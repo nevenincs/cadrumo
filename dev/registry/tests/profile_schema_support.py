@@ -70,7 +70,7 @@ class CommittedRegistryValidator:
             source_root=bundled_path(),
             user_profile_schema=load_user_profile_schema(),
         )
-        self._facts = CandidateFactAuthority(facts)
+        self._facts = CandidateFactAuthority(facts, compiled.require_supported_filing_years())
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
         """Validate one modelo inside the candidate-fact scope."""
