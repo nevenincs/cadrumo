@@ -1,6 +1,79 @@
 modelo:
   schema:
     '345':
+      casilla:
+        continuidad:
+          m345-anio-nacimiento:
+            label: Any de naixement
+          m345-beneficiario-nif:
+            label: NIF del beneficiari persona amb discapacitat
+          m345-clave:
+            label: Clau
+          m345-codigo-provincia:
+            label: Codi de província
+          m345-datos-adicionales-clave-i:
+            label: Dades addicionals per a la clau I
+          m345-datos-adicionales-clave-m:
+            label: Dades addicionals per a la clau M
+          m345-datos-adicionales-claves-abc:
+            label: Dades addicionals per a les claus A, B i C
+          m345-datos-identificativos-empleador:
+            label: Dades identificatives de l'ocupador promotor o prenedor del sistema
+              de previsió social
+          m345-declaracion-complementaria-sustitutiva:
+            label: Declaració complementària o substitutiva
+          m345-declarado-nif:
+            label: NIF del declarat
+          m345-declarado-nombre:
+            label: Cognoms i nom del declarat
+          m345-declarante-nif:
+            label: NIF del declarant
+          m345-declarante-razon-social:
+            label: Cognoms i nom o raó social del declarant
+          m345-devoluciones-excesos:
+            label: Devolucions o reintegraments per excessos d'aportacions
+          m345-ejercicio-declaracion:
+            label: Exercici de declaració
+          m345-empleador-nif:
+            label: NIF de l'ocupador promotor o prenedor
+          m345-empleador-nombre:
+            label: Cognoms i nom o raó social de l'ocupador
+          m345-entidad-aseguradora-nif:
+            label: NIF de l'entitat asseguradora
+          m345-fondo-pensiones-nif:
+            label: NIF del fons de pensions
+          m345-fondo-pensiones-numero-registro:
+            label: Número de registre del fons de pensions
+          m345-importe:
+            label: Import
+          m345-importe-total-aportaciones:
+            label: Import total de les aportacions
+          m345-numero-identificativo-anterior:
+            label: Número identificatiu de la declaració anterior
+          m345-numero-identificativo-declaracion:
+            label: Número identificatiu de la declaració
+          m345-pepp-cuenta-subcuenta:
+            label: Compte/subcompte
+          m345-pepp-denominacion:
+            label: Denominació del PEPP
+          m345-pepp-numero-inscripcion:
+            label: Número d'inscripció del PEPP
+          m345-persona-relacion:
+            label: Persona amb qui relacionar-se
+          m345-pias-fecha-primera-prima:
+            label: Data de pagament de la primera prima
+          m345-pias-importe-acumulado:
+            label: Import acumulat PIAS
+          m345-plan-pensiones-denominacion:
+            label: Denominació del pla de pensions
+          m345-rendimientos-trabajo-no-superiores-60000:
+            label: Rendiments íntegres del treball no superiors a 60.000 euros
+          m345-representante-legal-nif:
+            label: NIF del representant legal
+          m345-subclave:
+            label: Subclau
+          m345-total-declarados:
+            label: Nombre total de declarats
       field:
         official_name: Modelo 345. Declaració informativa. Plans, fons de pensions
           i sistemes alternatius. Declaració anual de partícips, aportacions i contribucions.
@@ -9,119 +82,87 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: Model 345, exercici 2022
         '2023':
           field:
-            label: null
+            label: Model 345, exercici 2023
         '2024':
           field:
-            label: null
+            label: Model 345, exercici 2024
         '2025':
           casilla:
             anio-nacimiento:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Any de naixement
             beneficiario-nif:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: NIF del beneficiari persona amb discapacitat
             clave:
               help: 'Consulteu la informació de la casella: Clave.'
-              label: Clau
             codigo-provincia:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Codi de província
             datos-adicionales-clave-i:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Dades addicionals per a la clau I
             datos-adicionales-clave-m:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Dades addicionals per a la clau M
             datos-adicionales-claves-abc:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Dades addicionals per a les claus A, B i C
             datos-identificativos-empleador:
               help: 'Consulteu la informació de la casella: Dades identificativos
                 del empleador promotor o tomador del sistema de prevision social.'
-              label: Dades identificatives de l'ocupador promotor o prenedor del sistema
-                de previsió social
             declaracion-complementaria-sustitutiva:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Declaració complementària o substitutiva
             declarado-nif:
               help: 'Consulteu la informació de la casella: NIF del declarado.'
-              label: NIF del declarat
             declarado-nombre:
               help: 'Consulteu la informació de la casella: Cognoms i nom del declarado.'
-              label: Cognoms i nom del declarat
             declarante-nif:
               help: Informació fiscal de la casella del Modelo 345.
-              label: NIF del declarant
             declarante-razon-social:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Cognoms i nom o raó social del declarant
             devoluciones-excesos:
               help: 'Consulteu la informació de la casella: Devoluciones o reintegros
                 per excesos de aportacions.'
-              label: Devolucions o reintegraments per excessos d'aportacions
             ejercicio-declaracion:
               help: 'Consulteu la informació de la casella: Exercici de declaració.'
-              label: Exercici de declaració
             empleador-nif:
               help: 'Consulteu la informació de la casella: NIF del empleador promotor
                 o tomador.'
-              label: NIF de l'ocupador promotor o prenedor
             empleador-nombre:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Cognoms i nom o raó social de l'ocupador
             entidad-aseguradora-nif:
               help: 'Consulteu la informació de la casella: NIF de la entitat aseguradora.'
-              label: NIF de l'entitat asseguradora
             fondo-pensiones-nif:
               help: 'Consulteu la informació de la casella: NIF del fondo de pensiones.'
-              label: NIF del fons de pensions
             fondo-pensiones-numero-registro:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Número de registre del fons de pensions
             importe:
               help: 'Consulteu la informació de la casella: Import.'
-              label: Import
             importe-total-aportaciones:
               help: 'Consulteu la informació de la casella: Import total de las aportacions.'
-              label: Import total de les aportacions
             numero-identificativo-anterior:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Número identificatiu de la declaració anterior
             numero-identificativo-declaracion:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Número identificatiu de la declaració
             pepp-cuenta-subcuenta:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Compte/subcompte
             pepp-denominacion:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Denominació del PEPP
             pepp-numero-inscripcion:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Número d'inscripció del PEPP
             persona-relacion:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Persona amb qui relacionar-se
             pias-fecha-primera-prima:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Data de pagament de la primera prima
             pias-importe-acumulado:
               help: 'Consulteu la informació de la casella: Import acumulado PIAS.'
-              label: Import acumulat PIAS
             plan-pensiones-denominacion:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Denominació del pla de pensions
             rendimientos-trabajo-superiores-60000:
               help: 'Consulteu la informació de la casella: Rendiments integros del
                 trabajo superiores a 60000 euros.'
@@ -129,13 +170,10 @@ modelo:
             representante-legal-nif:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: NIF del representant legal
             subclave:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 345.
-              label: Subclau
             total-declarados:
               help: Informació fiscal de la casella del Modelo 345.
-              label: Nombre total de declarats
           field:
-            label: Casella— informació fiscal
+            label: Model 345, exercici 2025 (Ordre HFP/823/2022 i Ordre HAC/1430/2025)

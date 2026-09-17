@@ -21,6 +21,10 @@ modelo:
             help: Sum of the withholdings and payments on account applied to the declared
               income.
             label: Withholdings and payments on account
+      construct:
+        modelo-194-calculation-construct:
+          field:
+            title: 'Modelo 194: annual summary of withholdings on capital income'
       field:
         official_name: Modelo 194. Personal Income Tax, Corporate Income Tax and Non-Resident
           Income Tax (permanent establishments). Withholdings and payments on account
@@ -31,23 +35,11 @@ modelo:
           summary
       revision:
         '2019':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
-            label: Casilla — tax field
+            label: Record design of Modelo 194, tax year 2019
         '2023':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
-            label: Casilla — tax field
+            label: Record design of Modelo 194, tax year 2023
         '2024':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
-            label: Casilla — tax field
+            label: Record design of Modelo 194, tax year 2024

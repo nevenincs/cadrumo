@@ -134,6 +134,10 @@ modelo:
               száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
               külön kell számolni.
             label: A bevallott kedvezményezetti rekordok teljes száma
+      construct:
+        modelo-270-informative:
+          field:
+            title: Modelo 270 bevallás tájékoztató
       field:
         official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
           Egyes lottó- és fogadási nyeremények különadója.
@@ -141,16 +145,8 @@ modelo:
           összesítője
       revision:
         2013-2022:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 270-es modelo (HAP/2368/2013 rendelet), 2013-2022. adóévek
         2023-y-siguientes:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 270-es modelo (HAP/2368/2013 rendelet), 2023-2024. adóévek

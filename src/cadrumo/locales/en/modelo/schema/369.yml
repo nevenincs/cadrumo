@@ -30,7 +30,9 @@ modelo:
                 title: Modelo 369 - Esquema Exterior (regime especial services prestados
                   by no establecidos)
           field:
-            label: Casilla— tax information
+            label: Modelo 369 - Non-Union scheme - special regime for services supplied
+              by taxable persons not established in the Community (LIVA art. 163 octiesdecies
+              to vicies). Quarterly under HAC/610/2021 art. 2(a).
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -51,15 +53,17 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Importacion (regime especial IOSS)
           field:
-            label: Casilla— tax information
+            label: Modelo 369 - Import scheme (IOSS) - special regime for distance
+              sales of imported goods (LIVA art. 163 quinvicies to octovicies). Monthly
+              under HAC/610/2021 art. 2(c)/(d).
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax information for casilla of Modelo 369.
-              label: Tax year the self-assessment refers to
+              label: Filing year to which the self-assessment relates
             x-chim6r1ee1in4qbfchng:
               help: Tax information for casilla of Modelo 369.
-              label: Filing period
+              label: Period of the return
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
               help: Tax information about tax information in casilla  of Modelo 369.
               label: Total output VAT of the Union scheme (cross-destination, cross-flow
@@ -82,4 +86,7 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Union (regime especial OSS Union)
           field:
-            label: Casilla— tax information
+            label: Modelo 369 - Union scheme - special regime for intra-Community
+              distance sales, electronic interfaces and services established in the
+              Community (LIVA art. 163 unvicies to quatervicies). Quarterly under
+              HAC/610/2021 art. 2(b).

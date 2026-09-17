@@ -29,7 +29,11 @@ def resolve_m303_regimen_simplificado_snapshot(
     registry_snapshot: RegistrySnapshot,
     scope_decision: M303RegimenSimplificadoScopeDecision,
 ) -> M303RegimenSimplificadoSnapshot:
-    """Resolve the sole annual-Orden and record-design snapshot for an explicit scope input."""
+    """Resolve the sole annual-Orden and record-design snapshot for an explicit scope input.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     if registry_snapshot.modelo.id != Modelo("303"):
         raise RegistryValidationError("M303 regimen simplificado resolver requires a Modelo 303 registry snapshot")
     record_design = _unique_active_record_design(

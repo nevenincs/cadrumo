@@ -1,6 +1,58 @@
 modelo:
   schema:
     '189':
+      casilla:
+        continuidad:
+          filing-year:
+            label: A bevallás éve
+          irpf-declarante-nif:
+            label: A bejelentő adószáma
+          m189-clave-identificacion:
+            label: Az azonosítás módjának kódja
+          m189-clave-mercado:
+            label: A piac típuskódja
+          m189-clave-representacion:
+            label: Az értékpapír megjelenítési kódja
+          m189-clave-titularidad:
+            label: A tulajdonlás típuskódja
+          m189-clave-valor:
+            label: Az értékpapír típuskódja
+          m189-codigo-pais:
+            label: Országkód
+          m189-codigo-provincia:
+            label: Tartománykód
+          m189-declaracion-complementaria-sustitutiva:
+            label: Kiegészítő vagy helyettesítő bevallás
+          m189-declarado-nif:
+            label: A bejelentett fél adószáma
+          m189-declarado-nombre:
+            label: A bejelentett fél neve, cégneve vagy elnevezése
+          m189-declarante-razon-social:
+            label: A bejelentő cégneve
+          m189-identificacion-valores:
+            label: Az értékpapírok azonosítója
+          m189-nominal-unitario-valores:
+            label: Az értékpapírok egységnyi névértéke
+          m189-numero-identificativo-anterior:
+            label: A korábbi bevallás azonosító száma
+          m189-numero-justificante:
+            label: A bevallás igazolásszáma
+          m189-numero-total-declarados:
+            label: A bejelentett felek teljes száma
+          m189-numero-valores:
+            label: Az értékpapírok száma
+          m189-persona-relacion:
+            label: Kapcsolattartó személy
+          m189-porcentaje-participacion:
+            label: Tulajdoni hányad százaléka
+          m189-representante-legal-nif:
+            label: A törvényes képviselő adószáma
+          m189-tipo-soporte:
+            label: Az adathordozó típusa
+          m189-valoracion:
+            label: Értékelés
+          m189-valoracion-total:
+            label: Teljes értékelés
       field:
         official_name: Modelo 189. Éves adatszolgáltatási bevallás értékpapírokról,
           biztosításokról és járadékokról.
@@ -9,86 +61,62 @@ modelo:
       revision:
         '2023':
           field:
-            label: null
+            label: 189-es modelo, 2023. adóév
         '2024':
           field:
-            label: null
+            label: 189-es modelo, 2024. adóév
         '2025':
           casilla:
             clave-identificacion:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Az azonosítás módjának kódja
             clave-mercado:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: A piac típuskódja
             clave-representacion:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Az értékpapír megjelenítési kódja
             clave-titularidad:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: A tulajdonlás típuskódja
             clave-valor:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Az értékpapír típuskódja
             codigo-pais:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Országkód
             codigo-provincia:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Tartománykód
             declaracion-complementaria-sustitutiva:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: 'Tekintse át a casilla adatait: NIF - declarado.'
-              label: A bejelentett fél adószáma
             declarado-nombre:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A bejelentett fél neve, cégneve vagy elnevezése
             declarante-nif:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A bejelentő adószáma
             declarante-razon-social:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A bejelentő cégneve
             ejercicio-declaracion:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóév.'
-              label: A bevallás éve
             identificacion-valores:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Az értékpapírok azonosítója
             nominal-unitario-valores:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Az értékpapírok egységnyi névértéke
             numero-identificativo-anterior:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A korábbi bevallás azonosító száma
             numero-justificante:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A bevallás igazolásszáma
             numero-total-declarados:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: A bejelentett felek teljes száma
             numero-valores:
               help: A Modelo 189 . casilla adóügyi adatai.
-              label: Az értékpapírok száma
             persona-relacion:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Kapcsolattartó személy
             porcentaje-participacion:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Tulajdoni hányad százaléka
             representante-legal-nif:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: A törvényes képviselő adószáma
             tipo-soporte:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Az adathordozó típusa
             valoracion:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Értékelés
             valoracion-total:
               help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-              label: Teljes értékelés
           field:
-            label: Casilla— adóügyi információ
+            label: 189-es modelo, 2025. adóév (EHA/3481/2008 rendelet; HFP/1180/2023,
+              HFP/1284/2023 és HAC/132/2026 rendeletek)

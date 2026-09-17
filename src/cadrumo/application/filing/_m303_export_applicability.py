@@ -21,7 +21,11 @@ def validate_m303_export_applicability(
     layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> None:
-    """Validate canonical M303 facts against the already-selected snapshot."""
+    """Validate canonical M303 facts against the already-selected snapshot.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     _validate_producer_snapshot_shape(period, producer_snapshot)
     _require_m303_producer_snapshot(producer_snapshot)
     filing_facts = _require_m303_filing_facts(period, producer_snapshot)

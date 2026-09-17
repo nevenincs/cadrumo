@@ -2,12 +2,12 @@
 
 import pytest
 
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
+from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..errors import LLMError
 from ..models import LLMRequest, LLMResponse, PromptRegistry
-from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

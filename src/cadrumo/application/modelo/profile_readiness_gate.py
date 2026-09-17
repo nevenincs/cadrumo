@@ -331,6 +331,9 @@ def profile_activity_start_date(record: UserProfileRecord) -> date | None:
     first resolves to the earlier date, and because this value decides whether a
     target period is refused as pre-activity, the disagreement fails open — a
     period before the effective activity start is admitted for work.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     rendered = record_to_path_values(record).get(_PROFILE_ACTIVITY_START_PATH)
     if rendered is None:

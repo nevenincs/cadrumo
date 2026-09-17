@@ -525,6 +525,16 @@ class SupervisorExecutionMixin(SupervisorHost):
         executor: Coroutine[None, None, OperationReference | None],
     ) -> OperationReference | None:
         """Await executor completion while aggregate and cleanup deadlines remain supervisor-owned."""
+        entry = context.snapshot
+        if (
+            entry.cancellation_requested_at is None
+            and entry.execution_deadline is not None
+            and self._clock() >= entry.execution_deadline
+        ):
+            # A continuation resumed after its deadline starts already cancelled,
+            # so its first cooperative check observes the request instead of
+            # racing the supervisor into an irreversible section.
+            await self.request_cancel(identity.operation_id)
         executor_task = asyncio.create_task(
             self._renew_while_executing(identity=identity, executor=executor),
             name=f"operation-supervision-{identity.operation_id}",
@@ -539,7 +549,15 @@ class SupervisorExecutionMixin(SupervisorHost):
                     await executor_task
                     break
                 if now >= execution_deadline:
-                    await self.request_cancel(identity.operation_id)
+                    observed_revision = (await self.inspect(identity.operation_id)).revision
+                    try:
+                        await self.request_cancel(identity.operation_id)
+                    except Exception:
+                        # An operator response may commit between the deadline's
+                        # read and its write. Only that moved revision is retried;
+                        # any other refusal stands.
+                        if (await self.inspect(identity.operation_id)).revision == observed_revision:
+                            raise
                     continue
                 await self._wait_for_executor_or_deadline(executor_task, execution_deadline, now)
                 continue

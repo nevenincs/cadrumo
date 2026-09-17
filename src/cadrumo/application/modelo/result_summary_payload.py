@@ -3,6 +3,9 @@
 The result-summary row is a typed projection of the application calculation
 summary.  Display adapters may add transport envelopes, but they do not own a
 second declaration of this row.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

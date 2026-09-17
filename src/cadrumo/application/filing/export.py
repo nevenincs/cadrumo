@@ -638,7 +638,12 @@ def render_filing_layout(
     prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
-    """Render one already-selected layout after enforcing immutable filing context."""
+    """Render one already-selected layout after enforcing immutable filing context.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`,
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     if (
         draft.modelo == Modelo("303").value
         and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election

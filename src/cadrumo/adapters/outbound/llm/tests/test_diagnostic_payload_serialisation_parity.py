@@ -32,7 +32,7 @@ import pytest
 
 from .....core.config_support import LLMProvider
 from .....core.hashing import canonical_json_bytes
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
 from ..models import LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

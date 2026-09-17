@@ -5,6 +5,9 @@ turns it into calculation evidence, and records the resulting local evidence.
 This module names the small surfaces that use case needs.  Sede readers,
 receipt parsers, and encrypted repositories are composed outside the
 application layer and implement these ports there.
+
+Core types:
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 """
 
 from __future__ import annotations

@@ -22,7 +22,7 @@ import pytest
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
 from .....core.directory_scan import scan_directory
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
 from ..models import LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

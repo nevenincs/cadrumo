@@ -41,12 +41,12 @@ from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
+from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
 from ..client import LLMClient
 from ..consent import EvidenceConsentToken
-from ..consent_ledger import EvidenceConsentLedger
 from ..errors import LLMConsentError
 from ..models import LLMRequest
 from ..providers.base import ProviderAdapter, ProviderCompletion, ProviderRequest

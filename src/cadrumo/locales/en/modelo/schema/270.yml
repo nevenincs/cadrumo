@@ -132,22 +132,18 @@ modelo:
             help: Total number of payees listed in the type 2 detail records. A payee
               appearing in several records is counted once for each appearance.
             label: Total number of declared payee records
+      construct:
+        modelo-270-informative:
+          field:
+            title: Modelo 270 return informative
       field:
         official_name: Modelo 270. Annual summary of withholdings and payments on
           account. Special levy on prizes from certain lotteries and betting.
         title: Annual summary of withholdings for the special levy on lottery prizes
       revision:
         2013-2022:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 270 (Order HAP/2368/2013), tax years 2013 to 2022
         2023-y-siguientes:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 270 (Order HAP/2368/2013), tax years 2023 to 2024

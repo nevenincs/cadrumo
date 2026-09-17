@@ -1,6 +1,11 @@
 modelo:
   schema:
     '360':
+      construct:
+        modelo-360-iva-devolucion-ue:
+          field:
+            title: Modelo 360 IVA solicitud de devolucion 8a Directiva (cuotas soportadas
+              en otros Estados miembros)
       field:
         official_name: Modelo 360. Solicitud de devolución del Impuesto sobre el Valor
           Añadido soportado por empresarios o profesionales establecidos en el territorio
@@ -705,11 +710,6 @@ modelo:
               label: 5. Modificación Prorrata año anterior. Prorrata definitiva
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               label: 5. Modificación Prorrata año anterior. Ejercicio
-          construct:
-            modelo-360-iva-devolucion-ue:
-              field:
-                title: Modelo 360 IVA solicitud de devolucion 8a Directiva (cuotas
-                  soportadas en otros Estados miembros)
           field:
             label: Modelo 360 ejercicios 2010 y siguientes (Orden EHA/789/2010, modificada
               por HAP/841/2016). Ad-hoc por trigger de devolucion solicitada.

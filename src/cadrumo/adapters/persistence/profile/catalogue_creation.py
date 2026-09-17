@@ -53,7 +53,11 @@ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
 
     @override
     def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
-        """Apply one guarded mutation, preserving domain validation refusals."""
+        """Apply one guarded mutation, preserving domain validation refusals.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         try:
             return self._repository.mutate(mutation)
         except InvoiceValidationError:

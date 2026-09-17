@@ -5,6 +5,9 @@ surfaces.  This module keeps only generic work-unit selection, persisted-value
 reading, arithmetic, and finding construction.  The paired models, operand
 casillas, tolerance, and provenance are all discovered from the selected
 verification expectations; none is copied into Python.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -253,6 +256,9 @@ def m303_m349_intracom_reconcile_findings(
     persisted revision are required; absent or ambiguous authority/work state
     stays a closed no-op.  A material gap produces the existing non-blocking
     reconciliation warning.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     contract = _selected_reconciliation_contract(work_unit, operation=operation)
     if contract is None:

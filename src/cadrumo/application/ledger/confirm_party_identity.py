@@ -206,12 +206,16 @@ def refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
         PurchaseInvoiceEvidenceInputError: When the identifier is the filer's
             own.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..invoices.self_counterparty import counterparty_is_the_filer
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 
     try:
-        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+        with bundled_indexed_authority().operation() as operation:
+            profile = load_active_taxpayer_profile(
+                workflow_state_repository().load(), schema=operation.profile_schema()
+            )
     except WizardStatusError:
         return
     if not counterparty_is_the_filer(counterparty_tax_id=counterparty_tax_id, profile=profile):
@@ -270,12 +274,16 @@ def refuse_an_issued_document_the_filer_did_not_issue(
     if kind is not InvoiceKind.ISSUED or extracted_supplier_tax_id is None:
         return
 
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..invoices.self_counterparty import counterparty_is_the_filer
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 
     try:
-        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+        with bundled_indexed_authority().operation() as operation:
+            profile = load_active_taxpayer_profile(
+                workflow_state_repository().load(), schema=operation.profile_schema()
+            )
     except WizardStatusError:
         return
     # The loader raises rather than returning None, and that failure is already

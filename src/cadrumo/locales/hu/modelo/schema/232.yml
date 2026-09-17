@@ -5,12 +5,17 @@ modelo:
         continuidad:
           actividad-cnae:
             help: A Modelo 232 . casilla adóügyi adatai.
-            label: A főtevékenység NACE-kódja
+            label: A fő tevékenység CNAE-kódja
           filing-year:
             help: 'A Modelo 232 . casilla adóügyi adatai: adóév.'
-            label: Az esedékesség éve
+            label: Az adóztatandó esemény adóéve
           tipo-ejercicio-232:
             help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
+      construct:
+        modelo-232-informative:
+          field:
+            title: '232-es modelo: a kapcsolt vállalkozási ügyletekről és adóparadicsomi
+              kapcsolatokról szóló adatszolgáltatás'
       field:
         official_name: Modelo 232. A kapcsolt felek közötti ügyletek, valamint az
           adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek
@@ -202,13 +207,8 @@ modelo:
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Üzleti év típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of ügyletek vinculadas and
-                  paraisos fiscales
           field:
-            label: Casilla— adóügyi információ
+            label: 232-es modelo, 2016-2017. adóévek (HFP/816/2017 rendelet, v13)
         2018-y-siguientes:
           casilla:
             vinculada-1-fjo:
@@ -363,17 +363,10 @@ modelo:
               label: 'Kapcsolt vállalkozás 5: Kapcsolat típusa'
             x-chim6r1ecdn62p8:
               help: A főtevékenység NACE-kódja
-              label: A fő tevékenység CNAE-kódja
             x-chim6r1ecll6asj3d5hmiro:
               help: Az esedékesség éve
-              label: Az adóztatandó esemény adóéve
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of ügyletek vinculadas and
-                  paraisos fiscales
           field:
-            label: Casilla— adóügyi információ
+            label: 232-es modelo, 2018. adóévtől (HFP/816/2017 rendelet, v14)

@@ -34,6 +34,9 @@ model-selected ``iva_category`` and the system-DERIVED ``taxable_base`` /
 ``iva_rate`` / ``iva_amount``. The model still never emits a number — the rate
 is looked up from the registry and the base and amount are derived with
 ``round_to_cents``. ``irpf_category`` remains operator-only.
+
+Core types:
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

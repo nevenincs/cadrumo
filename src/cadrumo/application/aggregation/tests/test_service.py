@@ -37,13 +37,13 @@ _P_2024_ANNUAL = Period.from_year_and_code(2024, "0A")
 
 
 def test_aggregation_config_error_registered_code_accessible_from_instance() -> None:
-    exc = AggregationConfigError(translated_message="aggregation.service.errors.provider_modelos_not_unique")
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.result_source_kinds_not_unique")
     registered = get_registered_error_code(exc)
     assert registered.code == "ERROR_AGGREGATION_CONFIG"
 
 
 def test_aggregation_config_error_round_trips_through_build_error_envelope() -> None:
-    exc = AggregationConfigError(translated_message="aggregation.service.errors.per_modelo_providers_not_unique")
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.per_modelo_modelos_not_unique")
     envelope = build_error_envelope(exc)
     assert envelope.code == "ERROR_AGGREGATION_CONFIG"
     assert envelope.category == "ERROR"

@@ -1,6 +1,11 @@
 modelo:
   schema:
     '720':
+      construct:
+        modelo-720-informative:
+          field:
+            title: '720-as modelo: a külföldön birtokolt vagyonról és jogokról szóló
+              adatszolgáltatás'
       field:
         official_name: Modelo 720. Adatszolgáltatási bevallás a külföldön található
           vagyonról és jogokról.
@@ -31,10 +36,5 @@ modelo:
               help: A Modelo 720 . casilla adóügyi adatai.
               label: Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek
                 értékelése
-          construct:
-            modelo-720-informative:
-              field:
-                title: A 720. számú nyomtatvány külföldön tartott vagyoni eszközökről
-                  és jogokról szóló tájékoztató bevallása
           field:
-            label: Casilla— adóügyi információ
+            label: 720-as modelo, 2012. adóévtől (HAP/72/2013 rendelet)

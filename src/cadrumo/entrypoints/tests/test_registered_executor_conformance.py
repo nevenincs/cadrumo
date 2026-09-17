@@ -122,7 +122,7 @@ from ..adapter_composition import (
     build_verification_repository_bundle,
     build_work_lifecycle_ports,
 )
-from ..censal_review import _run as run_censal_review_through_services
+from ..censal_review import review_censal_with_services
 from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -266,14 +266,16 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             OperationEffect.NONE,
         ),
         _RegisteredExecutorConformanceCase(
+            # The isolated settings name no Drive root folder, so the production
+            # transport refuses while planning, before any remote call.
             "export.google-sheets",
-            OperationTerminalCondition.FAILED,
-            OperationEffect.UNKNOWN,
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
             (
                 "export.google-sheets.preflight",
                 "export.google-sheets.plan",
-                "export.google-sheets.apply",
             ),
+            expected_refusal_ref="REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED",
         ),
         _RegisteredExecutorConformanceCase(
             "user-profile.censo-review", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
@@ -537,7 +539,7 @@ def _seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAut
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_verification_repository_bundle(unit.bucket_id),
             actor=_ACTOR,
-            workflow_profile=resolve_active_workflow_profile(),
+            workflow_profile=resolve_active_workflow_profile(operation),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         )
@@ -939,11 +941,11 @@ def _runtime(
                 authority_scope.__exit__(None, None, None)
 
 
-@pytest.mark.usefixtures("operation")
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])
 def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection(
     tmp_path: Path,
     apply: bool,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """The public frontend driver answers the encrypted exact proposal once."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
@@ -960,7 +962,9 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
             return apply
 
         result = asyncio.run(
-            run_censal_review_through_services(
+            review_censal_with_services(
+                _driver.services,
+                operation=operation,
                 actor_ref="operator:frontend-test",
                 decide=decide,
             )
@@ -980,8 +984,9 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
             assert after == before
 
 
-@pytest.mark.usefixtures("operation")
-def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_path: Path) -> None:
+def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """An accepted response followed by a failed continuation stays a failure."""
     cleanup = _CloseWitness()
     with _runtime(tmp_path / "frontend-failed", cleanup=cleanup) as (driver, _registry, _profile_id):
@@ -1008,10 +1013,12 @@ def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_p
                     )
                 return observed
 
-        replace(driver.services, observation=_FailedTerminalObservation())
+        failing_services = replace(driver.services, observation=_FailedTerminalObservation())
         with pytest.raises(InternalInvariantError, match="did not succeed"):
             asyncio.run(
-                run_censal_review_through_services(
+                review_censal_with_services(
+                    failing_services,
+                    operation=operation,
                     actor_ref="operator:frontend-failed-test",
                     decide=lambda _projection: True,
                 )
@@ -1207,7 +1214,7 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=str(profile_id)),
                 actor=_ACTOR,
-                workflow_profile=resolve_active_workflow_profile(),
+                workflow_profile=resolve_active_workflow_profile(operation),
                 operation=operation,
                 notes=None,
             )

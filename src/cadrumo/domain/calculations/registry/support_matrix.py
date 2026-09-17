@@ -313,6 +313,9 @@ def build_support_matrix_from_directory_views(
 
     A view carries only its selected revision, so the declared revision ids
     come from the directory the view was materialized from.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
     """
     entries = (
         _entry_for_modelo(

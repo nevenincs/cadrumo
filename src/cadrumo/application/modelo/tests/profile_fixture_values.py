@@ -28,6 +28,8 @@ MODELO_READY_PROFILE_FACTS: Final[tuple[UserProfileFact, ...]] = (
     UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
     UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
     UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    # Modelo 111 readiness asks whether the withholding agent is a colegio concertado.
+    UserProfileFact(path="withholding.colegio_concertado", value=False),
 )
 """The minimum taxpayer baseline accepted by the modelo readiness gate.
 

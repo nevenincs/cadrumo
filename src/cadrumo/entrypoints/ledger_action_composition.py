@@ -1,4 +1,8 @@
-"""Outer composition for bucket-scoped ledger action persistence."""
+"""Outer composition for bucket-scoped ledger action persistence.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

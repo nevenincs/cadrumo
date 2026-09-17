@@ -4,6 +4,10 @@ Product runtime admits only the descriptor-selected SQLite generation and
 decodes addressed immutable components from it. ``AuthorityArtifact`` is the
 development compiler's in-memory typed handoff into that database builder.
 This module knows no registry root and provides no eager runtime loader.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

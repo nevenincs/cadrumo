@@ -57,7 +57,11 @@ def profile_schema_for_record(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileSchemaDefinition:
-    """Return the schema explicitly supplied by the authority operation."""
+    """Return the schema explicitly supplied by the authority operation.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     return _schema_for_record(record, schema)
 
 
@@ -205,7 +209,11 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
 
 
 def fact_value(record: UserProfileRecord | UserProfileSnapshot | None, path: str) -> str | None:
-    """Read one effective current fact through the canonical projection."""
+    """Read one effective current fact through the canonical projection.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     return record_to_path_values(record).get(path)
 
 

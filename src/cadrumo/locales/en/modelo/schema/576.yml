@@ -6,6 +6,10 @@ modelo:
           filing-year:
             help: Tax information for casilla of Modelo 576.
             label: Accrual year
+      construct:
+        modelo-576-autoliquidacion:
+          field:
+            title: Self-assessment of the Special Tax on Certain Means of Transport
       field:
         official_name: Modelo 576. Special Tax on Certain Means of Transport. Self-assessment.
         title: IEDMT - self-assessment on registration of certain means of transport
@@ -156,9 +160,5 @@ modelo:
             x-dhkn2bjkd5o6u:
               help: 'Review the casilla information: Assessment. Rate %.'
               label: Assessment. Rate %
-          construct:
-            modelo-576-autoliquidacion:
-              field:
-                title: Self-assessment of the Special Tax on Certain Means of Transport
           field:
             label: Order EHA/3851/2007, tax years 2008 onwards

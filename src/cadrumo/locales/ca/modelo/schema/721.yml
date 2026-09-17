@@ -32,24 +32,19 @@ modelo:
           tipo-declaracion:
             help: Informació fiscal de la casella del Modelo 721.
             label: Tipus de declaració (originària / complementària / substitutiva)
+      construct:
+        modelo-721-informative:
+          field:
+            title: 'Model 721: declaració informativa de monedes virtuals a l''estranger
+              a través de custodi'
       field:
         official_name: Modelo 721. Declaració informativa sobre monedes virtuals situades
           a l'estranger.
         title: Monedes virtuals situades a l'estranger (informativa anual)
       revision:
         '2023':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Declaració informativa de monedes virtuals custodiades a l'estranger
-                  del Model 721
           field:
-            label: Casella— informació fiscal
+            label: Model 721, exercici 2023 (Ordre HFP/886/2023)
         '2024':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Declaració informativa de monedes virtuals custodiades a l'estranger
-                  del Model 721
           field:
-            label: Casella— informació fiscal
+            label: Model 721, exercici 2024 (annex substituït per l'Ordre HAC/1504/2024)

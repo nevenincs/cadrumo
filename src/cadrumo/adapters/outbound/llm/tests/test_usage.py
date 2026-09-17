@@ -15,8 +15,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.config_support import LLMProvider
+from ....persistence.llm.usage import UsageRecorder
 from ..models import LLMResponse
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -30,7 +30,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.projections import record_to_effective_facts
-from ..censal_review import _run as run_censal_review_through_services
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ..censal_review import review_censal_with_services
 from .test_registered_executor_conformance import _CloseWitness, _runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -49,11 +50,13 @@ def _decide(*, apply: bool):
     return decide, seen
 
 
-def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_path: Path) -> None:
+def test_applied_censal_review_lands_adopted_values_with_censo_provenance(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """Adopted values reach the durable record carrying the censo source tag."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (_driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -62,7 +65,9 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_pa
         decide, seen = _decide(apply=True)
 
         result = asyncio.run(
-            run_censal_review_through_services(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
                 actor_ref=_ACTOR,
                 decide=decide,
             )
@@ -107,11 +112,13 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(tmp_pa
         assert cleanup.closed is True
 
 
-def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(tmp_path: Path) -> None:
+def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """A rejected review neither writes values nor stamps censo provenance."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     cleanup = _CloseWitness()
-    with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (_driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
@@ -119,7 +126,9 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(t
         decide, seen = _decide(apply=False)
 
         result = asyncio.run(
-            run_censal_review_through_services(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
                 actor_ref=_ACTOR,
                 decide=decide,
             )
@@ -136,29 +145,35 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(t
         assert cleanup.closed is True
 
 
-def test_each_censal_acquisition_publishes_exactly_one_answerable_review(tmp_path: Path) -> None:
+def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """Two runs each review once; neither reuses the other's interaction."""
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     first_cleanup = _CloseWitness()
     second_cleanup = _CloseWitness()
 
-    with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (_driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
         )
         decide_first, first_seen = _decide(apply=True)
         first = asyncio.run(
-            run_censal_review_through_services(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
                 actor_ref=_ACTOR,
                 decide=decide_first,
             )
         )
         after_first = repository.load(profile_id)
 
-    with _runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (_driver, _registry, profile_id):
+    with _runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (driver, _registry, profile_id):
         decide_second, second_seen = _decide(apply=False)
         second = asyncio.run(
-            run_censal_review_through_services(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
                 actor_ref=_ACTOR,
                 decide=decide_second,
             )

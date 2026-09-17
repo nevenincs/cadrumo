@@ -330,6 +330,9 @@ def reviewed_against_current_state(
     readers, and the verdict is derived state: freezing it into the store on a
     read would make the stored status depend on when someone happened to open
     the review queue.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     if draft.status is not ModeloDraftStatus.APROBADO:
         return (draft, ())

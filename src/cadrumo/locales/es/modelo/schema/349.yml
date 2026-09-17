@@ -1,6 +1,10 @@
 modelo:
   schema:
     '349':
+      construct:
+        modelo-349-informative:
+          field:
+            title: 'Modelo 349: declaración informativa de operaciones intracomunitarias'
       field:
         official_name: Modelo 349. Declaración Informativa. Declaración recapitulativa
           de operaciones intracomunitarias.
@@ -48,9 +52,5 @@ modelo:
               label: Apellidos y nombre o razón social del sujeto pasivo sustituto
             x-edqn6t39ehqn8rpedpkmc:
               label: NIF del empresario o profesional destinatario final sustituto
-          construct:
-            modelo-349-informative:
-              field:
-                title: Modelo 349 informative intra-community operations declaration
           field:
             label: Modelo 349 ejercicio 2020 y siguientes (Orden HAC/174/2020)

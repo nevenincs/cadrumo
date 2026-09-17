@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 
 from ...core.casilla_id import CasillaId
 from ...core.identity.tax_id import same_tax_identifier
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
@@ -64,6 +65,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
@@ -72,6 +74,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -108,6 +111,15 @@ Tested twice in this module, each time paired with a different second condition,
 two checks agreed on the kinds only by hand. Held as a name so a kind added to one check
 cannot be missed by the other.
 """
+
+
+_OPERATOR_DECLARED_PROVENANCES: Final[frozenset[IvaCompensationStateProvenance]] = frozenset(
+    {
+        IvaCompensationStateProvenance.OPERATOR_SEED,
+        IvaCompensationStateProvenance.OPERATOR_CORRECTION,
+    },
+)
+"""History provenances that declare an opening balance without a filed envelope."""
 
 
 class _WalletBindingTarget(NamedTuple):
@@ -246,6 +258,7 @@ def _persisted_decision_for_calculation(
     operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision | None:
     persisted = load_persisted_iva_compensation_decision_for_work_unit(
@@ -262,6 +275,7 @@ def _persisted_decision_for_calculation(
         decision=persisted,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=history_repository,
         profile_values=profile_values,
     )
     return _require_first_period_zero_decision_grounded(
@@ -280,6 +294,7 @@ def _resolve_caller_supplied_prior_compensation(
     operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     supplied_amounts: tuple[Decimal, ...],
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision | None:
@@ -289,6 +304,7 @@ def _resolve_caller_supplied_prior_compensation(
         operation=operation,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=history_repository,
         persist=False,
         profile_values=profile_values,
     )
@@ -325,6 +341,7 @@ def resolve_iva_compensation_decision_for_calculation(
     operation: PinnedAuthorityOperation,
     supplied_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     repository: IvaWalletDecisionRepositoryProtocol,
     binding_values: Mapping[BindingId, Decimal] | None,
     backend_binding_values: Mapping[BindingId, Decimal] | None,
@@ -360,6 +377,7 @@ def resolve_iva_compensation_decision_for_calculation(
         operation=operation,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=history_repository,
         profile_values=profile_values,
     )
     if persisted is not None:
@@ -377,6 +395,7 @@ def resolve_iva_compensation_decision_for_calculation(
             operation=operation,
             repository=repository,
             observation_repository=observation_repository,
+            history_repository=history_repository,
             supplied_amounts=supplied_amounts,
             profile_values=profile_values,
         )
@@ -386,6 +405,7 @@ def resolve_iva_compensation_decision_for_calculation(
         operation=operation,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=history_repository,
         persist=True,
         profile_values=profile_values,
     )
@@ -769,6 +789,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     decision: IvaCompensationReconciliationDecision,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision:
     if not (
@@ -783,6 +804,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
         operation=operation,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=history_repository,
         persist=False,
         profile_values=profile_values,
     )
@@ -960,6 +982,7 @@ def _reconcile_local_iva_compensation(
     operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
     persist: bool,
     profile_values: Mapping[str, str] | None,
 ) -> IvaCompensationReconciliationDecision | None:
@@ -976,6 +999,7 @@ def _reconcile_local_iva_compensation(
         snapshot=snapshot,
         operation=operation,
         repository=observation_repository,
+        history_repository=history_repository,
     )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
@@ -1113,12 +1137,49 @@ def _prior_period_recurrence(
     )
 
 
+def _operator_declared_carry_evidence(
+    state: IvaCompensationPeriodState | None,
+    *,
+    requirement: RegistryFoldRequirement,
+    source_period: _Period,
+) -> _PriorPeriodCarryEvidence:
+    """Project an operator-declared opening balance into prior-period evidence.
+
+    A seeded or corrected balance predates the local filed history, so no
+    observation envelope exists for its period. It is local authority, never an
+    AEAT observation; any other stored history state without its envelope is
+    not usable and still proves the period existed.
+    """
+    if state is None:
+        return _NO_PRIOR_PERIOD_OBSERVATION
+    if state.provenance not in _OPERATOR_DECLARED_PROVENANCES:
+        return _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
+    return _PriorPeriodCarryEvidence(
+        recurrence=LocalIvaCompensationRecurrence(
+            binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
+            amount=state.available_end_amount,
+            source_kind=state.provenance.value,
+            source_modelo=Modelo("303").value,
+            source_filing_year=requirement.filing_year,
+            source_periods=(source_period,),
+            source_registry_snapshot_refs=(state.registry_snapshot_ref,),
+            resolved_at=state.presented_at,
+            source_locator=(
+                f"iva-compensation-history:{Modelo('303').value}:"
+                f"{source_period.filing_year}:{source_period.registry_token}"
+            ),
+        ),
+        prior_period_observation_found=True,
+    )
+
+
 def _prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
     operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
+    history_repository: IvaCompensationHistoryRepositoryProtocol,
 ) -> _PriorPeriodCarryEvidence:
     """Return validated filed M303 envelope recurrence, and whether one was stored.
 
@@ -1143,7 +1204,11 @@ def _prior_period_carry_evidence(
     source_period = _prior_period_source_period(requirement)
     payload = repository.load_observation(Modelo("303").value, source_period)
     if payload is None:
-        return _NO_PRIOR_PERIOD_OBSERVATION
+        return _operator_declared_carry_evidence(
+            history_repository.load_period(source_period),
+            requirement=requirement,
+            source_period=source_period,
+        )
     found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
     if not _prior_period_observation_is_usable(
         payload,

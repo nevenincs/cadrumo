@@ -8,6 +8,10 @@ content id under the registry-owned verify namespace.
 The adapter is deliberately bucket-bound.  A command creates one instance for
 its active bucket and injects it into :class:`VerifyService`; the service never
 needs to know about secure-object records, envelopes, or hashed lookup keys.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`,
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

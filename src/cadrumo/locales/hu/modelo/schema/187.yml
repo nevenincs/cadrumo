@@ -1,6 +1,10 @@
 modelo:
   schema:
     '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: '187-es modelo: az önadózás számítása'
       field:
         official_name: Modelo 187. A kollektív befektetési formák jegyzett tőkéjét
           vagy vagyonát megtestesítő részvények és befektetési jegyek adatszolgáltatási
@@ -27,9 +31,5 @@ modelo:
               help: A bevallott ügyletekre alkalmazott levonások és előlegfizetések
                 összege.
               label: A levonások és előlegfizetések teljes összege
-          construct:
-            modelo-187-calculation-construct:
-              field:
-                title: Modelo 187 calculation construct
           field:
-            label: Casilla— adóügyi információ
+            label: HAP/1608/2014 rendelet, 2022. adóévtől

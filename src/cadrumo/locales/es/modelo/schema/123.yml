@@ -44,8 +44,8 @@ modelo:
           construct:
             modelo-123-capital-withholding:
               field:
-                title: Modelo 123 historical quarterly capital-income withholding
-                  filing
+                title: 'Modelo 123: retenciones sobre rendimientos del capital mobiliario
+                  (ejercicios 2019 a 2023)'
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 a 2023
         2024-y-siguientes:
@@ -59,8 +59,5 @@ modelo:
               field:
                 title: Modelo 123 retenciones e ingresos a cuenta sobre rendimientos
                   del capital mobiliario
-            modelo-123-current-capital-withholding:
-              field:
-                title: Modelo 123 current quarterly capital-income withholding filing
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes

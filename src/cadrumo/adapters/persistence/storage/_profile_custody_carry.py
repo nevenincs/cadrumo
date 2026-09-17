@@ -1,4 +1,8 @@
-"""Concrete portable-profile custody carry over the encrypted substrate."""
+"""Concrete portable-profile custody carry over the encrypted substrate.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`.
+"""
 
 from __future__ import annotations
 

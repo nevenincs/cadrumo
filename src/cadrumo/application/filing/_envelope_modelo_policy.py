@@ -55,7 +55,11 @@ class FilingEnvelopeModeloPolicy(BaseModel):
         layout: ExportLayoutDefinition,
         producer_snapshot: FilingProducerSnapshot,
     ) -> None:
-        """Run the modelo's own applicability gate, where it registered one."""
+        """Run the modelo's own applicability gate, where it registered one.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+        """
         if self.applicability_gate is None:
             return
         self.applicability_gate(

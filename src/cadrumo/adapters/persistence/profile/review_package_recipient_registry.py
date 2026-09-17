@@ -4,6 +4,9 @@ The application layer owns recipient DTOs and registration policy.  This
 adapter owns the bucket namespace and secure-object encoding, translating
 storage failures into the application's registered registry error before they
 cross the port boundary.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

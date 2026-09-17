@@ -5,6 +5,9 @@ That module imports the application services every config verb needs -- reset
 journals, auth diagnostics, profile health -- and importing it to describe two
 rows dragged a sibling command's whole service graph, including the
 authenticated profile aggregate, into a listing that authenticates nothing.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

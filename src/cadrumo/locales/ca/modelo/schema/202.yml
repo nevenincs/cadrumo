@@ -253,9 +253,9 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202— informació fiscal
+                title: 'Model 202: pagament fraccionat (exercicis 2019-2022)'
           field:
-            label: Casella— informació fiscal
+            label: Model 202, exercicis 2019 a 2022 (DR202v52.xlsx, Ordre HAC/941/2018)
         2023-2024:
           casilla:
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
@@ -271,9 +271,9 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202— informació fiscal
+                title: 'Model 202: pagament fraccionat (exercicis 2023-2024)'
           field:
-            label: Casella— informació fiscal
+            label: Model 202, exercicis 2023 a 2024 (DR202e23.xlsx)
         2025-y-siguientes:
           casilla:
             '61':
@@ -320,7 +320,6 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Fonament del pagament fraccionat del Model 202 amb suport del
-                  registre
+                title: 'Model 202: base del pagament fraccionat'
           field:
-            label: Casella— informació fiscal
+            label: Model 202 vigent, exercicis 2025 i següents (DR202e25.xlsx)

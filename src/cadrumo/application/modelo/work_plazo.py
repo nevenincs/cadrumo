@@ -245,8 +245,17 @@ def calculated_m210_plazo_resolution(
     resolver.  It owns no result vocabulary, tipo-renta map, date catalogue, or
     matching rule.  A missing window produces no notice; notably, tipo 28 stays
     silent until its event-relative offset has authoritative registry backing.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if work_unit.modelo != Modelo("210"):
+        return None
+    if revision.unresolved_outcomes:
+        # The declaration result rests on a value the engine could not resolve,
+        # so no result-qualified window is known; projecting one would present
+        # the absent quota as a zero one.
         return None
 
     from ...domain.deadlines.plazo import resolve_filing_window

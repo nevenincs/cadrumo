@@ -32,6 +32,9 @@ See Also:
         Canonicalizes amendment override casilla ids against the registry.
     :func:`~cadrumo.application.modelo._registry_helpers.reject_incomplete_amendment_casillas`:
         Reuses the registry completeness gate before the amendment is filed.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

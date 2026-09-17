@@ -5,6 +5,10 @@ observations.  This module validates their joins and projects only natural
 declaration coordinates, lifecycle states, and non-sensitive timestamps.  It
 does not resolve repositories, contact AEAT, or retain financial/evidence
 payloads for serialization.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 """
 
 from __future__ import annotations

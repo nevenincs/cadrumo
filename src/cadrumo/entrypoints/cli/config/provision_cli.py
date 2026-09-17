@@ -25,6 +25,9 @@ and only when the configured endpoint is this machine.
 
 The pre-fetch admission check is the point of ``pull``. A refusal carries its
 typed condition and evidence. Cadrumo never touches a process it does not own.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

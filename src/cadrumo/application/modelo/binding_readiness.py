@@ -149,6 +149,9 @@ def annual_period_for_year(
 
     The shared temporal selector resolves same-year revision windows using
     ``as_of`` before this helper chooses the revision's first legal period.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
     try:
         if isinstance(authority, ValidatedRegistryAuthority):

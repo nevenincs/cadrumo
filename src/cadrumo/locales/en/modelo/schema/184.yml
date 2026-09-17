@@ -263,6 +263,11 @@ modelo:
             help: Amount declared on modelo 184. The design splits it into an integer
               and a decimal part.
             label: 'Net asset value / adjustments: increases'
+      construct:
+        modelo-184-informative:
+          field:
+            title: Modelo 184 informative return of entidades en régimen de atribución
+              de rentas
       field:
         official_name: Modelo 184. Annual informative return of income-attribution
           entities.
@@ -390,11 +395,6 @@ modelo:
               help: Box 94-95 of modelo 184, tax years 2023 and 2024.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax years 2023 and 2024.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Modelo 184 informative return of entidades en régimen de atribución
-                  de rentas
           field:
             label: Modelo 184, tax years 2023 and 2024
         2025-y-siguientes:
@@ -491,10 +491,5 @@ modelo:
               help: Box 94-95 of modelo 184, tax year 2025.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax year 2025.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Modelo 184 informative return of entidades en régimen de atribución
-                  de rentas
           field:
             label: Modelo 184, tax years 2025 onwards

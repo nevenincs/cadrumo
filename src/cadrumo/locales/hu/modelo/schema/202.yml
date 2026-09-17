@@ -247,9 +247,10 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202— adóügyi információ
+                title: '202-es modelo: részletfizetés (2019-2022 közötti adóévek)'
           field:
-            label: Casilla— adóügyi információ
+            label: 202-es modelo, 2019-2022. adóévek (DR202v52.xlsx, HAC/941/2018
+              rendelet)
         2023-2024:
           casilla:
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
@@ -265,9 +266,9 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202— adóügyi információ
+                title: '202-es modelo: részletfizetés (2023-2024 közötti adóévek)'
           field:
-            label: Casilla— adóügyi információ
+            label: 202-es modelo, 2023-2024. adóévek (DR202e23.xlsx)
         2025-y-siguientes:
           casilla:
             '61':
@@ -308,7 +309,6 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: A 202. számú nyomtatvány nyilvántartás által támogatott részletfizetési
-                  alapja
+                title: '202-es modelo: a részletfizetés alapja'
           field:
-            label: Casilla— adóügyi információ
+            label: 202-es modelo hatályos, 2025. adóévtől (DR202e25.xlsx)

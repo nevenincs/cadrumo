@@ -167,6 +167,8 @@ modelo:
             label: 'Tax status: taxpayer with no entitlement to deduct'
           transmitente-apellidos:
             label: Transferor (3) - Surnames or company name
+          transmitente-apellidos-nombre-razon-social:
+            label: Transferor - Surnames and first name or company name
           transmitente-nif:
             label: Transferor (3) - NIF
           transmitente-nif-iva:
@@ -281,7 +283,8 @@ modelo:
               field:
                 title: 'Historical Modelo 309: non-periodic self-assessment (2004-2015)'
           field:
-            label: Casilla — tax field
+            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
+              one and three). Ad hoc, triggered by a non-periodic obligation.
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -385,9 +388,10 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — tax information
+                title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Casilla — tax field
+            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
+              one and three). Ad hoc, triggered by a non-periodic obligation.
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -501,9 +505,10 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — tax information
+                title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Casilla — tax field
+            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
+              one and three). Ad hoc, triggered by a non-periodic obligation.
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -617,6 +622,7 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — tax information
+                title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Casilla — tax field
+            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
+              one and three). Ad hoc, triggered by a non-periodic obligation.

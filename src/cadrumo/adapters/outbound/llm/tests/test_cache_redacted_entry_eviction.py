@@ -25,7 +25,7 @@ from .....core.redaction.rules import (
     redact_for_log,
     redact_structured,
 )
-from ..cache import _CACHE_NAMESPACE, _CACHE_SENSITIVITY, _CACHE_VERSION, LLMCache
+from ....persistence.llm.cache import _CACHE_NAMESPACE, _CACHE_SENSITIVITY, _CACHE_VERSION, LLMCache
 from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

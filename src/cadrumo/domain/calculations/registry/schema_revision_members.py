@@ -89,7 +89,7 @@ class ConstructDefinition(RegistryModel):
     """Declare one legally grounded construct and the revision members it joins."""
 
     id: ConstructId
-    localization_key: str = Field(min_length=1, exclude=True, repr=False)
+    localization_keys: tuple[str, ...] = Field(min_length=1, exclude=True, repr=False)
     legal_refs: LegalRefs
     source_refs: SourceRefs
     casilla_ids: tuple[CasillaId, ...] = ()
@@ -108,7 +108,7 @@ class ConstructDefinition(RegistryModel):
 
     def get_title(self, locale: str) -> str:
         """Resolve the construct title from the shared catalogue."""
-        return require_modelo_localization((self.localization_key,), locale=locale)
+        return require_modelo_localization(self.localization_keys, locale=locale)
 
     @property
     def title(self) -> str:

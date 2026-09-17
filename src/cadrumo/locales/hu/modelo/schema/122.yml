@@ -1,6 +1,11 @@
 modelo:
   schema:
     '122':
+      construct:
+        modelo-122-regularizacion:
+          field:
+            title: '122-es modelo: a nagycsaládosok/fogyatékossággal élők utáni adókedvezmény
+              korrekciója'
       field:
         official_name: Modelo 122. A magánszemélyek jövedelemadója. Nagycsaládos vagy
           eltartott fogyatékos személy után járó kedvezmények. A kedvezményre való
@@ -113,9 +118,5 @@ modelo:
                 szereplő [574]/[575] házastársi párt; ezért ezt a rovatot az adózó
                 adja meg, nem számítjuk.
               label: A korrekció eredményeként fizetendő összeg
-          construct:
-            modelo-122-regularizacion:
-              field:
-                title: Modelo 122 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 122-es modelo (HFP/105/2017 rendelet), 2017. adóévtől

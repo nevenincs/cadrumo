@@ -14,6 +14,9 @@ See Also:
     :class:`CasillaObservationPayload`:
         JSON payload row carrying the legal/source references emitted by the
         maritime resolver.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
 """
 
 from __future__ import annotations

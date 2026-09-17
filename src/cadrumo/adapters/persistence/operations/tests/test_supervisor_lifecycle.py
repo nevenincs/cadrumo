@@ -47,6 +47,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -461,7 +462,7 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
             resource = executor.resource
             assert resource is not None
 
-            with pytest.raises(RuntimeError, match="cleanup"):
+            with pytest.raises(AsyncResourceCleanupError):
                 await supervisor.settle(operation_id, _receipt(running, case, settled_at=_NOW))
 
             persisted = await supervisor.inspect(operation_id)

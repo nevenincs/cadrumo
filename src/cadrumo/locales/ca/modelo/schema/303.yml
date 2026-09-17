@@ -818,6 +818,10 @@ modelo:
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Casella— exercici fiscal
+            x-chim6r1ee1in4qbfchng:
+              label: Casella— període de liquidació
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'
@@ -838,6 +842,10 @@ modelo:
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Casella— exercici fiscal
+            x-chim6r1ee1in4qbfchng:
+              label: Casella— període de liquidació
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'
@@ -858,13 +866,17 @@ modelo:
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Casella— exercici fiscal
+            x-chim6r1ee1in4qbfchng:
+              label: Casella— període de liquidació
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'
               label: 'Casella 69 — informació fiscal Referències: [66], [77], [68],
                 [78].'
           field:
-            label: Casella— informació fiscal
+            label: Model 303, exercici 2024, fins als períodes 08 i 2T
         '2025':
           casilla:
             '64':
@@ -878,6 +890,10 @@ modelo:
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Casella— exercici fiscal
+            x-chim6r1ee1in4qbfchng:
+              label: Casella— període de liquidació
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'

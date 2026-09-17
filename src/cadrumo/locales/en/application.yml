@@ -193,6 +193,7 @@ application:
         local_recurrence_modelo_303_only: Local IVA compensation recurrence is reconstructed
           only for Modelo 303; modelo {modelo} was supplied.
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
+        persistence: IVA compensation history storage failed during %{operation} (%{cause_type}).
         repository_backend_split: The Modelo 303 observation store and the IVA compensation
           history store must share one encrypted backend so both writes settle together.
         seed_conflict: An IVA compensation state already exists for this period; seeding
@@ -221,21 +222,28 @@ application:
         carry_operands_disagree_with_formula: The carry operands {derivation_operands}
           disagree with the registry formula operands {registry_operands}. Only a
           registry correction can resolve this; there is no safe automatic recovery.
-        declaration_type_code_invalid: The declaration type source header at {source_locator}
-          carries {value}, which is not a result disposition code.
-        declaration_type_code_not_admitted: The declaration type source header at
-          {source_locator} carries {value}, a code the Modelo 303 diseño de registros
-          does not admit.
-        disposition_resultado_sign_incompatible: The declared disposition {disposition}
+        casilla_id_invalid: The registry declares an invalid casilla for the Modelo
+          303 carry mapping key {mapping_key}.
+        disposition_code_not_admitted: The result disposition code {code} is not admitted
+          for the Modelo 303 carry.
+        disposition_code_undeclared: The registry declares no code for the result
+          disposition {disposition}.
+        disposition_result_sign_incompatible: The declared disposition {disposition}
           could not have been selected for a filed resultado of {resultado}. Only
           the taxpayer can decide which one is correct; there is no safe automatic
           recovery.
-        duplicate_declaration_type_headers: Modelo 303 carry evidence carries {header_count}
-          {header_key} source headers; exactly one is required.
+        duplicate_header_facts: Modelo 303 carry evidence carries {header_count} {header_key}
+          source headers; exactly one is required.
         envelope_not_normalized: Modelo 303 carry history requires an already normalised
           disposition-aware available and generated pair. Re-ingest the filed observation.
+        formula_mapping_required: Revision {revision_id} declares no Modelo 303 carry
+          mapping, so the available compensation cannot cite its formula.
         generated_compensation_amount_missing: The validated Modelo 303 carry envelope
           carries no generated compensation amount in casilla {casilla_id}.
+        header_code_invalid: The declaration type source header at {source_locator}
+          carries {value}, which is not a result disposition code.
+        header_code_not_admitted: The declaration type source header at {source_locator}
+          carries {value}, a code the Modelo 303 diseño de registros does not admit.
         incomplete_supported_operands: 'Modelo 303 carry normalisation cannot derive
           the available compensation from the casillas present: {casilla_ids}.'
         invalid_registry_observation: Modelo 303 carry ingress requires a registry
@@ -249,21 +257,26 @@ application:
           {source_kind} evidence carries none.
         local_filing_provenance_required: A local Modelo 303 filing disposition must
           retain its app_filing provenance; it carries {provenance_kind}.
-        non_m303_envelope: Modelo 303 carry history accepts only Modelo 303 observations;
-          modelo {modelo} was supplied.
-        official_declaration_type_header_required: Official Modelo 303 carry evidence
-          must carry exactly one {header_key} source header; the {source_kind} evidence
-          carries none.
+        non_target_modelo_envelope: Modelo 303 carry history accepts only Modelo 303
+          observations; modelo {modelo} was supplied.
         official_disposition_header_disagreement: The typed result disposition {typed_disposition}
           disagrees with the AEAT declaration type header {header_disposition}. Only
           the taxpayer can decide which one was filed; there is no safe automatic
           recovery.
-        resultado_casilla_required: Modelo 303 carry normalisation requires the filed
+        official_header_required: Official Modelo 303 carry evidence must carry exactly
+          one {header_key} source header; the {source_kind} evidence carries none.
+        registry_resolution_unavailable: The registry could not resolve the Modelo
+          {modelo} carry mapping for tax year {filing_year}, period {period}.
+        registry_scope_invalid: The Modelo 303 carry needs a modelo and a period;
+          it received modelo {modelo}, tax year {filing_year}, period {period}.
+        result_casilla_required: Modelo 303 carry normalisation requires the filed
           resultado casilla {casilla_id}, which the observation does not carry.
         supplied_available_contradicts_derivation: The supplied available compensation
           {supplied_available} contradicts the {basis} derivation {derived_available}.
           Only the taxpayer can decide which figure was filed; there is no safe automatic
           recovery.
+        supplied_disposition_not_admitted: The supplied result disposition {disposition}
+          is not admitted for the Modelo 303 carry.
         supplied_pair_contradicts_derivation: The supplied available and generated
           pair {supplied_available} and {supplied_generated} contradicts the {basis}
           derivation {derived_generated}. Only the taxpayer can decide which figures
@@ -345,9 +358,8 @@ application:
         text_casilla_invalid: The casilla text value does not match its declared registry
           data type.
         text_casilla_not_string: The casilla text input must be a text value.
-        unsupported_filing_year: Filing year {filing_year} is not declared supported.
-          The registry declares {supported_filing_years}. Admit the year in {declaration}
-          after grounding its prerequisites.
+    errors:
+      persistence: Filing history storage failed during %{operation} (%{adapter_error}).
     export:
       errors:
         draft_not_approved: Export requires an approved draft.
@@ -430,14 +442,10 @@ application:
           modelo ids.
         filing_year_period_mismatch: 'Internal error: filing year {filing_year} does
           not match the supplied period {period}.'
-        filing_year_period_pair: filing_year and period must be supplied together.
         modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
           registry.
-        modelo_revision_missing: Modelo %{modelo} has no revisions.
         period_type: 'Internal error: the runtime schema provider requires a Period
           object; received {period_type}.'
-        provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
-          year.
         registry_empty: The registry root %{registry_root_name} has no modelo definitions.
         registry_empty_for_period: The registry root has no modelo definitions for
           year %{filing_year} period %{period}.
@@ -1045,6 +1053,13 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
+      art20_reduccion_possible: Casilla %{rnt_id}'s %{rnt_value} EUR of rendimiento
+        neto del trabajo is within the Art. 20 LIRPF ceiling, so casilla %{reduccion_id}
+        may be eligible for a reduction it currently declares as zero.
+      art52_reduccion_individual_sublimit_possible: Casilla %{reduccion_id} declares
+        %{reduccion_value} EUR of previsión social reduction above the %{sublimit}
+        EUR Art. 52 LIRPF individual sub-limit, with no employer-contribution breakdown
+        declared; confirm the individual sub-limit was applied.
       attribution_received_uncaptured: Casilla %{casilla_id} for %{filing_year} carries
         %{casilla_value} EUR of attributed income that is not captured.
       attribution_received_unfolded: Attributed income for %{filing_year} totalling
@@ -1074,6 +1089,11 @@ application:
         %{target_period}.
       cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
         %{iva_category_code} has no declarable base.
+      dt12a_reduccion_antiquity_possible: Casilla %{reduccion_id} declares %{reduccion_value}
+        EUR of DT 12ª reduction; confirm the antiquity condition it requires is met.
+      dt12a_reduccion_possible: Casilla %{ingreso_id} declares %{ingreso_value} EUR
+        of trabajo income above the DT 12ª threshold, so casilla %{reduccion_id} may
+        qualify for a reduction it currently declares as zero.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: foreign
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
@@ -1088,6 +1108,9 @@ application:
         may be subject to a limitation-on-benefits clause (%{document_id}).
       m210_rate_unavailable: No Modelo 210 rate could be resolved for tipo de renta
         %{tipo_renta_code} in %{filing_year} (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: Modelo 303 intra-community total
+        %{m303_total} EUR and Modelo 349 total %{m349_total} EUR diverge by %{gap}
+        EUR for period %{period_code} %{filing_year}.
       madrid_nacimiento_adopcion_eligibility_advisory: Casilla %{casilla_id} with
         weighted count %{weighted_count} may qualify for the Madrid birth or adoption
         deduction.

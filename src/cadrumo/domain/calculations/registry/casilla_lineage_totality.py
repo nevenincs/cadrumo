@@ -116,7 +116,11 @@ class LineageTotalityReport:
 
 
 def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, ...]:
-    """Return the successor-edition rows that neither carry lineage nor declare a none."""
+    """Return the successor-edition rows that neither carry lineage nor declare a none.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+    """
     unresolved: list[CasillaRowKey] = []
     ordered = ordered_revisions(modelo)
     for index, revision in enumerate(ordered):
@@ -140,7 +144,11 @@ def lineage_totality(
     modelos: Iterable[ModeloDefinition],
     exceptions: Collection[CasillaRowKey],
 ) -> LineageTotalityReport:
-    """Judge ``modelos`` for lineage totality against a per-row exception set."""
+    """Judge ``modelos`` for lineage totality against a per-row exception set.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+    """
     unresolved = {key for modelo in modelos for key in unresolved_successor_rows(modelo)}
     excepted = frozenset(exceptions)
     return LineageTotalityReport(
@@ -182,6 +190,10 @@ def judging_predecessor(
     sense and pairing them would invent a lineage relationship the corpus never
     declared. Only a closed earlier edition -- one whose validity ends before
     this edition begins -- can be the edition these rows continue from.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     revision = ordered[index]
     match revision.predecessor:

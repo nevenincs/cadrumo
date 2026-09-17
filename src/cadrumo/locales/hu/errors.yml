@@ -622,8 +622,6 @@ errors:
       kötege legalább 1 kell legyen; kapott érték: %{batch_size}.'
     integrity_storage_secure_object_hashed_key_length: 'A biztonságos objektum hash-elt
       kulcsa érvénytelen hosszú: %{length} bájt.'
-    integrity_storage_secure_object_raw_bytes: 'A biztonságos objektum nyers bájt-metaadatai
-      nem támogatott típusúak: %{value_type}.'
     integrity_storage_secure_object_revision_ancestry_json: Egy tárolt biztonságos
       objektum revíziós ősmezője nem érvényes JSON.
     integrity_storage_secure_object_revision_ancestry_shape: Egy tárolt biztonságos
@@ -675,9 +673,6 @@ errors:
       automatikusan lezárul; az okot a diagnosztikai naplókban találja.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
       megjeleníteni.'
-    internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
-      nincs regisztrálva az alkalmazás indításakor.'
-    internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
     internal_wipe_type: 'Belső hiba: a törlési művelet olyan értéket kapott, amelyet
       nem tud felülírni.'
     internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási

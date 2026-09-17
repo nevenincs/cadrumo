@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operations import OperationCancellation, OperationDurability, OperationEffect
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ....entrypoints.adapter_composition import (
@@ -69,7 +70,8 @@ _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _test_profile_resolver() -> TaxpayerProfile:
+def _test_profile_resolver(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
+    del operation
     return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
 

@@ -1,4 +1,8 @@
-"""Encrypted persistence adapter for application sync-run provenance records."""
+"""Encrypted persistence adapter for application sync-run provenance records.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

@@ -277,6 +277,9 @@ def calendar_applicability_profile_keys_for_modelo(
     The result combines registry applicability rules, IVA-regime coverage, and
     corporate censo axes so calendar provenance warnings use the same profile
     facts that determine legal obligation rows.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     keys: set[str] = set()
     estimation_profile_keys = _estimation_regime_profile_key(operation)

@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -63,8 +64,8 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 
 def _workflow_database_path(storage_root: Path, bucket_id: str) -> Path:
-    """Return the test database location without importing the persistence adapter."""
-    return storage_root / "buckets" / bucket_id / "db" / "workflow.sqlite3"
+    """Return the bucket database the workflow state is committed to."""
+    return bucket_paths(storage_root, bucket_id).database_file
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]

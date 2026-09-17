@@ -57,7 +57,7 @@ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
 
 def compose_diagnostics_run_health_port() -> DiagnosticRunTelemetryPort:
     """Bind the diagnostic read port to encrypted local run telemetry."""
-    from ..adapters.outbound.llm.run_telemetry import (
+    from ..adapters.persistence.llm.run_telemetry import (
         LLMRunTelemetryDiagnosticsAdapter,
         LLMRunTelemetryRecorder,
     )

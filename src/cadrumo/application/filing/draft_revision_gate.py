@@ -17,7 +17,11 @@ def require_modelo_draft_coordinates_current(
     *,
     operation: PinnedAuthorityOperation,
 ) -> ModeloDraft:
-    """Return a persisted draft only when its producing registry coordinate is current."""
+    """Return a persisted draft only when its producing registry coordinate is current.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     outcome = revision_carry_outcome(draft.snapshot_ref, operation=operation)
     if outcome.refused:
         raise ModeloDraftError(

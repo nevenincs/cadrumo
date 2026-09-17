@@ -46,7 +46,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CREDENTIAL_INPUT = "censal-reviewed-apply-passphrase"
 _NOW = datetime(2026, 8, 24, 16, tzinfo=UTC)

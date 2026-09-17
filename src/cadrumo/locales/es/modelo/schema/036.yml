@@ -1314,6 +1314,10 @@ modelo:
             label: NIF del sucesor o beneficiario (sucesor 13e)
           suc-f-nif:
             label: NIF del sucesor o beneficiario (sucesor 13f)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: 'Modelo 036: datos censales de base'
       field:
         official_name: Modelo 036. Declaración censal de alta, modificación y baja
           en el Censo de empresarios, profesionales y retenedores.
@@ -1384,6 +1388,8 @@ modelo:
             x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
               label: Porcentaje de liquidacion, participacion o herencia del sucesor
                 o beneficiario (sucesor 13f)
+          field:
+            label: Modelo 036, desde 2023 hasta el 2 de febrero de 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
@@ -1830,9 +1836,5 @@ modelo:
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
               label: Titulares reales. Entidad sin obligacion de identificar al titular
                 real
-          construct:
-            modelo-036-censo-foundation:
-              field:
-                title: Modelo 036 censo foundation
           field:
             label: Modelo 036 desde 3 de febrero de 2025

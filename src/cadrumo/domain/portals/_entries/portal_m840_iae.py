@@ -1,4 +1,10 @@
-"""Portal metadata entry."""
+"""Portal metadata entry.
+
+Core types:
+:class:`~cadrumo.domain.portals.codes.Portal`,
+:class:`~cadrumo.domain.portals.categories.PortalCategory`,
+:class:`~cadrumo.domain.portals.metadata.PortalMetadata`.
+"""
 
 from __future__ import annotations
 

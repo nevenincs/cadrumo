@@ -25,14 +25,14 @@ import pytest
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
 from .....core.config_support import LLMProvider
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.usage import UsageRecorder
 from ..models import (
     CachedEntry,
     LLMRequest,
     LLMResponse,
     UsageRecord,
 )
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 

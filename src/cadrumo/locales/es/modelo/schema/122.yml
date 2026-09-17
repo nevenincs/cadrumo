@@ -1,6 +1,11 @@
 modelo:
   schema:
     '122':
+      construct:
+        modelo-122-regularizacion:
+          field:
+            title: Modelo 122 regularización de la deducción por familia numerosa
+              / discapacidad
       field:
         official_name: Modelo 122. Impuesto sobre la Renta de las Personas Físicas.
           Deducciones por familia numerosa o por personas con discapacidad a cargo.
@@ -112,10 +117,5 @@ modelo:
                 el par de cónyuge [574]/[575] declarado en el mismo registro; por
                 eso esta casilla se toma del contribuyente y no se calcula.
               label: Resultado de la regularización a ingresar
-          construct:
-            modelo-122-regularizacion:
-              field:
-                title: Modelo 122 regularización de la deducción por familia numerosa
-                  / discapacidad
           field:
             label: Modelo 122 (orden-hfp-105-2017), ejercicios 2017 y siguientes

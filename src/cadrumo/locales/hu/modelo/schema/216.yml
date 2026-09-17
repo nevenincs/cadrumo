@@ -1,6 +1,10 @@
 modelo:
   schema:
     '216':
+      construct:
+        modelo-216-calculation-construct:
+          field:
+            title: '216-os modelo: az IRNR forrásadójának számítása'
       field:
         official_name: Modelo 216. A külföldi illetőségűek jövedelemadója. Állandó
           telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.
@@ -73,9 +77,5 @@ modelo:
             '21':
               help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
-          construct:
-            modelo-216-calculation-construct:
-              field:
-                title: Modelo 216 calculation construct
           field:
-            label: Casilla— adóügyi információ
+            label: HAC/56/2024 rendelet, 2024. adóévtől

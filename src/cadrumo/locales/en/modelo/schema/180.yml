@@ -115,22 +115,18 @@ modelo:
           total-perceptores-count:
             help: Tax information for casilla 136-144 of Modelo 180.
             label: Total number of recipients
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: Annual summary of Modelo 180 from the quarterly Modelo 115 filings
       field:
         official_name: Modelo 180. Informative return. Withholdings and payments on
           account. Income arising from the letting of urban property. Annual summary.
         title: Annual summary of withholdings on urban property letting
       revision:
         2019-2022:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Modelo 180 annual summary based on quarterly Modelo 115 filings
           field:
-            label: Casilla— tax information
+            label: Order HAP/1732/2014, tax years 2019 to 2022
         2023-y-siguientes:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Modelo 180 annual summary based on quarterly Modelo 115 filings
           field:
-            label: Casilla— tax information
+            label: Order HAP/1732/2014 as updated by Order HFP/1284/2023

@@ -165,6 +165,9 @@ def resolve_simplificada_tax_id_advisory(
         The advisory state. Only :attr:`SimplificadaTaxIdAdvisory.REQUIRED` is
         something to tell the operator; :attr:`SimplificadaTaxIdAdvisory.ISSUER_UNKNOWN`
         says the rule did not run, which is not the same as it passing.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if invoice.counterparty_tax_id is not None:
         return SimplificadaTaxIdAdvisory.ALREADY_IDENTIFIED

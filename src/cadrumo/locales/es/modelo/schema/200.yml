@@ -10015,6 +10015,11 @@ modelo:
           unused-operating-profit-2020-remaining:
             label: Pendiente adición por límite beneficio operativo no aplicado -
               Ejercicio generación 2020 - Pendiente aplicación períodos futuros [02260]
+      construct:
+        modelo-200-foundation:
+          field:
+            title: 'Modelo 200: liquidación anual del Impuesto sobre Sociedades (2024
+              y siguientes) - cadena de deducciones de pagos fraccionados'
       field:
         official_name: Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes
           (establecimientos permanentes y entidades en régimen de atribución de rentas
@@ -12101,11 +12106,6 @@ modelo:
                 con presencia en territ. español (art. 38 TRLIRNR) - Disminución -
                 Correcciones del ejercicio - Temporarias (con origen en ejercicios
                 anteriores) [03368]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 y siguientes)
-                  - pagos fraccionados deduction chain
           field:
             label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
         2025-y-siguientes:
@@ -14878,10 +14878,5 @@ modelo:
             x-8h834c1g60oj2ehg60r34d8:
               label: Estado de cambios patrimonio neto (III) - Otras variaciones del
                 patrimonio neto - Resultado del ejercicio [00625]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 y siguientes)
-                  - pagos fraccionados deduction chain
           field:
             label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)

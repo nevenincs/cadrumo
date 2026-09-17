@@ -134,22 +134,18 @@ modelo:
               de tipus 2. Si un mateix perceptor figura en diversos registres, es
               computa tantes vegades com hi figuri.
             label: Nombre total de registres de perceptor declarats
+      construct:
+        modelo-270-informative:
+          field:
+            title: Modelo 270 declaració informativa
       field:
         official_name: Modelo 270. Resum anual de retencions i ingressos a compte.
           Gravamen especial sobre els premis de determinades loteries i apostes.
         title: Resum anual de retencions del gravamen especial sobre premis de loteries
       revision:
         2013-2022:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 270 (Ordre HAP/2368/2013), exercicis 2013 a 2022
         2023-y-siguientes:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 270 (Ordre HAP/2368/2013), exercicis 2023 a 2024

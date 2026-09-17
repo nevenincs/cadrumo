@@ -204,7 +204,11 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
     ) -> tuple[FiledObservationProtocol, ...]:
-        """Capture registry-selected source rows in one authenticated browser."""
+        """Capture registry-selected source rows in one authenticated browser.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+        """
         with bundled_indexed_authority().operation() as indexed_operation:
             session, settings = await _call_adapter(
                 "filed_register_session",

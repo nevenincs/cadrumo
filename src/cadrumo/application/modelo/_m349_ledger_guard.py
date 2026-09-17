@@ -89,7 +89,11 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> None:
-    """Refuse M349 calculation when raw ledger rows lack declarable operator rows."""
+    """Refuse M349 calculation when raw ledger rows lack declarable operator rows.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     if any(isinstance(row, Modelo349OperadorRow) for row in detail_rows):
         return
     categories = _guarded_ledger_categories(revision)

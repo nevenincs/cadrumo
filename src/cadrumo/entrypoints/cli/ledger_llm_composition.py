@@ -13,9 +13,9 @@ from ...adapters.inbound.einvoice.shape import probe_document_shape
 from ...adapters.outbound.llm.errors import LLMCacheError, LLMProviderError
 from ...adapters.outbound.llm.models import MultimodalImageInput
 from ...adapters.outbound.llm.providers.local import rasterise_pdf_pages_to_base64_png
-from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ...adapters.outbound.llm.text_classifier import LocalTextLLMClassifier
 from ...adapters.outbound.llm.vision_classifier import LocalVisionLLMClassifier
+from ...adapters.persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket

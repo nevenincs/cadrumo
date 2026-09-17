@@ -9,43 +9,27 @@ modelo:
           filing-year:
             help: Tax information for casilla of Modelo 763.
             label: Filing year to which the self-assessment relates
+      construct:
+        modelo-763-autoliquidacion:
+          field:
+            title: 'Modelo 763: self-assessment of the Tax on Gambling Activities'
       field:
         official_name: Modelo 763. Gambling Activities Tax for annual or multi-year
           activities. Self-assessment.
         title: Gambling Activities Tax - self-assessment (annual/multi-year)
       revision:
         2012-2014:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 763, tax years 2012 (Q2 to Q4), 2013 and 2014
         2015-2017:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 763, tax years 2015 to 2017
         2018-1t-3t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 763, tax year 2018 (Q1 to Q3)
         2018-4t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 763, tax year 2018 (Q4)
         2019-y-siguientes:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 763, tax years 2019 onwards

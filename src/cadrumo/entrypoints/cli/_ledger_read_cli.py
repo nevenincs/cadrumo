@@ -64,7 +64,11 @@ def resolve_ledger_transaction_id(
     transaction_repository: TransactionCatalogueRepository,
     prefix: str,
 ) -> str:
-    """Resolve a read-side transaction id while following stable edit lineage."""
+    """Resolve a read-side transaction id while following stable edit lineage.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+    """
     from ...application.cli_exception_preconditions import CliExceptionPrecondition
     from ...application.ledger.id_resolution import resolve_lineage_transaction_id
     from ...domain.transactions.errors import TransactionIdPrefixError

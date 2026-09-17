@@ -1,6 +1,10 @@
 modelo:
   schema:
     '111':
+      construct:
+        modelo-111-withholding-workflow:
+          field:
+            title: 'Modelo 111: withholdings and payments on account'
       field:
         official_name: Personal Income Tax withholdings and payments on account. Employment
           and business income, prizes and certain capital gains and income attributions.
@@ -116,9 +120,5 @@ modelo:
             '30':
               help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
-          construct:
-            modelo-111-withholding-workflow:
-              field:
-                title: Modelo 111 — tax information
           field:
-            label: Casilla— tax information
+            label: Order EHA/586/2011, tax years 2019 onwards

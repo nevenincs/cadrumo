@@ -1079,6 +1079,10 @@ modelo:
               490 References: [105].'
             label: Taxation by territory. Bizkaia. % for the period being adjusted.
               Q4 [105]
+      construct:
+        modelo-490-autoliquidacion:
+          field:
+            title: Modelo 490 tax on certain digital services, self-assessment
       field:
         official_name: Modelo 490. Tax on Certain Digital Services. Self-assessment.
         title: Tax on Certain Digital Services - self-assessment
@@ -1544,20 +1548,12 @@ modelo:
                 [18]'
             x-chim6r1ee1in4qbfchng:
               label: Quarterly period (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 tax on certain digital services, self-assessment
           field:
             label: Modelo 490, tax year 2021
         2022-1t:
           casilla:
             x-chim6r1ee1in4qbfchng:
               label: Quarterly period (1T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 tax on certain digital services, self-assessment
           field:
             label: Modelo 490, tax year 2022, period 1T
         2022-2t-4t:
@@ -2021,10 +2017,6 @@ modelo:
               label: Assessment result [26]
             x-chim6r1ee1in4qbfchng:
               label: Quarterly period (2T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 tax on certain digital services, self-assessment
           field:
             label: Modelo 490, tax year 2022, periods 2T to 4T
         2023-y-siguientes:
@@ -2652,9 +2644,5 @@ modelo:
                 Q3 [86]
             x-chim6r1ee1in4qbfchng:
               label: Quarterly period (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 tax on certain digital services, self-assessment
           field:
             label: Modelo 490, tax years 2023 onwards

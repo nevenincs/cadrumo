@@ -15,6 +15,9 @@ aggregation:
         o una observación o defectos, nunca ambos ni ninguno.
   irnr_income_ledger:
     diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} queda
+        fuera del ámbito de fuente que declara la revisión seleccionada del Modelo
+        210; el art. 13 del TRLIRNR solo admite rentas obtenidas en territorio español.
       incomplete_m210_classification: La operación entrante de fuente española no
         tiene una clasificación expresa de renta del Modelo 210; la proyección del
         IRNR nunca infiere un código oficial de tipo de renta desde irpf_category.
@@ -24,6 +27,17 @@ aggregation:
       tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
         del Modelo 210 no está declarado para la revisión y el período de presentación
         %{period} seleccionados.
+    errors:
+      income_type_codes_missing: La revisión seleccionada del Modelo 210 no declara
+        ningún código de tipo de renta válido para este periodo de presentación.
+      income_type_namespace_missing: La revisión seleccionada del Modelo 210 no declara
+        exactamente un espacio de códigos de tipo de renta con clave.
+      registry_revision_mismatch: La revisión del Modelo 210 inyectada no coincide
+        con la revisión que la autoridad fijada selecciona para este modelo, ejercicio
+        y periodo.
+      source_scope_missing: La revisión seleccionada del Modelo 210 no declara un
+        único ámbito de jurisdicción de la fuente para esta casilla de rendimientos
+        íntegros.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -38,10 +52,6 @@ aggregation:
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
-      injected_repositories_missing_bienes_inversion_authority: Los repositorios de
-        IVA inyectados requieren una autoridad explícita de bienes de inversión.
-      input_facts_missing_deduction_authority: Los hechos de IVA soportado requieren
-        una autoridad de deducción exacta.
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.
@@ -53,8 +63,6 @@ aggregation:
       missing_counterparty_identification_state: Una operación intracomunitaria requiere
         el Estado miembro en el que la contraparte está identificada a efectos del
         IVA.
-      output_facts_carry_deduction_authority: Los hechos de IVA repercutido no pueden
-        portar autoridad de deducción.
       rectification_consumed_more_than_once: Un hecho de IVA ya corregido solo puede
         rectificarse una vez.
       sectorized_apportionment_duplicate_sectors: El reparto sectorizado de IVA declara
@@ -67,8 +75,6 @@ aggregation:
         aporta identidad de sector explícita.
       sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
         sector desconocido.
-      unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
-        agregación.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registro de prorrata
@@ -175,10 +181,7 @@ aggregation:
         coincide con la esperada.
       observations_mismatch: Las observaciones devueltas no coinciden con las esperadas.
       per_modelo_modelos_not_unique: Los modelos por modelo no son únicos.
-      per_modelo_providers_not_unique: Los proveedores por modelo no son únicos.
-      provider_modelos_not_unique: Los modelos del proveedor no son únicos.
       result_source_kinds_not_unique: Los tipos de fuente del resultado no son únicos.
-      source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
       annual_summary_handoff_duplicate: Más de un resolutor proporcionó el traspaso
@@ -466,9 +469,6 @@ core:
     errors:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
-      registration_duplicate_callable: La implementación de respuestas de proyecto
-        se registró dos veces con distintos invocables; debe registrarse exactamente
-        una vez.
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente

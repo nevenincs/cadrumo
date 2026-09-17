@@ -184,6 +184,9 @@ def published_layout_source_payloads(
         RegistryValidationError: The layout cites a source the snapshot does not
             catalogue, or an XML dictionary layout has no embedded dictionary.
         LookupError: The generation lacks bytes for a source the contract embeds.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     layout = resolve_export_layout(snapshot).layout
     source_ids = layout_embedded_source_ids((layout,), sources=snapshot.sources)
@@ -304,6 +307,9 @@ def observed_header_facts_from_submitted_file(
     casillas down with it. A registry that cannot resolve the layout or its
     source bytes is a different failure and raises, so it never reads as a
     fichero without headers.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     resolved = resolve_export_layout(snapshot)
     source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
@@ -350,7 +356,11 @@ def observed_casillas_from_submitted_file(
     artefact: FiledDeclaracionArtefact,
     operation: PinnedAuthorityOperation,
 ) -> tuple[ObservedCasillaValue, ...]:
-    """Read the casilla values a submitted fichero actually carries."""
+    """Read the casilla values a submitted fichero actually carries.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     try:
         resolved = resolve_export_layout(snapshot)
         parsed = parse_export_payload(

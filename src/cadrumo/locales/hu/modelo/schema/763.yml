@@ -9,43 +9,27 @@ modelo:
           filing-year:
             help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
             label: Az önadózás vonatkozási éve
+      construct:
+        modelo-763-autoliquidacion:
+          field:
+            title: '763-as modelo: a szerencsejáték-tevékenységek adójának önadózása'
       field:
         official_name: Modelo 763. Szerencsejáték-tevékenységek adója éves vagy többéves
           tevékenységek esetén. Önbevallás.
         title: Szerencsejáték-tevékenységek adója - önbevallás (éves/többéves)
       revision:
         2012-2014:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
           field:
             label: Modelo 763, adóév 2012 (2.º és 3.º trimestre)
         2015-2017:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 763-as modelo, 2015-2017. adóévek
         2018-1t-3t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
           field:
             label: Modelo 763, adóév 2018 (1.º a 3.º trimestre)
         2018-4t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
           field:
             label: Modelo 763, adóév 2018 (4.º trimestre)
         2019-y-siguientes:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 763-as modelo, 2019. adóévtől

@@ -1,6 +1,10 @@
 modelo:
   schema:
     '840':
+      construct:
+        modelo-840-iae-declaration:
+          field:
+            title: 'Modelo 840: declaración censal del IAE (alta, variación, baja)'
       field:
         official_name: Modelo 840. Declaración del Impuesto sobre Actividades Económicas
           (alta, variación, baja).
@@ -267,9 +271,5 @@ modelo:
               label: NIF del sujeto pasivo
             x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
               label: Teléfono de contacto del sujeto pasivo, prefijo incluido
-          construct:
-            modelo-840-iae-declaration:
-              field:
-                title: Modelo 840 IAE censal declaration (alta, variacion, baja)
           field:
             label: Modelo 840 ejercicios 2003 y siguientes (Orden HAC/2572/2003)

@@ -1,6 +1,10 @@
 modelo:
   schema:
     '115':
+      construct:
+        modelo-115-quarterly-rental-withholding:
+          field:
+            title: 'Modelo 115: quarterly withholdings on urban property rentals'
       field:
         official_name: Withholdings and payments on account. Income arising from the
           letting or subletting of urban property.
@@ -25,9 +29,6 @@ modelo:
             '05':
               help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
-          construct:
-            modelo-115-quarterly-rental-withholding:
-              field:
-                title: Modelo 115 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 115 in force (Order of 20 November 2000, BOE-A-2000-21430),
+              tax years 2019 onwards

@@ -99,7 +99,11 @@ def build_m303_filing_projection_plan(
     layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    """Project every M303 repeated-row family from one selected snapshot and layout."""
+    """Project every M303 repeated-row family from one selected snapshot and layout.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     _validate_m303_projection_request(
         registry_snapshot=registry_snapshot,
         layout=layout,
@@ -205,7 +209,11 @@ def project_filing_record(
     refs: tuple[FilingProjectionRef, ...],
     producer_snapshot: FilingProducerSnapshot,
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
-    """Project one filing record into render contexts and typed field values."""
+    """Project one filing record into render contexts and typed field values.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     facts = _require_m303_projection_facts(producer_snapshot)
     ref_types = {type(ref) for ref in refs}
     if ref_types == {M303ProrrataActivityProjectionRef, M303DifferentiatedDeductionProjectionRef}:

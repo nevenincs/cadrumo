@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -759,7 +760,10 @@ def _child_main(payload: Mapping[str, Any]) -> int:
             return
         module = str(frame.f_globals.get("__name__", ""))
         name = str(frame.f_code.co_name)
-        if module.startswith(_STORAGE_MODULE_PREFIX) and name != "<module>":
+        # A class statement executes its body as a frame named after the class,
+        # so an import would otherwise read as a call to the class.
+        is_class_body = not frame.f_code.co_flags & inspect.CO_NEWLOCALS
+        if module.startswith(_STORAGE_MODULE_PREFIX) and name != "<module>" and not is_class_body:
             storage_operations[f"{module}:{frame.f_code.co_qualname}"] += 1
 
     sys.addaudithook(audit)

@@ -144,6 +144,10 @@ modelo:
             help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
               bevallott adat.
             label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
+      construct:
+        modelo-347-informative:
+          field:
+            title: 347-es modelo, harmadik felekkel folytatott ügyletek éves bevallása
       field:
         official_name: Modelo 347. A harmadik személyekkel folytatott ügyletek éves
           bevallása.
@@ -171,10 +175,6 @@ modelo:
               help: A 347-es modelo ejercicio. rovata, 2008. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 347-es modelo tipo-declaracion. rovata, 2008. adóév.
-          construct:
-            modelo-347-informative:
-              field:
-                title: 347-es modelo, harmadik felekkel folytatott ügyletek éves bevallása
           field:
             label: 347-es modelo, 2008-2024. adóévek
         2025-y-siguientes:
@@ -221,9 +221,5 @@ modelo:
               help: A 347-es modelo ejercicio. rovata, 2025. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 347-es modelo tipo-declaracion. rovata, 2025. adóév.
-          construct:
-            modelo-347-informative:
-              field:
-                title: 347-es modelo, harmadik felekkel folytatott ügyletek éves bevallása
           field:
             label: 347-es modelo, 2025. adóévtől

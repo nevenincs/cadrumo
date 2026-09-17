@@ -164,8 +164,7 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202 registry-backed fractional payment construct (ejercicios
-                  2019-2022)
+                title: 'Modelo 202: pago fraccionado (ejercicios 2019-2022)'
           field:
             label: Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)
         2023-2024:
@@ -183,8 +182,7 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202 registry-backed fractional payment construct (ejercicios
-                  2023-2024)
+                title: 'Modelo 202: pago fraccionado (ejercicios 2023-2024)'
           field:
             label: Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)
         2025-y-siguientes:
@@ -217,6 +215,6 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: Modelo 202 registry-backed fractional payment foundation
+                title: 'Modelo 202: base del pago fraccionado'
           field:
             label: Modelo 202 vigente, ejercicios 2025 y siguientes (DR202e25.xlsx)

@@ -64,6 +64,9 @@ def assemble_row_sets_for_snapshot(
     Returns the existing assembled-observation union once for each supplied
     row-set block.  No source resolution, persisted identity, or provenance is
     constructed here; later source-specific rows own those concerns.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     bindings_by_grouping = _bindings_by_grouping(snapshot)
     grouping_by_binding = {

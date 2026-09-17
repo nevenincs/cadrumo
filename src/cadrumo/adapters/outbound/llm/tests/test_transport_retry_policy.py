@@ -36,7 +36,9 @@ from .....tests.loopback_llm import (
     serving_loopback,
     write_raw_response,
 )
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ..errors import (
     LLMBusyError,
@@ -50,8 +52,6 @@ from ..errors import (
     LLMValidationError,
 )
 from ..models import LLMRequest
-from ..run_telemetry import LLMRunTelemetryRecorder
-from ..usage import UsageRecorder
 from ._arena_fixtures import _fresh_arena
 
 __all__ = ["_fresh_arena"]

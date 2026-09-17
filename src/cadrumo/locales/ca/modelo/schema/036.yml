@@ -1367,6 +1367,10 @@ modelo:
             help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
               (sucesor 13f).'
             label: NIF del successor o beneficiari (successor 13f)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: 'Model 036: dades censals de base'
       field:
         official_name: Modelo 036. Declaració censal d'alta, modificació i baixa en
           el Cens d'empresaris, professionals i retenidors.
@@ -1438,7 +1442,7 @@ modelo:
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13f)
           field:
-            label: null
+            label: Model 036, des de 2023 fins al 2 de febrer de 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
@@ -3659,9 +3663,5 @@ modelo:
                 obligacio d''identificar el titular real.'
               label: Titulars reals. Entitat sense obligacio d'identificar el titular
                 real
-          construct:
-            modelo-036-censo-foundation:
-              field:
-                title: Modelo 036 censo foundation
           field:
-            label: Casella— informació fiscal
+            label: Model 036 des del 3 de febrer de 2025

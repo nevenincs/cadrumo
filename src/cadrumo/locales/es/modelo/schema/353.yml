@@ -36,6 +36,11 @@ modelo:
           iva-resultado-regimen-general:
             label: Resultado del grupo (cuota devengada agregada - cuota deducible
               agregada)
+      construct:
+        modelo-353-iva-grupo-agregado:
+          field:
+            title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidación
+              mensual
       field:
         official_name: Modelo 353. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo agregado. Autoliquidación mensual.
@@ -59,11 +64,6 @@ modelo:
             09:
               label: Cuotas a compensar de periodos previos pendientes para periodos
                 posteriores ([02] - [08])
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidación
-                  mensual
           field:
             label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
         2026-desde-02:
@@ -88,10 +88,5 @@ modelo:
             '10':
               label: Pago a cuenta de entregas de gasolinas, gasóleos y biocarburantes
                 atribuible a la Administración del Estado [10]
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidación
-                  mensual
           field:
             label: Modelo 353 ejercicio 2026 y siguientes (Orden EHA/3434/2007)

@@ -7,48 +7,27 @@ modelo:
             label: Periodo (trimestre natural)
           filing-year:
             label: Ejercicio al que se refiere la autoliquidación
+      construct:
+        modelo-763-autoliquidacion:
+          field:
+            title: Modelo 763 autoliquidación del Impuesto sobre actividades de juego
       field:
         official_name: Modelo 763. Impuesto sobre actividades de juego en los supuestos
           de actividades anuales o plurianuales. Autoliquidación.
         title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
       revision:
         2012-2014:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
           field:
             label: Modelo 763, ejercicios 2012 (2.º a 4.º trimestre), 2013 y 2014
         2015-2017:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
           field:
             label: Modelo 763, ejercicios 2015 a 2017
         2018-1t-3t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
           field:
             label: Modelo 763, ejercicio 2018 (1.º a 3.º trimestre)
         2018-4t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
           field:
             label: Modelo 763, ejercicio 2018 (4.º trimestre)
         2019-y-siguientes:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
-                  juego
           field:
             label: Modelo 763, ejercicios 2019 y siguientes

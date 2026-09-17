@@ -7,6 +7,9 @@ surface in :mod:`cadrumo.application.modelo.work_plazo`.  Post-calculation
 consumers that know resultado or Modelo 210 tipo-renta context call the sibling
 ``resolve_filing_window`` entry point; both paths therefore share the same
 canonical matcher.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

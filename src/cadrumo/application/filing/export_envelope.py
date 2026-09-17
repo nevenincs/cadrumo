@@ -1,4 +1,9 @@
-"""Canonical filing-envelope contracts and declared prefix mechanics."""
+"""Canonical filing-envelope contracts and declared prefix mechanics.
+
+Core types:
+:class:`~cadrumo.domain.filing.schema.ModeloDraft`,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

@@ -1202,7 +1202,11 @@ def modelo_202_modality_for_record(
     work_unit: WorkUnit,
     record: UserProfileRecord | None,
 ) -> Modelo202ModalitySummary | None:
-    """Return the Modelo 202 modality summary for an already-loaded profile record."""
+    """Return the Modelo 202 modality summary for an already-loaded profile record.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     if str(work_unit.modelo) != Modelo("202"):
         return None
 

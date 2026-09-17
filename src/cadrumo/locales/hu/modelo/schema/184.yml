@@ -264,6 +264,10 @@ modelo:
             help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
               részre bontja.
             label: 'Nettó eszközérték / kiigazítások: növelések'
+      construct:
+        modelo-184-informative:
+          field:
+            title: 184-es modelo, jövedelem-hozzárendelési rendszerű szervezetek adatbevallása
       field:
         official_name: Modelo 184. A jövedelem-hozzárendelési rendszerbe tartozó szervezetek
           éves adatszolgáltatási bevallása.
@@ -391,11 +395,6 @@ modelo:
               help: A 184-es modelo 94-95. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: A 184-es modelo 76. rovata, 2023. és 2024. adóévek.
-          construct:
-            modelo-184-informative:
-              field:
-                title: 184-es modelo, jövedelem-hozzárendelési rendszerű szervezetek
-                  adatbevallása
           field:
             label: 184-es modelo, 2023. és 2024. adóévek
         2025-y-siguientes:
@@ -492,10 +491,5 @@ modelo:
               help: A 184-es modelo 94-95. rovata, 2025. adóév.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: A 184-es modelo 76. rovata, 2025. adóév.
-          construct:
-            modelo-184-informative:
-              field:
-                title: 184-es modelo, jövedelem-hozzárendelési rendszerű szervezetek
-                  adatbevallása
           field:
             label: 184-es modelo, 2025. adóévtől

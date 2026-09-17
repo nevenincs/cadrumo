@@ -1,4 +1,8 @@
-"""Private JSON payload rows for config repair quarantine."""
+"""Private JSON payload rows for config repair quarantine.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

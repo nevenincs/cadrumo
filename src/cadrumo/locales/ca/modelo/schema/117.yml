@@ -1,6 +1,10 @@
 modelo:
   schema:
     '117':
+      construct:
+        modelo-117-total-liquidacion-calculation:
+          field:
+            title: Modelo 117 total liquidació / resultat a ingresar
       field:
         official_name: Modelo 117. Retencions i ingressos a compte. Rendes o guanys
           patrimonials obtinguts com a conseqüència de les transmissions o reemborsaments
@@ -59,9 +63,5 @@ modelo:
             '11':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-117-total-liquidacion-calculation:
-              field:
-                title: Modelo 117 total liquidació / resultat a ingresar
           field:
-            label: Casella— informació fiscal
+            label: Ordre EHA/3435/2007, exercicis 2019 i següents

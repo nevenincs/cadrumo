@@ -1,6 +1,10 @@
 modelo:
   schema:
     '117':
+      construct:
+        modelo-117-total-liquidacion-calculation:
+          field:
+            title: Modelo 117 total assessment / result a ingresar
       field:
         official_name: Modelo 117. Withholdings and payments on account. Income or
           capital gains obtained as a result of the transfer or redemption of shares
@@ -57,9 +61,5 @@ modelo:
             '11':
               help: 'Review the casilla information: Result a ingresar.'
               label: Amount payable
-          construct:
-            modelo-117-total-liquidacion-calculation:
-              field:
-                title: Modelo 117 total assessment / result a ingresar
           field:
-            label: Casilla— tax information
+            label: Order EHA/3435/2007, tax years 2019 onwards

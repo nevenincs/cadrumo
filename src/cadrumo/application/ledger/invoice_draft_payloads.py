@@ -3,6 +3,9 @@
 Extraction is an application workflow.  The reviewable draft and its nested
 provenance records therefore belong below the CLI transport; the CLI only
 renders these strict contracts.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

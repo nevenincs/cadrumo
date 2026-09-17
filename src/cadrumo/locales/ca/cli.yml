@@ -1020,6 +1020,10 @@ cli:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
+        no_m130_revisions: No hi ha revisions esborrany trimestrals del Model 130
+          per a l'exercici %{year}.
+        no_m130_units: No hi ha unitats de treball del Model 130 en esborrany per
+          a l'exercici %{year}.
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Model 130).
@@ -3554,16 +3558,6 @@ cli:
         càlcul forfait del règim simplificat encara no està disponible; reviseu les
         caselles del règim simplificat abans de presentar.
     year_help: Any de declaració per a --period (p. ex. 2024).
-  registry:
-    manuals:
-      verify_dangling_rule_section_ref: la regla %{rule_id} referència una secció
-        desconeguda %{target}
-      verify_dangling_section_ref: la secció %{section_id} referència una secció desconeguda
-        %{target}
-      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
-        fetch'' per materialitzar-lo'
-      verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció
-        de %{field_name}'
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:

@@ -8,6 +8,10 @@ modelo:
             label: Devengo. Periodo
           filing-year:
             label: Ejercicio al que se refiere la solicitud
+      construct:
+        modelo-308-iva-solicitud-devolucion:
+          field:
+            title: Modelo 308 IVA solicitud de devolucion
       field:
         official_name: 'Modelo 308. Impuesto sobre el Valor Añadido. Solicitud de
           devolución: Recargo de equivalencia, artículo 30 bis del Reglamento del
@@ -16,26 +20,14 @@ modelo:
           sujetos pasivos ocasionales)
       revision:
         2009-2011-junio:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 IVA solicitud de devolucion
           field:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
         2011-julio-2015:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 IVA solicitud de devolucion
           field:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
         2016-2018:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 IVA solicitud de devolucion
           field:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
@@ -177,10 +169,6 @@ modelo:
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: Casilla 109 del modelo 308, ejercicio 2009.
               label: Tipo de tributación según el sujeto pasivo
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 IVA solicitud de devolucion
           field:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)

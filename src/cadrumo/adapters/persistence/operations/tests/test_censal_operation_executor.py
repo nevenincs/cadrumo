@@ -37,7 +37,6 @@ from cadrumo.application.operations.registry import (
     operation_public_schema_reference,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.censal_observation import (
     CensalObservation,
@@ -65,6 +64,8 @@ from cadrumo.application.user_profile.profile_record_repository import (
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
@@ -73,7 +74,7 @@ from .supervision_support import run_to_settlement
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
 _CREDENTIAL_INPUT = "censal-operation-executor-passphrase"
@@ -159,6 +160,13 @@ def _payload(profile_id: str) -> CensalOperationRequest:
     )
 
 
+def _scoped_authority_operation() -> PinnedAuthorityOperation:
+    """Return the session lease this module runs under; the executor reads it."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation), "censal executor tests run under the authority lease"
+    return scoped
+
+
 def _supervisor(
     *,
     root: Path,
@@ -180,7 +188,7 @@ def _supervisor(
     )
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
-        authority_operation=unread_authority_operation(),
+        authority_operation=_scoped_authority_operation(),
         registry=OperationRegistry(
             definitions=(definition,),
             public_registrations=(build_censal_operation_registration(definition),),
@@ -200,11 +208,14 @@ def _supervisor(
 
 
 async def _wait_for_phase(supervisor: OperationSupervisor, operation_id: str, phase: str):
-    for _ in range(100):
+    # The continuation commits through real journal and custody I/O, so the
+    # wait is bounded by time rather than by a count of scheduler turns.
+    deadline = asyncio.get_running_loop().time() + 10
+    while asyncio.get_running_loop().time() < deadline:
         snapshot = await supervisor.inspect(operation_id)
         if snapshot.phase_code == phase or snapshot.lifecycle is OperationLifecycle.TERMINAL:
             return snapshot
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.01)
     raise AssertionError(f"operation did not reach {phase}")
 
 
@@ -543,12 +554,13 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             requested = await supervisor.request_cancel(operation_id)
             assert requested.effect is OperationEffect.NONE
             release_boundary.set()
-            for _ in range(100):
+            deadline = asyncio.get_running_loop().time() + 10
+            while asyncio.get_running_loop().time() < deadline:
                 stopped = await supervisor.inspect(operation_id)
                 if stopped.cancellation_acknowledged_at is not None:
                     assert stopped.effect is OperationEffect.NONE
                     break
-                await asyncio.sleep(0)
+                await asyncio.sleep(0.01)
             else:
                 raise AssertionError("censo executor did not acknowledge pre-entry cancellation")
 

@@ -1058,6 +1058,9 @@ def derive_modelo_applicability(
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
     _today = today if today is not None else today_madrid()
     beckham_window_active = profile.beckham_window_active(_today)

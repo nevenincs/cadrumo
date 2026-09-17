@@ -16,6 +16,7 @@ modelo:
             label: Befizetendő eredmény
           ingresos-ejercicios-anteriores:
             help: 'A Modelo 123 04. casilla adóügyi adatai: adóügyi információ.'
+            label: Korábbi adóévek bevételei
           numero-rentas-dividendos:
             help: A Modelo 123 01. casilla adóügyi adatai.
             label: Osztalékokból és nyereségrészesedésekből származó jövedelmek száma
@@ -30,6 +31,7 @@ modelo:
             label: A kedvezményezettek száma
           regularizacion:
             help: 'Tekintse át a casilla adatait: Korrekció.'
+            label: Helyesbítés
           resultado-anteriores-autoliquidaciones:
             label: Korábbi önadózások eredménye
           retenciones-rentas-dividendos:
@@ -40,6 +42,7 @@ modelo:
             label: Egyéb jövedelmek forrásadója
           suma-retenciones-regularizacion:
             help: 'A Modelo 123 06. casilla adóügyi adatai: adóügyi információ.'
+            label: Forrásadó és helyesbítés összege
       field:
         official_name: Az IRPF, a társasági adó és az állandó telephellyel rendelkező
           külföldi illetőségűek jövedelemadójának (IRNR) adóelőleg-levonásai és -befizetései.
@@ -53,20 +56,15 @@ modelo:
             '03':
               help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések.'
               label: Levonások és előlegfizetések
-            '04':
-              label: Előző évekből származó jövedelem
-            '05':
-              label: Korrekció
-            '06':
-              label: Levonások és korrekció összege
             '07':
               help: 'A Modelo 123 07. casilla adóügyi adatai: adóügyi információ.'
           construct:
             modelo-123-capital-withholding:
               field:
-                title: Modelo 123 — adóügyi információ
+                title: '123-as modelo: tőkejövedelmek adóelőleg-levonása (2019-2023
+                  közötti adóévek)'
           field:
-            label: Casilla— adóügyi információ
+            label: EHA/3435/2007 rendelet, 2019-2023. adóévek
         2024-y-siguientes:
           casilla:
             '06':
@@ -77,12 +75,8 @@ modelo:
               label: Forrásadó összesen
             '10':
               help: 'A Modelo 123 10. casilla adóügyi adatai: adóügyi információ.'
-              label: Korábbi adóévek bevételei
-            '11':
-              label: Helyesbítés
             '12':
               help: 'A Modelo 123 12. casilla adóügyi adatai: adóügyi információ.'
-              label: Forrásadó és helyesbítés összege
             '13':
               help: 'A Modelo 123 13. casilla adóügyi adatai: adóügyi információ.'
           construct:
@@ -90,8 +84,5 @@ modelo:
               field:
                 title: '123-as modelo: ingótőke-jövedelmekre vonatkozó forrásadó és
                   előlegfizetés'
-            modelo-123-current-capital-withholding:
-              field:
-                title: Modelo 123 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: HAC/56/2024 rendelet, 2024. adóévtől

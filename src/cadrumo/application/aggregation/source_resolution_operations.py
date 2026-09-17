@@ -323,7 +323,11 @@ def collect_unhandled_source_diagnostics(
     handled_sources: frozenset[str],
     manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return diagnostics for revision bindings with no enrolled resolver."""
+    """Return diagnostics for revision bindings with no enrolled resolver.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)

@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support import (
     _BUCKET_ID,
     _TAXPAYER_NIF,
@@ -53,6 +54,7 @@ def _resolve_without_caller_inputs(
         supplied_decision=None,
         repository=repository,
         observation_repository=observation_repository,
+        history_repository=IvaCompensationHistoryRepository(),
         binding_values=None,
         backend_binding_values=None,
         casilla_inputs=None,

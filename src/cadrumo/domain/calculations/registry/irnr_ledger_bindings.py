@@ -17,10 +17,11 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
 __all__ = [
     "IrnrIncomeObservationProtocol",
     "LedgerIrnrIncomeProvider",
+    "ledger_irnr_income_source_jurisdictions",
     "resolve_ledger_irnr_income_aggregation_binding_values",
     "unsupported_ledger_irnr_income_observations",
     "validate_ledger_irnr_income_aggregation_binding",
@@ -53,6 +55,8 @@ class LedgerIrnrIncomeProvider(BaseModel):
     modelo: Modelo = Modelo("210")
     target_casilla_id: CasillaId
     fact: Literal["gross_income_sum"] = "gross_income_sum"
+    source_jurisdictions: tuple[CountryCodeAlpha2, ...] = Field(min_length=1)
+    """Source jurisdictions whose income the binding admits; any other source is out of scope."""
 
     @field_validator("modelo")
     @classmethod
@@ -61,6 +65,40 @@ class LedgerIrnrIncomeProvider(BaseModel):
         if value != Modelo("210"):
             raise ValueError("ledger_irnr_income_aggregation modelo must be '210'")
         return value
+
+    @field_validator("source_jurisdictions")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_distinct_uppercase_jurisdictions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not code.isalpha() or code != code.upper() for code in value):
+            raise ValueError("ledger_irnr_income_aggregation source_jurisdictions must be uppercase alpha-2 codes")
+        if len(set(value)) != len(value):
+            raise ValueError("ledger_irnr_income_aggregation source_jurisdictions must not repeat a code")
+        return value
+
+
+def ledger_irnr_income_source_jurisdictions(
+    revision: ModeloRevision,
+    *,
+    target_casilla_id: CasillaId,
+) -> frozenset[str] | None:
+    """Return the source-jurisdiction scope the revision declares for ``target_casilla_id``.
+
+    ``None`` means the revision declares no single scope for the target, which
+    callers must treat as an unavailable declaration rather than an open scope.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    scopes = {
+        frozenset(selector.source_jurisdictions)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
+        and (selector := _irnr_ledger_income_selector(binding)).target_casilla_id == target_casilla_id
+    }
+    if len(scopes) != 1:
+        return None
+    return scopes.pop()
 
 
 _IRNR_GROSS_INCOME_CASILLAS: frozenset[CasillaId] = frozenset(

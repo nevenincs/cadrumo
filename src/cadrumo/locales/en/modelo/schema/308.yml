@@ -9,6 +9,10 @@ modelo:
           filing-year:
             help: Tax information for casilla of Modelo 308.
             label: Filing year to which the request relates
+      construct:
+        modelo-308-iva-solicitud-devolucion:
+          field:
+            title: 'Modelo 308: VAT refund request'
       field:
         official_name: 'Modelo 308. Value Added Tax. Refund application: equivalence
           surcharge, Article 30 bis of the VAT Regulations, Article 21.4 of the VAT
@@ -17,26 +21,17 @@ modelo:
           taxable persons)
       revision:
         2009-2011-junio:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
+              by operator type)
         2011-julio-2015:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
+              by operator type)
         2016-2018:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
+              by operator type)
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -175,9 +170,6 @@ modelo:
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: Box 109 of modelo 308, tax year 2009.
               label: Taxation type by taxable person
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
+              by operator type)

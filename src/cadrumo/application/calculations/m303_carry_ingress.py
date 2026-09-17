@@ -6,6 +6,9 @@ evidence (or the local filing boundary's already-resolved equivalent) into the
 typed envelope disposition used to normalize the carry pair.  It intentionally
 does not make any annual, history, or wallet decision: those later consumers
 must read this persisted contract rather than recover an election themselves.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
 """
 
 from __future__ import annotations
@@ -80,7 +83,7 @@ def _selected_registry_mapping(
     normalized_period = raw_period.strip() if isinstance(raw_period, str) else ""
     if not normalized_modelo or not normalized_period:
         raise M303CarryIngressError(
-            translated_message=_translated_error(None, "registry_scope_invalid"),
+            translated_message=_translated_error("registry_scope_invalid"),
             context={"modelo": raw_modelo, "filing_year": filing_year, "period": raw_period},
         )
     try:
@@ -127,7 +130,6 @@ def _selected_registry_mapping(
             "sign.negative",
             "sign.positive",
             "sign.zero",
-            "validation.error_namespace",
             "casilla.posterior",
             "casilla.generated",
             "casilla.available",
@@ -142,7 +144,7 @@ def _selected_registry_mapping(
         return entries
     except (AuthorityComponentCodecError, AttributeError, TypeError, ValueError) as exc:
         raise M303CarryIngressError(
-            translated_message=_translated_error(None, "registry_resolution_unavailable"),
+            translated_message=_translated_error("registry_resolution_unavailable"),
             context={
                 "modelo": normalized_modelo,
                 "filing_year": filing_year,
@@ -151,11 +153,12 @@ def _selected_registry_mapping(
         ) from exc
 
 
-def _translated_error(entries: Mapping[str, str] | None, key: str) -> str:
-    namespace = entries.get("validation.error_namespace") if entries is not None else None
-    if isinstance(namespace, str) and namespace.strip():
-        return f"{namespace}.{key}"
-    return f"registry.{key}"
+M303_CARRY_ERROR_NAMESPACE = "application.calculations.m303_carry.errors"
+"""The one namespace every M303 carry ingress refusal is keyed under."""
+
+
+def _translated_error(key: str) -> str:
+    return f"{M303_CARRY_ERROR_NAMESPACE}.{key}"
 
 
 def _mapping_tokens(entries: Mapping[str, str], key: str) -> frozenset[str]:
@@ -204,7 +207,7 @@ def _selected_casilla_ids(entries: Mapping[str, str]) -> dict[str, CasillaId]:
             )
         except ValueError as exc:
             raise M303CarryIngressError(
-                translated_message=_translated_error(entries, "casilla_id_invalid"),
+                translated_message=_translated_error("casilla_id_invalid"),
                 context={"mapping_key": key},
             ) from exc
     return selected
@@ -215,7 +218,7 @@ def _disposition_token(disposition: ResultDisposition, *, entries: Mapping[str, 
     raw_code = getattr(disposition, "value", disposition)
     if not isinstance(raw_code, str) or not raw_code.strip():
         raise M303CarryIngressError(
-            translated_message=_translated_error(entries, "disposition_code_undeclared"),
+            translated_message=_translated_error("disposition_code_undeclared"),
             context={"disposition": str(disposition)},
         )
     code = raw_code.strip()
@@ -224,12 +227,12 @@ def _disposition_token(disposition: ResultDisposition, *, entries: Mapping[str, 
         admissible = _mapping_tokens(entries, "disposition.admissible")
     except (TypeError, ValueError) as exc:
         raise M303CarryIngressError(
-            translated_message=_translated_error(entries, "disposition_code_undeclared"),
+            translated_message=_translated_error("disposition_code_undeclared"),
             context={"code": code},
         ) from exc
     if semantic not in admissible:
         raise M303CarryIngressError(
-            translated_message=_translated_error(entries, "disposition_code_not_admitted"),
+            translated_message=_translated_error("disposition_code_not_admitted"),
             context={"code": code, "semantic": semantic},
         )
     return semantic
@@ -245,7 +248,7 @@ def _coerce_registry_disposition(
         return ResultDisposition(value)
     except (TypeError, ValueError) as exc:
         raise M303CarryIngressError(
-            translated_message=_translated_error(entries, "header_code_invalid"),
+            translated_message=_translated_error("header_code_invalid"),
             context={"value": value, "source_locator": source_locator},
         ) from exc
 
@@ -317,13 +320,13 @@ def validate_normalized_m303_carry_observation_envelope(
     """
     if str(envelope.observation.modelo) != Modelo("303").value:
         raise M303CarryIngressError(
-            translated_message=_translated_error(None, "non_target_modelo_envelope"),
+            translated_message=_translated_error("non_target_modelo_envelope"),
             context={"modelo": envelope.observation.modelo},
         )
     normalized = normalize_m303_carry_observation_envelope(envelope, operation=operation)
     if normalized != envelope:
         raise M303CarryIngressError(
-            translated_message=_translated_error(None, "envelope_not_normalized"),
+            translated_message=_translated_error("envelope_not_normalized"),
             context={
                 "has_result_disposition": envelope.result_disposition is not None,
                 "m303_compensation_basis": envelope.m303_compensation_basis,
@@ -347,14 +350,14 @@ def _resolve_result_disposition(
         "disposition.admissible",
     ):
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "supplied_disposition_not_admitted"),
+            translated_message=_translated_error("supplied_disposition_not_admitted"),
             context={"disposition": supplied.disposition},
         )
 
     if envelope.source_kind.is_official_aeat:
         if header_projection is None:
             raise M303CarryIngressError(
-                translated_message=_translated_error(registry_mapping, "official_header_required"),
+                translated_message=_translated_error("official_header_required"),
                 context={
                     "source_kind": envelope.source_kind,
                     "header_key": _required_registry_value(registry_mapping, "disposition.header_key"),
@@ -365,7 +368,7 @@ def _resolve_result_disposition(
             entries=registry_mapping,
         ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
             raise M303CarryIngressError(
-                translated_message=_translated_error(registry_mapping, "official_disposition_header_disagreement"),
+                translated_message=_translated_error("official_disposition_header_disagreement"),
                 context={
                     "typed_disposition": supplied.disposition,
                     "header_disposition": header_projection.disposition,
@@ -384,12 +387,12 @@ def _resolve_result_disposition(
     if envelope.source_kind is ObservationSourceKind.APP_FILING:
         if supplied is None:
             raise M303CarryIngressError(
-                translated_message=_translated_error(registry_mapping, "local_filing_disposition_required"),
+                translated_message=_translated_error("local_filing_disposition_required"),
                 context={"source_kind": envelope.source_kind},
             )
         if supplied.provenance_kind != "app_filing":
             raise M303CarryIngressError(
-                translated_message=_translated_error(registry_mapping, "local_filing_provenance_required"),
+                translated_message=_translated_error("local_filing_provenance_required"),
                 context={"provenance_kind": supplied.provenance_kind},
             )
         if header_projection is not None and _disposition_token(
@@ -397,7 +400,7 @@ def _resolve_result_disposition(
             entries=registry_mapping,
         ) != _disposition_token(header_projection.disposition, entries=registry_mapping):
             raise M303CarryIngressError(
-                translated_message=_translated_error(registry_mapping, "local_disposition_header_disagreement"),
+                translated_message=_translated_error("local_disposition_header_disagreement"),
                 context={
                     "typed_disposition": supplied.disposition,
                     "header_disposition": header_projection.disposition,
@@ -414,7 +417,7 @@ def _resolve_result_disposition(
         return supplied
 
     raise M303CarryIngressError(
-        translated_message=_translated_error(registry_mapping, "unsupported_provenance"),
+        translated_message=_translated_error("unsupported_provenance"),
         context={"source_kind": envelope.source_kind},
     )
 
@@ -430,7 +433,7 @@ def _project_disposition_header(
         return None
     if len(facts) != 1:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "duplicate_header_facts"),
+            translated_message=_translated_error("duplicate_header_facts"),
             context={"header_count": len(facts), "header_key": header_key},
         )
     fact = facts[0]
@@ -444,7 +447,7 @@ def _project_disposition_header(
         "disposition.admissible",
     ):
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "header_code_not_admitted"),
+            translated_message=_translated_error("header_code_not_admitted"),
             context={"value": fact.value, "source_locator": fact.source_locator},
         )
     return ResultDispositionProjection(
@@ -464,7 +467,7 @@ def _validate_disposition_result_sign(
     resultado = envelope.observation.casilla_values.get(casilla_ids["result"])
     if resultado is None:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "result_casilla_required"),
+            translated_message=_translated_error("result_casilla_required"),
             context={"casilla_id": casilla_ids["result"]},
         )
     token = _disposition_token(disposition, entries=registry_mapping)
@@ -475,7 +478,7 @@ def _validate_disposition_result_sign(
     )
     if not compatible:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "disposition_result_sign_incompatible"),
+            translated_message=_translated_error("disposition_result_sign_incompatible"),
             context={"disposition": disposition, "resultado": str(resultado)},
             precondition_verdict=calculation_no_recovery_verdict(
                 CalculationRefusalPrecondition.M303_CARRY_DISPOSITION_CONSISTENT,
@@ -499,7 +502,7 @@ def _normalize_carry_observation(
     """Normalize the available/generated pair while preserving casilla-only storage."""
     if not isinstance(observation, RegistryModeloObservation):
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "invalid_registry_observation"),
+            translated_message=_translated_error("invalid_registry_observation"),
             context={"observed_type": type(observation).__name__},
         )
 
@@ -523,7 +526,7 @@ def _normalize_carry_observation(
     )
     if derivation is None:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "incomplete_supported_operands"),
+            translated_message=_translated_error("incomplete_supported_operands"),
             context={"casilla_ids": sorted(str(casilla_id) for casilla_id in values)},
         )
 
@@ -596,7 +599,7 @@ def _require_supplied_pair_matches_derivation(
     """
     if current_available is not None and current_available != derivation.available and not available_was_calculated:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "supplied_available_contradicts_derivation"),
+            translated_message=_translated_error("supplied_available_contradicts_derivation"),
             context={
                 "supplied_available": str(current_available),
                 "derived_available": str(derivation.available),
@@ -618,7 +621,7 @@ def _require_supplied_pair_matches_derivation(
         and not available_was_calculated
     ):
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "supplied_pair_contradicts_derivation"),
+            translated_message=_translated_error("supplied_pair_contradicts_derivation"),
             context={
                 "supplied_available": str(current_available),
                 "supplied_generated": str(current_generated),
@@ -646,12 +649,15 @@ def resolve_available_compensation_formula_id(
     """Return the registry formula id backing a generated-basis available projection.
 
     A resultado-basis derivation carries no operands and so cites no formula.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if not derivation.operand_refs:
         return None
     if registry_mapping is None:
         raise M303CarryIngressError(
-            translated_message=_translated_error(None, "formula_mapping_required"),
+            translated_message=_translated_error("formula_mapping_required"),
             context={"revision_id": revision.id},
         )
     available_casilla_id = _selected_casilla_ids(registry_mapping)["available"]
@@ -661,7 +667,7 @@ def resolve_available_compensation_formula_id(
     )
     if formula is None:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "available_compensation_formula_missing"),
+            translated_message=_translated_error("available_compensation_formula_missing"),
             context={
                 "revision_id": revision.id,
                 "target_casilla_id": str(available_casilla_id),
@@ -670,7 +676,7 @@ def resolve_available_compensation_formula_id(
     expected_operands = expression_casilla_refs(formula.expression)
     if derivation.operand_refs != expected_operands:
         raise M303CarryIngressError(
-            translated_message=_translated_error(registry_mapping, "carry_operands_disagree_with_formula"),
+            translated_message=_translated_error("carry_operands_disagree_with_formula"),
             context={
                 "derivation_operands": derivation.operand_refs,
                 "registry_operands": expected_operands,

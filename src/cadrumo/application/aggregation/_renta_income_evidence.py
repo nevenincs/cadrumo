@@ -93,6 +93,9 @@ def sales_invoice_evidence_payload(
     professional invoices this evidence path exists to ground; asserting it
     against the cash without the retención term would accept an invoice that
     does not describe the payment.
+
+    Core types:
+    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
     """
     invoice_id = transaction.invoice_id
     if invoice_id is None:

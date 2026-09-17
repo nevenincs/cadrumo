@@ -38,15 +38,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
-from pydantic import SecretStr
 
-from .....application.calculations.binding_prefill import BindingPrefillReport
+from .....application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .....application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from .....application.calculations.relation_prefill import resolve_relations_from_local_store
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.calculation_actions import calculate_modelo_revision
 from .....application.modelo.filing_actions import file_modelo_revision
@@ -58,7 +57,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....domain.calculations.registry.ids import RelationId
+from .....domain.calculations.registry.ids import BindingId
 from .....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -76,6 +75,7 @@ from ..calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ._operator_scope_fakes import (
@@ -113,7 +113,7 @@ _FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
-_CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
+_CARRY_BINDING: BindingId = "modelo-303-compensacion-pendiente-anteriores"
 
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
@@ -328,15 +328,13 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
     """
     snapshot_next = published_authority_operation().snapshot("303", filing_year=_YEAR, period=next_period)
     with bundled_indexed_authority().operation() as operation:
-        relation_values = resolve_relations_from_local_store(
+        report = resolve_bindings_from_local_store(
             snapshot_next,
             repository=CalculationObservationRepository(),
+            iva_history_repository=IvaCompensationHistoryRepository(),
             operation=operation,
         )
-    resolved: dict[RelationId, Decimal] = {
-        item.relation: item.value for item in relation_values.values if item.value is not None
-    }
-    return resolved.get(_CARRY_RELATION)
+    return report.binding_values.get(_CARRY_BINDING)
 
 
 def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Path) -> None:
@@ -348,14 +346,10 @@ def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Pa
     filing path determines the devolución disposition from the REDEME profile
     and zeroes the cross-period carry — no ``refunded=True`` is passed anywhere.
 
-    The self-compensación carry relation (``modelo-303-compensacion-pendiente-anteriores``)
-    the registry declares targets only the quarterly periods (``target_periods =
-    ["1T", "2T", "3T", "4T"]``, ``previous_quarter`` alignment); the registry
-    models no monthly ``previous_month`` self-compensación carry. So a monthly
-    REDEME next period resolves NO casilla-110 carry-in via this relation
-    (``carry_in is None``). The refunded credit is therefore not carried forward
-    — the double-claim this test guards against cannot occur — which is the
-    invariant. The positive-carry counterpart is exercised by the quarterly
+    The devolución disposition closes the filed month's credit, so the next
+    month's prior-compensation binding resolves to a proven zero rather than
+    carrying the refunded credit forward — the double-claim this test guards
+    against. The positive-carry counterpart is exercised by the quarterly
     control below.
     """
     with _secure_backend(tmp_path):
@@ -363,7 +357,7 @@ def test_redeme_refund_period_auto_carries_zero_without_manual_flag(tmp_path: Pa
         assert saldo > Decimal("0")  # the engine did generate a credit to refund
         carry_in = _next_period_carry_in(next_period=_REDEME_NEXT_PERIOD)
 
-    assert carry_in is None
+    assert carry_in == Decimal("0")
 
 
 def test_compensar_period_auto_carries_credit_forward_control(tmp_path: Path) -> None:

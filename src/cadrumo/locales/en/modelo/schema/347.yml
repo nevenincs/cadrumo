@@ -148,6 +148,10 @@ modelo:
             help: Field declared on modelo 347, the annual return of transactions
               with third parties.
             label: TOTAL NUMBER OF PERSONS AND ENTITIES
+      construct:
+        modelo-347-informative:
+          field:
+            title: Modelo 347 annual return of transactions with third parties
       field:
         official_name: Modelo 347. Annual return of transactions with third parties.
         title: Transactions with third parties (annual informative return)
@@ -174,10 +178,6 @@ modelo:
               help: Box ejercicio of modelo 347, tax year 2008.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 347, tax year 2008.
-          construct:
-            modelo-347-informative:
-              field:
-                title: Modelo 347 annual return of transactions with third parties
           field:
             label: Modelo 347, tax years 2008 to 2024
         2025-y-siguientes:
@@ -224,9 +224,5 @@ modelo:
               help: Box ejercicio of modelo 347, tax year 2025.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 347, tax year 2025.
-          construct:
-            modelo-347-informative:
-              field:
-                title: Modelo 347 annual return of transactions with third parties
           field:
             label: Modelo 347, tax years 2025 onwards

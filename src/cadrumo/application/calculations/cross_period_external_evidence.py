@@ -25,7 +25,11 @@ def filing_external_evidence_blockers(
     taxpayer_tax_id: str | None,
     observation_source_metadata: Mapping[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
-    """Return every filing-history blocker attributable to external evidence."""
+    """Return every filing-history blocker attributable to external evidence.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+    """
     blockers = _filing_record_blockers(filing)
     if filing.external_evidence is None:
         return blockers + _missing_external_evidence_blockers(observation_source_kind)

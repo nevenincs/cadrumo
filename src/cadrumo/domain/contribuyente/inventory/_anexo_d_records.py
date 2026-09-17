@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import fields as dataclass_fields
 from datetime import date
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -21,8 +21,6 @@ from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
-from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.governed_fact_scope import governed_facts_in_scope
 from .closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingConflictDiagnostic,
@@ -39,11 +37,19 @@ from .records import (
     ValuationMethod,
 )
 
+if TYPE_CHECKING:
+    from ...calculations.registry.authority import PinnedAuthorityOperation
+
 
 def _resolve_anexo_d_registry_declarations(
     *, filing_year: int, authority: PinnedAuthorityOperation | None = None
 ) -> tuple[object, object]:
     """Resolve the selected M100 record and inventory-binding surfaces."""
+    # Deferred: the ledger records load this module, and a command that only
+    # parses inventory arguments must not import the registry authority.
+    from ...calculations.registry.authority import PinnedAuthorityOperation
+    from ...calculations.registry.governed_fact_scope import governed_facts_in_scope
+
     if authority is None:
         scoped = governed_facts_in_scope()
         authority = scoped if isinstance(scoped, PinnedAuthorityOperation) else None

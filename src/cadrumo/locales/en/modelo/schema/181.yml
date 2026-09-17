@@ -1,6 +1,10 @@
 modelo:
   schema:
     '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: Modelo 181 return informative
       field:
         official_name: Modelo 181. Informative return of loans and credits, and financial
           transactions relating to real property.
@@ -136,9 +140,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Tax information for casilla of Modelo 181.
               label: Return type (original / substitute / supplementary)
-          construct:
-            modelo-181-informative:
-              field:
-                title: Modelo 181 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 181 (Order EHA/3514/2009), tax years 2009 onwards

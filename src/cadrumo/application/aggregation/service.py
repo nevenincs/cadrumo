@@ -14,6 +14,9 @@ from :mod:`application.aggregation.source_mesh`.
 
 Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart``
 (347/349), and ``foreign_assets`` (720).
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

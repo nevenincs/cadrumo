@@ -1,6 +1,10 @@
 modelo:
   schema:
     '122':
+      construct:
+        modelo-122-regularizacion:
+          field:
+            title: 'Modelo 122: adjustment of the large-family/disability deduction'
       field:
         official_name: Modelo 122. Personal Income Tax. Deductions for large families
           or for dependants with disabilities. Adjustment of the entitlement to the
@@ -113,9 +117,5 @@ modelo:
                 the spouse pair [574]/[575] declared in the same record; the box is
                 therefore taken from the taxpayer rather than computed.
               label: Result of the regularisation payable
-          construct:
-            modelo-122-regularizacion:
-              field:
-                title: Modelo 122 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 122 (Order HFP/105/2017), tax years 2017 onwards

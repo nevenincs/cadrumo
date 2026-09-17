@@ -303,7 +303,11 @@ class GoogleSheetsExportService:
         return self._snapshot_resolver(payload.modelo, payload.filing_period)
 
     def plan(self, snapshot: RegistrySnapshot, *, prefill_relations: bool) -> SheetExportPlan:
-        """Build one canonical workbook plan from the resolved snapshot."""
+        """Build one canonical workbook plan from the resolved snapshot.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+        """
         return self._build_plan(snapshot, prefill_relations=prefill_relations)
 
     def prepare(self, active_bucket_id: str) -> GoogleSheetsExportPreparedPort:
@@ -330,7 +334,11 @@ class GoogleSheetsExportService:
         plan: SheetExportPlan,
         remote: GoogleSheetsExportRemoteResult,
     ) -> GoogleSheetsExportOperationResult:
-        """Normalize the safe, durable application result once."""
+        """Normalize the safe, durable application result once.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+        """
         return _result(payload, snapshot, plan, remote)
 
     def _build_plan(self, snapshot: RegistrySnapshot, *, prefill_relations: bool) -> SheetExportPlan:

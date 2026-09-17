@@ -4,6 +4,9 @@ Resolves lifecycle routing for Modelo 036 (active) and Modelo 037 (historical)
 censo registration forms. All routing decisions are derived from the
 :class:`ValidatedRegistryAuthority` so the registry TOML remains the single
 authority for event periods and ownership rules.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

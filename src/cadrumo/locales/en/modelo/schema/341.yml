@@ -55,6 +55,10 @@ modelo:
           tipo-declaracion:
             help: Tax information for casilla of Modelo 341.
             label: Settlement period to which the self-assessment relates
+      construct:
+        modelo-341-autoliquidacion:
+          field:
+            title: Modelo 341 self-assessment of the IVA
       field:
         official_name: Modelo 341. Application for reimbursement of compensation under
           the special regime for agriculture, livestock farming and fisheries.
@@ -62,16 +66,9 @@ modelo:
           livestock farming and fisheries
       revision:
         2005-2015:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 self-assessment of the IVA
           field:
-            label: Casilla— tax information
+            label: Modelo 341 (Order of 15 December 2000, M341), tax years 2005 to
+              2015
         2016-y-siguientes:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 self-assessment of the IVA
           field:
-            label: Casilla— tax information
+            label: Modelo 341 (Order of 15 December 2000, M341), tax years 2016 onwards

@@ -1165,6 +1165,10 @@ modelo:
               Modelo 490 Referències: [105].'
             label: Tributació per raó de territori. Biscaia. % del període objecte
               de regularització. 4T [105]
+      construct:
+        modelo-490-autoliquidacion:
+          field:
+            title: Model 490 impost sobre determinats serveis digitals, autoliquidació
       field:
         official_name: Modelo 490. Impost sobre Determinats Serveis Digitals. Autoliquidació.
         title: Impost sobre Determinats Serveis Digitals - autoliquidació
@@ -1672,20 +1676,12 @@ modelo:
                 i període [18]'
             x-chim6r1ee1in4qbfchng:
               label: Període trimestral (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Model 490 impost sobre determinats serveis digitals, autoliquidació
           field:
             label: Model 490, exercici 2021
         2022-1t:
           casilla:
             x-chim6r1ee1in4qbfchng:
               label: Període trimestral (1T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Model 490 impost sobre determinats serveis digitals, autoliquidació
           field:
             label: Model 490, exercici 2022, període 1T
         2022-2t-4t:
@@ -2206,10 +2202,6 @@ modelo:
               label: Resultat de la liquidació [26]
             x-chim6r1ee1in4qbfchng:
               label: Període trimestral (2T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Model 490 impost sobre determinats serveis digitals, autoliquidació
           field:
             label: Model 490, exercici 2022, períodes 2T a 4T
         2023-y-siguientes:
@@ -2894,9 +2886,5 @@ modelo:
                 de regularització. 3T [86]
             x-chim6r1ee1in4qbfchng:
               label: Període trimestral (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Model 490 impost sobre determinats serveis digitals, autoliquidació
           field:
             label: Model 490, exercicis 2023 i següents

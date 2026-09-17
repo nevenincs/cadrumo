@@ -76,7 +76,11 @@ def filing_evidence_from_modelo_record(
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence | None:
-    """Project one local Modelo filing record into calendar evidence."""
+    """Project one local Modelo filing record into calendar evidence.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+    """
     if record.status.value.lower() != "vigente":
         return None
     return filing_axes_from_modelo_record(
@@ -92,7 +96,11 @@ def filing_axes_from_modelo_record(
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
 ) -> OverviewCalendarFilingEvidence:
-    """Return the local and AEAT filing axes for one Modelo filing record."""
+    """Return the local and AEAT filing axes for one Modelo filing record.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+    """
     modelo = str(record.modelo)
     filing_year = int(record.filing_year)
     period = record.period

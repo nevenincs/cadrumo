@@ -22,8 +22,8 @@ import pytest
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from .....core.config_support import LLMProvider
+from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
-from ..cache import LLMCache
 from ..models import LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

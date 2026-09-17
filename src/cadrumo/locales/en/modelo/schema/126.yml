@@ -1,6 +1,10 @@
 modelo:
   schema:
     '126':
+      construct:
+        modelo-126-calculation-construct:
+          field:
+            title: 'Modelo 126: self-assessment calculation'
       field:
         official_name: Modelo 126. Withholdings and payments on account. Income from
           movable capital arising from the consideration on all types of accounts
@@ -54,9 +58,5 @@ modelo:
             '12':
               help: 'Review the casilla information: Result a ingresar.'
               label: Amount payable
-          construct:
-            modelo-126-calculation-construct:
-              field:
-                title: Modelo 126 calculation construct
           field:
-            label: Casilla— tax information
+            label: Order EHA/3435/2007, tax years 2019 onwards

@@ -637,6 +637,10 @@ modelo:
             label: Prorratas - 5 - Tipo de prorrata [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Regularización cuotas art. 80.Cinco.5ª LIVA [76]
+      construct:
+        modelo-322-iva-grupo-individual:
+          field:
+            title: Modelo 322 IVA grupo de entidades, modelo individual
       field:
         official_name: Modelo 322. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo individual. Autoliquidación mensual.
@@ -1042,10 +1046,6 @@ modelo:
                 2008.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2008.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Modelo 322 IVA grupo de entidades, modelo individual
           field:
             label: Modelo 322, ejercicios 2008 a 2025
         '2023':
@@ -1080,10 +1080,6 @@ modelo:
               help: Casilla 163 del modelo 322, ejercicio 2008.
             '164':
               help: Casilla 164 del modelo 322, ejercicio 2008.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Modelo 322 IVA grupo de entidades, modelo individual
           field:
             label: Modelo 322, ejercicios 2008 a 2025
         2024-2025:
@@ -1480,10 +1476,6 @@ modelo:
                 2024.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2024.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Modelo 322 IVA grupo de entidades, modelo individual
           field:
             label: Modelo 322, ejercicios 2008 a 2025
         2026-y-siguientes:
@@ -1573,9 +1565,5 @@ modelo:
               label: Tributacion exclusivamente foral
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
               label: Volumen anual de operaciones distinto de cero
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Modelo 322 IVA grupo de entidades, modelo individual
           field:
             label: Modelo 322, ejercicios 2026 y siguientes

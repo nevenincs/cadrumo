@@ -41,6 +41,7 @@ from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import ca
 from cadrumo.adapters.persistence.profile.tests.import_flow_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.live.errors import LiveApplicationError
 from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
 from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
@@ -202,8 +203,11 @@ def test_incomplete_live_manifest_refusal_creates_no_work_unit(
     ports = _filed_capture_ports(runtime_profile=runtime_profile, operation=operation, tmp_path=tmp_path)
     accumulator = FiledCaptureAccumulator(operation=operation)
 
-    with pytest.raises(ExternalModeloImportError):
+    with pytest.raises(LiveApplicationError) as refused:
         accumulator.absorb(incomplete, ports=ports, bucket_id=_PROFILE_ID, output_root=tmp_path)
+
+    assert refused.value.translated_message == "application.modelo.errors.external_import_source_incomplete"
+    assert isinstance(refused.value.__cause__, ExternalModeloImportError)
 
     assert not WorkUnitCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()
     assert not CalculationRevisionCatalogueRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).load()

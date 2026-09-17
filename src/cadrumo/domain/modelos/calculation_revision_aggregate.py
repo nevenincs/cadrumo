@@ -1,4 +1,8 @@
-"""Context-bound validation for persisted calculation-revision amendments."""
+"""Context-bound validation for persisted calculation-revision amendments.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

@@ -35,6 +35,9 @@ See Also:
         imported casilla ids.
     :class:`ExternalEvidence`:
         Filing-record metadata that records the official evidence source.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

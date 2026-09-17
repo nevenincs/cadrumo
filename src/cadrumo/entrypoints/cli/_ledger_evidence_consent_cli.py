@@ -123,7 +123,7 @@ def _recorded_dispatches() -> tuple[ConsentedDispatch, ...]:
     Deferred import, matching the on-host reader below: this module must stay
     loadable on an install without the inference extra.
     """
-    from ...adapters.outbound.llm.consent_ledger import EvidenceConsentLedger
+    from ...adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 
     return tuple(
         ConsentedDispatch(

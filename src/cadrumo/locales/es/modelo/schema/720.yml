@@ -1,6 +1,11 @@
 modelo:
   schema:
     '720':
+      construct:
+        modelo-720-informative:
+          field:
+            title: 'Modelo 720: declaración informativa de bienes y derechos en el
+              extranjero'
       field:
         official_name: Modelo 720. Declaración informativa sobre bienes y derechos
           situados en el extranjero.
@@ -25,9 +30,5 @@ modelo:
             x-epgmorriclpistj1dhnn4ob3d5nms:
               label: Valoracion de valores, derechos, seguros o rentas situados en
                 el extranjero
-          construct:
-            modelo-720-informative:
-              field:
-                title: Modelo 720 informative declaration of foreign assets and rights
           field:
             label: Modelo 720 ejercicios 2012 y siguientes (Orden HAP/72/2013)

@@ -68,7 +68,7 @@ def _seed_consented_dispatch(profile: TestRuntimeProfile, *, address: str = _DIG
     opened, so what the verb reads back is what a consented dispatch actually
     leaves behind.
     """
-    from ....adapters.outbound.llm.consent_ledger import EvidenceConsentLedger
+    from ....adapters.persistence.llm.consent_ledger import EvidenceConsentLedger
 
     _ = profile
     EvidenceConsentLedger().append(

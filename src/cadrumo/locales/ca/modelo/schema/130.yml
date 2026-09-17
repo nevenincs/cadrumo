@@ -1,6 +1,10 @@
 modelo:
   schema:
     '130':
+      construct:
+        modelo-130-direct-estimation-instalment:
+          field:
+            title: 'Model 130: pagament fraccionat en estimació directa'
       field:
         official_name: Impost sobre la Renda de les Persones Físiques. Activitats
           econòmiques en estimació directa. Pagament fraccionat.
@@ -85,9 +89,5 @@ modelo:
                 com a deducció a la casella 15 d'un trimestre posterior.
               label: Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella
                 17)
-          construct:
-            modelo-130-direct-estimation-instalment:
-              field:
-                title: Modelo 130 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAP/258/2015, exercicis 2019 i següents

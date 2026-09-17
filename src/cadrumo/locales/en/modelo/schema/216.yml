@@ -1,6 +1,10 @@
 modelo:
   schema:
     '216':
+      construct:
+        modelo-216-calculation-construct:
+          field:
+            title: 'Modelo 216: calculation of IRNR withholdings'
       field:
         official_name: Modelo 216. Non-Resident Income Tax. Income obtained without
           the intermediation of a permanent establishment. Withholdings and payments
@@ -81,9 +85,5 @@ modelo:
             '21':
               help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
-          construct:
-            modelo-216-calculation-construct:
-              field:
-                title: Modelo 216 calculation construct
           field:
-            label: Casilla— tax information
+            label: Order HAC/56/2024, tax years 2024 onwards

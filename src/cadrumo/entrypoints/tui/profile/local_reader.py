@@ -149,6 +149,20 @@ def local_reader_summary_lines(status: LocalReaderStatus) -> tuple[str, ...]:
     return tuple(lines)
 
 
+_CHECKLIST_COLUMN_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "tui.local_reader.column.step",
+    "tui.local_reader.column.state",
+)
+_ROLE_COLUMN_LOCALE_KEYS: Final[tuple[str, ...]] = (
+    "tui.local_reader.column.role",
+    "tui.local_reader.column.model",
+    "tui.local_reader.column.installed",
+    "tui.local_reader.column.loaded",
+    "tui.local_reader.column.fitness",
+    "tui.local_reader.column.ready",
+)
+
+
 class LocalReaderChecklistItem(StrEnum):
     """The rows of the setup checklist, in the order setup satisfies them."""
 
@@ -375,17 +389,10 @@ class LocalReaderScreen(Screen[None]):
     def on_mount(self) -> None:
         """Lay out both tables and take the first measurement."""
         checklist = cast("DataTable[str]", self.query_one("#local-reader-checklist", DataTable))
-        for key in ("tui.local_reader.column.step", "tui.local_reader.column.state"):
+        for key in _CHECKLIST_COLUMN_LOCALE_KEYS:
             checklist.add_column(tr(key))
         table = cast("DataTable[str]", self.query_one("#local-reader-roles", DataTable))
-        for key in (
-            "tui.local_reader.column.role",
-            "tui.local_reader.column.model",
-            "tui.local_reader.column.installed",
-            "tui.local_reader.column.loaded",
-            "tui.local_reader.column.fitness",
-            "tui.local_reader.column.ready",
-        ):
+        for key in _ROLE_COLUMN_LOCALE_KEYS:
             table.add_column(tr(key))
         self.action_refresh_status()
         table.focus()

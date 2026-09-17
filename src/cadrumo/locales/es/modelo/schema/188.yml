@@ -35,10 +35,12 @@ modelo:
               field:
                 title: Modelo 188 declaración informativa de rendimientos de operaciones
                   de capitalización y seguros de vida o invalidez
+          field:
+            label: Modelo 188, ejercicio 2022
         2023-y-siguientes:
           construct:
             modelo-188-calculation-construct:
               field:
-                title: Modelo 188 calculation construct
+                title: 'Modelo 188: cálculo de la autoliquidación'
           field:
             label: Orden de 17 de noviembre de 1999, ejercicios 2019 y siguientes

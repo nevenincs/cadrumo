@@ -140,6 +140,11 @@ modelo:
           tipo-autoliquidacion:
             help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: 'Az önadózás típusa (I: fizetendő, N: nemleges)'
+      construct:
+        modelo-604-autoliquidacion:
+          field:
+            title: Modelo 604 önadózási bevallás - Impuesto sobre las Transacciones
+              Financieras
       field:
         official_name: Modelo 604. Pénzügyi tranzakciós adó. Önbevallás.
         title: Pénzügyi tranzakciós adó - önbevallás
@@ -151,13 +156,8 @@ modelo:
                 adómentes realizadas -ban időszak. Signo - adóalap [03].'
               label: Az időszak adóköteles, nem mentes ügyletei. Az adóalap előjele
                 [03]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 önadózási bevallás - Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casilla— adóügyi információ
+            label: 604-es modelo (HAC/510/2021 rendelet), 2021-2023. adóévek
         2024-y-siguientes:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
@@ -325,10 +325,5 @@ modelo:
                 [24].'
               label: Területi adózás. Bizkaia. Az időszaki helyesbítések adójának
                 előjele [24]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 önadózási bevallás - Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casilla— adóügyi információ
+            label: 604-es modelo (HAC/510/2021 rendelet), 2024. adóévtől

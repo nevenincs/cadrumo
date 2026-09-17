@@ -80,7 +80,11 @@ class DeadlineExplanationEngine(Protocol):
     """Protocol for the deadline engine's scheduling-rationale method."""
 
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
-        """Return the engine's scheduling rationale for one modelo."""
+        """Return the engine's scheduling rationale for one modelo.
+
+        Core types:
+        :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+        """
         ...
 
 

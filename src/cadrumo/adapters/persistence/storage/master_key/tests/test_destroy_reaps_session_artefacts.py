@@ -58,7 +58,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.time.clock import now as _now
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CREDENTIAL_INPUT = "destroy-reaps-session-artefacts-password"
 _LABEL = "Destroy operator"

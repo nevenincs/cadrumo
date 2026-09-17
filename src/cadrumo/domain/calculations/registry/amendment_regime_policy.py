@@ -124,7 +124,11 @@ def resolve_amendment_regime_policy(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> AmendmentRegimePolicy:
-    """Resolve the selected dated amendment policy, failing closed if absent."""
+    """Resolve the selected dated amendment policy, failing closed if absent.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_policy(coordinate)
@@ -136,7 +140,11 @@ def resolve_amendment_regime_policy_for_period(
     *,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> AmendmentRegimePolicy:
-    """Resolve amendment policy at the period's filing-period coordinate."""
+    """Resolve amendment policy at the period's filing-period coordinate.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     effective_date = period.end_date if period.has_date_span() else date(period.filing_year, 12, 31)
     return resolve_amendment_regime_policy(effective_date=effective_date, authority=authority)
 
@@ -147,7 +155,11 @@ def resolve_amendment_kind_regime_for_period(
     *,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> AmendmentKindRegime:
-    """Resolve a model/period amendment regime through the selected fact."""
+    """Resolve a model/period amendment regime through the selected fact.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_amendment_kind_regime(
         modelo,
         period,
@@ -161,7 +173,11 @@ def permitted_amendment_kind_values_for_period(
     *,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[str]:
-    """Return permitted amendment kinds from the registry-projected policy."""
+    """Return permitted amendment kinds from the registry-projected policy.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_amendment_kind_regime_for_period(modelo, period, authority=authority).permitted_kinds
 
 

@@ -251,6 +251,9 @@ def clasificar_casillas_oficiales(
     XML dictionaries are external registry evidence. A revision containing one
     therefore requires the signed source projection and catalogue rather than
     silently treating an unavailable dictionary as an undefined export surface.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     addressed, has_binding_fields = _canales_representacion_casillas_oficiales(
         revision,

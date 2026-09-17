@@ -45,6 +45,9 @@ def normalised_observation_refs(
     An empty result is refused rather than returned: a bundle grounded in no
     legal or source reference cannot be traced back to the authority it claims,
     and an empty tuple would look like a deliberate absence.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
     """
     refs = tuple(
         dict.fromkeys(
@@ -78,6 +81,9 @@ def manual_fact_basis_entries(
     input is deliberately excluded: it is present in the replay map so formula
     replay is exact, but its fact basis is the fingerprinted transaction
     evidence rather than a manual declaration.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
     """
     observations_by_casilla_id = {observation.casilla_id: observation for observation in observations}
     return tuple(
@@ -119,6 +125,10 @@ def capture_revision_ledger_evidence(
 
     Returns:
         The bundled :class:`LedgerFilingEvidence`.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     grounded = bool(revision.source_transaction_ids)
     return compute_ledger_filing_evidence(

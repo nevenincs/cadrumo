@@ -5,10 +5,15 @@ modelo:
         continuidad:
           actividad-cnae:
             help: Informació fiscal de la casella del Modelo 232.
-            label: C.N.A.E. de l'activitat principal
+            label: CNAE de l'activitat principal
           filing-year:
             help: 'Consulteu la informació de la casella: Exercici de meritació.'
             label: Exercici de meritació
+      construct:
+        modelo-232-informative:
+          field:
+            title: 'Model 232: declaració informativa d''operacions vinculades i paradisos
+              fiscals'
       field:
         official_name: Modelo 232. Declaració informativa d'operacions vinculades
           i d'operacions i situacions relacionades amb països o territoris qualificats
@@ -177,13 +182,8 @@ modelo:
                 meses naturales / 12 meses 365 días / inferior a 12 meses).'
               label: Tipus d'exercici (12 mesos naturals / 12 mesos de 365 dies /
                 inferior a 12 mesos)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of operacions vinculadas
-                  and paraisos fiscales
           field:
-            label: Casella— informació fiscal
+            label: Model 232, exercicis 2016-2017 (Ordre HFP/816/2017 v13)
         2018-y-siguientes:
           casilla:
             vinculada-1-fjo:
@@ -368,7 +368,6 @@ modelo:
               label: 'Part vinculada 5: Tipus de vinculació'
             x-chim6r1ecdn62p8:
               help: C.N.A.E. de l'activitat principal
-              label: CNAE de l'activitat principal
             x-chim6r1ecll6asj3d5hmiro:
               help: Exercici de meritació
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
@@ -376,10 +375,5 @@ modelo:
                 meses naturales / 12 meses 365 dias / inferior a 12 meses).'
               label: Tipus d'exercici (12 mesos naturals / 12 mesos 365 dies / inferior
                 a 12 mesos)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of operacions vinculadas
-                  and paraisos fiscales
           field:
-            label: Casella— informació fiscal
+            label: Model 232, exercicis 2018 i següents (Ordre HFP/816/2017 v14)

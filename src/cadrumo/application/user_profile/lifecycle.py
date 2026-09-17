@@ -67,7 +67,11 @@ class ProfileCapsuleLifecycle:
         record_session: ProfileRecordSession,
         profile_id: UUID | None = None,
     ) -> CommittedProfileView:
-        """Create and publish a new profile capsule."""
+        """Create and publish a new profile capsule.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         identity = profile_id or uuid4()
         if password_envelope.profile_id != identity or sentinel.profile_id != identity:
             raise ValueError("profile lifecycle create material must bind the lifecycle UUID")

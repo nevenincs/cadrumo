@@ -1,4 +1,8 @@
-"""The decrypted profile one modelo work command carries through its call chain."""
+"""The decrypted profile one modelo work command carries through its call chain.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

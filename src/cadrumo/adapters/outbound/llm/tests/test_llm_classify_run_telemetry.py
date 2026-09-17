@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.run_telemetry import LLMRunTelemetryRecorder
+from cadrumo.adapters.persistence.llm.run_telemetry import LLMRunTelemetryRecorder
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification

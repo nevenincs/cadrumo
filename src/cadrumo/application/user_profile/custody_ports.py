@@ -270,7 +270,11 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> ProfileCustodySecureObjectRecordPort | None:
-        """Load and decrypt one object under its registered namespace contract."""
+        """Load and decrypt one object under its registered namespace contract.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
+        """
         ...
 
     def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:

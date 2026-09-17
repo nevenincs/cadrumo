@@ -1104,6 +1104,10 @@ modelo:
               [105].'
             label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 4.
               negyedév [105]
+      construct:
+        modelo-490-autoliquidacion:
+          field:
+            title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
       field:
         official_name: Modelo 490. Egyes digitális szolgáltatások adója. Önbevallás.
         title: Egyes digitális szolgáltatások adója - önbevallás
@@ -1574,10 +1578,6 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a casilla adatait: Időszak negyedéves (1T..4T).'
               label: Negyedéves időszak (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
           field:
             label: 490-es modelo, 2021. adóév
         2022-1t:
@@ -1585,10 +1585,6 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a casilla adatait: Időszak negyedéves (1T).'
               label: Negyedéves időszak (1T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
           field:
             label: 490-es modelo, 2022. adóév, 1T időszak
         2022-2t-4t:
@@ -2060,10 +2056,6 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a casilla adatait: Időszak negyedéves (2T..4T).'
               label: Negyedéves időszak (2T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
           field:
             label: 490-es modelo, 2022. adóév, 2T-4T időszakok
         2023-y-siguientes:
@@ -2699,9 +2691,5 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a casilla adatait: Időszak negyedéves (1T..4T).'
               label: Negyedéves időszak (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
           field:
             label: 490-es modelo, 2023. adóévtől

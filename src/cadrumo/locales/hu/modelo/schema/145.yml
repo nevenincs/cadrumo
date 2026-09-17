@@ -183,4 +183,5 @@ modelo:
               help: 'A Modelo 145 dr-46. casilla adóügyi adatai: adóügyi információ.'
               label: Casilla dr-46 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 145-ös modelo, kifizetői adatközlés 2012. január 31-től (v2.0 nyilvántartási
+              terv)

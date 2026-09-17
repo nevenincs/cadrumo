@@ -81,6 +81,9 @@ instead of allowing them to pass silently.
 
 The residual limit remains: a strong authority-rate match is indistinguishable
 from a real withholding without a declared source, so it passes silently.
+
+Core types:
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations

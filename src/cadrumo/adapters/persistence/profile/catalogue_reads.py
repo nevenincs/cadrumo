@@ -1,4 +1,10 @@
-"""Persistence adapters for the invoice link-consistency read port."""
+"""Persistence adapters for the invoice link-consistency read port.
+
+Core types:
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

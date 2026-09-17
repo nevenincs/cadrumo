@@ -111,7 +111,11 @@ from ..calculations.observations_repository import (
 from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .action_errors import M303FilingEvidenceError
-from .filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
+from .filed_revision_observation import (
+    persist_filed_revision_observation,
+    prepare_filed_revision_observation,
+    require_filing_result_disposition,
+)
 from .m303_filing_evidence import m303_filing_evidence_failure
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
@@ -718,7 +722,11 @@ def require_filing_instance_evidence_for_work_unit(
     work_unit: WorkUnit,
     revision: CalculationRevision,
 ) -> FilingInstanceEvidence | None:
-    """Return persisted evidence only when it is valid for the selected work unit."""
+    """Return persisted evidence only when it is valid for the selected work unit.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     return _require_filing_instance_evidence_for_work_unit(
         work_unit=work_unit,
         evidence=revision.filing_instance_evidence,
@@ -1132,6 +1140,20 @@ def persist_filed_revision(
         calculation_revision_id=calculation_revision_id,
         filed_by=actor.strip(),
     )
+    # The carry observation is validated here, before the co-commit below: its
+    # refusals (carry ingress, displacing captured AEAT evidence) would
+    # otherwise fire after the filing had already landed.
+    prepared_observation = prepare_filed_revision_observation(
+        revision=target,
+        work_unit=work_unit,
+        repository=calculation_observation_repository,
+        iva_compensation_history_repository=iva_compensation_history_repository,
+        captured_at=now,
+        result_disposition=result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        taxpayer_nif=taxpayer_nif,
+        filing_record_id=new_filing_id,
+    )
 
     filing_catalogue = filing_repository.load()
     prior_current = filing_catalogue.current_for(
@@ -1289,6 +1311,7 @@ def persist_filed_revision(
         prior_domiciliation_election=prior_domiciliation_election,
         taxpayer_nif=taxpayer_nif,
         filing_record_id=new_filing_id,
+        prepared=prepared_observation,
     )
 
     return new_filing

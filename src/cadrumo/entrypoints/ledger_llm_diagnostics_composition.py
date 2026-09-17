@@ -1,4 +1,8 @@
-"""Outer composition for the ledger LLM-diagnostics read capabilities."""
+"""Outer composition for the ledger LLM-diagnostics read capabilities.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +18,7 @@ from ..domain.transactions.models import Transaction
 
 def compose_ledger_llm_diagnostics_ports(*, bucket_id: str) -> LlmDiagnosticsPorts:
     """Bind the diagnostics readers to the encrypted usage and ledger stores."""
-    from ..adapters.outbound.llm.usage import UsageRecorder
+    from ..adapters.persistence.llm.usage import UsageRecorder
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
     normalized_bucket_id = bucket_id.strip()

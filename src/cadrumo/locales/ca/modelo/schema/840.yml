@@ -1,6 +1,10 @@
 modelo:
   schema:
     '840':
+      construct:
+        modelo-840-iae-declaration:
+          field:
+            title: 'Model 840: declaració censal de l''IAE (alta, variació, baixa)'
       field:
         official_name: Modelo 840. Declaració de l'Impost sobre Activitats Econòmiques
           (alta, variació, baixa).
@@ -452,9 +456,5 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 13 del
                 Modelo 840.
               label: Telèfon de contacte del subjecte passiu, prefix inclòs
-          construct:
-            modelo-840-iae-declaration:
-              field:
-                title: Modelo 840 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 840, exercicis 2003 i següents (Ordre HAC/2572/2003)

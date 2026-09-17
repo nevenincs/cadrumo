@@ -55,7 +55,7 @@ from .test_censal_operation_executor import (
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PATHS = (
     "contact.fiscal_address",
@@ -188,14 +188,15 @@ def _apply_response(operation_id: str, pending):
 
 
 async def _settle_when_stopped(supervisor, operation_id: str, receipt: OperationTerminalReceipt):
-    for _ in range(100):
-        try:
-            return await supervisor.settle(operation_id, receipt)
-        except ValueError as exc:
-            if "requires completed executor work" not in str(exc):
-                raise
-        await asyncio.sleep(0)
-    raise AssertionError("censal continuation did not stop before settlement")
+    """Return the terminal the resumed continuation settled, checked against the expected receipt.
+
+    A continuation settles its own result, so the test observes that settlement
+    rather than racing it with a second one.
+    """
+    terminal = await asyncio.wait_for(supervisor.await_terminal(operation_id), timeout=30)
+    assert terminal.terminal_condition is receipt.condition
+    assert terminal.effect is receipt.effect
+    return terminal
 
 
 @pytest.mark.parametrize(

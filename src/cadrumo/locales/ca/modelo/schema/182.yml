@@ -1,6 +1,31 @@
 modelo:
   schema:
     '182':
+      casilla:
+        continuidad:
+          donante-nif:
+            label: NIF del donant (persona física, jurídica o entitat sense finalitats
+              lucratives donatària de referència)
+          donante-nombre:
+            label: Cognoms i nom, o raó social, del donant
+          donativo-recurrente:
+            label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
+              entitat donatària, dos o més exercicis consecutius)
+          filing-year:
+            label: Exercici a què es refereix la declaració
+          importe-donativo:
+            label: Import del donatiu, donació o aportació rebuda en l'exercici (sense
+              signe, en euros)
+          porcentaje-deduccion:
+            label: Percentatge de deducció aplicable al donatiu (règim fiscal del
+              donant, art. 68.3 LIRPF / règim especial Llei 49/2002)
+          tipo-declaracion:
+            label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-182-informative:
+          field:
+            title: 'Model 182: declaració informativa de donatius, donacions i aportacions
+              rebudes'
       field:
         official_name: Modelo 182. Impost sobre la Renda de les Persones Físiques,
           Impost sobre la Renda de no Residents i Impost sobre Societats. Declaració
@@ -11,39 +36,23 @@ modelo:
       revision:
         '2024':
           field:
-            label: null
+            label: Model 182, exercici 2024
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
                 182.
-              label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Informació fiscal de la casella del Modelo 182.
-              label: Tipus de declaració (originària / substitutiva / complementària)
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
               help: Informació fiscal de la casella del Modelo 182.
-              label: NIF del donant (persona física, jurídica o entitat sense finalitats
-                lucratives donatària de referència)
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
               help: Informació fiscal de la casella del Modelo 182.
-              label: Cognoms i nom, o raó social, del donant
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
               help: Informació fiscal de la casella del Modelo 182.
-              label: Import del donatiu, donació o aportació rebuda en l'exercici
-                (sense signe, en euros)
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
               help: Informació fiscal de la casella del Modelo 182.
-              label: Percentatge de deducció aplicable al donatiu (règim fiscal del
-                donant, art. 68.3 LIRPF / règim especial Llei 49/2002)
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
               help: Informació fiscal de la casella recurrencia del Modelo 182.
-              label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
-                entitat donatària, dos o més exercicis consecutius)
-          construct:
-            modelo-182-informative:
-              field:
-                title: Modelo 182 informative declaration of donativos, donacions
-                  i aportacions recibidas
           field:
-            label: Casella— informació fiscal
+            label: Model 182, exercici 2025 (Ordre HAC/1430/2025)

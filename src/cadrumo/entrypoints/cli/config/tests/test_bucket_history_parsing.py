@@ -22,7 +22,7 @@ from .._bucket_history import (
     _resolve_profile_history_target,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def _event_at(occurred_at: datetime) -> BucketEvent:

@@ -26,9 +26,9 @@ import pytest
 from .....core.classification.policies import SensitivityClass
 from .....core.config_support import LLMProvider
 from .....core.redaction.rules import default_rules_for_class, redact_structured
+from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
-from ..cache import LLMCache
 from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

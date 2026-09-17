@@ -1,8 +1,8 @@
 """Async-first public LLM client.
 
 Coordinates :class:`~llm.LLMRequest` inputs,
-:class:`~adapters.outbound.llm.cache.LLMCache` lookup/write-through,
-:class:`~adapters.outbound.llm.usage.UsageRecorder` accounting, and concrete
+:class:`~adapters.persistence.llm.cache.LLMCache` lookup/write-through,
+:class:`~adapters.persistence.llm.usage.UsageRecorder` accounting, and concrete
 :class:`~llm.LLMProvider` adapters before returning an
 :class:`~llm.LLMResponse`.
 """
@@ -53,10 +53,10 @@ if TYPE_CHECKING:
     # application package stays deferred to the one call site that needs it.
     from ....application.provisioning import HardwareProfile
     from ....application.provisioning_runtime import RuntimeResident
-    from .cache import LLMCache
-    from .consent_ledger import EvidenceConsentLedger
-    from .run_telemetry import LLMRunTelemetryRecorder
-    from .usage import UsageRecorder
+    from ...persistence.llm.cache import LLMCache
+    from ...persistence.llm.consent_ledger import EvidenceConsentLedger
+    from ...persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+    from ...persistence.llm.usage import UsageRecorder
 from ....core.config_support import LLMProvider
 from .models import LLMRequest, LLMResponse, PromptRegistry
 from .pricing import estimate_cost_usd
@@ -321,12 +321,12 @@ class LLMClient:
     Args:
         settings: Optional :class:`~core.config.Settings` override used
             for provider selection and defaults.
-        cache: Optional :class:`~adapters.outbound.llm.cache.LLMCache`
+        cache: Optional :class:`~adapters.persistence.llm.cache.LLMCache`
             implementation override.
         usage_recorder: Optional
-            :class:`~adapters.outbound.llm.usage.UsageRecorder` override.
+            :class:`~adapters.persistence.llm.usage.UsageRecorder` override.
         run_telemetry_recorder: Optional
-            :class:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder` override.
+            :class:`~adapters.persistence.llm.run_telemetry.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
             :class:`~llm.PromptRegistry` override.
         retry_policy: Optional :class:`LLMRetryPolicy` override governing how
@@ -371,10 +371,10 @@ class LLMClient:
         # of the boundary and import this package for the shared error and model
         # types, so binding them at module load would close the cycle. Resolve
         # each class from its defining module here, at construction time.
-        from .cache import LLMCache
-        from .consent_ledger import EvidenceConsentLedger
-        from .run_telemetry import LLMRunTelemetryRecorder
-        from .usage import UsageRecorder
+        from ...persistence.llm.cache import LLMCache
+        from ...persistence.llm.consent_ledger import EvidenceConsentLedger
+        from ...persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+        from ...persistence.llm.usage import UsageRecorder
 
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
@@ -1000,6 +1000,6 @@ def _llm_run_record() -> type:
     defining module at call time prevents the cycle from closing at module load
     (see the TYPE_CHECKING block above for why the edge exists at all).
     """
-    from .run_telemetry import LLMRunRecord
+    from ...persistence.llm.run_telemetry import LLMRunRecord
 
     return LLMRunRecord

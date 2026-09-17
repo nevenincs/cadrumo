@@ -1,6 +1,10 @@
 modelo:
   schema:
     '126':
+      construct:
+        modelo-126-calculation-construct:
+          field:
+            title: '126-os modelo: az önadózás számítása'
       field:
         official_name: Modelo 126. Adóelőleg-levonások és -befizetések. A pénzügyi
           intézményeknél vezetett bármely számla ellenértékéből származó tőkejövedelmek.
@@ -48,9 +52,5 @@ modelo:
             '12':
               help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Fizetendő összeg
-          construct:
-            modelo-126-calculation-construct:
-              field:
-                title: Modelo 126 calculation construct
           field:
-            label: Casilla— adóügyi információ
+            label: EHA/3435/2007 rendelet, 2019. adóévtől

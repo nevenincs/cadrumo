@@ -21,24 +21,19 @@ modelo:
               variaciones significativas)
           tipo-declaracion:
             label: Tipo de declaración (originaria / complementaria / sustitutiva)
+      construct:
+        modelo-721-informative:
+          field:
+            title: 'Modelo 721: declaración informativa de monedas virtuales en el
+              extranjero a través de custodio'
       field:
         official_name: Modelo 721. Declaración informativa sobre monedas virtuales
           situadas en el extranjero.
         title: Monedas virtuales en el extranjero (informativa anual)
       revision:
         '2023':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Modelo 721 informative declaration of virtual currencies held
-                  abroad through custodian
           field:
             label: Modelo 721 ejercicio 2023 (Orden HFP/886/2023)
         '2024':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Modelo 721 informative declaration of virtual currencies held
-                  abroad through custodian
           field:
             label: Modelo 721 ejercicio 2024 (anexo sustituido por Orden HAC/1504/2024)

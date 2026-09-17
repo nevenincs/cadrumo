@@ -34,13 +34,25 @@ modelo:
               según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes
               para la asignación exacta.
           irpf-pf-modulos-indice-inicio-actividad:
-            label: 'Casilla modulos-indice-inicio-actividad: irpf pf modulos indice
-              inicio actividad'
+            label: 'Índice corrector por inicio de nuevas actividades (letra b.4,
+              actividad iniciada desde el 1-1-2025 en local exclusivo). Índice declarado
+              por el operador (0,80/0,90; 0,60/0,70 con discapacidad ≥33%, Orden HAC/1425/2025
+              Anexo II, instrucción 2.3.b.4); el motor no modela el ejercicio de inicio
+              ni la discapacidad. Incompatible con el índice de temporada (b.2): si
+              ambos se declaran, prevalece la temporada.'
           irpf-pf-modulos-indice-pequena-dimension:
-            label: 'Casilla modulos-indice-pequena-dimension: irpf pf modulos indice
-              pequena dimension'
+            label: Índice corrector para empresas de pequeña dimensión (letra b.1
+              - municipio, local único, sin personal o hasta 2 trabajadores). Índice
+              declarado por el operador (0,70/0,75/0,80/0,90, Orden HAC/1425/2025
+              Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente.
+              Nunca se aplica a las actividades con índice especial (721.2, 722).
           irpf-pf-modulos-indice-temporada:
-            label: 'Casilla modulos-indice-temporada: irpf pf modulos indice temporada'
+            label: 'Índice corrector de temporada (letra b.2 - actividad de temporada,
+              hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25
+              según duración, Orden HAC/1425/2025 Anexo II, instrucción 2.3.b.2);
+              el motor no modela la duración como hecho del contribuyente. Incompatible
+              con el índice de inicio de nuevas actividades (b.4): si ambos se declaran,
+              prevalece este.'
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
             label: Casilla— información fiscal
           irpf-pf-modulos-rendimiento-neto-actividad:
@@ -94,8 +106,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 objective-estimation instalment filing for 2019
-                  to 2023
+                title: 'Modelo 131: pago fraccionado en estimación objetiva (ejercicios
+                  2019 a 2023)'
           field:
             label: Ejercicios 2019 a 2023
         '2024':
@@ -144,7 +156,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 objective-estimation instalment filing for 2024
+                title: 'Modelo 131: pago fraccionado en estimación objetiva (ejercicio
+                  2024)'
           field:
             label: Ejercicio 2024
         '2025':
@@ -198,7 +211,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 objective-estimation instalment filing for 2025
+                title: 'Modelo 131: pago fraccionado en estimación objetiva (ejercicio
+                  2025)'
           field:
             label: Ejercicio 2025
         '2026':
@@ -220,6 +234,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 objective-estimation instalment filing for 2026
+                title: 'Modelo 131: pago fraccionado en estimación objetiva (ejercicio
+                  2026)'
           field:
             label: Ejercicio 2026

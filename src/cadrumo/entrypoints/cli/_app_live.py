@@ -1115,9 +1115,11 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
     """
     from ...application.wizard.status import load_active_taxpayer_profile
     from ...application.workflow.persistence import workflow_state_repository
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
 
     try:
-        return load_active_taxpayer_profile(workflow_state_repository().load())
+        with bundled_indexed_authority().operation() as operation:
+            return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
     except CadrumoError:
         return None
 

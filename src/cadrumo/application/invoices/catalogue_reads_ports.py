@@ -1,4 +1,9 @@
-"""Application-owned read capabilities for invoice and transaction catalogues."""
+"""Application-owned read capabilities for invoice and transaction catalogues.
+
+Core types:
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
 
 from __future__ import annotations
 

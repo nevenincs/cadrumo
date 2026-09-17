@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.digest import ContentDigest
 from ....core.percentage import Percentage
@@ -92,6 +93,7 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     lorca_reduction_pct: Decimal | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _is_the_exact_supported_annual_quota_shape(self) -> M303AnnualOrdenGeneratedSource:
         _validate_generated_source_counts(self)
         _validate_generated_source_axis_shape(self)
@@ -105,6 +107,7 @@ class M303AnnualOrdenGeneratedManifest(RegistryModel):
     sources: tuple[M303AnnualOrdenGeneratedSource, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _has_one_complete_source_per_supported_year(self) -> M303AnnualOrdenGeneratedManifest:
         _require_invariant(
             self.extractor_version == EXTRACTOR_VERSION,
@@ -143,6 +146,7 @@ class M303AnnualOrdenProjection(RegistryModel):
     lorca_reduction: ReduccionLorcaOrdenAnual | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rows_are_complete_and_year_scoped(self) -> M303AnnualOrdenProjection:
         _validate_projection_activity_rows(self)
         _validate_projection_iae_identity(self)
@@ -230,6 +234,7 @@ class M303AnnualOrdenAuthority(RegistryModel):
         return cls(projections=())
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _projection_coordinates_are_unique(self) -> M303AnnualOrdenAuthority:
         coordinates = tuple((item.ejercicio, item.registry_revision_id) for item in self.projections)
         _require_invariant(
@@ -269,6 +274,7 @@ class M303AnnualOrdenSnapshot(RegistryModel):
     lorca_reduction: ReduccionLorcaOrdenAnual | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _references_match_the_activity_rows(self) -> M303AnnualOrdenSnapshot:
         _validate_snapshot_activity_coordinates(self)
         _validate_snapshot_source_authority(self)
@@ -353,6 +359,7 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
 
     @field_validator("support", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _support_is_the_persisted_envelope(
         cls, value: TemporalSupportEnvelope | None
     ) -> TemporalSupportEnvelope | None:
@@ -363,6 +370,7 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
         return TemporalSupportEnvelope(floor=value.floor, horizon=value.horizon, hard_ceiling=value.hard_ceiling)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coordinates_are_complete_and_source_pinned(self) -> M303RegimenSimplificadoSnapshot:
         _validate_regimen_simplificado_coordinate(self)
         return self

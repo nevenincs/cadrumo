@@ -8,7 +8,7 @@ modelo:
           irpf-declarante-nif:
             label: NIF del declarante
           m189-clave-identificacion:
-            label: Clave de identificacion
+            label: Clave de identificación
           m189-clave-mercado:
             label: Clave de mercado
           m189-clave-representacion:
@@ -18,19 +18,19 @@ modelo:
           m189-clave-valor:
             label: Clave de valor
           m189-codigo-pais:
-            label: Codigo pais
+            label: Código país
           m189-codigo-provincia:
-            label: Codigo provincia
+            label: Código provincia
           m189-declaracion-complementaria-sustitutiva:
             label: Declaración complementaria o sustitutiva
           m189-declarado-nif:
             label: NIF del declarado
           m189-declarado-nombre:
-            label: Apellidos y nombre, razon social o denominacion del declarado
+            label: Apellidos y nombre, razón social o denominación del declarado
           m189-declarante-razon-social:
-            label: Razon social del declarante
+            label: Razón social del declarante
           m189-identificacion-valores:
-            label: Identificacion de los valores
+            label: Identificación de los valores
           m189-nominal-unitario-valores:
             label: Nominal unitario de los valores
           m189-numero-identificativo-anterior:
@@ -40,24 +40,30 @@ modelo:
           m189-numero-total-declarados:
             label: Número total de declarados
           m189-numero-valores:
-            label: Numero de valores
+            label: Número de valores
           m189-persona-relacion:
             label: Persona con quien relacionarse
           m189-porcentaje-participacion:
-            label: Porcentaje de participacion
+            label: Porcentaje de participación
           m189-representante-legal-nif:
             label: NIF del representante legal
           m189-tipo-soporte:
             label: Tipo de soporte
           m189-valoracion:
-            label: Valoracion
+            label: Valoración
           m189-valoracion-total:
-            label: Valoracion total
+            label: Valoración total
       field:
         official_name: Modelo 189. Declaración informativa anual acerca de valores,
           seguros y rentas.
         title: Declaración informativa anual acerca de valores, seguros y rentas
       revision:
+        '2023':
+          field:
+            label: Modelo 189, ejercicio 2023
+        '2024':
+          field:
+            label: Modelo 189, ejercicio 2024
         '2025':
           field:
             label: Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023,

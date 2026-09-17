@@ -33,7 +33,12 @@ def attach_revision_row_source_identities(
     draft: ModeloDraft,
     revision: CalculationRevision,
 ) -> ModeloDraft:
-    """Attach every persisted row identity to its exact replayed draft row."""
+    """Attach every persisted row identity to its exact replayed draft row.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     revision_row_keys, identity_keys = _validate_replay_coordinates(draft=draft, revision=revision)
     binding_values, attached = _replay_binding_values(
         draft=draft,
@@ -132,7 +137,11 @@ def _rebuild_replayed_draft(*, draft: ModeloDraft, binding_values: tuple[ModeloB
 def revision_row_source_fingerprints_for_review(
     revision: CalculationRevision | None,
 ) -> tuple[ModeloRowSourceFingerprint, ...]:
-    """Project encrypted revision identities onto the canonical safe review shape."""
+    """Project encrypted revision identities onto the canonical safe review shape.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     if revision is None:
         return ()
     return tuple(

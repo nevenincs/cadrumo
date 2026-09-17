@@ -1,6 +1,10 @@
 modelo:
   schema:
     '156':
+      construct:
+        modelo-156-informative:
+          field:
+            title: Modelo 156 declaración informativa
       field:
         official_name: Modelo 156. Impuesto sobre la Renta de las Personas Físicas.
           Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad.
@@ -68,9 +72,5 @@ modelo:
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
-          construct:
-            modelo-156-informative:
-              field:
-                title: Modelo 156 declaración informativa
           field:
             label: Modelo 156 (orden-hac-3580-2003), ejercicios 2003 y siguientes

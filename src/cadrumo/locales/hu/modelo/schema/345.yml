@@ -1,6 +1,79 @@
 modelo:
   schema:
     '345':
+      casilla:
+        continuidad:
+          m345-anio-nacimiento:
+            label: Casilla — adóügyi mező
+          m345-beneficiario-nif:
+            label: Casilla— adóügyi információ
+          m345-clave:
+            label: Kód
+          m345-codigo-provincia:
+            label: Tartománykód
+          m345-datos-adicionales-clave-i:
+            label: Casilla— adóügyi információ
+          m345-datos-adicionales-clave-m:
+            label: Casilla— adóügyi információ
+          m345-datos-adicionales-claves-abc:
+            label: Casilla— adóügyi információ
+          m345-datos-identificativos-empleador:
+            label: A szociális előtakarékossági rendszert alapító vagy szerződő munkáltató
+              azonosító adatai
+          m345-declaracion-complementaria-sustitutiva:
+            label: Kiegészítő vagy helyettesítő bevallás
+          m345-declarado-nif:
+            label: A bejelentett személy adószáma
+          m345-declarado-nombre:
+            label: A bevallott személy vezeték- és keresztneve
+          m345-declarante-nif:
+            label: A bejelentő adószáma
+          m345-declarante-razon-social:
+            label: Casilla — adóügyi mező
+          m345-devoluciones-excesos:
+            label: Casilla— adóügyi információ
+          m345-ejercicio-declaracion:
+            label: A bevallás éve
+          m345-empleador-nif:
+            label: Casilla— adóügyi információ
+          m345-empleador-nombre:
+            label: Casilla — adóügyi mező
+          m345-entidad-aseguradora-nif:
+            label: NIF - szervezet aseguradora
+          m345-fondo-pensiones-nif:
+            label: Casilla— adóügyi információ
+          m345-fondo-pensiones-numero-registro:
+            label: Casilla — adóügyi mező
+          m345-importe:
+            label: Összeg
+          m345-importe-total-aportaciones:
+            label: Casilla— adóügyi információ
+          m345-numero-identificativo-anterior:
+            label: A korábbi bevallás azonosító száma
+          m345-numero-identificativo-declaracion:
+            label: A bevallás azonosító száma
+          m345-pepp-cuenta-subcuenta:
+            label: Casilla— adóügyi információ
+          m345-pepp-denominacion:
+            label: Casilla — adóügyi mező
+          m345-pepp-numero-inscripcion:
+            label: Casilla — adóügyi mező
+          m345-persona-relacion:
+            label: Kapcsolattartó személy
+          m345-pias-fecha-primera-prima:
+            label: Casilla— adóügyi információ
+          m345-pias-importe-acumulado:
+            label: Összeg acumulado PIAS
+          m345-plan-pensiones-denominacion:
+            label: Casilla — adóügyi mező
+          m345-rendimientos-trabajo-no-superiores-60000:
+            label: Bruttó munkajövedelem, amely nem haladja meg a 60.000 eurót
+          m345-representante-legal-nif:
+            label: A törvényes képviselő adószáma
+          m345-subclave:
+            label: Casilla— adóügyi információ
+          m345-total-declarados:
+            label: A bejelentett tagok száma összesen
       field:
         official_name: Modelo 345. Adatszolgáltatási bevallás. Nyugdíjprogramok, nyugdíjpénztárak
           és alternatív rendszerek. A résztvevők, befizetések és munkáltatói hozzájárulások
@@ -10,120 +83,87 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: 345-ös modelo, 2022. adóév
         '2023':
           field:
-            label: null
+            label: 345-ös modelo, 2023. adóév
         '2024':
           field:
-            label: null
+            label: 345-ös modelo, 2024. adóév
         '2025':
           casilla:
             anio-nacimiento:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             beneficiario-nif:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             clave:
               help: 'Tekintse át a casilla adatait: Clave.'
             codigo-provincia:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Tartománykód
             datos-adicionales-clave-i:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             datos-adicionales-clave-m:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             datos-adicionales-claves-abc:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             datos-identificativos-empleador:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: A szociális előtakarékossági rendszert alapító vagy szerződő
-                munkáltató azonosító adatai
             declaracion-complementaria-sustitutiva:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
               help: 'Tekintse át a casilla adatait: NIF - declarado.'
-              label: A bejelentett személy adószáma
             declarado-nombre:
               help: 'Tekintse át a casilla adatait: Vezetéknév és név - declarado.'
-              label: A bevallott személy vezeték- és keresztneve
             declarante-nif:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: A bejelentő adószáma
             declarante-razon-social:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             devoluciones-excesos:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             ejercicio-declaracion:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: A bevallás éve
             empleador-nif:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             empleador-nombre:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             entidad-aseguradora-nif:
               help: 'Tekintse át a casilla adatait: NIF - szervezet aseguradora.'
-              label: NIF - szervezet aseguradora
             fondo-pensiones-nif:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             fondo-pensiones-numero-registro:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             importe:
               help: 'Tekintse át a casilla adatait: Összeg.'
-              label: Összeg
             importe-total-aportaciones:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             numero-identificativo-anterior:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: A bevallás azonosító száma
             pepp-cuenta-subcuenta:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             pepp-denominacion:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             pepp-numero-inscripcion:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             persona-relacion:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Kapcsolattartó személy
             pias-fecha-primera-prima:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             pias-importe-acumulado:
               help: 'Tekintse át a casilla adatait: Összeg acumulado PIAS.'
-              label: Összeg acumulado PIAS
             plan-pensiones-denominacion:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             rendimientos-trabajo-superiores-60000:
               help: 'Tekintse át a casilla adatait: Jövedelmek integros - trabajo
                 superiores a 60000 euros.'
               label: Jövedelmek integros - trabajo superiores a 60000 euros
             representante-legal-nif:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: A törvényes képviselő adószáma
             subclave:
               help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-              label: Casilla— adóügyi információ
             total-declarados:
               help: A Modelo 345 . casilla adóügyi adatai.
-              label: A bejelentett tagok száma összesen
           field:
-            label: Casilla— adóügyi információ
+            label: 345-ös modelo, 2025. adóév (HFP/823/2022 rendelet és HAC/1430/2025
+              rendelet)

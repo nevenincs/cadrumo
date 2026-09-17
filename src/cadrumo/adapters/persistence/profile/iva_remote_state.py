@@ -1,4 +1,8 @@
-"""Encrypted persistence adapter for live IVA acquisition manifests."""
+"""Encrypted persistence adapter for live IVA acquisition manifests.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 

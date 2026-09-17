@@ -62,6 +62,9 @@ modelo:
           a Largo Plazo.
         title: Declaración informativa anual de Planes de Ahorro a Largo Plazo
       revision:
+        2022-2024:
+          field:
+            label: Modelo 280, ejercicios 2022 a 2024
         '2025':
           field:
             label: Modelo 280 ejercicio 2025 (Orden HAP/2118/2015; Ordenes HFP/1822/2016,

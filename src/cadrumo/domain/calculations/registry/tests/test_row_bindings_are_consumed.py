@@ -38,16 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: (modelo, revision) -> why its row bindings are currently unreachable.
 #: An entry is a defect awaiting repair, never a permanent exemption.
 _UNCONSUMED_ROW_BINDING_DEFECTS: Final[dict[tuple[str, str], str]] = {
-    ("184", "2023-2024"): (
-        "19 modelo-184-member-row-* bindings, 0 binding fields on m184-socio. The diseño "
-        "prescribes '1 y tantos registros del tipo 2 como claves y subclaves declaradas ... "
-        "por cada socio, heredero, comunero o participe', so the shipped layout can declare "
-        "ONE socio. Live under-declaration, not a regeneration hazard."
-    ),
-    ("184", "2025-y-siguientes"): (
-        "Same defect as 2023-2024, carried into the successor revision: 19 member-row "
-        "bindings against a m184-socio record with no repeat and no binding fields."
-    ),
     ("360", "2010-y-siguientes"): (
         "5 modelo-360-refund-row-* bindings, 0 consumed across 235 fields on two page "
         "records. The shape of the repair is settled and is NOT a repeat: the bundled "

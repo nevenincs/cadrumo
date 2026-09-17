@@ -61,6 +61,10 @@ modelo:
           tipo-declaracion:
             help: Informació fiscal de la casella del Modelo 165.
             label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 declaració informativa
       field:
         official_name: Modelo 165. Declaració informativa de certificacions individuals
           emeses als socis o partícips d'entitats de nova o recent creació.
@@ -69,17 +73,13 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Casella— informació fiscal
+            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
         2016-2022:
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
         2023-2025:
           field:
-            label: Casella— informació fiscal
+            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
@@ -136,9 +136,5 @@ modelo:
               help: 'Consulteu la informació de la casella: Cognoms i nom del socio
                 o participe.'
               label: Cognoms i nom del soci o partícip
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents

@@ -62,10 +62,7 @@ _MIGRATED_KEYS: tuple[str, ...] = (
     "aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year",
     "aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry",
     "aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage",
-    "aggregation.iva_ledger.errors.injected_repositories_missing_bienes_inversion_authority",
-    "aggregation.iva_ledger.errors.input_facts_missing_deduction_authority",
     "aggregation.iva_ledger.errors.investment_observations_missing_bienes_inversion_authority",
-    "aggregation.iva_ledger.errors.output_facts_carry_deduction_authority",
     "aggregation.iva_ledger.errors.rectification_consumed_more_than_once",
     "aggregation.iva_ledger.errors.sectorized_apportionment_duplicate_sectors",
     "aggregation.iva_ledger.errors.sectorized_especial_missing_input_classification",
@@ -96,10 +93,7 @@ _MIGRATED_KEYS: tuple[str, ...] = (
     "aggregation.service.errors.envelope_provider_payload_mismatch",
     "aggregation.service.errors.observations_mismatch",
     "aggregation.service.errors.per_modelo_modelos_not_unique",
-    "aggregation.service.errors.per_modelo_providers_not_unique",
-    "aggregation.service.errors.provider_modelos_not_unique",
     "aggregation.service.errors.result_source_kinds_not_unique",
-    "aggregation.service.errors.source_kinds_mismatch",
 )
 
 #: Modules whose refusals this gate covers. Anchored so a rename cannot let the
@@ -203,10 +197,10 @@ def test_every_migrated_refusal_key_resolves_to_real_text(key: str) -> None:
 def test_config_refusal_renders_as_its_key_only() -> None:
     """The service-contract refusal degrades to its key, carrying no sentence."""
     error = AggregationConfigError(
-        translated_message="aggregation.service.errors.provider_modelos_not_unique",
+        translated_message="aggregation.service.errors.result_source_kinds_not_unique",
     )
 
-    assert str(error) == "aggregation.service.errors.provider_modelos_not_unique"
+    assert str(error) == "aggregation.service.errors.result_source_kinds_not_unique"
 
 
 def test_validation_refusal_renders_as_its_key_only() -> None:

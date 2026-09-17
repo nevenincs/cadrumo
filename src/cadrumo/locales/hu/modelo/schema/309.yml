@@ -171,6 +171,8 @@ modelo:
             label: 'Adójogi helyzet: levonási jog nélküli adóalany'
           transmitente-apellidos:
             label: Átruházó (3) - Vezetéknév vagy cégnév
+          transmitente-apellidos-nombre-razon-social:
+            label: Átruházó - Vezetéknév és keresztnév vagy cégnév
           transmitente-nif:
             label: Átruházó (3) - NIF
           transmitente-nif-iva:
@@ -284,7 +286,8 @@ modelo:
               field:
                 title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
           field:
-            label: Casilla — adóügyi mező
+            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
+              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -388,9 +391,10 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — adóügyi információ
+                title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: Casilla — adóügyi mező
+            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
+              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -504,9 +508,10 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — adóügyi információ
+                title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: Casilla — adóügyi mező
+            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
+              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -620,6 +625,7 @@ modelo:
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 — adóügyi információ
+                title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: Casilla — adóügyi mező
+            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
+              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.

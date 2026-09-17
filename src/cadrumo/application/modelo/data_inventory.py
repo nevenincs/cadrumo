@@ -23,6 +23,9 @@ See Also:
         richer operator-facing checklist over the same snapshot.
     :func:`~application.modelo.binding_readiness.profile_resolvable_binding_ids`
         Profile-fact binding resolver reused here to flag missing coefficients.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations

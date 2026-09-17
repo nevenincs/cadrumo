@@ -191,7 +191,11 @@ def build_m200_filing_projection_plan(
     layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    """Project every modelo 200 repeated-row family from one selected snapshot and layout."""
+    """Project every modelo 200 repeated-row family from one selected snapshot and layout.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     profile = producer_snapshot.model_profile
     filing_period = registry_snapshot.filing_period
     effective_date = (

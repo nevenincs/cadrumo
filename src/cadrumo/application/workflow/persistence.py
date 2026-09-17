@@ -120,7 +120,11 @@ class WorkflowSecureObjectStorePort(Protocol):
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> WorkflowSecureObjectRecordPort | None:
-        """Load one decrypted row under its registered contract."""
+        """Load one decrypted row under its registered contract.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
+        """
         ...
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
@@ -145,7 +149,11 @@ class WorkflowSecureObjectStorePort(Protocol):
         written_at: datetime,
         payload: bytes,
     ) -> None:
-        """Persist one encrypted payload."""
+        """Persist one encrypted payload.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
+        """
         ...
 
     def list_records(
@@ -155,7 +163,11 @@ class WorkflowSecureObjectStorePort(Protocol):
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> Iterator[WorkflowSecureObjectRecordPort]:
-        """Iterate every readable row under one namespace."""
+        """Iterate every readable row under one namespace.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
+        """
         ...
 
 

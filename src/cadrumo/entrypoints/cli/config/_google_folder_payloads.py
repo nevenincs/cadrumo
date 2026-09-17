@@ -1,4 +1,8 @@
-"""Result schemas owned only by the Google Drive folder command family."""
+"""Result schemas owned only by the Google Drive folder command family.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

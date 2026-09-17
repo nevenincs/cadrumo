@@ -1331,6 +1331,10 @@ modelo:
             help: Tax information about tax information in casilla 940 of Modelo 036.
             label: Tax identification number (NIF) of the successor or beneficiary
               (successor 13f)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: 'Modelo 036: census data foundation'
       field:
         official_name: Modelo 036. Census declaration of registration, amendment and
           deregistration in the Register of entrepreneurs, professionals and withholders.
@@ -1403,7 +1407,7 @@ modelo:
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13f)
           field:
-            label: null
+            label: Modelo 036, from 2023 until 2 February 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
@@ -3629,9 +3633,5 @@ modelo:
                 required to identify the beneficial owner.'
               label: Beneficial owners. Entity not required to identify the beneficial
                 owner
-          construct:
-            modelo-036-censo-foundation:
-              field:
-                title: Modelo 036 censo foundation
           field:
-            label: Casilla— tax information
+            label: Modelo 036 from 3 February 2025

@@ -129,9 +129,10 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — tax information
+                title: 'Modelo 131: instalment payment under objective estimation
+                  (tax years 2019 to 2023)'
           field:
-            label: Casilla— tax information
+            label: Tax years 2019 to 2023
         '2024':
           casilla:
             modulos-indice-inicio-actividad:
@@ -181,9 +182,10 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — tax information
+                title: 'Modelo 131: instalment payment under objective estimation
+                  (tax year 2024)'
           field:
-            label: Casilla — tax field
+            label: Tax year 2024
         '2025':
           casilla:
             modulos-1-unidades-anterior:
@@ -235,9 +237,10 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — tax information
+                title: 'Modelo 131: instalment payment under objective estimation
+                  (tax year 2025)'
           field:
-            label: Casilla — tax field
+            label: Tax year 2025
         '2026':
           casilla:
             modulos-1-unidades-anterior:
@@ -257,6 +260,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — tax information
+                title: 'Modelo 131: instalment payment under objective estimation
+                  (tax year 2026)'
           field:
-            label: Casilla — tax field
+            label: Tax year 2026

@@ -60,7 +60,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 
 from ......domain.calculations.registry.tests.published_authority import published_profile_schema
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CREDENTIAL_INPUT = "cotejo-apply-schema-judgement-passphrase"
 _UNDECLARED_CENSO_PATH = "censo.filed_on"

@@ -3,6 +3,9 @@
 This module is the outward implementation of the application-owned
 recipient-encryption capability.  It owns the X25519, HKDF, and AEAD details
 and translates their wire values and failures at the application boundary.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations

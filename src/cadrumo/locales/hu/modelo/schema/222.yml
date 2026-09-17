@@ -341,24 +341,20 @@ modelo:
             help: 'A Modelo 222 . casilla adóügyi adatai: adóügyi információ.'
             label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
               adóalap)
+      construct:
+        modelo-222-declaration-construct:
+          field:
+            title: '222-es modelo: részletfizetés az adókonszolidációs rendszerben'
       field:
         official_name: Modelo 222. Társasági adó. Adókonszolidációs rendszer. Részletfizetés.
         title: IS részletfizetés adókonszolidációs rendszerben (cégcsoportok)
       revision:
         '2023':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: '222-es modelo: részletfizetés az adókonszolidációs rendszerben'
           field:
-            label: null
+            label: 222-es modelo, 2023. adóév
         '2024':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: '222-es modelo: részletfizetés az adókonszolidációs rendszerben'
           field:
-            label: null
+            label: 222-es modelo, 2024. adóév
         2025-y-siguientes:
           casilla:
             '61':
@@ -391,9 +387,5 @@ modelo:
               help: Az adócsoport részletfizetési elszámolásának 67. rovata (Mod.
                 40.3 LIS).
               label: Mod. 40.3 LIS - Kiegészítő adó (IC) korrekció - Növelések
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Modelo 222— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: HFP/227/2017 rendelet (222-es modelo), 2025. adóévtől

@@ -10,6 +10,10 @@ modelo:
             help: 'Carácter de la declaración: originaria, sustitutiva de otra presentada
               antes, o complementaria que añade datos omitidos.'
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
+      construct:
+        modelo-185-informative:
+          field:
+            title: Modelo 185 declaración informativa
       field:
         official_name: Modelo 185. Declaración informativa mensual de cotizaciones
           de afiliados y mutualistas.
@@ -91,9 +95,5 @@ modelo:
                 igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
                 Se refiere al mes -2.'
               label: TIPO JORNADA MES -2
-          construct:
-            modelo-185-informative:
-              field:
-                title: Modelo 185 declaración informativa
           field:
             label: Modelo 185 (orden-hac-1197-2025), ejercicios 2025 y siguientes

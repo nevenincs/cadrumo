@@ -62,6 +62,10 @@ modelo:
             help: 'A Modelo 353 02. casilla adóügyi adatai: adóügyi információ.'
           m353-resultado-total-entidades:
             help: A Modelo 353 01. casilla adóügyi adatai.
+      construct:
+        modelo-353-iva-grupo-agregado:
+          field:
+            title: '353-as modelo: az áfacsoport havi összesített önadózása'
       field:
         official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
           Havi önbevallás.
@@ -91,10 +95,6 @@ modelo:
                 [02], [08].'
               label: Korábbi időszakokból származó, későbbi időszakokra fennmaradó
                 beszámítandó összegek ([02] - [08])
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — adóügyi információ
           field:
             label: 353-as modelo, 2008-2025 adóévek (EHA/3434/2007 rendelet)
         2026-desde-02:
@@ -134,9 +134,5 @@ modelo:
                 [10].'
               label: Benzin, gázolaj és bioüzemanyag értékesítése utáni előleg, az
                 állami adóhatóságnak betudhatóan [10]
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — adóügyi információ
           field:
             label: 353-as modelo, 2026-tól kezdődő adóévek (EHA/3434/2007 rendelet)

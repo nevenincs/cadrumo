@@ -98,6 +98,74 @@ MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
     _PublishedModeloCode(),
 )
 
+
+class _PublishedIvaTerritorialScope(click.ParamType[str]):
+    """Project an IVA territorial scope through the published fact at argument use."""
+
+    name = "territorial_scope"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published territorial tokens when a schema asks for the choice set."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.iva.classification import resolve_iva_classification_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            catalogue = resolve_iva_classification_catalogue(operation=operation)
+            return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
+
+    @override
+    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+        """Return the projected token, listing the accepted set on a refusal."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.iva.classification import require_iva_territorial_scope
+
+        accepted = self.choices
+        click.Choice(accepted).convert(value, param, ctx)
+        with bundled_indexed_authority().operation() as operation:
+            return require_iva_territorial_scope(value, operation=operation)
+
+
+class _PublishedEuMemberState(click.ParamType[str]):
+    """Project an EU IVA member-state token through the published fact at argument use."""
+
+    name = "member_state"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published member-state tokens when a schema asks for the choice set."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            return tuple(str(state) for state in resolve_eu_member_state_catalogue(authority=operation).choices)
+
+    @override
+    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+        """Return the projected token, listing the accepted set on a refusal."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.calculations.registry.errors import RegistryValidationError
+        from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            catalogue = resolve_eu_member_state_catalogue(authority=operation)
+            try:
+                return catalogue.require(value)
+            except RegistryValidationError:
+                accepted = tuple(str(state) for state in catalogue.choices)
+        click.Choice(accepted).convert(value, param, ctx)
+        raise click.BadParameter(str(value), ctx=ctx, param=param)
+
+
+IVA_TERRITORIAL_SCOPE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedIvaTerritorialScope(),
+)
+EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedEuMemberState(),
+)
+
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry

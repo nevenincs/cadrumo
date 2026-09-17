@@ -15,6 +15,9 @@ aggregation:
         an observation or defects, never both and never neither.
   irnr_income_ledger:
     diagnostics:
+      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is outside
+        the source scope the selected Modelo 210 revision declares; TRLIRNR Art. 13
+        admits only Spanish-source income.
       incomplete_m210_classification: Spanish-source incoming transaction has no explicit
         Modelo 210 income classification; the IRNR projection never infers an official
         tipo-renta code from irpf_category.
@@ -23,6 +26,16 @@ aggregation:
         income to this IRNR projection.
       tipo_renta_code_not_declared: Modelo 210 official tipo-renta code %{tipo_renta_code}
         is not declared for the selected revision and filing period %{period}.
+    errors:
+      income_type_codes_missing: The selected Modelo 210 revision declares no income-type
+        codes valid for this filing period.
+      income_type_namespace_missing: The selected Modelo 210 revision does not declare
+        exactly one keyed income-type code namespace.
+      registry_revision_mismatch: The injected Modelo 210 revision does not match
+        the revision the pinned authority selects for this modelo, filing year and
+        period.
+      source_scope_missing: The selected Modelo 210 revision declares no single source-jurisdiction
+        scope for this gross-income casilla.
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -37,10 +50,6 @@ aggregation:
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
-      injected_repositories_missing_bienes_inversion_authority: Injected IVA repositories
-        require an explicit bienes de inversión authority.
-      input_facts_missing_deduction_authority: Input IVA facts require an exact deduction
-        authority.
       investment_observations_missing_bienes_inversion_authority: Investment IVA observations
         require the explicit bienes de inversión register and a matching profile authority.
       missing_counterparty_establishment_on_export: An export is exempt because the
@@ -49,8 +58,6 @@ aggregation:
         nothing, and its VAT identification cannot answer this.
       missing_counterparty_identification_state: An intra-community transaction requires
         the Member State in which the counterparty is VAT-identified.
-      output_facts_carry_deduction_authority: Output IVA facts cannot carry deduction
-        authority.
       rectification_consumed_more_than_once: A corrected IVA ledger fact may be rectified
         only once.
       sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
@@ -63,7 +70,6 @@ aggregation:
         explicit sector identity.
       sectorized_input_unknown_sector: A sectorised IVA input references an unknown
         sector.
-      unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: The prorrata register records
@@ -161,10 +167,7 @@ aggregation:
       observations_mismatch: Observations cannot be supplied for the requested modelo.
       per_modelo_modelos_not_unique: Per-modelo aggregation modelos must be owned
         by exactly one provider.
-      per_modelo_providers_not_unique: Per-modelo aggregation providers must be unique.
-      provider_modelos_not_unique: Provider modelos must be unique.
       result_source_kinds_not_unique: Result source kinds must be unique.
-      source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
       annual_summary_handoff_duplicate: More than one resolver supplied the immutable
@@ -444,8 +447,6 @@ core:
     errors:
       output_language_type: The profile output language must be a supported language
         code in text form.
-      registration_duplicate_callable: Project answers implementation registered twice
-        with different callables; it must be registered exactly once.
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar

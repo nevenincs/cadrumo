@@ -10,7 +10,7 @@ unavailable at all when the run fails partway.
 
 Why a second run-record store rather than an existing one
 ---------------------------------------------------------
-:class:`~adapters.outbound.llm.run_telemetry.LLMRunRecord` is a shipped local encrypted
+:class:`~adapters.persistence.llm.run_telemetry.LLMRunRecord` is a shipped local encrypted
 run-record store, and it is deliberately not extended here. Its fields are
 provider-call accounting -- caller, provider, model, duration, succeeded,
 error kind -- and not one of them carries a SUBJECT. It cannot express what was

@@ -27,11 +27,11 @@ modelo:
                 title: '296-os modelo: éves tájékoztató bevallás az állandó telephely
                   nélküli IRNR forrásadóról és előlegekről'
           field:
-            label: null
+            label: 296-os modelo, 2023. adóév
         2024-y-siguientes:
           construct:
             modelo-296-calculation-construct:
               field:
-                title: Modelo 296 calculation construct
+                title: '296-os modelo: az IRNR forrásadójának éves összesítője'
           field:
-            label: Casilla— adóügyi információ
+            label: HAC/56/2024 rendelet, 2024. adóévtől

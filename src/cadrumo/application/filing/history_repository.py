@@ -3,6 +3,9 @@
 The repository persists lightweight :class:`ModeloHistory` payloads keyed by
 modelo.  Encrypted storage, envelope validation, and persistence failures are
 owned by the required outer capability in :mod:`history_ports`.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations

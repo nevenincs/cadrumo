@@ -427,6 +427,10 @@ modelo:
             help: Informació fiscal de la casella 60 del Modelo 714.
             label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor total
               de l'habitatge habitual susceptible d'exempció
+      construct:
+        m714-patrimonio-calculation:
+          field:
+            title: Model 714 Impost sobre el Patrimoni quota
       field:
         official_name: Impost sobre el Patrimoni. Declaració
         title: Modelo 714
@@ -455,10 +459,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
                 de residencia en 2020.'
               label: Comunitat o Ciutat Autònoma de residència el 2020
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2021
         '2022':
@@ -485,10 +485,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
                 de residencia en 2022.'
               label: Comunitat o Ciutat Autònoma de residència el 2022
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2022
         '2023':
@@ -515,10 +511,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
                 de residencia en 2023.'
               label: Comunitat o Ciutat Autònoma de residència el 2023
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2023
         '2024':
@@ -545,10 +537,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
                 de residencia en 2024.'
               label: Comunitat o Ciutat Autònoma de residència el 2024
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2024
         '2025':
@@ -575,9 +563,5 @@ modelo:
               help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
                 de residencia en 2025.'
               label: Comunitat o Ciutat Autònoma de residència el 2025
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Model 714 Impost sobre el Patrimoni quota
           field:
             label: Impost sobre el Patrimoni 2025

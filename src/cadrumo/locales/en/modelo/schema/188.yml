@@ -1,6 +1,18 @@
 modelo:
   schema:
     '188':
+      casilla:
+        continuidad:
+          capitalizacion-seguros-resumen-base-negativa:
+            label: Negative base for withholdings and payments on account
+          capitalizacion-seguros-resumen-base-positiva:
+            label: Base for withholdings and payments on account
+          capitalizacion-seguros-resumen-perceptores-base-negativa:
+            label: Total number of recipients with a negative base
+          capitalizacion-seguros-resumen-perceptores-base-positiva:
+            label: Total number of recipients with a positive base
+          capitalizacion-seguros-resumen-retenciones:
+            label: Withholdings and payments on account
       field:
         official_name: Modelo 188. Withholdings and payments on account. Income from
           movable capital arising from capitalisation transactions and life or disability
@@ -15,30 +27,25 @@ modelo:
                 title: Modelo 188 information return on income from capitalisation
                   operations and life or disability insurance
           field:
-            label: null
+            label: Modelo 188, tax year 2022
         2023-y-siguientes:
           casilla:
             '01':
               help: Number of recipients (records) whose withholding base is positive.
-              label: Total number of recipients with a positive base
             '02':
               help: Sum of the withholding bases reported in recipient records with
                 a positive base.
-              label: Base for withholdings and payments on account
             '03':
               help: Sum of the withholdings and payments on account applied to the
                 declared income.
-              label: Withholdings and payments on account
             '04':
               help: Number of recipients (records) whose withholding base is negative.
-              label: Total number of recipients with a negative base
             '05':
               help: Sum of the withholding bases reported in recipient records with
                 a negative base.
-              label: Negative base for withholdings and payments on account
           construct:
             modelo-188-calculation-construct:
               field:
-                title: Modelo 188 calculation construct
+                title: 'Modelo 188: self-assessment calculation'
           field:
-            label: Casilla— tax information
+            label: Order of 17 November 1999, tax years 2019 onwards

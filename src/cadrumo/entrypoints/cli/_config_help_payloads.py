@@ -1,4 +1,8 @@
-"""Import-light output schemas for the config metadata surface."""
+"""Import-light output schemas for the config metadata surface.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

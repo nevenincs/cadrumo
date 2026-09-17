@@ -231,4 +231,5 @@ modelo:
               label: 5. Pagaments per adquisició o rehabilitació d'habitatge habitual
                 amb finançament aliè
           field:
-            label: Casella— informació fiscal
+            label: Model 145 comunicació de dades al pagador des del 31 de gener de
+              2012 (disseny de registre v2.0)

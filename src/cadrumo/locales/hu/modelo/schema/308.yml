@@ -10,6 +10,10 @@ modelo:
           filing-year:
             help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
             label: A kérelem vonatkozási éve
+      construct:
+        modelo-308-iva-solicitud-devolucion:
+          field:
+            title: '308-as modelo: áfa-visszatérítési kérelem'
       field:
         official_name: 'Modelo 308. Hozzáadottérték-adó. Visszatérítési kérelem: egyenértékűségi
           felár, az IVA-rendelet 30 bis cikke, az IVA-törvény 21.4 cikke és eseti
@@ -18,26 +22,17 @@ modelo:
           adóalanyok)
       revision:
         2009-2011-junio:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
+              szerinti eseti szabályozás)
         2011-julio-2015:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
+              szerinti eseti szabályozás)
         2016-2018:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
+              szerinti eseti szabályozás)
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -178,9 +173,6 @@ modelo:
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: A 308-es modelo 109. rovata, 2009. adóév.
               label: Adózás típusa az adóalany szerint
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
+              szerinti eseti szabályozás)

@@ -827,6 +827,9 @@ def inject_derived_minimo_descendientes_facts(
     revision that does not declare the full tranche and threshold tables, which
     is the same ground the former year frozenset covered but derived from the
     registry rather than restated as a Python constant.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
@@ -974,6 +977,9 @@ def inject_derived_anualidades_eligibility_facts(
     and this flag would have to be evaluated per descendant rather than once.
     Whoever lands that attribution must revisit this function in the same
     change.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)

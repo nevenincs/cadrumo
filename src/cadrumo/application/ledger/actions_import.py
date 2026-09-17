@@ -165,6 +165,9 @@ def evaluate_import_rows(
     :func:`~cadrumo.application.transactions.import_classification.classify_import_row`, which the
     ``--verify`` diagnostics path consumes too, so the persisting path, the
     ``--dry-run`` preview and the verify report all agree on what a row is.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     existing_fingerprints = {
         fingerprint
@@ -414,6 +417,9 @@ def import_ledger_transactions(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerImportOperationResult`
     summarising the imported, skipped, and likely-duplicate transactions.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)

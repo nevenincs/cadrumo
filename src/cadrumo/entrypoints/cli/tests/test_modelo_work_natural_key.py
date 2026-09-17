@@ -47,6 +47,8 @@ def _create_profile() -> None:
             "identity.surnames": "Natural Key",
             "activities.description": "design",
             "tax_residence.jurisdiction_scope": "common_regime",
+            # Modelo 111 readiness asks whether the filer is a colegio concertado.
+            "withholding.colegio_concertado": "false",
         },
         log_in=False,
     )

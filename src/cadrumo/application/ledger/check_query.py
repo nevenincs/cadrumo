@@ -58,6 +58,9 @@ def ledger_check_years(transactions: TransactionCatalogue) -> tuple[int, ...]:
     Derived from the rows rather than assumed from a calendar, so a sweep never
     reports on a year the operator has no ledger for, and never misses one they
     do. ``booked_date`` is required, so the fallback always yields a date.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     return tuple(
         sorted(
@@ -86,6 +89,9 @@ def read_ledger_check(
 
     Returns:
         The verdict, the periods it covers, and the findings behind it.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     link_inconsistencies = tuple(verify_invoice_repository_links(ports=ports))
 

@@ -49,7 +49,11 @@ def render_record(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> str:
-    """Render one registry record through the canonical field renderer."""
+    """Render one registry record through the canonical field renderer.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     return _render_record_fields(
         record,
         draft=draft,
@@ -76,7 +80,12 @@ def render_layout_records(
     projection_plan: FilingProjectionPlan,
     projection_values: dict[ProjectionAddress, object],
 ) -> tuple[RenderedRecordOccurrence, ...]:
-    """Render admitted records after projection preflight has passed."""
+    """Render admitted records after projection preflight has passed.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`,
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     occurrences: list[RenderedRecordOccurrence] = []
     for record in sorted(layout.records, key=lambda item: item.order):
         if did_page_suppressed(

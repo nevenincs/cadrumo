@@ -201,6 +201,32 @@ async def _await_censal_settlement(
     _assert_censal_terminal_success(observed, apply=apply)
 
 
+async def review_censal_with_services(
+    services: OperationComposedServices,
+    *,
+    operation: PinnedAuthorityOperation,
+    actor_ref: str,
+    decide: Callable[[CensalReviewProjectionV1], bool],
+) -> CensalReviewedFrontendResult:
+    """Run one reviewed censal acquisition through already composed services."""
+    request = _active_censal_operation_request(operation)
+    submitted = await services.submission.submit(
+        request,
+        actor_ref=actor_ref,
+    )
+    operation_id = submitted.receipt.operation_id
+    await services.submission.start(operation_id)
+    # The executor stops at its review checkpoint; that is what settles first.
+    await services.submission.settled(operation_id)
+    waiting = await _observe(services, operation_id)
+    pending = _require_review_interaction(waiting)
+    projection = await _resolve_censal_projection(services, pending)
+    apply = decide(projection)
+    await _answer_censal_review(services, submitted, pending, actor_ref=actor_ref, apply=apply)
+    await _await_censal_settlement(services, operation_id, apply=apply)
+    return CensalReviewedFrontendResult(operation_id=operation_id, applied=apply, projection=projection)
+
+
 async def _run(
     *,
     actor_ref: str,
@@ -211,27 +237,17 @@ async def _run(
 
     async with AsyncExitStack() as owned:
         authority_operation = owned.enter_context(bundled_indexed_authority().operation())
-        request = _active_censal_operation_request(authority_operation)
         composed = compose_operation_dependencies(
             authority_operation=authority_operation,
             operator_scope_ports=build_operator_scope_ports(),
         )
         owned.push_async_callback(composed.shutdown)
-        submitted = await composed.submission.submit(
-            request,
+        return await review_censal_with_services(
+            composed,
+            operation=authority_operation,
             actor_ref=actor_ref,
+            decide=decide,
         )
-        operation_id = submitted.receipt.operation_id
-        await composed.submission.start(operation_id)
-        # The executor stops at its review checkpoint; that is what settles first.
-        await composed.submission.settled(operation_id)
-        waiting = await _observe(composed, operation_id)
-        pending = _require_review_interaction(waiting)
-        projection = await _resolve_censal_projection(composed, pending)
-        apply = decide(projection)
-        await _answer_censal_review(composed, submitted, pending, actor_ref=actor_ref, apply=apply)
-        await _await_censal_settlement(composed, operation_id, apply=apply)
-        return CensalReviewedFrontendResult(operation_id=operation_id, applied=apply, projection=projection)
 
 
 def run_censal_review(
@@ -243,4 +259,4 @@ def run_censal_review(
     return asyncio.run(_run(actor_ref=actor_ref, decide=decide))
 
 
-__all__ = ["CensalReviewedFrontendResult", "run_censal_review"]
+__all__ = ["CensalReviewedFrontendResult", "review_censal_with_services", "run_censal_review"]

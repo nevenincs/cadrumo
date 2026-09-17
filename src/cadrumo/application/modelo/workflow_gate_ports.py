@@ -30,7 +30,11 @@ class WorkflowGateDraftRepositoryProtocol(Protocol):
     """Write capability for the bucket-scoped filing-draft store."""
 
     def save(self, payload: ModeloDraft, /) -> None:
-        """Persist one approved draft."""
+        """Persist one approved draft.
+
+        Core types:
+        :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+        """
         ...
 
 

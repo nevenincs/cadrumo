@@ -215,6 +215,9 @@ class InvoiceCatalogueRepository:
 
         Returns:
             The catalogue as written.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
         """
 
         def _guarded(current: InvoiceCatalogue) -> InvoiceCatalogue:

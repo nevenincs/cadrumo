@@ -17,6 +17,9 @@ See Also:
         Carries the objective-estimation regime flag and prior-year volume facts.
     :class:`WorkUnit`:
         Supplies the modelo code and filing year that bound the advisory scope.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
 """
 
 from __future__ import annotations

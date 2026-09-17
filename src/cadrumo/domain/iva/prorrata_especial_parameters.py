@@ -97,6 +97,9 @@ def resolve_prorrata_especial_mandatory_parameters(
     Raises:
         ProrrataEspecialMandatoryParameterError: When the revision does not
             declare the parameter or cannot resolve it for that ejercicio.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     declared = next(
         (p for p in revision.parameters if p.id == PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID),

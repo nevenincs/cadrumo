@@ -431,7 +431,11 @@ class CensoSyncService:
 
 
 def raw_afectacion_ratio_for_record(record: UserProfileRecord) -> Decimal | None:
-    """Return ``office_m2 / total_m2`` from an already-loaded profile record, if declared."""
+    """Return ``office_m2 / total_m2`` from an already-loaded profile record, if declared.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     from .projections import record_to_path_values
 
     return _raw_afectacion_ratio(record_to_path_values(record))

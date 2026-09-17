@@ -12,6 +12,9 @@ page it returns carries canonical application results plus the two facts a
 caller needs to describe the window truthfully -- the unfiltered total and
 whether the window omits anything -- and nothing about columns, labels, or
 line formatting, which stay with the surface that displays them.
+
+Core types:
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

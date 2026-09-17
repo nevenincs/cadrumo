@@ -1,4 +1,8 @@
-"""Persisted amendment authority resolution for modelo export."""
+"""Persisted amendment authority resolution for modelo export.
+
+Core types:
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 
@@ -47,7 +51,12 @@ def resolve_persisted_amendment_export_evidence(
     justificante_repository: JustificanteRepositoryProtocol | None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> AmendmentEvidence | None:
-    """Resolve immutable amendment evidence exclusively from persisted authority."""
+    """Resolve immutable amendment evidence exclusively from persisted authority.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return resolve_persisted_amendment_export_evidence(

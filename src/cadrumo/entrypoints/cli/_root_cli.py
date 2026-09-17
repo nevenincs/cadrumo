@@ -64,6 +64,12 @@ def root_command(
     else:
         from ..adapter_composition import profile_adapter_composition
 
+        if requested is not None and _requested_leaf_writes_nothing(requested.canonical_cli_path):
+            from ...application.user_profile.profile_summary import summary_inventory_snapshot
+
+            # Composition resolves the active profile's language, so a leaf that
+            # writes nothing opens its one profile listing before that read.
+            ctx.with_resource(summary_inventory_snapshot())
         state["adapter_composition"] = ctx.with_resource(profile_adapter_composition())
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
@@ -89,6 +95,16 @@ def _requested_leaf_is_profile_free(path: tuple[str, ...]) -> bool:
     except LookupError:
         return False
     return command_is_profile_free(spec)
+
+
+def _requested_leaf_writes_nothing(path: tuple[str, ...]) -> bool:
+    from .command_specs import COMMAND_GRAPH
+
+    try:
+        spec = COMMAND_GRAPH.resolve_path((COMMAND_GRAPH.root().token, *path))
+    except LookupError:
+        return False
+    return spec.policy.side_effects == frozenset({"none"})
 
 
 def app_root(ctx: typer.Context, help_: bool = False) -> None:

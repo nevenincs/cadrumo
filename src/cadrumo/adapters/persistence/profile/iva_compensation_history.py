@@ -1,4 +1,8 @@
-"""Encrypted adapter for the IVA compensation-history application port."""
+"""Encrypted adapter for the IVA compensation-history application port.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

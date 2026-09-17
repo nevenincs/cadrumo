@@ -660,6 +660,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Every selected outer row is checked before any payload is decrypted or
         yielded.  A legacy row therefore reaches the owning repository's
         explicit-cutover refusal without an implicit upgrade or partial read.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
         """
         self._check_session_freshness(namespace)
         namespace_definition = self._enforce_registered_read_policy(
@@ -737,6 +740,9 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         after that callback succeeds are all older rows replaced in one
         compare-and-swap batch, so a malformed sibling or concurrent write
         leaves every original row intact.
+
+        Core types:
+        :class:`~cadrumo.core.classification.policies.SensitivityClass`.
         """
         targets = tuple(
             SecureObjectMigrationTarget(namespace, key, expected_class, current_version)

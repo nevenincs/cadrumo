@@ -36,7 +36,7 @@ required_text = ["no residentes", "país de residencia"]
 # source-scope authority.
 [[revisions."2023".bindings]]
 id = "m210-ledger-irnr-rendimientos-integros"
-provider = { kind = "ledger_irnr_income_aggregation", modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum" }
+provider = { kind = "ledger_irnr_income_aggregation", modelo = "210", target_casilla_id = "rendimientos_integros", fact = "gross_income_sum", source_jurisdictions = ["ES"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]

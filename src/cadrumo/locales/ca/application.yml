@@ -212,6 +212,8 @@ application:
           només es reconstrueix per al Model 303; s'ha indicat el model {modelo}.
         modelo_303_only: L'historial de compensació d'IVA només accepta observacions
           del Model 303.
+        persistence: L'emmagatzematge de l'historial de compensació d'IVA ha fallat
+          durant %{operation} (%{cause_type}).
         repository_backend_split: El magatzem d'observacions del Model 303 i el de
           l'historial de compensació d'IVA han de compartir un únic backend xifrat
           perquè totes dues escriptures es confirmin alhora.
@@ -244,23 +246,30 @@ application:
           no coincideixen amb els operands de la fórmula del registre {registry_operands}.
           Només una correcció del registre pot resoldre-ho; no hi ha recuperació automàtica
           segura.
-        declaration_type_code_invalid: La capçalera d'origen de tipus de declaració
-          a {source_locator} porta {value}, que no és un codi de disposició de resultat.
-        declaration_type_code_not_admitted: La capçalera d'origen de tipus de declaració
-          a {source_locator} porta {value}, un codi que el disseny de registres del
-          Model 303 no admet.
-        disposition_resultado_sign_incompatible: La disposició declarada {disposition}
+        casilla_id_invalid: El registre declara una casella no vàlida per a la clau
+          de correspondència {mapping_key} del traspàs del Model 303.
+        disposition_code_not_admitted: El codi de destinació del resultat {code} no
+          és admès per al traspàs del Model 303.
+        disposition_code_undeclared: El registre no declara cap codi per a la destinació
+          del resultat {disposition}.
+        disposition_result_sign_incompatible: La disposició declarada {disposition}
           no s'hauria pogut seleccionar per a un resultat presentat de {resultado}.
           Només el contribuent pot decidir quina és correcta; no hi ha recuperació
           automàtica segura.
-        duplicate_declaration_type_headers: L'evidència d'arrossegament del Model
-          303 porta {header_count} capçaleres d'origen {header_key}; se'n requereix
-          exactament una.
+        duplicate_header_facts: L'evidència d'arrossegament del Model 303 porta {header_count}
+          capçaleres d'origen {header_key}; se'n requereix exactament una.
         envelope_not_normalized: L'historial d'arrossegament del Model 303 requereix
           un parell disponible i generada ja normalitzat i conscient de la disposició.
           Torneu a ingerir l'observació presentada.
+        formula_mapping_required: La revisió {revision_id} no declara la correspondència
+          de traspàs del Model 303 necessària per citar la fórmula de la compensació
+          disponible.
         generated_compensation_amount_missing: El sobre d'arrossegament validat del
           Model 303 no porta cap import de compensació generada a la casella {casilla_id}.
+        header_code_invalid: La capçalera d'origen de tipus de declaració a {source_locator}
+          porta {value}, que no és un codi de disposició de resultat.
+        header_code_not_admitted: La capçalera d'origen de tipus de declaració a {source_locator}
+          porta {value}, un codi que el disseny de registres del Model 303 no admet.
         incomplete_supported_operands: 'La normalització de l''arrossegament del Model
           303 no pot derivar la compensació disponible a partir de les caselles presents:
           {casilla_ids}.'
@@ -275,22 +284,28 @@ application:
           el moment de la presentació; l'evidència {source_kind} no en porta cap.
         local_filing_provenance_required: La disposició d'una presentació local del
           Model 303 ha de conservar la seva procedència app_filing; porta {provenance_kind}.
-        non_m303_envelope: L'historial d'arrossegament del Model 303 només admet observacions
-          del Model 303; s'ha indicat el model {modelo}.
-        official_declaration_type_header_required: L'evidència oficial d'arrossegament
-          del Model 303 ha de portar exactament una capçalera d'origen {header_key};
-          l'evidència {source_kind} no en porta cap.
+        non_target_modelo_envelope: L'historial d'arrossegament del Model 303 només
+          admet observacions del Model 303; s'ha indicat el model {modelo}.
         official_disposition_header_disagreement: La disposició de resultat tipada
           {typed_disposition} no coincideix amb la capçalera de tipus de declaració
           de l'AEAT {header_disposition}. Només el contribuent pot decidir quina es
           va presentar; no hi ha recuperació automàtica segura.
-        resultado_casilla_required: La normalització de l'arrossegament del Model
-          303 requereix la casella de resultat presentada {casilla_id}, que l'observació
+        official_header_required: L'evidència oficial d'arrossegament del Model 303
+          ha de portar exactament una capçalera d'origen {header_key}; l'evidència
+          {source_kind} no en porta cap.
+        registry_resolution_unavailable: El registre no ha pogut resoldre la correspondència
+          de traspàs del Model {modelo} per a l'exercici {filing_year}, període {period}.
+        registry_scope_invalid: El traspàs del Model 303 necessita un model i un període;
+          s'ha rebut el model {modelo}, exercici {filing_year}, període {period}.
+        result_casilla_required: La normalització de l'arrossegament del Model 303
+          requereix la casella de resultat presentada {casilla_id}, que l'observació
           no porta.
         supplied_available_contradicts_derivation: La compensació disponible aportada
           {supplied_available} contradiu la derivació {basis} {derived_available}.
           Només el contribuent pot decidir quin import es va presentar; no hi ha recuperació
           automàtica segura.
+        supplied_disposition_not_admitted: La destinació del resultat indicada, {disposition},
+          no és admesa per al traspàs del Model 303.
         supplied_pair_contradicts_derivation: El parell disponible i generada aportat
           {supplied_available} i {supplied_generated} contradiu la derivació {basis}
           {derived_generated}. Només el contribuent pot decidir quins imports es van
@@ -382,9 +397,9 @@ application:
           de dada declarat al registre.
         text_casilla_not_string: L'entrada de text de la casella ha de ser un valor
           de text.
-        unsupported_filing_year: L'exercici {filing_year} no està declarat com a suportat.
-          El registre declara {supported_filing_years}. Admeteu l'exercici a {declaration}
-          després de fonamentar-ne els requisits.
+    errors:
+      persistence: L'emmagatzematge de l'historial de presentacions ha fallat durant
+        %{operation} (%{adapter_error}).
     export:
       errors:
         draft_not_approved: L'exportació requereix un esborrany aprovat.
@@ -472,14 +487,10 @@ application:
           identificadors buits.
         filing_year_period_mismatch: 'Error intern: l''exercici de declaració {filing_year}
           no coincideix amb el període indicat {period}.'
-        filing_year_period_pair: filing_year i period s han d indicar junts.
         modelo_not_in_registry: El model %{modelo} no està present al registre de
           càlcul.
-        modelo_revision_missing: El model %{modelo} no té revisions.
         period_type: 'Error intern: es requereix un objecte Period per al proveïdor
           d''esquema en temps d''execució; s''ha rebut {period_type}.'
-        provider_year_missing: El model %{modelo} revisió %{revision} no té exercici
-          de proveïdor.
         registry_empty: L arrel del registre %{registry_root_name} no té definicions
           de model.
         registry_empty_for_period: L arrel del registre no té definicions de model
@@ -1149,6 +1160,13 @@ application:
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
     findings:
+      art20_reduccion_possible: La casella %{rnt_id} declara %{rnt_value} EUR de rendiment
+        net del treball dins del límit de l'art. 20 LIRPF, de manera que la casella
+        %{reduccion_id} pot optar a una reducció que ara mateix declara a zero.
+      art52_reduccion_individual_sublimit_possible: La casella %{reduccion_id} declara
+        %{reduccion_value} EUR de reducció per previsió social per sobre del sublímit
+        individual de %{sublimit} EUR de l'art. 52 LIRPF, sense desglossament d'aportacions
+        amb contribució empresarial; confirmeu que s'ha aplicat el sublímit individual.
       attribution_received_uncaptured: La casella %{casilla_id} de %{filing_year}
         conté %{casilla_value} EUR de renda atribuïda sense registrar.
       attribution_received_unfolded: La renda atribuïda de %{filing_year} per %{total_base}
@@ -1179,6 +1197,13 @@ application:
         %{target_period}.
       cuota_less_ledger_row_base_missing: La transacció %{transaction_id} de la categoria
         d'IVA %{iva_category_code} no té base declarable.
+      dt12a_reduccion_antiquity_possible: La casella %{reduccion_id} declara %{reduccion_value}
+        EUR de reducció de la DT 12a; confirmeu que es compleix la condició d'antiguitat
+        que exigeix.
+      dt12a_reduccion_possible: La casella %{ingreso_id} declara %{ingreso_value}
+        EUR de rendiments del treball per sobre del llindar de la DT 12a, de manera
+        que la casella %{reduccion_id} pot optar a una reducció que ara mateix declara
+        a zero.
       foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el bé a l''estranger
         %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
         a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
@@ -1194,6 +1219,9 @@ application:
         poden estar subjectes a una clàusula de limitació de beneficis (%{document_id}).
       m210_rate_unavailable: No s'ha pogut resoldre el tipus del model 210 per al
         tipus de renda %{tipo_renta_code} de l'exercici %{filing_year} (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: El total intracomunitari del Model
+        303 de %{m303_total} EUR i el total del Model 349 de %{m349_total} EUR divergeixen
+        en %{gap} EUR per al període %{period_code} %{filing_year}.
       madrid_nacimiento_adopcion_eligibility_advisory: La casella %{casilla_id} amb
         recompte ponderat %{weighted_count} pot optar a la deducció madrilenya per
         naixement o adopció.

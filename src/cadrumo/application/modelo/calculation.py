@@ -15,6 +15,9 @@ re-exposed outside the record that owns it.
 See Also:
     :class:`~CalculationRevision`
         The materialized record this module captures without reconstruction.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
 """
 
 from __future__ import annotations
@@ -43,6 +46,9 @@ def visible_calculation_casilla_values(
     The write path has already removed registry-declared row templates. The read
     path first re-confirms the persisted canonical coordinate and never guesses
     semantic membership from an identifier prefix.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision.casilla_values
@@ -58,6 +64,9 @@ def visible_calculation_observations(
     This is the observation-stream counterpart of
     :func:`visible_calculation_casilla_values` and applies the same canonical
     revision re-confirmation before returning the write-time materialization.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     require_calculation_revision_coordinates_current(revision, operation=operation)
     return revision.observations

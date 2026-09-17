@@ -1,6 +1,10 @@
 modelo:
   schema:
     '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: 'Modelo 187: self-assessment calculation'
       field:
         official_name: Modelo 187. Informative return of shares and units representing
           the capital or assets of collective investment undertakings, and annual
@@ -27,9 +31,5 @@ modelo:
               help: Sum of the withholdings and payments on account applied to the
                 declared transactions.
               label: Total amount of withholdings and payments on account
-          construct:
-            modelo-187-calculation-construct:
-              field:
-                title: Modelo 187 calculation construct
           field:
-            label: Casilla— tax information
+            label: Order HAP/1608/2014, tax years 2022 onwards

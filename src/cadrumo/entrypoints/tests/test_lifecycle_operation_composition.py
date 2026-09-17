@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _FACTORY_ARGUMENTS: dict[str, Any] = {
     "actor": "operator",
-    "profile_resolver": lambda: None,
+    "profile_resolver": lambda operation: None,
     "command_builder": lambda revision, path: None,
     # Port collaborators are consumed only when an executor is built, which this
     # suite never does; it proves composition, not execution.

@@ -612,8 +612,6 @@ errors:
       must be at least 1; got %{batch_size}.
     integrity_storage_secure_object_hashed_key_length: Secure-object raw lookup digest
       must be 32 bytes; got %{length}.
-    integrity_storage_secure_object_raw_bytes: 'Secure-object raw byte metadata has
-      an unsupported type: %{value_type}.'
     integrity_storage_secure_object_revision_ancestry_json: Secure-object revision
       ancestry metadata is malformed JSON.
     integrity_storage_secure_object_revision_ancestry_shape: Secure-object revision
@@ -661,9 +659,6 @@ errors:
       owner lock expires; check the diagnostic logs for the cause.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
-    internal_profile_project_answers_not_registered: 'Internal error: project_answers
-      has not been registered at application startup.'
-    internal_profile_registration: 'Internal error: profile could not be registered.'
     internal_wipe_type: 'Internal error: the wipe operation received a value it cannot
       overwrite.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort

@@ -126,7 +126,11 @@ def m303_regimen_simplificado_annual_summary_selector(
 def m303_regimen_simplificado_annual_summary_requirement(
     revision: ModeloRevision,
 ) -> M303RegimenSimplificadoAnnualSummaryRequirement | None:
-    """Project the revision's typed Modelo 303 4T annual-summary bindings once."""
+    """Project the revision's typed Modelo 303 4T annual-summary bindings once.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     bindings = _annual_summary_bindings(revision)
     if not bindings:
         return None
@@ -144,7 +148,11 @@ def m303_regimen_simplificado_annual_summary_requirement(
 
 
 def validate_m303_regimen_simplificado_annual_summary_revision(revision: ModeloRevision) -> list[str]:
-    """Return build-time failures for the complete 303/4T -> 390/0A target map."""
+    """Return build-time failures for the complete 303/4T -> 390/0A target map.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     try:
         requirement = m303_regimen_simplificado_annual_summary_requirement(revision)
     except RegistryValidationError as exc:

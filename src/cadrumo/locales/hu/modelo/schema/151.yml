@@ -11,6 +11,7 @@ modelo:
             label: Adózó külföldi címe. 72 - Faxszám
           cuota-cero:
             help: 'Tekintse át a casilla adatait: Adóösszeg cero.'
+            label: Nulla adóösszeg
           did-devolucion-swift-bic:
             help: 'Tekintse át a casilla adatait: Visszatérítés. SWIFT-BIC.'
             label: Visszatérítés. SWIFT-BIC
@@ -19,7 +20,7 @@ modelo:
             label: Időszak (éves, 0A)
           filing-year:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóév.'
-            label: A bevallás tárgyát képező adóév
+            label: A bevallás vonatkozási éve
           impatriado-base-liquidable-ahorro:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóügyi információ.'
             label: 'Megtakarítási adóalap (a TRLIRNR 25.1.f cikke szerinti jövedelmek
@@ -27,8 +28,8 @@ modelo:
               tőkenyereség)'
           impatriado-base-liquidable-general:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóügyi információ.'
-            label: Általános adóalap (beköltöző-rendszer, a TRLIRNR 25.1.f cikke szerinti
-              megtakarítási rész kivételével)
+            label: Általános adóalap (beköltöző (impatriado) szabályozás, a TRLIRNR
+              25.1.f cikke szerinti megtakarítási jövedelem nélkül)
           impatriado-cuota-diferencial:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóügyi információ.'
           impatriado-cuota-integra-ahorro:
@@ -37,11 +38,11 @@ modelo:
               a megtakarítási adóalapra, a 7/2024. törvény hatályos szövege szerint)'
           impatriado-cuota-integra-general:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóügyi információ.'
-            label: 'Bruttó általános adókötelezettség (a 93.2.e.1. cikk szerinti sáv:
-              24% 600 000 EUR-ig, 47% a felette)'
+            label: 'Bruttó általános adóösszeg (93.2.e.1. cikk szerinti sáv: 24% 600
+              000 EUR-ig, 47% a felette lévő rész után)'
           impatriado-retenciones:
             help: 'A Modelo 151 . casilla adóügyi adatai: adóügyi információ.'
-            label: Visszatartások és előlegfizetések (93.2.f cikk)
+            label: Levonások és előlegfizetések (előlegfizetések, 93.2.f cikk)
           m151-44-tipo-de-via:
             help: 'A Modelo 151 317-321. casilla adóügyi adatai: adóügyi információ.'
           m151-46-tipo-de-numeracion:
@@ -56,15 +57,27 @@ modelo:
             help: 'A Modelo 151 473-474. casilla adóügyi adatai: adóügyi információ.'
           m151-cuota-de-participacion:
             help: 'A Modelo 151 222-226. casilla adóügyi adatai: adóügyi információ.'
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
             help: 'A Modelo 151 469-473. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
             help: 'A Modelo 151 481-500. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
             help: 'A Modelo 151 474-478. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           m151-descripcion-de-la-ganancia-patrimonial:
             help: A Modelo 151 15-114. casilla adóügyi adatai.
           m151-descripcion-del-elemento-patrimonial:
@@ -88,6 +101,7 @@ modelo:
           m151-retencion-o-ingreso-a-cuenta-11:
             help: 'A Modelo 151 181-197. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Levonás vagy előlegfizetés [11]
           p01-asignacion-de-cantidades-a-fines-sociales:
             help: A Modelo 151 925. casilla adóügyi adatai.
           p01-asignacion-tributaria-a-la-iglesia-catolica:
@@ -150,30 +164,66 @@ modelo:
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'A Modelo 151 225-229. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'A Modelo 151 713-717. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'A Modelo 151 957-961. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'A Modelo 151 230-234. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'A Modelo 151 718-722. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'A Modelo 151 962-966. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p02-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'A Modelo 151 237-256. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'A Modelo 151 725-744. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'A Modelo 151 969-988. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
           p02-pagador-apellidos-o-razon-social-01:
             help: 'A Modelo 151 111-170. casilla adóügyi adatai: adóügyi információ.'
             label: Kifizető. Vezetéknév vagy cégnév
@@ -201,39 +251,87 @@ modelo:
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'A Modelo 151 225-229. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
             help: 'A Modelo 151 469-473. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'A Modelo 151 713-717. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'A Modelo 151 957-961. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Tulajdon (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Elhelyezkedés [13]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'A Modelo 151 230-234. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
             help: 'A Modelo 151 474-478. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'A Modelo 151 718-722. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'A Modelo 151 962-966. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Haszonélvezet (%) [11]
           p03-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'A Modelo 151 237-256. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-02:
             help: 'A Modelo 151 481-500. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'A Modelo 151 725-744. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'A Modelo 151 969-988. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [14].'
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Kataszteri hivatkozás [14]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
+              adatai. Eredet [12]
           p03-pagador-apellidos-o-razon-social-01:
             help: 'A Modelo 151 111-170. casilla adóügyi adatai: adóügyi információ.'
             label: Kifizető. Vezetéknév vagy cégnév
@@ -261,9 +359,11 @@ modelo:
           p03-total-rendimientos-int-nmobiliaria-imputada-15:
             help: 'Tekintse át a casilla adatait: Total jövedelmek íntegros/Jövedelem
               ingatlan imputada [15].'
+            label: Összes bruttó hozam / beszámított ingatlanjövedelem [15]
           p03-total-retenciones-o-ingresos-a-cuenta-16:
             help: 'A Modelo 151 1040-1056. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [16].'
+            label: Összes levonás vagy előlegfizetés [16]
           p05-nif-de-la-sociedad-o-fondo-de-inversion-02:
             help: 'A Modelo 151 215-223. casilla adóügyi adatai: adóügyi információ.'
           p05-nif-de-la-sociedad-o-fondo-de-inversion-03:
@@ -329,17 +429,22 @@ modelo:
           p06-resto-ganancia-patrimonial-total-obtenida-10:
             help: 'A Modelo 151 1229-1245. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [10].'
+            label: MARADÉK. Elért teljes tőkenyereség [10]
           p06-resto-retencion-o-ingreso-a-cuenta-11:
             help: 'A Modelo 151 1246-1262. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: MARADÉK. Levonás vagy előlegfizetés [11]
           p06-retencion-o-ingreso-a-cuenta-11-02:
             help: 'A Modelo 151 789-805. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [11].'
+            label: Levonás vagy előlegfizetés [11]
           p06-total-ganancias-patrimoniales-12:
             help: 'Tekintse át a casilla adatait: Total ganancias vagyoni [12].'
+            label: Összes tőkenyereség [12]
           p06-total-retenciones-o-ingresos-a-cuenta-13:
             help: 'A Modelo 151 1280-1296. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [13].'
+            label: Összes levonás vagy előlegfizetés [13]
           p07-descripcion-de-la-ganancia-patrimonial-02:
             help: A Modelo 151 152-251. casilla adóügyi adatai.
           p07-descripcion-de-la-ganancia-patrimonial-03:
@@ -384,32 +489,46 @@ modelo:
             label: A megtakarítási adóalapra jutó adó [20]
           p08-cuota-integra-total-21:
             help: 'Tekintse át a casilla adatait: Adóösszeg teljes total [21].'
+            label: Összes bruttó adó [21]
           p08-cuota-integra-total-parte-autonomica-23:
             help: 'Tekintse át a casilla adatait: Adóösszeg teljes total. Autonóm
               közösségi rész [23].'
+            label: Összes bruttó adó. Regionális rész [23]
           p08-cuota-integra-total-parte-estatal-22:
             help: 'Tekintse át a casilla adatait: Adóösszeg teljes total. Állami rész
               [22].'
+            label: Összes bruttó adó. Állami rész [22]
           p08-cuota-liquida-total-30:
             help: 'Tekintse át a casilla adatait: Adóösszeg líquida total [30].'
+            label: Összes nettó adó [30]
           p08-cuota-liquida-total-parte-autonomica-32:
             help: 'Tekintse át a casilla adatait: Adóösszeg líquida total. Autonóm
               közösségi rész [32].'
+            label: Összes nettó adó. Regionális rész [32]
           p08-cuota-liquida-total-parte-estatal-31:
             help: 'Tekintse át a casilla adatait: Adóösszeg líquida total. Állami
               rész [31].'
+            label: Összes nettó adó. Állami rész [31]
           p08-cuotas-del-impuesto-so-as-en-la-declaracion-34:
             help: 'A Modelo 151 1080-1096. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [34].'
+            label: A bevallásban szereplő jövedelem után megfizetett külföldi illetőségűek
+              jövedelemadója [34]
           p08-deduccion-por-doble-im-anjero-parte-estatal-28:
             help: 'A Modelo 151 978-994. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [28].'
+            label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+              és megadóztatott munkajövedelem után. Állami rész [28]
           p08-deduccion-por-doble-im-dos-en-el-extranjero-27:
             help: 'A Modelo 151 961-977. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [27].'
+            label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+              és megadóztatott munkajövedelem után [27]
           p08-deduccion-por-doble-im-ero-parte-autonomica-29:
             help: 'A Modelo 151 995-1011. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [29].'
+            label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
+              és megadóztatott munkajövedelem után. Regionális rész [29]
           p08-deduccion-por-donativos-24:
             help: 'A Modelo 151 910-926. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [24].'
@@ -417,6 +536,7 @@ modelo:
           p08-deduccion-por-donativos-parte-autonomica-26:
             help: 'A Modelo 151 944-960. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [26].'
+            label: Adományok utáni levonás. Regionális rész [26]
           p08-deduccion-por-donativos-parte-estatal-25:
             help: 'A Modelo 151 927-943. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [25].'
@@ -430,6 +550,7 @@ modelo:
           p08-devoluciones-acordadas-or-la-administracion-42:
             help: 'A Modelo 151 1216-1232. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [42].'
+            label: A hatóság által megállapított visszatérítések [42]
           p08-epigrafe-a1-35:
             help: 'Tekintse át a casilla adatait: Epígrafe A1 [35].'
             label: A1 tétel [35]
@@ -466,9 +587,18 @@ modelo:
           p08-resultados-a-ingresar-cion-administrativas-41:
             help: 'A Modelo 151 1199-1215. casilla adóügyi adatai: adóügyi információ
               Hivatkozások: [41].'
+            label: Korábbi bevallásokból vagy hatósági megállapításokból befizetendő
+              összegek [41]
           representante-fax:
             help: 'A Modelo 151 913-921. casilla adóügyi adatai: adóügyi információ.'
             label: Képviselő. 61 - Faxszám.
+          tipo-de-declaracion:
+            label: Bevallás típusa
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: 151-es nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
+              rendszere, adóösszeg
       field:
         official_name: Modelo 151. Az IRPF bevallása a spanyol területre kiküldött
           munkavállalókra alkalmazandó különleges szabályozás alá tartozó adózók számára.
@@ -477,8 +607,6 @@ modelo:
       revision:
         2015-2022:
           casilla:
-            x-chkm8bj3elnn8o9dcdin4ro:
-              label: Nulla fizetendő adó
             x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
               help: 'A Modelo 151 13-46. casilla adóügyi adatai: adóügyi információ.'
               label: Számlaszám (IBAN)
@@ -640,75 +768,30 @@ modelo:
               label: Képviselő. Adóazonosító szám
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: 'A Modelo 151 13. casilla adóügyi adatai: adóügyi információ.'
-              label: A bevallás típusa
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'A Modelo 151 236. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'A Modelo 151 480. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'A Modelo 151 724. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'A Modelo 151 968. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'A Modelo 151 235. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'A Modelo 151 479. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'A Modelo 151 723. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'A Modelo 151 967. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'A Modelo 151 208-224. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [9].'
@@ -877,74 +960,30 @@ modelo:
               help: 'A Modelo 151 748-764. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [3].'
               label: Értékelés [3]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Tulajdon (%)
-                [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'A Modelo 151 236. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'A Modelo 151 480. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'A Modelo 151 724. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'A Modelo 151 968. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Helyzet [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Haszonélvezet
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Ingatlan-nyilvántartási
-                hivatkozás [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'A Modelo 151 235. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'A Modelo 151 479. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'A Modelo 151 723. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'A Modelo 151 967. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Ingatlan- és vagyonjövedelem kiegészítő adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'A Modelo 151 208-224. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [9].'
@@ -1106,10 +1145,6 @@ modelo:
               help: 'A Modelo 151 745-746. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [1].'
               label: Jövedelem típusa [1]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
-              label: Bruttó jövedelem / vélelmezett ingatlanjövedelem összesen [15]
-            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
-              label: Forrásadók vagy adóelőlegek összesen [16]
             x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
               help: 'A Modelo 151 16-32. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [3].'
@@ -1705,14 +1740,6 @@ modelo:
             x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
               help: 'Tekintse át a casilla adatait: Szám Igazolás - modelo 211.'
               label: A 211-es nyomtatvány bizonylatszáma
-            x-e0o3cbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              label: FENNMARADÓ. Elért teljes tőkenyereség [10]
-            x-e0o3cbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
-              label: FENNMARADÓ. Forrásadó vagy adóelőleg [11]
-            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko32:
-              label: Forrásadó vagy adóelőleg [11]
-            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
-              label: Forrásadó vagy adóelőleg [11]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               help: 'A Modelo 151 13-14. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [1].'
@@ -1721,10 +1748,6 @@ modelo:
               help: 'A Modelo 151 621-622. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [1].'
               label: Jövedelem típusa [1]
-            x-e0o3cbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
-              label: Tőkenyereség összesen [12]
-            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
-              label: Forrásadók vagy adóelőlegek összesen [13]
             x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
               help: 'A Modelo 151 45-61. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [3].'
@@ -1953,32 +1976,6 @@ modelo:
               help: 'A Modelo 151 1354-1370. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [2].'
               label: Átruházási érték [2]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
-              label: Bruttó adó összesen [21]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              label: Bruttó adó összesen. Autonóm közösségi rész [23]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              label: Bruttó adó összesen. Állami rész [22]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
-              label: Nettó adó összesen [30]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              label: Nettó adó összesen. Autonóm közösségi rész [32]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              label: Nettó adó összesen. Állami rész [31]
-            x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
-              label: A bevallásban szereplő jövedelem után megfizetett, külföldi illetőségűeket
-                terhelő jövedelemadó [34]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm2rjaclp6ubbgc5p78p9dclpn8obkc5m2qcho:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és adóztatott munkajövedelem után. Állami rész [28]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm8rrj5limsbb5dgmmau3ke9gmsqj5e9niqchn:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és adóztatott munkajövedelem után [27]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmmasjf5lo62sjkckmm2tbkdtn6urb9cdgiqchp:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és adóztatott munkajövedelem után. Autonóm közösségi rész [29]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              label: Adományok utáni levonás. Autonóm közösségi rész [26]
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
               label: A vagyontárgy megnevezése
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
@@ -1987,8 +1984,6 @@ modelo:
               label: A vagyontárgy megnevezése
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
               label: A vagyontárgy megnevezése
-            x-e0o3gbj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmmushddhgiqob4dlkmsqbjehp62or9dtn2qd1i:
-              label: Az adóhatóság által megítélt visszatérítések [42]
             x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
               help: 'Tekintse át a casilla adatait: Diferencia [4].'
               label: Különbözet [4]
@@ -2037,9 +2032,6 @@ modelo:
               help: 'A Modelo 151 757-773. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [5].'
               label: FENNMARADÓ. Tőkenyereség [5]
-            x-e0o3gbjiclpnar3kc5i6uspdc4mmirj7e9in6obi5lhmirre5lgm8rb9dpkn6t3ic5q6itj1ecmj8c8:
-              label: Korábbi bevallásokból vagy hatósági megállapításokból fizetendő
-                összegek [41]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               help: 'A Modelo 151 13-14. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [1].'
@@ -2091,11 +2083,6 @@ modelo:
               help: 'A Modelo 151 689-705. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [2].'
               label: Átruházási érték [2]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: 151-es nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
-                  rendszere, adóösszeg
           field:
             label: 151-es nyomtatvány, 2015–2022 adóévek (bevándorolt munkavállalók
               különleges rendszere, a 26/2014. sz. törvény szerinti egykulcsos 24/47
@@ -2104,11 +2091,8 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: A bevallás tárgyát képező adóév
-              label: A bevallás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: Időszak (éves, 0A)
-            x-chkm8bj3elnn8o9dcdin4ro:
-              label: Nulla adóösszeg
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: 'A Modelo 151 60-129. casilla adóügyi adatai: adóügyi információ.'
               label: Visszatérítés. Bank neve
@@ -2160,19 +2144,14 @@ modelo:
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: Általános adóalap (beköltöző-rendszer, a TRLIRNR 25.1.f cikke
                 szerinti megtakarítási rész kivételével)
-              label: Általános adóalap (beköltöző (impatriado) szabályozás, a TRLIRNR
-                25.1.f cikke szerinti megtakarítási jövedelem nélkül)
             x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
               label: Adókülönbözet (bruttó általános adóösszeg és bruttó megtakarítási
                 adóösszeg együtt, levonásokkal csökkentve)
             x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
               help: 'Bruttó általános adókötelezettség (a 93.2.e.1. cikk szerinti
                 sáv: 24% 600 000 EUR-ig, 47% a felette)'
-              label: 'Bruttó általános adóösszeg (93.2.e.1. cikk szerinti sáv: 24%
-                600 000 EUR-ig, 47% a felette lévő rész után)'
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: Visszatartások és előlegfizetések (93.2.f cikk)
-              label: Levonások és előlegfizetések (előlegfizetések, 93.2.f cikk)
             x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj5kp34:
               help: 'A Modelo 151 986-986. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [22].'
@@ -2413,83 +2392,30 @@ modelo:
               label: Képviselő. Közterület jellege [26]
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: 'A Modelo 151 13-13. casilla adóügyi adatai: adóügyi információ.'
-              label: Bevallás típusa
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'A Modelo 151 479-479. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'A Modelo 151 723-723. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'A Modelo 151 967-967. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'A Modelo 151 480-480. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'A Modelo 151 724-724. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'A Modelo 151 968-968. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'A Modelo 151 235-235. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'A Modelo 151 236-236. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'A Modelo 151 452-468. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [09].'
@@ -2674,82 +2600,30 @@ modelo:
               help: 'A Modelo 151 748-764. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [03].'
               label: Értékelés [03]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'A Modelo 151 479-479. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'A Modelo 151 723-723. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'A Modelo 151 967-967. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'A Modelo 151 480-480. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'A Modelo 151 724-724. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'A Modelo 151 968-968. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Tulajdon (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Haszonélvezet (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'A Modelo 151 235-235. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [12].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Eredet [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'A Modelo 151 236-236. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [13].'
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Elhelyezkedés [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Vagyontárgyakból és ingatlanokból származó jövedelem kiegészítő
-                adatai. Kataszteri hivatkozás [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'A Modelo 151 452-468. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [09].'
@@ -2926,10 +2800,6 @@ modelo:
               help: 'A Modelo 151 745-746. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [01].'
               label: Jövedelem típusa [01]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmn4pbeehgiqqbedlnm4qbcd5gn4qb15lkmqs3lehgm8o9d64qg:
-              label: Összes bruttó hozam / beszámított ingatlanjövedelem [15]
-            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
-              label: Összes levonás vagy előlegfizetés [16]
             x-e0o36bjmc5m6usj1cdkmurhd60pg:
               help: 'A Modelo 151 16-32. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [03].'
@@ -3962,14 +3832,6 @@ modelo:
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: 'Tekintse át a casilla adatait: Referencia Catastral [53].'
               label: Kataszteri hivatkozás [53]
-            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              label: MARADÉK. Elért teljes tőkenyereség [10]
-            x-e0o3gbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
-              label: MARADÉK. Levonás vagy előlegfizetés [11]
-            x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h:
-              label: Levonás vagy előlegfizetés [11]
-            x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
-              label: Levonás vagy előlegfizetés [11]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: 'A Modelo 151 372-374. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [28].'
@@ -3994,10 +3856,6 @@ modelo:
               help: 'A Modelo 151 925-929. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [26].'
               label: Közterület jellege [26]
-            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
-              label: Összes tőkenyereség [12]
-            x-e0o3gbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
-              label: Összes levonás vagy előlegfizetés [13]
             x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0co:
               help: 'A Modelo 151 45-61. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [03].'
@@ -4262,32 +4120,6 @@ modelo:
               help: 'A Modelo 151 1354-1370. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [02].'
               label: Átruházási érték [02]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
-              label: Összes bruttó adó [21]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              label: Összes bruttó adó. Regionális rész [23]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              label: Összes bruttó adó. Állami rész [22]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
-              label: Összes nettó adó [30]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              label: Összes nettó adó. Regionális rész [32]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              label: Összes nettó adó. Állami rész [31]
-            x-e0oj0bj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdth74p9ddhgiqsj5dpq62bb4ckmmsrpde9in6qb4cln78pbj5lo62pr1cgmj6d0:
-              label: A bevallásban szereplő jövedelem után megfizetett külföldi illetőségűek
-                jövedelemadója [34]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4do:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és megadóztatott munkajövedelem után [27]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e0:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és megadóztatott munkajövedelem után. Állami rész [28]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e8:
-              label: Nemzetközi kettős adóztatás miatti levonás a külföldön szerzett
-                és megadóztatott munkajövedelem után. Regionális rész [29]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              label: Adományok utáni levonás. Regionális rész [26]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: 'A Modelo 151 15-114. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [67].'
@@ -4304,8 +4136,6 @@ modelo:
               help: 'A Modelo 151 573-672. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [67].'
               label: A vagyontárgy leírása [67]
-            x-e0oj0bj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmn0rri5lm62bb1chmmirj9edq74ob3d5nmsb9k68:
-              label: A hatóság által megállapított visszatérítések [42]
             x-e0oj0bj4d5j6asj5dphmio9d60q0:
               help: 'Tekintse át a casilla adatait: Diferencia [04].'
               label: Különbözet [04]
@@ -4370,9 +4200,6 @@ modelo:
               help: 'A Modelo 151 757-773. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [05].'
               label: MARADÉK. Tőkenyereség [05]
-            x-e0oj0bjiclpnar3kc5i6uspdc4mmirj7e9in6obi5li6abbcc5piqobeehin4qbfe9in6bb4clhmoobic5hmirreclpiqrpddgmj8c8:
-              label: Korábbi bevallásokból vagy hatósági megállapításokból befizetendő
-                összegek [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: 'A Modelo 151 13-14. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [01].'
@@ -4424,10 +4251,8 @@ modelo:
               help: 'A Modelo 151 689-705. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [02].'
               label: Átruházási érték [02]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: 151-es nyomtatvány, személyi jövedelemadó, bevándorolt munkavállalók
-                  rendszere, adóösszeg
           field:
-            label: Casilla— adóügyi információ
+            label: 151-es modelo, 2025. adóévtől (kiküldött külföldiek rendszere;
+              24/47 általános egykulcsos sáv a 93.2.e.1. cikk szerint, valamint a
+              megtakarítási sáv a 93.2.e.2. cikk szerint, a 7/2024. törvény hatályos
+              szövegezése szerint)

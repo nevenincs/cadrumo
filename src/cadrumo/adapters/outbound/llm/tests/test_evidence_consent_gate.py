@@ -44,7 +44,8 @@ from .....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ..cache import LLMCache
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..client import LLMClient as _ClientUnderInspection
 from ..consent import (
@@ -56,7 +57,6 @@ from ..consent import (
 from ..errors import LLMConsentError
 from ..evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
 from ..models import LLMRequest
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -535,7 +535,7 @@ def test_the_gate_runs_before_the_cache_read_and_before_adapter_construction() -
 
 def _consent_entries() -> tuple[str, ...]:
     """Return the recorded content addresses for the active profile, oldest first."""
-    from ..consent_ledger import EvidenceConsentLedger
+    from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 
     return tuple(entry.evidence_content_address for entry in EvidenceConsentLedger().load_entries())
 
@@ -669,7 +669,7 @@ def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_p
     from .....adapters.persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
     from .....core.hashing import canonical_json_bytes
     from .....core.time.clock import now
-    from ..consent_ledger import EvidenceConsentLedger
+    from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 
     settings = _settings(tmp_path, cloud_upload_permitted=True)
     with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):

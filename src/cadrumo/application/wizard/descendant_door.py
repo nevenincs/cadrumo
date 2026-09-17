@@ -186,6 +186,9 @@ def persist_descendant_door_answers(
     in one authenticated compare-and-swap command. The clearing reads the
     authoritative current record before constructing the replacement, so a
     count-shrink never strands a descendant index above the answered count.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     from ...core.bucket_pointer import require_active_bucket_id
     from ...domain.user_profile.values import UserProfileFact

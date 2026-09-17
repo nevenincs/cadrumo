@@ -1,6 +1,10 @@
 modelo:
   schema:
     '156':
+      construct:
+        modelo-156-informative:
+          field:
+            title: Modelo 156 return informative
       field:
         official_name: Modelo 156. Personal Income Tax. Contributions by members and
           mutual-society members for the purposes of the maternity deduction. Annual
@@ -79,9 +83,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Tax information for casilla of Modelo 156.
               label: Return type (original / substitute / supplementary)
-          construct:
-            modelo-156-informative:
-              field:
-                title: Modelo 156 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 156 (Order HAC/3580/2003), tax years 2003 onwards

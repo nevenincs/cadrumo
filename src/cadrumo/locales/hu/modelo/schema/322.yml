@@ -550,6 +550,10 @@ modelo:
             label: Prorrata - 5 - Arányosítás típusa [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
+      construct:
+        modelo-322-iva-grupo-individual:
+          field:
+            title: 322-es modelo IVA-csoport, egyedi bevallás
       field:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.
@@ -985,10 +989,6 @@ modelo:
               help: A 322-es modelo iva.resultado-regimen-general. rovata, 2008. adóév.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: A 322-es modelo iva.soportado.interiores. rovata, 2008. adóév.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
             label: 322-es modelo, 2008-2025. adóévek
         '2023':
@@ -1023,10 +1023,6 @@ modelo:
               help: A 322-es modelo 163. rovata, 2008. adóév.
             '164':
               help: A 322-es modelo 164. rovata, 2008. adóév.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
             label: 322-es modelo, 2008-2025. adóévek
         2024-2025:
@@ -1440,10 +1436,6 @@ modelo:
               help: A 322-es modelo iva.resultado-regimen-general. rovata, 2024. adóév.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: A 322-es modelo iva.soportado.interiores. rovata, 2024. adóév.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
             label: 322-es modelo, 2008-2025. adóévek
         2026-y-siguientes:
@@ -2127,9 +2119,5 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
                 interiores corrientes.'
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: 322-es modelo IVA-csoport, egyedi bevallás
           field:
             label: 322-es modelo, 2026. adóévtől

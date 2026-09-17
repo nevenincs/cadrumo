@@ -135,6 +135,9 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     Returns ``None`` when the bucket carries no profile record, the revision
     does not declare the casilla-1039 semantic role, or any of the firing
     conditions above is not met.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     try:
         casilla_id = casilla_id_for_unique_semantic_role(snapshot, _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE)
@@ -218,7 +221,11 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile | None = None,
 ) -> ModeloVerificationFinding | None:
-    """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
+    """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     return madrid_nacimiento_adopcion_eligibility_advisory_finding(
         snapshot,
         casilla_values,

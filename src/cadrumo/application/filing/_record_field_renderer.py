@@ -352,19 +352,31 @@ def _sepa_marca(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | N
 
 
 def complementaria_page_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render the official ``C`` page marker from amendment evidence alone."""
+    """Render the official ``C`` page marker from amendment evidence alone.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     del draft
     return "C" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
 
 
 def m303_complementaria_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render the official binary amendment marker from immutable amendment evidence."""
+    """Render the official binary amendment marker from immutable amendment evidence.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     del draft
     return "X" if snapshot.amendment_evidence and snapshot.amendment_evidence.is_complementaria else None
 
 
 def m303_no_activity_marker(draft: ModeloDraft, snapshot: FilingProducerSnapshot) -> str | None:
-    """Render ``X`` only for the closed Modelo 303 no-activity disposition."""
+    """Render ``X`` only for the closed Modelo 303 no-activity disposition.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     del draft
     return "X" if snapshot.elections.result_disposition is ResultDisposition.NEGATIVA else None
 

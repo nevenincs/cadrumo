@@ -66,6 +66,10 @@ def validate_m303_filing_instance_evidence_for_revision(
 
     ``profile`` is the work profile the calling command already loaded; when
     omitted, this entry loads it for the simplified-regime check.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if work_unit.modelo != Modelo("303"):
         if evidence is not None:

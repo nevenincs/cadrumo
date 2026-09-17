@@ -27,8 +27,8 @@ from .....application.diagnostics_run_health import (
 from .....application.diagnostics_run_health_ports import DiagnosticAuthProbePort, DiagnosticAuthProbeResult
 from .....application.ledger.llm_diagnostics import LlmUsageCostProviderMetrics
 from .....core.directory_scan import scan_directory
+from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryDiagnosticsAdapter, LLMRunTelemetryRecorder
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..run_telemetry import LLMRunRecord, LLMRunTelemetryDiagnosticsAdapter, LLMRunTelemetryRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 

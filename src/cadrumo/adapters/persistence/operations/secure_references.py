@@ -1,4 +1,8 @@
-"""Encrypted, content-addressed secure operands for durable operations."""
+"""Encrypted, content-addressed secure operands for durable operations.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 
@@ -141,7 +145,11 @@ def operation_secure_reference_repository(
     *,
     objects: SecureObjectRepository | None = None,
 ) -> OperationSecureReferenceRepository:
-    """Bind explicit test storage or lazily resolve the live active profile."""
+    """Bind explicit test storage or lazily resolve the live active profile.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    """
     return OperationSecureReferenceRepository(
         objects=objects,
         objects_factory=None if objects is not None else secure_object_repository_for_active_bucket,

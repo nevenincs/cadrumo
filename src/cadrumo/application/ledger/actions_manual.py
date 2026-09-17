@@ -421,6 +421,9 @@ def list_manual_transactions(
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` for one
     stored transaction. ``catalogue`` is the bucket's already-loaded catalogue
     when the caller holds one; otherwise it is loaded here.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     if catalogue is None:
         repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
@@ -446,6 +449,9 @@ def query_ledger_review_rows(
     Returns a :class:`~cadrumo.application.ledger.models.LedgerReviewQueryResult`.
     ``catalogue`` is the query bucket's already-loaded catalogue when the caller
     holds one; otherwise it is loaded here.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     if catalogue is None:
         repository = resolve_transaction_repository(bucket_id=query.bucket_id, repository=ports.transaction_repository)
@@ -695,6 +701,9 @@ def summarize_manual_transactions(
     transactions summarise that exact snapshot. Reloading would cost a second
     decrypted read and, if a write interleaved, would describe a different
     instant from the rows the caller is projecting beside it.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     transactions = _manual_transaction_snapshot(
         bucket_id=bucket_id,
@@ -762,6 +771,9 @@ def update_manual_transaction(
     so decrypting the whole catalogue again would only repeat the read.
 
     Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)

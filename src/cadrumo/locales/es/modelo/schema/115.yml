@@ -1,6 +1,11 @@
 modelo:
   schema:
     '115':
+      construct:
+        modelo-115-quarterly-rental-withholding:
+          field:
+            title: 'Modelo 115: retenciones trimestrales sobre arrendamiento de inmuebles
+              urbanos'
       field:
         official_name: Retenciones e ingresos a cuenta. Rentas o rendimientos procedentes
           del arrendamiento o subarrendamiento de inmuebles urbanos.
@@ -18,10 +23,6 @@ modelo:
               label: Resultado de anteriores declaraciones
             '05':
               label: Resultado a ingresar
-          construct:
-            modelo-115-quarterly-rental-withholding:
-              field:
-                title: Modelo 115 quarterly urban rental withholding filing
           field:
             label: Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430),
               ejercicios 2019 y siguientes

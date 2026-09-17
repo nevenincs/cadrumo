@@ -5,6 +5,9 @@ rows, save arbitrary aggregates, delete, tombstone, or reactivate anything.
 The physical capsule lifecycle stages and publishes bytes; this narrow owner
 only authenticates the one exact current fact record for an already-bound
 session.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

@@ -53,6 +53,11 @@ modelo:
             help: Tax information about tax information in casilla 02 of Modelo 353.
           m353-resultado-total-entidades:
             help: Tax information for casilla 01 of Modelo 353.
+      construct:
+        modelo-353-iva-grupo-agregado:
+          field:
+            title: 'Modelo 353: monthly aggregated self-assessment for the VAT group
+              of entities'
       field:
         official_name: Modelo 353. Value Added Tax. Group of entities. Aggregate form.
           Monthly self-assessment.
@@ -83,10 +88,6 @@ modelo:
                 353 References: [02], [08].'
               label: Amounts to offset from earlier periods still pending for later
                 periods ([02] - [08])
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — tax information
           field:
             label: Modelo 353 tax years 2008 to 2025 (Orden EHA/3434/2007)
         2026-desde-02:
@@ -126,9 +127,5 @@ modelo:
                 353 References: [10].'
               label: Payment on account for supplies of petrol, diesel and biofuels
                 attributable to the State Administration [10]
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — tax information
           field:
             label: Modelo 353 tax year 2026 onwards (Orden EHA/3434/2007)

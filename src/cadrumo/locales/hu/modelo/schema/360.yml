@@ -1,6 +1,11 @@
 modelo:
   schema:
     '360':
+      construct:
+        modelo-360-iva-devolucion-ue:
+          field:
+            title: '360-as modelo: áfa-visszatérítési kérelem a 8. irányelv alapján
+              (más tagállamokban felszámított adó)'
       field:
         official_name: Modelo 360. Az adó alkalmazási területén letelepedett vállalkozók
           vagy szakemberek által felszámított hozzáadottérték-adó visszatérítésére
@@ -712,9 +717,6 @@ modelo:
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               help: A Modelo 360 1903-1906. casilla adóügyi adatai.
               label: 5. Az előző évi arányosítás módosítása. Adóév
-          construct:
-            modelo-360-iva-devolucion-ue:
-              field:
-                title: Modelo 360 — adóügyi információ
           field:
-            label: Casilla — adóügyi mező
+            label: 360-as modelo, 2010. adóévtől (EHA/789/2010 rendelet, a HAP/841/2016
+              rendelettel módosítva). Eseti, visszatérítési kérelem váltja ki.

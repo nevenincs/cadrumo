@@ -2154,7 +2154,7 @@ to_revision = "2022"
 evolution_kind = "unchanged"
 legal_refs = ["ley-35-2006:art-68.2"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]
-# Grounding: aeat-dr-100-2020-dictionary:1113 y aeat-dr-100-2022-dictionary:1214; España País Invitado de Honor en la Feria del Libro de Fráncfort en 2021, columna Aplicado, M21EPIA. Identidad adjudicada en dev/registry/aeip/adjudications.toml.
+# Grounding: aeat-dr-100-2020-dictionary:1113 y aeat-dr-100-2022-dictionary:1214; España País Invitado de Honor en la Feria del Libro de Fráncfort en 2021, columna Aplicado, M21EPIA. Identidad adjudicada en el registro de adjudicaciones de identidad.
 [[revisions."2022".casilla_continuidad_evolutions]]
 id = "m100-0764-2020-2022-label_evolved"
 continuidad_id = "irpf-aeip-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-aplicado"
@@ -2163,7 +2163,7 @@ to_revision = "2022"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-68.2"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2022-dictionary"]
-# Grounding: aeat-dr-100-2021-dictionary:1156 y aeat-dr-100-2022-dictionary:1214; España País Invitado de Honor en la Feria del Libro de Fráncfort en 2021, columna Aplicado, M21EPIA. Identidad adjudicada en dev/registry/aeip/adjudications.toml.
+# Grounding: aeat-dr-100-2021-dictionary:1156 y aeat-dr-100-2022-dictionary:1214; España País Invitado de Honor en la Feria del Libro de Fráncfort en 2021, columna Aplicado, M21EPIA. Identidad adjudicada en el registro de adjudicaciones de identidad.
 [[revisions."2022".casilla_continuidad_evolutions]]
 id = "m100-0764-2021-2022-label_evolved"
 continuidad_id = "irpf-aeip-espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort-aplicado"

@@ -69,6 +69,7 @@ from ......application.operations.frontend_requests import (
 )
 from ......application.operations.models import OperationRequest
 from ......application.operations.owner import OperationEventEmitter
+from ......application.operations.persistence.journal import OperationPersistedSnapshot
 from ......application.operations.projection_services import OperationResultProjectionService
 from ......application.operations.registry import OperationRegistry
 from ......application.operations.supervisor import OperationSupervisor
@@ -114,6 +115,12 @@ class _TestFiledHistoryComposition:
     certificate_secret_backend_factory: CertificateSecretBackendFactory
     browser_session_factory: BrowserSessionFactoryPort
     operator_scope_ports: OperatorScopePorts
+
+
+async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
+    """Admit the operation and wait for the supervised task that settles it."""
+    await supervisor.start(operation_id)
+    return await supervisor.settled(operation_id)
 
 
 def _test_filed_history_composition(output_root: Path) -> FiledHistoryComposition:
@@ -414,7 +421,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             sync_run_repository_factory=SyncRunRecordRepository,
             composition_factory=_test_filed_history_composition,
             pull=pull,
-            profile_resolver=lambda: taxpayer,
+            profile_resolver=lambda _operation: taxpayer,
         )
         journal = OperationJournalRepository(storage_root=tmp_path / "operations")
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
@@ -442,14 +449,16 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            start_task = asyncio.create_task(supervisor.start(operation_id))
-            for _ in range(100):
-                if discovery_entered.is_set():
-                    break
+            start_task = asyncio.create_task(_run_to_terminal(supervisor, operation_id))
+            # Admission and the executor's first phases do real journal I/O, so
+            # the discovery barrier is awaited on time rather than on a count of
+            # scheduler turns. A task that ends first surfaces its own failure.
+            entered = asyncio.create_task(discovery_entered.wait())
+            await asyncio.wait({entered, start_task}, timeout=10, return_when=asyncio.FIRST_COMPLETED)
+            if not discovery_entered.is_set():
+                entered.cancel()
                 if start_task.done():
                     await start_task
-                await asyncio.sleep(0)
-            else:
                 raise AssertionError("filed-history pull did not reach deterministic discovery")
             assert start_task.done() is False
             in_flight_events = (
@@ -551,7 +560,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="4" * 64)
-            snapshot = await supervisor.start(operation_id)
+            snapshot = await _run_to_terminal(supervisor, operation_id)
             events = (await supervisor.replay(operation_id, 0, limit=100)).events
             receipt = snapshot.terminal_receipt
             assert receipt is not None
@@ -628,7 +637,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="7" * 64)
-            terminal = await supervisor.start(operation_id)
+            terminal = await _run_to_terminal(supervisor, operation_id)
             reloaded = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=100)
             assert terminal.terminal_receipt is not None
@@ -707,7 +716,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="a" * 64)
-            terminal = await supervisor.start(operation_id)
+            terminal = await _run_to_terminal(supervisor, operation_id)
             contract = registry.lookup_public_contract(definition.definition_id)
             assert contract.result_schema is not None
             resolved = await result_service.resolve(

@@ -68,9 +68,10 @@ modelo:
           construct:
             modelo-123-capital-withholding:
               field:
-                title: Modelo 123 — informació fiscal
+                title: 'Model 123: retencions sobre rendiments del capital mobiliari
+                  (exercicis 2019 a 2023)'
           field:
-            label: Casella— informació fiscal
+            label: Ordre EHA/3435/2007, exercicis 2019 a 2023
         2024-y-siguientes:
           casilla:
             '06':
@@ -90,8 +91,5 @@ modelo:
               field:
                 title: Model 123 retencions i ingressos a compte sobre rendiments
                   del capital mobiliari
-            modelo-123-current-capital-withholding:
-              field:
-                title: Modelo 123 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAC/56/2024, exercicis 2024 i següents

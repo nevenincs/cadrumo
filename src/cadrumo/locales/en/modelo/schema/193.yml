@@ -36,13 +36,13 @@ modelo:
             label: Taxpayer's tax ID (NIF)
           gasto-contributor-nombre:
             help: 'Casilla information: Casilla 36-75: gasto contributor name.'
-            label: 'Casilla 36-75: gasto contributor name'
+            label: Taxpayer's surnames and given name, or business name
           gasto-importe-anual:
             help: 'Casilla information: Casilla 195-207: gasto amount annual.'
             label: Amount of expenses
           gastos-total-declarante:
             help: Tax information for casilla 220-234 of Modelo 193.
-            label: Casilla 220-234 — tax field
+            label: Deductible expenses (art. 26.1.a Law 35/2006)
           payee-base-retenciones-193:
             help: 'Casilla information: Casilla 152-164: payee base withholdings 193.'
             label: Base for withholdings and payments on account
@@ -82,7 +82,7 @@ modelo:
             label: Casilla 76 — tax information
           payee-name:
             help: 'Casilla information: Casilla 36-75: payee name.'
-            label: 'Casilla 36-75: payee name'
+            label: Recipient's name
           payee-naturaleza-declarante:
             help: Tax information for casilla 208 of Modelo 193.
             label: NATURE OF THE DECLARANT
@@ -92,7 +92,7 @@ modelo:
             label: NATURE
           payee-nif:
             help: 'Casilla information: Casilla 18-26: payee nif.'
-            label: 'Casilla 18-26: payee nif'
+            label: Recipient's tax ID (NIF)
           payee-nif-pagador-anterior:
             label: NIF OF THE PREVIOUS PAYER
           payee-numero-orden-193:
@@ -119,7 +119,7 @@ modelo:
             label: PROVINCE CODE
           payee-reducciones-193:
             help: 'Casilla information: Casilla 139-151: payee reducciones 193.'
-            label: 'Casilla 139-151: payee reducciones 193'
+            label: Amount of reductions (art. 26.2 Law 35/2006)
           payee-retenciones-193:
             help: 'Casilla information: Casilla 169-181: payee withholdings 193.'
             label: Withholdings and payments on account
@@ -168,6 +168,11 @@ modelo:
             help: Tax information about tax information in casilla 136-144 of Modelo
               193.
             label: TOTAL NUMBER OF RECIPIENTS
+      construct:
+        modelo-193-annual-summary:
+          field:
+            title: Modelo 193 annual summary of withholdings on capital mobiliario
+              income
       field:
         official_name: Modelo 193. Informative return. Withholdings and payments on
           account on certain income from movable capital and certain income. Annual
@@ -176,10 +181,10 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: Modelo 193, tax year 2022
         '2023':
           field:
-            label: null
+            label: Modelo 193, tax year 2023
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -190,7 +195,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
-              label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Box 235 of modelo 193, tax year 2024.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -325,11 +329,6 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Box 122 of modelo 193, tax year 2024.
               label: RECEIPT TYPE
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: Modelo 193 annual summary of withholdings on capital mobiliario
-                  income
           field:
             label: Modelo 193, tax year 2024
         2025-y-siguientes:
@@ -342,7 +341,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declared in modelo 193's declarante record. The design splits
                 it into an integer and a decimal part.
-              label: Deductible expenses (art. 26.1.a Law 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Box 235 of modelo 193, tax year 2025.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -480,10 +478,5 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Box 122 of modelo 193, tax year 2025.
               label: RECEIPT TYPE
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: Modelo 193 annual summary of withholdings on capital mobiliario
-                  income
           field:
             label: Modelo 193, tax years 2025 onwards

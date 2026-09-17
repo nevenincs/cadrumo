@@ -310,7 +310,11 @@ def resolve_iva_flow_direction_catalogue(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> IvaFlowDirectionCatalogue:
-    """Resolve the dated IVA flow and settlement vocabulary from fact 0083."""
+    """Resolve the dated IVA flow and settlement vocabulary from fact 0083.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
@@ -323,7 +327,11 @@ def require_iva_flow_direction(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> IvaFlowDirection:
-    """Return a flow token only when the selected registry declares it."""
+    """Return a flow token only when the selected registry declares it.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     return resolve_iva_flow_direction_catalogue(
         effective_date=effective_date,
         authority=authority,

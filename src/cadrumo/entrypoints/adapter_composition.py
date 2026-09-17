@@ -9,6 +9,10 @@ root and does not import this entrypoint module.
 
 An entrypoint that forgets this scope fails on every custody-touching verb,
 which is exactly the symptom that made the original MCP gap visible.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 """
 
 from __future__ import annotations

@@ -54,6 +54,10 @@ modelo:
           tipo-declaracion:
             help: A Modelo 165 . casilla adóügyi adatai.
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 bevallás tájékoztató
       field:
         official_name: Modelo 165. Az újonnan vagy nemrég alapított szervezetek tagjai
           vagy résztvevői részére kiadott egyedi igazolások adatszolgáltatási bevallása.
@@ -62,17 +66,13 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Casilla— adóügyi információ
+            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
         2016-2022:
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
         2023-2025:
           field:
-            label: Casilla— adóügyi információ
+            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
@@ -123,9 +123,5 @@ modelo:
             socio-nombre:
               help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos családi és utóneve
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől

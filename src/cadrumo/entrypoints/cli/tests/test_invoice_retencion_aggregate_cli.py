@@ -118,6 +118,7 @@ def _seed_ready_profile(root: Path) -> None:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
             ),
             created_at=_T0,
             updated_at=_T0,

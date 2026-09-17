@@ -6,11 +6,11 @@ modelo:
           dr303-01:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Tax base.'
-            label: Accrued VAT, general regime super-reduced 4% rate - taxable base
+            label: Casilla 01 — tax information
           dr303-02:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Rate percentage.'
-            label: Accrued VAT, general regime super-reduced 4% rate - rate percentage
+            label: Casilla 02 — tax information
           dr303-03:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Amount.'
@@ -18,11 +18,11 @@ modelo:
           dr303-04:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Tax base.'
-            label: Accrued VAT, general regime reduced 10% rate - taxable base
+            label: Casilla 04 — tax information
           dr303-05:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Rate percentage.'
-            label: Accrued VAT, general regime reduced 10% rate - rate percentage
+            label: Casilla 05 — tax information
           dr303-06:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Amount.'
@@ -30,11 +30,11 @@ modelo:
           dr303-07:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Tax base.'
-            label: Accrued VAT, general regime standard 21% rate - taxable base
+            label: Casilla 07 — tax information
           dr303-08:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Rate percentage.'
-            label: Accrued VAT, general regime standard 21% rate - rate percentage
+            label: Casilla 08 — tax information
           dr303-09:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Amount.'
@@ -50,8 +50,7 @@ modelo:
               with administrative criterion
           dr303-109:
             help: Tax information for casilla 109 of Modelo 303.
-            label: Result - refunds agreed by AEAT for previous self-assessments for
-              the same year and period
+            label: Casilla 109 — tax information
           dr303-11:
             help: 'Review the casilla information: Output VAT intra-Community acquisitions
               goods and services - Amount.'
@@ -65,8 +64,7 @@ modelo:
               to the State
           dr303-12:
             help: Tax information about tax information in casilla 12 of Modelo 303.
-            label: Accrued VAT on other reverse-charge transactions excluding intra-Community
-              acquisitions - base
+            label: Casilla 12 — tax information
           dr303-120:
             help: 'Review the casilla information: Informacion adicional - Ops no
               subject to tax reglas localizacion (excl casilla 123).'
@@ -78,13 +76,11 @@ modelo:
           dr303-123:
             help: 'Review the casilla information: Informacion adicional - Ops no
               subject to tax localizacion regimenes especiales ventanilla unica.'
-            label: Additional information - transactions not subject under one-stop
-              shop special schemes place-of-supply rules
+            label: Casilla 123 — tax information
           dr303-124:
             help: 'Review the casilla information: Informacion adicional - Ops subject
               to tax regimenes especiales ventanilla unica.'
-            label: Additional information - transactions subject under one-stop shop
-              special schemes
+            label: Casilla 124 — tax information
           dr303-13:
             help: Tax information about tax information in casilla 13 of Modelo 303.
             label: Accrued VAT on other reverse-charge transactions excluding intra-Community
@@ -92,47 +88,47 @@ modelo:
           dr303-14:
             help: 'Review the casilla information: Modificacion bases and amounts
               Output VAT - Tax base.'
-            label: Changes to accrued VAT taxable bases and amounts - taxable base
+            label: Casilla 14 — tax information
           dr303-15:
             help: 'Review the casilla information: Modificacion bases and amounts
               Output VAT - Amount.'
-            label: Changes to accrued VAT taxable bases and amounts - VAT amount
+            label: Casilla 15 — tax information
           dr303-150:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Tax base.'
-            label: Accrued VAT, general regime new rate tier 1 - taxable base
+            label: Casilla 150 — tax information
           dr303-151:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Rate percentage.'
-            label: Accrued VAT, general regime new rate tier 1 - rate percentage
+            label: Casilla 151 — tax information
           dr303-152:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Amount.'
-            label: Accrued VAT, general regime new rate tier 1 - VAT amount
+            label: Casilla 152 — tax information
           dr303-153:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Tax base.'
-            label: Accrued VAT, general regime new rate tier 2 - taxable base
+            label: Casilla 153 — tax information
           dr303-154:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Rate percentage.'
-            label: Accrued VAT, general regime new rate tier 2 - rate percentage
+            label: Casilla 154 — tax information
           dr303-155:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Amount.'
-            label: Accrued VAT, general regime new rate tier 2 - VAT amount
+            label: Casilla 155 — tax information
           dr303-156:
             help: Tax information for casilla 156 of Modelo 303.
-            label: Equivalence surcharge at 0.5% - taxable base
+            label: Casilla 156 — tax information
           dr303-157:
             help: Tax information for casilla 157 of Modelo 303.
-            label: Equivalence surcharge at 0.5% - rate percentage
+            label: Casilla 157 — tax information
           dr303-158:
             help: Tax information for casilla 158 of Modelo 303.
-            label: Equivalence surcharge at 0.5% - surcharge amount
+            label: Casilla 158 — tax information
           dr303-16:
             help: Tax information for casilla 16 of Modelo 303.
-            label: Equivalence surcharge at 1.0% - taxable base
+            label: Casilla 16 — tax information
           dr303-165:
             help: Tax information about tax information in casilla 165 of Modelo 303.
             label: Accrued VAT, general regime 2% rate from 2024 - taxable base
@@ -150,7 +146,7 @@ modelo:
             label: New equivalence surcharge rate from 2024 - rate percentage
           dr303-17:
             help: Tax information for casilla 17 of Modelo 303.
-            label: Equivalence surcharge at 1.0% - rate percentage
+            label: Casilla 17 — tax information
           dr303-170:
             help: Tax information for casilla 170 of Modelo 303.
             label: New equivalence surcharge rate from 2024 - surcharge amount
@@ -159,36 +155,35 @@ modelo:
             label: Equivalence surcharge at 1.0% - surcharge amount
           dr303-19:
             help: Tax information for casilla 19 of Modelo 303.
-            label: Equivalence surcharge at 1.4% - taxable base
+            label: Casilla 19 — tax information
           dr303-20:
             help: Tax information for casilla 20 of Modelo 303.
-            label: Equivalence surcharge at 1.4% - rate percentage
+            label: Casilla 20 — tax information
           dr303-21:
             help: Tax information for casilla 21 of Modelo 303.
-            label: Equivalence surcharge at 1.4% - surcharge amount
+            label: Casilla 21 — tax information
           dr303-22:
             help: Tax information for casilla 22 of Modelo 303.
-            label: Equivalence surcharge at 5.2% - taxable base
+            label: Casilla 22 — tax information
           dr303-23:
             help: Tax information for casilla 23 of Modelo 303.
-            label: Equivalence surcharge at 5.2% - rate percentage
+            label: Casilla 23 — tax information
           dr303-24:
             help: Tax information for casilla 24 of Modelo 303.
-            label: Equivalence surcharge at 5.2% - surcharge amount
+            label: Casilla 24 — tax information
           dr303-25:
             help: Tax information for casilla 25 of Modelo 303.
-            label: Changes to equivalence surcharge bases and amounts - taxable base
+            label: Casilla 25 — tax information
           dr303-26:
             help: Tax information for casilla 26 of Modelo 303.
-            label: Changes to equivalence surcharge bases and amounts - surcharge
-              amount
+            label: Casilla 26 — tax information
           dr303-27:
             help: 'Review the casilla information: Total amount accrued.'
             label: Total accrued VAT amount
           dr303-28:
             help: 'Review the casilla information: IVA deductible ops interiores corrientes
               - Base.'
-            label: Deductible VAT on domestic current transactions - base
+            label: Casilla 28 — tax information
           dr303-29:
             help: 'Review the casilla information: IVA deductible ops interiores corrientes
               - Amount.'
@@ -196,15 +191,15 @@ modelo:
           dr303-30:
             help: 'Review the casilla information: IVA deductible ops interiores goods
               investment - Base.'
-            label: Deductible VAT on domestic capital goods - base
+            label: Casilla 30 — tax information
           dr303-31:
             help: 'Review the casilla information: IVA deductible ops interiores goods
               investment - Amount.'
-            label: Deductible VAT on domestic capital goods - VAT amount
+            label: Casilla 31 — tax information
           dr303-32:
             help: 'Review the casilla information: IVA deductible imports goods corrientes
               - Base.'
-            label: Deductible VAT on imports of current goods - base
+            label: Casilla 32 — tax information
           dr303-33:
             help: 'Review the casilla information: IVA deductible imports goods corrientes
               - Amount.'
@@ -212,16 +207,15 @@ modelo:
           dr303-34:
             help: 'Review the casilla information: IVA deductible imports goods investment
               - Base.'
-            label: Deductible VAT on imports of capital goods - base
+            label: Casilla 34 — tax information
           dr303-35:
             help: 'Review the casilla information: IVA deductible imports goods investment
               - Amount.'
-            label: Deductible VAT on imports of capital goods - VAT amount
+            label: Casilla 35 — tax information
           dr303-36:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions corrientes - Base.'
-            label: Deductible VAT on intra-Community acquisitions of current goods
-              - base
+            label: Casilla 36 — tax information
           dr303-37:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions corrientes - Amount.'
@@ -230,123 +224,112 @@ modelo:
           dr303-38:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions goods investment - Base.'
-            label: Deductible VAT on intra-Community acquisitions of capital goods
-              - base
+            label: Casilla 38 — tax information
           dr303-39:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions goods investment - Amount.'
-            label: Deductible VAT on intra-Community acquisitions of capital goods
-              - VAT amount
+            label: Casilla 39 — tax information
           dr303-40:
             help: 'Review the casilla information: Correction deductions - Base.'
-            label: Deduction corrections - base
+            label: Casilla 40 — tax information
           dr303-41:
             help: 'Review the casilla information: Correction deductions - Amount.'
-            label: Deduction corrections - VAT amount
+            label: Casilla 41 — tax information
           dr303-42:
             help: 'Review the casilla information: Compensaciones regime especial
               agricultura ganaderia and pesca - Amount.'
-            label: Special agriculture, livestock and fisheries scheme compensations
-              - amount
+            label: Casilla 42 — tax information
           dr303-43:
             help: Tax information about tax information in casilla 43 of Modelo 303.
-            label: Capital goods regularization - amount
+            label: Casilla 43 — tax information
           dr303-44:
             help: 'Review the casilla information: Adjustment prorrata by percentage
               definitivo - Amount.'
-            label: Pro rata regularization using final percentage - amount
+            label: Casilla 44 — tax information
           dr303-45:
             help: 'Review the casilla information: Total a deduct - Amount.'
             label: Total deductible amount
           dr303-47:
             help: Tax information for casilla 47 of Modelo 303.
-            label: Simplified regime, Q1-Q3 - sum of payments on account for all activities
+            label: Casilla 47 — tax information
           dr303-48:
             help: Tax information for casilla 48 of Modelo 303.
-            label: Simplified regime, Q4 - sum of derived amounts for all activities
+            label: Casilla 48 — tax information
           dr303-49:
             help: Tax information for casilla 49 of Modelo 303.
-            label: Simplified regime, Q4 - sum of payments on account made in the
-              year
+            label: Casilla 49 — tax information
           dr303-50:
             help: 'Review the casilla information: RS - 4T - Result ([48]-[49]).'
-            label: Simplified regime, Q4 - result ([48] - [49])
+            label: Casilla 50 — tax information
           dr303-51:
             help: 'Review the casilla information: RS - Amounts devengadas intra-Community
               acquisitions goods.'
-            label: Simplified regime - accrued VAT on intra-Community acquisitions
-              of goods
+            label: Casilla 51 — tax information
           dr303-52:
             help: 'Review the casilla information: RS - Amounts devengadas supplies
               activos fixed assets.'
-            label: Simplified regime - accrued VAT on supplies of fixed assets
+            label: Casilla 52 — tax information
           dr303-53:
             help: Tax information about tax information in casilla 53 of Modelo 303.
-            label: Simplified regime - accrued VAT from reverse-charge transactions
+            label: Casilla 53 — tax information
           dr303-54:
             help: 'Review the casilla information: RS - Total amount resultante.'
-            label: Simplified regime - total resulting amount
+            label: Casilla 54 — tax information
           dr303-55:
             help: Tax information about tax information in casilla 55 of Modelo 303.
-            label: Simplified regime - deductible VAT on acquisition or import of
-              fixed assets
+            label: Casilla 55 — tax information
           dr303-56:
             help: 'Review the casilla information: RS - IVA deductible adjustment
               goods investment.'
-            label: Simplified regime - deductible VAT from capital goods regularization
+            label: Casilla 56 — tax information
           dr303-57:
             help: 'Review the casilla information: RS - Total IVA deductible regime
               simplificado ([55]+[56]).'
-            label: Simplified regime - total deductible VAT ([55] + [56])
+            label: Casilla 57 — tax information
           dr303-58:
             help: 'Review the casilla information: RS - Result regime simplificado
               ([54]-[57]).'
-            label: Simplified regime result ([54] - [57])
+            label: Casilla 58 — tax information
           dr303-59:
             help: 'Review the casilla information: Informacion adicional - Supplies
               intracomunitarias goods and services.'
-            label: Additional information - intra-Community supplies of goods and
-              services
+            label: Casilla 59 — tax information
           dr303-60:
             help: 'Review the casilla information: Informacion adicional - Exports
               and transactions asimiladas.'
-            label: Additional information - exports and assimilated transactions
+            label: Casilla 60 — tax information
           dr303-62:
             help: 'Review the casilla information: Informacion adicional - Supplies
               criterio caja accrued art 75 LIVA - Tax base.'
-            label: Additional information - cash accounting supplies accrued under
-              Article 75 LIVA - taxable base
+            label: Casilla 62 — tax information
           dr303-63:
             help: 'Review the casilla information: Informacion adicional - Supplies
               criterio caja accrued art 75 LIVA - Amount.'
-            label: Additional information - cash accounting supplies accrued under
-              Article 75 LIVA - VAT amount
+            label: Casilla 63 — tax information
           dr303-65:
             help: Tax information for casilla 65 of Modelo 303.
             label: Result - percentage attributable to the State Tax Administration
           dr303-68:
             help: Tax information for casilla 68 of Modelo 303.
-            label: Result - joint taxation annual regularization result
+            label: Casilla 68 — tax information
           dr303-70:
             help: Tax information for casilla 70 of Modelo 303.
-            label: Result - amounts payable from previous self-assessments for the
-              same year and period
+            label: Casilla 70 — tax information
           dr303-74:
             help: 'Review the casilla information: Informacion adicional - Acquisitions
               criterio caja - Tax base.'
-            label: Additional information - cash accounting acquisitions - taxable
-              base
+            label: Casilla 74 — tax information
           dr303-75:
             help: 'Review the casilla information: Informacion adicional - Acquisitions
               criterio caja - Amount.'
-            label: Additional information - cash accounting acquisitions - VAT amount
+            label: Casilla 75 — tax information
           dr303-76:
             help: 'Review the casilla information: Result - Adjustment amounts art
               80 cinco 5a LIVA.'
-            label: Result - regularization under Article 80.Five.5 LIVA
+            label: Casilla 76 — tax information
           dr303-77:
             help: Tax information for casilla 77 of Modelo 303.
-            label: Result - import VAT assessed by Customs pending payment
+            label: Casilla 77 — tax information
           filing-period:
             help: Tax information for casilla of Modelo 303.
             label: Quarterly period
@@ -368,19 +351,19 @@ modelo:
             label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
           iva-compensacion-aplicada-periodo:
             help: Tax information for casilla 78 of Modelo 303.
-            label: Prior-period offsets applied in this period
+            label: Casilla 78 — tax field
           iva-compensacion-disponible-fin-periodo:
             help: Tax information about tax information in casilla  of Modelo 303.
-            label: Offset balance available at period end
+            label: Casilla — tax field
           iva-compensacion-generada-periodo:
             help: Tax information for casilla of Modelo 303.
-            label: Offset balance generated in this period
+            label: Casilla — tax field
           iva-compensacion-pendiente-anteriores:
             help: Tax information about tax information in casilla 110 of Modelo 303.
-            label: Amounts to offset pending from prior periods
+            label: Casilla 110 — tax field
           iva-compensacion-pendiente-posteriores:
             help: Tax information about tax information in casilla 87 of Modelo 303.
-            label: Prior-period offsets pending for later periods
+            label: Casilla 87 — tax field
           iva-cuota-autorepercutida-interior-deducible:
             help: Tax information about tax information in casilla  of Modelo 303.
             label: Deductible reverse-charge VAT on domestic transactions
@@ -779,199 +762,144 @@ modelo:
             '01':
               help: Tax information about tax information in casilla 01 of Modelo
                 303.
-              label: Casilla 01 — tax information
             '02':
               help: Tax information about tax information in casilla 02 of Modelo
                 303.
-              label: Casilla 02 — tax information
             '04':
               help: Tax information about tax information in casilla 04 of Modelo
                 303.
-              label: Casilla 04 — tax information
             '05':
               help: Tax information about tax information in casilla 05 of Modelo
                 303.
-              label: Casilla 05 — tax information
             '07':
               help: Tax information about tax information in casilla 07 of Modelo
                 303.
-              label: Casilla 07 — tax information
             08:
               help: Tax information about tax information in casilla 08 of Modelo
                 303.
-              label: Casilla 08 — tax information
-            '12':
-              label: Casilla 12 — tax information
             '123':
               help: Tax information about tax information in casilla 123 of Modelo
                 303.
-              label: Casilla 123 — tax information
             '124':
               help: Tax information about tax information in casilla 124 of Modelo
                 303.
-              label: Casilla 124 — tax information
             '14':
               help: Tax information about tax information in casilla 14 of Modelo
                 303.
-              label: Casilla 14 — tax information
             '15':
               help: Tax information about tax information in casilla 15 of Modelo
                 303.
-              label: Casilla 15 — tax information
             '16':
               help: Tax information about tax information in casilla 16 of Modelo
                 303.
-              label: Casilla 16 — tax information
             '17':
               help: Tax information about tax information in casilla 17 of Modelo
                 303.
-              label: Casilla 17 — tax information
             '19':
               help: Tax information about tax information in casilla 19 of Modelo
                 303.
-              label: Casilla 19 — tax information
             '20':
               help: Tax information about tax information in casilla 20 of Modelo
                 303.
-              label: Casilla 20 — tax information
             '21':
               help: Tax information about tax information in casilla 21 of Modelo
                 303.
-              label: Casilla 21 — tax information
             '22':
               help: Tax information about tax information in casilla 22 of Modelo
                 303.
-              label: Casilla 22 — tax information
             '23':
               help: Tax information about tax information in casilla 23 of Modelo
                 303.
-              label: Casilla 23 — tax information
             '24':
               help: Tax information about tax information in casilla 24 of Modelo
                 303.
-              label: Casilla 24 — tax information
             '25':
               help: Tax information about tax information in casilla 25 of Modelo
                 303.
-              label: Casilla 25 — tax information
             '26':
               help: Tax information about tax information in casilla 26 of Modelo
                 303.
-              label: Casilla 26 — tax information
             '28':
               help: Tax information about tax information in casilla 28 of Modelo
                 303.
-              label: Casilla 28 — tax information
             '30':
               help: Tax information about tax information in casilla 30 of Modelo
                 303.
-              label: Casilla 30 — tax information
             '31':
               help: Tax information about tax information in casilla 31 of Modelo
                 303.
-              label: Casilla 31 — tax information
             '32':
               help: Tax information about tax information in casilla 32 of Modelo
                 303.
-              label: Casilla 32 — tax information
             '34':
               help: Tax information about tax information in casilla 34 of Modelo
                 303.
-              label: Casilla 34 — tax information
             '35':
               help: Tax information about tax information in casilla 35 of Modelo
                 303.
-              label: Casilla 35 — tax information
             '36':
               help: Tax information about tax information in casilla 36 of Modelo
                 303.
-              label: Casilla 36 — tax information
             '38':
               help: Tax information about tax information in casilla 38 of Modelo
                 303.
-              label: Casilla 38 — tax information
             '39':
               help: Tax information about tax information in casilla 39 of Modelo
                 303.
-              label: Casilla 39 — tax information
             '40':
               help: Tax information about tax information in casilla 40 of Modelo
                 303.
-              label: Casilla 40 — tax information
             '41':
               help: Tax information about tax information in casilla 41 of Modelo
                 303.
-              label: Casilla 41 — tax information
             '42':
               help: Tax information about tax information in casilla 42 of Modelo
                 303.
-              label: Casilla 42 — tax information
-            '43':
-              label: Casilla 43 — tax information
             '44':
               help: Tax information about tax information in casilla 44 of Modelo
                 303.
-              label: Casilla 44 — tax information
             '47':
               help: Tax information about tax information in casilla 47 of Modelo
                 303.
-              label: Casilla 47 — tax information
             '48':
               help: Tax information about tax information in casilla 48 of Modelo
                 303.
-              label: Casilla 48 — tax information
             '49':
               help: Tax information about tax information in casilla 49 of Modelo
                 303.
-              label: Casilla 49 — tax information
             '50':
               help: Tax information about tax information in casilla 50 of Modelo
                 303.
-              label: Casilla 50 — tax information
             '51':
               help: Tax information about tax information in casilla 51 of Modelo
                 303.
-              label: Casilla 51 — tax information
             '52':
               help: Tax information about tax information in casilla 52 of Modelo
                 303.
-              label: Casilla 52 — tax information
-            '53':
-              label: Casilla 53 — tax information
             '54':
               help: Tax information about tax information in casilla 54 of Modelo
                 303.
-              label: Casilla 54 — tax information
-            '55':
-              label: Casilla 55 — tax information
             '56':
               help: Tax information about tax information in casilla 56 of Modelo
                 303.
-              label: Casilla 56 — tax information
             '57':
               help: Tax information about tax information in casilla 57 of Modelo
                 303.
-              label: Casilla 57 — tax information
             '58':
               help: Tax information about tax information in casilla 58 of Modelo
                 303.
-              label: Casilla 58 — tax information
             '59':
               help: Tax information about tax information in casilla 59 of Modelo
                 303.
-              label: Casilla 59 — tax information
             '60':
               help: Tax information about tax information in casilla 60 of Modelo
                 303.
-              label: Casilla 60 — tax information
             '62':
               help: Tax information about tax information in casilla 62 of Modelo
                 303.
-              label: Casilla 62 — tax information
             '63':
               help: Tax information about tax information in casilla 63 of Modelo
                 303.
-              label: Casilla 63 — tax information
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
@@ -983,343 +911,249 @@ modelo:
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
-              label: Casilla 68 — tax information
             '70':
               help: Tax information about tax information in casilla 70 of Modelo
                 303.
-              label: Casilla 70 — tax information
             '71':
               help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             '74':
               help: Tax information about tax information in casilla 74 of Modelo
                 303.
-              label: Casilla 74 — tax information
             '75':
               help: Tax information about tax information in casilla 75 of Modelo
                 303.
-              label: Casilla 75 — tax information
             '76':
               help: Tax information about tax information in casilla 76 of Modelo
                 303.
-              label: Casilla 76 — tax information
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-              label: Casilla 77 — tax information
             x-chim6r1ecll6asj3d5hmiro:
               label: Casilla — tax field
             x-chim6r1ee1in4qbfchng:
               label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              label: Casilla 78 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
-              label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: Tax information for casilla 110 of Modelo 303.
-              label: Casilla 110 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: Tax information for casilla 87 of Modelo 303.
-              label: Casilla 87 — tax field
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: 'Casilla information: Casilla prorrata-volumen-total: iva prorrata
                 volumen total.'
-              label: 'Box prorrata-volume-total: VAT pro-rata total volume'
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Review the casilla information: Result of the self-assessment
                 ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
-            label: Casilla — tax field
+            label: Modelo 303, tax year 2023
         2024-desde-09-y-3t:
           casilla:
             '01':
               help: Tax information about tax information in casilla 01 of Modelo
                 303.
-              label: Casilla 01 — tax information
             '02':
               help: Tax information about tax information in casilla 02 of Modelo
                 303.
-              label: Casilla 02 — tax information
             '03':
               help: Tax information about tax information in casilla 03 of Modelo
                 303.
-              label: Casilla 03 — tax information
             '04':
               help: Tax information about tax information in casilla 04 of Modelo
                 303.
-              label: Casilla 04 — tax information
             '05':
               help: Tax information about tax information in casilla 05 of Modelo
                 303.
-              label: Casilla 05 — tax information
             '06':
               help: Tax information about tax information in casilla 06 of Modelo
                 303.
-              label: Casilla 06 — tax information
             '07':
               help: Tax information about tax information in casilla 07 of Modelo
                 303.
-              label: Casilla 07 — tax information
             08:
               help: Tax information about tax information in casilla 08 of Modelo
                 303.
-              label: Casilla 08 — tax information
             09:
               help: Tax information about tax information in casilla 09 of Modelo
                 303.
-              label: Casilla 09 — tax information
             '10':
               help: Tax information about tax information in casilla 10 of Modelo
                 303.
-              label: Casilla 10 — tax information
             '109':
               help: Tax information about tax information in casilla 109 of Modelo
                 303.
-              label: Casilla 109 — tax information
             '11':
               help: Tax information about tax information in casilla 11 of Modelo
                 303.
-              label: Casilla 11 — tax information
-            '12':
-              label: Casilla 12 — tax information
             '120':
               help: Tax information about tax information in casilla 120 of Modelo
                 303.
-              label: Casilla 120 — tax information
-            '122':
-              label: Casilla 122 — tax information
             '123':
               help: Tax information about tax information in casilla 123 of Modelo
                 303.
-              label: Casilla 123 — tax information
             '124':
               help: Tax information about tax information in casilla 124 of Modelo
                 303.
-              label: Casilla 124 — tax information
-            '13':
-              label: Casilla 13 — tax information
             '14':
               help: Tax information about tax information in casilla 14 of Modelo
                 303.
-              label: Casilla 14 — tax information
             '15':
               help: Tax information about tax information in casilla 15 of Modelo
                 303.
-              label: Casilla 15 — tax information
             '150':
               help: Tax information about tax information in casilla 150 of Modelo
                 303.
-              label: Casilla 150 — tax information
             '151':
               help: Tax information about tax information in casilla 151 of Modelo
                 303.
-              label: Casilla 151 — tax information
             '152':
               help: Tax information about tax information in casilla 152 of Modelo
                 303.
-              label: Casilla 152 — tax information
             '153':
               help: Tax information about tax information in casilla 153 of Modelo
                 303.
-              label: Casilla 153 — tax information
             '154':
               help: Tax information about tax information in casilla 154 of Modelo
                 303.
-              label: Casilla 154 — tax information
             '155':
               help: Tax information about tax information in casilla 155 of Modelo
                 303.
-              label: Casilla 155 — tax information
             '156':
               help: Tax information about tax information in casilla 156 of Modelo
                 303.
-              label: Casilla 156 — tax information
             '157':
               help: Tax information about tax information in casilla 157 of Modelo
                 303.
-              label: Casilla 157 — tax information
             '158':
               help: Tax information about tax information in casilla 158 of Modelo
                 303.
-              label: Casilla 158 — tax information
             '16':
               help: Tax information about tax information in casilla 16 of Modelo
                 303.
-              label: Casilla 16 — tax information
             '17':
               help: Tax information about tax information in casilla 17 of Modelo
                 303.
-              label: Casilla 17 — tax information
             '19':
               help: Tax information about tax information in casilla 19 of Modelo
                 303.
-              label: Casilla 19 — tax information
             '20':
               help: Tax information about tax information in casilla 20 of Modelo
                 303.
-              label: Casilla 20 — tax information
             '21':
               help: Tax information about tax information in casilla 21 of Modelo
                 303.
-              label: Casilla 21 — tax information
             '22':
               help: Tax information about tax information in casilla 22 of Modelo
                 303.
-              label: Casilla 22 — tax information
             '23':
               help: Tax information about tax information in casilla 23 of Modelo
                 303.
-              label: Casilla 23 — tax information
             '24':
               help: Tax information about tax information in casilla 24 of Modelo
                 303.
-              label: Casilla 24 — tax information
             '25':
               help: Tax information about tax information in casilla 25 of Modelo
                 303.
-              label: Casilla 25 — tax information
             '26':
               help: Tax information about tax information in casilla 26 of Modelo
                 303.
-              label: Casilla 26 — tax information
             '27':
               help: Tax information about tax information in casilla 27 of Modelo
                 303.
-              label: Casilla 27 — tax information
             '28':
               help: Tax information about tax information in casilla 28 of Modelo
                 303.
-              label: Casilla 28 — tax information
             '29':
               help: Tax information about tax information in casilla 29 of Modelo
                 303.
-              label: Casilla 29 — tax information
             '30':
               help: Tax information about tax information in casilla 30 of Modelo
                 303.
-              label: Casilla 30 — tax information
             '31':
               help: Tax information about tax information in casilla 31 of Modelo
                 303.
-              label: Casilla 31 — tax information
             '32':
               help: Tax information about tax information in casilla 32 of Modelo
                 303.
-              label: Casilla 32 — tax information
             '33':
               help: Tax information about tax information in casilla 33 of Modelo
                 303.
-              label: Casilla 33 — tax information
             '34':
               help: Tax information about tax information in casilla 34 of Modelo
                 303.
-              label: Casilla 34 — tax information
             '35':
               help: Tax information about tax information in casilla 35 of Modelo
                 303.
-              label: Casilla 35 — tax information
             '36':
               help: Tax information about tax information in casilla 36 of Modelo
                 303.
-              label: Casilla 36 — tax information
             '37':
               help: Tax information about tax information in casilla 37 of Modelo
                 303.
-              label: Casilla 37 — tax information
             '38':
               help: Tax information about tax information in casilla 38 of Modelo
                 303.
-              label: Casilla 38 — tax information
             '39':
               help: Tax information about tax information in casilla 39 of Modelo
                 303.
-              label: Casilla 39 — tax information
             '40':
               help: Tax information about tax information in casilla 40 of Modelo
                 303.
-              label: Casilla 40 — tax information
             '41':
               help: Tax information about tax information in casilla 41 of Modelo
                 303.
-              label: Casilla 41 — tax information
             '42':
               help: Tax information about tax information in casilla 42 of Modelo
                 303.
-              label: Casilla 42 — tax information
-            '43':
-              label: Casilla 43 — tax information
             '44':
               help: Tax information about tax information in casilla 44 of Modelo
                 303.
-              label: Casilla 44 — tax information
             '45':
               help: Tax information about tax information in casilla 45 of Modelo
                 303.
-              label: Casilla 45 — tax information
             '47':
               help: Tax information about tax information in casilla 47 of Modelo
                 303.
-              label: Casilla 47 — tax information
             '48':
               help: Tax information about tax information in casilla 48 of Modelo
                 303.
-              label: Casilla 48 — tax information
             '49':
               help: Tax information about tax information in casilla 49 of Modelo
                 303.
-              label: Casilla 49 — tax information
             '50':
               help: Tax information about tax information in casilla 50 of Modelo
                 303.
-              label: Casilla 50 — tax information
             '51':
               help: Tax information about tax information in casilla 51 of Modelo
                 303.
-              label: Casilla 51 — tax information
             '52':
               help: Tax information about tax information in casilla 52 of Modelo
                 303.
-              label: Casilla 52 — tax information
-            '53':
-              label: Casilla 53 — tax information
             '54':
               help: Tax information about tax information in casilla 54 of Modelo
                 303.
-              label: Casilla 54 — tax information
-            '55':
-              label: Casilla 55 — tax information
             '56':
               help: Tax information about tax information in casilla 56 of Modelo
                 303.
-              label: Casilla 56 — tax information
             '57':
               help: Tax information about tax information in casilla 57 of Modelo
                 303.
-              label: Casilla 57 — tax information
             '58':
               help: Tax information about tax information in casilla 58 of Modelo
                 303.
-              label: Casilla 58 — tax information
             '59':
               help: Tax information about tax information in casilla 59 of Modelo
                 303.
-              label: Casilla 59 — tax information
             '60':
               help: Tax information about tax information in casilla 60 of Modelo
                 303.
-              label: Casilla 60 — tax information
             '62':
               help: Tax information about tax information in casilla 62 of Modelo
                 303.
-              label: Casilla 62 — tax information
             '63':
               help: Tax information about tax information in casilla 63 of Modelo
                 303.
-              label: Casilla 63 — tax information
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
@@ -1327,7 +1161,6 @@ modelo:
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
-              label: Casilla 65 — tax information
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
@@ -1335,347 +1168,252 @@ modelo:
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
-              label: Casilla 68 — tax information
             '70':
               help: Tax information about tax information in casilla 70 of Modelo
                 303.
-              label: Casilla 70 — tax information
             '71':
               help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             '74':
               help: Tax information about tax information in casilla 74 of Modelo
                 303.
-              label: Casilla 74 — tax information
             '75':
               help: Tax information about tax information in casilla 75 of Modelo
                 303.
-              label: Casilla 75 — tax information
             '76':
               help: Tax information about tax information in casilla 76 of Modelo
                 303.
-              label: Casilla 76 — tax information
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-              label: Casilla 77 — tax information
             x-chim6r1ecll6asj3d5hmiro:
               label: Casilla — tax field
             x-chim6r1ee1in4qbfchng:
               label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              label: Casilla 78 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
-              label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: Tax information for casilla 110 of Modelo 303.
-              label: Casilla 110 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: Tax information for casilla 87 of Modelo 303.
-              label: Casilla 87 — tax field
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: 'Casilla information: Casilla prorrata-volumen-total: iva prorrata
                 volumen total.'
-              label: 'Box prorrata-volume-total: VAT pro-rata total volume'
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Review the casilla information: Result of the self-assessment
                 ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
-            label: Casilla — tax field
+            label: Modelo 303, tax year 2024, from periods 09 and Q3 onwards
         2024-hasta-08-y-2t:
           casilla:
             '01':
               help: Tax information about tax information in casilla 01 of Modelo
                 303.
-              label: Casilla 01 — tax information
             '02':
               help: Tax information about tax information in casilla 02 of Modelo
                 303.
-              label: Casilla 02 — tax information
             '03':
               help: Tax information about tax information in casilla 03 of Modelo
                 303.
-              label: Casilla 03 — tax information
             '04':
               help: Tax information about tax information in casilla 04 of Modelo
                 303.
-              label: Casilla 04 — tax information
             '05':
               help: Tax information about tax information in casilla 05 of Modelo
                 303.
-              label: Casilla 05 — tax information
             '06':
               help: Tax information about tax information in casilla 06 of Modelo
                 303.
-              label: Casilla 06 — tax information
             '07':
               help: Tax information about tax information in casilla 07 of Modelo
                 303.
-              label: Casilla 07 — tax information
             08:
               help: Tax information about tax information in casilla 08 of Modelo
                 303.
-              label: Casilla 08 — tax information
             09:
               help: Tax information about tax information in casilla 09 of Modelo
                 303.
-              label: Casilla 09 — tax information
             '10':
               help: Tax information about tax information in casilla 10 of Modelo
                 303.
-              label: Casilla 10 — tax information
             '109':
               help: Tax information about tax information in casilla 109 of Modelo
                 303.
-              label: Casilla 109 — tax information
             '11':
               help: Tax information about tax information in casilla 11 of Modelo
                 303.
-              label: Casilla 11 — tax information
-            '12':
-              label: Casilla 12 — tax information
             '120':
               help: Tax information about tax information in casilla 120 of Modelo
                 303.
-              label: Casilla 120 — tax information
-            '122':
-              label: Casilla 122 — tax information
             '123':
               help: Tax information about tax information in casilla 123 of Modelo
                 303.
-              label: Casilla 123 — tax information
             '124':
               help: Tax information about tax information in casilla 124 of Modelo
                 303.
-              label: Casilla 124 — tax information
-            '13':
-              label: Casilla 13 — tax information
             '14':
               help: Tax information about tax information in casilla 14 of Modelo
                 303.
-              label: Casilla 14 — tax information
             '15':
               help: Tax information about tax information in casilla 15 of Modelo
                 303.
-              label: Casilla 15 — tax information
             '150':
               help: Tax information about tax information in casilla 150 of Modelo
                 303.
-              label: Casilla 150 — tax information
             '151':
               help: Tax information about tax information in casilla 151 of Modelo
                 303.
-              label: Casilla 151 — tax information
             '152':
               help: Tax information about tax information in casilla 152 of Modelo
                 303.
-              label: Casilla 152 — tax information
             '153':
               help: Tax information about tax information in casilla 153 of Modelo
                 303.
-              label: Casilla 153 — tax information
             '154':
               help: Tax information about tax information in casilla 154 of Modelo
                 303.
-              label: Casilla 154 — tax information
             '155':
               help: Tax information about tax information in casilla 155 of Modelo
                 303.
-              label: Casilla 155 — tax information
             '156':
               help: Tax information about tax information in casilla 156 of Modelo
                 303.
-              label: Casilla 156 — tax information
             '157':
               help: Tax information about tax information in casilla 157 of Modelo
                 303.
-              label: Casilla 157 — tax information
             '158':
               help: Tax information about tax information in casilla 158 of Modelo
                 303.
-              label: Casilla 158 — tax information
             '16':
               help: Tax information about tax information in casilla 16 of Modelo
                 303.
-              label: Casilla 16 — tax information
             '17':
               help: Tax information about tax information in casilla 17 of Modelo
                 303.
-              label: Casilla 17 — tax information
             '18':
               help: Tax information about tax information in casilla 18 of Modelo
                 303.
-              label: Casilla 18 — tax information
             '19':
               help: Tax information about tax information in casilla 19 of Modelo
                 303.
-              label: Casilla 19 — tax information
             '20':
               help: Tax information about tax information in casilla 20 of Modelo
                 303.
-              label: Casilla 20 — tax information
             '21':
               help: Tax information about tax information in casilla 21 of Modelo
                 303.
-              label: Casilla 21 — tax information
             '22':
               help: Tax information about tax information in casilla 22 of Modelo
                 303.
-              label: Casilla 22 — tax information
             '23':
               help: Tax information about tax information in casilla 23 of Modelo
                 303.
-              label: Casilla 23 — tax information
             '24':
               help: Tax information about tax information in casilla 24 of Modelo
                 303.
-              label: Casilla 24 — tax information
             '25':
               help: Tax information about tax information in casilla 25 of Modelo
                 303.
-              label: Casilla 25 — tax information
             '26':
               help: Tax information about tax information in casilla 26 of Modelo
                 303.
-              label: Casilla 26 — tax information
             '27':
               help: Tax information about tax information in casilla 27 of Modelo
                 303.
-              label: Casilla 27 — tax information
             '28':
               help: Tax information about tax information in casilla 28 of Modelo
                 303.
-              label: Casilla 28 — tax information
             '29':
               help: Tax information about tax information in casilla 29 of Modelo
                 303.
-              label: Casilla 29 — tax information
             '30':
               help: Tax information about tax information in casilla 30 of Modelo
                 303.
-              label: Casilla 30 — tax information
             '31':
               help: Tax information about tax information in casilla 31 of Modelo
                 303.
-              label: Casilla 31 — tax information
             '32':
               help: Tax information about tax information in casilla 32 of Modelo
                 303.
-              label: Casilla 32 — tax information
             '33':
               help: Tax information about tax information in casilla 33 of Modelo
                 303.
-              label: Casilla 33 — tax information
             '34':
               help: Tax information about tax information in casilla 34 of Modelo
                 303.
-              label: Casilla 34 — tax information
             '35':
               help: Tax information about tax information in casilla 35 of Modelo
                 303.
-              label: Casilla 35 — tax information
             '36':
               help: Tax information about tax information in casilla 36 of Modelo
                 303.
-              label: Casilla 36 — tax information
             '37':
               help: Tax information about tax information in casilla 37 of Modelo
                 303.
-              label: Casilla 37 — tax information
             '38':
               help: Tax information about tax information in casilla 38 of Modelo
                 303.
-              label: Casilla 38 — tax information
             '39':
               help: Tax information about tax information in casilla 39 of Modelo
                 303.
-              label: Casilla 39 — tax information
             '40':
               help: Tax information about tax information in casilla 40 of Modelo
                 303.
-              label: Casilla 40 — tax information
             '41':
               help: Tax information about tax information in casilla 41 of Modelo
                 303.
-              label: Casilla 41 — tax information
             '42':
               help: Tax information about tax information in casilla 42 of Modelo
                 303.
-              label: Casilla 42 — tax information
-            '43':
-              label: Casilla 43 — tax information
             '44':
               help: Tax information about tax information in casilla 44 of Modelo
                 303.
-              label: Casilla 44 — tax information
             '45':
               help: Tax information about tax information in casilla 45 of Modelo
                 303.
-              label: Casilla 45 — tax information
             '47':
               help: Tax information about tax information in casilla 47 of Modelo
                 303.
-              label: Casilla 47 — tax information
             '48':
               help: Tax information about tax information in casilla 48 of Modelo
                 303.
-              label: Casilla 48 — tax information
             '49':
               help: Tax information about tax information in casilla 49 of Modelo
                 303.
-              label: Casilla 49 — tax information
             '50':
               help: Tax information about tax information in casilla 50 of Modelo
                 303.
-              label: Casilla 50 — tax information
             '51':
               help: Tax information about tax information in casilla 51 of Modelo
                 303.
-              label: Casilla 51 — tax information
             '52':
               help: Tax information about tax information in casilla 52 of Modelo
                 303.
-              label: Casilla 52 — tax information
-            '53':
-              label: Casilla 53 — tax information
             '54':
               help: Tax information about tax information in casilla 54 of Modelo
                 303.
-              label: Casilla 54 — tax information
-            '55':
-              label: Casilla 55 — tax information
             '56':
               help: Tax information about tax information in casilla 56 of Modelo
                 303.
-              label: Casilla 56 — tax information
             '57':
               help: Tax information about tax information in casilla 57 of Modelo
                 303.
-              label: Casilla 57 — tax information
             '58':
               help: Tax information about tax information in casilla 58 of Modelo
                 303.
-              label: Casilla 58 — tax information
             '59':
               help: Tax information about tax information in casilla 59 of Modelo
                 303.
-              label: Casilla 59 — tax information
             '60':
               help: Tax information about tax information in casilla 60 of Modelo
                 303.
-              label: Casilla 60 — tax information
             '62':
               help: Tax information about tax information in casilla 62 of Modelo
                 303.
-              label: Casilla 62 — tax information
             '63':
               help: Tax information about tax information in casilla 63 of Modelo
                 303.
-              label: Casilla 63 — tax information
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
@@ -1683,7 +1421,6 @@ modelo:
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
-              label: Casilla 65 — tax information
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
@@ -1691,371 +1428,264 @@ modelo:
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
-              label: Casilla 68 — tax information
             '70':
               help: Tax information about tax information in casilla 70 of Modelo
                 303.
-              label: Casilla 70 — tax information
             '71':
               help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             '74':
               help: Tax information about tax information in casilla 74 of Modelo
                 303.
-              label: Casilla 74 — tax information
             '75':
               help: Tax information about tax information in casilla 75 of Modelo
                 303.
-              label: Casilla 75 — tax information
             '76':
               help: Tax information about tax information in casilla 76 of Modelo
                 303.
-              label: Casilla 76 — tax information
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-              label: Casilla 77 — tax information
             x-chim6r1ecll6asj3d5hmiro:
               label: Casilla — tax field
             x-chim6r1ee1in4qbfchng:
               label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              label: Casilla 78 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
-              label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: Tax information for casilla 110 of Modelo 303.
-              label: Casilla 110 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: Tax information for casilla 87 of Modelo 303.
-              label: Casilla 87 — tax field
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: 'Casilla information: Casilla prorrata-volumen-total: iva prorrata
                 volumen total.'
-              label: 'Box prorrata-volume-total: VAT pro-rata total volume'
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Review the casilla information: Result of the self-assessment
                 ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
-            label: Casilla — tax field
+            label: Modelo 303, tax year 2024, up to periods 08 and Q2
         '2025':
           casilla:
             '01':
               help: Tax information about tax information in casilla 01 of Modelo
                 303.
-              label: Casilla 01 — tax information
             '02':
               help: Tax information about tax information in casilla 02 of Modelo
                 303.
-              label: Casilla 02 — tax information
             '03':
               help: Tax information about tax information in casilla 03 of Modelo
                 303.
-              label: Casilla 03 — tax information
             '04':
               help: Tax information about tax information in casilla 04 of Modelo
                 303.
-              label: Casilla 04 — tax information
             '05':
               help: Tax information about tax information in casilla 05 of Modelo
                 303.
-              label: Casilla 05 — tax information
             '06':
               help: Tax information about tax information in casilla 06 of Modelo
                 303.
-              label: Casilla 06 — tax information
             '07':
               help: Tax information about tax information in casilla 07 of Modelo
                 303.
-              label: Casilla 07 — tax information
             08:
               help: Tax information about tax information in casilla 08 of Modelo
                 303.
-              label: Casilla 08 — tax information
             09:
               help: Tax information about tax information in casilla 09 of Modelo
                 303.
-              label: Casilla 09 — tax information
             '10':
               help: Tax information about tax information in casilla 10 of Modelo
                 303.
-              label: Casilla 10 — tax information
-            '108':
-              label: Casilla 108 — tax information
             '109':
               help: Tax information about tax information in casilla 109 of Modelo
                 303.
-              label: Casilla 109 — tax information
             '11':
               help: Tax information about tax information in casilla 11 of Modelo
                 303.
-              label: Casilla 11 — tax information
             '111':
               help: Tax information about tax information in casilla 111 of Modelo
                 303.
-              label: Casilla 111 — tax information
-            '12':
-              label: Casilla 12 — tax information
             '120':
               help: Tax information about tax information in casilla 120 of Modelo
                 303.
-              label: Casilla 120 — tax information
-            '122':
-              label: Casilla 122 — tax information
             '123':
               help: Tax information about tax information in casilla 123 of Modelo
                 303.
-              label: Casilla 123 — tax information
             '124':
               help: Tax information about tax information in casilla 124 of Modelo
                 303.
-              label: Casilla 124 — tax information
-            '13':
-              label: Casilla 13 — tax information
             '14':
               help: Tax information about tax information in casilla 14 of Modelo
                 303.
-              label: Casilla 14 — tax information
             '15':
               help: Tax information about tax information in casilla 15 of Modelo
                 303.
-              label: Casilla 15 — tax information
             '150':
               help: Tax information about tax information in casilla 150 of Modelo
                 303.
-              label: Casilla 150 — tax information
             '151':
               help: Tax information about tax information in casilla 151 of Modelo
                 303.
-              label: Casilla 151 — tax information
             '152':
               help: Tax information about tax information in casilla 152 of Modelo
                 303.
-              label: Casilla 152 — tax information
             '153':
               help: Tax information about tax information in casilla 153 of Modelo
                 303.
-              label: Casilla 153 — tax information
             '154':
               help: Tax information about tax information in casilla 154 of Modelo
                 303.
-              label: Casilla 154 — tax information
             '155':
               help: Tax information about tax information in casilla 155 of Modelo
                 303.
-              label: Casilla 155 — tax information
             '156':
               help: Tax information about tax information in casilla 156 of Modelo
                 303.
-              label: Casilla 156 — tax information
             '157':
               help: Tax information about tax information in casilla 157 of Modelo
                 303.
-              label: Casilla 157 — tax information
             '158':
               help: Tax information about tax information in casilla 158 of Modelo
                 303.
-              label: Casilla 158 — tax information
             '16':
               help: Tax information about tax information in casilla 16 of Modelo
                 303.
-              label: Casilla 16 — tax information
-            '165':
-              label: Casilla 165 — tax information
-            '166':
-              label: Casilla 166 — tax information
-            '167':
-              label: Casilla 167 — tax information
             '168':
               help: Tax information about tax information in casilla 168 of Modelo
                 303.
-              label: Casilla 168 — tax information
             '169':
               help: Tax information about tax information in casilla 169 of Modelo
                 303.
-              label: Casilla 169 — tax information
             '17':
               help: Tax information about tax information in casilla 17 of Modelo
                 303.
-              label: Casilla 17 — tax information
             '170':
               help: Tax information about tax information in casilla 170 of Modelo
                 303.
-              label: Casilla 170 — tax information
             '18':
               help: Tax information about tax information in casilla 18 of Modelo
                 303.
-              label: Casilla 18 — tax information
             '19':
               help: Tax information about tax information in casilla 19 of Modelo
                 303.
-              label: Casilla 19 — tax information
             '20':
               help: Tax information about tax information in casilla 20 of Modelo
                 303.
-              label: Casilla 20 — tax information
             '21':
               help: Tax information about tax information in casilla 21 of Modelo
                 303.
-              label: Casilla 21 — tax information
             '22':
               help: Tax information about tax information in casilla 22 of Modelo
                 303.
-              label: Casilla 22 — tax information
             '23':
               help: Tax information about tax information in casilla 23 of Modelo
                 303.
-              label: Casilla 23 — tax information
             '24':
               help: Tax information about tax information in casilla 24 of Modelo
                 303.
-              label: Casilla 24 — tax information
             '25':
               help: Tax information about tax information in casilla 25 of Modelo
                 303.
-              label: Casilla 25 — tax information
             '26':
               help: Tax information about tax information in casilla 26 of Modelo
                 303.
-              label: Casilla 26 — tax information
             '27':
               help: Tax information about tax information in casilla 27 of Modelo
                 303.
-              label: Casilla 27 — tax information
             '28':
               help: Tax information about tax information in casilla 28 of Modelo
                 303.
-              label: Casilla 28 — tax information
             '29':
               help: Tax information about tax information in casilla 29 of Modelo
                 303.
-              label: Casilla 29 — tax information
             '30':
               help: Tax information about tax information in casilla 30 of Modelo
                 303.
-              label: Casilla 30 — tax information
             '31':
               help: Tax information about tax information in casilla 31 of Modelo
                 303.
-              label: Casilla 31 — tax information
             '32':
               help: Tax information about tax information in casilla 32 of Modelo
                 303.
-              label: Casilla 32 — tax information
             '33':
               help: Tax information about tax information in casilla 33 of Modelo
                 303.
-              label: Casilla 33 — tax information
             '34':
               help: Tax information about tax information in casilla 34 of Modelo
                 303.
-              label: Casilla 34 — tax information
             '35':
               help: Tax information about tax information in casilla 35 of Modelo
                 303.
-              label: Casilla 35 — tax information
             '36':
               help: Tax information about tax information in casilla 36 of Modelo
                 303.
-              label: Casilla 36 — tax information
             '37':
               help: Tax information about tax information in casilla 37 of Modelo
                 303.
-              label: Casilla 37 — tax information
             '38':
               help: Tax information about tax information in casilla 38 of Modelo
                 303.
-              label: Casilla 38 — tax information
             '39':
               help: Tax information about tax information in casilla 39 of Modelo
                 303.
-              label: Casilla 39 — tax information
             '40':
               help: Tax information about tax information in casilla 40 of Modelo
                 303.
-              label: Casilla 40 — tax information
             '41':
               help: Tax information about tax information in casilla 41 of Modelo
                 303.
-              label: Casilla 41 — tax information
             '42':
               help: Tax information about tax information in casilla 42 of Modelo
                 303.
-              label: Casilla 42 — tax information
-            '43':
-              label: Casilla 43 — tax information
             '44':
               help: Tax information about tax information in casilla 44 of Modelo
                 303.
-              label: Casilla 44 — tax information
             '45':
               help: Tax information about tax information in casilla 45 of Modelo
                 303.
-              label: Casilla 45 — tax information
             '47':
               help: Tax information about tax information in casilla 47 of Modelo
                 303.
-              label: Casilla 47 — tax information
             '48':
               help: Tax information about tax information in casilla 48 of Modelo
                 303.
-              label: Casilla 48 — tax information
             '49':
               help: Tax information about tax information in casilla 49 of Modelo
                 303.
-              label: Casilla 49 — tax information
             '50':
               help: Tax information about tax information in casilla 50 of Modelo
                 303.
-              label: Casilla 50 — tax information
             '51':
               help: Tax information about tax information in casilla 51 of Modelo
                 303.
-              label: Casilla 51 — tax information
             '52':
               help: Tax information about tax information in casilla 52 of Modelo
                 303.
-              label: Casilla 52 — tax information
-            '53':
-              label: Casilla 53 — tax information
             '54':
               help: Tax information about tax information in casilla 54 of Modelo
                 303.
-              label: Casilla 54 — tax information
-            '55':
-              label: Casilla 55 — tax information
             '56':
               help: Tax information about tax information in casilla 56 of Modelo
                 303.
-              label: Casilla 56 — tax information
             '57':
               help: Tax information about tax information in casilla 57 of Modelo
                 303.
-              label: Casilla 57 — tax information
             '58':
               help: Tax information about tax information in casilla 58 of Modelo
                 303.
-              label: Casilla 58 — tax information
             '59':
               help: Tax information about tax information in casilla 59 of Modelo
                 303.
-              label: Casilla 59 — tax information
             '60':
               help: Tax information about tax information in casilla 60 of Modelo
                 303.
-              label: Casilla 60 — tax information
             '62':
               help: Tax information about tax information in casilla 62 of Modelo
                 303.
-              label: Casilla 62 — tax information
             '63':
               help: Tax information about tax information in casilla 63 of Modelo
                 303.
-              label: Casilla 63 — tax information
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
@@ -2063,7 +1693,6 @@ modelo:
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
-              label: Casilla 65 — tax information
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
@@ -2071,57 +1700,43 @@ modelo:
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
-              label: Casilla 68 — tax information
             '70':
               help: Tax information about tax information in casilla 70 of Modelo
                 303.
-              label: Casilla 70 — tax information
             '71':
               help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             '74':
               help: Tax information about tax information in casilla 74 of Modelo
                 303.
-              label: Casilla 74 — tax information
             '75':
               help: Tax information about tax information in casilla 75 of Modelo
                 303.
-              label: Casilla 75 — tax information
             '76':
               help: Tax information about tax information in casilla 76 of Modelo
                 303.
-              label: Casilla 76 — tax information
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-              label: Casilla 77 — tax information
             x-chim6r1ecll6asj3d5hmiro:
               label: Casilla — tax field
             x-chim6r1ee1in4qbfchng:
               label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              label: Casilla 78 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
-              label: Casilla — tax field
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
               help: Tax information for casilla 110 of Modelo 303.
-              label: Casilla 110 — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
               help: Tax information for casilla 87 of Modelo 303.
-              label: Casilla 87 — tax field
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
               help: 'Casilla information: Casilla prorrata-volumen-total: iva prorrata
                 volumen total.'
-              label: 'Box prorrata-volume-total: VAT pro-rata total volume'
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Review the casilla information: Result of the self-assessment
                 ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
-            label: Casilla — tax field
+            label: Modelo 303, tax year 2025
         2026-y-siguientes:
           casilla:
             '01':
@@ -2438,4 +2053,4 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Deductible input VAT borne on domestic current transactions.
           field:
-            label: Casilla — tax field
+            label: Modelo 303, tax year 2026 onwards

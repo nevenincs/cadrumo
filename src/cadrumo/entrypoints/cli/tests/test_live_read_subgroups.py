@@ -14,10 +14,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from time import sleep
-from typing import cast
+from typing import Any, cast
 
 import pytest
 import typer
+from typer._click.core import Context as ClickContext
 from typer.main import get_command
 
 from ....adapters.persistence.profile.verify_observations import VerifyObservationRepository
@@ -142,24 +143,51 @@ def _registered_cli_name(value: object) -> str:
     return str(getattr(value, "value", value))
 
 
-def _live_registered_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+def _is_group(command: object) -> bool:
+    return callable(getattr(command, "list_commands", None))
+
+
+def _click_children(typer_app) -> dict[str, Any]:
+    """Resolve a subtree's children through the materialized Click group.
+
+    Groups resolve their children lazily, so the Typer registration lists are
+    empty; the Click group is the authority on what a subtree contains.
+    """
+    command = get_command(typer_app)
+    if not _is_group(command):
+        return {}
+    context = ClickContext(command)
+    return {name: child for name in command.list_commands(context) if (child := command.get_command(context, name))}
+
+
+def _click_paths(command: Any, prefix: tuple[str, ...], *, groups_only: bool) -> list[tuple[str, ...]]:
     paths: list[tuple[str, ...]] = []
-    for group in typer_app.registered_groups:
-        group_path = (*prefix, _registered_cli_name(group.name))
-        paths.append(group_path)
-        paths.extend(_live_registered_paths(group.typer_instance, group_path))
-    for command in typer_app.registered_commands:
-        paths.append((*prefix, _registered_cli_name(command.name)))
-    return tuple(paths)
+    if not _is_group(command):
+        return paths
+    context = ClickContext(command)
+    for name in command.list_commands(context):
+        child = command.get_command(context, name)
+        if child is None:
+            continue
+        path = (*prefix, name)
+        if _is_group(child):
+            paths.append(path)
+            paths.extend(_click_paths(child, path, groups_only=groups_only))
+        elif not groups_only:
+            paths.append(path)
+    return paths
+
+
+def _live_registered_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
+    return tuple(_click_paths(get_command(typer_app), prefix, groups_only=False))
 
 
 def _live_registered_group_paths(typer_app, prefix: tuple[str, ...] = ("live",)) -> tuple[tuple[str, ...], ...]:
-    paths: list[tuple[str, ...]] = []
-    for group in typer_app.registered_groups:
-        group_path = (*prefix, _registered_cli_name(group.name))
-        paths.append(group_path)
-        paths.extend(_live_registered_group_paths(group.typer_instance, group_path))
-    return tuple(paths)
+    return tuple(_click_paths(get_command(typer_app), prefix, groups_only=True))
+
+
+def _registered_leaf_names(typer_app) -> set[str]:
+    return {name for name, child in _click_children(typer_app).items() if not _is_group(child)}
 
 
 def _forbidden_mutation_verbs(name: str) -> frozenset[str]:
@@ -326,6 +354,7 @@ class TestReadOnlyStructuralInvariants:
             ("live", "filed"),
             ("live", "iva-wallet"),
             ("live", "notifications"),
+            ("live", "notifications", "document"),
             ("live", "portals"),
             ("live", "expedientes"),
             ("live", "justificante"),
@@ -359,7 +388,7 @@ class TestReadOnlyStructuralInvariants:
         ],
     )
     def test_no_forbidden_mutation_verb_exists_on_live_subgroup_commands(self, subgroup_app) -> None:
-        registered = {_registered_cli_name(info.name) for info in subgroup_app.registered_commands}
+        registered = _registered_leaf_names(subgroup_app)
         offenders = {name: _forbidden_mutation_verbs(name) for name in registered if _forbidden_mutation_verbs(name)}
         assert offenders == {}, f"forbidden write verb on {subgroup_app.info.name}: {offenders}"
 
@@ -421,6 +450,9 @@ class TestIvaRemoteStateCliSurface:
             import asyncio
             import sys
 
+            import typer
+            from typer.main import get_command
+
             from cadrumo.application.live.errors import LiveIvaSurfaceTimeoutError
             from cadrumo.entrypoints.cli._app_live import _run_live_iva_evidence_pull_command
 
@@ -428,7 +460,11 @@ class TestIvaRemoteStateCliSurface:
                 await asyncio.sleep(30)
 
             try:
-                asyncio.run(_run_live_iva_evidence_pull_command(slow_read(), timeout_ms=1))
+                # The watchdog only reads the context for best-effort auth diagnostics.
+                probe_app = typer.Typer()
+                probe_app.command("watchdog-canary")(lambda: None)
+                ctx = typer.Context(get_command(probe_app))
+                asyncio.run(_run_live_iva_evidence_pull_command(slow_read(), ctx=ctx, timeout_ms=1))
             except LiveIvaSurfaceTimeoutError:
                 sys.exit(0)
             sys.exit(2)
@@ -529,7 +565,7 @@ class TestIvaRemoteStateCliSurface:
                 assert label != _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.UNKNOWN)
 
     def test_iva_wallet_combined_evidence_command_is_registered_as_read_capture(self) -> None:
-        registered = {info.name for info in iva_wallet_app.registered_commands}
+        registered = _registered_leaf_names(iva_wallet_app)
 
         assert "pull-evidence" in registered
         assert "pull-remote-state" not in registered
@@ -579,7 +615,8 @@ class TestIvaRemoteStateCliSurface:
 
         assert "auth_status=failed" in lines
         assert "auth_outcome=no_clave_prompt" in lines
-        assert "auth_outcome_label=no Cl@ve prompt" in lines
+        no_prompt_label = _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT)
+        assert f"auth_outcome_label={no_prompt_label}" in lines
         assert "filed_history_succeeded=False" in lines
         assert "wallet_succeeded=False" in lines
         assert any(

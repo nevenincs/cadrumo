@@ -1,4 +1,8 @@
-"""Sole production composition seam for the supervised operation platform."""
+"""Sole production composition seam for the supervised operation platform.
+
+Core types:
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

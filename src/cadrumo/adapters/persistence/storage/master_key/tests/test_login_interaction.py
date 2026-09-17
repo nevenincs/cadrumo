@@ -20,7 +20,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CREDENTIAL_INPUT = "login-interaction-operator-secret"
 

@@ -18,6 +18,9 @@ See Also:
     :mod:`cadrumo.application.aggregation`
         Calculation source mesh that consumes ledger facts only after this
         readiness layer has reported operator-facing gaps.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

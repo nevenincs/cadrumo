@@ -1,6 +1,10 @@
 modelo:
   schema:
     '156':
+      construct:
+        modelo-156-informative:
+          field:
+            title: Modelo 156 declaració informativa
       field:
         official_name: Modelo 156. Impost sobre la Renda de les Persones Físiques.
           Cotitzacions d'afiliats i mutualistes a efectes de la deducció per maternitat.
@@ -100,9 +104,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Informació fiscal de la casella del Modelo 156.
               label: Tipus de declaració (originària / substitutiva / complementària)
-          construct:
-            modelo-156-informative:
-              field:
-                title: Modelo 156 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 156 (Ordre HAC/3580/2003), exercicis 2003 i següents

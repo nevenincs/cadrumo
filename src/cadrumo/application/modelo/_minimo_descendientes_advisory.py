@@ -205,7 +205,11 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant verification declarations to the selected revision."""
+    """Delegate descendant verification declarations to the selected revision.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del casilla_values, bucket_id
     return _registry_minimo_descendientes_diagnostics(
         revision,
@@ -246,7 +250,11 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate inferred-proration verification declarations to the registry."""
+    """Delegate inferred-proration verification declarations to the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del casilla_values, bucket_id
     return _registry_minimo_descendientes_diagnostics(
         revision,
@@ -401,7 +409,11 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant income verification declarations to the registry."""
+    """Delegate descendant income verification declarations to the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del casilla_values, bucket_id
     return _registry_minimo_descendientes_diagnostics(
         revision,
@@ -420,7 +432,11 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate entry-date verification declarations to the registry."""
+    """Delegate entry-date verification declarations to the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del casilla_values, bucket_id
     return _registry_minimo_descendientes_diagnostics(
         revision,
@@ -647,7 +663,11 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate dependency verification declarations to the registry."""
+    """Delegate dependency verification declarations to the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del casilla_values, bucket_id
     return _registry_minimo_descendientes_diagnostics(
         revision,
@@ -665,7 +685,11 @@ def collect_descendientes_count_desync_diagnostics(
     period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant-count verification declarations to the registry."""
+    """Delegate descendant-count verification declarations to the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     del bucket_id
     return _registry_minimo_descendientes_count_diagnostics(
         revision,

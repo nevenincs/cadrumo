@@ -9,6 +9,10 @@ modelo:
           tipo-declaracion:
             help: Tax information for casilla of Modelo 038.
             label: Return type (original / substitute / supplementary)
+      construct:
+        modelo-038-informative:
+          field:
+            title: Modelo 038 return informative
       field:
         official_name: Modelo 038. List of transactions carried out by entities registered
           in public registers. Informative return.
@@ -16,16 +20,8 @@ modelo:
           return)
       revision:
         2024-desde-06:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 038, from June 2024
         2025-y-siguientes:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 038, tax years 2025 onwards

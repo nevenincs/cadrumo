@@ -105,7 +105,11 @@ def build_m296_filing_projection_plan(
     layout: ExportLayoutDefinition,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    """Project one record occurrence per row, for every modelo 296 detail family."""
+    """Project one record occurrence per row, for every modelo 296 detail family.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     profile = producer_snapshot.model_profile
     filing_period = registry_snapshot.filing_period
     effective_date = (

@@ -264,6 +264,11 @@ modelo:
             help: Import declarat al model 184. El disseny el divideix en part entera
               i part decimal.
             label: 'Valor liquidatiu / ajustos: augments'
+      construct:
+        modelo-184-informative:
+          field:
+            title: Model 184 declaració informativa d'entitats en règim d'atribució
+              de rendes
       field:
         official_name: Modelo 184. Declaració informativa anual d'entitats en règim
           d'atribució de rendes.
@@ -391,11 +396,6 @@ modelo:
               help: Casella 94-95 del model 184, exercicis 2023 i 2024.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercicis 2023 i 2024.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Model 184 declaració informativa d'entitats en règim d'atribució
-                  de rendes
           field:
             label: Model 184, exercicis 2023 i 2024
         2025-y-siguientes:
@@ -492,10 +492,5 @@ modelo:
               help: Casella 94-95 del model 184, exercici 2025.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercici 2025.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Model 184 declaració informativa d'entitats en règim d'atribució
-                  de rendes
           field:
             label: Model 184, exercicis 2025 i següents

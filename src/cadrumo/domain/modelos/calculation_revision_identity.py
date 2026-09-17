@@ -514,6 +514,9 @@ def outputs_for_hash_from_observations(
     A future cycle drops the flat field and routes the hash directly through
     this helper; currently both fields are kept and this helper is used for
     the consistency check only.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
     """
     return outputs_for_hash_from_mapping(
         {obs.casilla_id: obs.value for obs in observations if isinstance(obs.value, Decimal)}

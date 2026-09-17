@@ -1,4 +1,10 @@
-"""Concrete encrypted persistence adapter for application workflow state and runs."""
+"""Concrete encrypted persistence adapter for application workflow state and runs.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`,
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

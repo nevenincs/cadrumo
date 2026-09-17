@@ -346,25 +346,21 @@ modelo:
               222.
             label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra / art.
               40.3 base imposable)
+      construct:
+        modelo-222-declaration-construct:
+          field:
+            title: 'Model 222: pagament fraccionat en règim de consolidació fiscal'
       field:
         official_name: Modelo 222. Impost sobre Societats. Règim de consolidació fiscal.
           Pagament fraccionat.
         title: IS pagament fraccionat règim de consolidació fiscal (grups)
       revision:
         '2023':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Model 222 pagament fraccionat en règim de consolidació fiscal
           field:
-            label: null
+            label: Model 222, exercici 2023
         '2024':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Model 222 pagament fraccionat en règim de consolidació fiscal
           field:
-            label: null
+            label: Model 222, exercici 2024
         2025-y-siguientes:
           casilla:
             '61':
@@ -397,9 +393,5 @@ modelo:
               help: Casella 67 de la liquidació del pagament fraccionat del grup fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - Correcció per Impost Complementari (IC) - Augments
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Modelo 222— informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Ordre HFP/227/2017 (model 222), exercicis 2025 i següents

@@ -128,7 +128,11 @@ def m303_rectificativa_record_design_from_snapshot(
     *,
     operation: PinnedAuthorityOperation | None = None,
 ) -> SourceReference | None:
-    """Resolve the sole admitted record-design source owned by a snapshot."""
+    """Resolve the sole admitted record-design source owned by a snapshot.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return m303_rectificativa_record_design_from_snapshot(snapshot, operation=indexed_operation)

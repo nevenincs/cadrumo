@@ -204,6 +204,10 @@ modelo:
           ? m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-rectificacion-de-deducciones-cuota-deducible
           : label: Activitats amb règims de deducció diferenciats. IVA deduïble. Grup
               1. Rectificació de deduccions. Quota deduïble [715]
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible:
+            label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
+              Grup 1. Suma de deduccions (701 + 703 + 705 + 707 + 709 + 711 + 713
+              + 715 + 716). Quota deduïble [717]'
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la:
             label: Activitats amb règims de deducció diferenciats. IVA deduïble. Grup
               2. Compensacions en règim especial de l'agricultura, ramaderia i pesca.
@@ -228,6 +232,10 @@ modelo:
           ? m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-rectificacion-de-deducciones-cuota-deducible
           : label: Activitats amb règims de deducció diferenciats. IVA deduïble. Grup
               2. Rectificació de deduccions. Quota deduïble [733]
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible:
+            label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
+              Grup 2. Suma de deduccions (719 + 721 + 723 + 725 + 727 + 729 + 731
+              + 733 + 734). Quota deduïble [735]'
           m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota:
             label: Activitats amb règims de deducció diferenciats. IVA deduïble. Grup
               1. Regularització de béns d'inversió. Quota deduïble [716]
@@ -523,6 +531,10 @@ modelo:
             label: Prorrata - 5 - Tipus de prorrata [523]
           m322-regularizacion-cuotas-art-80-cinco-5-liva:
             label: Regularització de quotes art. 80.Cinco.5ª LIVA [76]
+      construct:
+        modelo-322-iva-grupo-individual:
+          field:
+            title: Model 322 IVA grup d'entitats, model individual
       field:
         official_name: Modelo 322. Impost sobre el Valor Afegit. Grup d'entitats.
           Model individual. Autoliquidació mensual.
@@ -778,9 +790,6 @@ modelo:
               help: Casella 716 del model 322, exercici 2008.
             '717':
               help: Casella 717 del model 322, exercici 2008.
-              label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
-                Grup 1. Suma de deduccions (701 + 703 + 705 + 707 + 709 + 711 + 713
-                + 715 + 716). Quota deduïble [717]'
             '718':
               help: Casella 718 del model 322, exercici 2008.
             '719':
@@ -819,9 +828,6 @@ modelo:
               help: Casella 734 del model 322, exercici 2008.
             '735':
               help: Casella 735 del model 322, exercici 2008.
-              label: 'Activitats amb règims de deducció diferenciats. IVA deduïble:
-                Grup 2. Suma de deduccions (719 + 721 + 723 + 725 + 727 + 729 + 731
-                + 733 + 734). Quota deduïble [735]'
             '76':
               help: Casella 76 del model 322, exercici 2008.
             '77':
@@ -965,10 +971,6 @@ modelo:
                 2008.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casella iva.soportado.interiores del model 322, exercici 2008.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Model 322 IVA grup d'entitats, model individual
           field:
             label: Model 322, exercicis 2008 a 2025
         '2023':
@@ -1003,10 +1005,6 @@ modelo:
               help: Casella 163 del model 322, exercici 2008.
             '164':
               help: Casella 164 del model 322, exercici 2008.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Model 322 IVA grup d'entitats, model individual
           field:
             label: Model 322, exercicis 2008 a 2025
         2024-2025:
@@ -1421,10 +1419,6 @@ modelo:
                 2024.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casella iva.soportado.interiores del model 322, exercici 2024.
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Model 322 IVA grup d'entitats, model individual
           field:
             label: Model 322, exercicis 2008 a 2025
         2026-y-siguientes:
@@ -1897,7 +1891,6 @@ modelo:
             '717':
               help: 'Informació fiscal sobre informació fiscal de la casella 717 del
                 Modelo 322 Referències: [717].'
-              label: 'Casella 717 — informació fiscal Referències: [717].'
             '718':
               help: 'Informació fiscal sobre informació fiscal de la casella 718 del
                 Modelo 322 Referències: [718].'
@@ -1955,7 +1948,6 @@ modelo:
             '735':
               help: 'Informació fiscal sobre informació fiscal de la casella 735 del
                 Modelo 322 Referències: [735].'
-              label: 'Casella 735 — informació fiscal Referències: [735].'
             '76':
               help: 'Consulteu la informació de la casella: Regularització quotes
                 art. 80.Cinco.5ª LIVA [76].'
@@ -2127,9 +2119,5 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: 'Consulteu la informació de la casella: Quota IVA suportat en
                 operacions interiors corrientes.'
-          construct:
-            modelo-322-iva-grupo-individual:
-              field:
-                title: Model 322 IVA grup d'entitats, model individual
           field:
             label: Model 322, exercicis 2026 i següents

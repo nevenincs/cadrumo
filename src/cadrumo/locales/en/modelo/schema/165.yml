@@ -54,6 +54,10 @@ modelo:
           tipo-declaracion:
             help: Tax information for casilla of Modelo 165.
             label: Return type (original / substitute / supplementary)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 return informative
       field:
         official_name: Modelo 165. Informative return of individual certificates issued
           to shareholders or members of newly or recently created entities.
@@ -62,17 +66,13 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Casilla— tax information
+            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
         2016-2022:
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
         2023-2025:
           field:
-            label: Casilla— tax information
+            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
@@ -123,9 +123,5 @@ modelo:
             socio-nombre:
               help: Tax information about tax information in casilla  of Modelo 165.
               label: Surnames and given name of the member or shareholder
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards

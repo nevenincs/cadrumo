@@ -29,24 +29,20 @@ modelo:
           tipo-declaracion:
             help: A Modelo 721 . casilla adóügyi adatai.
             label: A bevallás típusa (eredeti / kiegészítő / helyettesítő)
+      construct:
+        modelo-721-informative:
+          field:
+            title: '721-es modelo: a letétkezelőn keresztül külföldön tartott virtuális
+              pénznemekről szóló adatszolgáltatás'
       field:
         official_name: Modelo 721. Adatszolgáltatási bevallás a külföldön található
           virtuális fizetőeszközökről.
         title: Külföldön található virtuális fizetőeszközök (éves adatszolgáltatás)
       revision:
         '2023':
-          construct:
-            modelo-721-informative:
-              field:
-                title: A 721. számú nyomtatvány külföldön, letétkezelőnél tartott
-                  virtuális pénznemekről szóló adatszolgáltató bevallása
           field:
-            label: Casilla— adóügyi információ
+            label: 721-es modelo, 2023. adóév (HFP/886/2023 rendelet)
         '2024':
-          construct:
-            modelo-721-informative:
-              field:
-                title: A 721. számú nyomtatvány külföldön, letétkezelőnél tartott
-                  virtuális pénznemekről szóló adatszolgáltató bevallása
           field:
-            label: Casilla— adóügyi információ
+            label: 721-es modelo, 2024. adóév (a melléklet a HAC/1504/2024 rendelettel
+              felváltva)

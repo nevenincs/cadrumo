@@ -48,7 +48,11 @@ class _RelationConsumptionIndex(NamedTuple):
 
 
 def relation_consumption_index(revision: ModeloRevision) -> _RelationConsumptionIndex:
-    """Return the binding channels that consume relation-prefill values."""
+    """Return the binding channels that consume relation-prefill values.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     primary_bindings: set[BindingId] = set()
     alternate_bindings: set[BindingId] = set()
     for casilla in revision.casillas:

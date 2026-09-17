@@ -6,13 +6,13 @@ modelo:
           base-retenciones-ingresos-a-cuenta:
             label: Base de retenciones e ingresos a cuenta
           declaracion-anterior-numero:
-            label: 'Casilla 123-135: declaración anterior número'
+            label: Número identificativo de la declaración anterior
           declaracion-complementaria:
             label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
           declaracion-numero-identificativo:
             label: NÚMERO IDENTIFICATIVO DE LA Declaración
           declaracion-sustitutiva:
-            label: 'Casilla 122: declaración sustitutiva'
+            label: Declaración sustitutiva
           declarante-contacto-nombre:
             label: APELLIDOS Y NOMBRE
           declarante-contacto-telefono:
@@ -24,11 +24,11 @@ modelo:
           gasto-contributor-nif:
             label: NIF del contribuyente
           gasto-contributor-nombre:
-            label: 'Casilla 36-75: gasto contributor nombre'
+            label: Apellidos y nombre del contribuyente o denominación
           gasto-importe-anual:
             label: Importe de gastos
           gastos-total-declarante:
-            label: 'Casilla 220-234: gastos total declarante'
+            label: Gastos deducibles (art. 26.1.a Ley 35/2006)
           payee-base-retenciones-193:
             label: Base de retenciones e ingresos a cuenta
           payee-ceuta-melilla-clave:
@@ -98,21 +98,31 @@ modelo:
           payee-tipo-percepcion:
             label: Casilla 122 — información fiscal
           perc-nif-representante:
-            label: 'Casilla 27-35: representante legal nif'
+            label: NIF del representante legal
           representante-legal-nif:
-            label: 'Casilla 27-35: representante legal nif'
+            label: NIF del representante legal
           retenciones-ingresadas-total:
             label: RETENCIONES E INGRESOS A CUENTA INGRESADOS
           retenciones-ingresos-a-cuenta:
             label: Retenciones e ingresos a cuenta
           total-perceptores-count:
             label: NÚMERO TOTAL DE PERCEPTORES
+      construct:
+        modelo-193-annual-summary:
+          field:
+            title: Modelo 193 resumen anual de retenciones sobre capital mobiliario
       field:
         official_name: Modelo 193. Declaración informativa. Retenciones e ingresos
           a cuenta sobre determinados rendimientos del capital mobiliario y determinadas
           rentas. Resumen anual.
         title: Resumen anual de retenciones sobre capital mobiliario
       revision:
+        '2022':
+          field:
+            label: Modelo 193, ejercicio 2022
+        '2023':
+          field:
+            label: Modelo 193, ejercicio 2023
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -123,7 +133,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
-              label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Casilla 235 del modelo 193, ejercicio 2024.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -256,10 +265,6 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casilla 122 del modelo 193, ejercicio 2024.
               label: TIPO DE PERCEPCIÓN
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: Modelo 193 resumen anual de retenciones sobre capital mobiliario
           field:
             label: Modelo 193, ejercicio 2024
         2025-y-siguientes:
@@ -272,7 +277,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: Total declarado en el registro de declarante del modelo 193. El
                 diseno lo divide en parte entera y parte decimal.
-              label: Gastos deducibles (art. 26.1.a Ley 35/2006)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Casilla 235 del modelo 193, ejercicio 2025.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -408,9 +412,5 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: Casilla 122 del modelo 193, ejercicio 2025.
               label: TIPO DE PERCEPCIÓN
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: Modelo 193 resumen anual de retenciones sobre capital mobiliario
           field:
             label: Modelo 193, ejercicios 2025 y siguientes

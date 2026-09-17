@@ -186,7 +186,11 @@ def resolve_foreign_asset_obligation_catalogue(
     effective_date: date | None = None,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ForeignAssetObligationCatalogue:
-    """Resolve the dated foreign-asset obligation taxonomy."""
+    """Resolve the dated foreign-asset obligation taxonomy.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
+    """
     coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)

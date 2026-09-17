@@ -14,6 +14,7 @@ modelo:
             label: Result payable
           ingresos-ejercicios-anteriores:
             help: Tax information about tax information in casilla 04 of Modelo 123.
+            label: Income from previous tax years
           numero-rentas-dividendos:
             help: Tax information for casilla 01 of Modelo 123.
             label: Number of dividend and profit-sharing income items
@@ -29,6 +30,8 @@ modelo:
           regularizacion:
             help: 'Review the casilla information: Adjustment.'
             label: Adjustment
+          resultado-anteriores-autoliquidaciones:
+            label: Result of previous self-assessments
           retenciones-rentas-dividendos:
             help: 'Review the casilla information: Withholdings dividendos and units.'
             label: Withholdings on dividends and profit-sharing
@@ -53,18 +56,16 @@ modelo:
             '03':
               help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and advance payments
-            '04':
-              label: Income from prior years
             '07':
               help: Tax information about tax information in casilla 07 of Modelo
                 123.
-              label: Result of prior self-assessments
           construct:
             modelo-123-capital-withholding:
               field:
-                title: Modelo 123 — tax information
+                title: 'Modelo 123: withholdings on investment income (tax years 2019
+                  to 2023)'
           field:
-            label: Casilla— tax information
+            label: Order EHA/3435/2007, tax years 2019 to 2023
         2024-y-siguientes:
           casilla:
             '06':
@@ -76,21 +77,16 @@ modelo:
             '10':
               help: Tax information about tax information in casilla 10 of Modelo
                 123.
-              label: Income from previous tax years
             '12':
               help: Tax information about tax information in casilla 12 of Modelo
                 123.
             '13':
               help: Tax information about tax information in casilla 13 of Modelo
                 123.
-              label: Result of previous self-assessments
           construct:
             modelo-123-capital-withholding:
               field:
                 title: Modelo 123 withholding and payments on account on movable capital
                   income
-            modelo-123-current-capital-withholding:
-              field:
-                title: Modelo 123 — tax information
           field:
-            label: Casilla— tax information
+            label: Order HAC/56/2024, tax years 2024 onwards

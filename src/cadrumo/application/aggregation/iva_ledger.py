@@ -980,7 +980,11 @@ def resolve_iva_differentiated_deduction_contributions(
     apportionment: IvaLedgerProrrataApportionment,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
-    """Expose the canonical sector apportionment as immutable per-kind outputs."""
+    """Expose the canonical sector apportionment as immutable per-kind outputs.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     if not apportionment.sector_apportionments:
         return ()
     rows = tuple(observations)

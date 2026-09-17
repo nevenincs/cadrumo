@@ -28,7 +28,11 @@ class WorkflowGateDraftRepositoryAdapter(WorkflowGateDraftRepositoryProtocol):
 
     @override
     def save(self, payload: ModeloDraft, /) -> None:
-        """Persist an approved draft and translate storage failures."""
+        """Persist an approved draft and translate storage failures.
+
+        Core types:
+        :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+        """
         try:
             self._repository.save(payload)
         except (StorageError, OSError) as exc:

@@ -60,7 +60,11 @@ class RevisionSelectionMetadata(RegistryModel):
 
     @classmethod
     def from_revision(cls, revision: ModeloRevision) -> RevisionSelectionMetadata:
-        """Project exactly the fields consumed by temporal selection."""
+        """Project exactly the fields consumed by temporal selection.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+        """
         return cls(
             id=revision.id,
             valid_from=revision.valid_from,
@@ -94,7 +98,11 @@ class ModeloDirectoryMetadata(RegistryModel):
 
     @classmethod
     def from_modelo(cls, modelo: ModeloDefinition) -> ModeloDirectoryMetadata:
-        """Capture every modelo field needed to reconstruct a selected snapshot."""
+        """Capture every modelo field needed to reconstruct a selected snapshot.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+        """
         return cls(
             id=str(modelo.id),
             title_localization_key=modelo.title_localization_key,
@@ -120,7 +128,12 @@ class RevisionEndpointSourceEnrollment(RegistryModel):
 
 
 def revision_endpoint_source_ids(modelo: ModeloDefinition, revision: ModeloRevision) -> tuple[str, ...]:
-    """Return the compiler's canonical source-enrollment basis for one endpoint."""
+    """Return the compiler's canonical source-enrollment basis for one endpoint.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     enrolled = set(modelo.source_refs) | set(revision.source_refs)
     enrolled.update(source_ref for casilla in revision.casillas for source_ref in casilla.source_refs)
     return tuple(sorted(enrolled))
@@ -163,6 +176,9 @@ class ModeloRevisionDirectory(RegistryModel):
         Raises:
             RegistryValidationError: When the view is not a valid modelo, for
                 example when the revision references one its directory lacks.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
         """
         try:
             return ModeloDefinition.model_validate(
@@ -181,7 +197,11 @@ class ModeloRevisionDirectory(RegistryModel):
         *,
         support: SupportedFilingYearsCatalogue | None = None,
     ) -> ModeloRevisionDirectory:
-        """Build a deterministic directory without embedding revision payloads."""
+        """Build a deterministic directory without embedding revision payloads.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
+        """
         return cls(
             modelo_id=str(modelo.id),
             modelo=ModeloDirectoryMetadata.from_modelo(modelo),

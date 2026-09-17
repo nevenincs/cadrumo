@@ -215,13 +215,13 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 )
 
             assert exc_info.value.context is not None
-            assert exc_info.value.context["divergence"] == "filed_history_only"
+            assert exc_info.value.context["divergence"] == "wallet_missing"
             refreshed = IvaWalletDecisionRepository().load_decision(
                 taxpayer_nif,
                 _period(_TARGET_YEAR, "1T"),
             )
             assert refreshed is not None
-            assert refreshed.divergence == "filed_history_only"
+            assert refreshed.divergence == "wallet_missing"
             assert refreshed.local_recurrence_amount == Decimal("450.00")
             assert refreshed.blocked is True
             assert any(source.source_periods == (_period(2025, "4T"),) for source in refreshed.authority_sources)

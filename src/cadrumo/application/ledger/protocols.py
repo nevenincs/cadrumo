@@ -98,7 +98,11 @@ class TransactionCatalogueCoCommitWriterProtocol(TransactionCatalogueRepositoryP
         catalogue: TransactionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Persist the catalogue and related secure objects atomically."""
+        """Persist the catalogue and related secure objects atomically.
+
+        Core types:
+        :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+        """
         ...
 
 
@@ -115,7 +119,11 @@ class InvoiceCatalogueCoCommitWriterProtocol(InvoiceCatalogueRepositoryProtocol,
         *,
         expected_revision_id: str | None = None,
     ) -> SecureObjectWrite:
-        """Build the invoice secure-object write without committing it."""
+        """Build the invoice secure-object write without committing it.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         ...
 
 

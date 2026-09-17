@@ -309,6 +309,9 @@ def build_prorrata_missing_provisional_advisory(
     fabricate a percentage: an applicable-but-unresolved prorrata tells the
     operator to record the inicio-de-actividad percentage for a first ejercicio
     or seed/record the prior definitive percentage for subsequent ejercicios.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if not applicability.applies or provisional_resolution.resolved:
         return None
@@ -1135,6 +1138,9 @@ def buildprorrata_regularizacion_advisory(
         ``(result, diagnostic)`` where ``result`` is the
         :class:`RegularizacionProrrataResult`; the diagnostic is ``None`` when
         there is nothing to regularise.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     projection = project_prorrata_regularizacion_feed(
         cuotas_soportadas_deducibles=cuotas_soportadas_deducibles,

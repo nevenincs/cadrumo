@@ -1,6 +1,10 @@
 modelo:
   schema:
     '128':
+      construct:
+        modelo-128-calculation-construct:
+          field:
+            title: 'Modelo 128: self-assessment calculation'
       field:
         official_name: Modelo 128. Withholdings and payments on account. Income from
           movable capital arising from capitalisation transactions and life or disability
@@ -34,9 +38,5 @@ modelo:
             '07':
               help: 'Review the casilla information: Result a ingresar.'
               label: Amount due
-          construct:
-            modelo-128-calculation-construct:
-              field:
-                title: Modelo 128 calculation construct
           field:
-            label: Casilla— tax information
+            label: Order EHA/3435/2007, tax years 2019 onwards

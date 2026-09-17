@@ -27,7 +27,7 @@ from ....application.ledger.workspace import (
 from ....application.operator_actions.models import ActionReference
 from ....application.review.filter import LedgerReviewStatus
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
-from ....core.i18n.render import lookup_translation, output_language, tr
+from ....core.i18n.render import tr
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ..components.account_chrome import AccountChromeScreen
@@ -126,17 +126,8 @@ def item_count_label(state: LedgerWorkspaceAreaStateV1) -> str:
     return status_label(state.status) if state.status is LedgerWorkspaceStatus.UNMEASURED else str(state.item_count)
 
 
-def _application_reason_key(reason_code: str | None) -> str:
-    """Name the application's own reason for a closed area, or the generic line.
-
-    A reason without authored words falls back to the generic line rather
-    than to an invented phrase.
-    """
-    if reason_code is not None:
-        key = f"tui.ledger.refusal.reason.{reason_code}"
-        if lookup_translation(key, locale=output_language()) is not None:
-            return key
-    return "tui.ledger.refusal.application_state"
+_APPLICATION_STATE_REASON_KEY = "tui.ledger.refusal.application_state"
+"""The one line a closed Ledger area renders: the application names no Ledger reason codes."""
 
 
 class LedgerWorkspaceController:
@@ -262,7 +253,7 @@ class LedgerWorkspaceController:
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=state.availability,
-                reason_key=_application_reason_key(state.reason_code),
+                reason_key=_APPLICATION_STATE_REASON_KEY,
             )
         selection_refusal = self._selection_refusal(area, target)
         if selection_refusal is not None:

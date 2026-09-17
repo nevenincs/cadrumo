@@ -107,9 +107,164 @@ modelo:
           documento-ingreso-devolucion-tipo-ejercicio:
             help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
             label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adóév típusa
+          extracooperativo-base-tramo-dos:
+            label: 2. sáv - Adóalap 2 (nem szövetkezeti eredmény) | 3. megjegyzés
+          extracooperativo-base-tramo-uno:
+            label: 1. sáv - Adóalap (nem szövetkezeti eredmény) | 3. megjegyzés
+          extracooperativo-tipo-tramo-dos:
+            label: 2. sáv - Adókulcs (nem szövetkezeti eredmény) | 2 egész, 4 tizedes.
+              3. megjegyzés
+          extracooperativo-tipo-tramo-uno:
+            label: 1. sáv - Adókulcs (nem szövetkezeti eredmény) | 2 egész, 4 tizedes.
+              3. megjegyzés
           filing-year:
             help: 'A Modelo 220 . casilla adóügyi adatai: adóév.'
             label: Az adócsoport bevallásának vonatkozási éve
+          liquidacion-complementaria-abono-conversion-estado:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó jóváírás (LIS 130. cikk).
+              ÖSSZESEN Állam
+          liquidacion-complementaria-abono-conversion-forales:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó jóváírás (LIS 130. cikk).
+              ÖSSZESEN Külön jogállású tartományi tanácsok és Navarra
+          liquidacion-complementaria-abono-conversion-total:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó jóváírás (LIS 130. cikk).
+              ÖSSZESEN (Állam + Külön jogállású tartományi tanácsok és Navarra)
+          liquidacion-complementaria-abono-regularizacion-estado:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Jóváírás. Állam'
+          liquidacion-complementaria-abono-regularizacion-forales:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Jóváírás. Külön jogállású tartományi tanácsok
+              és Navarra'
+          liquidacion-complementaria-abono-regularizacion-total:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Jóváírás. Összesen (Állam + Külön jogállású
+              tartományi tanácsok és Navarra)'
+          liquidacion-complementaria-cambio-residencia-base-estado:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). Az adóalapba beépített összeg. Állam
+          liquidacion-complementaria-cambio-residencia-base-forales:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). Az adóalapba beépített összeg. Külön jogállású tartományi
+              tanácsok és Navarra (Összesen)
+          liquidacion-complementaria-cambio-residencia-deuda-estado:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). A LIS 19,1. cikke szerinti részletfizetésből eredő
+              adótartozás. Állam
+          liquidacion-complementaria-cambio-residencia-deuda-forales:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). A LIS 19,1. cikke szerinti részletfizetésből eredő
+              adótartozás. Külön jogállású tartományi tanácsok és Navarra (Összesen)
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). 1. részletfizetés. Állam
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). 1. részletfizetés. Külön jogállású tartományi tanácsok
+              és Navarra (Összesen)
+          liquidacion-complementaria-compensacion-conversion-estado:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó beszámítás (LIS 130. cikk).
+              ÖSSZESEN Állam
+          liquidacion-complementaria-compensacion-conversion-forales:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó beszámítás (LIS 130. cikk).
+              ÖSSZESEN Külön jogállású tartományi tanácsok és Navarra
+          liquidacion-complementaria-compensacion-conversion-total:
+            label: Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Halasztott adókövetelés átváltásából származó beszámítás (LIS 130. cikk).
+              ÖSSZESEN (Állam + Külön jogállású tartományi tanácsok és Navarra)
+          liquidacion-complementaria-compensacion-regularizacion-estado:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Beszámítás. Állam'
+          liquidacion-complementaria-compensacion-regularizacion-forales:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Beszámítás. Külön jogállású tartományi tanácsok
+              és Navarra'
+          liquidacion-complementaria-compensacion-regularizacion-total:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Beszámítás. Összesen (Állam + Külön jogállású
+              tartományi tanácsok és Navarra)'
+          liquidacion-complementaria-devolucion-anterior-estado:
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+              adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Állam
+          liquidacion-complementaria-devolucion-anterior-forales:
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő. A 2025.
+              adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Külön jogállású tartományi tanácsok és Navarra (Összesen)
+          liquidacion-complementaria-devolucion-compensada-anterior-estado:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: Kiegészítő: Megítélt vagy beszámított
+              visszatérítés. Állam'
+          liquidacion-complementaria-devolucion-compensada-anterior-forales:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: Kiegészítő: Megítélt vagy beszámított
+              visszatérítés. Külön jogállású tartományi tanácsok és Navarra'
+          liquidacion-complementaria-devolucion-compensada-anterior-total:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: Kiegészítő: Megítélt vagy beszámított
+              visszatérítés. Összesen (Állam + Külön jogállású tartományi tanácsok
+              és Navarra)'
+          liquidacion-complementaria-ingreso-fraccionamiento-estado:
+            label: Elszámolás. Fizetendő nettó összeg. Fizetendő nettó összeg a LIS
+              19.1. cikke szerinti 1. részletfizetéssel együtt. Állam
+          liquidacion-complementaria-ingreso-fraccionamiento-forales:
+            label: Elszámolás. Fizetendő nettó összeg. Fizetendő nettó összeg a LIS
+              19.1. cikke szerinti 1. részletfizetéssel együtt. Külön jogállású tartományi
+              tanácsok és Navarra (Összesen)
+          liquidacion-complementaria-ingreso-regularizacion-estado:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Fizetendő összeg. Állam'
+          liquidacion-complementaria-ingreso-regularizacion-forales:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Fizetendő összeg. Külön jogállású tartományi
+              tanácsok és Navarra'
+          liquidacion-complementaria-ingreso-regularizacion-total:
+            label: 'Elszámolás. Halasztott adókövetelés átváltása (LIS 130. cikk).
+              Fizetendő vagy visszajáró adó: A halasztott adókövetelés átváltásának
+              eredménye rendezés után. Fizetendő összeg. Összesen (Állam + Külön jogállású
+              tartományi tanácsok és Navarra)'
+          liquidacion-complementaria-resultado-anterior-estado:
+            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+              adózási időszak korábbi önadózásaiból fizetendő összegek. Állam'
+          liquidacion-complementaria-resultado-anterior-forales:
+            label: 'Elszámolás. Fizetendő vagy visszajáró adó. Kiegészítő: a 2025.
+              adózási időszak korábbi önadózásaiból fizetendő összegek. Külön jogállású
+              tartományi tanácsok és Navarra (Összesen).'
+          liquidacion-complementaria-resultado-estado:
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Állam
+          liquidacion-complementaria-resultado-forales:
+            label: Elszámolás. Fizetendő vagy visszajáró adó. Külön jogállású tartományi
+              tanácsok és Navarra
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
+            label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás eredménye
+              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2025. adózási
+              időszak korábbi önadózásaiból. Állam'
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
+            label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás eredménye
+              a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2025. adózási
+              időszak korábbi önadózásaiból. Külön jogállású tartományi tanácsok és
+              Navarra (Összesen)'
+          liquidacion-complementaria-resultado-fraccionamiento-estado:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). Az önadózás eredménye a LIS 19.1. cikke szerinti 1.
+              részletfizetéssel együtt. Állam.
+          liquidacion-complementaria-resultado-fraccionamiento-forales:
+            label: Elszámolás. Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19,1. cikk). Az önadózás eredménye a LIS 19.1. cikke szerinti 1.
+              részletfizetéssel együtt. Állam.
           t22007000-00043:
             help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
               adókötelezettsége (7. oldal, 00. lap). Az adócsoport entitásainak egyedi
@@ -1354,6 +1509,17 @@ modelo:
               két tizedes).'
             label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
               lap). Adókulcs sávja 1 (három egész, két tizedes)
+          tonelaje-base-imponible:
+            label: Hajózási társaságok tonnatartalom szerinti átalányadózásának különleges
+              rendszere - Adóalap | 2. megjegyzés.
+          tonelaje-tipo-gravamen:
+            label: Hajózási társaságok tonnatartalom szerinti átalányadózásának különleges
+              rendszere - Adókulcs | 2 egész, 4 tizedes. 2. megjegyzés
+      construct:
+        modelo-220-declaration-construct:
+          field:
+            title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
+              rendszerben
       field:
         official_name: Modelo 220. Társasági adó. Adókonszolidációs rendszer. Bevallás.
         title: IS éves önbevallás adókonszolidációs rendszerben (cégcsoportok)
@@ -9384,18 +9550,8 @@ modelo:
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
               help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
               label: Törvényes képviselők. 3. törvényes képviselő. Közjegyzői iroda
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
-                  rendszerben
           field:
             label: Orden HAC/657/2025 (220-as modelo), 2024-es adóév
         '2025':
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
-                  rendszerben
           field:
             label: Orden HAC/529/2026 (220-as modelo), 2025-től kezdődő adóévek

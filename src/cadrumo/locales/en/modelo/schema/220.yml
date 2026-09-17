@@ -96,9 +96,158 @@ modelo:
           documento-ingreso-devolucion-tipo-ejercicio:
             help: Tax information for casilla of Modelo 220.
             label: Payment or refund document. Accrual. Type of tax year
+          extracooperativo-base-tramo-dos:
+            label: Bracket 2 - Taxable base 2 (extra-cooperative results) | Note 3
+          extracooperativo-base-tramo-uno:
+            label: Bracket 1 - Taxable base (extra-cooperative results) | Note 3
+          extracooperativo-tipo-tramo-dos:
+            label: Bracket 2 - Tax rate (extra-cooperative results) | 2 integer digits,
+              4 decimals. Note 3
+          extracooperativo-tipo-tramo-uno:
+            label: Bracket 1 - Tax rate (extra-cooperative results) | 2 integer digits,
+              4 decimals. Note 3
           filing-year:
             help: Tax information for casilla of Modelo 220.
             label: Filing year to which the tax group return relates
+          liquidacion-complementaria-abono-conversion-estado:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Credit
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL State
+          liquidacion-complementaria-abono-conversion-forales:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Credit
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL Chartered
+              provincial councils and Navarre
+          liquidacion-complementaria-abono-conversion-total:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Credit
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL (State
+              + Chartered provincial councils and Navarre)
+          liquidacion-complementaria-abono-regularizacion-estado:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Credit. State'
+          liquidacion-complementaria-abono-regularizacion-forales:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Credit. Chartered provincial councils and Navarre'
+          liquidacion-complementaria-abono-regularizacion-total:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Credit. Total (State + Chartered provincial councils
+              and Navarre)'
+          liquidacion-complementaria-cambio-residencia-base-estado:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Amount incorporated into the taxable base. State
+          liquidacion-complementaria-cambio-residencia-base-forales:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Amount incorporated into the taxable base. Chartered provincial
+              councils and Navarre (totals)
+          liquidacion-complementaria-cambio-residencia-deuda-estado:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Tax liability resulting from the instalment under art. 19,1
+              LIS. State
+          liquidacion-complementaria-cambio-residencia-deuda-forales:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Tax liability resulting from the instalment under art. 19,1
+              LIS. Chartered provincial councils and Navarre (totals)
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). First instalment. State
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). First instalment. Chartered provincial councils and Navarre
+              (totals)
+          liquidacion-complementaria-compensacion-conversion-estado:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Offset
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL State
+          liquidacion-complementaria-compensacion-conversion-forales:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Offset
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL Chartered
+              provincial councils and Navarre
+          liquidacion-complementaria-compensacion-conversion-total:
+            label: Settlement. Conversion of deferred tax assets (art. 130 LIS). Offset
+              from the conversion of deferred tax assets (art. 130 LIS). TOTAL (State
+              + Chartered provincial councils and Navarre)
+          liquidacion-complementaria-compensacion-regularizacion-estado:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Offset. State'
+          liquidacion-complementaria-compensacion-regularizacion-forales:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Offset. Chartered provincial councils and Navarre'
+          liquidacion-complementaria-compensacion-regularizacion-total:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Offset. Total (State + Chartered provincial councils
+              and Navarre)'
+          liquidacion-complementaria-devolucion-anterior-estado:
+            label: Settlement. Net amount payable or refundable. Supplementary. Refunds
+              granted from earlier self-assessments for tax period 2025. State
+          liquidacion-complementaria-devolucion-anterior-forales:
+            label: Settlement. Net amount payable or refundable. Supplementary. Refunds
+              granted from earlier self-assessments for tax period 2025. Chartered
+              provincial councils and Navarre (totals)
+          liquidacion-complementaria-devolucion-compensada-anterior-estado:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Supplementary: Agreed or offset refund.
+              State'
+          liquidacion-complementaria-devolucion-compensada-anterior-forales:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Supplementary: Agreed or offset refund.
+              Chartered provincial councils and Navarre'
+          liquidacion-complementaria-devolucion-compensada-anterior-total:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Supplementary: Agreed or offset refund.
+              Total (State + Chartered provincial councils and Navarre)'
+          liquidacion-complementaria-ingreso-fraccionamiento-estado:
+            label: Settlement. Net amount payable. Net amount payable including the
+              first instalment under art. 19.1 LIS. State
+          liquidacion-complementaria-ingreso-fraccionamiento-forales:
+            label: Settlement. Net amount payable. Net amount payable including the
+              first instalment under art. 19.1 LIS. Chartered provincial councils
+              and Navarre (totals)
+          liquidacion-complementaria-ingreso-regularizacion-estado:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Amount payable. State'
+          liquidacion-complementaria-ingreso-regularizacion-forales:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Amount payable. Chartered provincial councils and
+              Navarre'
+          liquidacion-complementaria-ingreso-regularizacion-total:
+            label: 'Settlement. Conversion of deferred tax assets (art. 130 LIS).
+              Net amount payable or refundable: Result of the deferred tax asset conversion
+              after adjustment. Amount payable. Total (State + Chartered provincial
+              councils and Navarre)'
+          liquidacion-complementaria-resultado-anterior-estado:
+            label: 'Settlement. Net amount payable or refundable. Supplementary: amounts
+              payable from earlier self-assessments for tax period 2025. State'
+          liquidacion-complementaria-resultado-anterior-forales:
+            label: 'Settlement. Net amount payable or refundable. Supplementary: amounts
+              payable from earlier self-assessments for tax period 2025. Chartered
+              provincial councils and Navarre (totals).'
+          liquidacion-complementaria-resultado-estado:
+            label: Settlement. Net amount payable or refundable. State
+          liquidacion-complementaria-resultado-forales:
+            label: Settlement. Net amount payable or refundable. Chartered provincial
+              councils and Navarre
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
+            label: 'Settlement. Net amount payable: Supplementary: Self-assessment
+              result including the first instalment under art. 19,1 LIS from earlier
+              self-assessments for tax period 2025. State'
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
+            label: 'Settlement. Net amount payable: Supplementary: Self-assessment
+              result including the first instalment under art. 19,1 LIS from earlier
+              self-assessments for tax period 2025. Chartered provincial councils
+              and Navarre (totals)'
+          liquidacion-complementaria-resultado-fraccionamiento-estado:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Self-assessment result including the first instalment under
+              art. 19.1 LIS. State.
+          liquidacion-complementaria-resultado-fraccionamiento-forales:
+            label: Settlement. Instalment option in cases of change of residence (art.
+              19,1 LIS). Self-assessment result including the first instalment under
+              art. 19.1 LIS. State.
           t22007000-00043:
             help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
               of the group (page 7 sheet 00). Sum of the individual taxable bases
@@ -1476,6 +1625,17 @@ modelo:
               two decimals).'
             label: Taxable base and gross tax liability of the group (page 7 sheet
               00). Tax rate bracket 1 (three integer digits, two decimals)
+          tonelaje-base-imponible:
+            label: Special regime for shipping companies based on tonnage - Taxable
+              base | Note 2.
+          tonelaje-tipo-gravamen:
+            label: Special regime for shipping companies based on tonnage - Tax rate
+              | 2 integer digits, 4 decimals. Note 2
+      construct:
+        modelo-220-declaration-construct:
+          field:
+            title: Modelo 220 annual return of the tax group under the fiscal consolidation
+              regime
       field:
         official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.
           Return.
@@ -9882,18 +10042,8 @@ modelo:
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
               help: Tax information about tax information in casilla  of Modelo 220.
               label: Legal representatives. Legal representative 3. Notary
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: Modelo 220 annual return of the tax group under the fiscal
-                  consolidation regime
           field:
             label: Orden HAC/657/2025 (modelo 220), tax year 2024
         '2025':
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: Modelo 220 annual return of the tax group under the fiscal
-                  consolidation regime
           field:
             label: Orden HAC/529/2026 (modelo 220), tax years 2025 onwards

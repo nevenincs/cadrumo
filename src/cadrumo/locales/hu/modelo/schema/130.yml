@@ -1,6 +1,10 @@
 modelo:
   schema:
     '130':
+      construct:
+        modelo-130-direct-estimation-instalment:
+          field:
+            title: '130-as modelo: negyedéves előlegfizetés a közvetlen becslés rendszerében'
       field:
         official_name: A magánszemélyek jövedelemadója. Közvetlen megállapítás alá
           tartozó gazdasági tevékenységek. Részletfizetés.
@@ -84,9 +88,5 @@ modelo:
               help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben
                 a 15. mező levonásaként használható.
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)
-          construct:
-            modelo-130-direct-estimation-instalment:
-              field:
-                title: Modelo 130 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: HAP/258/2015 rendelet, 2019. adóévtől

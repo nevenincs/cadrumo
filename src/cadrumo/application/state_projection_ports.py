@@ -4,6 +4,9 @@ The projection producer needs a small, profile-scoped view of persistence.  It
 does not need to know which catalogue repositories or storage-runtime
 inspection serve that view.  This module owns the DTOs and the required port
 bundle that an outer composition root supplies for one profile session.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

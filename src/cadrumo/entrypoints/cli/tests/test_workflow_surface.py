@@ -26,6 +26,7 @@ from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_P
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.buckets.event import BucketEventType
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .cli_runner import invoke_cached_cli
 
@@ -247,7 +248,10 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     calendar_payload = calendar_envelope["result"]
     assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
-    filing_profile = filing_profile_from_taxpayer(load_active_taxpayer_profile(state))
+    with bundled_indexed_authority().operation() as operation:
+        filing_profile = filing_profile_from_taxpayer(
+            load_active_taxpayer_profile(state, schema=operation.profile_schema())
+        )
     assert filing_profile.tax_id == "00000000T"
 
 
@@ -314,7 +318,8 @@ def test_retired_commands_are_not_registered() -> None:
 def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> None:
     root_repair = _invoke(["repair", "--help"])
     help_result = _invoke(["config", "repair", "--help"])
-    text_result = _invoke(["config", "repair"])
+    # The status labels are asserted in English.
+    text_result = _invoke(["--language", "en", "config", "repair"])
     json_result = _invoke(["--format", "json", "config", "repair"])
     logs_result = _invoke(["config", "repair", "logs", "--lines", "0"])
 
@@ -343,11 +348,12 @@ def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "live", "modelo", "registry", "review"):
+    for command in ("overview", "ledger", "live", "modelo", "review"):
         assert command in result.output
     for removed_command in (
         "aeat app invoice",
         "aeat app declaration",
+        "aeat app registry",
         "aeat app transactions",
         "aeat app imports",
         "workspaces",
@@ -592,7 +598,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert not (storage_path(StorageCategory.FINANCIAL_TRANSACTIONS) / "transactions.envelope.json").exists()
     _assert_secure_database_payload(bucket_id, canary, transaction_ref)
 
-    with open_test_profile_session(bucket_id):
+    with open_test_profile_session(bucket_id), bundled_indexed_authority().operation():
         catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
         [stored] = list(catalogue.transactions.values())
         assert stored.raw.counterparty == canary
@@ -775,8 +781,9 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        profile = projection_for_taxpayer(record, tax_id_default="00000000T")
-    assert profile.iva_regime is IVARegime("GENERAL")
+        with bundled_indexed_authority().operation() as operation:
+            profile = projection_for_taxpayer(record, tax_id_default="00000000T", schema=operation.profile_schema())
+    assert profile.iva_regime == IVARegime("GENERAL")
 
 
 def test_config_profile_create_persists_situacion_familiar(
@@ -839,7 +846,8 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        profile = projection_for_taxpayer(record, tax_id_default="00000000T")
+        with bundled_indexed_authority().operation() as operation:
+            profile = projection_for_taxpayer(record, tax_id_default="00000000T", schema=operation.profile_schema())
     assert profile.does_intracomunitario is True
 
 

@@ -17,6 +17,9 @@ def verification_tolerance_or_exact(snapshot: RegistrySnapshot) -> Decimal:
     A revision without verification expectations has no published authority for a
     wider comparison, so its deliberate fallback is exact equality instead of an
     invented cent allowance.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     try:
         return snapshot.verification_policy().tolerance
