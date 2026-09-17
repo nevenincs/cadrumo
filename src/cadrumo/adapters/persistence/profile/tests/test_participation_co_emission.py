@@ -29,6 +29,11 @@ from cadrumo.application.ledger.actions_common import blocking_modelo_references
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.result_disposition import (
+    ResultDisposition,
+    derive_result_disposition,
+    result_disposition_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -45,6 +50,19 @@ from cadrumo.domain.modelos.participation_index import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
+
+def _filed_result_disposition(revision: CalculationRevision) -> ResultDisposition:
+    """Resolve the disposition the filing states from the revision's own result."""
+    casilla_ids = result_disposition_casilla_ids("303")
+    assert casilla_ids is not None
+    disposition = derive_result_disposition(
+        "303",
+        {casilla_id: revision.casilla_values.get(casilla_id, Decimal("0")) for casilla_id in casilla_ids},
+    )
+    assert disposition is not None
+    return disposition
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -240,6 +258,7 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 iva_compensation_history_repository=iva_compensation_history_repository,
                 participation_index_repository=participation_repo,
                 prorrata_register_repository=prorrata_repository,
+                result_disposition=_filed_result_disposition(verified_revision),
                 operation=_authority_operation_for_test,
             )
 
