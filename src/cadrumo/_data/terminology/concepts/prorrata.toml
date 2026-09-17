@@ -95,3 +95,4 @@ authority = "boe"
 [[language.hu.term]]
 label = "arányosítás"
 term_status = "admitted"
+hidden_search_forms = ["aranyositas"]
