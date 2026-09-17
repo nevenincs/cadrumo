@@ -9,7 +9,7 @@ reader that is usually right is the wrong instrument for a figure that gets
 filed.
 
 The parser has exactly two outcomes: a complete :class:`SancionLiquidacion`, or
-a :class:`~adapters.inbound.notificacion.SancionParseError` naming every field
+a :class:`~adapters.inbound.notificacion.errors.SancionParseError` naming every field
 it could not resolve. There is deliberately no partial record and no
 zero-filled record. A reader that returns clean zeros against a populated
 surface reads as "nothing owed" at every layer above it, which is precisely how
@@ -19,7 +19,7 @@ Layout robustness rests on three independent guards rather than on trusting one
 template:
 
 * **Anchored value shapes.** Money must match the AEAT two-decimal
-  comma-tailed shape end to end (:func:`~core.decimal.is_aeat_printed_money`,
+  comma-tailed shape end to end (:func:`~core.decimal.printed_money.is_aeat_printed_money`,
   the one house grammar, which the IVA compensation wallet reader consults
   too), never merely contain one. A template that begins printing whole euros
   surfaces as the shape change it is instead of being silently reinterpreted as

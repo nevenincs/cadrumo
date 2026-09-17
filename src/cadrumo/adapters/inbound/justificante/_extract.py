@@ -2,7 +2,7 @@
 
 This module translates the raw text of a justificante (as returned by one of
 the backends in :mod:`adapters.inbound.justificante._parsers`) into a
-:class:`~domain.justificante.Justificante` pydantic record. It extracts
+:class:`~domain.justificante.schema.Justificante` pydantic record. It extracts
 receipt metadata only: CSV, modelo, period/ejercicio, taxpayer, presentation
 timestamp, optional payment totals, and the verification URL. Casilla-level
 filing values belong to the declaración/borrador adapters, not this receipt
@@ -17,7 +17,7 @@ The extractor is **deterministic**: same input bytes produce the same output
 record. All monetary values are parsed via :class:`decimal.Decimal` to
 preserve the receipt precision; never floats. Parse failures populate the
 structured attributes on
-:class:`~domain.justificante.JustificanteParseError` so callers and tests
+:class:`~domain.justificante.errors.JustificanteParseError` so callers and tests
 do not need to parse message strings.
 """
 
@@ -49,8 +49,8 @@ _logger = get_logger(__name__)
 
 
 # Each tier captures a candidate at the canonical AEAT CSV width
-# (:data:`core.AEAT_CSV_PATTERN`, 8..32 uppercase alphanumeric); the capture is
-# then confirmed against :func:`core.is_aeat_csv` in :func:`_extract_csv`. The
+# (:data:`core.aeat_csv.AEAT_CSV_PATTERN`, 8..32 uppercase alphanumeric); the capture is
+# then confirmed against :func:`core.aeat_csv.is_aeat_csv` in :func:`_extract_csv`. The
 # tiers previously stopped at 24, so a legitimately longer CSV was truncated
 # to a wrong identifier or missed entirely.
 _CSV_LABEL_RE = re.compile(
@@ -242,9 +242,9 @@ def _parse_decimal(raw: str, field: str | None = None) -> Decimal:
             exception so callers can assert on the structured attribute.
 
     The receipt's amount regexes capture ``([0-9][0-9\\.,]*)`` and so, unlike
-    :data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP`, do not require the
+    :data:`~adapters.inbound.pdf.label_regex.SPANISH_AMOUNT_GROUP`, do not require the
     ``,NN`` tail that makes a printed Spanish amount unambiguous. A bare
-    ``1.234`` reaching :func:`~adapters.inbound.pdf.parse_spanish_decimal`
+    ``1.234`` reaching :func:`~adapters.inbound.pdf.label_regex.parse_spanish_decimal`
     decodes as one point two three four, so a receipt total of one thousand two
     hundred thirty-four would be recorded a thousandfold small. AEAT prints the
     tail on money, so refusing the ambiguous shape rejects nothing a real

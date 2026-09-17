@@ -203,9 +203,19 @@ def _split_by_supported_filing_year[CaseT: tuple[object, ...]](
     declaration may be parsed for; a corpus render below its floor must be
     refused rather than silently resolved.
     """
-    admitted = tuple(case for case in cases if _filing_year_is_supported(int(case[year_index])))
+    admitted = tuple(
+        case for case in cases if _filing_year_is_supported(_case_filing_year(case, year_index=year_index))
+    )
     refused = tuple(case for case in cases if case not in admitted)
     return admitted, refused
+
+
+def _case_filing_year(case: tuple[object, ...], *, year_index: int) -> int:
+    """Extract the filing year from a corpus case tuple's typed year field."""
+    value = case[year_index]
+    if not isinstance(value, (int, str)):
+        raise TypeError(f"filing year at index {year_index} must be int or str, got {type(value)!r}")
+    return int(value)
 
 
 def _filing_year_is_supported(filing_year: int) -> bool:

@@ -1,16 +1,16 @@
 """CSV financial provider with bank-layout-aware parsing.
 
 Provides :class:`CsvProvider`, an implementation of
-:class:`~adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.base.FinancialProvider`
 that ingests bank CSV exports for the BBVA, Santander, CaixaBank and
 Revolut layouts. Each layout is described by a frozen
 :class:`CsvBankLayout` carrying the header aliases, date-format
 hint, and decimal-separator hint the parser needs.
 
-Successful rows become :class:`~adapters.inbound.financial.providers.ParsedLedgerRow`
-objects: the stored :class:`~domain.transactions.RawTransaction` carries
+Successful rows become :class:`~adapters.inbound.financial.providers.base.ParsedLedgerRow`
+objects: the stored :class:`~domain.transactions.raw_transaction.RawTransaction` carries
 an absolute amount and provenance, while
-:class:`~domain.transactions.TransactionDirection` records the source flow.
+:class:`~domain.transactions.enums.TransactionDirection` records the source flow.
 """
 
 from __future__ import annotations
@@ -557,7 +557,7 @@ def build_provider_row(
 
     Shared post-parse tail for the CSV and spreadsheet providers. Delegates to
     :func:`build_raw_transaction` for the magnitude/provenance
-    :class:`~domain.transactions.RawTransaction` and its sign-derived
+    :class:`~domain.transactions.raw_transaction.RawTransaction` and its sign-derived
     direction, then overrides the flow with ``parsed.direction`` when the
     layout carried an explicit direction column. The direction-at-parse-boundary
     contract is unchanged: the sign is consumed exactly once, at the adapter
@@ -605,9 +605,9 @@ def _currency_from_aliases(
     """Resolve, default, and validate the optional currency column.
 
     The ISO 4217 shape policy is owned by
-    :func:`~core.parsing.normalise_iso_4217_currency`, shared with the OFX
+    :func:`~core.parsing.codes.normalise_iso_4217_currency`, shared with the OFX
     statement header and with the persisted
-    :class:`~domain.transactions.RawTransaction`; only the column-naming
+    :class:`~domain.transactions.raw_transaction.RawTransaction`; only the column-naming
     context of the refusal is built here.
     """
     header = find_column(lookup, aliases)

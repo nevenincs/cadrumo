@@ -20,7 +20,7 @@ OFX_EXTENSIONS: frozenset[str] = frozenset({".ofx", ".qfx"})
 """File extensions treated as OFX-compatible input by the OFX provider.
 
 ``.qfx`` is the Quicken-flavoured OFX variant; both route to the same
-:class:`~adapters.inbound.financial.providers.OfxProvider`.
+:class:`~adapters.inbound.financial.providers.ofx.OfxProvider`.
 """
 
 __all__ = ["CSV_EXTENSIONS", "OFX_EXTENSIONS"]

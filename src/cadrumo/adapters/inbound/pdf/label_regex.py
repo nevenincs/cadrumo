@@ -19,7 +19,7 @@ from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.decimal.printed_money import AEAT_THOUSANDS_SEPARATORS
 
 # The thousands-separator class is NOT declared here: it is
-# :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS`, shared with the anchored
+# :data:`~core.decimal.printed_money.AEAT_THOUSANDS_SEPARATORS`, shared with the anchored
 # grammar in that module so the two cannot disagree on which code points AEAT
 # prints. Per UNE 82100 those are ``.``, U+00A0 NBSP and U+202F narrow NBSP --
 # never a plain ASCII space or tab, which are AEAT's column separators. That

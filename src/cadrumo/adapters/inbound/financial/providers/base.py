@@ -5,11 +5,11 @@ record :class:`ProviderValidation`, the provider error hierarchy
 (:class:`FinancialProviderError`, :class:`InvalidFinancialSourceError`,
 :class:`UnsupportedFinancialSourceError`, :class:`BankStatementParseError`),
 and the parsing / provenance helpers concrete providers reuse to emit
-:class:`~domain.transactions.RawTransaction` records with consistent
-:class:`~domain.transactions.RawProvenance`.
+:class:`~domain.transactions.raw_transaction.RawTransaction` records with consistent
+:class:`~domain.transactions.raw_transaction.RawProvenance`.
 
 Providers emit :class:`ParsedLedgerRow` objects: the source sign is consumed at
-the adapter boundary into a :class:`~domain.transactions.TransactionDirection`,
+the adapter boundary into a :class:`~domain.transactions.enums.TransactionDirection`,
 while the stored raw amount is an absolute magnitude.
 
 Provider corpus discipline
@@ -88,7 +88,7 @@ CorpusVerificationSource = Literal[
 class FinancialProviderError(CadrumoError):
     """Base error raised by financial-ingest providers.
 
-    Subclasses :class:`core.errors.CadrumoError` so the application
+    Subclasses :class:`core.errors.hierarchy.CadrumoError` so the application
     layer can catch every provider failure with one ``except`` clause.
     """
 
@@ -119,8 +119,8 @@ class BankStatementParseError(FinancialProviderError):
 
     Carries structured attributes that allow callers to assert on the
     failure kind without parsing the message string — the same pattern
-    as :class:`~adapters.inbound.declaracion.DeclaracionParseError`
-    and :class:`~domain.justificante.JustificanteParseError`.
+    as :class:`~adapters.inbound.declaracion.errors.DeclaracionParseError`
+    and :class:`~domain.justificante.errors.JustificanteParseError`.
 
     This error is appropriate for PDF-specific parse failures where the
     document was accepted by format detection but extraction produced
@@ -222,8 +222,8 @@ class FinancialProvider(ABC):
     :attr:`verification_source`, and :attr:`provisional_pending_specimen`
     and implement :meth:`ingest` plus :meth:`validate_source`. The shared
     :meth:`build_provenance` helper centralises
-    :class:`~domain.transactions.RawProvenance` construction so every
-    emitted :class:`~domain.transactions.RawTransaction` carries
+    :class:`~domain.transactions.raw_transaction.RawProvenance` construction so every
+    emitted :class:`~domain.transactions.raw_transaction.RawTransaction` carries
     consistent provenance metadata.
 
     See the module docstring for the corpus discipline contract that
@@ -325,8 +325,8 @@ class FinancialProvider(ABC):
 
         Implementations must produce one :class:`ParsedLedgerRow` per source
         row (via :func:`build_raw_transaction`), each carrying a magnitude
-        :class:`domain.transactions.RawTransaction` plus the
-        :class:`domain.transactions.TransactionDirection` derived from the
+        :class:`domain.transactions.raw_transaction.RawTransaction` plus the
+        :class:`domain.transactions.enums.TransactionDirection` derived from the
         source sign at the parse boundary, with provenance built via
         :meth:`build_provenance`.
 
@@ -714,15 +714,15 @@ class ParsedLedgerRow(BaseModel):
 
     The provider observes the bank export's sign (or native debit/credit
     signal) once, at the parse boundary, to choose a
-    :class:`~domain.transactions.TransactionDirection`; it then stores the
+    :class:`~domain.transactions.enums.TransactionDirection`; it then stores the
     **absolute magnitude** on ``raw`` and discards the sign. Downstream the
     import action carries ``direction`` straight onto the
-    :class:`~domain.transactions.Transaction`, never re-deriving flow from
+    :class:`~domain.transactions.models.Transaction`, never re-deriving flow from
     a sign that no longer exists.
 
     Attributes:
         raw: The verbatim per-row
-            :class:`~domain.transactions.RawTransaction` carrying the
+            :class:`~domain.transactions.raw_transaction.RawTransaction` carrying the
             non-negative magnitude amount.
         direction: The authoritative flow direction derived from the source
             sign at the parse boundary.
@@ -765,8 +765,8 @@ def build_raw_transaction(
 
     ``amount`` is the source-signed value as the parser read it. Its sign is
     consumed here to choose the
-    :class:`~domain.transactions.TransactionDirection`, then the stored
-    :class:`~domain.transactions.RawTransaction` carries the
+    :class:`~domain.transactions.enums.TransactionDirection`, then the stored
+    :class:`~domain.transactions.raw_transaction.RawTransaction` carries the
     absolute magnitude (flow lives in ``direction``, never in the sign). A
     **zero-amount** row carries no flow and is refused at the parse boundary,
     consistent with the manual ledger path.
@@ -802,11 +802,11 @@ def default_currency() -> str:
 
     Every provider falls back to this value when a source omits a per-row
     currency, so it reaches the persisted
-    :class:`~domain.transactions.RawTransaction` on the fallback branch
+    :class:`~domain.transactions.raw_transaction.RawTransaction` on the fallback branch
     without passing through any column-level check. The
     ``financial_base_currency`` setting itself declares no shape, so it is
     validated here — at the single owner of the fallback — against the same
-    :func:`~core.parsing.normalise_iso_4217_currency` policy the per-column
+    :func:`~core.parsing.codes.normalise_iso_4217_currency` policy the per-column
     and per-statement paths use.
 
     Raises:

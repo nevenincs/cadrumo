@@ -2,7 +2,7 @@
 
 Defines the parse-error tree raised by
 :mod:`adapters.inbound.declaracion`. All exceptions descend from
-:class:`~domain.justificante.PdfModeloImportError` so callers can catch
+:class:`~domain.justificante.errors.PdfModeloImportError` so callers can catch
 the generic PDF-import boundary without needing declaración specifics.
 
 Coverage failures carry structured ``missing`` / ``malformed`` / ``ambiguous``
@@ -30,8 +30,8 @@ class DeclaracionParseError(PdfExtractionCoverageMixin, PdfModeloImportError):
 
     The structured ``missing`` / ``malformed`` / ``ambiguous`` / ``coverage``
     extraction-coverage attributes (casilla IDs here, mirroring
-    :class:`~domain.justificante.JustificanteParseError`'s field names) come
-    from the shared :class:`~domain.justificante.PdfExtractionCoverageMixin`
+    :class:`~domain.justificante.errors.JustificanteParseError`'s field names) come
+    from the shared :class:`~domain.justificante.errors.PdfExtractionCoverageMixin`
     so callers can assert on them without parsing the message string.
     """
 

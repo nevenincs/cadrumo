@@ -4,9 +4,9 @@ This module classifies the printed text extracted from a Renta borrador,
 predeclaración, or declaración PDF into an
 :class:`~adapters.inbound.borrador.schema.ArtefactKind`. It is a local
 adapter helper: it reads PDF text through
-:func:`adapters.inbound.borrador._parsers.extract_pages_text`, applies the
+:func:`adapters.inbound.borrador._parsers.pdfplumber_backend.extract_pages_text`, applies the
 documented marker precedence ladder, and returns the artefact kind consumed by
-:func:`~adapters.inbound.borrador.parse_borrador`.
+:func:`~adapters.inbound.borrador.parser.parse_borrador`.
 """
 
 from __future__ import annotations

@@ -2,18 +2,18 @@
 
 Parsing is registry-profile-driven: template detection resolves the
 modelo/year/revision coordinate, then a
-:class:`~domain.calculations.registry.RegistrySnapshot` supplies the single
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` supplies the single
 ``declaracion_pdf``
 :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition`
 used to extract casillas. There is deliberately no per-modelo extractor class
 registry here.
 
 When callers do not supply a snapshot, the parser loads one through
-:class:`~domain.calculations.registry.ValidatedRegistryAuthority`. The
-snapshot's :class:`~domain.calculations.registry.ModeloRevision` owns the
+:class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority`. The
+snapshot's :class:`~domain.calculations.registry.schema.ModeloRevision` owns the
 canonical casilla declarations and the returned
-:class:`~adapters.inbound.declaracion.InboundDeclaracionObservation` stamps the
-exact :class:`~domain.calculations.registry.RegistrySnapshotRef`. The bytes
+:class:`~adapters.inbound.declaracion.schema.InboundDeclaracionObservation` stamps the
+exact :class:`~domain.calculations.registry.schema_references.RegistrySnapshotRef`. The bytes
 entry point keeps decrypted live-read PDF content in memory rather than
 materialising a plaintext temporary file.
 """
@@ -331,7 +331,7 @@ def _filing_period_for_observation(filing_year: int, registry_selector: str) -> 
 
     An administrative censo selector names a registration event, not a period a
     filing occupies, so it is stored as ``AD-HOC``. Membership is asked of
-    :func:`~cadrumo.core.is_administrative_period_token` rather than a local set:
+    :func:`~cadrumo.core.period.is_administrative_period_token` rather than a local set:
     a hand-copied set here already drifted two members behind the authority, and
     the drift was invisible because the two it lacked belong to a modelo that
     ships no extraction profile yet.
