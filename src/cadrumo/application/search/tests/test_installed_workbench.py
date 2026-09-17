@@ -14,7 +14,13 @@ from ....core.filing_year import FilingYear
 from ....core.period import Period
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecordStatus,
+)
 from ....domain.modelos.work_unit import WorkUnitState
 from ...aeat_sync.workspace import (
     AeatSyncDiscrepancyKind,
@@ -184,7 +190,9 @@ def _declarations() -> DeclarationsWorkspaceProjectionV1:
                 calculation_revision_id=_REVISION_ID,
                 filed_at=_NOW,
                 local_status=ModeloRecordStatus.VIGENTE,
-                aeat_accepted=True,
+                origin=FilingOrigin.AEAT,
+                confirmation=AeatConfirmationState.CONFIRMADA,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
                 evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                 **common,
             ),
