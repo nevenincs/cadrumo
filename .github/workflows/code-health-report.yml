@@ -32,22 +32,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Set up just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          tool: just@1.38.0
+          persist-credentials: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          # Self-hosted: the runner-local uv cache persists between jobs; the
-          # GitHub cloud-cache round-trip only adds transfer time.
-          enable-cache: false
-
-      - name: Initialize the worktree
-        run: just setup
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
 
       - name: Run code-health report (text)
         # Informational only: a failed diagnostic verdict must not fail this job.

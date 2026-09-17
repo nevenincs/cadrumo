@@ -40,20 +40,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Set up just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          tool: just@1.38.0
+          persist-credentials: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          enable-cache: false
-
-      - name: Initialize the worktree
-        run: just setup
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
 
       - name: Compare the captured corpus against the official pages
         id: staleness
@@ -74,7 +66,7 @@ jobs:
 
       - name: Open a staleness issue when the corpus has drifted
         if: steps.staleness.outputs.status != '0' && steps.staleness.outputs.status != '75'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const body = [
