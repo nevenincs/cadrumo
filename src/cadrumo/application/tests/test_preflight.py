@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: inward suite uses the smallest valid contract value to exercise application
 #: grading without importing storage layout knowledge.
 _SUFFIX_LENGTH = 1
-_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
 
 
 def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
@@ -88,6 +88,7 @@ def test_auth_provider_clave_invalid_identity_is_error() -> None:
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
         rows = probe_auth_providers(
             operator_probe_ports=fake_operator_probe_ports(
+                active_profile_session_bound=False,
                 clave_identity_results={
                     "NOT-A-VALID-ID": ClaveIdentityFailure(detail="invalid test identity"),
                 },
