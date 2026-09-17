@@ -255,15 +255,22 @@ means a corpus slice outgrew its share rather than that the limit needs raising.
 **A version is unusable.** PyPI does not allow a version to be re-uploaded, even after
 deletion. Release the next patch version rather than trying to reuse one.
 
-## Known limitation: the managed channels
+## Managed channels
 
-The Homebrew formula and the Scoop manifest are generated with a release base URL and
-pin their digests against artifacts served from it. No workflow attaches assets to a
-GitHub release, so a formula or manifest generated today addresses downloads that do not
-exist, and an install through either channel fails.
+After the PyPI upload, the publish phase of `release.yml` updates the channels from the
+same proven cohort: it commits the cohort's Homebrew formula to the tap and its Scoop
+manifest to the bucket, skipping a commit when the channel already serves that version.
+It then reacquires the release from PyPI, the tap and the bucket on their own runners.
 
-Publish to PyPI. Do not publish the tap or the bucket until the generators source what
-the index serves.
+Both channel jobs refuse to start without their credentials:
+
+| Channel | Repository | Credential |
+| --- | --- | --- |
+| Homebrew | variable `HOMEBREW_TAP_REPOSITORY` (default `nevenincs/homebrew-tap`) | secret `HOMEBREW_TAP_TOKEN` |
+| Scoop | variable `SCOOP_BUCKET_REPOSITORY` | secret `SCOOP_BUCKET_TOKEN` |
+
+A channel failure does not undo the PyPI upload. Fix the credential or the channel and
+re-run the failed jobs of the same run.
 
 ## Authorities
 

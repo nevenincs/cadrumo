@@ -11,9 +11,7 @@ only supplies execution transport and reporting.
 
 from __future__ import annotations
 
-import argparse
-
-from .lanes import run_lanes
+from .lanes import lane_command_parser, run_lanes
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,28 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     Returns:
         0 when every lane passed, otherwise 1.
     """
-    parser = argparse.ArgumentParser(
-        prog="python -m dev.test_runs",
-        description="Run the named lanes sequentially.",
-    )
-    sub = parser.add_subparsers(dest="action", required=True)
-    lanes = sub.add_parser("lanes", help="run the named lanes in order")
-    lanes.add_argument("--json-events", action="store_true", help="emit machine-readable lane boundaries")
-    lanes.add_argument("--no-evidence", action="store_true", help="leave evidence persistence to the caller")
-    lanes.add_argument(
-        "--preflight-count",
-        type=int,
-        default=0,
-        help="run this many leading lanes as prerequisites and block the remaining lanes if one fails",
-    )
-    lanes.add_argument(
-        "--lane-kind",
-        action="append",
-        default=[],
-        metavar="LANE=KIND",
-        help="declare a lane's machine-readable purpose (collection, load, or command)",
-    )
-    lanes.add_argument("lane", nargs="+", help="just recipe names")
+    parser = lane_command_parser()
     args = parser.parse_args(argv)
     lane_kinds: dict[str, str] = {}
     for declaration in args.lane_kind:

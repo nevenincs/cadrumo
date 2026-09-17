@@ -131,6 +131,7 @@ from cadrumo.core.directory_scan import scan_directory
 from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
 from dev.source_tree import repository_files
+from dev.test_runs.lanes import lane_command_parser
 
 from .workflow_job_gates import job_gate, narrowed_events
 from .workflow_run_text import executed_lines
@@ -168,10 +169,10 @@ MANUAL_TRIGGERS: Final[frozenset[str]] = frozenset({"workflow_dispatch", "reposi
 
 #: A justfile recipe header: a name at column zero, optional parameters and
 #: attributes, then a bare `:` -- never `:=`, which is a variable assignment.
-_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
+_RECIPE_HEADER: Final = re.compile(r"^(?P<name>_?[a-z][\w-]*)\b[^:\n]*:(?![=])")
 
 #: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
-_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
+_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)")
 
 #: A `gh workflow run <file>.yml` call in a workflow `run:` block. This is a
 #: real edge between workflows: a dispatch-only workflow can still be reached
@@ -512,6 +513,7 @@ def _recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) 
     """
     invoked: set[str] = set()
     for line in executed_lines(text):
+        invoked.update(_lane_transport_recipes(line))
         for match in _JUST_CALL.finditer(line):
             recipe = match.group("recipe")
             invoked.add(recipe)
@@ -523,6 +525,38 @@ def _recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) 
                 recipe = token
                 invoked.add(recipe)
     return invoked
+
+
+#: The module that runs just recipes by name on a recipe's behalf.
+_LANE_TRANSPORT_MODULE: Final = "dev.test_runs"
+
+
+def _lane_transport_recipes(line: str) -> set[str]:
+    """Return the recipes a ``python -m dev.test_runs lanes ...`` call runs.
+
+    The transport invokes each named lane as ``just <lane>``, so those names
+    are recipe calls the ``just`` pattern cannot see. They are read with the
+    transport's own parser, so an option value is never mistaken for a lane.
+    """
+    try:
+        tokens = shlex.split(line)
+    except ValueError:
+        return set()
+    recipes: set[str] = set()
+    for index, word in enumerate(tokens[:-1]):
+        if word != "-m" or tokens[index + 1] != _LANE_TRANSPORT_MODULE:
+            continue
+        arguments: list[str] = []
+        for argument in tokens[index + 2 :]:
+            if argument in {"&&", "||", ";", "|"}:
+                break
+            arguments.append(argument)
+        try:
+            parsed, _ = lane_command_parser().parse_known_args(arguments)
+        except SystemExit:
+            continue
+        recipes.update(str(lane) for lane in parsed.lane)
+    return recipes
 
 
 def _parameterless_recipes(text: str) -> frozenset[str]:

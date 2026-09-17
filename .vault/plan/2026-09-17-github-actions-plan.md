@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-github-actions-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:e8c0de9b7bc49ccadfe48c6b47539adda05da6686e25a693732e4a2e20586798'
+body_hash: 'sha256:fe20b14bae1570e2b13b2b9f5a1c2bd992a7bef3c302d1c5d06f368b1af10046'
 ---
 
 # `github-actions` plan
@@ -89,10 +89,10 @@ Deliver one release workflow that proves the release PR head, builds the cohort 
 
 Remove superseded workflows, legacy definitions and layout-pinned contract tests in the same change set as their replacements.
 
-- [ ] `P04.S06` - Delete the superseded workflows and remove runner-fleet-health from this repository lanes; `.github/workflows/`.
-- [ ] `P04.S19` - Remove legacy definitions including the stale watchdog name, stale allow-list entries and the missing ci_contract parity citation; `dev/ci/runner_queue_watchdog.py, .github/ci-contract-allow.txt, dev/ci_contract.py`.
-- [ ] `P04.S20` - Rewrite or delete contract tests pinned to the old layout, including the workflow-count floors; `dev/ci/tests/, dev/ci/lane_reachability.py, dev/packaging/tests/, dev/release/tests/, dev/deploy/tests/, dev/tests/test_lane_reachability.py, src/cadrumo/tests/test_release_config.py`.
-- [ ] `P04.S21` - Update the CI control-plane and release checklist documentation; `.github/ci-control-plane.md, docs/_release_checklist.yaml`.
+- [x] `P04.S06` - Delete the superseded workflows and remove runner-fleet-health from this repository lanes; `.github/workflows/`.
+- [x] `P04.S19` - Remove legacy definitions including the stale watchdog name, stale allow-list entries and the missing ci_contract parity citation; `dev/ci/runner_queue_watchdog.py, .github/ci-contract-allow.txt, dev/ci_contract.py`.
+- [x] `P04.S20` - Rewrite or delete contract tests pinned to the old layout, including the workflow-count floors; `dev/ci/tests/, dev/ci/lane_reachability.py, dev/packaging/tests/, dev/release/tests/, dev/deploy/tests/, dev/tests/test_lane_reachability.py, src/cadrumo/tests/test_release_config.py`.
+- [x] `P04.S21` - Update the CI control-plane and release checklist documentation; `.github/ci-control-plane.md, docs/_release_checklist.yaml`.
 
 ### Phase `P05` - Enforcement
 

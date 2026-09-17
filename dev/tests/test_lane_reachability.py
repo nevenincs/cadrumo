@@ -423,6 +423,31 @@ def test_one_just_call_naming_two_parameterless_recipes_invokes_both(tmp_path: P
     assert ci_invoked_recipes(tmp_path) == frozenset({"first", "second", "takes"})
 
 
+def test_recipes_run_through_the_lane_transport_are_invoked(tmp_path: Path) -> None:
+    """`python -m dev.test_runs lanes a b` runs `just a` and `just b`.
+
+    Read with the transport's own parser: the value of `--preflight-count` and
+    of `--lane-kind` are arguments, not lanes, and a prose mention of the
+    module outside an executed line invokes nothing.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "sweep:\n"
+        "    # python -m dev.test_runs lanes _commented\n"
+        "    uv run python -m dev.test_runs lanes --preflight-count 1 --lane-kind _first=collection _first _second\n\n"
+        "_first:\n    pytest -q src\n\n_second:\n    pytest -q src\n\n_commented:\n    pytest -q src\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: pull_request\njobs:\n  build:\n    steps:\n      - run: just sweep\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"sweep", "_first", "_second"})
+
+
 def test_a_reusable_workflow_call_carries_the_callers_events(tmp_path: Path) -> None:
     """A workflow reached only through `uses: ./.github/workflows/...` inherits the caller's reach.
 

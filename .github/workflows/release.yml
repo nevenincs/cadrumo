@@ -227,6 +227,14 @@ jobs:
           CADRUMO_PYTEST_WORKERS: "8"
         run: just test-release-tooling
 
+      - name: Channel artifact contracts
+        if: ${{ !cancelled() }}
+        run: just test-channel-artifacts
+
+      - name: TUI rendered inventory
+        if: ${{ !cancelled() }}
+        run: just test-tui-render
+
       - name: Packaging performance contracts
         if: ${{ !cancelled() }}
         run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
@@ -825,6 +833,24 @@ jobs:
             --with "cadrumo==${INPUT_VERSION#v}" \
             dev/smoke/smoke_check.py
 
+  test-windows-only:
+    name: "Test: Windows-only contracts (Windows)"
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Windows-only contracts
+        run: just test-windows
+
   check-proven:
     name: "Check: Release proven (Linux)"
     needs:
@@ -838,6 +864,7 @@ jobs:
       - test-installer-campaign
       - test-homebrew
       - test-scoop
+      - test-windows-only
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]

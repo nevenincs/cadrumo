@@ -16,6 +16,7 @@ whose evidence would only repeat the prerequisite failure.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import subprocess
@@ -271,3 +272,34 @@ def run_lanes(
             sys.stdout, sys.stderr = original_out, original_err
 
     return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
+
+
+def lane_command_parser() -> argparse.ArgumentParser:
+    """Return the parser of ``python -m dev.test_runs``.
+
+    Declared here so the CLI and the lane-reachability model read one
+    definition of which arguments name lanes.
+    """
+    parser = argparse.ArgumentParser(
+        prog="python -m dev.test_runs",
+        description="Run the named lanes sequentially.",
+    )
+    sub = parser.add_subparsers(dest="action", required=True)
+    lanes = sub.add_parser("lanes", help="run the named lanes in order")
+    lanes.add_argument("--json-events", action="store_true", help="emit machine-readable lane boundaries")
+    lanes.add_argument("--no-evidence", action="store_true", help="leave evidence persistence to the caller")
+    lanes.add_argument(
+        "--preflight-count",
+        type=int,
+        default=0,
+        help="run this many leading lanes as prerequisites and block the remaining lanes if one fails",
+    )
+    lanes.add_argument(
+        "--lane-kind",
+        action="append",
+        default=[],
+        metavar="LANE=KIND",
+        help="declare a lane's machine-readable purpose (collection, load, or command)",
+    )
+    lanes.add_argument("lane", nargs="+", help="just recipe names")
+    return parser

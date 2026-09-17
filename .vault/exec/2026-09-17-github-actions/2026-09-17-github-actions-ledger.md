@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:7bbd164f12c594c77ff211068a2a9d3f4e5780a7124cbef9c3f690cd2dd1ffc9'
+body_hash: 'sha256:98bd28de60d621629b19892401eeb798ddf9d498d8723bad7f09c955cba9bc4e'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
@@ -68,4 +68,27 @@ related:
 - `S18` `by:` `ci-release`
 - `S05` `M` `.github/workflows/release-please.yml`
 - `S05` `verify:` `just check-workflows` -> `pass`
+- `S06` `D` `.github/workflows/`
+- `S06` `verify:` `dev.actionlint` -> `pass`
+- `S06` `by:` `ci-retire`
+- `S19` `M` `dev/ci/runner_queue_watchdog.py`
+- `S19` `M` `dev/ci_contract.py`
+- `S19` `M` `.github/ci-contract-allow.txt`
+- `S19` `verify:` `dev.ci_contract` -> `pass`
+- `S19` `by:` `ci-retire`
+- `S20` `M` `dev/ci/tests/`
+- `S20` `M` `dev/ci/lane_reachability.py`
+- `S20` `M` `dev/test_runs/lanes.py`
+- `S20` `M` `dev/tests/test_lane_reachability.py`
+- `S20` `M` `src/cadrumo/tests/test_release_config.py`
+- `S20` `M` `justfile`
+- `S20` `M` `.github/workflows/release.yml`
+- `S20` `M` `.github/workflows/merge-gate.yml`
+- `S20` `verify:` `pytest dev/tests/test_lane_reachability.py src/cadrumo/tests/test_release_config.py` -> `pass`
+- `S20` `by:` `ci-retire`
+- `S21` `M` `.github/ci-control-plane.md`
+- `S21` `M` `docs/_release_checklist.yaml`
+- `S21` `M` `RELEASING.md`
+- `S21` `M` `dev/runners/README.md`
+- `S21` `by:` `ci-docs`
 
