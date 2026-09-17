@@ -49,6 +49,7 @@ from pydantic import (
     field_validator,
 )
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
 from .errors.hierarchy import CadrumoError
 from .identifier_grammar import FIELD_KEY_PATTERN
@@ -167,6 +168,7 @@ class ResolvedActionReference(PreconditionActionIdentity):
 
     @field_validator("cli_path")
     @classmethod
+    @pydantic_validation_boundary
     def _cli_path_is_canonical(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         if value is None:
             return None
@@ -176,6 +178,7 @@ class ResolvedActionReference(PreconditionActionIdentity):
 
     @field_validator("arguments")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_arguments(cls, value: Mapping[str, str] | None) -> Mapping[str, str] | None:
         if value is None:
             return None
@@ -226,6 +229,7 @@ class ResolvedNoticeAction(BaseModel):
 
     @field_validator("argument_bindings")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalize_resolved_arguments(
         cls,
         value: tuple[ResolvedActionArgument, ...],
@@ -285,6 +289,7 @@ class Notice(BaseModel):
 
     @field_validator("message")
     @classmethod
+    @pydantic_validation_boundary
     def _message_cannot_carry_command_identity(cls, value: str) -> str:
         """Reserve executable command identity for the typed action projection."""
         if _RAW_AEAT_COMMAND_PATTERN.search(value):
@@ -293,6 +298,7 @@ class Notice(BaseModel):
 
     @field_validator("context")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_non_action_context(cls, value: Mapping[str, str] | None) -> Mapping[str, str] | None:
         """Preserve generic diagnostics while refusing a hidden action channel."""
         if value is None:

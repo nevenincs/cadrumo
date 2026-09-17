@@ -24,7 +24,7 @@ def test_cleanup_error_retains_failures_and_registry_contract() -> None:
     )
 
     assert isinstance(error, CoreError)
-    assert isinstance(error, RuntimeError)
+    assert not isinstance(error, RuntimeError)
     assert error._failures == (failure,)
     code = get_registered_error_code(error)
     assert code.code == "ERROR_CADRUMO_ASYNC_RESOURCE_CLEANUP"

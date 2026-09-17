@@ -38,7 +38,7 @@ from ..models import (
     WorkflowLinkPayload,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 _RUN_ID = "0123456789abcdef"
 _MODULE = "cadrumo.core.observability.test_models"

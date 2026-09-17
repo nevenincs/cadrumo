@@ -38,7 +38,7 @@ from ..identity.nif_iva import normalise_nif_iva
 from ..identity.tax_id import same_tax_identifier
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 _FUNNELS: list[Callable[[str], str]] = [redact_for_cli_output, redact_for_log]
 

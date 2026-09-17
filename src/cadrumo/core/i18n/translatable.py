@@ -10,6 +10,8 @@ from __future__ import annotations
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
+from ..errors.hierarchy import pydantic_validation_boundary
+
 
 class Translatable(str):
     """A strictly-typed marker for abstract i18n keys.
@@ -27,7 +29,7 @@ class Translatable(str):
     ) -> core_schema.CoreSchema:
         """Expose translation-key values to Pydantic as strings."""
         del source_type, handler
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+        return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
 
 
 __all__ = ["Translatable"]

@@ -54,8 +54,12 @@ def _flatten_dict(value: object, prefix: str = "") -> dict[str, str | None]:
     return {prefix: _flat_value(value)}
 
 
-class _UnscannableShardError(Exception):
-    """The event scan met a construct only a full load interprets faithfully."""
+class _UnscannableShardError(yaml.YAMLError):
+    """The event scan met a construct only a full load interprets faithfully.
+
+    A YAML error rather than a registered failure: it never leaves this module,
+    and the shard reader treats it exactly like a YAML stream it cannot read.
+    """
 
 
 _SCAN_RESOLVER = yaml.resolver.Resolver()
@@ -208,7 +212,7 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         try:
             with shard_file.open("r", encoding=UTF_8_ENCODING) as handle:
                 self._key_cache[key] = _scan_shard_for_key(handle, key)
-        except (_UnscannableShardError, yaml.YAMLError):
+        except yaml.YAMLError:
             return False
         return True
 

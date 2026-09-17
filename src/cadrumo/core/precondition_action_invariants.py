@@ -10,6 +10,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
 from .identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from .models import STRICT_FROZEN_CONFIG
@@ -58,6 +59,7 @@ class PreconditionEvidence(BaseModel):
 
     @field_validator("values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_values(
         cls,
         value: Mapping[str, str | int | bool | Decimal],
@@ -130,6 +132,7 @@ class PreconditionOutcomeInvariant[
 
     @field_validator("evidence")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalize_evidence(cls, value: tuple[EvidenceT, ...]) -> tuple[EvidenceT, ...]:
         """Reject duplicate evidence identities and produce deterministic order."""
         evidence_ids = tuple(item.evidence_id for item in value)
@@ -139,6 +142,7 @@ class PreconditionOutcomeInvariant[
 
     @field_validator("argument_bindings")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalize_arguments(cls, value: tuple[ArgumentT, ...]) -> tuple[ArgumentT, ...]:
         """Reject competing materialisations of one target argument."""
         names = tuple(item.argument_name for item in value)
@@ -148,6 +152,7 @@ class PreconditionOutcomeInvariant[
 
     @field_validator("missing_argument_names")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalize_missing_names(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Keep the public missing-input list stable and unambiguous."""
         if any(not re.fullmatch(FIELD_KEY_PATTERN, name) for name in value):
@@ -157,6 +162,7 @@ class PreconditionOutcomeInvariant[
         return tuple(sorted(value))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_outcome(self) -> Self:
         """Enforce factual joins, one outcome shape, and derived conditionality."""
         if any(item.condition_id != self.failed_condition_id for item in self.evidence):

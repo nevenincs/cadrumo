@@ -36,7 +36,7 @@ from ..amendment_kind_regime import (
 from ..modelo import Modelo
 from ..period import Period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 _COMPLEMENTARIA = "complementaria"
 _SUSTITUTIVA = "sustitutiva"

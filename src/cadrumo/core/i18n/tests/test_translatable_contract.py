@@ -25,7 +25,7 @@ from ....tests.inventory import SRC_CADRUMO, package_ast_items, repo_relative
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _TRANSLATABLE_EXPORT = SRC_CADRUMO / "core" / "i18n" / "__init__.py"
-_TRANSLATION_RENDERER = SRC_CADRUMO / "core" / "i18n" / "_render.py"
+_TRANSLATION_RENDERER = SRC_CADRUMO / "core" / "i18n" / "render.py"
 
 
 def _location(path: Path, node: ast.AST, message: str) -> str:
@@ -81,7 +81,7 @@ def _is_i18n_tr_import(path: Path, node: ast.ImportFrom, alias: ast.alias) -> bo
     module = _resolved_import_target(path, node)
     if module is None:
         return False
-    return module in {"_render", "i18n"} or module.endswith((".i18n", ".i18n._render", "._render"))
+    return module == "render" or module.endswith(".i18n.render")
 
 
 class _TranslatableContractVisitor(ast.NodeVisitor):

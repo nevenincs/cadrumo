@@ -130,6 +130,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.toml.TomlDecodeError",
+        ErrorCode(
+            code="INTEGRITY_CADRUMO_TOML_DECODE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_cadrumo_toml_decode",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.tabular.TabularSourceError",
         ErrorCode(
             code="REFUSED_TABULAR_SOURCE_UNREADABLE",

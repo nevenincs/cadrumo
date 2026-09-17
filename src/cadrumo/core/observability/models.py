@@ -45,6 +45,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..errors.hierarchy import pydantic_validation_boundary
 from ..identity.aeat_box import AeatBoxNumber
 from ..identity.digest import ContentDigest, ContentDigestOrAbsent
 from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -361,6 +362,7 @@ class RunEvent(BaseModel):
     module: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_tz_aware_timestamp(self) -> RunEvent:
         """Reject naive ``timestamp`` values; see :func:`_require_tz_aware`."""
         _require_tz_aware(self.timestamp)
@@ -401,6 +403,7 @@ class RunTrace(BaseModel):
     outcome: RunOutcome
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_tz_aware_timestamps(self) -> RunTrace:
         """Reject naive ``started_at`` / ``finished_at``."""
         _require_tz_aware(self.started_at)

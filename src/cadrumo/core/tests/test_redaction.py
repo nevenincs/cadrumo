@@ -20,7 +20,7 @@ from ..redaction.rules import (
     redact_structured_for_cli_output,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "986c0dc9-56dc-422b-9d8f-698661b9eb1e"  # was '123e4567-e89b-12d3-a456-426614174000'
 # A UUID whose first segment (``1470176e`` = 7 digits + a letter) matches the

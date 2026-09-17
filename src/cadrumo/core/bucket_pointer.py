@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .identity.bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .toml import parse_toml
@@ -48,6 +49,7 @@ class BucketPointer(BaseModel):
     schema_version: Literal[2]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_selection(self) -> BucketPointer:
         if (self.selection == "selected") != (self.bucket_id is not None):
             raise ValueError("pointer selection and bucket id must agree")

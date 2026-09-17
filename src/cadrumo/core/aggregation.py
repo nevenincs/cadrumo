@@ -29,7 +29,7 @@ from typing import Final, Literal
 from pydantic import BaseModel, GetCoreSchemaHandler, field_validator
 from pydantic_core import CoreSchema, core_schema
 
-from .errors.hierarchy import CoreValidationError
+from .errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 from .registry_token import StrictRegistryToken
 
@@ -85,6 +85,7 @@ class BindingAggregation(BaseModel):
 
     @field_validator("op", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_op(cls, value: object) -> object:
         """Hydrate the registry TOML's raw ``op`` string into its enum member.
 
@@ -741,7 +742,7 @@ class RetencionScheme(str):
         """Validate and serialize the open registry token as a string."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(
-            cls,
+            pydantic_validation_boundary(cls),
             core_schema.str_schema(pattern=_RETENCION_SCHEME_PATTERN.pattern),
             serialization=core_schema.to_string_ser_schema(),
         )

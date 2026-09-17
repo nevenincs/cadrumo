@@ -14,9 +14,10 @@ Contract under test:
 from __future__ import annotations
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from ....core.errors.hierarchy import CoreValidationError
-from ..codes import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
+from ..codes import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -57,13 +58,16 @@ def test_currency_refuses_non_iso_4217_shapes(raw: str) -> None:
         normalise_iso_4217_currency(raw)
 
 
-def test_currency_error_is_a_value_error_so_pydantic_reports_it() -> None:
-    """The raised error must be a ``ValueError`` so a delegating validator reports cleanly.
+def test_currency_error_is_registered_and_translated_only_at_the_pydantic_boundary() -> None:
+    """The normaliser raises the registered error; the annotation reports it through Pydantic.
 
-    SUPPORTING. Pins the base-class contract the Pydantic delegation relies
-    on; it cannot flip under a normaliser-logic mutation.
+    SUPPORTING. Pins the base-class contract: ``CoreValidationError`` is not a
+    builtin ``ValueError``, so :data:`IsoCurrencyCode` must translate it at its
+    validator for Pydantic to report a ``ValidationError``.
     """
     assert not issubclass(CoreValidationError, ValueError)
+    with pytest.raises(ValidationError, match="three-letter ISO 4217"):
+        TypeAdapter(IsoCurrencyCode).validate_python("US")
 
 
 @pytest.mark.parametrize(

@@ -25,6 +25,7 @@ from typing import Final
 
 from pydantic import Field, field_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .config_runtime_fields import CadrumoRuntimeSettings
 from .external_constants import DEFAULT_CURRENCY
 
@@ -48,6 +49,7 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
 
     @field_validator("cadrumo_google_drive_vault_folder_name")
     @classmethod
+    @pydantic_validation_boundary
     def _refuse_former_product_google_drive_vault_folder(cls, value: str) -> str:
         if value.strip().casefold() == FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME:
             raise ValueError("the former product Google Drive vault folder is not supported")

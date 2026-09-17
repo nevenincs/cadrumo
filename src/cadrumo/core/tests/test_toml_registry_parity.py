@@ -129,7 +129,15 @@ def test_read_toml_reproduces_known_manifest_values() -> None:
     """``read_toml`` on the real M036 manifest matches hand-derived expected values."""
     assert _MANIFEST_PATH.is_file(), f"fixture moved or renamed: {_MANIFEST_PATH}"
     parsed = read_toml(_MANIFEST_PATH, error_factory=ValueError)
-    assert parsed == _EXPECTED_MANIFEST
+    # Each hand-derived key is compared exactly; the registry stays free to add
+    # keys (and their prose) this parser test has no opinion about.
+    assert set(parsed) == set(_EXPECTED_MANIFEST)
+    actual_modelo = parsed["modelo"]
+    expected_modelo = _EXPECTED_MANIFEST["modelo"]
+    assert isinstance(actual_modelo, dict)
+    assert isinstance(expected_modelo, dict)
+    for key, expected_value in expected_modelo.items():
+        assert actual_modelo[key] == expected_value, key
 
 
 def test_read_toml_reproduces_known_revision_values_including_date_and_inline_table() -> None:

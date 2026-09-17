@@ -27,10 +27,12 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from .documents import IdentityError, SpanishTaxIdFormat, validate_identity
 from .nif_iva import normalise_nif_iva
 
 
+@pydantic_validation_boundary
 def tax_id_identity_token(value: str) -> str:
     """Return the canonical identity form of a tax identifier, without a checksum claim.
 

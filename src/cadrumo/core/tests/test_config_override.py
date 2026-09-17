@@ -137,8 +137,12 @@ def test_override_settings_preserves_explicit_fields_set_signal() -> None:
         # The override key is now in the explicit set.
         assert "cadrumo_log_dir" in overridden.model_fields_set
         # Defaults that were not overridden remain NOT in the explicit
-        # set — operator did not touch them in this override block.
-        assert "cadrumo_cert_warn_days" not in overridden.model_fields_set
+        # set — operator did not touch them in this override block. The
+        # ambient environment decides which fields start explicit, so the
+        # untouched fields are taken from the baseline rather than named.
+        untouched = set(type(baseline).model_fields) - baseline_explicit - {"cadrumo_log_dir"}
+        assert untouched, "the baseline marks every field explicit, so nothing here is checked"
+        assert overridden.model_fields_set == baseline_explicit | {"cadrumo_log_dir"}
 
 
 @contextmanager

@@ -75,6 +75,7 @@ def resolve_database_url_for_active_profile(
         # independent of the inert ``cadrumo.core`` package namespace and
         # avoids binding the pointer module until the fallback is needed.
         from .bucket_pointer import pointer_path, read_pointer
+        from .toml import TomlDecodeError
 
         try:
             captured = pointer_observation
@@ -83,7 +84,7 @@ def resolve_database_url_for_active_profile(
                 if captured is not None and captured[0] == settings.cadrumo_local_storage_root
                 else read_pointer(settings.cadrumo_local_storage_root)
             )
-        except (OSError, ValueError) as exc:
+        except (OSError, ValueError, TomlDecodeError) as exc:
             pointer_file = pointer_path(settings.cadrumo_local_storage_root)
             _LOGGER.debug(
                 "Invalid active-profile pointer at %s; refusing root storage fallback",

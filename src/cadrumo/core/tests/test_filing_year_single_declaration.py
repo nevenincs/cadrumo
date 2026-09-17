@@ -57,7 +57,7 @@ _BOUND_KWARGS = frozenset({"ge", "le", "gt", "lt"})
 #: Sites permitted to spell their own window on a filing-year-named field,
 #: each with the reason the canonical alias does not fit.
 EXEMPT_SITES: dict[str, str] = {
-    "core/period.py:381": (
+    "core/period.py::Period.filing_year": (
         "a period is a calendar span, not a claim that a revision exists for "
         "it; it must express a pre-1995 IVA regime year and a 1999 coordinate "
         "whose refusal is the behaviour under test, so the filing-year window "
@@ -89,6 +89,17 @@ def _production_modules() -> list[Path]:
     ]
 
 
+def _annotated_names(tree: ast.AST, owner: str = "") -> list[tuple[str, ast.AnnAssign]]:
+    """Return every annotated name with the dotted path of the classes enclosing it."""
+    found: list[tuple[str, ast.AnnAssign]] = []
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            found.append((owner, node))
+        child_owner = f"{owner}{node.name}." if isinstance(node, ast.ClassDef) else owner
+        found.extend(_annotated_names(node, child_owner))
+    return found
+
+
 def _restated_windows() -> dict[str, str]:
     findings: dict[str, str] = {}
     for path in _production_modules():
@@ -97,14 +108,14 @@ def _restated_windows() -> dict[str, str]:
         except SyntaxError:  # a peer's mid-edit file is not this gate's finding
             continue
         relative = path.relative_to(_SRC).as_posix()
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.AnnAssign) or not isinstance(node.target, ast.Name):
-                continue
+        for owner, node in _annotated_names(tree):
             if node.target.id not in FILING_YEAR_FIELD_NAMES:
                 continue
             spelled = _spelled_bounds(node.annotation) | _spelled_bounds(node.value)
             if spelled:
-                site = f"{relative}:{node.lineno}"
+                # Keyed by owner and name, not line: a line key goes stale on
+                # the next edit above it.
+                site = f"{relative}::{owner}{node.target.id}"
                 findings[site] = f"{node.target.id} spells {sorted(spelled)}"
     return findings
 

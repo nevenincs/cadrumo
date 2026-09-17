@@ -36,7 +36,7 @@ from ..identity.nif_iva import normalise_nif_iva
 from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 #: Printed renderings of a real tax identity. Every one folds, under the app's
 #: own normalisation, onto a form the funnel already redacted.

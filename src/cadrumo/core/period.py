@@ -181,6 +181,24 @@ def is_administrative_period_token(token: str) -> bool:
     return _normalised_period_token(token) in _ADMINISTRATIVE_PERIOD_SET
 
 
+def is_filing_period_token(token: str) -> bool:
+    """Return whether ``token`` names exactly one period a taxpayer can file.
+
+    Registry selectors also carry administrative censo tokens and the symbolic
+    ``EVENT-N`` selector, which cover filings without being one; neither builds
+    a :class:`Period`.
+
+    Raises:
+        ValueError: When ``token`` is not a string.
+    """
+    normalized = _normalised_period_token(token)
+    try:
+        _validate_filing_period(normalized)
+    except ValueError:
+        return False
+    return True
+
+
 def accepted_filing_period_codes() -> tuple[str, ...]:
     """Return the fully enumerable codes a :class:`Period` accepts.
 
@@ -540,5 +558,6 @@ __all__ = [
     "accepted_filing_period_codes",
     "accepted_filing_period_patterns",
     "is_administrative_period_token",
+    "is_filing_period_token",
     "registry_period_kind",
 ]

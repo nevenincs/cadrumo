@@ -982,6 +982,10 @@ def get_logger(name: str) -> logging.Logger:
     Returns:
         The named logging.Logger instance.
     """
+    # Stamping run context onto records loads no settings and opens nothing, so
+    # it is installed here rather than waiting for a host to configure logging;
+    # otherwise records made before configuration carry no ``run_id`` at all.
+    _install_run_context_record_factory()
     logger = logging.getLogger(name)
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
         logger.addFilter(SecretScrubbingFilter())
