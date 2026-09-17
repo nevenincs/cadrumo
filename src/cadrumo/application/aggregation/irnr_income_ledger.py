@@ -30,6 +30,7 @@ from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.irnr_ledger_bindings import ledger_irnr_income_source_jurisdictions
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
@@ -240,6 +241,7 @@ def aggregate_irnr_income_ledger(
         operation=operation,
     )
     declared_codes = _resolve_selected_income_type_codes(selected_revision, period)
+    source_jurisdictions = _resolve_source_jurisdictions(selected_revision, target_casilla_id)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
             tr("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
@@ -259,6 +261,7 @@ def aggregate_irnr_income_ledger(
             period=period,
             selected_official_tipo_renta_code=selected_official_tipo_renta_code,
             declared_codes=declared_codes,
+            source_jurisdictions=source_jurisdictions,
             target_casilla_id=target_casilla_id,
         )
         if outcome is None:
@@ -302,11 +305,24 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
     return declared
 
 
+def _resolve_source_jurisdictions(revision: ModeloRevision, target_casilla_id: CasillaId) -> frozenset[str]:
+    """Resolve the selected binding's source-jurisdiction scope, refusing an undeclared one."""
+    scope = ledger_irnr_income_source_jurisdictions(revision, target_casilla_id=target_casilla_id)
+    if scope is None:
+        raise AggregationValidationError(
+            tr("aggregation.irnr_income_ledger.errors.source_scope_missing"),
+            context={"revision_id": str(revision.id), "target_casilla_id": str(target_casilla_id)},
+        )
+    return scope
+
+
 def _irnr_source_jurisdiction_issue(
     transaction_id: str,
     declared_jurisdiction: str | None,
+    *,
+    source_jurisdictions: frozenset[str],
 ) -> IrnrIncomeLedgerAggregationIssue | None:
-    """Reject an unresolved source jurisdiction; registry scope owns membership."""
+    """Reject an unresolved or out-of-scope source jurisdiction, else ``None``."""
     if declared_jurisdiction is None:
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -315,6 +331,16 @@ def _irnr_source_jurisdiction_issue(
                 "aggregation.irnr_income_ledger.diagnostics.source_jurisdiction_unresolved",
             ),
             rejected_source_jurisdiction=None,
+        )
+    if declared_jurisdiction not in source_jurisdictions:
+        return IrnrIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IrnrIncomeLedgerAggregationIssueReason.FOREIGN_SOURCE_OUT_OF_SCOPE,
+            detail=render_tr(
+                "aggregation.irnr_income_ledger.diagnostics.foreign_source_out_of_scope",
+                source_jurisdiction=declared_jurisdiction,
+            ),
+            rejected_source_jurisdiction=declared_jurisdiction,
         )
     return None
 
@@ -354,6 +380,7 @@ def _classify_irnr_income_transaction(
     period: Period,
     selected_official_tipo_renta_code: str,
     declared_codes: frozenset[str],
+    source_jurisdictions: frozenset[str],
     target_casilla_id: CasillaId,
 ) -> IrnrIncomeObservation | IrnrIncomeLedgerAggregationIssue | None:
     """Classify one incoming transaction for the selected registry projection."""
@@ -364,7 +391,11 @@ def _classify_irnr_income_transaction(
 
     transaction_id = transaction.transaction_id
     source_jurisdiction = transaction.source_jurisdiction
-    jurisdiction_issue = _irnr_source_jurisdiction_issue(transaction_id, source_jurisdiction)
+    jurisdiction_issue = _irnr_source_jurisdiction_issue(
+        transaction_id,
+        source_jurisdiction,
+        source_jurisdictions=source_jurisdictions,
+    )
     if jurisdiction_issue is not None:
         return jurisdiction_issue
     if source_jurisdiction is None:

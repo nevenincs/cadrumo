@@ -175,6 +175,9 @@ def collect_terminal_origin_diagnostics(
 
     Audited per binding rather than per provenance node, so a fold over a
     thousand transactions reports once and the channel stays readable.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     primaries = _primaries_by_source(resolution.provenance)
     resolved = _resolved_binding_ids(resolution)

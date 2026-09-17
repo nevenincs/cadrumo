@@ -1,4 +1,8 @@
-"""Shared internal support for modelo-binding source resolvers."""
+"""Shared internal support for modelo-binding source resolvers.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+"""
 
 from __future__ import annotations
 
