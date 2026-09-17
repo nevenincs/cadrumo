@@ -502,32 +502,37 @@ def domestic_rate_tier_is_required(
     transaction_date: date | None = None,
     customer_tax_status: CustomerTaxStatus | None = None,
     art_69_dos_service: IvaArt69DosService | None = None,
-    exempt_kinds: frozenset[TransactionKind] = frozenset(),
-    outside_territories: frozenset[IvaTerritorialScope] = frozenset(),
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether the supplied axes require a rate tier.
+    """Return whether any registry row this operation can reach derives its category from a rate tier.
 
-    Any registry-declared exceptions and outside territories are supplied by
-    the caller, keeping this reusable predicate free of a second legal table.
+    Asked of the registry-projected rows themselves rather than of a second
+    list of exempt kinds or territories: the operation needs a tier exactly when
+    its first matching row is a ``rate_categories[rate_tier]`` row. A still-open
+    customer status is a union over every status, so an open status demands
+    the tier rather than excusing it, and the direction is unioned the same
+    way. Identification is probed absent: a row that needs one cannot then
+    preempt a later rate-tier row, which errs toward asking.
     """
-    if kind in exempt_kinds:
-        return False
-    vocabulary = resolve_iva_classification_catalogue(transaction_date, operation=operation)
-    mainland = vocabulary.territorial_scope_alias("mainland")
-    if issuer_residency == mainland and customer_residency == mainland:
-        return True
-    services_kind = resolve_transaction_kind_catalogue(
-        transaction_date or today_madrid(),
-        operation=operation,
-    ).for_supply_nature("services")
-    return (
-        issuer_residency == mainland
-        and customer_residency in outside_territories
-        and kind == services_kind
-        and (customer_tax_status is None or customer_tax_status == vocabulary.customer_tax_status_alias("b2c_consumer"))
-        and art_69_dos_service is None
-    )
+    effective_date = transaction_date or today_madrid()
+    vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
+    rules = resolve_iva_classification_inputs(effective_date=effective_date, operation=operation).rules
+    statuses = (customer_tax_status,) if customer_tax_status is not None else vocabulary.customer_tax_statuses
+    for status in statuses:
+        for direction in InvoiceKind:
+            criteria = IvaInvoiceClassificationCriteria(
+                transaction_date=effective_date,
+                issuer_residency=issuer_residency,
+                customer_residency=customer_residency,
+                customer_tax_status=status,
+                kind=kind,
+                direction=direction,
+                art_69_dos_service=art_69_dos_service,
+            )
+            matched = next((rule for rule in rules if rule.predicate(criteria)), None)
+            if matched is not None and matched.category is None:
+                return True
+    return False
 
 
 class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
@@ -787,6 +792,16 @@ def _status_predicate_values(
         return frozenset({vocabulary.require_customer_tax_status(value)})
 
 
+def _selector_union[T](value: str, resolve: Callable[[str], frozenset[T]]) -> frozenset[T]:
+    """Resolve a comma-separated selector as the union of its members."""
+    members = tuple(member.strip() for member in value.split(","))
+    if any(not member for member in members) or len(members) != len(set(members)):
+        raise IvaValidationError(f"IVA classification predicate selector {value!r} is malformed")
+    resolved: set[T] = set()
+    for member in members:
+        resolved |= resolve(member)
+    return frozenset(resolved)
+
 def _kind_predicate_values(
     value: str,
     *,
@@ -812,6 +827,12 @@ def _customer_identification_state(criteria: IvaInvoiceClassificationCriteria) -
     return criteria.customer_identification_state
 
 
+def matches_nothing(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Predicate of the registry's terminal `no_match` row, which reads no axis."""
+    del criteria
+    return False
+
+
 def _compile_classification_predicate(
     expression: str,
     *,
@@ -822,7 +843,7 @@ def _compile_classification_predicate(
 ) -> Callable[[IvaInvoiceClassificationCriteria], bool]:
     """Compile one registry predicate without introducing a second rule table."""
     if expression.strip() == "no_match":
-        return lambda _criteria: False
+        return matches_nothing
     clauses = tuple(part.strip() for part in expression.split(";") if part.strip())
     if not clauses:
         raise IvaValidationError("IVA classification predicate must not be empty")
@@ -838,14 +859,14 @@ def _compile_classification_predicate(
             raise IvaValidationError(f"IVA classification predicate clause {clause!r} is malformed")
         seen.add(field)
         if field in {"issuer", "customer"}:
-            allowed = _scope_predicate_values(value, vocabulary=vocabulary)
+            allowed = _selector_union(value, lambda member: _scope_predicate_values(member, vocabulary=vocabulary))
             if field == "issuer":
                 conditions.append(lambda criteria, allowed=allowed: criteria.issuer_residency in allowed)
             else:
                 conditions.append(lambda criteria, allowed=allowed: criteria.customer_residency in allowed)
             continue
         if field == "status":
-            allowed = _status_predicate_values(value, vocabulary=vocabulary)
+            allowed = _selector_union(value, lambda member: _status_predicate_values(member, vocabulary=vocabulary))
             conditions.append(lambda criteria, allowed=allowed: criteria.customer_tax_status in allowed)
             continue
         if field == "kind":
