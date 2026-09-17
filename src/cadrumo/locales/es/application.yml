@@ -1211,6 +1211,16 @@ application:
         presentación exige autoridad %{requested_grade}.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
         para el modelo %{modelo} %{filing_year} %{period}.
+      suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
+        rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
+        soportada (%{predicate_id}). Introduzca el importe del certificado de retenciones
+        e ingresos a cuenta del pagador; el contribuyente nunca presentó el Modelo
+        123 que lo declara, por lo que este valor no puede rellenarse automáticamente.
+      suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
+        del trabajo pero no acredita ninguna retención soportada (%{predicate_id}).
+        Introduzca el importe del certificado de retenciones e ingresos a cuenta del
+        pagador; el contribuyente nunca presentó el Modelo 111 que lo declara, por
+        lo que este valor no puede rellenarse automáticamente.
       transaction_evidence_missing_deductible: Una transacción deducible no tiene
         evidencia justificativa (vínculo %{binding_id}, origen %{source_kind_code},
         motivo %{diagnostic_reason_code}).

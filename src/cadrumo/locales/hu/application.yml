@@ -1157,6 +1157,16 @@ application:
         a bevalláshoz pedig %{requested_grade} szintű jogosultság szükséges.
       registry_snapshot_unresolved: A(z) %{modelo} %{filing_year} %{period} modelóhoz
         tartozó nyilvántartási pillanatképet nem sikerült feloldani.
+      suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarítási
+        tőkejövedelmet tartalmaz, de nem számol el levont forrásadót (%{predicate_id}).
+        Adja meg az összeget a kifizető igazolásából (certificado de retenciones e
+        ingresos a cuenta); az adózó soha nem nyújtotta be a 123-as nyomtatványt,
+        amely ezt bevallja, ezért ez az érték nem tölthető ki automatikusan.
+      suffered_retencion_trabajo_uncredited: Ez a bevallás munkaviszonyból származó
+        jövedelmet tartalmaz, de nem számol el levont forrásadót (%{predicate_id}).
+        Adja meg az összeget a kifizető igazolásából (certificado de retenciones e
+        ingresos a cuenta); az adózó soha nem nyújtotta be a 111-es nyomtatványt,
+        amely ezt bevallja, ezért ez az érték nem tölthető ki automatikusan.
       transaction_evidence_missing_deductible: 'Egy levonható tranzakcióhoz nincs
         alátámasztó bizonyíték (kötés: %{binding_id}, forrás: %{source_kind_code},
         ok: %{diagnostic_reason_code}).'

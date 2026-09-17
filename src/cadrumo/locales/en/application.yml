@@ -1105,6 +1105,16 @@ application:
         requires %{requested_grade} authority.
       registry_snapshot_unresolved: The registry snapshot for modelo %{modelo} %{filing_year}
         %{period} could not be resolved.
+      suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
+        del capital mobiliario del ahorro but credits no suffered retención (%{predicate_id}).
+        Enter the amount from the payer's certificado de retenciones e ingresos a
+        cuenta; the taxpayer never filed the Modelo 123 that declares it, so this
+        value cannot be filled in automatically.
+      suffered_retencion_trabajo_uncredited: This return declares rendimientos del
+        trabajo but credits no suffered retención (%{predicate_id}). Enter the amount
+        from the payer's certificado de retenciones e ingresos a cuenta; the taxpayer
+        never filed the Modelo 111 that declares it, so this value cannot be filled
+        in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
         evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting

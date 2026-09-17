@@ -1210,6 +1210,16 @@ application:
         presentació exigeix autoritat %{requested_grade}.
       registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
         per al model %{modelo} %{filing_year} %{period}.
+      suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna
+        rendiments del capital mobiliari de l'estalvi però no acredita cap retenció
+        suportada (%{predicate_id}). Introdueixi l'import del certificat de retencions
+        i ingressos a compte del pagador; el contribuent mai va presentar el Model
+        123 que ho declara, de manera que aquest valor no es pot emplenar automàticament.
+      suffered_retencion_trabajo_uncredited: Aquesta declaració consigna rendiments
+        del treball però no acredita cap retenció suportada (%{predicate_id}). Introdueixi
+        l'import del certificat de retencions i ingressos a compte del pagador; el
+        contribuent mai va presentar el Model 111 que ho declara, de manera que aquest
+        valor no es pot emplenar automàticament.
       transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
         justificativa (vincle %{binding_id}, origen %{source_kind_code}, motiu %{diagnostic_reason_code}).
       transaction_evidence_missing_output: Una transacció repercutida no té evidència

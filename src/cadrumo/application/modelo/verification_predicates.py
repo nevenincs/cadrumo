@@ -582,11 +582,42 @@ def evaluate_advisory_predicate_fires(
     return False
 
 
+#: Suffixes of the two suffered-retencion advisory predicates. Their remedy is
+#: to enter the payer's certificate value, which the generic message cannot
+#: name, so each resolves to its own locale key.
+_TRABAJO_RETENCION_ADVISORY_SUFFIX = "retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+_CAPITAL_MOBILIARIO_RETENCION_ADVISORY_SUFFIX = (
+    "retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+)
+
+
 def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> ModeloVerificationFinding:
-    """Build the generic warning for a registry-authored advisory predicate."""
+    """Build the warning for a registry-authored advisory predicate.
+
+    Each constructor carries its ``message_locale_key`` as a literal, so the
+    two suffered-retencion families dispatch to their own call sites.
+    """
     legal_refs = tuple(str(r) for r in predicate.legal_refs)
     message_facts = {"predicate_id": predicate.predicate_id}
     casilla_id = _unique_predicate_casilla_id(predicate)
+    if predicate.predicate_id.endswith(_TRABAJO_RETENCION_ADVISORY_SUFFIX):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=casilla_id,
+            message_locale_key="application.modelo.findings.suffered_retencion_trabajo_uncredited",
+            message_facts=message_facts,
+            legal_refs=legal_refs,
+        )
+    if predicate.predicate_id.endswith(_CAPITAL_MOBILIARIO_RETENCION_ADVISORY_SUFFIX):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=casilla_id,
+            message_locale_key="application.modelo.findings.suffered_retencion_capital_mobiliario_uncredited",
+            message_facts=message_facts,
+            legal_refs=legal_refs,
+        )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
