@@ -31,6 +31,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
+from ...core.aeat_csv import normalise_aeat_csv
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
@@ -50,6 +51,7 @@ from ...domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
+    is_justificante_backed_external_evidence,
     is_receipt_bound_external_evidence,
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
@@ -300,7 +302,7 @@ def reconcile_aeat_register_entry(
         period=entry.period,
         member_nif=entry.member_nif,
     )
-    recorded = _recorded_chain_entry(history, entry.register)
+    recorded = recorded_chain_entry(history, entry.register)
     if recorded is not None:
         return _result(entry, FilingReconciliationOutcome.ALREADY_RECORDED, recorded.filing_record_id)
     context = _Context(
@@ -326,15 +328,34 @@ def reconcile_aeat_register_entry(
     return _contradict(context, pending=current, comparison=comparison)
 
 
-def _recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegisterRef) -> ModeloRecord | None:
-    identifiers = {register.expediente_id, *((register.csv,) if register.csv is not None else ())}
+def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegisterRef) -> ModeloRecord | None:
+    """Return the chain entry that already records ``register``, if any.
+
+    An entry records the register when its stored register reference names the
+    same expediente or CSV, or when its evidence reference is that expediente
+    or CSV. CSVs compare in their canonical form, so one receipt spelled two
+    ways is still one receipt.
+    """
+    expediente_id = register.expediente_id.strip()
+    csv = normalise_aeat_csv(register.csv) if register.csv is not None else None
     for record in history:
         stored = record.aeat_register
         if stored is not None and (
-            stored.expediente_id == register.expediente_id or (register.csv is not None and stored.csv == register.csv)
+            stored.expediente_id.strip() == expediente_id
+            or (csv is not None and stored.csv is not None and normalise_aeat_csv(stored.csv) == csv)
         ):
             return record
-        if record.external_evidence is not None and record.external_evidence.reference_id in identifiers:
+        evidence = record.external_evidence
+        if evidence is None:
+            continue
+        reference = evidence.reference_id.strip()
+        if reference == expediente_id:
+            return record
+        if (
+            csv is not None
+            and is_justificante_backed_external_evidence(evidence.kind)
+            and normalise_aeat_csv(reference) == csv
+        ):
             return record
     return None
 
@@ -889,4 +910,5 @@ __all__ = [
     "FilingReconciliationPorts",
     "FilingReconciliationResult",
     "reconcile_aeat_register_entry",
+    "recorded_chain_entry",
 ]
