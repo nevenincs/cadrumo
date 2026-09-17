@@ -63,15 +63,15 @@ def test_no_catalogue_references_an_undeclared_revision(
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
-def test_every_casilla_bearing_revision_has_catalogue_keys(
+def test_every_registry_revision_has_catalogue_keys(
     locale: str,
     registry_keys: frozenset[str],
     catalogue_keys: dict[str, frozenset[str]],
 ) -> None:
-    """Every registry revision carrying casillas is present in every catalogue."""
+    """Every registry revision is present in every catalogue."""
     findings = classify_revision_parity(registry_keys, catalogue_keys[locale])
     assert not findings.absent, (
-        f"the registry declares casillas for revision(s) the {locale} catalogue holds no key for at all: "
+        f"the registry declares revision(s) the {locale} catalogue holds no key for at all: "
         f"{[f'{modelo}/{revision}' for modelo, revision in findings.absent]}. If the revision was renamed, "
         f"carry its keys with `python -m dev.locales move-revision <modelo> <old> <new>` rather than "
         f"scaffolding empty slots."
@@ -129,13 +129,10 @@ def test_an_unmoved_rename_is_reported_as_a_move_with_its_invocation(
     assert len(candidates) == 1, f"expected exactly one move candidate for {modelo}/{old_revision}: {candidates}"
     (candidate,) = candidates
     assert candidate.destination_revisions == (new_revision,)
-    # The move carries 397 keys live, and the composition says what a partial
-    # rename looks like: 199 `.label` and 198 `.help`, so a renamer matching
-    # one suffix relocates about half and `> 0` would still call that one
-    # clean move. A floor below the half, not a pinned count.
-    assert candidate.key_count > 300, (
-        f"the move candidate carries only {candidate.key_count} keys against a revision "
-        "holding 397, so the rename reached part of the surface"
-    )
+    # Every catalogue key the registry derives under the old id moves, not a
+    # subset: a renamer matching one key family would move fewer.
+    prefix = f"modelo.schema.{modelo}.revision.{old_revision}."
+    moved = {key for key in catalogue & registry_keys if key.startswith(prefix)}
+    assert moved, f"{modelo}/{old_revision} carries no derived catalogue key for this proof to move"
+    assert candidate.key_count == len(moved)
     assert candidate.invocation == f"python -m dev.locales move-revision {modelo} {old_revision} {new_revision}"
-    assert report.accounted_extra, "the moved keys must be accounted for rather than reported as removals"

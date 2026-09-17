@@ -19,8 +19,10 @@ from ..manager import _audit_locale_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_OLD = "modelo.schema.347.revision.2008-2024.casilla.01"
-_NEW = "modelo.schema.347.revision.2011-2024.casilla.01"
+#: A revision-scoped key the generic parity audit judges; casilla leaves are judged by the
+#: delta-keyed casilla catalogue instead, so they never appear in this report.
+_OLD = "modelo.schema.347.revision.2008-2024.field"
+_NEW = "modelo.schema.347.revision.2011-2024.field"
 
 
 def test_a_rename_is_one_move_carrying_both_halves_of_the_drift() -> None:

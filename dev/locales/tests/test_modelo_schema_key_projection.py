@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
+    construct_lineage_locale_key,
     construct_locale_key,
     modelo_locale_key,
     revision_locale_key,
@@ -20,6 +21,7 @@ from dev.registry.compiler import loader as loader_module
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 
 from .. import _registry_scanner as scanner_module
+from .._casilla_keys import is_delta_keyed_leaf
 from .._registry_scanner import LocaleRegistryEnumerationError, scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -70,6 +72,7 @@ def test_structural_projection_matches_every_modelo_identity_ignoring_binding_sh
         modelo_locale_key("999", "official_name"),
         revision_locale_key("999", "2024"),
         construct_locale_key("999", "2024", "construct-1"),
+        construct_lineage_locale_key("999", "construct-1"),
         occurrence,
         f"{occurrence.removesuffix('.label')}.help",
         continuity,
@@ -94,7 +97,9 @@ def test_scanner_does_not_call_typed_registry_tree_loader(monkeypatch: pytest.Mo
     finally:
         scan_modelo_schema_keys.cache_clear()
 
-    assert len(keys) == 64550
+    assert keys, "the structural projection yielded no Modelo schema keys"
+    # Casilla leaves are delta-keyed and governed by the casilla catalogue, not the key universe.
+    assert not any(is_delta_keyed_leaf(key) for key in keys)
 
 
 def test_scanner_wraps_projection_failures_as_blocking_discovery_errors(

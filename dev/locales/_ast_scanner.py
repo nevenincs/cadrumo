@@ -1655,7 +1655,10 @@ def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> s
             continue
         guarded = node.left
         name = guarded.attr if isinstance(guarded, ast.Attribute) else getattr(guarded, "id", None)
-        if name not in translated_names:
+        # A generic name (``name``, ``code``) is translated somewhere for unrelated
+        # reasons, so only a name that says it holds a key or a translated message
+        # links a guard to copy.
+        if name not in translated_names or not str(name).lower().endswith(("key", "message")):
             continue
         for comparator in node.comparators:
             if isinstance(comparator, ast.Name) and comparator.id in containers:

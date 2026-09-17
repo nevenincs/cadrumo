@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev._paths import REPO_ROOT
 from dev.registry.compiler.loader import load_registry_tree
 
+from .._casilla_keys import is_delta_keyed_leaf
 from .._registry_scanner import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -54,7 +55,7 @@ def _runtime_schema_keys(modelos: Iterable[ModeloDefinition]) -> frozenset[str]:
         for revision in modelo.revisions.values():
             keys.add(revision.localization_key)
             for construct in revision.constructs:
-                keys.add(construct.localization_key)
+                keys.update(construct.localization_keys)
             for casilla in revision.casillas:
                 keys.update(casilla.localization_keys)
                 keys.update(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
@@ -201,7 +202,9 @@ def test_runtime_scanner_covers_every_key_attached_to_shipped_schema_objects(
     scanner_keys = frozenset(scan_modelo_schema_keys())
 
     assert runtime_keys, "the registry loader yielded no Modelo localization identities"
-    assert scanner_keys == runtime_keys
+    # Casilla label and help leaves are governed by the delta-keyed casilla
+    # catalogue, which reads the same chains; the scanner covers everything else.
+    assert scanner_keys == frozenset(key for key in runtime_keys if not is_delta_keyed_leaf(key))
 
 
 def test_every_shipped_modelo_schema_localization_resolves_for_every_output_locale(

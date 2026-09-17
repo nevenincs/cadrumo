@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 import shutil
 import time
+import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -33,10 +34,14 @@ from typing import Final
 
 import yaml
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.modelo_localization import modelo_localization_source
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    encode_modelo_locale_segment,
+    modelo_localization_source,
+)
 
-from ._casilla_keys import is_casilla_key
+from ._casilla_keys import is_delta_keyed_leaf, is_lineage_key
 from ._paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 from .manager import LocaleManager, _flatten_raw_locale_leaves, discover_locale_codes
 
@@ -48,6 +53,7 @@ __all__ = [
     "CollapseVerificationError",
     "ModeloCasillaCatalogue",
     "casilla_occurrences",
+    "edition_text_gaps",
     "load_casilla_values",
     "resume_install",
 ]
@@ -62,7 +68,9 @@ _DERIVED_HELP: Final = (
     re.compile(r"^Información de la casilla\b.*$", re.S),
     re.compile(r"^Dato del modelo \S+, ejercicio \S+.*$", re.S),
 )
-#: Scaffold renderings standing in for a label that was never authored.
+_REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.(?P<revision>[^.]+)\.")
+#: Scaffold renderings standing in for a label that was never authored. Help text may
+#: legitimately open with its box number, so only labels are judged.
 _PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci", re.IGNORECASE)
 
 
@@ -77,16 +85,24 @@ class CasillaOccurrence:
     continuidad_id: str | None
     inherited_from: str | None
     label_chain: tuple[str, ...]
+    carries_help: bool = True
+    """Casillas carry label and help; a construct carries only its title, read as its label."""
 
     def chain(self, field_name: str) -> tuple[str, ...]:
         """Return the ordered chain for ``label`` or ``help``."""
         if field_name == "label":
             return self.label_chain
+        if not self.carries_help:
+            return ()
         return tuple(f"{key.removesuffix('.label')}.help" for key in self.label_chain)
 
 
 def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
-    """Enumerate every casilla occurrence of the published generation."""
+    """Enumerate every casilla and construct occurrence of the published generation.
+
+    A construct is carried as an occurrence whose label chain is its title chain,
+    so both delta-keyed surfaces share one resolution, collapse and audit.
+    """
     found: list[CasillaOccurrence] = []
     with bundled_indexed_authority().operation() as operation:
         for modelo_id in operation.modelo_ids():
@@ -104,6 +120,19 @@ def casilla_occurrences() -> tuple[CasillaOccurrence, ...]:
                     )
                     for casilla in revision.casillas
                 )
+                found.extend(
+                    CasillaOccurrence(
+                        modelo=str(modelo_id),
+                        revision=str(metadata.id),
+                        casilla=f"construct:{construct.id}",
+                        number="",
+                        continuidad_id=None,
+                        inherited_from=None,
+                        label_chain=tuple(construct.localization_keys),
+                        carries_help=False,
+                    )
+                    for construct in revision.constructs
+                )
     return tuple(found)
 
 
@@ -119,10 +148,53 @@ def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:
         for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
             raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
             for key, value in _flatten_raw_locale_leaves(raw).items():
-                if is_casilla_key(key):
+                if is_delta_keyed_leaf(key):
                     leaves[key] = None if value is None else str(value)
         values[locale] = leaves
     return values
+
+
+_EDITION_TEXT: Final = re.compile(r"^modelo\.schema\.[^.]+\.revision\.[^.]+\.field\.label$")
+#: Scaffold renderings standing in for revision or construct text that was never authored.
+_EDITION_TEXT_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella)\s*—|—\s*(?:tax|informaci|adóügyi)")
+
+
+def edition_text_gaps(locales_dir: Path = LOCALES_DIR) -> dict[str, tuple[str, ...]]:
+    """Return, per locale, revision labels that are null or a scaffold placeholder.
+
+    A revision label is edition-specific text with no inheritance chain, so every
+    declared revision needs its own authored value in every locale. Construct
+    titles are delta-keyed and judged through resolution with casilla labels.
+    """
+    gaps: dict[str, tuple[str, ...]] = {}
+    for locale in sorted(discover_locale_codes(locales_dir)):
+        found: list[str] = []
+        for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
+            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
+            for key, value in _flatten_raw_locale_leaves(raw).items():
+                if _EDITION_TEXT.match(key) and (
+                    value is None or _EDITION_TEXT_PLACEHOLDER.search(str(value)) is not None
+                ):
+                    found.append(key)
+        gaps[locale] = tuple(sorted(found))
+    return gaps
+
+
+#: Lineages whose Spanish wording changed between editions without changing meaning, so one
+#: translation correctly renders every edition. Keyed per (locale, modelo, lineage), each with
+#: the reviewer's reason; never widened by modelo or prefix.
+REVIEWED_EQUIVALENT_SPANISH: Final[dict[tuple[str, str, str], str]] = {
+    **{
+        (locale, "202", lineage): "The later edition only spells out abbreviations ('op.', 'Tit.') of the same text."
+        for locale in ("ca", "en", "hu")
+        for lineage in (
+            "importe-excluido-aumento-capital-art-17-2-lis",
+            "importe-integrado-cuota-quita-espera-cooperativas",
+            "renta-exenta-cap-xiv-tit-vii-lis",
+        )
+    },
+    ("en", "100", "irpf-ed-suministros"): "'Electricity' renders both 'luz' and 'electricidad'.",
+}
 
 
 type Coordinate = tuple[int, str, str]
@@ -134,6 +206,8 @@ class CatalogueFindings:
     """Measured state of the casilla surface; every tuple is sorted."""
 
     orphan_keys: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    undeclared_revision_keys: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, keys under a revision id the registry does not declare: a rename to move, never to delete."""
     null_leaves: dict[str, tuple[str, ...]] = field(default_factory=dict)
     redundant_values: dict[str, tuple[str, ...]] = field(default_factory=dict)
     lineage_lifts: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -143,6 +217,10 @@ class CatalogueFindings:
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    stranded_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    stale_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, lineages rendering two different Spanish texts with one translation."""
+    """Per locale, rows rendering Spanish although their lineage translates that text."""
     """Per locale, lineages whose one Spanish text is translated more than one way."""
 
     def counts(self) -> dict[str, object]:
@@ -153,6 +231,7 @@ class CatalogueFindings:
 
         return {
             "orphan_keys": total(self.orphan_keys),
+            "undeclared_revision_keys": total(self.undeclared_revision_keys),
             "null_leaves": total(self.null_leaves),
             "redundant_values": total(self.redundant_values),
             "lineage_lifts": total(self.lineage_lifts),
@@ -161,7 +240,23 @@ class CatalogueFindings:
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
+            "stranded_translations": total(self.stranded_translations),
+            "stale_translations": total(self.stale_translations),
         }
+
+    @property
+    def structurally_pure(self) -> bool:
+        """Whether every stored leaf is a canonical, non-derived, readable value."""
+        return not any(
+            (
+                any(self.orphan_keys.values()),
+                any(self.undeclared_revision_keys.values()),
+                any(self.null_leaves.values()),
+                any(self.redundant_values.values()),
+                any(self.lineage_lifts.values()),
+                any(self.derived_help.values()),
+            )
+        )
 
     @property
     def pure(self) -> bool:
@@ -169,12 +264,15 @@ class CatalogueFindings:
         return not any(
             (
                 any(self.orphan_keys.values()),
+                any(self.undeclared_revision_keys.values()),
                 any(self.null_leaves.values()),
                 any(self.redundant_values.values()),
                 any(self.lineage_lifts.values()),
                 any(self.derived_help.values()),
                 any(self.placeholders.values()),
                 any(self.translation_drift.values()),
+                any(self.stranded_translations.values()),
+                any(self.stale_translations.values()),
                 self.unresolved_spanish,
             )
         )
@@ -227,6 +325,10 @@ class ModeloCasillaCatalogue:
         self.values = values
         self.locales = tuple(sorted(values))
         self.dependents: dict[str, list[tuple[int, str]]] = defaultdict(list)
+        self.declared_revisions = frozenset(
+            (encode_modelo_locale_segment(occurrence.modelo), encode_modelo_locale_segment(occurrence.revision))
+            for occurrence in occurrences
+        )
         for index, occurrence in enumerate(occurrences):
             for field_name in _FIELDS:
                 for key in occurrence.chain(field_name):
@@ -271,7 +373,12 @@ class ModeloCasillaCatalogue:
         plan = self.collapse_plan(include_redundant=True)
         for locale in self.locales:
             leaves = self.values[locale]
-            found.orphan_keys[locale] = tuple(sorted(key for key in leaves if key not in self.dependents))
+            found.orphan_keys[locale] = tuple(
+                sorted(key for key in leaves if key not in self.dependents and not self._undeclared_revision(key))
+            )
+            found.undeclared_revision_keys[locale] = tuple(
+                sorted(key for key in leaves if self._undeclared_revision(key))
+            )
             found.null_leaves[locale] = tuple(
                 sorted(key for key, value in leaves.items() if value is None and key in self.dependents)
             )
@@ -279,7 +386,15 @@ class ModeloCasillaCatalogue:
                 sorted(key for key, value in leaves.items() if value is not None and _is_derived_help(key, value))
             )
             found.placeholders[locale] = tuple(
-                sorted(key for key, value in leaves.items() if value is not None and _PLACEHOLDER.search(value))
+                sorted(
+                    key
+                    for key, value in leaves.items()
+                    if value is not None
+                    and (
+                        (key.endswith(".label") and _PLACEHOLDER.search(value))
+                        or (key.endswith(".title") and _EDITION_TEXT_PLACEHOLDER.search(value))
+                    )
+                )
             )
             found.redundant_values[locale] = tuple(
                 sorted(key for key, reason in plan.plan.removals.get(locale, {}).items() if reason == "redundant")
@@ -303,6 +418,12 @@ class ModeloCasillaCatalogue:
             if locale != SOURCE_LOCALE
         }
         found.translation_drift = self.translation_drift()
+        found.stale_translations = {
+            locale: self.stale_translations(locale) for locale in self.locales if locale != SOURCE_LOCALE
+        }
+        found.stranded_translations = {
+            locale: self.stranded_translations(locale) for locale in self.locales if locale != SOURCE_LOCALE
+        }
         return found
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
@@ -339,6 +460,72 @@ class ModeloCasillaCatalogue:
             )
         return drift
 
+    def copied_translations(self, locale: str) -> dict[str, str]:
+        """Return the ``locale`` keys that serve a label identical to its resolved Spanish text."""
+        copied: dict[str, str] = {}
+        lookup = self.lookup_for(self.values)
+        for index, occurrence in enumerate(self.occurrences):
+            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
+            if source is None or source[1] != locale:
+                continue
+            text = self.values[locale][source[0]]
+            if text is not None and text == self.resolve(index, "label", SOURCE_LOCALE):
+                copied[source[0]] = text
+        return copied
+
+    def stale_translations(
+        self,
+        locale: str,
+        excused: Mapping[tuple[str, str, str], str] = REVIEWED_EQUIVALENT_SPANISH,
+    ) -> tuple[str, ...]:
+        """Return lineages where one translation renders two different Spanish texts.
+
+        The official wording changed and the translation did not follow, so a
+        filer reads text that no longer matches the Spanish label.
+        """
+        lookup = self.lookup_for(self.values)
+        spanish_by_translation: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+        for index, occurrence in enumerate(self.occurrences):
+            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
+            spanish = self.resolve(index, "label", SOURCE_LOCALE)
+            if source is None or source[1] != locale or spanish is None:
+                continue
+            translation = self.values[locale][source[0]]
+            if translation is None:
+                continue
+            lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
+            spanish_by_translation[(occurrence.modelo, lineage, translation)].add(spanish)
+        return tuple(
+            sorted(
+                {
+                    f"{modelo}/{lineage}"
+                    for (modelo, lineage, _translation), spanish in spanish_by_translation.items()
+                    if len({_normalised(text) for text in spanish}) > 1 and (locale, modelo, lineage) not in excused
+                }
+            )
+        )
+
+    def stranded_translations(self, locale: str) -> tuple[str, ...]:
+        """Return rows rendering Spanish although their lineage translates that exact Spanish text.
+
+        The translation exists; it is only stored where these rows do not read
+        it. Such rows are derivable, never new translation work.
+        """
+        lookup = self.lookup_for(self.values)
+        translated: set[tuple[str, str, str]] = set()
+        untranslated: list[tuple[tuple[str, str, str], str]] = []
+        for index, occurrence in enumerate(self.occurrences):
+            spanish = self.resolve(index, "label", SOURCE_LOCALE)
+            if spanish is None:
+                continue
+            group = (occurrence.modelo, occurrence.continuidad_id or f"casilla:{occurrence.casilla}", spanish)
+            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
+            if source is not None and source[1] == locale:
+                translated.add(group)
+            else:
+                untranslated.append((group, f"{occurrence.modelo}/{occurrence.revision}/{occurrence.casilla}"))
+        return tuple(sorted(label for group, label in untranslated if group in translated))
+
     # -- collapse ---------------------------------------------------------
 
     def collapse_plan(self, *, include_redundant: bool = True) -> CollapseResult:
@@ -355,6 +542,8 @@ class ModeloCasillaCatalogue:
         plan = CollapsePlan()
         for locale in self.locales:
             for key, value in list(working[locale].items()):
+                if self._undeclared_revision(key):
+                    continue
                 if key not in self.dependents:
                     plan.remove(locale, key, "orphan")
                 elif value is None:
@@ -392,6 +581,8 @@ class ModeloCasillaCatalogue:
             changed = False
             for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
                 for key in sorted(working[locale], key=_specificity):
+                    if self._undeclared_revision(key):
+                        continue
                     value = working[locale].pop(key)
                     if self._unchanged(key, locale, working, baseline):
                         plan.remove(locale, key, "redundant")
@@ -400,6 +591,11 @@ class ModeloCasillaCatalogue:
                     else:
                         working[locale][key] = value
         return removed
+
+    def _undeclared_revision(self, key: str) -> bool:
+        """Return whether ``key`` sits under a revision id no occurrence declares."""
+        match = _REVISION_SCOPED.match(key)
+        return match is not None and (match["modelo"], match["revision"]) not in self.declared_revisions
 
     def _affected_locales(self, locale: str) -> tuple[str, ...]:
         return self.locales if locale == SOURCE_LOCALE else (locale,)
@@ -424,7 +620,7 @@ class ModeloCasillaCatalogue:
         redundancy pass dropped it, lifting it back would only cycle.
         """
         lifted = 0
-        lineage_keys = sorted(key for key in self.dependents if ".casilla.continuidad." in key)
+        lineage_keys = sorted(key for key in self.dependents if is_lineage_key(key))
         for locale in (SOURCE_LOCALE, *[loc for loc in self.locales if loc != SOURCE_LOCALE]):
             for key in lineage_keys:
                 if working[locale].get(key) is not None or key in lifted_keys[locale]:
@@ -592,7 +788,7 @@ def _install_shards(staged: Path, locales_dir: Path) -> tuple[str, ...]:
             continue
         for _attempt in range(_INSTALL_ATTEMPTS):
             try:
-                target.write_bytes(payload)
+                atomic_write_text(target, payload.decode("utf-8"))
                 break
             except OSError:
                 time.sleep(_INSTALL_BACKOFF_SECONDS)
@@ -612,7 +808,14 @@ class CollapseResult:
 
 def _specificity(key: str) -> tuple[int, str]:
     """Order occurrence keys before lineage keys so the shared value survives."""
-    return (1 if ".casilla.continuidad." in key else 0, key)
+    return (1 if is_lineage_key(key) else 0, key)
+
+
+def _normalised(text: str) -> str:
+    """Fold case, accents and punctuation so only a wording change counts."""
+    decomposed = unicodedata.normalize("NFKD", text.casefold())
+    letters = "".join(character for character in decomposed if not unicodedata.combining(character))
+    return " ".join(re.sub(r"[^\w]+", " ", letters).split())
 
 
 def _is_derived_help(key: str, value: str) -> bool:
