@@ -17,11 +17,11 @@ ordering. Completeness names the schema-required information still missing
 — never arithmetic and never a gate on viewing or editing.
 
 The screen owns no profile logic. The page content is
-:func:`~cadrumo.application.user_profile.build_profile_overview`, and an
+:func:`~cadrumo.application.user_profile.overview.build_profile_overview`, and an
 edit is an authenticated revision-bound fact command.
 
 See Also:
-    :class:`~cadrumo.application.user_profile.ProfileOverview`
+    :class:`~cadrumo.application.user_profile.overview.ProfileOverview`
         The typed projection this screen renders.
 """
 
