@@ -315,8 +315,9 @@ def reconcile_aeat_register_entry(
         catalogue_revision_id=catalogue_revision_id,
         evidence_reference_id=_evidence_reference_id(entry),
     )
-    if entry.justificante is not None:
-        ports.justificante_repository.save(entry.justificante)
+    receipt = entry.justificante
+    if receipt is not None and ports.justificante_repository.load(receipt.csv) != receipt:
+        ports.justificante_repository.save(receipt)
     current = context.current()
     if current is None or current.confirmation is not AeatConfirmationState.PENDIENTE:
         return _append(context, current=current)
@@ -805,15 +806,20 @@ def _aeat_content_writes(
         filing_record_id=filing_record_id,
         source_headers=entry.source_headers,
     )
-    if clear_pending:
-        writes.extend(
-            ports.observation_repository.clear_pending_local(
-                entry.modelo,
-                entry.period,
-                member_nif=entry.member_nif,
-            ),
+    # Both layers live in one row, so clearing the pending layer and placing
+    # AEAT's content must be one write; two writes would each carry a stale copy.
+    cleared = (
+        ports.observation_repository.clear_pending_local(
+            entry.modelo,
+            entry.period,
+            member_nif=entry.member_nif,
+            replacement_official=observation_payload,
         )
-    if observation_payload is not None:
+        if clear_pending
+        else ()
+    )
+    writes.extend(cleared)
+    if observation_payload is not None and not cleared:
         writes.append(ports.observation_repository.to_secure_object_write(observation_payload))
     return tuple(writes)
 
