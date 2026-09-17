@@ -110,23 +110,41 @@ def _cache_root() -> Path:
     return Path.cwd() / ".venv" / "tools" / "actionlint" / VERSION
 
 
+_DOWNLOAD_HOSTS = frozenset({"github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"})
+_MAX_REDIRECTS = 5
+
+
 def _download(url: str, into: Path) -> None:
-    """Fetch `url` to `into`, failing loudly rather than partially."""
-    parsed = urlsplit(url)
-    if parsed.scheme != "https" or parsed.hostname != "github.com":
-        raise ValueError(f"actionlint downloads require an HTTPS github.com URL: {url}")
-    target = parsed.path or "/"
-    if parsed.query:
-        target = f"{target}?{parsed.query}"
-    connection = http.client.HTTPSConnection(parsed.hostname, port=parsed.port or 443, timeout=120)
-    try:
-        connection.request("GET", target, headers={"User-Agent": "cadrumo-actionlint"})
-        response = connection.getresponse()
-        if not 200 <= response.status < 300:
-            raise OSError(f"actionlint download returned HTTP {response.status}")
-        into.write_bytes(response.read())
-    finally:
-        connection.close()
+    """Fetch `url` to `into`, failing loudly rather than partially.
+
+    GitHub serves release assets through a redirect to its asset host, so
+    redirects are followed, but only to HTTPS GitHub asset hosts; the pinned
+    digest check still decides whether the bytes are accepted.
+    """
+    for _ in range(_MAX_REDIRECTS + 1):
+        parsed = urlsplit(url)
+        if parsed.scheme != "https" or parsed.hostname not in _DOWNLOAD_HOSTS:
+            raise ValueError(f"actionlint downloads require an HTTPS GitHub asset URL: {url}")
+        target = parsed.path or "/"
+        if parsed.query:
+            target = f"{target}?{parsed.query}"
+        connection = http.client.HTTPSConnection(parsed.hostname, port=parsed.port or 443, timeout=120)
+        try:
+            connection.request("GET", target, headers={"User-Agent": "cadrumo-actionlint"})
+            response = connection.getresponse()
+            if response.status in {301, 302, 303, 307, 308}:
+                location = response.getheader("Location")
+                if not location:
+                    raise OSError(f"actionlint download redirect (HTTP {response.status}) has no Location")
+                url = location
+                continue
+            if not 200 <= response.status < 300:
+                raise OSError(f"actionlint download returned HTTP {response.status}")
+            into.write_bytes(response.read())
+            return
+        finally:
+            connection.close()
+    raise OSError(f"actionlint download exceeded {_MAX_REDIRECTS} redirects")
 
 
 def _verify(archive: Path, expected: str) -> None:
