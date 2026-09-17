@@ -127,12 +127,16 @@ _HANDLER_MODULES = {
 }
 
 
-def test_nonwork_modelo_specs_are_the_exact_54_node_set() -> None:
-    assert len(MODELO_NONWORK_COMMAND_SPECS) == 54
-    assert {spec.key for spec in MODELO_NONWORK_COMMAND_SPECS} == _EXPECTED_KEYS
-    assert sum(spec.kind == "group" for spec in MODELO_NONWORK_COMMAND_SPECS) == 8
-    assert sum(spec.kind == "leaf" for spec in MODELO_NONWORK_COMMAND_SPECS) == 46
-    assert sum(len(spec.parameters) for spec in MODELO_NONWORK_COMMAND_SPECS) == 197
+def test_nonwork_modelo_specs_are_the_exact_declared_node_set() -> None:
+    keys = [spec.key for spec in MODELO_NONWORK_COMMAND_SPECS]
+    assert len(keys) == len(set(keys)), "a non-work modelo node is declared twice"
+    assert set(keys) == _EXPECTED_KEYS
+    # A node is a group exactly when another node names it as its parent.
+    parents = {spec.parent_key for spec in MODELO_NONWORK_COMMAND_SPECS}
+    for spec in MODELO_NONWORK_COMMAND_SPECS:
+        assert spec.kind == ("group" if spec.key in parents else "leaf"), spec.key
+        names = [parameter.name for parameter in spec.parameters]
+        assert len(names) == len(set(names)), f"{spec.key} declares a parameter twice: {names}"
 
 
 def test_bindings_parameters_keep_exact_order_and_identity() -> None:

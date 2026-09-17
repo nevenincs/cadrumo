@@ -4,7 +4,8 @@ Each class declared here is a strict :class:`~core.json_contract.OutputSchema`
 subclass and is referenced as a deferred public schema target by
 production-authored CommandSpec so
 the JSON-contract test suite can enumerate every collab-recipient command surface this
-module covers. Field sets mirror :class:`~application.modelo.review_package_recipient_registry.RecipientFingerprintRecord`
+module covers. Field sets mirror
+:class:`~application.modelo.review_package_recipient_registry.RecipientFingerprintRecord`
 projected to plain JSON; the private key never appears anywhere in this module (the
 registry stores only recipients' PUBLIC keys -- see
 :mod:`~entrypoints.cli.config.collab`).

@@ -18,7 +18,12 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from ....domain.modelos.filing_record import ModeloRecordStatus
+from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecordStatus,
+)
 from .._modelo_amend_wizard_payloads import WorkAmendWizardResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -38,6 +43,10 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
         "notes": None,
         "aeat_accepted": False,
         "status": ModeloRecordStatus.VIGENTE,
+        # A locally filed amendment is not yet observed at AEAT.
+        "origin": FilingOrigin.LOCAL,
+        "confirmation": AeatConfirmationState.PENDIENTE,
+        "declaration_kind": FilingDeclarationKind.COMPLEMENTARIA,
         "superseded_at": None,
         "superseded_by_filing_record_id": None,
         "external_evidence": None,

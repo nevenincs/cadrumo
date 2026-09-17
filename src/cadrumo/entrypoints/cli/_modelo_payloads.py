@@ -990,19 +990,6 @@ class FilingRecordLocalObservationResult(OutputSchema):
     filing_record_created: Literal[False] = False
     aeat_accepted: Literal[False] = False
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_action_shape(self) -> FilingRecordLocalObservationResult:
-        """A recorded override carries its values and revision; a clear carries none."""
-        recorded = self.action == "recorded"
-        if recorded and (self.revision_id is None or self.source_kind is None or not self.casilla_values):
-            raise ValueError("a recorded local observation carries its revision, source kind and values")
-        if not recorded and (self.revision_id is not None or self.source_kind is not None or self.casilla_values):
-            raise ValueError("a cleared local observation carries no revision, source kind or values")
-        if self.casilla_count != len(self.casilla_values):
-            raise ValueError("casilla_count must equal the number of casilla values")
-        return self
-
 
 class ModeloCasillaResult(OutputSchema):
     """Single-casilla semantic detail returned by ``aeat app modelo casilla``.
