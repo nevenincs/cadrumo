@@ -359,7 +359,7 @@ def migrate_stored_relation_overrides_to_binding_ids(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
-    catalogue, expected_revision_id = repository.load_revisioned()
+    catalogue, expected_revision_id = repository.load_revisioned(operation=operation)
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:
         return result
