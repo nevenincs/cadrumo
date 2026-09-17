@@ -13,6 +13,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 
@@ -36,6 +37,7 @@ class MonetaryAmount(BaseModel):
 
     @field_validator("currency", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_currency(cls, v: object) -> object:
         """Normalise through the canonical ISO-4217 owner.
 

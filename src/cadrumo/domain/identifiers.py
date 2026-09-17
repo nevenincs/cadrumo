@@ -20,6 +20,7 @@ from decimal import Decimal
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .errors import DomainValidationError
 
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
@@ -52,7 +53,7 @@ class ModeloIdentifier(str):
         """Return the strict Pydantic schema for modelo identifiers."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(
-            cls,
+            pydantic_validation_boundary(cls),
             core_schema.str_schema(pattern=_MODELO_RE.pattern),
         )
 

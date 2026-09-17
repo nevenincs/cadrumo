@@ -25,7 +25,7 @@ from ..models import (
     SubmissionStatus,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _SUBMITTED_AT = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)

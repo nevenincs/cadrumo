@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -251,7 +251,7 @@ class ModeloPresentado(BaseModel):
         if isinstance(value, str):
             try:
                 return Modelo(value)
-            except ValueError as exc:
+            except CoreValidationError as exc:
                 raise SubmissionValidationError(
                     f"modelo {value!r} is not a canonical AEAT modelo identifier",
                 ) from exc

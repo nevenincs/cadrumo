@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _UTC = datetime(2026, 8, 1, 10, 0, tzinfo=UTC)
 

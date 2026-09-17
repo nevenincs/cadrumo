@@ -35,7 +35,7 @@ from ..registry import (
     portals_for_modelo,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_registry_is_frozen_mappingproxy() -> None:

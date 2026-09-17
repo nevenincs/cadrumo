@@ -15,7 +15,7 @@ import pytest
 from ....core.calendar_shift import shift_by_calendar_years
 from ..floor import RetainableFilingRecord, RetentionFloorAssessment, assess_retention_floor
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 #: The LGT art. 66 prescription floor. Duplicated here as the independent
 #: specification the assessment must satisfy, not imported from the code path

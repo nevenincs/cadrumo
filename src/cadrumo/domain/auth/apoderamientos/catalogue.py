@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Annotated, TypeGuard
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator
 
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
@@ -45,6 +45,7 @@ class ApoderadoScope(BaseModel):
 
     @field_validator("code")
     @classmethod
+    @pydantic_validation_boundary
     def _code_is_uppercase_alnum(cls, value: str) -> str:
         if not value.isupper():
             raise ValueError(f"scope code must be uppercase, got {value!r}")

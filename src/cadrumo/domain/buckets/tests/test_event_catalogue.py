@@ -24,7 +24,7 @@ from ..event import (
     derive_bucket_event_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _BUCKET_A = "5612ee74-f4e5-47c2-9df9-2afa04286b2a"  # was 'operator-a'
