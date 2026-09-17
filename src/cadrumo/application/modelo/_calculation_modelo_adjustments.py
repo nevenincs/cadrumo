@@ -30,7 +30,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.aggregation import BindingAggregationOp, BindingSourceKind
-from ...core.casilla_id import CasillaId
+from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.decimal.constants import ZERO
 from ...core.money.rounding import round_to_cents
@@ -52,6 +52,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.schema_verification import parse_verification_predicate_expression
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
@@ -371,16 +372,35 @@ def reconciliation_relation_targets(
 ) -> tuple[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId], ...]:
     """Return selected annual-relation targets from the registry revision."""
     target_casillas_by_binding = casillas_by_binding(snapshot.revision)
+    annual_by_reconciliation = _annual_casillas_by_reconciliation_slot(snapshot.revision)
     targets: list[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]] = []
     for binding, provider in relation_prefill_bindings_for_period(snapshot.revision):
         target_casillas = target_casillas_by_binding.get(binding.id, ())
         if not target_casillas:
             continue
         source_casillas = provider.declared_source_casilla_ids
-        if len(source_casillas) != 1:
+        annual_casilla = annual_by_reconciliation.get(target_casillas[0])
+        if len(source_casillas) != 1 or annual_casilla is None:
             continue
-        targets.append((binding.id, binding.id, target_casillas, source_casillas[0], target_casillas[0]))
+        targets.append((binding.id, binding.id, target_casillas, source_casillas[0], annual_casilla))
     return tuple(targets)
+
+
+def _annual_casillas_by_reconciliation_slot(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
+    """Pair each casilla with the one a registry ``equals`` predicate says it must equal.
+
+    The pairing is read from the revision's own two-casilla ``equals``
+    verification predicates, so no annual casilla is named in code.
+    """
+    pairs: dict[CasillaId, CasillaId] = {}
+    for predicate in revision.verification_predicates:
+        parsed = parse_verification_predicate_expression(predicate.expression)
+        if parsed is None or parsed.operator != "equals" or len(parsed.casilla_ids) != 2:
+            continue
+        first, second = (validated_casilla_id(token) for token in parsed.casilla_ids)
+        pairs[first] = second
+        pairs[second] = first
+    return pairs
 
 
 def _required_relation_periods(snapshot: RegistrySnapshot, relation_ids: frozenset[RelationId]) -> tuple[str, ...]:
