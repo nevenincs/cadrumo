@@ -3,19 +3,25 @@
 from __future__ import annotations
 
 # Development-only record-design corpus support.
+import os
 import re
 from functools import cache, lru_cache
 from pathlib import Path
+
+from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
+from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from dev.cache_root import dev_cache_dir
+from dev.registry.compiler.build_identity import authority_compiler_identity
 from dev.registry.compiler.record_design_schema import RecordDesignSheet
 
 from ..compiler.authority import compile_validated_authority
@@ -115,6 +121,7 @@ def _design_dir(modelo_id: str) -> Path:
     return bundled_path(*_DESIGN_ROOT_PARTS, f"modelo_{modelo_id}")
 
 
+@cache
 def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
     """``(design year, source path)`` pairs, first source per year winning."""
     seen: dict[int, Path] = {}
@@ -331,6 +338,7 @@ def _catalogue_ejercicio_span() -> dict[str, tuple[int, int]]:
     return spans
 
 
+@cache
 def _design_coverage_years(path: Path) -> tuple[int, ...]:
     """Every ejercicio a design covers, from its content and its filename TOGETHER.
 
@@ -411,6 +419,7 @@ def _coverage_start_period(name: str) -> int | None:
     return 1 if kind == "hasta" else period
 
 
+@cache
 def _design_fingerprint(path: Path) -> tuple[object, ...]:
     """Format-independent identity of a design: what it DECLARES, not how it is packaged.
 
@@ -442,6 +451,7 @@ def _design_fingerprint(path: Path) -> tuple[object, ...]:
     )
 
 
+@cache
 def _readable_designs_by_year(modelo_id: str) -> dict[int, list[Path]]:
     """Group distinct readable designs by their first covered ejercicio."""
     by_year: dict[int, list[Path]] = {}
@@ -511,6 +521,7 @@ def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
     return {year: tuple(paths) for year, paths in sorted(grouped.items())}
 
 
+@cache
 def _design_sources(modelo_id: str) -> list[Path]:
     """Every bundled design SOURCE for one modelo, deterministically ordered.
 
@@ -531,6 +542,50 @@ def _design_sources(modelo_id: str) -> list[Path]:
     )
 
 
+_PARSE_CACHE_FAMILY = "record-design-parse"
+_SHEETS_ADAPTER: TypeAdapter[tuple[RecordDesignSheet, ...]] = TypeAdapter(tuple[RecordDesignSheet, ...])
+
+
+def _parse_cache_path(path: Path) -> Path | None:
+    """Where one design's parsed sheets are kept, keyed by content and parser identity.
+
+    Keyed by the file's own digest rather than its name, so the corpus's
+    same-document-twice packaging shares one entry, and by the compiler identity,
+    so a parser change invalidates every entry rather than serving a stale parse.
+    """
+    try:
+        digest, _length = hash_file(path)
+    except OSError:
+        return None
+    return dev_cache_dir(_PARSE_CACHE_FAMILY) / f"{authority_compiler_identity()[:16]}-{digest}.json"
+
+
+def _cached_parse(location: Path) -> tuple[RecordDesignSheet, ...] | None:
+    """Return a previously persisted parse, or ``None`` when it is absent or unreadable."""
+    try:
+        payload = location.read_bytes()
+    except OSError:
+        return None
+    try:
+        return _SHEETS_ADAPTER.validate_json(payload)
+    except ValidationError:
+        # A parse written by an incompatible shape is discarded rather than
+        # trusted; the caller reparses and overwrites it.
+        return None
+
+
+def _store_parse(location: Path, sheets: tuple[RecordDesignSheet, ...]) -> None:
+    """Persist one parse atomically, and stay silent when the cache is unwritable."""
+    try:
+        location.parent.mkdir(parents=True, exist_ok=True)
+        staged = location.with_name(f"{location.name}.{os.getpid()}.part")
+        staged.write_bytes(_SHEETS_ADAPTER.dump_json(sheets))
+        staged.replace(location)
+    except OSError:
+        return
+
+
+@cache
 def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Parse one design SOURCE, dispatching on its suffix.
 
@@ -555,15 +610,25 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     parser = parsers.get(path.suffix.lower())
     if parser is None:
         return ()
+    location = _parse_cache_path(path)
+    if location is not None:
+        persisted = _cached_parse(location)
+        if persisted is not None:
+            return persisted
     try:
         # ACCEPTS a partial read deliberately. This module compares designs against
         # each other, and a design read in part still carries real evidence about
         # the sheets it did read; refusing it here would replace a comparison that
         # sees most of a boundary with one that sees none of it. The completeness
         # of each read is reported by the coverage guard rather than resolved here.
-        return parser(path).accept_partial()
+        sheets = parser(path).accept_partial()
     except Exception:
-        return ()
+        sheets = ()
+    if location is not None:
+        # An empty parse is persisted too: it is this parser's answer for these
+        # exact bytes, and reparsing it on every call costs the same as a read.
+        _store_parse(location, sheets)
+    return sheets
 
 
 def _unparseable_design_sources(modelo_id: str) -> tuple[Path, ...]:
@@ -641,6 +706,7 @@ def _parse_extracted(path: Path) -> dict[str, int]:
     return table
 
 
+@cache
 def _parse_design(path: Path) -> dict[str, int]:
     """box number -> record offset for one design, source first, derivative second."""
     table: dict[str, int] = {}
@@ -668,6 +734,7 @@ def _parse_design(path: Path) -> dict[str, int]:
     return table or _parse_extracted(path)
 
 
+@cache
 def _page_lengths(path: Path) -> tuple[str, ...]:
     """The per-sheet declared record length, source first, derivative second.
 
@@ -695,6 +762,7 @@ def _page_lengths(path: Path) -> tuple[str, ...]:
     return tuple(str(total) for total in _PAGE_TOTAL.findall(derivative.read_text(encoding="utf-8", errors="replace")))
 
 
+@cache
 def _occupancy(path: Path) -> dict[tuple[str, int], bool]:
     """``(sheet, offset) -> is_reserved`` for every field in one design.
 

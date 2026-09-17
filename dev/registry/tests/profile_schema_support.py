@@ -60,6 +60,20 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
     return schema
 
 
+def _overlay_is_inert(catalogues: RegistryCatalogues, compiled: RegistryCatalogues) -> bool:
+    """Whether overlaying ``catalogues`` onto ``compiled`` would change nothing.
+
+    Compared by object identity per entry, which is what the authority's own
+    catalogues satisfy and a mutated fixture does not: a fixture that replaced
+    one declaration carries a different object for it and takes the copy path.
+    """
+    if catalogues is compiled:
+        return True
+    return all(compiled.legal.get(key) is value for key, value in catalogues.legal.items()) and all(
+        compiled.sources.get(key) is value for key, value in catalogues.sources.items()
+    )
+
+
 class CommittedRegistryValidator:
     """The validator registry compilation builds, scoped as compilation scopes it.
 
@@ -79,15 +93,22 @@ class CommittedRegistryValidator:
 
         compiled = compiled_bundled_authority().catalogues
         facts = compiled.facts
-        # The test's own legal and source entries win, so a deliberately
-        # mutated declaration is still the one validated.
-        completed = catalogues.model_copy(
-            update={
-                "facts": facts,
-                "legal": {**compiled.legal, **catalogues.legal},
-                "sources": {**compiled.sources, **catalogues.sources},
-            },
-        )
+        # A caller validating the committed corpus unchanged gets the
+        # authority's OWN catalogues, not a copy of them. The validator memoizes
+        # per catalogue object, so a copy that overlays nothing still guaranteed
+        # a miss and re-validated the corpus the authority had just validated.
+        if _overlay_is_inert(catalogues, compiled):
+            completed = compiled
+        else:
+            # The test's own legal and source entries win, so a deliberately
+            # mutated declaration is still the one validated.
+            completed = catalogues.model_copy(
+                update={
+                    "facts": facts,
+                    "legal": {**compiled.legal, **catalogues.legal},
+                    "sources": {**compiled.sources, **catalogues.sources},
+                },
+            )
         self._validator = RegistryValidator(
             completed,
             source_root=bundled_path(),

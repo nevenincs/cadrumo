@@ -103,6 +103,12 @@ def _mid_year_claimed_designs(within: tuple[Path, ...], revision: ModeloRevision
     return kept or within
 
 
+# DELIBERATELY NOT MEMOIZED on the revision id. Callers pass a MODIFIED copy of a
+# declared edition -- the mid-course-boundary proof widens a half back across its
+# whole ejercicio -- and such a copy keeps the id it was copied from, so an
+# id-keyed memo answers the widened span with the narrow span's designs and the
+# proof silently measures nothing. The walk is cheap now that the design parse
+# itself is memoized and persisted.
 def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path, ...]:
     """The designs a revision's span claims, in publication order.
 
@@ -183,6 +189,7 @@ def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int])
     )
 
 
+@cache
 def _position_content(path: Path) -> dict[tuple[str, int, int], str]:
     """``(sheet, offset, length) -> normalised description`` for EVERY field, boxed or not.
 
@@ -285,6 +292,7 @@ _DESCRIPTION_ONLY = "DESCRIPTION-KEYED PASS ONLY"
 _LABEL_SEPARATOR = " - "
 
 
+@cache
 def _unnumbered_labels(path: Path) -> dict[tuple[str, int, int], str]:
     """``(sheet, offset, length) -> description`` for slots carrying NO box number.
 
