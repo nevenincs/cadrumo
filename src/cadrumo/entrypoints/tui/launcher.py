@@ -631,9 +631,9 @@ def _workspace_action_candidates(
     suggested actions and the palette open the workspace that performs them.
     With none declared, a suggested action was selectable and led nowhere.
     """
-    from .navigation import TuiActionCandidateV1
+    from .navigation import TuiActionCandidateV1, TuiDestinationIdV1
 
-    owned = (
+    owned: tuple[tuple[TuiDestinationIdV1, tuple[ActionReference, ...]], ...] = (
         (
             "workbench.ledger",
             (
