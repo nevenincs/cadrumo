@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-10'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:68a2de9ddcfcd39ab13cbe8e3db07be481165c72d8f639abcb564d9c28c08a1e'
+body_hash: 'sha256:3c14c29b5f4b89ac8b1f0b7b1cba9dd4f5dbb376b37128d1632ad2901a9f4bbc'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-artifact-contract-audit]]'
@@ -53,6 +53,7 @@ related:
   - '[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research]]'
   - '[[2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit]]'
+  - '[[2026-09-15-registry-authority-artifact-boundary-migration-r02-runtime-adoption-closure-audit]]'
 ---
 
 # `registry-authority-artifact-boundary` feature index
@@ -99,6 +100,7 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-14-registry-authority-artifact-boundary-indexed-cutover-final-review-audit` - `registry-authority-artifact-boundary` audit: `indexed cutover final review`
 - `2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit` - Authority storage readiness and profile facts schema enrollment
 - `2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit` - `registry-authority-artifact-boundary` audit: `lane 3 integration review`
+- `2026-09-15-registry-authority-artifact-boundary-migration-r02-runtime-adoption-closure-audit` - `registry-authority-artifact-boundary` audit: `migration r02 runtime adoption closure`
 
 ### exec
 
