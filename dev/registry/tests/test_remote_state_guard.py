@@ -860,6 +860,9 @@ def _first_snapshot(modelo: ModeloDefinition, catalogues: RegistryCatalogues):
         )
         if year is None:
             continue
+        # A revision reaching back below the support floor is selectable from it.
+        floor = catalogues.supported_filing_years.floor if catalogues.supported_filing_years else year
+        year = max(year, floor)
         try:
             return build_snapshot(
                 modelo,
