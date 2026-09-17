@@ -4,138 +4,75 @@ modelo:
       casilla:
         continuidad:
           m345-anio-nacimiento:
-            help: 'Consulte la información correspondiente a la casilla: Año de nacimiento.'
             label: Ano de nacimiento
           m345-beneficiario-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del beneficiario
-              persona con discapacidad.'
             label: NIF del beneficiario persona con discapacidad
           m345-clave:
-            help: 'Consulte la información correspondiente a la casilla: Clave.'
             label: Clave
           m345-codigo-provincia:
-            help: Información fiscal sobre información fiscal de la casilla  del Modelo
-              345.
             label: Codigo provincia
           m345-datos-adicionales-clave-i:
-            help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-              para la clave I.'
             label: Datos adicionales para la clave I
           m345-datos-adicionales-clave-m:
-            help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-              para la clave M.'
             label: Datos adicionales para la clave M
           m345-datos-adicionales-claves-abc:
-            help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-              para las claves A, B y C.'
             label: Datos adicionales para las claves A, B y C
           m345-datos-identificativos-empleador:
-            help: 'Consulte la información correspondiente a la casilla: Datos identificativos
-              del empleador promotor o tomador del sistema de prevision social.'
             label: Datos identificativos del empleador promotor o tomador del sistema
               de prevision social
           m345-declaracion-complementaria-sustitutiva:
-            help: 'Consulte la información correspondiente a la casilla: Declaración
-              complementaria o sustitutiva.'
             label: Declaración complementaria o sustitutiva
           m345-declarado-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del declarado.'
             label: NIF del declarado
           m345-declarado-nombre:
-            help: 'Consulte la información correspondiente a la casilla: Apellidos
-              y nombre del declarado.'
             label: Apellidos y nombre del declarado
           m345-declarante-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del declarante.'
             label: NIF del declarante
           m345-declarante-razon-social:
-            help: Información fiscal sobre información fiscal de la casilla  del Modelo
-              345.
             label: Apellidos y nombre o razon social del declarante
           m345-devoluciones-excesos:
-            help: 'Consulte la información correspondiente a la casilla: Devoluciones
-              o reintegros por excesos de aportaciones.'
             label: Devoluciones o reintegros por excesos de aportaciones
           m345-ejercicio-declaracion:
-            help: 'Consulte la información correspondiente a la casilla: Ejercicio
-              de declaración.'
             label: Ejercicio de declaración
           m345-empleador-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del empleador
-              promotor o tomador.'
             label: NIF del empleador promotor o tomador
           m345-empleador-nombre:
-            help: Información fiscal sobre información fiscal de la casilla  del Modelo
-              345.
             label: Apellidos y nombre o razon social del empleador
           m345-entidad-aseguradora-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF de la
-              entidad aseguradora.'
             label: NIF de la entidad aseguradora
           m345-fondo-pensiones-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del fondo
-              de pensiones.'
             label: NIF del fondo de pensiones
           m345-fondo-pensiones-numero-registro:
-            help: 'Consulte la información correspondiente a la casilla: Número de
-              registro del fondo de pensiones.'
             label: Número de registro del fondo de pensiones
           m345-importe:
-            help: 'Consulte la información correspondiente a la casilla: Importe.'
             label: Importe
           m345-importe-total-aportaciones:
-            help: 'Consulte la información correspondiente a la casilla: Importe total
-              de las aportaciones.'
             label: Importe total de las aportaciones
           m345-numero-identificativo-anterior:
-            help: 'Consulte la información correspondiente a la casilla: Número identificativo
-              de la declaración anterior.'
             label: Número identificativo de la declaración anterior
           m345-numero-identificativo-declaracion:
-            help: 'Consulte la información correspondiente a la casilla: Número identificativo
-              de la declaración.'
             label: Número identificativo de la declaración
           m345-pepp-cuenta-subcuenta:
-            help: 'Consulte la información correspondiente a la casilla: Cuenta/subcuenta.'
             label: Cuenta/subcuenta
           m345-pepp-denominacion:
-            help: Información fiscal sobre información fiscal de la casilla  del Modelo
-              345.
             label: Denominacion del PEPP
           m345-pepp-numero-inscripcion:
-            help: 'Consulte la información correspondiente a la casilla: Número de
-              inscripcion del PEPP.'
             label: Número de inscripcion del PEPP
           m345-persona-relacion:
-            help: 'Consulte la información correspondiente a la casilla: Persona con
-              quien relacionarse.'
             label: Persona con quien relacionarse
           m345-pias-fecha-primera-prima:
-            help: 'Consulte la información correspondiente a la casilla: Fecha de
-              pago de la primera prima.'
             label: Fecha de pago de la primera prima
           m345-pias-importe-acumulado:
-            help: 'Consulte la información correspondiente a la casilla: Importe acumulado
-              PIAS.'
             label: Importe acumulado PIAS
           m345-plan-pensiones-denominacion:
-            help: Información fiscal sobre información fiscal de la casilla  del Modelo
-              345.
             label: Denominacion del plan de pensiones
           m345-rendimientos-trabajo-no-superiores-60000:
-            help: 'Consulte la información correspondiente a la casilla: Rendimientos
-              íntegros del trabajo no superiores a 60.000 euros.'
             label: Rendimientos íntegros del trabajo no superiores a 60.000 euros
           m345-representante-legal-nif:
-            help: 'Consulte la información correspondiente a la casilla: NIF del representante
-              legal.'
             label: NIF del representante legal
           m345-subclave:
-            help: 'Consulte la información correspondiente a la casilla: Subclave.'
             label: Subclave
           m345-total-declarados:
-            help: 'Consulte la información correspondiente a la casilla: Número total
-              de declarados.'
             label: Número total de declarados
       field:
         official_name: Modelo 345. Declaración informativa. Planes, fondos de pensiones
@@ -145,142 +82,7 @@ modelo:
       revision:
         '2025':
           casilla:
-            anio-nacimiento:
-              help: 'Consulte la información correspondiente a la casilla: Año de
-                nacimiento.'
-              label: Ano de nacimiento
-            beneficiario-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                beneficiario persona con discapacidad.'
-              label: NIF del beneficiario persona con discapacidad
-            clave:
-              help: 'Consulte la información correspondiente a la casilla: Clave.'
-              label: Clave
-            codigo-provincia:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 345.
-              label: Codigo provincia
-            datos-adicionales-clave-i:
-              help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-                para la clave I.'
-              label: Datos adicionales para la clave I
-            datos-adicionales-clave-m:
-              help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-                para la clave M.'
-              label: Datos adicionales para la clave M
-            datos-adicionales-claves-abc:
-              help: 'Consulte la información correspondiente a la casilla: Datos adicionales
-                para las claves A, B y C.'
-              label: Datos adicionales para las claves A, B y C
-            datos-identificativos-empleador:
-              help: 'Consulte la información correspondiente a la casilla: Datos identificativos
-                del empleador promotor o tomador del sistema de prevision social.'
-              label: Datos identificativos del empleador promotor o tomador del sistema
-                de prevision social
-            declaracion-complementaria-sustitutiva:
-              help: 'Consulte la información correspondiente a la casilla: Declaración
-                complementaria o sustitutiva.'
-              label: Declaración complementaria o sustitutiva
-            declarado-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                declarado.'
-              label: NIF del declarado
-            declarado-nombre:
-              help: 'Consulte la información correspondiente a la casilla: Apellidos
-                y nombre del declarado.'
-              label: Apellidos y nombre del declarado
-            declarante-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                declarante.'
-              label: NIF del declarante
-            declarante-razon-social:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 345.
-              label: Apellidos y nombre o razon social del declarante
-            devoluciones-excesos:
-              help: 'Consulte la información correspondiente a la casilla: Devoluciones
-                o reintegros por excesos de aportaciones.'
-              label: Devoluciones o reintegros por excesos de aportaciones
-            ejercicio-declaracion:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                de declaración.'
-              label: Ejercicio de declaración
-            empleador-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                empleador promotor o tomador.'
-              label: NIF del empleador promotor o tomador
-            empleador-nombre:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 345.
-              label: Apellidos y nombre o razon social del empleador
-            entidad-aseguradora-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF de
-                la entidad aseguradora.'
-              label: NIF de la entidad aseguradora
-            fondo-pensiones-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                fondo de pensiones.'
-              label: NIF del fondo de pensiones
-            fondo-pensiones-numero-registro:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                de registro del fondo de pensiones.'
-              label: Número de registro del fondo de pensiones
-            importe:
-              help: 'Consulte la información correspondiente a la casilla: Importe.'
-              label: Importe
-            importe-total-aportaciones:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                total de las aportaciones.'
-              label: Importe total de las aportaciones
-            numero-identificativo-anterior:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración anterior.'
-              label: Número identificativo de la declaración anterior
-            numero-identificativo-declaracion:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración.'
-              label: Número identificativo de la declaración
-            pepp-cuenta-subcuenta:
-              help: 'Consulte la información correspondiente a la casilla: Cuenta/subcuenta.'
-              label: Cuenta/subcuenta
-            pepp-denominacion:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 345.
-              label: Denominacion del PEPP
-            pepp-numero-inscripcion:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                de inscripcion del PEPP.'
-              label: Número de inscripcion del PEPP
-            persona-relacion:
-              help: 'Consulte la información correspondiente a la casilla: Persona
-                con quien relacionarse.'
-              label: Persona con quien relacionarse
-            pias-fecha-primera-prima:
-              help: 'Consulte la información correspondiente a la casilla: Fecha de
-                pago de la primera prima.'
-              label: Fecha de pago de la primera prima
-            pias-importe-acumulado:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                acumulado PIAS.'
-              label: Importe acumulado PIAS
-            plan-pensiones-denominacion:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 345.
-              label: Denominacion del plan de pensiones
             rendimientos-trabajo-superiores-60000:
-              help: 'Consulte la información correspondiente a la casilla: Rendimientos
-                integros del trabajo superiores a 60000 euros.'
               label: Rendimientos integros del trabajo superiores a 60000 euros
-            representante-legal-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                representante legal.'
-              label: NIF del representante legal
-            subclave:
-              help: 'Consulte la información correspondiente a la casilla: Subclave.'
-              label: Subclave
-            total-declarados:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                total de declarados.'
-              label: Número total de declarados
           field:
             label: Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)

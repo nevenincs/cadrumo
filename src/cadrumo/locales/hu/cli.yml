@@ -1303,9 +1303,7 @@ cli:
         bucket_id_help: A munkaegységhez tartozó profil.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
-          %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app
-          modelo work revisions --modelo %{modelo} --year %{year} --period %{period}`,
-          ezt az egyet újra megtekintheti: `aeat app modelo work revision %{revision_id}`.'
+          %{state}). Megőrzött és később folytatható.'
         calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött,
           de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel
           a bevallásban; ellenőrizze benyújtás előtt.'
@@ -1664,10 +1662,8 @@ cli:
           tudta feloldani az összes számítási bemenetet. Futtasd közvetlenül a `aeat
           app modelo work calculate` parancsot, és add meg kézzel a fennmaradó --binding
           / --relation értékeket.
-        wizard_saved: 'Elmentve piszkozat számítási verzióként: %{revision_id} (állapot:
-          %{state}). Tartósan tárolva van, később folytatható; a verziók listázása:
-          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
-          %{period}`, ennek újravizsgálata: `aeat app modelo work revision %{revision_id}`.'
+        wizard_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
+          %{state}). Megőrzött és később folytatható.'
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon

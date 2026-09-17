@@ -3,12 +3,1479 @@ modelo:
     '220':
       casilla:
         continuidad:
+          base-imponible-tramo-dos:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Taxable base bracket 2.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Taxable base bracket 2
+          base-imponible-tramo-uno:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Taxable base bracket 1.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Taxable base bracket 1
+          documento-ingreso-devolucion-abono-activos-diferidos:
+            help: Tax information about tax information in casilla A of Modelo 220.
+            label: Payment or refund document. Credit/Offset. Credit from the conversion
+              of deferred tax assets (art. 130 LIS)
+          documento-ingreso-devolucion-apellidos-razon-social:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Identification. Surnames or company
+              name
+          documento-ingreso-devolucion-banco-extranjero:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: 'Payment or refund document. Refund. Rest of the world: name of
+              the bank'
+          documento-ingreso-devolucion-ciudad-banco:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: 'Payment or refund document. Refund. Rest of the world: city'
+          documento-ingreso-devolucion-codigo-pais-banco:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: 'Payment or refund document. Refund. Rest of the world: country
+              code'
+          documento-ingreso-devolucion-compensacion-activos-diferidos:
+            help: Tax information about tax information in casilla C of Modelo 220.
+            label: Payment or refund document. Credit/Offset. Offset from the conversion
+              of deferred tax assets (art. 130 LIS)
+          documento-ingreso-devolucion-cuenta-corriente-tributaria:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Tax current account
+          documento-ingreso-devolucion-cuota-cero:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Zero tax due
+          documento-ingreso-devolucion-direccion-banco:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: 'Payment or refund document. Refund. Rest of the world: address
+              of the bank'
+          documento-ingreso-devolucion-ejercicio:
+            help: Tax information for casilla of Modelo 220.
+            label: Payment or refund document. Accrual. Tax year
+          documento-ingreso-devolucion-fecha-fin:
+            help: Tax information for casilla of Modelo 220.
+            label: Payment or refund document. Accrual. Tax period, end date (YYYYMMDD)
+          documento-ingreso-devolucion-fecha-inicio:
+            help: Tax information for casilla of Modelo 220.
+            label: Payment or refund document. Accrual. Tax period, start date (YYYYMMDD)
+          documento-ingreso-devolucion-iban-devolucion:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Refund. IBAN code - block
+          documento-ingreso-devolucion-iban-ingreso:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Payment. IBAN code - block
+          documento-ingreso-devolucion-importe-devolucion:
+            help: Tax information about tax information in casilla D of Modelo 220.
+            label: Payment or refund document. Refund. Amount to be refunded
+          documento-ingreso-devolucion-importe-ingreso:
+            help: Tax information about tax information in casilla I of Modelo 220.
+            label: Payment or refund document. Payment. Amount payable
+          documento-ingreso-devolucion-marca-sepa:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Refund. SEPA marker
+          documento-ingreso-devolucion-modalidad-devolucion:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Refund. Refund method
+          documento-ingreso-devolucion-modalidad-ingreso:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Payment. Payment method
+          documento-ingreso-devolucion-nif:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Identification. Tax identification
+              number
+          documento-ingreso-devolucion-nombre:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Identification. Given name
+          documento-ingreso-devolucion-pais-banco:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: 'Payment or refund document. Refund. Rest of the world: country'
+          documento-ingreso-devolucion-periodo:
+            help: Tax information for casilla of Modelo 220.
+            label: Payment or refund document. Accrual. Tax period
+          documento-ingreso-devolucion-swift-bic:
+            help: Tax information about tax information in casilla  of Modelo 220.
+            label: Payment or refund document. Refund. SWIFT-BIC code (rest of the
+              world / non-SEPA only)
+          documento-ingreso-devolucion-tipo-ejercicio:
+            help: Tax information for casilla of Modelo 220.
+            label: Payment or refund document. Accrual. Type of tax year
           filing-year:
             help: Tax information for casilla of Modelo 220.
-            label: Casilla — tax field
+            label: Filing year to which the tax group return relates
+          t22007000-00043:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of the individual taxable bases
+              of the tax group''s entities (excluding bases under the objective-assessment
+              shipping regime) (p. 7A).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of the individual taxable bases of the tax group's entities
+              (excluding bases under the objective-assessment shipping regime) (p.
+              7A)
+          t22007000-00047:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: sum of individual
+              taxable bases from cooperative results (p. 7A).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: sum of individual taxable bases from cooperative
+              results (p. 7A)'
+          t22007000-00048:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: sum of individual
+              taxable bases from non-cooperative results (p. 7A).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: sum of individual taxable bases from non-cooperative
+              results (p. 7A)'
+          t22007000-00049:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Groups with shipping entities under
+              the special regime: sum of tonnage-based taxable bases determined by
+              objective assessment (p. 7A)(*).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Groups with shipping entities under the special regime: sum of
+              tonnage-based taxable bases determined by objective assessment (p. 7A)(*)'
+          t22007000-00079:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Total corrections to the sum of taxable
+              bases for deferral of internal results.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Total corrections to the sum of taxable bases for deferral of internal
+              results
+          t22007000-00080:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Other corrections to the sum of taxable
+              bases (**). Elimination of internal dividends of the tax group (p. 7D).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Other corrections to the sum of taxable bases (**). Elimination
+              of internal dividends of the tax group (p. 7D)
+          t22007000-00082:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Other corrections to the sum of taxable
+              bases (**). Incorporation of impairments of equity holdings in tax group
+              entities, eliminated in earlier periods (p. 7E).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Other corrections to the sum of taxable bases (**). Incorporation
+              of impairments of equity holdings in tax group entities, eliminated
+              in earlier periods (p. 7E)
+          t22007000-00083:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Other corrections to the sum of taxable
+              bases (**). Cooperative groups: elimination of "intra-group returns",
+              "intra-group economic aid" and "results distributed by the head entity
+              of the group" (RD 1345/1992) (p. 7G).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Other corrections to the sum of taxable bases (**). Cooperative
+              groups: elimination of "intra-group returns", "intra-group economic
+              aid" and "results distributed by the head entity of the group" (RD 1345/1992)
+              (p. 7G)'
+          t22007000-00085:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Other corrections to the sum of taxable
+              bases (**). Other corrections to the sum of individual taxable bases
+              or to the tax group''s taxable base (p. 7H).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Other corrections to the sum of taxable bases (**). Other corrections
+              to the sum of individual taxable bases or to the tax group's taxable
+              base (p. 7H)
+          t22007000-00086:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Other corrections to the sum of taxable
+              bases (**). Total other corrections to the sum of taxable bases.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Other corrections to the sum of taxable bases (**). Total other
+              corrections to the sum of taxable bases
+          t22007000-00225:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Preliminary taxable base of the group.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Preliminary taxable base of the group
+          t22007000-00291:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Application of the art. 11.12 LIS limit
+              (art. 62.1 e) LIS). Decrease.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Decrease
+          t22007000-00362:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Offset of the group''s negative taxable
+              bases from earlier periods (p. 7K)(***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Offset of the group's negative taxable bases from earlier periods
+              (p. 7K)(***)
+          t22007000-00363:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: offset of the group''s
+              negative tax liabilities from earlier periods (p. 7K bis)(***).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: offset of the group''s negative tax liabilities
+              from earlier periods (p. 7K bis)(***)'
+          t22007000-00398:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Allocations referred to in art. 11.12
+              LIS from periods before joining the group (arts. 67 d) and 74.3 d) LIS)(***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Allocations referred to in art. 11.12 LIS from periods before joining
+              the group (arts. 67 d) and 74.3 d) LIS)(***)
+          t22007000-00540:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Application of the art. 11.12 LIS limit
+              and 7th additional provision of Act 20/1990. Decrease.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Application of the art. 11.12 LIS limit and 7th additional provision
+              of Act 20/1990. Decrease
+          t22007000-00541:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Allocations referred to in art. 11.12
+              LIS and the 7th additional provision of Act 20/1990, from periods before
+              the entity joined the group (***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Allocations referred to in art. 11.12 LIS and the 7th additional
+              provision of Act 20/1990, from periods before the entity joined the
+              group (***)
+          t22007000-00547:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Offset of entities'' negative taxable
+              bases from periods before joining the group (arts. 67 e) and 74.3 e)
+              LIS) (p. 7L)(***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Offset of entities' negative taxable bases from periods before
+              joining the group (arts. 67 e) and 74.3 e) LIS) (p. 7L)(***)
+          t22007000-00550:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Taxable base of the group, before applying
+              the capitalisation reserves and offsetting negative taxable bases from
+              earlier periods.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Taxable base of the group, before applying the capitalisation reserves
+              and offsetting negative taxable bases from earlier periods
+          t22007000-00552:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Taxable base of the group.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Taxable base of the group
+          t22007000-00553:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: sum of individual
+              taxable bases less eliminations, from cooperative results.'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: sum of individual taxable bases less eliminations,
+              from cooperative results'
+          t22007000-00554:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: sum of individual
+              taxable bases less eliminations, from non-cooperative results.'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: sum of individual taxable bases less eliminations,
+              from non-cooperative results'
+          t22007000-00558:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Tax rate (%).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Tax rate (%)
+          t22007000-00560:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of the gross tax liabilities of
+              the group''s cooperatives.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of the gross tax liabilities of the group's cooperatives
+          t22007000-00561:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Cooperative groups: offset of entities''
+              negative tax liabilities from periods before joining the group (p. 7L
+              bis)(***).'
+            label: 'Taxable base and gross tax liability of the group (page 7 sheet
+              00). Cooperative groups: offset of entities'' negative tax liabilities
+              from periods before joining the group (p. 7L bis)(***)'
+          t22007000-00562:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Gross tax liability of the group.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Gross tax liability of the group
+          t22007000-01021:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of individual negative taxable bases
+              from earlier periods now included (19th additional provision LIS). General
+              regime (p. 7A bis).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of individual negative taxable bases from earlier periods now
+              included (19th additional provision LIS). General regime (p. 7A bis)
+          t22007000-01263:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of 50% of the individual negative
+              taxable bases of the period, not included (19th additional provision
+              LIS). General regime (p. 7A).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of 50% of the individual negative taxable bases of the period,
+              not included (19th additional provision LIS). General regime (p. 7A)
+          t22007000-01264:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of 50% of the individual negative
+              taxable bases of the period, not included (19th additional provision
+              LIS). Special regime for vessels and shipping companies in the Canary
+              Islands (p. 7A).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of 50% of the individual negative taxable bases of the period,
+              not included (19th additional provision LIS). Special regime for vessels
+              and shipping companies in the Canary Islands (p. 7A)
+          t22007000-01935:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Sum of negative taxable bases from earlier
+              periods now included (19th additional provision LIS). Special regime
+              for vessels and shipping companies in the Canary Islands (p. 7A bis).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Sum of negative taxable bases from earlier periods now included
+              (19th additional provision LIS). Special regime for vessels and shipping
+              companies in the Canary Islands (p. 7A bis)
+          t22007000-02542:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Impairment losses under art. 13.1 LIS
+              and provisions and expenses (arts. 14.1 and 14.2 LIS) referred to in
+              art. 11.12 LIS, and allocations under transitional provision 33.1 LIS.
+              Increase.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Impairment losses under art. 13.1 LIS and provisions and expenses
+              (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS, and allocations
+              under transitional provision 33.1 LIS. Increase
+          t22007000-02543:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Impairment losses under art. 13.1 LIS
+              and provisions and expenses (arts. 14.1 and 14.2 LIS) referred to in
+              art. 11.12 LIS. Decrease.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Impairment losses under art. 13.1 LIS and provisions and expenses
+              (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease
+          t22007000-02544:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Application of the art. 11.12 LIS limit
+              (art. 62.1 e) LIS). Increase.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Increase
+          t22007000-02545:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve. Increase.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve. Increase
+          t22007000-02546:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve. Decrease.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve. Decrease
+          t22007000-02547:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve of entities from periods
+              before joining the group (arts. 67 f) and 74.3 f) LIS).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve of entities from periods before joining the group
+              (arts. 67 f) and 74.3 f) LIS)
+          t22007000-02548:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Impairment losses under art. 13.1 LIS
+              and provisions and expenses (arts. 14.1 and 14.2 LIS) referred to in
+              art. 11.12 LIS. Increase (cooperatives).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Impairment losses under art. 13.1 LIS and provisions and expenses
+              (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Increase (cooperatives)
+          t22007000-02549:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Impairment losses under art. 13.1 LIS
+              and provisions and expenses (arts. 14.1 and 14.2 LIS) referred to in
+              art. 11.12 LIS. Decrease (cooperatives).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Impairment losses under art. 13.1 LIS and provisions and expenses
+              (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease (cooperatives)
+          t22007000-02890:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Application of the art. 11.12 LIS limit
+              and 7th additional provision of Act 20/1990. Increase.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Application of the art. 11.12 LIS limit and 7th additional provision
+              of Act 20/1990. Increase
+          t22007000-02891:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve. Increase.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve. Increase
+          t22007000-02892:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve. Decrease.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve. Decrease
+          t22007000-02893:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Levelling reserve of entities from periods
+              before joining the group.'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Levelling reserve of entities from periods before joining the group
+          t22007000-02963:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Capitalisation reserve (***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Capitalisation reserve (***)
+          t22007000-03140:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Capitalisation reserve of entities from
+              periods before joining the group, applied (arts. 67 c) and 74.3 c) LIS)(***).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Capitalisation reserve of entities from periods before joining
+              the group, applied (arts. 67 c) and 74.3 c) LIS)(***)
+          t22007000-03241:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Corrections to the sum of taxable bases
+              for deferral of internal results (**). Total elimination of results
+              from internal transactions (p. 7C).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Corrections to the sum of taxable bases for deferral of internal
+              results (**). Total elimination of results from internal transactions
+              (p. 7C)
+          t22007000-03242:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Corrections to the sum of taxable bases
+              for deferral of internal results (**). Total incorporation of results
+              from internal transactions (p. 7C).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Corrections to the sum of taxable bases for deferral of internal
+              results (**). Total incorporation of results from internal transactions
+              (p. 7C)
+          t22009000-00186:
+            help: Tax information for casilla 00186 of Modelo 220.
+            label: Other deductions. Net tax liability. R&D&i deductions excluded
+              from the limit of art. 39.2 LIS
+          t22009000-00399:
+            help: Tax information for casilla 00399 of Modelo 220.
+            label: Other deductions. Net tax liability. Specific deductions for entities
+              subject to chartered rules
+          t22009000-00436:
+            help: Tax information about tax information in casilla 00436 of Modelo
+              220.
+            label: Self-assessment result. Payment of R&D&i deductions for insufficient
+              tax liability (election art. 39.2 LIS), total. Chartered provincial
+              councils and Navarre
+          t22009000-00562:
+            help: 'Review the casilla information: Amount full.'
+            label: Gross tax liability
+          t22009000-00563:
+            help: Tax information for casilla 00563 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Relief for income from the sale of tangible goods produced
+              in the Canary Islands (art. 26 Law 19/1994)
+          t22009000-00565:
+            help: Tax information for casilla 00565 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction for donations to
+              non-profit entities (Law 49/2002)
+          t22009000-00566:
+            help: Tax information for casilla 00566 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Reliefs for cooperative societies (Law 20/1990)
+          t22009000-00567:
+            help: Tax information for casilla 00567 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Relief for income obtained in Ceuta and Melilla (art.
+              33 LIS)
+          t22009000-00568:
+            help: Tax information for casilla 00568 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Reliefs for the provision of services (art. 34 LIS)
+          t22009000-00569:
+            help: Tax information for casilla 00569 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Other reliefs
+          t22009000-00570:
+            help: Tax information for casilla 00570 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Internal double taxation from prior periods applied in
+              the year (art. 30 RDLeg 4/2004)
+          t22009000-00571:
+            help: Tax information for casilla 00571 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Internal double taxation generated and applied in the
+              period (transitional provision 23.1 LIS)
+          t22009000-00572:
+            help: Tax information for casilla 00572 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. International double taxation from prior periods applied
+              in the period (arts. 31 and 32 RDLeg 4/2004)
+          t22009000-00575:
+            help: Tax information for casilla 00575 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. International tax transparency (art. 100.10 LIS)
+          t22009000-00576:
+            help: Tax information for casilla 00576 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Reliefs for entities engaged in residential letting (Chapter
+              III, Title VII LIS)
+          t22009000-00577:
+            help: Tax information for casilla 00577 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Inter-company internal double taxation at 5/10 per cent
+              (cooperatives)
+          t22009000-00581:
+            help: Tax information for casilla 00581 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Reliefs for shipping companies in the Canary Islands
+              (art. 76 Law 19/1994)
+          t22009000-00582:
+            help: Tax information for casilla 00582 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability
+          t22009000-00583:
+            help: Tax information for casilla 00583 of Modelo 220.
+            label: Other deductions. Net tax liability. Tax support for investment
+              and other deductions
+          t22009000-00584:
+            help: Tax information for casilla 00584 of Modelo 220.
+            label: Other deductions. Net tax liability. Deductions under transitional
+              provision 24.1 LIS
+          t22009000-00585:
+            help: Tax information for casilla 00585 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction under transitional
+              provision 24.7 LIS, art. 42 RDLeg 4/2004
+          t22009000-00588:
+            help: Tax information for casilla 00588 of Modelo 220.
+            label: Other deductions. Net tax liability. Deductions to encourage certain
+              activities (Chapter IV Title VI, transitional provision 24.3 LIS and
+              art. 27.3 first, Law 49/2002)
+          t22009000-00590:
+            help: Tax information for casilla 00590 of Modelo 220.
+            label: Other deductions. Net tax liability. Canary Islands investment
+              deductions
+          t22009000-00592:
+            help: Tax information about tax information in casilla 00592 of Modelo
+              220.
+            label: Other deductions. Net tax liability. Net tax liability
+          t22009000-00595:
+            help: Tax information for casilla 00595 of Modelo 220.
+            label: Tax for the year, payable or refundable. Withholdings and payments
+              on account, and payments on account for collective investment holdings
+          t22009000-00596:
+            help: Tax information for casilla 00596 of Modelo 220.
+            label: Tax for the year, payable or refundable. Withholdings and payments
+              on account attributed by economic interest groupings and temporary business
+              consortia
+          t22009000-00597:
+            help: Tax information for casilla 00597 of Modelo 220.
+            label: Tax for the year, payable or refundable. Withholdings on prizes
+              from certain lotteries and betting
+          t22009000-00599:
+            help: Tax information for casilla 00599 of Modelo 220.
+            label: Tax for the year, payable or refundable. Tax for the period, payable
+              or refundable. State
+          t22009000-00600:
+            help: Tax information for casilla 00600 of Modelo 220.
+            label: Tax for the year, payable or refundable. Tax for the period, payable
+              or refundable. Chartered provincial councils and Navarre
+          t22009000-00601:
+            help: Tax information about tax information in casilla 00601 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. First instalment
+              payment. State
+          t22009000-00602:
+            help: Tax information about tax information in casilla 00602 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. First instalment
+              payment. Chartered provincial councils and Navarre
+          t22009000-00603:
+            help: Tax information about tax information in casilla 00603 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. Second instalment
+              payment. State
+          t22009000-00604:
+            help: Tax information about tax information in casilla 00604 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. Second instalment
+              payment. Chartered provincial councils and Navarre
+          t22009000-00605:
+            help: Tax information about tax information in casilla 00605 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. Third instalment
+              payment. State
+          t22009000-00606:
+            help: Tax information about tax information in casilla 00606 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. Third instalment
+              payment. Chartered provincial councils and Navarre
+          t22009000-00611:
+            help: Tax information about tax information in casilla 00611 of Modelo
+              220.
+            label: Instalment payments. Differential tax liability. Differential tax
+              liability. State
+          t22009000-00612:
+            help: Tax information about tax information in casilla 00612 of Modelo
+              220.
+            label: Differential tax liability. Chartered provincial councils and Navarre
+          t22009000-00615:
+            help: Tax information about tax information in casilla 00615 of Modelo
+              220.
+            label: Self-assessment result. Increase for loss of tax benefits from
+              prior periods. State
+          t22009000-00616:
+            help: Tax information about tax information in casilla 00616 of Modelo
+              220.
+            label: Self-assessment result. Increase for loss of tax benefits from
+              prior periods. Chartered provincial councils and Navarre
+          t22009000-00617:
+            help: Tax information about tax information in casilla 00617 of Modelo
+              220.
+            label: Self-assessment result. Late-payment interest. State
+          t22009000-00618:
+            help: Tax information about tax information in casilla 00618 of Modelo
+              220.
+            label: Self-assessment result. Late-payment interest. Chartered provincial
+              councils and Navarre
+          t22009000-01375:
+            help: Tax information for casilla 01375 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Relief for income from the sale of tangible goods produced
+              in the Balearic Islands (70th additional provision, Law 31/2022)
+          t22009000-01629:
+            help: Tax information for casilla 01629 of Modelo 220.
+            label: Other deductions. Net tax liability. Minimum net tax liability
+              (art. 30 bis LIS)
+          t22009000-01631:
+            help: Tax information about tax information in casilla 01631 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions in the Canary Islands (art. 39.3 LIS and 14th additional
+              provision, Law 19/1994), State
+          t22009000-01632:
+            help: Tax information about tax information in casilla 01632 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions in the Canary Islands (art. 39.3 LIS and 14th additional
+              provision, Law 19/1994), Chartered provincial councils and Navarre
+          t22009000-01737:
+            help: Tax information about tax information in casilla 01737 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions in the Canary Islands (art. 39.3 LIS and 14th additional
+              provision, Law 19/1994), total. Chartered provincial councils and Navarre
+          t22009000-01965:
+            help: Tax information for casilla 01965 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. Internal double taxation from prior periods applied in
+              the period (transitional provision 23.1 LIS)
+          t22009000-02188:
+            help: Tax information for casilla 02188 of Modelo 220.
+            label: Tax for the period, payable or refundable. Total withholdings and
+              payments on account
+          t22009000-02353:
+            help: Tax information for casilla 02353 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction for foreign film
+              productions in the Canary Islands (art. 36.2 LIS and 14th additional
+              provision, Law 14/1994)
+          t22009000-02354:
+            help: Tax information for casilla 02354 of Modelo 220.
+            label: Other deductions. Net tax liability. Deductions for investments
+              and expenses made by port authorities (art. 38 bis LIS)
+          t22009000-02538:
+            help: 'Review the casilla information: Assessment. Result of the self-assessment.
+              Status.'
+            label: Settlement. Self-assessment result. State
+          t22009000-02539:
+            help: Tax information about tax information in casilla 02539 of Modelo
+              220.
+            label: Settlement. Self-assessment result. Chartered provincial councils
+              and Navarre
+          t22009000-03251:
+            help: Tax information for casilla 03251 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. International double taxation from prior periods applied
+              in the period (arts. 31 and 32 LIS)
+          t22009000-03261:
+            help: Tax information for casilla 03261 of Modelo 220.
+            label: Reliefs and double-taxation deductions. Adjusted positive gross
+              tax liability. International double taxation generated and applied in
+              the period (arts. 31 and 32 LIS)
+          t22009000-03344:
+            help: Tax information for casilla 03344 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction for reversal of
+              temporary measures, transitional provision 37.1 LIS
+          t22009000-03356:
+            help: Tax information for casilla 03356 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction for reversal of
+              temporary measures, transitional provision 37.2 LIS
+          t22009000-03358:
+            help: Tax information about tax information in casilla 03358 of Modelo
+              220.
+            label: Gross tax liability. Adjustment of the levelling reserve (art.
+              105.6 LIS)
+          t22009000-03359:
+            help: Tax information for casilla 03359 of Modelo 220.
+            label: Other deductions. Net tax liability. Deduction for foreign film
+              productions (art. 36.2 LIS)
+          t22009000-03360:
+            help: Tax information about tax information in casilla 03360 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions (art. 39.3 LIS), total. Chartered provincial councils and
+              Navarre
+          t22009000-03393:
+            help: Tax information about tax information in casilla 03393 of Modelo
+              220.
+            label: Self-assessment result. Payment of R&D&i deductions for insufficient
+              tax liability (election art. 39.2 LIS), Chartered provincial councils
+              and Navarre
+          t22009000-03398:
+            help: Tax information about tax information in casilla 03398 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions (art. 39.3 LIS), Chartered provincial councils and Navarre
+          t22009000-03399:
+            help: Tax information about tax information in casilla 03399 of Modelo
+              220.
+            label: Self-assessment result. Payment of R&D&i deductions for insufficient
+              tax liability (election art. 39.2 LIS), State
+          t22009000-03400:
+            help: Tax information about tax information in casilla 03400 of Modelo
+              220.
+            label: Self-assessment result. Payment of deductions for foreign film
+              productions (art. 39.3 LIS), State
+          t22016000-00052:
+            help: Tax information about tax information in casilla 00052 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Total. Araba
+          t22016000-00053:
+            help: Tax information about tax information in casilla 00053 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Total. Gipuzkoa
+          t22016000-00054:
+            help: Tax information about tax information in casilla 00054 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Total. Bizkaia
+          t22016000-00055:
+            help: Tax information about tax information in casilla 00055 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Total. Navarre
+          t22016000-00056:
+            help: Tax information about tax information in casilla 00056 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Total. Common
+              territory
+          t22016000-00402:
+            help: Tax information about tax information in casilla 00402 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 1. Araba
+          t22016000-00420:
+            help: Tax information for casilla 00420 of Modelo 220.
+            label: Allocation between chartered tax administrations. Tax liability
+              for the year, payable or refundable. Araba
+          t22016000-00421:
+            help: Tax information for casilla 00421 of Modelo 220.
+            label: Allocation between chartered tax administrations. Tax liability
+              for the year, payable or refundable. Gipuzkoa
+          t22016000-00426:
+            help: Tax information for casilla 00426 of Modelo 220.
+            label: Allocation between chartered tax administrations. Tax liability
+              for the year, payable or refundable. Bizkaia
+          t22016000-00427:
+            help: Tax information for casilla 00427 of Modelo 220.
+            label: Allocation between chartered tax administrations. Tax liability
+              for the year, payable or refundable. Navarre
+          t22016000-00442:
+            help: Tax information about tax information in casilla 00442 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 1. Gipuzkoa
+          t22016000-00443:
+            help: Tax information about tax information in casilla 00443 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 1. Bizkaia
+          t22016000-00444:
+            help: Tax information about tax information in casilla 00444 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 1. Navarre
+          t22016000-00445:
+            help: Tax information about tax information in casilla 00445 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 2. Araba
+          t22016000-00446:
+            help: Tax information about tax information in casilla 00446 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 2. Gipuzkoa
+          t22016000-00447:
+            help: Tax information about tax information in casilla 00447 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 2. Bizkaia
+          t22016000-00448:
+            help: Tax information about tax information in casilla 00448 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 2. Navarre
+          t22016000-00449:
+            help: Tax information about tax information in casilla 00449 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 3. Araba
+          t22016000-00450:
+            help: Tax information about tax information in casilla 00450 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 3. Gipuzkoa
+          t22016000-00451:
+            help: Tax information about tax information in casilla 00451 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 3. Bizkaia
+          t22016000-00465:
+            help: Tax information about tax information in casilla 00465 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 3. Navarre
+          t22016000-00474:
+            help: Tax information about tax information in casilla 00474 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Differential
+              tax liability. Araba
+          t22016000-00475:
+            help: Tax information about tax information in casilla 00475 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Differential
+              tax liability. Gipuzkoa
+          t22016000-00476:
+            help: Tax information about tax information in casilla 00476 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Differential
+              tax liability. Bizkaia
+          t22016000-00477:
+            help: Tax information about tax information in casilla 00477 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Differential
+              tax liability. Navarre
+          t22016000-00482:
+            help: Tax information about tax information in casilla 00482 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Increase for
+              loss of tax benefits from prior periods. Araba
+          t22016000-00483:
+            help: Tax information about tax information in casilla 00483 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Increase for
+              loss of tax benefits from prior periods. Gipuzkoa
+          t22016000-00484:
+            help: Tax information about tax information in casilla 00484 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Increase for
+              loss of tax benefits from prior periods. Bizkaia
+          t22016000-00485:
+            help: Tax information about tax information in casilla 00485 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Increase for
+              loss of tax benefits from prior periods. Navarre
+          t22016000-00486:
+            help: Tax information about tax information in casilla 00486 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Late-payment
+              interest. Araba
+          t22016000-00487:
+            help: Tax information about tax information in casilla 00487 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Late-payment
+              interest. Gipuzkoa
+          t22016000-00488:
+            help: Tax information about tax information in casilla 00488 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Late-payment
+              interest. Bizkaia
+          t22016000-00489:
+            help: Tax information about tax information in casilla 00489 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Late-payment
+              interest. Navarre
+          t22016000-00494:
+            help: Tax information about tax information in casilla 00494 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              or refundable. Araba
+          t22016000-00495:
+            help: Tax information about tax information in casilla 00495 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              or refundable. Gipuzkoa
+          t22016000-00496:
+            help: Tax information about tax information in casilla 00496 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              or refundable. Bizkaia
+          t22016000-00497:
+            help: Tax information about tax information in casilla 00497 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              or refundable. Navarre
+          t22016000-00600:
+            help: Tax information for casilla 00600 of Modelo 220.
+            label: Allocation between chartered tax administrations. Tax liability
+              for the year, payable or refundable. Total of the chartered territories
+          t22016000-00602:
+            help: Tax information about tax information in casilla 00602 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 1. Total of the chartered territories
+          t22016000-00604:
+            help: Tax information about tax information in casilla 00604 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 2. Total of the chartered territories
+          t22016000-00606:
+            help: Tax information about tax information in casilla 00606 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Instalment payments.
+              instalment payment 3. Total of the chartered territories
+          t22016000-00612:
+            help: Tax information about tax information in casilla 00612 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Differential
+              tax liability. Total of the chartered territories
+          t22016000-00616:
+            help: Tax information about tax information in casilla 00616 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Increase for
+              loss of tax benefits from prior periods. Total of the chartered territories
+          t22016000-00618:
+            help: Tax information about tax information in casilla 00618 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Late-payment
+              interest. Total of the chartered territories
+          t22016000-00622:
+            help: Tax information about tax information in casilla 00622 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              or refundable. Total of the chartered territories
+          t22016000-00625:
+            help: Tax information about tax information in casilla 00625 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Taxation percentages.
+              Common territory
+          t22016000-00626:
+            help: Tax information about tax information in casilla 00626 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Taxation percentages.
+              Araba
+          t22016000-00627:
+            help: Tax information about tax information in casilla 00627 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Taxation percentages.
+              Gipuzkoa
+          t22016000-00628:
+            help: Tax information about tax information in casilla 00628 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Taxation percentages.
+              Bizkaia
+          t22016000-00629:
+            help: Tax information about tax information in casilla 00629 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Taxation percentages.
+              Navarre
+          t22016000-01632:
+            help: Tax information about tax information in casilla 01632 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions in the Canary Islands (art. 39.3 LIS and
+              14th additional provision, Law 19/1994). Total of the chartered territories
+          t22016000-02066:
+            help: Tax information about tax information in casilla 02066 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions in the Canary Islands (art. 39.3 LIS and
+              14th additional provision, Law 19/1994). Araba
+          t22016000-02067:
+            help: Tax information about tax information in casilla 02067 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions in the Canary Islands (art. 39.3 LIS and
+              14th additional provision, Law 19/1994). Gipuzkoa
+          t22016000-02068:
+            help: Tax information about tax information in casilla 02068 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions in the Canary Islands (art. 39.3 LIS and
+              14th additional provision, Law 19/1994). Bizkaia
+          t22016000-02069:
+            help: Tax information about tax information in casilla 02069 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions in the Canary Islands (art. 39.3 LIS and
+              14th additional provision, Law 19/1994). Navarre
+          t22016000-02539:
+            help: Tax information about tax information in casilla 02539 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Self-assessment
+              result. Total of the chartered territories
+          t22016000-02541:
+            help: Tax information for casilla 02541 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              amounts payable from earlier self-assessments for tax period 2024. Total
+              of the chartered territories'
+          t22016000-02789:
+            help: Tax information for casilla 02789 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refunds granted from earlier self-assessments for tax period 2024. Total
+              of the chartered territories'
+          t22016000-02791:
+            help: Tax information about tax information in casilla 02791 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: amount included in the taxable base. Total of the
+              chartered territories'
+          t22016000-02793:
+            help: Tax information about tax information in casilla 02793 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: tax debt resulting from the instalment. Total of
+              the chartered territories'
+          t22016000-02795:
+            help: Tax information about tax information in casilla 02795 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: first instalment. Total of the chartered territories'
+          t22016000-02797:
+            help: Tax information about tax information in casilla 02797 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: self-assessment result including the first instalment.
+              Total of the chartered territories'
+          t22016000-02799:
+            help: Tax information for casilla 02799 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              self-assessment result including the first instalment of art. 19.1 LIS,
+              from earlier self-assessments for tax period 2024. fifth column, territory
+              not named in the design'
+          t22016000-02801:
+            help: Tax information about tax information in casilla 02801 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              including the first instalment of art. 19.1 LIS. fifth column, territory
+              not named in the design
+          t22016000-03192:
+            help: Tax information about tax information in casilla 03192 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Self-assessment
+              result. Araba
+          t22016000-03193:
+            help: Tax information about tax information in casilla 03193 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Self-assessment
+              result. Gipuzkoa
+          t22016000-03194:
+            help: Tax information about tax information in casilla 03194 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Self-assessment
+              result. Bizkaia
+          t22016000-03195:
+            help: Tax information about tax information in casilla 03195 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Self-assessment
+              result. Navarre
+          t22016000-03293:
+            help: Tax information for casilla 03293 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              amounts payable from earlier self-assessments for tax period 2024. Araba'
+          t22016000-03294:
+            help: Tax information for casilla 03294 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              amounts payable from earlier self-assessments for tax period 2024. Gipuzkoa'
+          t22016000-03295:
+            help: Tax information for casilla 03295 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              amounts payable from earlier self-assessments for tax period 2024. Bizkaia'
+          t22016000-03296:
+            help: Tax information for casilla 03296 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              amounts payable from earlier self-assessments for tax period 2024. Navarre'
+          t22016000-03297:
+            help: Tax information for casilla 03297 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refunds granted from earlier self-assessments for tax period 2024. Araba'
+          t22016000-03298:
+            help: Tax information for casilla 03298 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refunds granted from earlier self-assessments for tax period 2024. Gipuzkoa'
+          t22016000-03299:
+            help: Tax information for casilla 03299 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refunds granted from earlier self-assessments for tax period 2024. Bizkaia'
+          t22016000-03300:
+            help: Tax information for casilla 03300 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refunds granted from earlier self-assessments for tax period 2024. Navarre'
+          t22016000-03301:
+            help: Tax information about tax information in casilla 03301 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: amount included in the taxable base. Araba'
+          t22016000-03302:
+            help: Tax information about tax information in casilla 03302 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: amount included in the taxable base. Gipuzkoa'
+          t22016000-03303:
+            help: Tax information about tax information in casilla 03303 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: amount included in the taxable base. Bizkaia'
+          t22016000-03304:
+            help: Tax information about tax information in casilla 03304 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: amount included in the taxable base. Navarre'
+          t22016000-03305:
+            help: Tax information about tax information in casilla 03305 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: tax debt resulting from the instalment. Araba'
+          t22016000-03306:
+            help: Tax information about tax information in casilla 03306 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: tax debt resulting from the instalment. Gipuzkoa'
+          t22016000-03307:
+            help: Tax information about tax information in casilla 03307 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: tax debt resulting from the instalment. Bizkaia'
+          t22016000-03308:
+            help: Tax information about tax information in casilla 03308 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: tax debt resulting from the instalment. Navarre'
+          t22016000-03309:
+            help: Tax information about tax information in casilla 03309 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: first instalment. Araba'
+          t22016000-03310:
+            help: Tax information about tax information in casilla 03310 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: first instalment. Gipuzkoa'
+          t22016000-03311:
+            help: Tax information about tax information in casilla 03311 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: first instalment. Bizkaia'
+          t22016000-03312:
+            help: Tax information about tax information in casilla 03312 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: first instalment. Navarre'
+          t22016000-03313:
+            help: Tax information about tax information in casilla 03313 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: self-assessment result including the first instalment.
+              Araba'
+          t22016000-03314:
+            help: Tax information about tax information in casilla 03314 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: self-assessment result including the first instalment.
+              Gipuzkoa'
+          t22016000-03315:
+            help: Tax information about tax information in casilla 03315 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: self-assessment result including the first instalment.
+              Bizkaia'
+          t22016000-03316:
+            help: Tax information about tax information in casilla 03316 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Instalment election
+              under art. 19.1 LIS: self-assessment result including the first instalment.
+              Navarre'
+          t22016000-03317:
+            help: Tax information for casilla 03317 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              self-assessment result including the first instalment of art. 19.1 LIS,
+              from earlier self-assessments for tax period 2024. Araba'
+          t22016000-03318:
+            help: Tax information for casilla 03318 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              self-assessment result including the first instalment of art. 19.1 LIS,
+              from earlier self-assessments for tax period 2024. Gipuzkoa'
+          t22016000-03319:
+            help: Tax information for casilla 03319 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              self-assessment result including the first instalment of art. 19.1 LIS,
+              from earlier self-assessments for tax period 2024. Bizkaia'
+          t22016000-03320:
+            help: Tax information for casilla 03320 of Modelo 220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              self-assessment result including the first instalment of art. 19.1 LIS,
+              from earlier self-assessments for tax period 2024. Navarre'
+          t22016000-03321:
+            help: Tax information about tax information in casilla 03321 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              including the first instalment of art. 19.1 LIS. Araba
+          t22016000-03322:
+            help: Tax information about tax information in casilla 03322 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              including the first instalment of art. 19.1 LIS. Gipuzkoa
+          t22016000-03323:
+            help: Tax information about tax information in casilla 03323 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              including the first instalment of art. 19.1 LIS. Bizkaia
+          t22016000-03324:
+            help: Tax information about tax information in casilla 03324 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Net amount payable
+              including the first instalment of art. 19.1 LIS. Navarre
+          t22016000-03389:
+            help: Tax information about tax information in casilla 03389 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of R&D&i
+              deductions for insufficient tax liability (election art. 39.2 LIS).
+              Araba
+          t22016000-03390:
+            help: Tax information about tax information in casilla 03390 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of R&D&i
+              deductions for insufficient tax liability (election art. 39.2 LIS).
+              Gipuzkoa
+          t22016000-03391:
+            help: Tax information about tax information in casilla 03391 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of R&D&i
+              deductions for insufficient tax liability (election art. 39.2 LIS).
+              Bizkaia
+          t22016000-03392:
+            help: Tax information about tax information in casilla 03392 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of R&D&i
+              deductions for insufficient tax liability (election art. 39.2 LIS).
+              Navarre
+          t22016000-03393:
+            help: Tax information about tax information in casilla 03393 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of R&D&i
+              deductions for insufficient tax liability (election art. 39.2 LIS).
+              Total of the chartered territories
+          t22016000-03394:
+            help: Tax information about tax information in casilla 03394 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions (art. 39.3 LIS). Araba
+          t22016000-03395:
+            help: Tax information about tax information in casilla 03395 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions (art. 39.3 LIS). Gipuzkoa
+          t22016000-03396:
+            help: Tax information about tax information in casilla 03396 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions (art. 39.3 LIS). Bizkaia
+          t22016000-03397:
+            help: Tax information about tax information in casilla 03397 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions (art. 39.3 LIS). Navarre
+          t22016000-03398:
+            help: Tax information about tax information in casilla 03398 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment of deductions
+              for foreign film productions (art. 39.3 LIS). Total of the chartered
+              territories
+          t22016001-02173:
+            help: Tax information about tax information in casilla 02173 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refund granted or offset. Gipuzkoa'
+          t22016001-02174:
+            help: Tax information about tax information in casilla 02174 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refund granted or offset. Bizkaia'
+          t22016001-02175:
+            help: Tax information about tax information in casilla 02175 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refund granted or offset. Navarre'
+          t22016001-02176:
+            help: Tax information about tax information in casilla 02176 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payment. Araba'
+          t22016001-02177:
+            help: Tax information about tax information in casilla 02177 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payment. Gipuzkoa'
+          t22016001-02178:
+            help: Tax information about tax information in casilla 02178 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payment. Bizkaia'
+          t22016001-02179:
+            help: Tax information about tax information in casilla 02179 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payment. Navarre'
+          t22016001-02180:
+            help: Tax information about tax information in casilla 02180 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: offset. Araba'
+          t22016001-02181:
+            help: Tax information about tax information in casilla 02181 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: offset. Gipuzkoa'
+          t22016001-02182:
+            help: Tax information about tax information in casilla 02182 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: offset. Bizkaia'
+          t22016001-02183:
+            help: Tax information about tax information in casilla 02183 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: offset. Navarre'
+          t22016001-02184:
+            help: Tax information about tax information in casilla 02184 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payable. Araba'
+          t22016001-02185:
+            help: Tax information about tax information in casilla 02185 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payable. Gipuzkoa'
+          t22016001-02186:
+            help: Tax information about tax information in casilla 02186 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payable. Bizkaia'
+          t22016001-02187:
+            help: Tax information about tax information in casilla 02187 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payable. Navarre'
+          t22016001-02804:
+            help: Tax information about tax information in casilla 02804 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refund granted or offset. Total of the chartered territories'
+          t22016001-02807:
+            help: Tax information about tax information in casilla 02807 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payment. Total of the chartered
+              territories'
+          t22016001-02810:
+            help: Tax information about tax information in casilla 02810 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: offset. Total of the chartered
+              territories'
+          t22016001-02813:
+            help: Tax information about tax information in casilla 02813 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Result of deferred
+              tax asset conversion after adjustment: payable. Total of the chartered
+              territories'
+          t22016001-03325:
+            help: Tax information about tax information in casilla 03325 of Modelo
+              220.
+            label: 'Allocation between chartered tax administrations. Supplementary:
+              refund granted or offset. Araba'
+          t22016001-03362:
+            help: Tax information about tax information in casilla 03362 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment for conversion
+              of deferred tax assets. Total of the chartered territories
+          t22016001-03364:
+            help: Tax information about tax information in casilla 03364 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Offset for conversion
+              of deferred tax assets. Total of the chartered territories
+          t22016001-03373:
+            help: Tax information about tax information in casilla 03373 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment for conversion
+              of deferred tax assets. Araba
+          t22016001-03374:
+            help: Tax information about tax information in casilla 03374 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment for conversion
+              of deferred tax assets. Gipuzkoa
+          t22016001-03375:
+            help: Tax information about tax information in casilla 03375 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment for conversion
+              of deferred tax assets. Bizkaia
+          t22016001-03376:
+            help: Tax information about tax information in casilla 03376 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Payment for conversion
+              of deferred tax assets. Navarre
+          t22016001-03377:
+            help: Tax information about tax information in casilla 03377 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Offset for conversion
+              of deferred tax assets. Araba
+          t22016001-03378:
+            help: Tax information about tax information in casilla 03378 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Offset for conversion
+              of deferred tax assets. Gipuzkoa
+          t22016001-03379:
+            help: Tax information about tax information in casilla 03379 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Offset for conversion
+              of deferred tax assets. Bizkaia
+          t22016001-03380:
+            help: Tax information about tax information in casilla 03380 of Modelo
+              220.
+            label: Allocation between chartered tax administrations. Offset for conversion
+              of deferred tax assets. Navarre
+          t220did00-00562:
+            help: Tax information about tax information in casilla 00562 of Modelo
+              220.
+            label: Payment or refund document. Settlement. Gross tax liability of
+              the group
+          t220did00-00621:
+            help: Tax information about tax information in casilla 00621 of Modelo
+              220.
+            label: 'Payment or refund document. Settlement. Result: State'
+          t220did00-02800:
+            help: Tax information about tax information in casilla 02800 of Modelo
+              220.
+            label: 'Payment or refund document. Settlement. Instalment option under
+              art. 19.1 LIS. Net amount payable including the first art. 19.1 LIS
+              instalment: State'
+          t220did00-02806:
+            help: Tax information about tax information in casilla 02806 of Modelo
+              220.
+            label: 'Payment or refund document. Credit/Offset. Result of the deferred
+              tax asset conversion after adjustment: credit'
+          t220did00-02809:
+            help: Tax information about tax information in casilla 02809 of Modelo
+              220.
+            label: 'Payment or refund document. Credit/Offset. Result of the deferred
+              tax asset conversion after adjustment: offset'
+          t220did00-02812:
+            help: Tax information about tax information in casilla 02812 of Modelo
+              220.
+            label: 'Payment or refund document. Credit/Offset. Result of the deferred
+              tax asset conversion after adjustment: payable'
           tipo-declaracion:
-            help: 'Casilla information: Casilla rate-return: rate return.'
-            label: 'Casilla rate-return: rate return'
+            help: Tax information for casilla of Modelo 220.
+            label: Return type (original / substitute / supplementary)
+          tipo-gravamen-tramo-dos:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Tax rate bracket 2 (three integer digits,
+              two decimals).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Tax rate bracket 2 (three integer digits, two decimals)
+          tipo-gravamen-tramo-uno:
+            help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
+              of the group (page 7 sheet 00). Tax rate bracket 1 (three integer digits,
+              two decimals).'
+            label: Taxable base and gross tax liability of the group (page 7 sheet
+              00). Tax rate bracket 1 (three integer digits, two decimals)
       field:
         official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.
           Return.
@@ -3060,370 +4527,6 @@ modelo:
               label: Consolidated statement of recognised income and expense for the
                 year (page 5A sheet 02). Entities accounted for using the equity method.
                 Other reclassifications
-            x-agp34c1g6so30c1q60o30d1j:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of the individual taxable bases
-                of the tax group''s entities (excluding bases under the objective-assessment
-                shipping regime) (p. 7A).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of the individual taxable bases of the tax group's entities
-                (excluding bases under the objective-assessment shipping regime) (p.
-                7A)
-            x-agp34c1g6so30c1q60o30d1n:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: sum of individual
-                taxable bases from cooperative results (p. 7A).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: sum of individual taxable bases from cooperative
-                results (p. 7A)'
-            x-agp34c1g6so30c1q60o30d1o:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: sum of individual
-                taxable bases from non-cooperative results (p. 7A).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: sum of individual taxable bases from non-cooperative
-                results (p. 7A)'
-            x-agp34c1g6so30c1q60o30d1p:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Groups with shipping entities under
-                the special regime: sum of tonnage-based taxable bases determined
-                by objective assessment (p. 7A)(*).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Groups with shipping entities under the special regime: sum of
-                tonnage-based taxable bases determined by objective assessment (p.
-                7A)(*)'
-            x-agp34c1g6so30c1q60o30dpp:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Total corrections to the sum of taxable
-                bases for deferral of internal results.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Total corrections to the sum of taxable bases for deferral of
-                internal results
-            x-agp34c1g6so30c1q60o30e1g:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Other corrections to the sum of taxable
-                bases (**). Elimination of internal dividends of the tax group (p.
-                7D).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Other corrections to the sum of taxable bases (**). Elimination
-                of internal dividends of the tax group (p. 7D)
-            x-agp34c1g6so30c1q60o30e1i:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Other corrections to the sum of taxable
-                bases (**). Incorporation of impairments of equity holdings in tax
-                group entities, eliminated in earlier periods (p. 7E).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Other corrections to the sum of taxable bases (**). Incorporation
-                of impairments of equity holdings in tax group entities, eliminated
-                in earlier periods (p. 7E)
-            x-agp34c1g6so30c1q60o30e1j:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Other corrections to the sum of taxable
-                bases (**). Cooperative groups: elimination of "intra-group returns",
-                "intra-group economic aid" and "results distributed by the head entity
-                of the group" (RD 1345/1992) (p. 7G).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Other corrections to the sum of taxable bases (**). Cooperative
-                groups: elimination of "intra-group returns", "intra-group economic
-                aid" and "results distributed by the head entity of the group" (RD
-                1345/1992) (p. 7G)'
-            x-agp34c1g6so30c1q60o30e1l:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Other corrections to the sum of taxable
-                bases (**). Other corrections to the sum of individual taxable bases
-                or to the tax group''s taxable base (p. 7H).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Other corrections to the sum of taxable bases (**). Other corrections
-                to the sum of individual taxable bases or to the tax group's taxable
-                base (p. 7H)
-            x-agp34c1g6so30c1q60o30e1m:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Other corrections to the sum of taxable
-                bases (**). Total other corrections to the sum of taxable bases.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Other corrections to the sum of taxable bases (**). Total other
-                corrections to the sum of taxable bases
-            x-agp34c1g6so30c1q60o34chl:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Preliminary taxable base of the group.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Preliminary taxable base of the group
-            x-agp34c1g6so30c1q60o34e9h:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
-                limit (art. 62.1 e) LIS). Decrease.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Decrease
-            x-agp34c1g6so30c1q60o36dhi:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Offset of the group''s negative taxable
-                bases from earlier periods (p. 7K)(***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Offset of the group's negative taxable bases from earlier periods
-                (p. 7K)(***)
-            x-agp34c1g6so30c1q60o36dhj:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: offset of the
-                group''s negative tax liabilities from earlier periods (p. 7K bis)(***).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: offset of the group''s negative tax liabilities
-                from earlier periods (p. 7K bis)(***)'
-            x-agp34c1g6so30c1q60o36e9o:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Allocations referred to in art. 11.12
-                LIS from periods before joining the group (arts. 67 d) and 74.3 d)
-                LIS)(***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Allocations referred to in art. 11.12 LIS from periods before
-                joining the group (arts. 67 d) and 74.3 d) LIS)(***)
-            x-agp34c1g6so30c1q60o3ad1g:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
-                limit and 7th additional provision of Act 20/1990. Decrease.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Application of the art. 11.12 LIS limit and 7th additional provision
-                of Act 20/1990. Decrease
-            x-agp34c1g6so30c1q60o3ad1h:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Allocations referred to in art. 11.12
-                LIS and the 7th additional provision of Act 20/1990, from periods
-                before the entity joined the group (***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Allocations referred to in art. 11.12 LIS and the 7th additional
-                provision of Act 20/1990, from periods before the entity joined the
-                group (***)
-            x-agp34c1g6so30c1q60o3ad1n:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Offset of entities'' negative taxable
-                bases from periods before joining the group (arts. 67 e) and 74.3
-                e) LIS) (p. 7L)(***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Offset of entities' negative taxable bases from periods before
-                joining the group (arts. 67 e) and 74.3 e) LIS) (p. 7L)(***)
-            x-agp34c1g6so30c1q60o3ad9g:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Taxable base of the group, before
-                applying the capitalisation reserves and offsetting negative taxable
-                bases from earlier periods.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Taxable base of the group, before applying the capitalisation
-                reserves and offsetting negative taxable bases from earlier periods
-            x-agp34c1g6so30c1q60o3ad9i:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Taxable base of the group.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Taxable base of the group
-            x-agp34c1g6so30c1q60o3ad9j:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: sum of individual
-                taxable bases less eliminations, from cooperative results.'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: sum of individual taxable bases less eliminations,
-                from cooperative results'
-            x-agp34c1g6so30c1q60o3ad9k:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: sum of individual
-                taxable bases less eliminations, from non-cooperative results.'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: sum of individual taxable bases less eliminations,
-                from non-cooperative results'
-            x-agp34c1g6so30c1q60o3ad9o:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Tax rate (%).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Tax rate (%)
-            x-agp34c1g6so30c1q60o3adhg:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of the gross tax liabilities of
-                the group''s cooperatives.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of the gross tax liabilities of the group's cooperatives
-            x-agp34c1g6so30c1q60o3adhh:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Cooperative groups: offset of entities''
-                negative tax liabilities from periods before joining the group (p.
-                7L bis)(***).'
-              label: 'Taxable base and gross tax liability of the group (page 7 sheet
-                00). Cooperative groups: offset of entities'' negative tax liabilities
-                from periods before joining the group (p. 7L bis)(***)'
-            x-agp34c1g6so30c1q60o3adhi:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Gross tax liability of the group.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Gross tax liability of the group
-            x-agp34c1g6so30c1q60oj0chh:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of individual negative taxable
-                bases from earlier periods now included (19th additional provision
-                LIS). General regime (p. 7A bis).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of individual negative taxable bases from earlier periods
-                now included (19th additional provision LIS). General regime (p. 7A
-                bis)
-            x-agp34c1g6so30c1q60oj4dhj:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of 50% of the individual negative
-                taxable bases of the period, not included (19th additional provision
-                LIS). General regime (p. 7A).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of 50% of the individual negative taxable bases of the period,
-                not included (19th additional provision LIS). General regime (p. 7A)
-            x-agp34c1g6so30c1q60oj4dhk:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of 50% of the individual negative
-                taxable bases of the period, not included (19th additional provision
-                LIS). Special regime for vessels and shipping companies in the Canary
-                Islands (p. 7A).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of 50% of the individual negative taxable bases of the period,
-                not included (19th additional provision LIS). Special regime for vessels
-                and shipping companies in the Canary Islands (p. 7A)
-            x-agp34c1g6so30c1q60ojicpl:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Sum of negative taxable bases from
-                earlier periods now included (19th additional provision LIS). Special
-                regime for vessels and shipping companies in the Canary Islands (p.
-                7A bis).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Sum of negative taxable bases from earlier periods now included
-                (19th additional provision LIS). Special regime for vessels and shipping
-                companies in the Canary Islands (p. 7A bis)
-            x-agp34c1g6so30c1q60p3ad1i:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Impairment losses under art. 13.1
-                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
-                to in art. 11.12 LIS, and allocations under transitional provision
-                33.1 LIS. Increase.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Impairment losses under art. 13.1 LIS and provisions and expenses
-                (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS, and allocations
-                under transitional provision 33.1 LIS. Increase
-            x-agp34c1g6so30c1q60p3ad1j:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Impairment losses under art. 13.1
-                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
-                to in art. 11.12 LIS. Decrease.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Impairment losses under art. 13.1 LIS and provisions and expenses
-                (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease
-            x-agp34c1g6so30c1q60p3ad1k:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
-                limit (art. 62.1 e) LIS). Increase.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Application of the art. 11.12 LIS limit (art. 62.1 e) LIS). Increase
-            x-agp34c1g6so30c1q60p3ad1l:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve. Increase.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve. Increase
-            x-agp34c1g6so30c1q60p3ad1m:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve. Decrease.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve. Decrease
-            x-agp34c1g6so30c1q60p3ad1n:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve of entities from
-                periods before joining the group (arts. 67 f) and 74.3 f) LIS).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve of entities from periods before joining the
-                group (arts. 67 f) and 74.3 f) LIS)
-            x-agp34c1g6so30c1q60p3ad1o:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Impairment losses under art. 13.1
-                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
-                to in art. 11.12 LIS. Increase (cooperatives).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Impairment losses under art. 13.1 LIS and provisions and expenses
-                (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Increase
-                (cooperatives)
-            x-agp34c1g6so30c1q60p3ad1p:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Impairment losses under art. 13.1
-                LIS and provisions and expenses (arts. 14.1 and 14.2 LIS) referred
-                to in art. 11.12 LIS. Decrease (cooperatives).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Impairment losses under art. 13.1 LIS and provisions and expenses
-                (arts. 14.1 and 14.2 LIS) referred to in art. 11.12 LIS. Decrease
-                (cooperatives)
-            x-agp34c1g6so30c1q60p3ge9g:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Application of the art. 11.12 LIS
-                limit and 7th additional provision of Act 20/1990. Increase.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Application of the art. 11.12 LIS limit and 7th additional provision
-                of Act 20/1990. Increase
-            x-agp34c1g6so30c1q60p3ge9h:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve. Increase.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve. Increase
-            x-agp34c1g6so30c1q60p3ge9i:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve. Decrease.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve. Decrease
-            x-agp34c1g6so30c1q60p3ge9j:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Levelling reserve of entities from
-                periods before joining the group.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Levelling reserve of entities from periods before joining the
-                group
-            x-agp34c1g6so30c1q60p3idhj:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Capitalisation reserve (***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Capitalisation reserve (***)
-            x-agp34c1g6so30c1q60pj2d1g:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Capitalisation reserve of entities
-                from periods before joining the group, applied (arts. 67 c) and 74.3
-                c) LIS)(***).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Capitalisation reserve of entities from periods before joining
-                the group, applied (arts. 67 c) and 74.3 c) LIS)(***)
-            x-agp34c1g6so30c1q60pj4d1h:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Corrections to the sum of taxable
-                bases for deferral of internal results (**). Total elimination of
-                results from internal transactions (p. 7C).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Corrections to the sum of taxable bases for deferral of internal
-                results (**). Total elimination of results from internal transactions
-                (p. 7C)
-            x-agp34c1g6so30c1q60pj4d1i:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Corrections to the sum of taxable
-                bases for deferral of internal results (**). Total incorporation of
-                results from internal transactions (p. 7C).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Corrections to the sum of taxable bases for deferral of internal
-                results (**). Total incorporation of results from internal transactions
-                (p. 7C)
-            x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Taxable base bracket 1.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Taxable base bracket 1
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Tax rate bracket 1 (three integer
-                digits, two decimals).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Tax rate bracket 1 (three integer digits, two decimals)
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Taxable base bracket 2.'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Taxable base bracket 2
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
-              help: 'Modelo 220 entry, tax year 2024: Taxable base and gross tax liability
-                of the group (page 7 sheet 00). Tax rate bracket 2 (three integer
-                digits, two decimals).'
-              label: Taxable base and gross tax liability of the group (page 7 sheet
-                00). Tax rate bracket 2 (three integer digits, two decimals)
             x-agp34c1g6t0j0c9q60oj0c1n:
               help: 'Modelo 220 entry, tax year 2024: Individual negative taxable
                 bases (DA 19ª LIS) (page 7A sheet 01). General regime. Original amount
@@ -4401,301 +5504,6 @@ modelo:
                 220.
               label: Consolidation of accounting results and taxable bases. Taxable
                 base (tax result)
-            x-agp34c1g74o30c1q60o32e1m:
-              help: Tax information for casilla 00186 of Modelo 220.
-              label: Other deductions. Net tax liability. R&D&i deductions excluded
-                from the limit of art. 39.2 LIS
-            x-agp34c1g74o30c1q60o36e9p:
-              help: Tax information for casilla 00399 of Modelo 220.
-              label: Other deductions. Net tax liability. Specific deductions for
-                entities subject to chartered rules
-            x-agp34c1g74o30c1q60o38cpm:
-              help: Tax information about tax information in casilla 00436 of Modelo
-                220.
-              label: Self-assessment result. Payment of R&D&i deductions for insufficient
-                tax liability (election art. 39.2 LIS), total. Chartered provincial
-                councils and Navarre
-            x-agp34c1g74o30c1q60o3adhi:
-              help: 'Review the casilla information: Amount full.'
-              label: Gross tax liability
-            x-agp34c1g74o30c1q60o3adhj:
-              help: Tax information for casilla 00563 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Relief for income from the sale of tangible goods produced
-                in the Canary Islands (art. 26 Law 19/1994)
-            x-agp34c1g74o30c1q60o3adhl:
-              help: Tax information for casilla 00565 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction for donations
-                to non-profit entities (Law 49/2002)
-            x-agp34c1g74o30c1q60o3adhm:
-              help: Tax information for casilla 00566 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Reliefs for cooperative societies (Law 20/1990)
-            x-agp34c1g74o30c1q60o3adhn:
-              help: Tax information for casilla 00567 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Relief for income obtained in Ceuta and Melilla (art.
-                33 LIS)
-            x-agp34c1g74o30c1q60o3adho:
-              help: Tax information for casilla 00568 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Reliefs for the provision of services (art. 34 LIS)
-            x-agp34c1g74o30c1q60o3adhp:
-              help: Tax information for casilla 00569 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Other reliefs
-            x-agp34c1g74o30c1q60o3adpg:
-              help: Tax information for casilla 00570 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Internal double taxation from prior periods applied
-                in the year (art. 30 RDLeg 4/2004)
-            x-agp34c1g74o30c1q60o3adph:
-              help: Tax information for casilla 00571 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Internal double taxation generated and applied in the
-                period (transitional provision 23.1 LIS)
-            x-agp34c1g74o30c1q60o3adpi:
-              help: Tax information for casilla 00572 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. International double taxation from prior periods applied
-                in the period (arts. 31 and 32 RDLeg 4/2004)
-            x-agp34c1g74o30c1q60o3adpl:
-              help: Tax information for casilla 00575 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. International tax transparency (art. 100.10 LIS)
-            x-agp34c1g74o30c1q60o3adpm:
-              help: Tax information for casilla 00576 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Reliefs for entities engaged in residential letting
-                (Chapter III, Title VII LIS)
-            x-agp34c1g74o30c1q60o3adpn:
-              help: Tax information for casilla 00577 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Inter-company internal double taxation at 5/10 per
-                cent (cooperatives)
-            x-agp34c1g74o30c1q60o3ae1h:
-              help: Tax information for casilla 00581 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Reliefs for shipping companies in the Canary Islands
-                (art. 76 Law 19/1994)
-            x-agp34c1g74o30c1q60o3ae1i:
-              help: Tax information for casilla 00582 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability
-            x-agp34c1g74o30c1q60o3ae1j:
-              help: Tax information for casilla 00583 of Modelo 220.
-              label: Other deductions. Net tax liability. Tax support for investment
-                and other deductions
-            x-agp34c1g74o30c1q60o3ae1k:
-              help: Tax information for casilla 00584 of Modelo 220.
-              label: Other deductions. Net tax liability. Deductions under transitional
-                provision 24.1 LIS
-            x-agp34c1g74o30c1q60o3ae1l:
-              help: Tax information for casilla 00585 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction under transitional
-                provision 24.7 LIS, art. 42 RDLeg 4/2004
-            x-agp34c1g74o30c1q60o3ae1o:
-              help: Tax information for casilla 00588 of Modelo 220.
-              label: Other deductions. Net tax liability. Deductions to encourage
-                certain activities (Chapter IV Title VI, transitional provision 24.3
-                LIS and art. 27.3 first, Law 49/2002)
-            x-agp34c1g74o30c1q60o3ae9g:
-              help: Tax information for casilla 00590 of Modelo 220.
-              label: Other deductions. Net tax liability. Canary Islands investment
-                deductions
-            x-agp34c1g74o30c1q60o3ae9i:
-              help: Tax information about tax information in casilla 00592 of Modelo
-                220.
-              label: Other deductions. Net tax liability. Net tax liability
-            x-agp34c1g74o30c1q60o3ae9l:
-              help: Tax information for casilla 00595 of Modelo 220.
-              label: Tax for the year, payable or refundable. Withholdings and payments
-                on account, and payments on account for collective investment holdings
-            x-agp34c1g74o30c1q60o3ae9m:
-              help: Tax information for casilla 00596 of Modelo 220.
-              label: Tax for the year, payable or refundable. Withholdings and payments
-                on account attributed by economic interest groupings and temporary
-                business consortia
-            x-agp34c1g74o30c1q60o3ae9n:
-              help: Tax information for casilla 00597 of Modelo 220.
-              label: Tax for the year, payable or refundable. Withholdings on prizes
-                from certain lotteries and betting
-            x-agp34c1g74o30c1q60o3ae9p:
-              help: Tax information for casilla 00599 of Modelo 220.
-              label: Tax for the year, payable or refundable. Tax for the period,
-                payable or refundable. State
-            x-agp34c1g74o30c1q60o3cc1g:
-              help: Tax information for casilla 00600 of Modelo 220.
-              label: Tax for the year, payable or refundable. Tax for the period,
-                payable or refundable. Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60o3cc1h:
-              help: Tax information about tax information in casilla 00601 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. First instalment
-                payment. State
-            x-agp34c1g74o30c1q60o3cc1i:
-              help: Tax information about tax information in casilla 00602 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. First instalment
-                payment. Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60o3cc1j:
-              help: Tax information about tax information in casilla 00603 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. Second instalment
-                payment. State
-            x-agp34c1g74o30c1q60o3cc1k:
-              help: Tax information about tax information in casilla 00604 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. Second instalment
-                payment. Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60o3cc1l:
-              help: Tax information about tax information in casilla 00605 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. Third instalment
-                payment. State
-            x-agp34c1g74o30c1q60o3cc1m:
-              help: Tax information about tax information in casilla 00606 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. Third instalment
-                payment. Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60o3cc9h:
-              help: Tax information about tax information in casilla 00611 of Modelo
-                220.
-              label: Instalment payments. Differential tax liability. Differential
-                tax liability. State
-            x-agp34c1g74o30c1q60o3cc9i:
-              help: Tax information about tax information in casilla 00612 of Modelo
-                220.
-              label: Differential tax liability. Chartered provincial councils and
-                Navarre
-            x-agp34c1g74o30c1q60o3cc9l:
-              help: Tax information about tax information in casilla 00615 of Modelo
-                220.
-              label: Self-assessment result. Increase for loss of tax benefits from
-                prior periods. State
-            x-agp34c1g74o30c1q60o3cc9m:
-              help: Tax information about tax information in casilla 00616 of Modelo
-                220.
-              label: Self-assessment result. Increase for loss of tax benefits from
-                prior periods. Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60o3cc9n:
-              help: Tax information about tax information in casilla 00617 of Modelo
-                220.
-              label: Self-assessment result. Late-payment interest. State
-            x-agp34c1g74o30c1q60o3cc9o:
-              help: Tax information about tax information in casilla 00618 of Modelo
-                220.
-              label: Self-assessment result. Late-payment interest. Chartered provincial
-                councils and Navarre
-            x-agp34c1g74o30c1q60oj6dpl:
-              help: Tax information for casilla 01375 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Relief for income from the sale of tangible goods produced
-                in the Balearic Islands (70th additional provision, Law 31/2022)
-            x-agp34c1g74o30c1q60ojcchp:
-              help: Tax information for casilla 01629 of Modelo 220.
-              label: Other deductions. Net tax liability. Minimum net tax liability
-                (art. 30 bis LIS)
-            x-agp34c1g74o30c1q60ojccph:
-              help: Tax information about tax information in casilla 01631 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions in the Canary Islands (art. 39.3 LIS and 14th additional
-                provision, Law 19/1994), State
-            x-agp34c1g74o30c1q60ojccpi:
-              help: Tax information about tax information in casilla 01632 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions in the Canary Islands (art. 39.3 LIS and 14th additional
-                provision, Law 19/1994), Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60ojecpn:
-              help: Tax information about tax information in casilla 01737 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions in the Canary Islands (art. 39.3 LIS and 14th additional
-                provision, Law 19/1994), total. Chartered provincial councils and
-                Navarre
-            x-agp34c1g74o30c1q60ojidhl:
-              help: Tax information for casilla 01965 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. Internal double taxation from prior periods applied
-                in the period (transitional provision 23.1 LIS)
-            x-agp34c1g74o30c1q60p32e1o:
-              help: Tax information for casilla 02188 of Modelo 220.
-              label: Tax for the period, payable or refundable. Total withholdings
-                and payments on account
-            x-agp34c1g74o30c1q60p36d9j:
-              help: Tax information for casilla 02353 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction for foreign film
-                productions in the Canary Islands (art. 36.2 LIS and 14th additional
-                provision, Law 14/1994)
-            x-agp34c1g74o30c1q60p36d9k:
-              help: Tax information for casilla 02354 of Modelo 220.
-              label: Other deductions. Net tax liability. Deductions for investments
-                and expenses made by port authorities (art. 38 bis LIS)
-            x-agp34c1g74o30c1q60p3acpo:
-              help: 'Review the casilla information: Assessment. Result of the self-assessment.
-                Status.'
-              label: Settlement. Self-assessment result. State
-            x-agp34c1g74o30c1q60p3acpp:
-              help: Tax information about tax information in casilla 02539 of Modelo
-                220.
-              label: Settlement. Self-assessment result. Chartered provincial councils
-                and Navarre
-            x-agp34c1g74o30c1q60pj4d9h:
-              help: Tax information for casilla 03251 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. International double taxation from prior periods applied
-                in the period (arts. 31 and 32 LIS)
-            x-agp34c1g74o30c1q60pj4dhh:
-              help: Tax information for casilla 03261 of Modelo 220.
-              label: Reliefs and double-taxation deductions. Adjusted positive gross
-                tax liability. International double taxation generated and applied
-                in the period (arts. 31 and 32 LIS)
-            x-agp34c1g74o30c1q60pj6d1k:
-              help: Tax information for casilla 03344 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction for reversal of
-                temporary measures, transitional provision 37.1 LIS
-            x-agp34c1g74o30c1q60pj6d9m:
-              help: Tax information for casilla 03356 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction for reversal of
-                temporary measures, transitional provision 37.2 LIS
-            x-agp34c1g74o30c1q60pj6d9o:
-              help: Tax information about tax information in casilla 03358 of Modelo
-                220.
-              label: Gross tax liability. Adjustment of the levelling reserve (art.
-                105.6 LIS)
-            x-agp34c1g74o30c1q60pj6d9p:
-              help: Tax information for casilla 03359 of Modelo 220.
-              label: Other deductions. Net tax liability. Deduction for foreign film
-                productions (art. 36.2 LIS)
-            x-agp34c1g74o30c1q60pj6dhg:
-              help: Tax information about tax information in casilla 03360 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions (art. 39.3 LIS), total. Chartered provincial councils
-                and Navarre
-            x-agp34c1g74o30c1q60pj6e9j:
-              help: Tax information about tax information in casilla 03393 of Modelo
-                220.
-              label: Self-assessment result. Payment of R&D&i deductions for insufficient
-                tax liability (election art. 39.2 LIS), Chartered provincial councils
-                and Navarre
-            x-agp34c1g74o30c1q60pj6e9o:
-              help: Tax information about tax information in casilla 03398 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions (art. 39.3 LIS), Chartered provincial councils and Navarre
-            x-agp34c1g74o30c1q60pj6e9p:
-              help: Tax information about tax information in casilla 03399 of Modelo
-                220.
-              label: Self-assessment result. Payment of R&D&i deductions for insufficient
-                tax liability (election art. 39.2 LIS), State
-            x-agp34c1g74o30c1q60pj8c1g:
-              help: Tax information about tax information in casilla 03400 of Modelo
-                220.
-              label: Self-assessment result. Payment of deductions for foreign film
-                productions (art. 39.3 LIS), State
             x-agp34c1h60o30c1q60o3adpl:
               help: Tax information for casilla 00575 of Modelo 220.
               label: 'Per-entity detail: international fiscal transparency and internal
@@ -8743,843 +9551,6 @@ modelo:
               help: Tax information for casilla of Modelo 220.
               label: Deduction for the investment of profits (transitional provision
                 24.5 LIS and art. 37 TRLIS). Deduction still outstanding
-            x-agp34c1h6oo30c1q60o30d9i:
-              help: Tax information about tax information in casilla 00052 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Total. Araba
-            x-agp34c1h6oo30c1q60o30d9j:
-              help: Tax information about tax information in casilla 00053 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Total. Gipuzkoa
-            x-agp34c1h6oo30c1q60o30d9k:
-              help: Tax information about tax information in casilla 00054 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Total. Bizkaia
-            x-agp34c1h6oo30c1q60o30d9l:
-              help: Tax information about tax information in casilla 00055 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Total. Navarre
-            x-agp34c1h6oo30c1q60o30d9m:
-              help: Tax information about tax information in casilla 00056 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Total. Common
-                territory
-            x-agp34c1h6oo30c1q60o38c1i:
-              help: Tax information about tax information in casilla 00402 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 1. Araba
-            x-agp34c1h6oo30c1q60o38chg:
-              help: Tax information for casilla 00420 of Modelo 220.
-              label: Allocation between chartered tax administrations. Tax liability
-                for the year, payable or refundable. Araba
-            x-agp34c1h6oo30c1q60o38chh:
-              help: Tax information for casilla 00421 of Modelo 220.
-              label: Allocation between chartered tax administrations. Tax liability
-                for the year, payable or refundable. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38chm:
-              help: Tax information for casilla 00426 of Modelo 220.
-              label: Allocation between chartered tax administrations. Tax liability
-                for the year, payable or refundable. Bizkaia
-            x-agp34c1h6oo30c1q60o38chn:
-              help: Tax information for casilla 00427 of Modelo 220.
-              label: Allocation between chartered tax administrations. Tax liability
-                for the year, payable or refundable. Navarre
-            x-agp34c1h6oo30c1q60o38d1i:
-              help: Tax information about tax information in casilla 00442 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 1. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d1j:
-              help: Tax information about tax information in casilla 00443 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 1. Bizkaia
-            x-agp34c1h6oo30c1q60o38d1k:
-              help: Tax information about tax information in casilla 00444 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 1. Navarre
-            x-agp34c1h6oo30c1q60o38d1l:
-              help: Tax information about tax information in casilla 00445 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 2. Araba
-            x-agp34c1h6oo30c1q60o38d1m:
-              help: Tax information about tax information in casilla 00446 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 2. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d1n:
-              help: Tax information about tax information in casilla 00447 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 2. Bizkaia
-            x-agp34c1h6oo30c1q60o38d1o:
-              help: Tax information about tax information in casilla 00448 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 2. Navarre
-            x-agp34c1h6oo30c1q60o38d1p:
-              help: Tax information about tax information in casilla 00449 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 3. Araba
-            x-agp34c1h6oo30c1q60o38d9g:
-              help: Tax information about tax information in casilla 00450 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 3. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d9h:
-              help: Tax information about tax information in casilla 00451 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 3. Bizkaia
-            x-agp34c1h6oo30c1q60o38dhl:
-              help: Tax information about tax information in casilla 00465 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 3. Navarre
-            x-agp34c1h6oo30c1q60o38dpk:
-              help: Tax information about tax information in casilla 00474 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Differential
-                tax liability. Araba
-            x-agp34c1h6oo30c1q60o38dpl:
-              help: Tax information about tax information in casilla 00475 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Differential
-                tax liability. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38dpm:
-              help: Tax information about tax information in casilla 00476 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Differential
-                tax liability. Bizkaia
-            x-agp34c1h6oo30c1q60o38dpn:
-              help: Tax information about tax information in casilla 00477 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Differential
-                tax liability. Navarre
-            x-agp34c1h6oo30c1q60o38e1i:
-              help: Tax information about tax information in casilla 00482 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Increase for
-                loss of tax benefits from prior periods. Araba
-            x-agp34c1h6oo30c1q60o38e1j:
-              help: Tax information about tax information in casilla 00483 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Increase for
-                loss of tax benefits from prior periods. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e1k:
-              help: Tax information about tax information in casilla 00484 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Increase for
-                loss of tax benefits from prior periods. Bizkaia
-            x-agp34c1h6oo30c1q60o38e1l:
-              help: Tax information about tax information in casilla 00485 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Increase for
-                loss of tax benefits from prior periods. Navarre
-            x-agp34c1h6oo30c1q60o38e1m:
-              help: Tax information about tax information in casilla 00486 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Late-payment
-                interest. Araba
-            x-agp34c1h6oo30c1q60o38e1n:
-              help: Tax information about tax information in casilla 00487 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Late-payment
-                interest. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e1o:
-              help: Tax information about tax information in casilla 00488 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Late-payment
-                interest. Bizkaia
-            x-agp34c1h6oo30c1q60o38e1p:
-              help: Tax information about tax information in casilla 00489 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Late-payment
-                interest. Navarre
-            x-agp34c1h6oo30c1q60o38e9k:
-              help: Tax information about tax information in casilla 00494 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable or refundable. Araba
-            x-agp34c1h6oo30c1q60o38e9l:
-              help: Tax information about tax information in casilla 00495 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable or refundable. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e9m:
-              help: Tax information about tax information in casilla 00496 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable or refundable. Bizkaia
-            x-agp34c1h6oo30c1q60o38e9n:
-              help: Tax information about tax information in casilla 00497 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable or refundable. Navarre
-            x-agp34c1h6oo30c1q60o3cc1g:
-              help: Tax information for casilla 00600 of Modelo 220.
-              label: Allocation between chartered tax administrations. Tax liability
-                for the year, payable or refundable. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc1i:
-              help: Tax information about tax information in casilla 00602 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 1. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc1k:
-              help: Tax information about tax information in casilla 00604 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 2. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc1m:
-              help: Tax information about tax information in casilla 00606 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Instalment
-                payments. instalment payment 3. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc9i:
-              help: Tax information about tax information in casilla 00612 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Differential
-                tax liability. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc9m:
-              help: Tax information about tax information in casilla 00616 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Increase for
-                loss of tax benefits from prior periods. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cc9o:
-              help: Tax information about tax information in casilla 00618 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Late-payment
-                interest. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cchi:
-              help: Tax information about tax information in casilla 00622 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable or refundable. Total of the chartered territories
-            x-agp34c1h6oo30c1q60o3cchl:
-              help: Tax information about tax information in casilla 00625 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Taxation percentages.
-                Common territory
-            x-agp34c1h6oo30c1q60o3cchm:
-              help: Tax information about tax information in casilla 00626 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Taxation percentages.
-                Araba
-            x-agp34c1h6oo30c1q60o3cchn:
-              help: Tax information about tax information in casilla 00627 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Taxation percentages.
-                Gipuzkoa
-            x-agp34c1h6oo30c1q60o3ccho:
-              help: Tax information about tax information in casilla 00628 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Taxation percentages.
-                Bizkaia
-            x-agp34c1h6oo30c1q60o3cchp:
-              help: Tax information about tax information in casilla 00629 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Taxation percentages.
-                Navarre
-            x-agp34c1h6oo30c1q60ojccpi:
-              help: Tax information about tax information in casilla 01632 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions in the Canary Islands (art.
-                39.3 LIS and 14th additional provision, Law 19/1994). Total of the
-                chartered territories
-            x-agp34c1h6oo30c1q60p30dhm:
-              help: Tax information about tax information in casilla 02066 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions in the Canary Islands (art.
-                39.3 LIS and 14th additional provision, Law 19/1994). Araba
-            x-agp34c1h6oo30c1q60p30dhn:
-              help: Tax information about tax information in casilla 02067 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions in the Canary Islands (art.
-                39.3 LIS and 14th additional provision, Law 19/1994). Gipuzkoa
-            x-agp34c1h6oo30c1q60p30dho:
-              help: Tax information about tax information in casilla 02068 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions in the Canary Islands (art.
-                39.3 LIS and 14th additional provision, Law 19/1994). Bizkaia
-            x-agp34c1h6oo30c1q60p30dhp:
-              help: Tax information about tax information in casilla 02069 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions in the Canary Islands (art.
-                39.3 LIS and 14th additional provision, Law 19/1994). Navarre
-            x-agp34c1h6oo30c1q60p3acpp:
-              help: Tax information about tax information in casilla 02539 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Self-assessment
-                result. Total of the chartered territories
-            x-agp34c1h6oo30c1q60p3ad1h:
-              help: Tax information for casilla 02541 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                amounts payable from earlier self-assessments for tax period 2024.
-                Total of the chartered territories'
-            x-agp34c1h6oo30c1q60p3ee1p:
-              help: Tax information for casilla 02789 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refunds granted from earlier self-assessments for tax period 2024.
-                Total of the chartered territories'
-            x-agp34c1h6oo30c1q60p3ee9h:
-              help: Tax information about tax information in casilla 02791 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: amount included in the taxable base.
-                Total of the chartered territories'
-            x-agp34c1h6oo30c1q60p3ee9j:
-              help: Tax information about tax information in casilla 02793 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: tax debt resulting from the instalment.
-                Total of the chartered territories'
-            x-agp34c1h6oo30c1q60p3ee9l:
-              help: Tax information about tax information in casilla 02795 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: first instalment. Total of the chartered
-                territories'
-            x-agp34c1h6oo30c1q60p3ee9n:
-              help: Tax information about tax information in casilla 02797 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: self-assessment result including the
-                first instalment. Total of the chartered territories'
-            x-agp34c1h6oo30c1q60p3ee9p:
-              help: Tax information for casilla 02799 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                self-assessment result including the first instalment of art. 19.1
-                LIS, from earlier self-assessments for tax period 2024. fifth column,
-                territory not named in the design'
-            x-agp34c1h6oo30c1q60p3gc1h:
-              help: Tax information about tax information in casilla 02801 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable including the first instalment of art. 19.1 LIS. fifth column,
-                territory not named in the design
-            x-agp34c1h6oo30c1q60pj2e9i:
-              help: Tax information about tax information in casilla 03192 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Self-assessment
-                result. Araba
-            x-agp34c1h6oo30c1q60pj2e9j:
-              help: Tax information about tax information in casilla 03193 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Self-assessment
-                result. Gipuzkoa
-            x-agp34c1h6oo30c1q60pj2e9k:
-              help: Tax information about tax information in casilla 03194 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Self-assessment
-                result. Bizkaia
-            x-agp34c1h6oo30c1q60pj2e9l:
-              help: Tax information about tax information in casilla 03195 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Self-assessment
-                result. Navarre
-            x-agp34c1h6oo30c1q60pj4e9j:
-              help: Tax information for casilla 03293 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                amounts payable from earlier self-assessments for tax period 2024.
-                Araba'
-            x-agp34c1h6oo30c1q60pj4e9k:
-              help: Tax information for casilla 03294 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                amounts payable from earlier self-assessments for tax period 2024.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj4e9l:
-              help: Tax information for casilla 03295 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                amounts payable from earlier self-assessments for tax period 2024.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj4e9m:
-              help: Tax information for casilla 03296 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                amounts payable from earlier self-assessments for tax period 2024.
-                Navarre'
-            x-agp34c1h6oo30c1q60pj4e9n:
-              help: Tax information for casilla 03297 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refunds granted from earlier self-assessments for tax period 2024.
-                Araba'
-            x-agp34c1h6oo30c1q60pj4e9o:
-              help: Tax information for casilla 03298 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refunds granted from earlier self-assessments for tax period 2024.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj4e9p:
-              help: Tax information for casilla 03299 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refunds granted from earlier self-assessments for tax period 2024.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1g:
-              help: Tax information for casilla 03300 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refunds granted from earlier self-assessments for tax period 2024.
-                Navarre'
-            x-agp34c1h6oo30c1q60pj6c1h:
-              help: Tax information about tax information in casilla 03301 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: amount included in the taxable base.
-                Araba'
-            x-agp34c1h6oo30c1q60pj6c1i:
-              help: Tax information about tax information in casilla 03302 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: amount included in the taxable base.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c1j:
-              help: Tax information about tax information in casilla 03303 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: amount included in the taxable base.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1k:
-              help: Tax information about tax information in casilla 03304 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: amount included in the taxable base.
-                Navarre'
-            x-agp34c1h6oo30c1q60pj6c1l:
-              help: Tax information about tax information in casilla 03305 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: tax debt resulting from the instalment.
-                Araba'
-            x-agp34c1h6oo30c1q60pj6c1m:
-              help: Tax information about tax information in casilla 03306 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: tax debt resulting from the instalment.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c1n:
-              help: Tax information about tax information in casilla 03307 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: tax debt resulting from the instalment.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1o:
-              help: Tax information about tax information in casilla 03308 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: tax debt resulting from the instalment.
-                Navarre'
-            x-agp34c1h6oo30c1q60pj6c1p:
-              help: Tax information about tax information in casilla 03309 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: first instalment. Araba'
-            x-agp34c1h6oo30c1q60pj6c9g:
-              help: Tax information about tax information in casilla 03310 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: first instalment. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9h:
-              help: Tax information about tax information in casilla 03311 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: first instalment. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c9i:
-              help: Tax information about tax information in casilla 03312 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: first instalment. Navarre'
-            x-agp34c1h6oo30c1q60pj6c9j:
-              help: Tax information about tax information in casilla 03313 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: self-assessment result including the
-                first instalment. Araba'
-            x-agp34c1h6oo30c1q60pj6c9k:
-              help: Tax information about tax information in casilla 03314 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: self-assessment result including the
-                first instalment. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9l:
-              help: Tax information about tax information in casilla 03315 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: self-assessment result including the
-                first instalment. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c9m:
-              help: Tax information about tax information in casilla 03316 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Instalment
-                election under art. 19.1 LIS: self-assessment result including the
-                first instalment. Navarre'
-            x-agp34c1h6oo30c1q60pj6c9n:
-              help: Tax information for casilla 03317 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                self-assessment result including the first instalment of art. 19.1
-                LIS, from earlier self-assessments for tax period 2024. Araba'
-            x-agp34c1h6oo30c1q60pj6c9o:
-              help: Tax information for casilla 03318 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                self-assessment result including the first instalment of art. 19.1
-                LIS, from earlier self-assessments for tax period 2024. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9p:
-              help: Tax information for casilla 03319 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                self-assessment result including the first instalment of art. 19.1
-                LIS, from earlier self-assessments for tax period 2024. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6chg:
-              help: Tax information for casilla 03320 of Modelo 220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                self-assessment result including the first instalment of art. 19.1
-                LIS, from earlier self-assessments for tax period 2024. Navarre'
-            x-agp34c1h6oo30c1q60pj6chh:
-              help: Tax information about tax information in casilla 03321 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable including the first instalment of art. 19.1 LIS. Araba
-            x-agp34c1h6oo30c1q60pj6chi:
-              help: Tax information about tax information in casilla 03322 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable including the first instalment of art. 19.1 LIS. Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6chj:
-              help: Tax information about tax information in casilla 03323 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable including the first instalment of art. 19.1 LIS. Bizkaia
-            x-agp34c1h6oo30c1q60pj6chk:
-              help: Tax information about tax information in casilla 03324 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Net amount
-                payable including the first instalment of art. 19.1 LIS. Navarre
-            x-agp34c1h6oo30c1q60pj6e1p:
-              help: Tax information about tax information in casilla 03389 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                R&D&i deductions for insufficient tax liability (election art. 39.2
-                LIS). Araba
-            x-agp34c1h6oo30c1q60pj6e9g:
-              help: Tax information about tax information in casilla 03390 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                R&D&i deductions for insufficient tax liability (election art. 39.2
-                LIS). Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6e9h:
-              help: Tax information about tax information in casilla 03391 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                R&D&i deductions for insufficient tax liability (election art. 39.2
-                LIS). Bizkaia
-            x-agp34c1h6oo30c1q60pj6e9i:
-              help: Tax information about tax information in casilla 03392 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                R&D&i deductions for insufficient tax liability (election art. 39.2
-                LIS). Navarre
-            x-agp34c1h6oo30c1q60pj6e9j:
-              help: Tax information about tax information in casilla 03393 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                R&D&i deductions for insufficient tax liability (election art. 39.2
-                LIS). Total of the chartered territories
-            x-agp34c1h6oo30c1q60pj6e9k:
-              help: Tax information about tax information in casilla 03394 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions (art. 39.3 LIS). Araba
-            x-agp34c1h6oo30c1q60pj6e9l:
-              help: Tax information about tax information in casilla 03395 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions (art. 39.3 LIS). Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6e9m:
-              help: Tax information about tax information in casilla 03396 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions (art. 39.3 LIS). Bizkaia
-            x-agp34c1h6oo30c1q60pj6e9n:
-              help: Tax information about tax information in casilla 03397 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions (art. 39.3 LIS). Navarre
-            x-agp34c1h6oo30c1q60pj6e9o:
-              help: Tax information about tax information in casilla 03398 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment of
-                deductions for foreign film productions (art. 39.3 LIS). Total of
-                the chartered territories
-            x-agp34c1h6oo30c9q60p32dpj:
-              help: Tax information about tax information in casilla 02173 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refund granted or offset. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32dpk:
-              help: Tax information about tax information in casilla 02174 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refund granted or offset. Bizkaia'
-            x-agp34c1h6oo30c9q60p32dpl:
-              help: Tax information about tax information in casilla 02175 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refund granted or offset. Navarre'
-            x-agp34c1h6oo30c9q60p32dpm:
-              help: Tax information about tax information in casilla 02176 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payment. Araba'
-            x-agp34c1h6oo30c9q60p32dpn:
-              help: Tax information about tax information in casilla 02177 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payment. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32dpo:
-              help: Tax information about tax information in casilla 02178 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payment. Bizkaia'
-            x-agp34c1h6oo30c9q60p32dpp:
-              help: Tax information about tax information in casilla 02179 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payment. Navarre'
-            x-agp34c1h6oo30c9q60p32e1g:
-              help: Tax information about tax information in casilla 02180 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: offset. Araba'
-            x-agp34c1h6oo30c9q60p32e1h:
-              help: Tax information about tax information in casilla 02181 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: offset. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32e1i:
-              help: Tax information about tax information in casilla 02182 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: offset. Bizkaia'
-            x-agp34c1h6oo30c9q60p32e1j:
-              help: Tax information about tax information in casilla 02183 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: offset. Navarre'
-            x-agp34c1h6oo30c9q60p32e1k:
-              help: Tax information about tax information in casilla 02184 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payable. Araba'
-            x-agp34c1h6oo30c9q60p32e1l:
-              help: Tax information about tax information in casilla 02185 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payable. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32e1m:
-              help: Tax information about tax information in casilla 02186 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payable. Bizkaia'
-            x-agp34c1h6oo30c9q60p32e1n:
-              help: Tax information about tax information in casilla 02187 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payable. Navarre'
-            x-agp34c1h6oo30c9q60p3gc1k:
-              help: Tax information about tax information in casilla 02804 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refund granted or offset. Total of the chartered territories'
-            x-agp34c1h6oo30c9q60p3gc1n:
-              help: Tax information about tax information in casilla 02807 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payment. Total of
-                the chartered territories'
-            x-agp34c1h6oo30c9q60p3gc9g:
-              help: Tax information about tax information in casilla 02810 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: offset. Total of the
-                chartered territories'
-            x-agp34c1h6oo30c9q60p3gc9j:
-              help: Tax information about tax information in casilla 02813 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Result of
-                deferred tax asset conversion after adjustment: payable. Total of
-                the chartered territories'
-            x-agp34c1h6oo30c9q60pj6chl:
-              help: Tax information about tax information in casilla 03325 of Modelo
-                220.
-              label: 'Allocation between chartered tax administrations. Supplementary:
-                refund granted or offset. Araba'
-            x-agp34c1h6oo30c9q60pj6dhi:
-              help: Tax information about tax information in casilla 03362 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment for
-                conversion of deferred tax assets. Total of the chartered territories
-            x-agp34c1h6oo30c9q60pj6dhk:
-              help: Tax information about tax information in casilla 03364 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Offset for
-                conversion of deferred tax assets. Total of the chartered territories
-            x-agp34c1h6oo30c9q60pj6dpj:
-              help: Tax information about tax information in casilla 03373 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment for
-                conversion of deferred tax assets. Araba
-            x-agp34c1h6oo30c9q60pj6dpk:
-              help: Tax information about tax information in casilla 03374 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment for
-                conversion of deferred tax assets. Gipuzkoa
-            x-agp34c1h6oo30c9q60pj6dpl:
-              help: Tax information about tax information in casilla 03375 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment for
-                conversion of deferred tax assets. Bizkaia
-            x-agp34c1h6oo30c9q60pj6dpm:
-              help: Tax information about tax information in casilla 03376 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Payment for
-                conversion of deferred tax assets. Navarre
-            x-agp34c1h6oo30c9q60pj6dpn:
-              help: Tax information about tax information in casilla 03377 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Offset for
-                conversion of deferred tax assets. Araba
-            x-agp34c1h6oo30c9q60pj6dpo:
-              help: Tax information about tax information in casilla 03378 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Offset for
-                conversion of deferred tax assets. Gipuzkoa
-            x-agp34c1h6oo30c9q60pj6dpp:
-              help: Tax information about tax information in casilla 03379 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Offset for
-                conversion of deferred tax assets. Bizkaia
-            x-agp34c1h6oo30c9q60pj6e1g:
-              help: Tax information about tax information in casilla 03380 of Modelo
-                220.
-              label: Allocation between chartered tax administrations. Offset for
-                conversion of deferred tax assets. Navarre
-            x-agp34c2495230c1q60o3adhi:
-              help: Tax information about tax information in casilla 00562 of Modelo
-                220.
-              label: Payment or refund document. Settlement. Gross tax liability of
-                the group
-            x-agp34c2495230c1q60o3cchh:
-              help: Tax information about tax information in casilla 00621 of Modelo
-                220.
-              label: 'Payment or refund document. Settlement. Result: State'
-            x-agp34c2495230c1q60p3gc1g:
-              help: Tax information about tax information in casilla 02800 of Modelo
-                220.
-              label: 'Payment or refund document. Settlement. Instalment option under
-                art. 19.1 LIS. Net amount payable including the first art. 19.1 LIS
-                instalment: State'
-            x-agp34c2495230c1q60p3gc1m:
-              help: Tax information about tax information in casilla 02806 of Modelo
-                220.
-              label: 'Payment or refund document. Credit/Offset. Result of the deferred
-                tax asset conversion after adjustment: credit'
-            x-agp34c2495230c1q60p3gc1p:
-              help: Tax information about tax information in casilla 02809 of Modelo
-                220.
-              label: 'Payment or refund document. Credit/Offset. Result of the deferred
-                tax asset conversion after adjustment: offset'
-            x-agp34c2495230c1q60p3gc9i:
-              help: Tax information about tax information in casilla 02812 of Modelo
-                220.
-              label: 'Payment or refund document. Credit/Offset. Result of the deferred
-                tax asset conversion after adjustment: payable'
-            x-agp34c2495230c1q84:
-              help: Tax information about tax information in casilla A of Modelo 220.
-              label: Payment or refund document. Credit/Offset. Credit from the conversion
-                of deferred tax assets (art. 130 LIS)
-            x-agp34c2495230c1q8c:
-              help: Tax information about tax information in casilla C of Modelo 220.
-              label: Payment or refund document. Credit/Offset. Offset from the conversion
-                of deferred tax assets (art. 130 LIS)
-            x-agp34c2495230c1q8g:
-              help: Tax information about tax information in casilla D of Modelo 220.
-              label: Payment or refund document. Refund. Amount to be refunded
-            x-agp34c2495230c1q94:
-              help: Tax information about tax information in casilla I of Modelo 220.
-              label: Payment or refund document. Payment. Amount payable
-            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Identification. Given name
-            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Tax current account
-            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
-              help: Tax information for casilla of Modelo 220.
-              label: Payment or refund document. Accrual. Tax year
-            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Refund. Refund method
-            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Refund. SEPA marker
-            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Refund. IBAN code - block
-            x-agp34c2495230c1qegp34c34d5i30c1e68og:
-              help: Tax information for casilla of Modelo 220.
-              label: Payment or refund document. Accrual. Type of tax year
-            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
-              help: Tax information for casilla of Modelo 220.
-              label: Payment or refund document. Accrual. Tax period
-            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Refund. SWIFT-BIC code (rest of the
-                world / non-SEPA only)
-            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
-              help: Tax information for casilla of Modelo 220.
-              label: Payment or refund document. Accrual. Tax period, start date (YYYYMMDD)
-            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: 'Payment or refund document. Refund. Rest of the world: name
-                of the bank'
-            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: 'Payment or refund document. Refund. Rest of the world: address
-                of the bank'
-            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
-              help: Tax information for casilla of Modelo 220.
-              label: Payment or refund document. Accrual. Tax period, end date (YYYYMMDD)
-            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: 'Payment or refund document. Refund. Rest of the world: city'
-            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: 'Payment or refund document. Refund. Rest of the world: country'
-            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Identification. Tax identification
-                number
-            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: 'Payment or refund document. Refund. Rest of the world: country
-                code'
-            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Payment. Payment method
-            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Payment. IBAN code - block
-            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Identification. Surnames or company
-                name
-            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
-              help: Tax information about tax information in casilla  of Modelo 220.
-              label: Payment or refund document. Zero tax due
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               help: 'Review the casilla information: activities of the group. Epigrafe
                 CNAE of the activity 1.'
@@ -9762,12 +9733,6 @@ modelo:
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
               help: Tax information about tax information in casilla  of Modelo 220.
               label: Contact person for incidents. Mobile telephone
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 220.
-              label: Filing year to which the tax group return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 220.
-              label: Return type (original / substitute / supplementary)
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               help: Tax information about tax information in casilla  of Modelo 220.
               label: Parent entity. Surnames or legal name
@@ -9925,13 +9890,6 @@ modelo:
           field:
             label: Orden HAC/657/2025 (modelo 220), tax year 2024
         '2025':
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 220.
-              label: Filing year to which the tax group return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 220.
-              label: Return type (original / substitute / supplementary)
           construct:
             modelo-220-declaration-construct:
               field:

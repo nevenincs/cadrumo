@@ -7,6 +7,15 @@ modelo:
         title: Declaració informativa anual de plans i fons de pensions, partícips,
           aportacions i contribucions
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             anio-nacimiento:

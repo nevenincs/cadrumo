@@ -4,93 +4,136 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: 'A Modelo 270 164-180. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 164-180 — adóügyi információ
+            help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
+              összege euróban.
+            label: A forrásadó vagy adóelőleg alapjának teljes összege
           filing-year:
-            help: A Modelo 270 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
+            label: Az adóbevallás vonatkozási éve
           m270-clave-personalidad:
-            help: 'A Modelo 270 117. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 117 — adóügyi információ
+            help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
+              F természetes személy, J jogi személy vagy szervezet esetén.'
+            label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
           m270-declaracion-complementaria:
-            help: 'A Modelo 270 121. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 121 — adóügyi információ
+            help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
+              korábbi, azonos évi bevallásból teljesen kimaradtak.
+            label: Kiegészítő bevallás
           m270-declaracion-sustitutiva:
-            help: A Modelo 270 122. casilla adóügyi adatai.
-            label: Casilla 122 — adóügyi mező
+            help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
+              teljes egészében érvénytelenít és helyettesít.
+            label: Helyettesítő bevallás
           m270-fecha-nacimiento:
-            help: 'A Modelo 270 453-460. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 453-460 — adóügyi információ
+            help: Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód
+              és a jogi személyiség kódja F.
+            label: A külföldi illetőségű kedvezményezett születési ideje
           m270-fecha-pago-premio:
-            help: 'A Modelo 270 128-135. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 128-135 — adóügyi információ
+            help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
+              kifizették vagy jóváírták.
+            label: A nyeremény kifizetésének időpontja
           m270-fecha-sorteo:
-            help: 'A Modelo 270 120-127. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 120-127 — adóügyi információ
+            help: A sorsolás megtartásának napja, illetve annak az eseménynek a napja,
+              amelyre a nyereményt eredményező fogadást megkötötték.
+            label: A sorsolás vagy fogadás időpontja
           m270-gestor-cobro:
-            help: 'A Modelo 270 181. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 181 — adóügyi információ
+            help: Csak akkor kell X-szel jelölni, ha a korábban részjegyekre osztott
+              nyereményt veszik fel, így a nyereményt felvevő nem annak végső jogosultja.
+            label: A nyeremény beszedési megbízottja
           m270-importe-premio:
-            help: 'A Modelo 270 136-150. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 136-150 — adóügyi információ
+            help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
+              nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
+              sorsoláson több nyereményt is nyert, ezek összege.
+            label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
+              értéke
           m270-lugar-nacimiento:
-            help: 'A Modelo 270 461-497. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 461-497 — adóügyi információ
+            help: Csak akkor, ha a kedvezményezett típusa 5-ös kód és a jogi személyiség
+              kódja F. A születési hely települése és adott esetben tartománya, régiója
+              vagy megyéje, majd az EHA/3496/2011. sz. rendelet II. melléklete szerinti
+              ország- vagy területkód.
+            label: A külföldi illetőségű kedvezményezett születési helye
           m270-nif-pais-residencia:
-            help: 'A Modelo 270 433-452. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 433-452 — adóügyi információ
+            help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+              adóazonosítója: természetes személynél az útlevélszám vagy ennek hiányában
+              a származási országban érvényes személyazonosító okmány száma, szervezetnél
+              a származási ország adóhatósága által kiadott azonosító.'
+            label: Adóazonosító szám az adóügyi illetőség szerinti országban
           m270-numero-identificativo:
-            help: A Modelo 270 108-120. casilla adóügyi adatai.
-            label: Casilla 108-120 — adóügyi mező
+            help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
+              kód.
+            label: A bevallás azonosító száma
           m270-numero-identificativo-anterior:
-            help: A Modelo 270 123-135. casilla adóügyi adatai.
-            label: Casilla 123-135 — adóügyi mező
+            help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
+              helyettesít. Minden más esetben nullákkal kell kitölteni.
+            label: A korábbi bevallás azonosító száma
           m270-pais-residencia:
-            help: 'A Modelo 270 498-499. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 498-499 — adóügyi információ
+            help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód: a kedvezményezett
+              illetősége szerinti ország vagy terület két betűs kódja az EHA/3496/2011.
+              sz. rendelet II. melléklete szerint. Minden más esetben üres.'
+            label: A kedvezményezett adóügyi illetőségének országa vagy területe
           m270-persona-contacto-nombre:
-            help: 'A Modelo 270 68-107. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 68-107 — adóügyi információ
+            help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes utónév,
+              kötelezően ebben a sorrendben.
+            label: A kapcsolattartó vezeték- és utóneve
           m270-persona-contacto-telefono:
-            help: 'A Modelo 270 59-67. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 59-67 — adóügyi információ
+            help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
+            label: A kapcsolattartó telefonszáma
           m270-representante-nombre:
-            help: 'A Modelo 270 76-115. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 76-115 — adóügyi információ
+            help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
+              a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
+              Minden más esetben üres.
+            label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve vagy
+              elnevezése
           m270-tipo-perceptor:
-            help: 'A Modelo 270 116. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 116 — adóügyi információ
+            help: '1-es kód: a személyi jövedelemadó alanyát képező természetes személy;
+              2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési szervezet;
+              3: társasági adó alanyát képező jogi személy vagy belföldi szervezet;
+              4: spanyolországi állandó telephely; 5: állandó telephely nélkül működő
+              külföldi illetőségű személy vagy szervezet.'
+            label: A kedvezményezett típusa
           m270-total-importe-premios:
-            help: 'A Modelo 270 147-163. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 147-163 — adóügyi információ
+            help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
+              összege euróban, előjel és tizedesjel nélkül.
+            label: A nyeremények teljes összege vagy értéke
           payee-name:
-            help: 'A Modelo 270 36-75. casilla adóügyi adatai: a kedvezményezett neve.'
-            label: Casilla 36-75 — a kedvezményezett neve
+            help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
+              szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy szervezetnél
+              a teljes cégnév vagy elnevezés, logó nélkül.
+            label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
           payee-nif:
-            help: 'A Modelo 270 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
-            label: Casilla 18-26 — a kedvezményezett NIF-je
+            help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
+              marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+              adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
+              kötelező.
+            label: A kedvezményezett adóazonosító száma
           payee-province:
-            help: 'A Modelo 270 118-119. casilla adóügyi adatai: a kedvezményezett
-              tartománya.'
-            label: Casilla 118-119 — a kedvezményezett tartománya
+            help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
+              kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
+              98, az 5-ös kedvezményezetti típusnál 99 a kód.
+            label: A kedvezményezett lakcíme szerinti tartomány kódja
           payee-representative-nif:
-            help: 'A Modelo 270 27-35. casilla adóügyi adatai: a képviselő NIF-je.'
-            label: Casilla 27-35 — a képviselő NIF-je
+            help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
+              adóazonosító száma, ha van ilyen. Minden más esetben üres.
+            label: A kedvezményezett törvényes képviselőjének adóazonosító száma
           perc-base-retencion:
-            help: 'A Modelo 270 151-165. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 151-165 — adóügyi információ
+            help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
+              kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
+              forrásadó- vagy adóelőleg-alap.
+            label: A forrásadó vagy adóelőleg alapja
           perc-retencion:
-            help: 'A casilla adatai: Casilla 166-180: adólevonások előlegfizetések.'
-            label: 'Casilla 166-180: adólevonások előlegfizetések'
+            help: A nyereményt kifizető szervezet által ténylegesen levont forrásadó
+              vagy adóelőleg összege.
+            label: A forrásadó vagy adóelőleg összege
           retenciones-ingresos-a-cuenta:
-            help: 'A casilla adatai: Casilla 181-197: adólevonások előlegfizetések.'
-            label: 'Casilla 181-197: adólevonások előlegfizetések'
+            help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
+              összege euróban.
+            label: A forrásadó vagy adóelőleg teljes összege
           tipo-declaracion:
-            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
-            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+            help: A Modelo 270 . casilla adóügyi adatai.
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           total-perceptores-count:
-            help: 'A Modelo 270 138-146. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 138-146 — adóügyi információ
+            help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek teljes
+              száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
+              külön kell számolni.
+            label: A bevallott kedvezményezetti rekordok teljes száma
       field:
         official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
           Egyes lottó- és fogadási nyeremények különadója.
@@ -98,138 +141,6 @@ modelo:
           összesítője
       revision:
         2013-2022:
-          casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
-                korábbi, azonos évi bevallásból teljesen kimaradtak.
-              label: Kiegészítő bevallás
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
-                kód.
-              label: A bevallás azonosító száma
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
-                helyettesít. Minden más esetben nullákkal kell kitölteni.
-              label: A korábbi bevallás azonosító száma
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes
-                utónév, kötelezően ebben a sorrendben.
-              label: A kapcsolattartó vezeték- és utóneve
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
-              label: A kapcsolattartó telefonszáma
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
-                teljes egészében érvénytelenít és helyettesít.
-              label: Helyettesítő bevallás
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 270 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
-              help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
-                összege euróban.
-              label: A forrásadó vagy adóelőleg alapjának teljes összege
-            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
-              help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
-                összege euróban, előjel és tizedesjel nélkül.
-              label: A nyeremények teljes összege vagy értéke
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek
-                teljes száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
-                külön kell számolni.
-              label: A bevallott kedvezményezetti rekordok teljes száma
-            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
-              help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
-                összege euróban.
-              label: A forrásadó vagy adóelőleg teljes összege
-            x-e1in4opec9gn6p9de9in8pbecdkmurg:
-              help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
-                kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
-                forrásadó- vagy adóelőleg-alap.
-              label: A forrásadó vagy adóelőleg alapja
-            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
-              help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
-                F természetes személy, J jogi személy vagy szervezet esetén.'
-              label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
-            x-e1in4opecpim6q315ln62or9dlkmarjkds:
-              help: Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód
-                és a jogi személyiség kódja F.
-              label: A külföldi illetőségű kedvezményezett születési ideje
-            x-e1in4opecpim6q315lo62prf:
-              help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
-                kifizették vagy jóváírták.
-              label: A nyeremény kifizetésének időpontja
-            x-e1in4opecpim6q315lpmusjkclng:
-              help: A sorsolás megtartásának napja, illetve annak az eseménynek a
-                napja, amelyre a nyereményt eredményező fogadást megkötötték.
-              label: A sorsolás vagy fogadás időpontja
-            x-e1in4opectin6t3fe8mm6rr2e9ng:
-              help: Csak akkor kell X-szel jelölni, ha a korábban részjegyekre osztott
-                nyereményt veszik fel, így a nyereményt felvevő nem annak végső jogosultja.
-              label: A nyeremény beszedési megbízottja
-            x-e1in4oped5mn0rriehiiqs3iclmmiro:
-              help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
-                nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
-                sorsoláson több nyereményt is nyert, ezek összege.
-              label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
-                értéke
-            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
-              help: Csak akkor, ha a kedvezményezett típusa 5-ös kód és a jogi személyiség
-                kódja F. A születési hely települése és adott esetben tartománya,
-                régiója vagy megyéje, majd az EHA/3496/2011. sz. rendelet II. melléklete
-                szerinti ország- vagy területkód.
-              label: A külföldi illetőségű kedvezményezett születési helye
-            x-e1in4opedpkmc:
-              help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
-                marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
-                adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
-                kötelező.
-              label: A kedvezményezett adóazonosító száma
-            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
-              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
-                adóazonosítója: természetes személynél az útlevélszám vagy ennek hiányában
-                a származási országban érvényes személyazonosító okmány száma, szervezetnél
-                a származási ország adóhatósága által kiadott azonosító.'
-              label: Adóazonosító szám az adóügyi illetőség szerinti országban
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
-                adóazonosító száma, ha van ilyen. Minden más esetben üres.
-              label: A kedvezményezett törvényes képviselőjének adóazonosító száma
-            x-e1in4opedpnmqojick:
-              help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
-                szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy
-                szervezetnél a teljes cégnév vagy elnevezés, logó nélkül.
-              label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
-            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
-              help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
-                a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
-                Minden más esetben üres.
-              label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
-                vagy elnevezése
-            x-e1in4opee1gmispde9in6qb4cln66qb1:
-              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód: a kedvezményezett
-                illetősége szerinti ország vagy terület két betűs kódja az EHA/3496/2011.
-                sz. rendelet II. melléklete szerint. Minden más esetben üres.'
-              label: A kedvezményezett adóügyi illetőségének országa vagy területe
-            x-e1in4opee1p6utj9dphmio8:
-              help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
-                kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
-                98, az 5-ös kedvezményezetti típusnál 99 a kód.
-              label: A kedvezményezett lakcíme szerinti tartomány kódja
-            x-e1in4opee9in8pbecdkmurg:
-              help: A nyereményt kifizető szervezet által ténylegesen levont forrásadó
-                vagy adóelőleg összege.
-              label: A forrásadó vagy adóelőleg összege
-            x-e1in4opeehkn0rpde1in4or5e1q6usg:
-              help: '1-es kód: a személyi jövedelemadó alanyát képező természetes
-                személy; 2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési
-                szervezet; 3: társasági adó alanyát képező jogi személy vagy belföldi
-                szervezet; 4: spanyolországi állandó telephely; 5: állandó telephely
-                nélkül működő külföldi illetőségű személy vagy szervezet.'
-              label: A kedvezményezett típusa
           construct:
             modelo-270-informative:
               field:
@@ -237,138 +148,6 @@ modelo:
           field:
             label: Casilla— adóügyi információ
         2023-y-siguientes:
-          casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
-                korábbi, azonos évi bevallásból teljesen kimaradtak.
-              label: Kiegészítő bevallás
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
-                kód.
-              label: A bevallás azonosító száma
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
-                helyettesít. Minden más esetben nullákkal kell kitölteni.
-              label: A korábbi bevallás azonosító száma
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes
-                utónév, kötelezően ebben a sorrendben.
-              label: A kapcsolattartó vezeték- és utóneve
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
-              label: A kapcsolattartó telefonszáma
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
-                teljes egészében érvénytelenít és helyettesít.
-              label: Helyettesítő bevallás
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 270 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-            x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
-              help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
-                összege euróban.
-              label: A forrásadó vagy adóelőleg alapjának teljes összege
-            x-chim6r1eehnn8obc5lkmqs3fe9q6abbge9imqqbfec:
-              help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
-                összege euróban, előjel és tizedesjel nélkül.
-              label: A nyeremények teljes összege vagy értéke
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek
-                teljes száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
-                külön kell számolni.
-              label: A bevallott kedvezményezetti rekordok teljes száma
-            x-chim6r1eehnn8obc5lp6at35dphmirreclpg:
-              help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
-                összege euróban.
-              label: A forrásadó vagy adóelőleg teljes összege
-            x-e1in4opec9gn6p9de9in8pbecdkmurg:
-              help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
-                kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
-                forrásadó- vagy adóelőleg-alap.
-              label: A forrásadó vagy adóelőleg alapja
-            x-e1in4opecdm62tj55lo6asjjdtn62r39chgm8:
-              help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
-                F természetes személy, J jogi személy vagy szervezet esetén.'
-              label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
-            x-e1in4opecpim6q315ln62or9dlkmarjkds:
-              help: Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód
-                és a jogi személyiség kódja F.
-              label: A külföldi illetőségű kedvezményezett születési ideje
-            x-e1in4opecpim6q315lo62prf:
-              help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
-                kifizették vagy jóváírták.
-              label: A nyeremény kifizetésének időpontja
-            x-e1in4opecpim6q315lpmusjkclng:
-              help: A sorsolás megtartásának napja, illetve annak az eseménynek a
-                napja, amelyre a nyereményt eredményező fogadást megkötötték.
-              label: A sorsolás vagy fogadás időpontja
-            x-e1in4opectin6t3fe8mm6rr2e9ng:
-              help: Csak akkor kell X-szel jelölni, ha a korábban részjegyekre osztott
-                nyereményt veszik fel, így a nyereményt felvevő nem annak végső jogosultja.
-              label: A nyeremény beszedési megbízottja
-            x-e1in4oped5mn0rriehiiqs3iclmmiro:
-              help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
-                nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
-                sorsoláson több nyereményt is nyert, ezek összege.
-              label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
-                értéke
-            x-e1in4opedhqmeobi5ln62or9dlkmarjkds:
-              help: Csak akkor, ha a kedvezményezett típusa 5-ös kód és a jogi személyiség
-                kódja F. A születési hely települése és adott esetben tartománya,
-                régiója vagy megyéje, majd az EHA/3496/2011. sz. rendelet II. melléklete
-                szerinti ország- vagy területkód.
-              label: A külföldi illetőségű kedvezményezett születési helye
-            x-e1in4opedpkmc:
-              help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
-                marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
-                adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
-                kötelező.
-              label: A kedvezményezett adóazonosító száma
-            x-e1in4opedpkmcbbgc5kn6bbiclpmip35dphmio8:
-              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
-                adóazonosítója: természetes személynél az útlevélszám vagy ennek hiányában
-                a származási országban érvényes személyazonosító okmány száma, szervezetnél
-                a származási ország adóhatósága által kiadott azonosító.'
-              label: Adóazonosító szám az adóügyi illetőség szerinti országban
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
-                adóazonosító száma, ha van ilyen. Minden más esetben üres.
-              label: A kedvezményezett törvényes képviselőjének adóazonosító száma
-            x-e1in4opedpnmqojick:
-              help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
-                szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy
-                szervezetnél a teljes cégnév vagy elnevezés, logó nélkül.
-              label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
-            x-e1in4opedpnmqojickmn4pbge9in6pbeehgmst35:
-              help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
-                a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
-                Minden más esetben üres.
-              label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve
-                vagy elnevezése
-            x-e1in4opee1gmispde9in6qb4cln66qb1:
-              help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód: a kedvezményezett
-                illetősége szerinti ország vagy terület két betűs kódja az EHA/3496/2011.
-                sz. rendelet II. melléklete szerint. Minden más esetben üres.'
-              label: A kedvezményezett adóügyi illetőségének országa vagy területe
-            x-e1in4opee1p6utj9dphmio8:
-              help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
-                kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
-                98, az 5-ös kedvezményezetti típusnál 99 a kód.
-              label: A kedvezményezett lakcíme szerinti tartomány kódja
-            x-e1in4opee9in8pbecdkmurg:
-              help: A nyereményt kifizető szervezet által ténylegesen levont forrásadó
-                vagy adóelőleg összege.
-              label: A forrásadó vagy adóelőleg összege
-            x-e1in4opeehkn0rpde1in4or5e1q6usg:
-              help: '1-es kód: a személyi jövedelemadó alanyát képező természetes
-                személy; 2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési
-                szervezet; 3: társasági adó alanyát képező jogi személy vagy belföldi
-                szervezet; 4: spanyolországi állandó telephely; 5: állandó telephely
-                nélkül működő külföldi illetőségű személy vagy szervezet.'
-              label: A kedvezményezett típusa
           construct:
             modelo-270-informative:
               field:

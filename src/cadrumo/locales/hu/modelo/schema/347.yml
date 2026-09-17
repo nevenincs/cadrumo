@@ -4,146 +4,146 @@ modelo:
       casilla:
         continuidad:
           arrendamiento-local-negocio:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: ÜZLETHELYISÉG BÉRLETE
           arrendatario-nif:
-            help: 'A casilla adatai: Casilla inmueble.arrendatario-nif: arrendatario
-              nif.'
-            label: 'inmueble.arrendatario-nif mező: a bérlő adóazonosítója'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A BÉRLŐ NIF SZÁMA
           arrendatario-nombre:
-            help: 'A casilla adatai: Casilla inmueble.arrendatario-név: arrendatario
-              név.'
-            label: 'Casilla inmueble.arrendatario-név: arrendatario név'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A BÉRLŐ VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
           arrendatario-representante-legal-nif:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
           complementaria-sustitutiva:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
           contraparte-clave-operacion:
-            help: 'A casilla adatai: Casilla contraparte.clave-operacion: contraparte
-              clave operacion.'
-            label: 'Casilla contraparte.clave-operacion: contraparte clave operacion'
+            label: A partnerrel végzett ügylet kódja (A=értékesítések, B=beszerzések,
+              ...)
           contraparte-importe-q1:
-            help: 'A casilla adatai: Casilla contraparte.összeg-Q1: contraparte összeg
-              q1.'
-            label: 'Casilla contraparte.összeg-Q1: contraparte összeg q1'
+            label: A partnerrel végzett ügyletek összege az első negyedévben
           contraparte-importe-q2:
-            help: 'A casilla adatai: Casilla contraparte.összeg-Q2: contraparte összeg
-              q2.'
-            label: 'Casilla contraparte.összeg-Q2: contraparte összeg q2'
+            label: A partnerrel végzett ügyletek összege a második negyedévben
           contraparte-importe-q3:
-            help: 'A casilla adatai: Casilla contraparte.összeg-Q3: contraparte összeg
-              q3.'
-            label: 'Casilla contraparte.összeg-Q3: contraparte összeg q3'
+            label: A partnerrel végzett ügyletek összege a harmadik negyedévben
           contraparte-importe-q4:
-            help: 'A casilla adatai: Casilla contraparte.összeg-Q4: contraparte összeg
-              q4.'
-            label: 'Casilla contraparte.összeg-Q4: contraparte összeg q4'
+            label: A partnerrel végzett ügyletek összege a negyedik negyedévben
           contraparte-nif:
-            help: 'A casilla adatai: Casilla contraparte.nif: contraparte nif.'
-            label: 'Casilla contraparte.nif: contraparte nif'
+            label: A bejelentett partner adószáma
           contraparte-nombre:
-            help: 'A casilla adatai: Casilla contraparte.név: contraparte név.'
-            label: 'Casilla contraparte.név: contraparte név'
+            label: A bejelentett partner neve vagy cégneve
           contraparte-pais-codigo:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél
+              üres)
           contraparte-provincia-codigo:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: A 347-es modelo contraparte.provincia-codigo. rovata.
+            label: A partner tartomanykodja (ket szamjegy)
           declarante-representante-legal-nif:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
           direccion-inmueble:
-            help: 'A casilla adatai: Casilla inmueble.direccion: direccion inmueble.'
-            label: 'inmueble.direccion mező: az ingatlan címe'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ INGATLAN CÍME
           ejercicio-operacion:
-            help: 'A casilla adatai: Casilla contraparte.adóév-operacion: adóév operacion.'
-            label: 'Casilla contraparte.adóév-operacion: adóév operacion'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: ADÓÉV
           filing-year:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: Az adóbevallás vonatkozási éve
           importe-anual-operaciones:
-            help: 'A casilla adatai: Casilla contraparte.összeg-éves: összeg éves
-              ügyletek.'
-            label: 'Casilla contraparte.összeg-éves: összeg éves ügyletek'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ ÜGYLETEK ÉVES ÖSSZEGE
           importe-operacion-arrendamiento:
-            help: 'A casilla adatai: Casilla inmueble.összeg-operacion: összeg operacion
-              arrendamiento.'
-            label: 'Casilla inmueble.összeg-operacion: összeg operacion arrendamiento'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ ÜGYLET ÖSSZEGE
           importe-percibido-metalico:
-            help: 'A casilla adatai: Casilla contraparte.összeg-metalico: összeg percibido
-              metalico.'
-            label: 'Casilla contraparte.összeg-metalico: összeg percibido metalico'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: KÉSZPÉNZBEN KAPOTT ÖSSZEG
           importe-total-anual-operaciones:
-            help: 'A casilla adatai: Casilla decl.összeg-total-éves: összeg total
-              éves ügyletek.'
-            label: 'Casilla decl.összeg-total-éves: összeg total éves ügyletek'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
           importe-total-arrendamiento-locales:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: ÜZLETHELYISÉG-BÉRLETI ÜGYLETEK TELJES ÖSSZEGE
           importe-transmisiones-inmuebles:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL SZÁRMAZÓ ÉVES ÖSSZEG
           importe-transmisiones-q1:
-            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q1:
-              összeg transmisiones q1.'
-            label: 'Casilla contraparte.összeg-transmisiones-Q1: összeg transmisiones
-              q1'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG ELSŐ NEGYEDÉV
           importe-transmisiones-q2:
-            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q2:
-              összeg transmisiones q2.'
-            label: 'Casilla contraparte.összeg-transmisiones-Q2: összeg transmisiones
-              q2'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG MÁSODIK NEGYEDÉV
           importe-transmisiones-q3:
-            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q3:
-              összeg transmisiones q3.'
-            label: 'Casilla contraparte.összeg-transmisiones-Q3: összeg transmisiones
-              q3'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV
           importe-transmisiones-q4:
-            help: 'A casilla adatai: Casilla contraparte.összeg-transmisiones-Q4:
-              összeg transmisiones q4.'
-            label: 'Casilla contraparte.összeg-transmisiones-Q4: összeg transmisiones
-              q4'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG NEGYEDIK NEGYEDÉV
           nif-operador-comunitario:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: KÖZÖSSÉGI GAZDÁLKODÓ NIF SZÁMA
           numero-justificante:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A BEVALLÁS AZONOSÍTÓ SZÁMA
           operacion-seguro:
-            help: 'A casilla adatai: Casilla contraparte.operacion-seguro: operacion
-              seguro.'
-            label: 'Casilla contraparte.operacion-seguro: operacion seguro'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: BIZTOSÍTÁSI ÜGYLET
           persona-con-quien-relacionarse:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: VEZETÉKNÉV ÉS UTÓNÉV
           persona-con-quien-relacionarse-telefono:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: 9 pozíciós numerikus mező. A bevalló által megjelölt kapcsolattartó
+              személy telefonszáma.
+            label: A kapcsolattartó telefonszáma
           referencia-catastral:
-            help: 'A casilla adatai: Casilla inmueble.referencia-catastral: referencia
-              catastral.'
-            label: 'inmueble.referencia-catastral mező: kataszteri hivatkozás'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: KATASZTERI HIVATKOZÁS
           representante-legal-nif:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
           situacion-inmueble:
-            help: 'A casilla adatai: Casilla inmueble.situacion: situacion inmueble.'
-            label: 'Casilla inmueble.situacion: situacion inmueble'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ INGATLAN FEKVÉSE
           tipo-declaracion:
-            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
-            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           tipo-soporte:
-            help: 'A casilla adatai: Casilla decl.kulcs-soporte: kulcs soporte.'
-            label: 'Casilla decl.kulcs-soporte: kulcs soporte'
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: ADATHORDOZÓ TÍPUSA
           total-inmuebles:
-            help: 'A Modelo 347 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: AZ INGATLANOK TELJES SZÁMA
           total-personas-entidades:
-            help: A Modelo 347 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
+              bevallott adat.
+            label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
       field:
         official_name: Modelo 347. A harmadik személyekkel folytatott ügyletek éves
           bevallása.
@@ -151,157 +151,26 @@ modelo:
       revision:
         2011-2024:
           casilla:
-            x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ÜZLETHELYISÉG BÉRLETE
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
               help: A 347-es modelo contraparte.clave-operacion. rovata, 2008. adóév.
-              label: A partnerrel végzett ügylet kódja (A=értékesítések, B=beszerzések,
-                ...)
-            x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ADÓÉV
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
               help: A 347-es modelo contraparte.importe-Q1. rovata, 2008. adóév.
-              label: A partnerrel végzett ügyletek összege az első negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
               help: A 347-es modelo contraparte.importe-Q2. rovata, 2008. adóév.
-              label: A partnerrel végzett ügyletek összege a második negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
               help: A 347-es modelo contraparte.importe-Q3. rovata, 2008. adóév.
-              label: A partnerrel végzett ügyletek összege a harmadik negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
               help: A 347-es modelo contraparte.importe-Q4. rovata, 2008. adóév.
-              label: A partnerrel végzett ügyletek összege a negyedik negyedévben
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLETEK ÉVES ÖSSZEGE
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KÉSZPÉNZBEN KAPOTT ÖSSZEG
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG ELSŐ NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG MÁSODIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG NEGYEDIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL SZÁRMAZÓ ÉVES ÖSSZEG
             x-cdnmst3ic5o62sjkckn6sqb6:
               help: A 347-es modelo contraparte.nif. rovata, 2008. adóév.
-              label: A bejelentett partner adószáma
-            x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KÖZÖSSÉGI GAZDÁLKODÓ NIF SZÁMA
             x-cdnmst3ic5o62sjkckn6srrdc9p6a:
               help: A 347-es modelo contraparte.nombre. rovata, 2008. adóév.
-              label: A bejelentett partner neve vagy cégneve
-            x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: BIZTOSÍTÁSI ÜGYLET
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
               help: A 347-es modelo contraparte.pais-codigo. rovata, 2008. adóév.
-              label: A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél
-                üres)
-            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
-              help: A 347-es modelo contraparte.provincia-codigo. rovata.
-              label: A partner tartomanykodja (ket szamjegy)
-            x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
             x-chim6r1ecll6asj3d5hmiro:
               help: A 347-es modelo ejercicio. rovata, 2008. adóév.
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
-            x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ÜZLETHELYISÉG-BÉRLETI ÜGYLETEK TELJES ÖSSZEGE
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BEVALLÁS AZONOSÍTÓ SZÁMA
-            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: VEZETÉKNÉV ÉS UTÓNÉV
-            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
-              help: 9 pozíciós numerikus mező. A bevalló által megjelölt kapcsolattartó
-                személy telefonszáma.
-              label: A kapcsolattartó telefonszáma
-            x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 347-es modelo tipo-declaracion. rovata, 2008. adóév.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ADATHORDOZÓ TÍPUSA
-            x-chim6r1eehnn8obc5lkmsrblclh6opbj:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLANOK TELJES SZÁMA
-            x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
-            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BÉRLŐ NIF SZÁMA
-            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BÉRLŐ VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
-            x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLAN CÍME
-            x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLET ÖSSZEGE
-            x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KATASZTERI HIVATKOZÁS
-            x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-            x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLAN FEKVÉSE
           construct:
             modelo-347-informative:
               field:
@@ -310,10 +179,6 @@ modelo:
             label: 347-es modelo, 2008-2024. adóévek
         2025-y-siguientes:
           casilla:
-            x-cdnmst3ic5o62sjkckn62sjicln68obdd5imst3f5lm6uor1dgmmspb7dthmiro:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ÜZLETHELYISÉG BÉRLETE
             x-cdnmst3ic5o62sjkckn64qb5dpin6bbmd5n66tbcc5i6uso:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
@@ -321,168 +186,41 @@ modelo:
                 FOLYTATOTT ÜGYLET
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
               help: A 347-es modelo contraparte.clave-operacion. rovata, 2025. adóév.
-              label: A partnerrel végzett ügylet kódja (A=értékesítések, B=beszerzések,
-                ...)
             x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
               label: AZ IVA PÉNZFORGALMI KÜLÖNÖS RENDSZERE SZERINTI ÜGYLETEK
-            x-cdnmst3ic5o62sjkckn6aqj5e9hmior9dsmmus35e9gm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ADÓÉV
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4og:
               help: A 347-es modelo contraparte.importe-Q1. rovata, 2025. adóév.
-              label: A partnerrel végzett ügyletek összege az első negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4p0:
               help: A 347-es modelo contraparte.importe-Q2. rovata, 2025. adóév.
-              label: A partnerrel végzett ügyletek összege a második negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4pg:
               help: A 347-es modelo contraparte.importe-Q3. rovata, 2025. adóév.
-              label: A partnerrel végzett ügyletek összege a harmadik negyedévben
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9da4q0:
               help: A 347-es modelo contraparte.importe-Q4. rovata, 2025. adóév.
-              label: A partnerrel végzett ügyletek összege a negyedik negyedévben
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dc5n7aobc:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLETEK ÉVES ÖSSZEGE
             x-cdnmst3ic5o62sjkckn6irbgdtp78p9dcdp6it35e9kmubb3c5l62:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
               label: AZ IVA PÉNZFORGALMI SZEMLÉLETE SZERINT ESEDÉKESSÉ VÁLT ÜGYLETEK
                 ÉVES ÖSSZEGE
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9ddlin8obcd5hmu:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KÉSZPÉNZBEN KAPOTT ÖSSZEG
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah64:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG ELSŐ NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah68:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG MÁSODIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6c:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bah6g:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG NEGYEDIK NEGYEDÉV
-            x-cdnmst3ic5o62sjkckn6irbgdtp78p9dehp62rjjdlkn6qbfdpin6bb9dpmnapb2dhin6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL SZÁRMAZÓ ÉVES ÖSSZEG
             x-cdnmst3ic5o62sjkckn6irjmclp76qbfdomn6tbaclq6ubbgc5pmitjf:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
               label: FORDÍTOTT ADÓZÁSÚ ÜGYLET
             x-cdnmst3ic5o62sjkckn6sqb6:
               help: A 347-es modelo contraparte.nif. rovata, 2025. adóév.
-              label: A bejelentett partner adószáma
-            x-cdnmst3ic5o62sjkckn6sqb65lnn0pbic5i6ushdcdnmqtbed5q62sj9ds:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KÖZÖSSÉGI GAZDÁLKODÓ NIF SZÁMA
             x-cdnmst3ic5o62sjkckn6srrdc9p6a:
               help: A 347-es modelo contraparte.nombre. rovata, 2025. adóév.
-              label: A bejelentett partner neve vagy cégneve
             x-cdnmst3ic5o62sjkckn6stbdclp6ubb3dtn7crr3c5q6usj9c4mm4p3eec:
               help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
                 bevallásán bevallott adat.
               label: BDNS PÁLYÁZATI SZÁM
-            x-cdnmst3ic5o62sjkckn6us35e9gm6qbfdomn6pb7elp6u:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: BIZTOSÍTÁSI ÜGYLET
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
               help: A 347-es modelo contraparte.pais-codigo. rovata, 2025. adóév.
-              label: A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél
-                üres)
-            x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
-              help: A 347-es modelo contraparte.provincia-codigo. rovata.
-              label: A partner tartomanykodja (ket szamjegy)
-            x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
             x-chim6r1ecll6asj3d5hmiro:
               help: A 347-es modelo ejercicio. rovata, 2025. adóév.
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1ed5mn0rriehiiqt3fehgmobb1dpqm2r0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLETEK TELJES ÉVES ÖSSZEGE
-            x-chim6r1ed5mn0rriehiiqt3fehgmobb1e9p6arj4c5mmipbeehniqr3fcdgmopbj:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ÜZLETHELYISÉG-BÉRLETI ÜGYLETEK TELJES ÖSSZEGE
-            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BEVALLÁS AZONOSÍTÓ SZÁMA
-            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: VEZETÉKNÉV ÉS UTÓNÉV
-            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdomn8pbcclj6urjf:
-              help: 9 pozíciós numerikus mező. A bevalló által megjelölt kapcsolattartó
-                személy telefonszáma.
-              label: A kapcsolattartó telefonszáma
-            x-chim6r1ee9in0sj5edimst31dpq6abbccljm2r1ddpkmc:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 347-es modelo tipo-declaracion. rovata, 2025. adóév.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-            x-chim6r1eehkn0rpdednn0rriehig:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: ADATHORDOZÓ TÍPUSA
-            x-chim6r1eehnn8obc5lkmsrblclh6opbj:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLANOK TELJES SZÁMA
-            x-chim6r1eehnn8obc5lo6asjjdtn62spdcln78qb4c5i6aso:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A SZEMÉLYEK ÉS SZERVEZETEK TELJES SZÁMA
-            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsqb6:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BÉRLŐ NIF SZÁMA
-            x-d5n6qtb5c9m6abj1e9p6arj4c5q62sj9dsmmsrrdc9p6a:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A BÉRLŐ VEZETÉKNEVE ÉS UTÓNEVE, CÉGNEVE VAGY MEGNEVEZÉSE
-            x-d5n6qtb5c9m6abj4d5p6aor3d5nms:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLAN CÍME
-            x-d5n6qtb5c9m6abj9dlo6usjkckmmus35e9gm6qbfdo:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ ÜGYLET ÖSSZEGE
-            x-d5n6qtb5c9m6abjiclj6asj5dphmio9dcdgn8objehp62r0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: KATASZTERI HIVATKOZÁS
-            x-d5n6qtb5c9m6abjiclo74pbjcln78obeehiiqr35ctgmobbed5j0:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: A TÖRVÉNYES KÉPVISELŐ NIF SZÁMA
-            x-d5n6qtb5c9m6abjjd5q7aob3d5nms:
-              help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves
-                bevallásán bevallott adat.
-              label: AZ INGATLAN FEKVÉSE
           construct:
             modelo-347-informative:
               field:

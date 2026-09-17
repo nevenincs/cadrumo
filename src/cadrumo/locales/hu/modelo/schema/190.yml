@@ -124,8 +124,9 @@ modelo:
             help: 'A Modelo 190 167. casilla adóügyi adatai: adóügyi információ.'
             label: Fogyatékosság
           payee-emerging-stock-excess-clave:
-            help: 'A Modelo 190 388. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 388 — adóügyi információ
+            help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
+              adat.
+            label: Induló vállalkozások részvényjuttatásából származó többlet
           payee-family-situation:
             help: 'A Modelo 190 157. casilla adóügyi adatai: a kedvezményezett családi
               helyzete.'
@@ -204,6 +205,34 @@ modelo:
           percepcion-valoracion-especie:
             help: 'A Modelo 190 109-121. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 109-121 — adóügyi információ
+          prestacion-incapacidad:
+            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+              az evben.
+            label: A B.01 kód szerinti ellátás típusa. 03. Teljes vagy részleges tartós
+              rokkantság
+          prestacion-jubilacion:
+            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+              az evben.
+            label: A B.01 kód szerinti ellátás típusa. 01. Nyugdíj
+          prestacion-no-contributiva:
+            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+              az evben.
+            label: A B.01 kód szerinti ellátás típusa. 04. Nem járulékalapú rokkantsági
+              vagy nyugdíjellátás
+          prestacion-resto:
+            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+              az evben.
+            label: A B.01 kód szerinti ellátás típusa. 05. A 35/2006 törvény 17.2.a).1
+              cikke szerinti egyéb ellátások
+          prestacion-viudedad:
+            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
+              az evben.
+            label: A B.01 kód szerinti ellátás típusa. 02. Özvegyi ellátás
+          rendimientos-trabajo-fondos-emprendimiento:
+            help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
+              adat.
+            label: Vállalkozáshoz, innovációhoz és gazdasági tevékenység fejlesztéséhez
+              kötött alapok kezeléséből származó munkajövedelem
           representante-legal-nif:
             help: 'A Modelo 190 27-35. casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselő NIF száma
@@ -224,47 +253,41 @@ modelo:
         title: Munkaviszonyból és gazdasági tevékenységből származó jövedelmek adóelőleg-levonásának
           éves összesítője
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Tekintse át a casilla adatait: Bevallás kiegészítő.'
-              label: Kiegészítő bevallás
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: 'A Modelo 190 176-225. casilla adóügyi adatai: adóügyi információ.'
-              label: A kapcsolattartó e-mail címe
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás.'
-              label: A bevallás azonosító száma
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
               help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás
                 korábbi.'
               label: Az előző bevallás azonosító száma
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: 'A Modelo 190 145-160. casilla adóügyi adatai: adóügyi információ.'
               label: A kifizetések teljes összege
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: 'A Modelo 190 68-107. casilla adóügyi adatai: adóügyi információ.'
               label: A kapcsolattartó vezeték- és utóneve
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: 'A Modelo 190 59-67. casilla adóügyi adatai: adóügyi információ.'
               label: A kapcsolattartó telefonszáma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: 'A Modelo 190 161-175. casilla adóügyi adatai: adóügyi információ.'
               label: A visszatartások és előlegfizetések teljes összege
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: A Modelo 190 122. casilla adóügyi adatai.
-              label: Helyettesítő bevallás
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: 'A Modelo 190 136-144. casilla adóügyi adatai: adóügyi információ.'
               label: A kifizetések teljes száma
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Születési év
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Tartásdíj-járadékok
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -313,14 +336,9 @@ modelo:
             x-e1in4opecdinat315lmmar39dhm62:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Ceuta vagy Melilla
-            x-e1in4opecdm62tj5:
-              help: 'A Modelo 190 78. casilla adóügyi adatai: adóügyi információ.'
-              label: Jövedelemkód
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Gyermektámogatási kiegészítés
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -336,7 +354,6 @@ modelo:
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Szerződés vagy jogviszony
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -388,19 +405,12 @@ modelo:
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Fogyatékosság
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Esedékesség éve
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
-                adat.
-              label: Induló vállalkozások részvényjuttatásából származó többlet
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Levonható költségek
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -435,10 +445,8 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Földrajzi mobilitás
             x-e1in4opedpkmc:
               help: 'Tekintse át a casilla adatait: NIF - kedvezményezett.'
-              label: A juttatásban részesülő adóazonosítója (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -446,20 +454,14 @@ modelo:
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: A törvényes képviselő NIF száma
             x-e1in4opedpnmqojick:
-              help: 'A Modelo 190 36-75. casilla adóügyi adatai: a kedvezményezett
-                neve.'
               label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Kiegyenlítő járadékok
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: 'A Modelo 190 82-94. casilla adóügyi adatai: adóügyi információ.'
               label: Nem keresőképtelenségből származó bruttó pénzbeli juttatás
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: 'A Modelo 190 109-121. casilla adóügyi adatai: adóügyi információ.'
               label: Nem keresőképtelenségből származó természetbeni juttatás értéke
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
@@ -501,9 +503,7 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Családi helyzet
             x-e1in4opeedqm4orcc5r6a:
-              help: 'A Modelo 190 79-80. casilla adóügyi adatai: adóügyi információ.'
               label: Jövedelem-alkód
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
@@ -520,43 +520,31 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Tekintse át a casilla adatait: Bevallás kiegészítő.'
-              label: Kiegészítő bevallás
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: 'A Modelo 190 176-225. casilla adóügyi adatai: adóügyi információ.'
-              label: A kapcsolattartó e-mail címe
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás.'
-              label: A bevallás azonosító száma
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
               help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás
                 korábbi.'
               label: Az előző bevallás azonosító száma
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: 'A Modelo 190 145-160. casilla adóügyi adatai: adóügyi információ.'
               label: A kifizetések teljes összege
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: 'A Modelo 190 68-107. casilla adóügyi adatai: adóügyi információ.'
               label: A kapcsolattartó vezeték- és utóneve
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: 'A Modelo 190 59-67. casilla adóügyi adatai: adóügyi információ.'
               label: A kapcsolattartó telefonszáma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: 'A Modelo 190 161-175. casilla adóügyi adatai: adóügyi információ.'
               label: A visszatartások és előlegfizetések teljes összege
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: A Modelo 190 122. casilla adóügyi adatai.
-              label: Helyettesítő bevallás
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: 'A Modelo 190 136-144. casilla adóügyi adatai: adóügyi információ.'
               label: A kifizetések teljes száma
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Születési év
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Tartásdíj-járadékok
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -605,14 +593,9 @@ modelo:
             x-e1in4opecdinat315lmmar39dhm62:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Ceuta vagy Melilla
-            x-e1in4opecdm62tj5:
-              help: 'A Modelo 190 78. casilla adóügyi adatai: adóügyi információ.'
-              label: Jövedelemkód
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Gyermektámogatási kiegészítés
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -628,7 +611,6 @@ modelo:
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Szerződés vagy jogviszony
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -680,19 +662,12 @@ modelo:
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Fogyatékosság
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Esedékesség éve
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
-                adat.
-              label: Induló vállalkozások részvényjuttatásából származó többlet
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Levonható költségek
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -727,10 +702,8 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Földrajzi mobilitás
             x-e1in4opedpkmc:
               help: 'Tekintse át a casilla adatait: NIF - kedvezményezett.'
-              label: A juttatásban részesülő adóazonosítója (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -738,44 +711,15 @@ modelo:
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: A törvényes képviselő NIF száma
             x-e1in4opedpnmqojick:
-              help: 'A Modelo 190 36-75. casilla adóügyi adatai: a kedvezményezett
-                neve.'
               label: A juttatásban részesülő vezetékneve és utóneve vagy cégneve
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
-              label: Kiegyenlítő járadékok
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: 'A Modelo 190 82-94. casilla adóügyi adatai: adóügyi információ.'
               label: Nem keresőképtelenségből származó bruttó pénzbeli juttatás
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: 'A Modelo 190 109-121. casilla adóügyi adatai: adóügyi információ.'
               label: Nem keresőképtelenségből származó természetbeni juttatás értéke
-            x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
-              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-                az evben.
-              label: A B.01 kód szerinti ellátás típusa. 03. Teljes vagy részleges
-                tartós rokkantság
-            x-e1in4opee1p6asrkc5hmirre5ll7aoj9dhgm6qbfdo:
-              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-                az evben.
-              label: A B.01 kód szerinti ellátás típusa. 01. Nyugdíj
-            x-e1in4opee1p6asrkc5hmirre5ln6ubb3dtn78sj9c9qn8qbmc4:
-              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-                az evben.
-              label: A B.01 kód szerinti ellátás típusa. 04. Nem járulékalapú rokkantsági
-                vagy nyugdíjellátás
-            x-e1in4opee1p6asrkc5hmirre5lp6asrkds:
-              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-                az evben.
-              label: A B.01 kód szerinti ellátás típusa. 05. A 35/2006 törvény 17.2.a).1
-                cikke szerinti egyéb ellátások
-            x-e1in4opee1p6asrkc5hmirre5lr6itb4cli62p0:
-              help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-                az evben.
-              label: A B.01 kód szerinti ellátás típusa. 02. Özvegyi ellátás
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -788,11 +732,6 @@ modelo:
               help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
                 A nyomtatvany egesz es tizedes reszre bontja.
               label: Alkalmazandó csökkentések
-            x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
-              help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
-                adat.
-              label: Vállalkozáshoz, innovációhoz és gazdasági tevékenység fejlesztéséhez
-                kötött alapok kezeléséből származó munkajövedelem
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -821,9 +760,7 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Családi helyzet
             x-e1in4opeedqm4orcc5r6a:
-              help: 'A Modelo 190 79-80. casilla adóügyi adatai: adóügyi információ.'
               label: Jövedelem-alkód
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti

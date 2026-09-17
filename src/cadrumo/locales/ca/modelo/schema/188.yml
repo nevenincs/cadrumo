@@ -7,6 +7,14 @@ modelo:
           o invalidesa. Resum anual.
         title: Retencions de capitalització i assegurances de vida - resum anual
       revision:
+        '2022':
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: Model 188 declaració informativa de rendiments d'operacions
+                  de capitalització i assegurances de vida o invalidesa
+          field:
+            label: null
         2023-y-siguientes:
           casilla:
             '01':

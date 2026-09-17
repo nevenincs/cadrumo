@@ -4,12 +4,63 @@ modelo:
       casilla:
         continuidad:
           filing-year:
+            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+              165.
+            label: Exercici a què es refereix la declaració
+          m165-declaracion-complementaria-sustitutiva:
             help: Informació fiscal de la casella del Modelo 165.
-            label: Casella — informació fiscal
-          tipo-declaracion:
+            label: Declaració complementària o substitutiva
+          m165-declarante-razon-social:
+            help: Informació fiscal de la casella del Modelo 165.
+            label: Denominació o raó social del declarant
+          m165-fecha-adquisicion:
+            help: 'Consulteu la informació de la casella: Data de adquisició de las
+              accions o participacions.'
+            label: Data d'adquisició de les accions o participacions
+          m165-fecha-constitucion:
+            help: 'Consulteu la informació de la casella: Data de constitucion.'
+            label: Data de constitució
+          m165-importe-fondos-propios:
+            help: 'Consulteu la informació de la casella: Import de los fondos propios.'
+            label: Import dels fons propis
+          m165-importe-suscripcion:
+            help: 'Consulteu la informació de la casella: Import de la suscripcion
+              o adquisició.'
+            label: Import de la subscripció o adquisició
+          m165-importe-total-suscripciones:
+            help: 'Consulteu la informació de la casella: Import total de las suscripciones
+              o adquisicions.'
+            label: Import total de les subscripcions o adquisicions
+          m165-numero-identificativo-anterior:
+            help: Informació fiscal de la casella del Modelo 165.
+            label: Número identificatiu de la declaració anterior
+          m165-numero-identificativo-declaracion:
+            help: Informació fiscal de la casella del Modelo 165.
+            label: Número identificatiu de la declaració
+          m165-numero-total-declarados:
+            help: Informació fiscal de la casella del Modelo 165.
+            label: Nombre total de declarats
+          m165-persona-relacion:
             help: Informació fiscal sobre informació fiscal de la casella  del Modelo
               165.
-            label: Casella— informació fiscal
+            label: Persona amb qui relacionar-se
+          m165-porcentaje-participacion:
+            help: 'Consulteu la informació de la casella: Percentatge de participacion.'
+            label: Percentatge de participació
+          m165-representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              165.
+            label: NIF del representant legal
+          m165-socio-nif:
+            help: 'Consulteu la informació de la casella: NIF del socio o participe.'
+            label: NIF del soci o partícip
+          m165-socio-nombre:
+            help: 'Consulteu la informació de la casella: Cognoms i nom del socio
+              o participe.'
+            label: Cognoms i nom del soci o partícip
+          tipo-declaracion:
+            help: Informació fiscal de la casella del Modelo 165.
+            label: Tipus de declaració (originària / substitutiva / complementària)
       field:
         official_name: Modelo 165. Declaració informativa de certificacions individuals
           emeses als socis o partícips d'entitats de nova o recent creació.
@@ -17,76 +68,9 @@ modelo:
           anual)
       revision:
         2013-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                165.
-              label: Exercici a què es refereix la declaració
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Casella— informació fiscal
         2016-2022:
-          casilla:
-            declaracion-complementaria-sustitutiva:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Declaració complementària o substitutiva
-            declarante-razon-social:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Denominació o raó social del declarant
-            fecha-adquisicion:
-              help: 'Consulteu la informació de la casella: Data de adquisició de
-                las accions o participacions.'
-              label: Data d'adquisició de les accions o participacions
-            fecha-constitucion:
-              help: 'Consulteu la informació de la casella: Data de constitucion.'
-              label: Data de constitució
-            importe-fondos-propios:
-              help: 'Consulteu la informació de la casella: Import de los fondos propios.'
-              label: Import dels fons propis
-            importe-suscripcion:
-              help: 'Consulteu la informació de la casella: Import de la suscripcion
-                o adquisició.'
-              label: Import de la subscripció o adquisició
-            importe-total-suscripciones:
-              help: 'Consulteu la informació de la casella: Import total de las suscripciones
-                o adquisicions.'
-              label: Import total de les subscripcions o adquisicions
-            numero-identificativo-anterior:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Número identificatiu de la declaració anterior
-            numero-identificativo-declaracion:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Número identificatiu de la declaració
-            numero-total-declarados:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Nombre total de declarats
-            persona-relacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                165.
-              label: Persona amb qui relacionar-se
-            porcentaje-participacion:
-              help: 'Consulteu la informació de la casella: Percentatge de participacion.'
-              label: Percentatge de participació
-            representante-legal-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                165.
-              label: NIF del representant legal
-            socio-nif:
-              help: 'Consulteu la informació de la casella: NIF del socio o participe.'
-              label: NIF del soci o partícip
-            socio-nombre:
-              help: 'Consulteu la informació de la casella: Cognoms i nom del socio
-                o participe.'
-              label: Cognoms i nom del soci o partícip
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                165.
-              label: Exercici a què es refereix la declaració
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           construct:
             modelo-165-informative:
               field:
@@ -94,14 +78,6 @@ modelo:
           field:
             label: Casella— informació fiscal
         2023-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                165.
-              label: Exercici a què es refereix la declaració
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Casella— informació fiscal
         2026-y-siguientes:
@@ -160,13 +136,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Cognoms i nom del socio
                 o participe.'
               label: Cognoms i nom del soci o partícip
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                165.
-              label: Exercici a què es refereix la declaració
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Informació fiscal de la casella del Modelo 165.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           construct:
             modelo-165-informative:
               field:

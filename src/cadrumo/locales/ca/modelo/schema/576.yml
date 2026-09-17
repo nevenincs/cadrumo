@@ -4,18 +4,14 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Informació fiscal de la casella del Modelo 576.
-            label: Casella — informació fiscal
+            help: 'Consulteu la informació de la casella: Exercici de meritació.'
+            label: Exercici de meritació
       field:
         official_name: Modelo 576. Impost Especial sobre Determinats Mitjans de Transport.
           Autoliquidació.
         title: IEDMT - autoliquidació per matriculació de determinats mitjans de transport
       revision:
         '2007':
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulteu la informació de la casella: Exercici de meritació.'
-              label: Exercici de meritació
           field:
             label: Ordre EHA/1981/2005, exercici 2007
         2008-y-siguientes:
@@ -125,9 +121,6 @@ modelo:
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: Informació fiscal de la casella 45 del Modelo 576.
               label: Causa del fet imposable
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulteu la informació de la casella: Exercici de meritació.'
-              label: Exercici de meritació
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: Informació fiscal de la casella 41 del Modelo 576.
               label: Declaració complementària. Número de justificant de la declaració

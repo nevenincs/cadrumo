@@ -4,146 +4,193 @@ modelo:
       casilla:
         continuidad:
           a-deducir-23:
-            help: 'A casilla adatai: Casilla 23: a levonni 23.'
-            label: 'Casilla 23: a levonni 23'
+            label: Elszámolás (8) - Levonandó [23]
           adjudicatario-apellidos:
-            help: 'A casilla adatai: Casilla 1049-1108: adjudicatario vezetéknév.'
-            label: 'Casilla 1049-1108: adjudicatario vezetéknév'
+            label: Vevő (4) - Vezetéknév vagy cégnév
           adjudicatario-nif:
-            help: 'A casilla adatai: Casilla 1040-1048: adjudicatario nif.'
-            label: 'Casilla 1040-1048: adjudicatario nif'
+            label: Vevő (4) - NIF
           adjudicatario-nombre:
-            help: 'A casilla adatai: Casilla 1109-1128: adjudicatario név.'
-            label: 'Casilla 1109-1128: adjudicatario név'
+            label: Vevő (4) - Név
           aeronave-ano:
-            help: A Modelo 309 546. casilla adóügyi adatai.
-            label: Casilla 546 — adóügyi mező
+            label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
           aeronave-fabricante:
-            help: 'A casilla adatai: Casilla 426: aeronave fabricante.'
-            label: 'Casilla 426: aeronave fabricante'
+            label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
           aeronave-marca:
-            help: 'A casilla adatai: Casilla 466: aeronave marca.'
-            label: 'Casilla 466: aeronave marca'
+            label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
+              - Modell
           aeronave-peso:
-            help: 'A casilla adatai: Casilla 550: aeronave peso.'
-            label: 'Casilla 550: aeronave peso'
+            label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb felszállótömeg
+              (kg)
           aeronave-serie:
-            help: 'A casilla adatai: Casilla 506: aeronave serie.'
-            label: 'Casilla 506: aeronave serie'
+            label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
           cuota-devengada-22:
-            help: 'A casilla adatai: Casilla 22: adóösszeg felszámított 22.'
-            label: 'Casilla 22: adóösszeg felszámított 22'
+            label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
+              [22]
           declaracion-complementaria:
-            help: 'A casilla adatai: Casilla 1016: bevallás kiegészítő.'
-            label: 'Casilla 1016: bevallás kiegészítő'
+            label: Kiegészítő bevallás (9)
           declaracion-periodo-309:
-            help: 'A casilla adatai: Casilla 7: bevallás időszak 309.'
-            label: 'Casilla 7: bevallás időszak 309'
-          devolucion-iban-309:
-            help: A Modelo 309 1030-1063. casilla adóügyi adatai.
-            label: Casilla 1030-1063 — adóügyi mező
+            label: Esedékesség. Időszak
+          declaracion-tipo-309:
+            label: Bevallás típusa
+          declarante-nombre-309:
+            label: Azonosítás (1) - Név
           embarcacion-eslora:
-            help: 'A casilla adatai: Casilla 420: embarcacion eslora.'
-            label: 'Casilla 420: embarcacion eslora'
+            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb hossz
           embarcacion-fabricante:
-            help: 'A casilla adatai: Casilla 300: embarcacion fabricante.'
-            label: 'Casilla 300: embarcacion fabricante'
+            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
           embarcacion-tipo:
-            help: 'A casilla adatai: Casilla 340: embarcacion kulcs.'
-            label: 'Casilla 340: embarcacion kulcs'
+            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
+          filing-year:
+            help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
+            label: Az adóbevallás vonatkozási éve
+          hecho-imponible:
+            label: 'Adóköteles tényállás (6):'
+          hecho-imponible-adquisicion-intracomunitaria:
+            help: A 309-es modell 94-94. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: termékek Közösségen belüli beszerzése'
+          hecho-imponible-entrega-inversion-inmobiliaria:
+            help: A 309-es modell 97-97. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: ingatlan jellegű beruházási javak értékesítése'
+          hecho-imponible-inversion-sujeto-pasivo:
+            help: A 309-es modell 96-96. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: fordított adózás'
+          hecho-imponible-medios-transporte-nuevos:
+            help: A 309-es modell 95-95. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: új közlekedési eszközök Közösségen belüli beszerzése'
+          hecho-imponible-otros:
+            help: A 309-es modell 99-99. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: egyéb, nem szabályozott esetek'
+          hecho-imponible-procedimiento-administrativo-judicial:
+            help: A 309-es modell 98-98. mezője, 2004-2015. adóév.
+            label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
+              közigazgatási és bírósági eljárásokban'
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
+            label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén (új
+              közlekedési eszközök stb.)
+          iva-cuota-no-periodica-total:
+            help: A Modelo 309 . casilla adóügyi adatai.
+            label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
+              előzetesen felszámított)
+          iva-cuota-soportada-recargo-equivalencia:
+            help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
+              minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
+            label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
+              felár keretében (utasoknak járó visszatérítés)
           justificante-anterior:
-            help: 'A casilla adatai: Casilla 61: igazolás korábbi.'
-            label: 'Casilla 61: igazolás korábbi'
+            label: Az előző bevallás igazolószáma (9)
+          letras-etiqueta-persona-fisica:
+            help: A 309-es modell 15-18. mezője, 2004-2015. adóév.
+            label: Az azonosító címke betűi
+          motivo-declaracion-no-periodica:
+            help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
+            label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
+              szabályozás / egyenértékűségi felár / végrehajtási eljárás)
           mtn-embarcacion-identificacion:
-            help: A Modelo 309 380. casilla adóügyi adatai.
-            label: Casilla 380 — adóügyi mező
+            label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás (építési
+              szám)
+          observaciones-presentacion:
+            help: A 309-es modell 951-1300. mezője, 2004-2015. adóév.
+            label: Megjegyzések
           re-base-10:
-            help: 'A Modelo 309 10. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 10 — adóügyi információ
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
           re-base-13:
-            help: 'A Modelo 309 13. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 13 — adóügyi információ
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
           re-base-16:
-            help: 'A Modelo 309 16. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 16 — adóügyi információ
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
           re-base-19:
-            help: 'A Modelo 309 19. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 19 — adóügyi információ
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
           re-cuota-12:
-            help: 'A casilla adatai: Casilla 12: re adóösszeg 12.'
-            label: 'Casilla 12: re adóösszeg 12'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
           re-cuota-15:
-            help: 'A casilla adatai: Casilla 15: re adóösszeg 15.'
-            label: 'Casilla 15: re adóösszeg 15'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
           re-cuota-18:
-            help: 'A casilla adatai: Casilla 18: re adóösszeg 18.'
-            label: 'Casilla 18: re adóösszeg 18'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
           re-cuota-21:
-            help: 'A casilla adatai: Casilla 21: re adóösszeg 21.'
-            label: 'Casilla 21: re adóösszeg 21'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
           re-tipo-11:
-            help: 'A casilla adatai: Casilla 11: re kulcs 11.'
-            label: 'Casilla 11: re kulcs 11'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
           re-tipo-14:
-            help: 'A casilla adatai: Casilla 14: re kulcs 14.'
-            label: 'Casilla 14: re kulcs 14'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
           re-tipo-17:
-            help: 'A casilla adatai: Casilla 17: re kulcs 17.'
-            label: 'Casilla 17: re kulcs 17'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
           re-tipo-20:
-            help: 'A casilla adatai: Casilla 20: re kulcs 20.'
-            label: 'Casilla 20: re kulcs 20'
+            label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
           resultado-24:
-            help: 'A casilla adatai: Casilla 24: eredmény 24.'
-            label: 'Casilla 24: eredmény 24'
+            label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
           rg-base-01:
-            help: 'A Modelo 309 01. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 01 — adóügyi információ
+            label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
           rg-base-04:
-            help: 'A Modelo 309 04. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 04 — adóügyi információ
+            label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
           rg-base-07:
-            help: 'A Modelo 309 07. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 07 — adóügyi információ
+            label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
+          rg-base-25:
+            help: A 309-es modell 692-708. mezője, 2023 y siguientes. adóév.
+            label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
           rg-cuota-03:
-            help: 'A casilla adatai: Casilla 03: rg adóösszeg 03.'
-            label: 'Casilla 03: rg adóösszeg 03'
+            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
           rg-cuota-06:
-            help: 'A casilla adatai: Casilla 06: rg adóösszeg 06.'
-            label: 'Casilla 06: rg adóösszeg 06'
+            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
           rg-cuota-09:
-            help: 'A casilla adatai: Casilla 09: rg adóösszeg 09.'
-            label: 'Casilla 09: rg adóösszeg 09'
+            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
+          rg-cuota-27:
+            help: A 309-es modell 714-730. mezője, 2023 y siguientes. adóév.
+            label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
           rg-tipo-02:
-            help: 'A casilla adatai: Casilla 02: rg kulcs 02.'
-            label: 'Casilla 02: rg kulcs 02'
+            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
           rg-tipo-05:
-            help: 'A casilla adatai: Casilla 05: rg kulcs 05.'
-            label: 'Casilla 05: rg kulcs 05'
+            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
           rg-tipo-08:
-            help: 'A casilla adatai: Casilla 08: rg kulcs 08.'
-            label: 'Casilla 08: rg kulcs 08'
+            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
+          rg-tipo-26:
+            help: A 309-es modell 709-713. mezője, 2023 y siguientes. adóév.
+            label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
+          situacion-tributaria:
+            label: 'Adójogi helyzet (5):'
+          situacion-tributaria-agricola:
+            help: A 309-es modell 88-88. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: a mezőgazdasági, állattenyésztési és halászati
+              különös rendszer alanya'
+          situacion-tributaria-otras:
+            help: A 309-es modell 93-93. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: egyéb, nem szabályozott esetek'
+          situacion-tributaria-persona-fisica-no-empresario:
+            help: A 309-es modell 92-92. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
+              végző természetes személy'
+          situacion-tributaria-persona-juridica-no-empresario:
+            help: A 309-es modell 91-91. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
+              végző jogi személy'
+          situacion-tributaria-recargo-equivalencia:
+            help: A 309-es modell 89-89. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: az egyenértékűségi felár különös rendszerének
+              alanya'
+          situacion-tributaria-sin-derecho-deduccion:
+            help: A 309-es modell 90-90. mezője, 2004-2015. adóév.
+            label: 'Adójogi helyzet: levonási jog nélküli adóalany'
+          transmitente-apellidos:
+            label: Átruházó (3) - Vezetéknév vagy cégnév
           transmitente-nif:
-            help: 'A casilla adatai: Casilla 25: transmitente nif.'
-            label: 'Casilla 25: transmitente nif'
+            label: Átruházó (3) - NIF
           transmitente-nif-iva:
-            help: 'A casilla adatai: Casilla 1025-1039: transmitente nif iva.'
-            label: 'Casilla 1025-1039: transmitente nif iva'
+            label: Átruházó (3) - NIF-IVA
+          transmitente-nombre:
+            label: Átruházó (3) - Név
+          transmitente-pais:
+            help: A 309-es modell 198-199. mezője, 2016-2017. adóév.
+            label: Átruházó (3) - Ország
           vehiculo-bastidor:
-            help: 'A casilla adatai: Casilla 220: vehiculo bastidor.'
-            label: 'Casilla 220: vehiculo bastidor'
+            label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
           vehiculo-clasificacion:
-            help: 'A casilla adatai: Casilla 260: vehiculo clasificacion.'
-            label: 'Casilla 260: vehiculo clasificacion'
+            label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
           vehiculo-marca:
-            help: 'A casilla adatai: Casilla 100: vehiculo marca.'
-            label: 'Casilla 100: vehiculo marca'
+            label: Jellemzők és műszaki adatok (7) - Járművek - Márka
           vehiculo-modelo:
-            help: 'A casilla adatai: Casilla 180: vehiculo modelo.'
-            label: 'Casilla 180: vehiculo modelo'
+            label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
+              megnevezés):'
           vehiculo-tipo:
-            help: 'A casilla adatai: Casilla 140: vehiculo kulcs.'
-            label: 'Casilla 140: vehiculo kulcs'
+            label: Jellemzők és műszaki adatok (7) - Járművek - Típus
       field:
         official_name: Modelo 309. Hozzáadottérték-adó. Nem rendszeres bevallás-elszámolás.
         title: IVA. Nem rendszeres bevallás-elszámolás
@@ -152,190 +199,86 @@ modelo:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
               help: A 309-es modell 792-804. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5in4rrec5r6abb1dpng:
               help: A 309-es modell 546-549. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
               help: A 309-es modell 426-465. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
               help: A 309-es modell 466-505. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
-                - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
               help: A 309-es modell 550-561. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
-                felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
               help: A 309-es modell 506-545. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
               help: A 309-es modell 779-791. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
-                [22]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 420-425. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
-                hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
               help: A 309-es modell 300-339. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
               help: A 309-es modell 380-419. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
-                (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
               help: A 309-es modell 340-379. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lgm8sbld5pmior9dtn2qqbeehp62orfdlqmsqbkc5p6io8:
-              help: A 309-es modell 94-94. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: termékek Közösségen belüli beszerzése'
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355limst3icljm2bb9dpr6asjjd5nmsbb9dpmmuoj9dhkm2sj9c4:
-              help: A 309-es modell 97-97. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: ingatlan jellegű beruházási javak értékesítése'
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: A 309-es modell 96-96. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: fordított adózás'
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lmmap39dtpiqt3ic5n76s3fe9q6abbeelincrrj:
-              help: A 309-es modell 95-95. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: új közlekedési eszközök Közösségen belüli
-                beszerzése'
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lnn8sjfec:
-              help: A 309-es modell 99-99. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: egyéb, nem szabályozott esetek'
-            x-chim6r1ed1im6q3f5lkmqs3fdpkm4r355lo74rr3cli6irb9cln78rpdc5i6qqbed5pn8sj1ehkncrpdd9qm8qb3d5gmo:
-              help: A 309-es modell 98-98. mezője, 2004-2015. adóév.
-              label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
-                közigazgatási és bírósági eljárásokban'
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: A 309-es modell 818-830. mezője, 2004-2015. adóév.
-              label: Az előző bevallás igazolószáma (9)
             x-chim6r1ee1in4qbfchng:
               help: A 309-es modell 23-24. mezője, 2004-2015. adóév.
-              label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
               help: A 309-es modell 655-667. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
               help: A 309-es modell 686-698. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
               help: A 309-es modell 717-729. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
               help: A 309-es modell 748-760. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
               help: A 309-es modell 673-685. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
               help: A 309-es modell 704-716. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
               help: A 309-es modell 735-747. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
               help: A 309-es modell 766-778. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
               help: A 309-es modell 668-672. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
               help: A 309-es modell 699-703. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
               help: A 309-es modell 730-734. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
               help: A 309-es modell 761-765. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
               help: A 309-es modell 805-817. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
               help: A 309-es modell 562-574. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
               help: A 309-es modell 593-605. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
               help: A 309-es modell 624-636. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
               help: A 309-es modell 580-592. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
               help: A 309-es modell 611-623. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
               help: A 309-es modell 642-654. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
               help: A 309-es modell 575-579. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
               help: A 309-es modell 606-610. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
               help: A 309-es modell 637-641. mezője, 2004-2015. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lgmesj9cdnmoo8:
-              help: A 309-es modell 88-88. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: a mezőgazdasági, állattenyésztési és halászati
-                különös rendszer alanya'
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lnn8sj1ec:
-              help: A 309-es modell 93-93. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: egyéb, nem szabályozott esetek'
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bb6d5pmior15ln6ubb5dlo74pbjc5p6iro:
-              help: A 309-es modell 92-92. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
-                végző természetes személy'
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lo6asjjdtn62bbaelp6ip39cdgiqrjf5limqs3iclpm2sj9ds:
-              help: A 309-es modell 91-91. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
-                végző jogi személy'
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lp6aor1e9jmubb5e5qmitj1dhimsor9c4:
-              help: A 309-es modell 89-89. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: az egyenértékűségi felár különös rendszerének
-                alanya'
-            x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb15lpmirhdchin4pb3d1niqp35chqm6or9dtn0:
-              help: A 309-es modell 90-90. mezője, 2004-2015. adóév.
-              label: 'Adójogi helyzet: levonási jog nélküli adóalany'
-            x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modell 34-73. mezője, 2004-2015. adóév.
-              label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
               help: A 309-es modell 25-33. mezője, 2004-2015. adóév.
-              label: Átruházó (3) - NIF
-            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modell 74-87. mezője, 2004-2015. adóév.
-              label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
               help: A 309-es modell 220-259. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
               help: A 309-es modell 260-299. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
               help: A 309-es modell 100-139. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
               help: A 309-es modell 180-219. mezője, 2004-2015. adóév.
-              label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
-                megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
               help: A 309-es modell 140-179. mezője, 2004-2015. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Típus
-            x-etkn4p9edhin8sj1ecmmat39e5qmat31:
-              help: A 309-es modell 15-18. mezője, 2004-2015. adóév.
-              label: Az azonosító címke betűi
-            x-etkn4p9edth76pbiepgm6qbfdpin6:
-              help: A 309-es modell 951-1300. mezője, 2004-2015. adóév.
-              label: Megjegyzések
           construct:
             modelo-309-iva-no-periodica:
               field:
@@ -346,180 +289,102 @@ modelo:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
               help: A 309-es modell 943-959. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5in4rrec5r6abb1dpng:
               help: A 309-es modell 639-642. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
               help: A 309-es modell 497-536. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
               help: A 309-es modell 537-616. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
-                - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
               help: A 309-es modell 643-652. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
-                felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
               help: A 309-es modell 617-638. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 309-es modell 977-977. mezője, 2016-2017. adóév.
-              label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
               help: A 309-es modell 926-942. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
-                [22]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
-                hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
               help: A 309-es modell 350-389. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
               help: A 309-es modell 470-491. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
-                (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
               help: A 309-es modell 390-469. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
               help: A 309-es modell 201-201. mezője, 2016-2017. adóév.
-              label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
               help: A 309-es modell 991-1024. mezője, 2016-2017. adóév.
-              label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: A 309-es modell 978-990. mezője, 2016-2017. adóév.
-              label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
               help: A 309-es modell 83-102. mezője, 2016-2017. adóév.
-              label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
               help: A 309-es modell 107-108. mezője, 2016-2017. adóév.
-              label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
               help: A 309-es modell 770-786. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
               help: A 309-es modell 809-825. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
               help: A 309-es modell 848-864. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
               help: A 309-es modell 887-903. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
               help: A 309-es modell 792-808. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
               help: A 309-es modell 831-847. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
               help: A 309-es modell 870-886. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
               help: A 309-es modell 909-925. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
               help: A 309-es modell 787-791. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
               help: A 309-es modell 826-830. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
               help: A 309-es modell 865-869. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
               help: A 309-es modell 904-908. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
               help: A 309-es modell 960-976. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
               help: A 309-es modell 653-669. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
               help: A 309-es modell 692-708. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
               help: A 309-es modell 731-747. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
               help: A 309-es modell 675-691. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
               help: A 309-es modell 714-730. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
               help: A 309-es modell 753-769. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
               help: A 309-es modell 670-674. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
               help: A 309-es modell 709-713. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
               help: A 309-es modell 748-752. mezője, 2016-2017. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
               help: A 309-es modell 200-200. mezője, 2016-2017. adóév.
-              label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 309-es modell 13-13. mezője, 2016-2017. adóév.
-              label: Bevallás típusa
-            x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
-                szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
               help: A 309-es modell 118-177. mezője, 2016-2017. adóév.
-              label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
               help: A 309-es modell 109-117. mezője, 2016-2017. adóév.
-              label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
               help: A 309-es modell 178-197. mezője, 2016-2017. adóév.
-              label: Átruházó (3) - Név
-            x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modell 198-199. mezője, 2016-2017. adóév.
-              label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
               help: A 309-es modell 322-343. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
               help: A 309-es modell 344-349. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
               help: A 309-es modell 202-241. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
               help: A 309-es modell 282-321. mezője, 2016-2017. adóév.
-              label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
-                megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
               help: A 309-es modell 242-281. mezője, 2016-2017. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Típus
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
-                (új közlekedési eszközök stb.)
-            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: A Modelo 309 . casilla adóügyi adatai.
-              label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
-                előzetesen felszámított)
-            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
-                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
-              label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
-                felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:
@@ -530,192 +395,112 @@ modelo:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
               help: A 309-es modell 943-959. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
               help: A 309-es modell 1049-1108. mezője, 2018-2022. adóév.
-              label: Vevő (4) - Vezetéknév vagy cégnév
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
               help: A 309-es modell 1040-1048. mezője, 2018-2022. adóév.
-              label: Vevő (4) - NIF
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
               help: A 309-es modell 1109-1128. mezője, 2018-2022. adóév.
-              label: Vevő (4) - Név
             x-chim6r1ec5in4rrec5r6abb1dpng:
               help: A 309-es modell 639-642. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
               help: A 309-es modell 497-536. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
               help: A 309-es modell 537-616. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
-                - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
               help: A 309-es modell 643-652. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
-                felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
               help: A 309-es modell 617-638. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 309-es modell 977-977. mezője, 2018-2022. adóév.
-              label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
               help: A 309-es modell 926-942. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
-                [22]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
-                hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
               help: A 309-es modell 350-389. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
               help: A 309-es modell 470-491. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
-                (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
               help: A 309-es modell 390-469. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
               help: A 309-es modell 201-201. mezője, 2018-2022. adóév.
-              label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
               help: A 309-es modell 991-1024. mezője, 2018-2022. adóév.
-              label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: A 309-es modell 978-990. mezője, 2018-2022. adóév.
-              label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
               help: A 309-es modell 83-102. mezője, 2018-2022. adóév.
-              label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
               help: A 309-es modell 107-108. mezője, 2018-2022. adóév.
-              label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
               help: A 309-es modell 770-786. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
               help: A 309-es modell 809-825. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
               help: A 309-es modell 848-864. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
               help: A 309-es modell 887-903. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
               help: A 309-es modell 792-808. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
               help: A 309-es modell 831-847. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
               help: A 309-es modell 870-886. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
               help: A 309-es modell 909-925. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
               help: A 309-es modell 787-791. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
               help: A 309-es modell 826-830. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
               help: A 309-es modell 865-869. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
               help: A 309-es modell 904-908. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
               help: A 309-es modell 960-976. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
               help: A 309-es modell 653-669. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
               help: A 309-es modell 692-708. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
               help: A 309-es modell 731-747. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
             x-chim6r1ee9jiqorldtq62b9g6c:
               help: A 309-es modell 675-691. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
               help: A 309-es modell 714-730. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
               help: A 309-es modell 753-769. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
             x-chim6r1ee9jiqt39e1niqc1i:
               help: A 309-es modell 670-674. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
               help: A 309-es modell 709-713. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
               help: A 309-es modell 748-752. mezője, 2018-2022. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
               help: A 309-es modell 200-200. mezője, 2018-2022. adóév.
-              label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 309-es modell 13-13. mezője, 2018-2022. adóév.
-              label: Bevallás típusa
-            x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
-                szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
               help: A 309-es modell 118-177. mezője, 2018-2022. adóév.
-              label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
               help: A 309-es modell 109-117. mezője, 2018-2022. adóév.
-              label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
               help: A 309-es modell 1025-1039. mezője, 2018-2022. adóév.
-              label: Átruházó (3) - NIF-IVA
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
               help: A 309-es modell 178-197. mezője, 2018-2022. adóév.
-              label: Átruházó (3) - Név
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
               help: A 309-es modell 198-199. mezője, 2018-2022. adóév.
-              label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
               help: A 309-es modell 322-343. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
               help: A 309-es modell 344-349. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
               help: A 309-es modell 202-241. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
               help: A 309-es modell 282-321. mezője, 2018-2022. adóév.
-              label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
-                megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
               help: A 309-es modell 242-281. mezője, 2018-2022. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Típus
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
-                (új közlekedési eszközök stb.)
-            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: A Modelo 309 . casilla adóügyi adatai.
-              label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
-                előzetesen felszámított)
-            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
-                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
-              label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
-                felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:
@@ -726,201 +511,112 @@ modelo:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
               help: A 309-es modell 982-998. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Levonandó [23]
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
               help: A 309-es modell 1088-1147. mezője, 2023 y siguientes. adóév.
-              label: Vevő (4) - Vezetéknév vagy cégnév
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
               help: A 309-es modell 1079-1087. mezője, 2023 y siguientes. adóév.
-              label: Vevő (4) - NIF
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
               help: A 309-es modell 1148-1167. mezője, 2023 y siguientes. adóév.
-              label: Vevő (4) - Név
             x-chim6r1ec5in4rrec5r6abb1dpng:
               help: A 309-es modell 639-642. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
               help: A 309-es modell 497-536. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártó
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
               help: A 309-es modell 537-616. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Márka - Típus
-                - Modell
             x-chim6r1ec5in4rrec5r6abbgclpmu:
               help: A 309-es modell 643-652. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Legnagyobb
-                felszállótömeg (kg)
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
               help: A 309-es modell 617-638. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Légi járművek - Sorozatszám
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 309-es modell 1016-1016. mezője, 2023 y siguientes. adóév.
-              label: Kiegészítő bevallás (9)
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
               help: A 309-es modell 965-981. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
-                [22]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb
-                hossz
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
               help: A 309-es modell 350-389. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Gyártó
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
               help: A 309-es modell 470-491. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás
-                (építési szám)
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
               help: A 309-es modell 390-469. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
               help: A 309-es modell 201-201. mezője, 2023 y siguientes. adóév.
-              label: 'Adóköteles tényállás (6):'
             x-chim6r1ed5h62rg:
               help: A 309-es modell 1030-1063. mezője, 2023 y siguientes. adóév.
-              label: IBAN (10)
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: A 309-es modell 1017-1029. mezője, 2023 y siguientes. adóév.
-              label: Az előző bevallás igazolószáma (9)
             x-chim6r1edpnmqojick:
               help: A 309-es modell 83-102. mezője, 2023 y siguientes. adóév.
-              label: Azonosítás (1) - Név
             x-chim6r1ee1in4qbfchng:
               help: A 309-es modell 107-108. mezője, 2023 y siguientes. adóév.
-              label: Esedékesség. Időszak
             x-chim6r1ee9iiqoj1ediiqc9g:
               help: A 309-es modell 809-825. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
             x-chim6r1ee9iiqoj1ediiqc9j:
               help: A 309-es modell 848-864. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [13]
             x-chim6r1ee9iiqoj1ediiqc9m:
               help: A 309-es modell 887-903. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [16]
             x-chim6r1ee9iiqoj1ediiqc9p:
               help: A 309-es modell 926-942. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [19]
             x-chim6r1ee9iiqorldtq62b9h68:
               help: A 309-es modell 831-847. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [12]
             x-chim6r1ee9iiqorldtq62b9h6k:
               help: A 309-es modell 870-886. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [15]
             x-chim6r1ee9iiqorldtq62b9h70:
               help: A 309-es modell 909-925. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [18]
             x-chim6r1ee9iiqorldtq62b9i64:
               help: A 309-es modell 948-964. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adóösszeg [21]
             x-chim6r1ee9iiqt39e1niqc9h:
               help: A 309-es modell 826-830. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [11]
             x-chim6r1ee9iiqt39e1niqc9k:
               help: A 309-es modell 865-869. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [14]
             x-chim6r1ee9iiqt39e1niqc9n:
               help: A 309-es modell 904-908. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [17]
             x-chim6r1ee9iiqt39e1niqchg:
               help: A 309-es modell 943-947. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Egyenértékűségi felár - Adókulcs % [20]
             x-chim6r1ee9in6tbcehgm8rpd68q0:
               help: A 309-es modell 999-1015. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Befizetendő eredmény [22] [23] [24]
             x-chim6r1ee9jiqoj1ediiqc1h:
               help: A 309-es modell 653-669. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [01]
             x-chim6r1ee9jiqoj1ediiqc1k:
               help: A 309-es modell 731-747. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [04]
             x-chim6r1ee9jiqoj1ediiqc1n:
               help: A 309-es modell 770-786. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
-            x-chim6r1ee9jiqoj1ediiqchl:
-              help: A 309-es modell 692-708. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
             x-chim6r1ee9jiqorldtq62b9g6c:
               help: A 309-es modell 675-691. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
             x-chim6r1ee9jiqorldtq62b9g6o:
               help: A 309-es modell 753-769. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [06]
             x-chim6r1ee9jiqorldtq62b9g74:
               help: A 309-es modell 792-808. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
-            x-chim6r1ee9jiqorldtq62b9i6s:
-              help: A 309-es modell 714-730. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
             x-chim6r1ee9jiqt39e1niqc1i:
               help: A 309-es modell 670-674. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
             x-chim6r1ee9jiqt39e1niqc1l:
               help: A 309-es modell 748-752. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [05]
             x-chim6r1ee9jiqt39e1niqc1o:
               help: A 309-es modell 787-791. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
-            x-chim6r1ee9jiqt39e1niqchm:
-              help: A 309-es modell 709-713. mezője, 2023 y siguientes. adóév.
-              label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
               help: A 309-es modell 200-200. mezője, 2023 y siguientes. adóév.
-              label: 'Adójogi helyzet (5):'
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A 309-es modell 13-13. mezője, 2023 y siguientes. adóév.
-              label: Bevallás típusa
-            x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
-                szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
               help: A 309-es modell 118-177. mezője, 2023 y siguientes. adóév.
-              label: Átruházó (3) - Vezetéknév vagy cégnév
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
               help: A 309-es modell 109-117. mezője, 2023 y siguientes. adóév.
-              label: Átruházó (3) - NIF
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
               help: A 309-es modell 1064-1078. mezője, 2023 y siguientes. adóév.
-              label: Átruházó (3) - NIF-IVA
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
               help: A 309-es modell 178-197. mezője, 2023 y siguientes. adóév.
-              label: Átruházó (3) - Név
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
               help: A 309-es modell 198-199. mezője, 2023 y siguientes. adóév.
-              label: Átruházó (3) - Ország
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
               help: A 309-es modell 322-343. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
               help: A 309-es modell 344-349. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Besorolás
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
               help: A 309-es modell 202-241. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Márka
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
               help: A 309-es modell 282-321. mezője, 2023 y siguientes. adóév.
-              label: 'Jellemzők és műszaki adatok (7) - Járművek - Modell (kereskedelmi
-                megnevezés):'
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
               help: A 309-es modell 242-281. mezője, 2023 y siguientes. adóév.
-              label: Jellemzők és műszaki adatok (7) - Járművek - Típus
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
-              label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
-                (új közlekedési eszközök stb.)
-            x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: A Modelo 309 . casilla adóügyi adatai.
-              label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
-                előzetesen felszámított)
-            x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
-                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
-              label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
-                felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:

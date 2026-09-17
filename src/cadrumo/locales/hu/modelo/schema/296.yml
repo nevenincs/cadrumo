@@ -1,26 +1,34 @@
 modelo:
   schema:
     '296':
+      casilla:
+        continuidad:
+          irnr-resumen-base:
+            help: A kedvezményezetti rekordok levonási alapjainak algebrai összege.
+            label: A levonások és előlegfizetések alapja
+          irnr-resumen-retenciones:
+            help: A kedvezményezetti rekordok levonásainak és előlegfizetéseinek összege.
+            label: Levonások és előlegfizetések
+          irnr-resumen-retenciones-ingresadas:
+            help: 'A ténylegesen befizetett levonások része: csak a 3-25 kulcsú kedvezményezettek,
+              valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke 1. Alacsonyabb
+              lehet, mint a 03. rovat.'
+            label: Ténylegesen befizetett levonások és előlegfizetések
       field:
         official_name: Modelo 296. A külföldi illetőségűek jövedelemadója. Állandó
           telephellyel nem rendelkező külföldi illetőségűek. Az adóelőleg-levonások
           és -befizetések éves bevallása.
         title: IRNR adóelőleg-levonások és -befizetések éves összesítője
       revision:
+        '2023':
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: '296-os modelo: éves tájékoztató bevallás az állandó telephely
+                  nélküli IRNR forrásadóról és előlegekről'
+          field:
+            label: null
         2024-y-siguientes:
-          casilla:
-            '02':
-              help: A kedvezményezetti rekordok levonási alapjainak algebrai összege.
-              label: A levonások és előlegfizetések alapja
-            '03':
-              help: A kedvezményezetti rekordok levonásainak és előlegfizetéseinek
-                összege.
-              label: Levonások és előlegfizetések
-            '04':
-              help: 'A ténylegesen befizetett levonások része: csak a 3-25 kulcsú
-                kedvezményezettek, valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke
-                1. Alacsonyabb lehet, mint a 03. rovat.'
-              label: Ténylegesen befizetett levonások és előlegfizetések
           construct:
             modelo-296-calculation-construct:
               field:

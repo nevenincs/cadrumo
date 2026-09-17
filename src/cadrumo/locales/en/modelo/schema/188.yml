@@ -8,6 +8,14 @@ modelo:
         title: Withholdings on capitalisation transactions and life insurance - annual
           summary
       revision:
+        '2022':
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: Modelo 188 information return on income from capitalisation
+                  operations and life or disability insurance
+          field:
+            label: null
         2023-y-siguientes:
           casilla:
             '01':

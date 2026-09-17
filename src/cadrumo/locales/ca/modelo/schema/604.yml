@@ -3,185 +3,179 @@ modelo:
     '604':
       casilla:
         continuidad:
+          base-imponible-operaciones-sujetas-no-exentas:
+            help: 'Informació fiscal sobre informació fiscal de la casella 01 del
+              Modelo 604 Referències: [01].'
+            label: Operacions subjectes no exemptes realitzades en el període. Base
+              imposable [01]
+          base-imponible-rectificaciones:
+            help: 'Informació fiscal sobre informació fiscal de la casella 03 del
+              Modelo 604 Referències: [03].'
+            label: Rectificacions. Base imposable [03]
+          cuota-operaciones-sujetas-no-exentas:
+            help: 'Consulteu la informació de la casella: Operacions subjectes no
+              exemptes realizadas en el període. Quota [02].'
+            label: Operacions subjectes no exemptes realitzades en el període. Quota
+              [02]
+          cuota-rectificaciones:
+            help: 'Consulteu la informació de la casella: Rectificaciones. Quota [04].'
+            label: Rectificacions. Quota [04]
+          declaracion-complementaria:
+            help: 'Consulteu la informació de la casella: Declaració complementària.'
+            label: Declaració complementària
+          domicilio-fiscal-espana-bloque:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Domicili fiscal en territori espanyol. Bloc
+          domicilio-fiscal-espana-calificador-numero:
+            help: Informació fiscal de la casella del Modelo 604.
+            label: Domicili fiscal en territori espanyol. Qualificador del número
+          domicilio-fiscal-espana-codigo-postal:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Codi postal.'
+            label: Domicili fiscal en territori espanyol. Codi postal
+          domicilio-fiscal-espana-codigo-provincia:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Domicili fiscal en territori espanyol. Codi de província
+          domicilio-fiscal-espana-complemento:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Complemento del domicili.'
+            label: Domicili fiscal en territori espanyol. Complement del domicili
+          domicilio-fiscal-espana-escalera:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Escalera.'
+            label: Domicili fiscal en territori espanyol. Escala
+          domicilio-fiscal-espana-localidad:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Localidad o población.'
+            label: Domicili fiscal en territori espanyol. Localitat o població
+          domicilio-fiscal-espana-municipio:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Domicili fiscal en territori espanyol. Municipi
+          domicilio-fiscal-espana-nombre-via:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Nom de la vía.'
+            label: Domicili fiscal en territori espanyol. Nom de la via
+          domicilio-fiscal-espana-numero-casa:
+            help: Informació fiscal de la casella del Modelo 604.
+            label: Domicili fiscal en territori espanyol. Número de casa
+          domicilio-fiscal-espana-planta:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Planta.'
+            label: Domicili fiscal en territori espanyol. Planta
+          domicilio-fiscal-espana-portal:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Portal.'
+            label: Domicili fiscal en territori espanyol. Portal
+          domicilio-fiscal-espana-provincia:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Domicili fiscal en territori espanyol. Província
+          domicilio-fiscal-espana-puerta:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Puerta.'
+            label: Domicili fiscal en territori espanyol. Porta
+          domicilio-fiscal-espana-tipo-numeracion:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Tipus de numeración.'
+            label: Domicili fiscal en territori espanyol. Tipus de numeració
+          domicilio-fiscal-espana-tipo-via:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
+              español. Tipus de vía.'
+            label: Domicili fiscal en territori espanyol. Tipus de via
+          domicilio-fiscal-extranjero-codigo-pais:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              Codi de país.'
+            label: Domicili fiscal a l'estranger. Codi de país
+          domicilio-fiscal-extranjero-codigo-postal:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              Codi postal (ZIP).'
+            label: Domicili fiscal a l'estranger. Codi postal (ZIP)
+          domicilio-fiscal-extranjero-complemento:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              Complemento del domicili.'
+            label: Domicili fiscal a l'estranger. Complement del domicili
+          domicilio-fiscal-extranjero-domicilio:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              Domicili.'
+            label: Domicili fiscal a l'estranger. Domicili
+          domicilio-fiscal-extranjero-pais:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              País.'
+            label: Domicili fiscal a l'estranger. País
+          domicilio-fiscal-extranjero-poblacion:
+            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
+              Población o ciudad.'
+            label: Domicili fiscal a l'estranger. Població o ciutat
+          domicilio-fiscal-extranjero-provincia-region-estado:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Domicili fiscal a l'estranger. Província, regió o estat
           filing-period:
-            help: Informació fiscal de la casella del Modelo 604.
-            label: Casella — informació fiscal
+            help: 'Consulteu la informació de la casella: Període (més natural).'
+            label: Període (mes natural)
           filing-year:
+            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+              604.
+            label: Exercici a què es refereix l'autoliquidació
+          idioma-declaracion:
+            help: 'Consulteu la informació de la casella: Idioma de la declaració.'
+            label: Idioma de la declaració
+          importe-a-deducir:
+            help: 'Consulteu la informació de la casella: A deduir [06].'
+            label: A deduir [06]
+          importe-operaciones-exentas:
+            help: 'Consulteu la informació de la casella: Operacions exemptes realizadas
+              en el període [05].'
+            label: Operacions exemptes realitzades en el període [05]
+          numero-justificante-anexo-informativo:
             help: Informació fiscal de la casella del Modelo 604.
-            label: Casella — informació fiscal
+            label: Annex informatiu. Número de justificant
+          numero-justificante-declaracion-anterior:
+            help: Informació fiscal de la casella del Modelo 604.
+            label: Número de justificant de la declaració anterior
+          resultado-autoliquidacion:
+            help: 'Informació fiscal sobre informació fiscal de la casella 07 del
+              Modelo 604 Referències: [07].'
+            label: Resultat de l'autoliquidació [07]
+          signo-base-sujetas:
+            help: 'Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604 Referències: [03].'
+          signo-cuota-rectificaciones:
+            help: 'Consulteu la informació de la casella: Rectificaciones. Signo de
+              la quota [04].'
+            label: Rectificacions. Signe de la quota [04]
+          sujeto-pasivo-codigo-bic:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Subjecte passiu. Codi BIC
+          sujeto-pasivo-codigo-lei:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Subjecte passiu. Codi LEI (norma ISO 17442)
+          sujeto-pasivo-persona-contacto:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Subjecte passiu. Persona de contacte
+          sujeto-pasivo-telefono-contacto:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              604.
+            label: Subjecte passiu. Telèfon de contacte
+          tipo-autoliquidacion:
+            help: 'Consulteu la informació de la casella: Tipus de autoliquidació
+              (I: a ingresar, N: negativa).'
+            label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
       field:
         official_name: Modelo 604. Impost sobre les Transaccions Financeres. Autoliquidació.
         title: Impost sobre les Transaccions Financeres - autoliquidació
       revision:
         2021-2023:
           casilla:
-            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Annex informatiu. Número de justificant
-            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
-              help: 'Consulteu la informació de la casella: Declaració complementària.'
-              label: Declaració complementària
-            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Número de justificant de la declaració anterior
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                604.
-              label: Exercici a què es refereix l'autoliquidació
-            x-chim6r1ed5i6irrdc4:
-              help: 'Consulteu la informació de la casella: Idioma de la declaració.'
-              label: Idioma de la declaració
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulteu la informació de la casella: Període (més natural).'
-              label: Període (mes natural)
-            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
-              help: 'Consulteu la informació de la casella: Tipus de autoliquidació
-                (I: a ingresar, N: negativa).'
-              label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
-            x-chnmqbb5ecn64r3fe5qma:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Bloc
-            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Domicili fiscal en territori espanyol. Qualificador del número
-            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Codi postal.'
-              label: Domicili fiscal en territori espanyol. Codi postal
-            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Codi de província
-            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Complemento del domicili.'
-              label: Domicili fiscal en territori espanyol. Complement del domicili
-            x-chnmqbb5ecn6asr3c5m6asj1:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Escalera.'
-              label: Domicili fiscal en territori espanyol. Escala
-            x-chnmqbb5ecn6orr3c5m6ip31cg:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Localidad o población.'
-              label: Domicili fiscal en territori espanyol. Localitat o població
-            x-chnmqbb5ecn6qtbed5hmis39ds:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Municipi
-            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Nom de la vía.'
-              label: Domicili fiscal en territori espanyol. Nom de la via
-            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Domicili fiscal en territori espanyol. Número de casa
-            x-chnmqbb5ecn70r31dpq62:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Planta.'
-              label: Domicili fiscal en territori espanyol. Planta
-            x-chnmqbb5ecn70rriehgmo:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Portal.'
-              label: Domicili fiscal en territori espanyol. Portal
-            x-chnmqbb5ecn70sjfepkmsor9c4:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Província
-            x-chnmqbb5ecn70tb5e9q62:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Puerta.'
-              label: Domicili fiscal en territori espanyol. Porta
-            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Tipus de numeración.'
-              label: Domicili fiscal en territori espanyol. Tipus de numeració
-            x-chnmqbb5ecn78qbgdsmncqb1:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Tipus de vía.'
-              label: Domicili fiscal en territori espanyol. Tipus de via
-            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Codi de país.'
-              label: Domicili fiscal a l'estranger. Codi de país
-            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Codi postal (ZIP).'
-              label: Domicili fiscal a l'estranger. Codi postal (ZIP)
-            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Complemento del domicili.'
-              label: Domicili fiscal a l'estranger. Complement del domicili
-            x-chnmqbb5f0n68rrdd5hmir39ds:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Domicili.'
-              label: Domicili fiscal a l'estranger. Domicili
-            x-chnmqbb5f0n70ob9ec:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. País.'
-              label: Domicili fiscal a l'estranger. País
-            x-chnmqbb5f0n70rr2dhgm6qbfdo:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Población o ciudad.'
-              label: Domicili fiscal a l'estranger. Població o ciutat
-            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal a l'estranger. Província, regió o estat
-            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
-              help: 'Informació fiscal sobre informació fiscal de la casella 01 del
-                Modelo 604 Referències: [01].'
-              label: Operacions subjectes no exemptes realitzades en el període. Base
-                imposable [01]
-            x-dhkn2bhg68mm6tbfehgg:
-              help: 'Consulteu la informació de la casella: Operacions subjectes no
-                exemptes realizadas en el període. Quota [02].'
-              label: Operacions subjectes no exemptes realitzades en el període. Quota
-                [02]
-            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'Informació fiscal sobre informació fiscal de la casella 03 del
-                Modelo 604 Referències: [03].'
-              label: Rectificacions. Base imposable [03]
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
-              help: 'Informació fiscal sobre informació fiscal de la casella  del
-                Modelo 604 Referències: [03].'
               label: Operacions subjectes no exemptes realitzades en el període. Signe
                 de la base imposable [03]
-            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Consulteu la informació de la casella: Rectificaciones. Quota
-                [04].'
-              label: Rectificacions. Quota [04]
-            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'Consulteu la informació de la casella: Rectificaciones. Signo
-                de la quota [04].'
-              label: Rectificacions. Signe de la quota [04]
-            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
-              help: 'Consulteu la informació de la casella: Operacions exemptes realizadas
-                en el període [05].'
-              label: Operacions exemptes realitzades en el període [05]
-            x-dhkn2bhg6omm2bb4cli7aor9e8:
-              help: 'Consulteu la informació de la casella: A deduir [06].'
-              label: A deduir [06]
-            x-dhkn2bhg6smn4pbjelm78ob4ds:
-              help: 'Informació fiscal sobre informació fiscal de la casella 07 del
-                Modelo 604 Referències: [07].'
-              label: Resultat de l'autoliquidació [07]
-            x-edo2sorfchkmerpdc9km6:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Codi BIC
-            x-edo2sorfchkmerpddhimi:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Codi LEI (norma ISO 17442)
-            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Persona de contacte
-            x-edo2st35dhimcrredsmm6rreehgm6t3f:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Telèfon de contacte
           construct:
             modelo-604-autoliquidacion:
               field:
@@ -191,156 +185,8 @@ modelo:
             label: Casella— informació fiscal
         2024-y-siguientes:
           casilla:
-            x-c5n6au3f5pn7arb5e9niqqjledq6ipj9cdgmst35:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Annex informatiu. Número de justificant
-            x-cdnmqs3c5pi6aorcc5p62or9dtn2qorfdlo6opbdcln78obid5gg:
-              help: 'Consulteu la informació de la casella: Declaració complementària.'
-              label: Declaració complementària
-            x-cdnmqs3c5pn7arb5e9niqqjledq6ipj9cdgmst355lgmst35e9kmusg:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Número de justificant de la declaració anterior
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                604.
-              label: Exercici a què es refereix l'autoliquidació
-            x-chim6r1ed5i6irrdc4:
-              help: 'Consulteu la informació de la casella: Idioma de la declaració.'
-              label: Idioma de la declaració
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulteu la informació de la casella: Període (més natural).'
-              label: Període (mes natural)
-            x-chim6r1eehkn0rpdc5qn8rrcd5onaqb4c5hmirre:
-              help: 'Consulteu la informació de la casella: Tipus de autoliquidació
-                (I: a ingresar, N: negativa).'
-              label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
-            x-chnmqbb5ecn64r3fe5qma:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Bloc
-            x-chnmqbb5ecn66obcd5j6ior1chnn4bbeelmmasjf:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Domicili fiscal en territori espanyol. Qualificador del número
-            x-chnmqbb5ecn66rr4d5jmubbgdtpn8obc:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Codi postal.'
-              label: Domicili fiscal en territori espanyol. Codi postal
-            x-chnmqbb5ecn66rr4d5jmubbge9nncqbecdkm2:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Codi de província
-            x-chnmqbb5ecn66rrde1m6arb5dpq6u:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Complemento del domicili.'
-              label: Domicili fiscal en territori espanyol. Complement del domicili
-            x-chnmqbb5ecn6asr3c5m6asj1:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Escalera.'
-              label: Domicili fiscal en territori espanyol. Escala
-            x-chnmqbb5ecn6orr3c5m6ip31cg:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Localidad o población.'
-              label: Domicili fiscal en territori espanyol. Localitat o població
-            x-chnmqbb5ecn6qtbed5hmis39ds:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Municipi
-            x-chnmqbb5ecn6srrdc9p6abbmd5gg:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Nom de la vía.'
-              label: Domicili fiscal en territori espanyol. Nom de la via
-            x-chnmqbb5ecn6stbdclp6ubb3c5pm2:
-              help: Informació fiscal de la casella del Modelo 604.
-              label: Domicili fiscal en territori espanyol. Número de casa
-            x-chnmqbb5ecn70r31dpq62:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Planta.'
-              label: Domicili fiscal en territori espanyol. Planta
-            x-chnmqbb5ecn70rriehgmo:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Portal.'
-              label: Domicili fiscal en territori espanyol. Portal
-            x-chnmqbb5ecn70sjfepkmsor9c4:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal en territori espanyol. Província
-            x-chnmqbb5ecn70tb5e9q62:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Puerta.'
-              label: Domicili fiscal en territori espanyol. Porta
-            x-chnmqbb5ecn78qbgdsmmstbdclp62or9dtn0:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Tipus de numeración.'
-              label: Domicili fiscal en territori espanyol. Tipus de numeració
-            x-chnmqbb5ecn78qbgdsmncqb1:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-                español. Tipus de vía.'
-              label: Domicili fiscal en territori espanyol. Tipus de via
-            x-chnmqbb5f0n66rr4d5jmubbgc5kn6:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Codi de país.'
-              label: Domicili fiscal a l'estranger. Codi de país
-            x-chnmqbb5f0n66rr4d5jmubbgdtpn8obc:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Codi postal (ZIP).'
-              label: Domicili fiscal a l'estranger. Codi postal (ZIP)
-            x-chnmqbb5f0n66rrde1m6arb5dpq6u:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Complemento del domicili.'
-              label: Domicili fiscal a l'estranger. Complement del domicili
-            x-chnmqbb5f0n68rrdd5hmir39ds:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Domicili.'
-              label: Domicili fiscal a l'estranger. Domicili
-            x-chnmqbb5f0n70ob9ec:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. País.'
-              label: Domicili fiscal a l'estranger. País
-            x-chnmqbb5f0n70rr2dhgm6qbfdo:
-              help: 'Consulteu la informació de la casella: Domicili fiscal en el
-                estranger. Población o ciudad.'
-              label: Domicili fiscal a l'estranger. Població o ciutat
-            x-chnmqbb5f0n70sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Domicili fiscal a l'estranger. Província, regió o estat
-            x-dhkn2bhg64mm4objckmmirbgdtn6iojcck:
-              help: 'Informació fiscal sobre informació fiscal de la casella 01 del
-                Modelo 604 Referències: [01].'
-              label: Operacions subjectes no exemptes realitzades en el període. Base
-                imposable [01]
-            x-dhkn2bhg68mm6tbfehgg:
-              help: 'Consulteu la informació de la casella: Operacions subjectes no
-                exemptes realizadas en el període. Quota [02].'
-              label: Operacions subjectes no exemptes realitzades en el període. Quota
-                [02]
-            x-dhkn2bhg6cmm4objckmn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'Informació fiscal sobre informació fiscal de la casella 03 del
-                Modelo 604 Referències: [03].'
-              label: Rectificacions. Base imposable [03]
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Informació fiscal sobre informació fiscal de la casella  del
-                Modelo 604 Referències: [03].'
               label: Rectificacions. Signe de la base imposable [03]
-            x-dhkn2bhg6gmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Consulteu la informació de la casella: Rectificaciones. Quota
-                [04].'
-              label: Rectificacions. Quota [04]
-            x-dhkn2bhg6gmn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'Consulteu la informació de la casella: Rectificaciones. Signo
-                de la quota [04].'
-              label: Rectificacions. Signe de la quota [04]
-            x-dhkn2bhg6kmmus35e9gm6qbfdpin6bb5f1imst31ec:
-              help: 'Consulteu la informació de la casella: Operacions exemptes realizadas
-                en el període [05].'
-              label: Operacions exemptes realitzades en el període [05]
-            x-dhkn2bhg6omm2bb4cli7aor9e8:
-              help: 'Consulteu la informació de la casella: A deduir [06].'
-              label: A deduir [06]
-            x-dhkn2bhg6smn4pbjelm78ob4ds:
-              help: 'Informació fiscal sobre informació fiscal de la casella 07 del
-                Modelo 604 Referències: [07].'
-              label: Resultat de l'autoliquidació [07]
             x-dhkn2bhg70mm8qb6clp6arj3d5gg:
               help: 'Consulteu la informació de la casella: Diferència ([02] - [04])
                 [08].'
@@ -369,22 +215,6 @@ modelo:
                 la Administració del Estat ([09] - [10]) [12].'
               label: Resultat atribuïble a l'Administració de l'Estat ([09] - [10])
                 [12]
-            x-edo2sorfchkmerpdc9km6:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Codi BIC
-            x-edo2sorfchkmerpddhimi:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Codi LEI (norma ISO 17442)
-            x-edo2ss35e9pmurj15lhmurjkc5hn8ro:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Persona de contacte
-            x-edo2st35dhimcrredsmm6rreehgm6t3f:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                604.
-              label: Subjecte passiu. Telèfon de contacte
             x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
               help: 'Consulteu la informació de la casella: Tributació per territori.
                 Álava. Quota de rectificaciones realizadas en el període [14].'

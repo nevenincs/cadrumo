@@ -6,6 +6,12 @@ modelo:
           and annuities.
         title: Annual informative return on securities, insurance and annuities
       revision:
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             clave-identificacion:

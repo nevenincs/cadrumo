@@ -4,24 +4,17 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: A Modelo 763 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
+            label: Időszak (naptári negyedév)
           filing-year:
-            help: A Modelo 763 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
+            label: Az önadózás vonatkozási éve
       field:
         official_name: Modelo 763. Szerencsejáték-tevékenységek adója éves vagy többéves
           tevékenységek esetén. Önbevallás.
         title: Szerencsejáték-tevékenységek adója - önbevallás (éves/többéves)
       revision:
         2012-2014:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -29,13 +22,6 @@ modelo:
           field:
             label: Modelo 763, adóév 2012 (2.º és 3.º trimestre)
         2015-2017:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -43,13 +29,6 @@ modelo:
           field:
             label: Casilla— adóügyi információ
         2018-1t-3t:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -57,13 +36,6 @@ modelo:
           field:
             label: Modelo 763, adóév 2018 (1.º a 3.º trimestre)
         2018-4t:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -71,13 +43,6 @@ modelo:
           field:
             label: Modelo 763, adóév 2018 (4.º trimestre)
         2019-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás vonatkozási éve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
-              label: Időszak (naptári negyedév)
           construct:
             modelo-763-autoliquidacion:
               field:

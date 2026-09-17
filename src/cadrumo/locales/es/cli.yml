@@ -1319,10 +1319,7 @@ cli:
         bucket_id_help: Perfil al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculate_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
-          (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
-          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
-          work revision %{revision_id}`.'
+          (estado: %{state}). Está persistido y puede retomarse más tarde.'
         calculate_source_advisory: 'AVISO: %{message} El cálculo se completó, pero
           este importe declarable no se asigna a ninguna casilla y no se declara en
           esta presentación; revísalo antes de presentar.'
@@ -1685,10 +1682,7 @@ cli:
           work calculate` directamente y aporta los valores --binding / --relation
           restantes a mano.
         wizard_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
-          (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
-          revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
-          work revision %{revision_id}`.'
+          (estado: %{state}). Está persistido y puede retomarse más tarde.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)

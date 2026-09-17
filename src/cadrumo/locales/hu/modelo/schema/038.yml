@@ -4,24 +4,17 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: A Modelo 038 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 038 . casilla adóügyi adatai: adóév.'
+            label: Az adóbevallás vonatkozási éve
           tipo-declaracion:
-            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
-            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+            help: A Modelo 038 . casilla adóügyi adatai.
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       field:
         official_name: Modelo 038. A közhitelű nyilvántartásba bejegyzett szervezetek
           által végzett ügyletek kimutatása. Adatszolgáltatási bevallás.
         title: Közhitelű nyilvántartásba bejegyzett szervezetek ügyletei (havi adatszolgáltatás)
       revision:
         2024-desde-06:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 038 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 038 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           construct:
             modelo-038-informative:
               field:
@@ -29,13 +22,6 @@ modelo:
           field:
             label: Casilla— adóügyi információ
         2025-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 038 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 038 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           construct:
             modelo-038-informative:
               field:

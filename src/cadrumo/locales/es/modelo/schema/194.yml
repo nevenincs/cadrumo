@@ -4,25 +4,25 @@ modelo:
       casilla:
         continuidad:
           capital-ajeno-resumen-base-negativa:
-            help: 'Información de la casilla: Casilla 05: capital ajeno resumen base
-              negativa.'
-            label: 'Casilla 05: capital ajeno resumen base negativa'
+            help: Suma de las bases de retención e ingreso a cuenta de los registros
+              de perceptor con base negativa.
+            label: Base de retenciones e ingresos a cuenta negativa
           capital-ajeno-resumen-base-positiva:
-            help: 'Información de la casilla: Casilla 02: capital ajeno resumen base
-              positiva.'
-            label: 'Casilla 02: capital ajeno resumen base positiva'
+            help: Suma de las bases de retención e ingreso a cuenta de los registros
+              de perceptor con base positiva.
+            label: Base de retenciones e ingresos a cuenta
           capital-ajeno-resumen-perceptores-base-negativa:
-            help: 'Información de la casilla: Casilla 04: capital ajeno resumen perceptores
-              base negativa.'
-            label: 'Casilla 04: capital ajeno resumen perceptores base negativa'
+            help: Número de perceptores (registros) cuya base de retenciones e ingresos
+              a cuenta es negativa.
+            label: Número total de perceptores con base negativa
           capital-ajeno-resumen-perceptores-base-positiva:
-            help: 'Información de la casilla: Casilla 01: capital ajeno resumen perceptores
-              base positiva.'
-            label: 'Casilla 01: capital ajeno resumen perceptores base positiva'
+            help: Número de perceptores (registros) cuya base de retenciones e ingresos
+              a cuenta es positiva.
+            label: Número total de perceptores con base positiva
           capital-ajeno-resumen-retenciones:
-            help: Información fiscal sobre información fiscal de la casilla 03 del
-              Modelo 194.
-            label: Casilla 03 — información fiscal
+            help: Suma de las retenciones e ingresos a cuenta practicados sobre las
+              rentas declaradas.
+            label: Retenciones e ingresos a cuenta
       field:
         official_name: Modelo 194. Impuesto sobre la Renta de las Personas Físicas,
           Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos
@@ -33,27 +33,6 @@ modelo:
         title: Retenciones capital mobiliario y transmisión de activos - resumen anual
       revision:
         '2019':
-          casilla:
-            '01':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es positiva.
-              label: Número total de perceptores con base positiva
-            '02':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base positiva.
-              label: Base de retenciones e ingresos a cuenta
-            '03':
-              help: Suma de las retenciones e ingresos a cuenta practicados sobre
-                las rentas declaradas.
-              label: Retenciones e ingresos a cuenta
-            '04':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es negativa.
-              label: Número total de perceptores con base negativa
-            '05':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base negativa.
-              label: Base de retenciones e ingresos a cuenta negativa
           construct:
             modelo-194-calculation-construct:
               field:
@@ -61,27 +40,6 @@ modelo:
           field:
             label: Diseño de registro del modelo 194, ejercicio 2019
         '2023':
-          casilla:
-            '01':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es positiva.
-              label: Número total de perceptores con base positiva
-            '02':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base positiva.
-              label: Base de retenciones e ingresos a cuenta
-            '03':
-              help: Suma de las retenciones e ingresos a cuenta practicados sobre
-                las rentas declaradas.
-              label: Retenciones e ingresos a cuenta
-            '04':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es negativa.
-              label: Número total de perceptores con base negativa
-            '05':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base negativa.
-              label: Base de retenciones e ingresos a cuenta negativa
           construct:
             modelo-194-calculation-construct:
               field:
@@ -89,27 +47,6 @@ modelo:
           field:
             label: Diseño de registro del modelo 194, ejercicio 2023
         '2024':
-          casilla:
-            '01':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es positiva.
-              label: Número total de perceptores con base positiva
-            '02':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base positiva.
-              label: Base de retenciones e ingresos a cuenta
-            '03':
-              help: Suma de las retenciones e ingresos a cuenta practicados sobre
-                las rentas declaradas.
-              label: Retenciones e ingresos a cuenta
-            '04':
-              help: Número de perceptores (registros) cuya base de retenciones e ingresos
-                a cuenta es negativa.
-              label: Número total de perceptores con base negativa
-            '05':
-              help: Suma de las bases de retención e ingreso a cuenta de los registros
-                de perceptor con base negativa.
-              label: Base de retenciones e ingresos a cuenta negativa
           construct:
             modelo-194-calculation-construct:
               field:

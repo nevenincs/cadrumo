@@ -4,25 +4,25 @@ modelo:
       casilla:
         continuidad:
           capital-ajeno-resumen-base-negativa:
-            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
-              194.
-            label: Casella 05 — informació fiscal
+            help: Suma de les bases de retenció dels registres de perceptor amb base
+              negativa.
+            label: Base de retencions i ingressos a compte negativa
           capital-ajeno-resumen-base-positiva:
-            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
-              194.
-            label: Casella 02 — informació fiscal
+            help: Suma de les bases de retenció dels registres de perceptor amb base
+              positiva.
+            label: Base de retencions i ingressos a compte
           capital-ajeno-resumen-perceptores-base-negativa:
-            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
-              194.
-            label: Casella 04 — informació fiscal
+            help: Nombre de perceptors (registres) la base de retencions dels quals
+              és negativa.
+            label: Nombre total de perceptors amb base negativa
           capital-ajeno-resumen-perceptores-base-positiva:
-            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
-              194.
-            label: Casella 01 — informació fiscal
+            help: Nombre de perceptors (registres) la base de retencions dels quals
+              és positiva.
+            label: Nombre total de perceptors amb base positiva
           capital-ajeno-resumen-retenciones:
-            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
-              194.
-            label: Casella 03 — informació fiscal
+            help: Suma de les retencions i ingressos a compte practicats sobre les
+              rendes declarades.
+            label: Retencions i ingressos a compte
       field:
         official_name: Modelo 194. Impost sobre la Renda de les Persones Físiques,
           Impost sobre Societats i Impost sobre la Renda de no Residents (establiments
@@ -33,27 +33,6 @@ modelo:
         title: Retencions de capital mobiliari i transmissió d'actius - resum anual
       revision:
         '2019':
-          casilla:
-            '01':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és positiva.
-              label: Nombre total de perceptors amb base positiva
-            '02':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base positiva.
-              label: Base de retencions i ingressos a compte
-            '03':
-              help: Suma de les retencions i ingressos a compte practicats sobre les
-                rendes declarades.
-              label: Retencions i ingressos a compte
-            '04':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és negativa.
-              label: Nombre total de perceptors amb base negativa
-            '05':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base negativa.
-              label: Base de retencions i ingressos a compte negativa
           construct:
             modelo-194-calculation-construct:
               field:
@@ -61,27 +40,6 @@ modelo:
           field:
             label: Diseño de registro del modelo 194, exercici 2019
         '2023':
-          casilla:
-            '01':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és positiva.
-              label: Nombre total de perceptors amb base positiva
-            '02':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base positiva.
-              label: Base de retencions i ingressos a compte
-            '03':
-              help: Suma de les retencions i ingressos a compte practicats sobre les
-                rendes declarades.
-              label: Retencions i ingressos a compte
-            '04':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és negativa.
-              label: Nombre total de perceptors amb base negativa
-            '05':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base negativa.
-              label: Base de retencions i ingressos a compte negativa
           construct:
             modelo-194-calculation-construct:
               field:
@@ -89,27 +47,6 @@ modelo:
           field:
             label: Diseño de registro del modelo 194, exercici 2023
         '2024':
-          casilla:
-            '01':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és positiva.
-              label: Nombre total de perceptors amb base positiva
-            '02':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base positiva.
-              label: Base de retencions i ingressos a compte
-            '03':
-              help: Suma de les retencions i ingressos a compte practicats sobre les
-                rendes declarades.
-              label: Retencions i ingressos a compte
-            '04':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és negativa.
-              label: Nombre total de perceptors amb base negativa
-            '05':
-              help: Suma de les bases de retenció dels registres de perceptor amb
-                base negativa.
-              label: Base de retencions i ingressos a compte negativa
           construct:
             modelo-194-calculation-construct:
               field:

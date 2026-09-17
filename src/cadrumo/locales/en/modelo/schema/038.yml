@@ -5,10 +5,10 @@ modelo:
         continuidad:
           filing-year:
             help: Tax information for casilla of Modelo 038.
-            label: Casilla — tax field
+            label: Filing year to which the return relates
           tipo-declaracion:
-            help: 'Casilla information: Casilla rate-return: rate return.'
-            label: 'Casilla rate-return: rate return'
+            help: Tax information for casilla of Modelo 038.
+            label: Return type (original / substitute / supplementary)
       field:
         official_name: Modelo 038. List of transactions carried out by entities registered
           in public registers. Informative return.
@@ -16,13 +16,6 @@ modelo:
           return)
       revision:
         2024-desde-06:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 038.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 038.
-              label: Return type (original / substitute / supplementary)
           construct:
             modelo-038-informative:
               field:
@@ -30,13 +23,6 @@ modelo:
           field:
             label: Casilla— tax information
         2025-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 038.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 038.
-              label: Return type (original / substitute / supplementary)
           construct:
             modelo-038-informative:
               field:

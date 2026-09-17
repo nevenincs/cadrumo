@@ -34,8 +34,9 @@ modelo:
             help: Tax information for casilla 23 of Modelo 210.
             label: Casilla 23 — tax field
           irnr-exencion-dividendos:
-            help: 'Casilla information: Casilla 6: irnr exencion dividendos.'
-            label: 'Casilla 6: irnr exencion dividendos'
+            help: 'See the information for this box: Dividend exemption applied (annual
+              limit of 1,500 euros).'
+            label: Dividend exemption applied (annual limit of 1,500 euros)
           irnr-exenciones-ley-irnr-indicador:
             help: 'Casilla information: Casilla 19: irnr exenciones ley irnr indicator.'
             label: 'Casilla 19: irnr exenciones ley irnr indicator'
@@ -79,8 +80,8 @@ modelo:
             help: Tax information for casilla 30 of Modelo 210.
             label: Casilla 30 — tax field
           irnr-limite-convenio:
-            help: 'Casilla information: Casilla 26: irnr limite convenio.'
-            label: 'Casilla 26: irnr limite convenio'
+            help: 'See the information for this box: Limit under the tax treaty.'
+            label: Limit under the tax treaty
           irnr-mejora-diferencia:
             help: 'Casilla information: Casilla 15: irnr mejora diferencia.'
             label: 'Casilla 15: irnr mejora diferencia'
@@ -97,8 +98,8 @@ modelo:
             help: 'Casilla information: Casilla 25: irnr percentage convenio.'
             label: 'Casilla 25: irnr percentage convenio'
           irnr-reduccion-convenio:
-            help: 'Casilla information: Casilla 27: irnr reduccion convenio.'
-            label: 'Casilla 27: irnr reduccion convenio'
+            help: 'See the information for this box: Reduction under the tax treaty.'
+            label: Reduction under the tax treaty
           irnr-rendimientos-integros:
             help: 'Casilla information: Casilla 5: irnr income integros.'
             label: 'Casilla 5: irnr income integros'
@@ -116,6 +117,20 @@ modelo:
           a permanent establishment. Self-assessment.
         title: IRNR self-assessment for non-residents without a permanent establishment
       revision:
+        '2023':
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Modelo 210 IRNR calculation
+          field:
+            label: null
+        '2024':
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Modelo 210 IRNR calculation
+          field:
+            label: null
         '2025':
           casilla:
             base_imponible:
@@ -137,8 +152,6 @@ modelo:
               help: 'Review the casilla information: Convenio.'
               label: Tax treaty
             cuota_diferencial:
-              help: Tax information about tax information in casilla 31 of Modelo
-                210.
               label: Differential tax liability
             cuota_integra:
               help: 'Review the casilla information: Amount full.'
@@ -150,7 +163,6 @@ modelo:
               help: 'Review the casilla information: Amount Ley IRNR ([22]-[23]).'
               label: IRNR Law tax liability ([22]-[23])
             deduccion_donativos:
-              help: Tax information for casilla 23 of Modelo 210.
               label: Deduction for donations
             dias_imputacion:
               help: Tax information about tax information in casilla  of Modelo 210.
@@ -169,18 +181,12 @@ modelo:
                 H).'
               label: Acquisition. Difference (210 H)
             ganancia_importe:
-              help: Tax information about tax information in casilla 12 of Modelo
-                210.
               label: Acquisition. Gain (210 H)
             ganancia_valor_adquisicion:
-              help: Tax information about tax information in casilla 10 of Modelo
-                210.
               label: Acquisition. Acquisition value (updated) (210 H)
             ganancia_valor_transmision:
-              help: Tax information about tax information in casilla 9 of Modelo 210.
               label: Acquisition. Transfer value (210 H)
             gastos_deducibles:
-              help: Tax information about tax information in casilla 7 of Modelo 210.
               label: Deductible expenses
             ingreso_devolucion_anterior:
               help: 'Review the casilla information: Payment/Refund previous (exclusivamente
@@ -194,8 +200,6 @@ modelo:
                 210.
               label: Improvement or 2nd acquisition. Difference (210 H)
             mejora_ganancia:
-              help: Tax information about tax information in casilla 16 of Modelo
-                210.
               label: Improvement or 2nd acquisition. Gain (210 H)
             mejora_valor_adquisicion:
               help: Tax information about tax information in casilla 14 of Modelo

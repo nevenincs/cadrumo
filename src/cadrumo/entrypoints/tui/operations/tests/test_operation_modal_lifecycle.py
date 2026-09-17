@@ -84,6 +84,7 @@ from .....core.time.clock import now
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
+from ....operation_composition import build_auth_operation_ports
 from ..controller import OperationController
 from ..modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalOutcomeV1
 
@@ -157,7 +158,9 @@ def _runtime(
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
             profile_decode_context=authority_operation.profile_decode_context(),
         )
-        auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
+        auth_definitions = build_auth_operation_definitions(
+            ports=build_auth_operation_ports(), profile_login=lambda **_kwargs: initial_login
+        )
         auth_registrations = build_auth_operation_registrations(auth_definitions)
         censal_definition = build_censal_operation_definition(
             certificate_secret_backend_factory=build_certificate_secret_backend,

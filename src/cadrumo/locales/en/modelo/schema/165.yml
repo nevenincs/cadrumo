@@ -5,10 +5,55 @@ modelo:
         continuidad:
           filing-year:
             help: Tax information for casilla of Modelo 165.
-            label: Casilla — tax field
+            label: Filing year to which the return relates
+          m165-declaracion-complementaria-sustitutiva:
+            help: Tax information for casilla of Modelo 165.
+            label: Supplementary or replacement return
+          m165-declarante-razon-social:
+            help: Tax information for casilla of Modelo 165.
+            label: Name or business name of the filer
+          m165-fecha-adquisicion:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Date the shares or holdings were acquired
+          m165-fecha-constitucion:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Incorporation date
+          m165-importe-fondos-propios:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Amount of shareholders' equity
+          m165-importe-suscripcion:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Amount of the subscription or acquisition
+          m165-importe-total-suscripciones:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Total amount of subscriptions or acquisitions
+          m165-numero-identificativo-anterior:
+            help: Tax information for casilla of Modelo 165.
+            label: Identifying number of the previous return
+          m165-numero-identificativo-declaracion:
+            help: Tax information for casilla of Modelo 165.
+            label: Declaration identifying number
+          m165-numero-total-declarados:
+            help: Tax information for casilla of Modelo 165.
+            label: Total number of reported members
+          m165-persona-relacion:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Contact person
+          m165-porcentaje-participacion:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Percentage of shareholding
+          m165-representante-legal-nif:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Tax ID of the legal representative
+          m165-socio-nif:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Tax ID of the member or shareholder
+          m165-socio-nombre:
+            help: Tax information about tax information in casilla  of Modelo 165.
+            label: Surnames and given name of the member or shareholder
           tipo-declaracion:
-            help: 'Casilla information: Casilla rate-return: rate return.'
-            label: 'Casilla rate-return: rate return'
+            help: Tax information for casilla of Modelo 165.
+            label: Return type (original / substitute / supplementary)
       field:
         official_name: Modelo 165. Informative return of individual certificates issued
           to shareholders or members of newly or recently created entities.
@@ -16,68 +61,9 @@ modelo:
           (annual informative return)
       revision:
         2013-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 165.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 165.
-              label: Return type (original / substitute / supplementary)
           field:
             label: Casilla— tax information
         2016-2022:
-          casilla:
-            declaracion-complementaria-sustitutiva:
-              help: Tax information for casilla of Modelo 165.
-              label: Supplementary or replacement return
-            declarante-razon-social:
-              help: Tax information for casilla of Modelo 165.
-              label: Name or business name of the filer
-            fecha-adquisicion:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Date the shares or holdings were acquired
-            fecha-constitucion:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Incorporation date
-            importe-fondos-propios:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Amount of shareholders' equity
-            importe-suscripcion:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Amount of the subscription or acquisition
-            importe-total-suscripciones:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Total amount of subscriptions or acquisitions
-            numero-identificativo-anterior:
-              help: Tax information for casilla of Modelo 165.
-              label: Identifying number of the previous return
-            numero-identificativo-declaracion:
-              help: Tax information for casilla of Modelo 165.
-              label: Declaration identifying number
-            numero-total-declarados:
-              help: Tax information for casilla of Modelo 165.
-              label: Total number of reported members
-            persona-relacion:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Contact person
-            porcentaje-participacion:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Percentage of shareholding
-            representante-legal-nif:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Tax ID of the legal representative
-            socio-nif:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Tax ID of the member or shareholder
-            socio-nombre:
-              help: Tax information about tax information in casilla  of Modelo 165.
-              label: Surnames and given name of the member or shareholder
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 165.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 165.
-              label: Return type (original / substitute / supplementary)
           construct:
             modelo-165-informative:
               field:
@@ -85,13 +71,6 @@ modelo:
           field:
             label: Casilla— tax information
         2023-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 165.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 165.
-              label: Return type (original / substitute / supplementary)
           field:
             label: Casilla— tax information
         2026-y-siguientes:
@@ -144,12 +123,6 @@ modelo:
             socio-nombre:
               help: Tax information about tax information in casilla  of Modelo 165.
               label: Surnames and given name of the member or shareholder
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 165.
-              label: Filing year to which the return relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 165.
-              label: Return type (original / substitute / supplementary)
           construct:
             modelo-165-informative:
               field:

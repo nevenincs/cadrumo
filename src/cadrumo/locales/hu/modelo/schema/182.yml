@@ -8,6 +8,9 @@ modelo:
         title: Kapott adományok, ajándékok és hozzájárulások, valamint teljesített
           rendelkezések (éves adatszolgáltatás)
       revision:
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

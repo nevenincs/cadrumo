@@ -9,185 +9,6 @@ modelo:
           filing-year:
             help: 'Consulteu la informació de la casella: Exercici de meritació.'
             label: Exercici de meritació
-          related-party-fjo-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-fjo-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-fjo-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-fjo-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-fjo-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-importe-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-importe-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-importe-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-importe-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-importe-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-ingreso-pago-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-ingreso-pago-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-ingreso-pago-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-ingreso-pago-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-ingreso-pago-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-location-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-location-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-location-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-location-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-location-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-metodo-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-metodo-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-metodo-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-metodo-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-metodo-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-name-1:
-            help: Informació fiscal de la casella del Modelo 232.
-            label: Casella — informació fiscal
-          related-party-name-2:
-            help: Informació fiscal de la casella del Modelo 232.
-            label: Casella — informació fiscal
-          related-party-name-3:
-            help: Informació fiscal de la casella del Modelo 232.
-            label: Casella — informació fiscal
-          related-party-name-4:
-            help: Informació fiscal de la casella del Modelo 232.
-            label: Casella — informació fiscal
-          related-party-name-5:
-            help: Informació fiscal de la casella del Modelo 232.
-            label: Casella — informació fiscal
-          related-party-nif-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-nif-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-nif-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-nif-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-nif-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-operacion-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-operacion-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-operacion-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-operacion-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-operacion-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-vinculacion-1:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-vinculacion-2:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-vinculacion-3:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-vinculacion-4:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          related-party-tipo-vinculacion-5:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
-          tipo-ejercicio-232:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              232.
-            label: Casella— informació fiscal
       field:
         official_name: Modelo 232. Declaració informativa d'operacions vinculades
           i d'operacions i situacions relacionades amb països o territoris qualificats
@@ -351,12 +172,6 @@ modelo:
             vinculada-5-tipo-vinculacion:
               help: Dada de l'operació vinculada número 5 declarada al model 232.
               label: Operacions amb persones o entitats vinculades 5 - Tipus de vinculació
-            x-chim6r1ecdn62p8:
-              help: C.N.A.E. de l'activitat principal
-              label: C.N.A.E. de l'activitat principal
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Exercici de meritació
-              label: Exercici de meritació
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               help: 'Consulteu la informació de la casella: Tipus de exercici (12
                 meses naturales / 12 meses 365 días / inferior a 12 meses).'
@@ -556,7 +371,6 @@ modelo:
               label: CNAE de l'activitat principal
             x-chim6r1ecll6asj3d5hmiro:
               help: Exercici de meritació
-              label: Exercici de meritació
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               help: 'Consulteu la informació de la casella: Tipus de exercici (12
                 meses naturales / 12 meses 365 dias / inferior a 12 meses).'

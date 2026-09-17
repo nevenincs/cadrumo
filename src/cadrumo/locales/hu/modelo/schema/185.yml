@@ -4,11 +4,9 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: A Modelo 185 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: Az adóbevallás vonatkozási éve
           tipo-declaracion:
-            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
-            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       field:
         official_name: Modelo 185. A tagok és önsegélyező-tagok járulékainak havi
           adatszolgáltatási bevallása.
@@ -18,18 +16,15 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Az az adóév, amelyre a bevallás vonatkozik, négy számjeggyel.
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: 'A bevallás jellege: eredeti, egy korábban benyújtottat helyettesítő,
                 vagy kihagyott adatokat pótló kiegészítő.'
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
             label: 185-ös modelo (orden-hac-96-2003), 2003-2025. adóévek
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: 'A Modelo 185 . casilla adóügyi adatai: adóév.'
-              label: Az adóbevallás vonatkozási éve
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: E bevallás sorszámos azonosító száma, 13 számjegyű.
               label: A BEVALLÁS AZONOSÍTÓ SZÁMA
@@ -38,7 +33,6 @@ modelo:
               label: IDŐSZAK
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A Modelo 185 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Az e bevallóhoz tartozó bejelentett személyek, azaz a 2-es típusú
                 rekordok teljes száma.

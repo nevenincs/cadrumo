@@ -1,6 +1,13 @@
 modelo:
   schema:
     '308':
+      casilla:
+        continuidad:
+          filing-period:
+            help: Dato declarado en el modelo 308, tomado del diseno de registro oficial.
+            label: Devengo. Periodo
+          filing-year:
+            label: Ejercicio al que se refiere la solicitud
       field:
         official_name: 'Modelo 308. Impuesto sobre el Valor Añadido. Solicitud de
           devolución: Recargo de equivalencia, artículo 30 bis del Reglamento del
@@ -9,15 +16,6 @@ modelo:
           sujetos pasivos ocasionales)
       revision:
         2009-2011-junio:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la solicitud.'
-              label: Ejercicio al que se refiere la solicitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dato declarado en el modelo 308, tomado del diseno de registro
-                oficial.
-              label: Devengo. Periodo
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -26,15 +24,6 @@ modelo:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
         2011-julio-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la solicitud.'
-              label: Ejercicio al que se refiere la solicitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dato declarado en el modelo 308, tomado del diseno de registro
-                oficial.
-              label: Devengo. Periodo
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -43,15 +32,6 @@ modelo:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
         2016-2018:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la solicitud.'
-              label: Ejercicio al que se refiere la solicitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dato declarado en el modelo 308, tomado del diseno de registro
-                oficial.
-              label: Devengo. Periodo
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -67,10 +47,6 @@ modelo:
             x-chim6r1echincrrcelhmirre5lkm4obe:
               help: Casilla 932-965 del modelo 308, ejercicio 2009.
               label: Devolución - IBAN
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la solicitud.'
-              label: Ejercicio al que se refiere la solicitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Casilla 119-178 del modelo 308, ejercicio 2009.
               label: MTN - Adquirente - Apellidos ó Razón social
@@ -161,10 +137,6 @@ modelo:
             x-chim6r1edpnmqojick:
               help: Casilla 83-102 del modelo 308, ejercicio 2009.
               label: Identificación - Nombre
-            x-chim6r1ee1in4qbfchng:
-              help: Dato declarado en el modelo 308, tomado del diseno de registro
-                oficial.
-              label: Devengo. Periodo
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Casilla 798-814 del modelo 308, ejercicio 2009.
               label: Rég. Espec. recargo equival. (REQ) - Liquidación - Base Imponible
@@ -200,9 +172,6 @@ modelo:
               help: Casilla 13 del modelo 308, ejercicio 2009.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                solicitud (recargo de equivalencia / art 30 bis / art 21.4 / sujeto
-                pasivo ocasional / régimen simplificado transporte).'
               label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
                 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:

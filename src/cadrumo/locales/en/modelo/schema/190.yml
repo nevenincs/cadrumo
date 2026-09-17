@@ -136,8 +136,8 @@ modelo:
             help: 'Casilla information: Casilla 167: payee disability clave.'
             label: Disability
           payee-emerging-stock-excess-clave:
-            help: 'Casilla information: Casilla 388: payee emerging stock excess clave.'
-            label: 'Casilla 388: payee emerging stock excess clave'
+            help: Perceptor field declared in modelo 190's type 2 record.
+            label: Excess from delivery of start-up company shares
           payee-family-situation:
             help: 'Casilla information: Casilla 157: payee family situation.'
             label: Family situation
@@ -229,6 +229,32 @@ modelo:
             help: Tax information about tax information in casilla 109-121 of Modelo
               190.
             label: Casilla 109-121 — tax information
+          prestacion-incapacidad:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 03. Total or partial permanent incapacity
+          prestacion-jubilacion:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 01. Retirement
+          prestacion-no-contributiva:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 04. Non-contributory invalidity or
+              retirement pensions
+          prestacion-resto:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 05. Other benefits under art. 17.2.a).1
+              of Law 35/2006
+          prestacion-viudedad:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 02. Widowhood
+          rendimientos-trabajo-fondos-emprendimiento:
+            help: Perceptor field declared in modelo 190's type 2 record.
+            label: Employment income from managing funds linked to entrepreneurship,
+              innovation and economic activity development
           representante-legal-nif:
             help: Tax information about tax information in casilla 27-35 of Modelo
               190.
@@ -251,53 +277,43 @@ modelo:
           and income attributions. Annual summary.
         title: Annual summary of withholdings on employment and business income
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Review the casilla information: Return supplementary.'
-              label: Supplementary declaration
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: Tax information about tax information in casilla 176-225 of Modelo
                 190.
-              label: Contact person's email address
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: 'Review the casilla information: Number identificativo of the
                 return.'
-              label: Declaration identifying number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
               help: 'Review the casilla information: Number identificativo of the
                 return previous.'
               label: Identifying number of the previous declaration
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: Tax information about tax information in casilla 145-160 of Modelo
-                190.
               label: Total amount of payments made
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Tax information about tax information in casilla 68-107 of Modelo
-                190.
               label: Contact person's surnames and given name
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Tax information about tax information in casilla 59-67 of Modelo
-                190.
               label: Contact person's telephone number
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Tax information about tax information in casilla 161-175 of Modelo
                 190.
               label: Total amount of withholdings and advance payments
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: Tax information for casilla 122 of Modelo 190.
-              label: Replacement declaration
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: Tax information about tax information in casilla 136-144 of Modelo
-                190.
               label: Total number of payments made
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Year of birth
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Maintenance annuities
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -342,14 +358,8 @@ modelo:
               label: Ascendants. Under 75 years old. Total number
             x-e1in4opecdinat315lmmar39dhm62:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Ceuta or Melilla
-            x-e1in4opecdm62tj5:
-              help: Tax information about tax information in casilla 78 of Modelo
-                190.
-              label: Income key
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Child support supplement
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -364,7 +374,6 @@ modelo:
               label: Count of the first 3 children. 3rd child
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Contract or relationship
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -414,17 +423,11 @@ modelo:
               label: Children and other descendants. Remainder. Total number
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Disability
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Accrual year
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: Perceptor field declared in modelo 190's type 2 record.
-              label: Excess from delivery of start-up company shares
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Deductible expenses
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Perceptor field declared on modelo 190. The design splits amounts
                 into an integer and a decimal part.
@@ -458,30 +461,22 @@ modelo:
               label: Payments on account
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Geographic mobility
             x-e1in4opedpkmc:
               help: 'Review the casilla information: NIF of the recipient.'
-              label: Recipient's tax ID (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: NIF of the spouse or of the holder of the cohabitation unit
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: NIF of the legal representative
             x-e1in4opedpnmqojick:
               help: Tax information about payee name in casilla 36-75 of Modelo 190.
               label: Recipient's surnames and given name, or legal name
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Compensatory pensions
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: Tax information about tax information in casilla 82-94 of Modelo
-                190.
               label: Gross cash income not arising from work incapacity
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: Tax information about tax information in casilla 109-121 of Modelo
-                190.
               label: Valuation of in-kind income not arising from work incapacity
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -524,10 +519,7 @@ modelo:
               label: Withholdings applied to cash income
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Family situation
             x-e1in4opeedqm4orcc5r6a:
-              help: Tax information about tax information in casilla 79-80 of Modelo
-                190.
               label: Income subkey
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -542,49 +534,33 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Review the casilla information: Return supplementary.'
-              label: Supplementary declaration
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: Tax information about tax information in casilla 176-225 of Modelo
                 190.
-              label: Contact person's email address
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: 'Review the casilla information: Number identificativo of the
                 return.'
-              label: Declaration identifying number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
               help: 'Review the casilla information: Number identificativo of the
                 return previous.'
               label: Identifying number of the previous declaration
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: Tax information about tax information in casilla 145-160 of Modelo
-                190.
               label: Total amount of payments made
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Tax information about tax information in casilla 68-107 of Modelo
-                190.
               label: Contact person's surnames and given name
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Tax information about tax information in casilla 59-67 of Modelo
-                190.
               label: Contact person's telephone number
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: Tax information about tax information in casilla 161-175 of Modelo
                 190.
               label: Total amount of withholdings and advance payments
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: Tax information for casilla 122 of Modelo 190.
-              label: Replacement declaration
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: Tax information about tax information in casilla 136-144 of Modelo
-                190.
               label: Total number of payments made
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Year of birth
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Maintenance annuities
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -629,14 +605,8 @@ modelo:
               label: Ascendants. Under 75 years old. Total number
             x-e1in4opecdinat315lmmar39dhm62:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Ceuta or Melilla
-            x-e1in4opecdm62tj5:
-              help: Tax information about tax information in casilla 78 of Modelo
-                190.
-              label: Income key
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Child support supplement
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -651,7 +621,6 @@ modelo:
               label: Count of the first 3 children. 3rd child
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Contract or relationship
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Perceptor field declared on modelo 190, for the descendant or
                 ascendant minimum.
@@ -701,17 +670,11 @@ modelo:
               label: Children and other descendants. Remainder. Total number
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Disability
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Accrual year
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: Perceptor field declared in modelo 190's type 2 record.
-              label: Excess from delivery of start-up company shares
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Deductible expenses
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Perceptor field declared on modelo 190. The design splits amounts
                 into an integer and a decimal part.
@@ -745,54 +708,23 @@ modelo:
               label: Payments on account
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Geographic mobility
             x-e1in4opedpkmc:
               help: 'Review the casilla information: NIF of the recipient.'
-              label: Recipient's tax ID (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: NIF of the spouse or of the holder of the cohabitation unit
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: NIF of the legal representative
             x-e1in4opedpnmqojick:
               help: Tax information about payee name in casilla 36-75 of Modelo 190.
               label: Recipient's surnames and given name, or legal name
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
-              label: Compensatory pensions
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: Tax information about tax information in casilla 82-94 of Modelo
-                190.
               label: Gross cash income not arising from work incapacity
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: Tax information about tax information in casilla 109-121 of Modelo
-                190.
               label: Valuation of in-kind income not arising from work incapacity
-            x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
-              help: Flag 1 or 0 according to whether this B.01 benefit type was paid
-                during the year.
-              label: Benefit type under code B.01. 03. Total or partial permanent
-                incapacity
-            x-e1in4opee1p6asrkc5hmirre5ll7aoj9dhgm6qbfdo:
-              help: Flag 1 or 0 according to whether this B.01 benefit type was paid
-                during the year.
-              label: Benefit type under code B.01. 01. Retirement
-            x-e1in4opee1p6asrkc5hmirre5ln6ubb3dtn78sj9c9qn8qbmc4:
-              help: Flag 1 or 0 according to whether this B.01 benefit type was paid
-                during the year.
-              label: Benefit type under code B.01. 04. Non-contributory invalidity
-                or retirement pensions
-            x-e1in4opee1p6asrkc5hmirre5lp6asrkds:
-              help: Flag 1 or 0 according to whether this B.01 benefit type was paid
-                during the year.
-              label: Benefit type under code B.01. 05. Other benefits under art. 17.2.a).1
-                of Law 35/2006
-            x-e1in4opee1p6asrkc5hmirre5lr6itb4cli62p0:
-              help: Flag 1 or 0 according to whether this B.01 benefit type was paid
-                during the year.
-              label: Benefit type under code B.01. 02. Widowhood
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Notification of loans for a habitual residence
@@ -803,10 +735,6 @@ modelo:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Applicable reductions
-            x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
-              help: Perceptor field declared in modelo 190's type 2 record.
-              label: Employment income from managing funds linked to entrepreneurship,
-                innovation and economic activity development
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Perceptor field declared on modelo 190. The design splits amounts
                 into an integer and a decimal part.
@@ -838,10 +766,7 @@ modelo:
               label: Withholdings applied to cash income
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Family situation
             x-e1in4opeedqm4orcc5r6a:
-              help: Tax information about tax information in casilla 79-80 of Modelo
-                190.
               label: Income subkey
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.

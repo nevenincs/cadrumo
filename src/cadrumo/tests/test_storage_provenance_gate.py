@@ -148,6 +148,10 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
         # test's reason for existing while leaving it green. Joining the root is
         # not debt here; it is the measurement.
         ("core/tests/test_output_dir_state_root.py", "test_every_derived_output_dir_roots_under_storage_root"),
+        # The TUI review harness gives each reviewer a private storage root for
+        # its own session journal and SQLite bucket. That is development-only
+        # harness state, not an application-chosen member of the taxonomy.
+        ("entrypoints/tui/tests/fixture.py", "<module>"),
     },
 )
 """Functions that may join onto the storage root, because producing a location is their job."""

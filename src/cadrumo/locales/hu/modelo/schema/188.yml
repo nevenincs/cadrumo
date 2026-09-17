@@ -8,6 +8,14 @@ modelo:
         title: Tőkésítési műveletek és életbiztosítások adóelőleg-levonása - éves
           összesítő
       revision:
+        '2022':
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: '188-as modelo: tájékoztató bevallás tőkésítési műveletek és
+                  élet- vagy rokkantsági biztosítások jövedelméről'
+          field:
+            label: null
         2023-y-siguientes:
           casilla:
             '01':

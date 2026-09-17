@@ -1220,9 +1220,7 @@ cli:
         bucket_id_help: Profile the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
-          %{state}). It is persisted and can be resumed later; list revisions with
-          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
-          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
+          %{state}). It is persisted and can be resumed later.'
         calculate_source_advisory: 'ADVISORY: %{message} The calculation completed,
           but this declarable amount is not routed to any casilla and is not declared
           on this filing; review it before filing.'
@@ -1564,9 +1562,7 @@ cli:
           after %{limit} follow-up prompts. Run `aeat app modelo work calculate` directly
           and supply the remaining --binding / --relation values by hand.
         wizard_saved: 'Saved as draft calculation revision %{revision_id} (state:
-          %{state}). It is persisted and can be resumed later; list revisions with
-          `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
-          %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.'
+          %{state}). It is persisted and can be resumed later.'
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between

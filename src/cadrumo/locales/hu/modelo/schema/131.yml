@@ -54,22 +54,23 @@ modelo:
             label: Casilla — adóügyi mező
           irpf-pf-modulos-minoracion-inversion:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
             help: A Modelo 131 . casilla adóügyi adatai.
             label: Casilla — adóügyi mező
           irpf-pf-modulos-rendimiento-neto-actividad:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
+              5%-os csökkentés)'
           irpf-pf-modulos-rendimiento-neto-minorado:
-            help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Csökkentett nettó jövedelem (2. szakasz: előzetes − foglalkoztatási
+              kedvezmény csökkentése − beruházási kedvezmény csökkentése)'
           irpf-pf-modulos-rendimiento-neto-modulos:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
           irpf-pf-modulos-rendimiento-neto-previo:
-            help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Előzetes nettó jövedelem (1. szakasz: Σ modulegységek × egységenkénti
+              éves hozam)'
           irpf-pf-modulos-resultado-declaracion:
             help: 'Tekintse át a casilla adatait: Eredmény - bevallás.'
             label: A bevallás eredménye
@@ -126,57 +127,6 @@ modelo:
         title: IRPF részletfizetés, objektív megállapítás
       revision:
         2019-2023:
-          casilla:
-            '01':
-              help: Nettó jövedelmek összege
-              label: Nettó jövedelmek összege
-            '02':
-              help: Előzetes előlegfizetés alapadatok szerint (datos-base)
-              label: Előzetes előlegfizetés alapadatok szerint (datos-base)
-            '03':
-              help: Forgalom vagy bevétel alapadatok nélkül
-              label: Forgalom vagy bevétel alapadatok nélkül
-            '04':
-              help: Előzetes előlegfizetés alapadatok nélkül
-              label: Előzetes előlegfizetés alapadatok nélkül
-            '05':
-              help: A negyedév mezőgazdasági bevétele
-              label: A negyedév mezőgazdasági bevétele
-            '06':
-              help: Előzetes mezőgazdasági előlegfizetés
-              label: Előzetes mezőgazdasági előlegfizetés
-            '07':
-              help: Előzetes előlegfizetések összege
-              label: Előzetes előlegfizetések összege
-            08:
-              help: Forrásadó és előlegfizetés
-              label: Forrásadó és előlegfizetés
-            09:
-              help: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-              label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-            '10':
-              help: Különbözet
-              label: Különbözet
-            '11':
-              help: Korábbi negyedévek negatív eredményei
-              label: Korábbi negyedévek negatív eredményei
-            '12':
-              help: Az állandó lakóhelyre felvett kölcsönök törlesztése
-              label: Az állandó lakóhelyre felvett kölcsönök törlesztése
-            '13':
-              help: Összesen
-              label: Összesen
-            '14':
-              help: Korábbi önadózásokból befizetendő eredmény
-              label: Korábbi önadózásokból befizetendő eredmény
-            '15':
-              help: A bevallás eredménye
-              label: A bevallás eredménye
-            saldo-negativo-fin-periodo:
-              help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -185,102 +135,6 @@ modelo:
             label: Casilla— adóügyi információ
         '2024':
           casilla:
-            '01':
-              help: Nettó jövedelmek összege
-              label: Nettó jövedelmek összege
-            '02':
-              help: Előzetes előlegfizetés alapadatok szerint (datos-base)
-              label: Előzetes előlegfizetés alapadatok szerint (datos-base)
-            '03':
-              help: Forgalom vagy bevétel alapadatok nélkül
-              label: Forgalom vagy bevétel alapadatok nélkül
-            '04':
-              help: Előzetes előlegfizetés alapadatok nélkül
-              label: Előzetes előlegfizetés alapadatok nélkül
-            '05':
-              help: A negyedév mezőgazdasági bevétele
-              label: A negyedév mezőgazdasági bevétele
-            '06':
-              help: Előzetes mezőgazdasági előlegfizetés
-              label: Előzetes mezőgazdasági előlegfizetés
-            '07':
-              help: Előzetes előlegfizetések összege
-              label: Előzetes előlegfizetések összege
-            08:
-              help: Forrásadó és előlegfizetés
-              label: Forrásadó és előlegfizetés
-            09:
-              help: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-              label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-            '10':
-              help: Különbözet
-              label: Különbözet
-            '11':
-              help: Korábbi negyedévek negatív eredményei
-              label: Korábbi negyedévek negatív eredményei
-            '12':
-              help: Az állandó lakóhelyre felvett kölcsönök törlesztése
-              label: Az állandó lakóhelyre felvett kölcsönök törlesztése
-            '13':
-              help: Összesen
-              label: Összesen
-            '14':
-              help: Korábbi önadózásokból befizetendő eredmény
-              label: Korábbi önadózásokból befizetendő eredmény
-            '15':
-              help: A bevallás eredménye
-              label: A bevallás eredménye
-            modulos-1-unidades:
-              help: '1. modul (Alkalmazott személyzet): egységek száma'
-              label: '1. modul (Alkalmazott személyzet): egységek száma'
-            modulos-1-unidades-anterior:
-              help: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
-                (2023), a foglalkoztatási kedvezmény csökkentéséhez'
-              label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
-                (2023), a foglalkoztatási kedvezmény csökkentéséhez'
-            modulos-2-unidades:
-              help: '2. modul (Nem alkalmazott személyzet): egységek száma'
-              label: '2. modul (Nem alkalmazott személyzet): egységek száma'
-            modulos-3-unidades:
-              help: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-              label: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-            modulos-4-unidades:
-              help: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-              label: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-            modulos-5-unidades:
-              help: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-              label: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-            modulos-6-unidades:
-              help: '6. modul (tevékenységspecifikus egység, pl. a nem független helyiség
-                fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-              label: '6. modul (tevékenységspecifikus egység, pl. a nem független
-                helyiség fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-            modulos-7-unidades:
-              help: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-              label: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-            modulos-epigrafe:
-              help: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
-              label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
             modulos-indice-inicio-actividad:
               help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2023-01-01
@@ -299,7 +153,6 @@ modelo:
                 adózó tényeit. Soha nem alkalmazandó a különleges indexszel rendelkező
                 tevékenységekre (721.2, 722).
             modulos-indice-temporada:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: 'Szezonális korrekciós index (b.2 pont - szezonális tevékenység,
                 évi legfeljebb 180 nap). Az üzemeltető által megadott index (1,50/1,35/1,25
                 az időtartamtól függően, HFP/1359/2023 rendelet II. melléklet, 2.3.b.2
@@ -307,7 +160,6 @@ modelo:
                 Összeegyeztethetetlen az új tevékenység indítási indexével (b.4):
                 ha mindkettőt megadják, ez érvényesül.'
             modulos-minoracion-inversion:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: Csökkentés beruházási ösztönzők után (a használatban lévő tárgyi
                 vagy immateriális eszközök amortizációja, a beruházási eszközök nyilvántartása
                 szerint). Az üzemeltető által megadott összeg; a motor nem modellez
@@ -319,33 +171,17 @@ modelo:
                 index (b.1) figyelmen kívül maradt a tevékenység különleges korrekciós
                 indexével való összeférhetetlenség miatt (HFP/1359/2023 rendelet II.
                 melléklet, 2.3.a/b.1 utasítás).'
-            modulos-rendimiento-neto-actividad:
-              help: A Modelo 131 . casilla adóügyi adatai.
-              label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
-                5%-os csökkentés)'
-            modulos-rendimiento-neto-minorado:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Csökkentett nettó jövedelem (2. szakasz: előzetes − foglalkoztatási
-                kedvezmény csökkentése − beruházási kedvezmény csökkentése)'
             modulos-rendimiento-neto-modulos:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: 'Modulok szerinti nettó jövedelem (3. szakasz: csökkentett összeg
                 az általános korrekciós indexekkel kiigazítva - kisvállalkozás, szezonalitás/új
                 tevékenység indítása, többlet - a HFP/1359/2023 rendelet II. mellékletének
                 2.3 utasításában meghatározott sorrendben és összeférhetetlenségekkel)'
-            modulos-rendimiento-neto-previo:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Előzetes nettó jövedelem (1. szakasz: Σ modulegységek × egységenkénti
-                éves hozam)'
             modulos-temporada-inicio-actividad-conflicto-flag:
               help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Belső jelző (1/0): a szezonális korrekciós indexet (b.2) és
                 az új tevékenység indítási korrekciós indexét (b.4) egyidejűleg jelentették
                 be, amelyek kölcsönösen összeférhetetlenek (HFP/1359/2023 rendelet
                 II. melléklet, 2.3 utasítás).'
-            saldo-negativo-fin-periodo:
-              help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -354,104 +190,12 @@ modelo:
             label: Adóév 2024
         '2025':
           casilla:
-            '01':
-              help: Nettó jövedelmek összege
-              label: Nettó jövedelmek összege
-            '02':
-              help: Előzetes előlegfizetés alapadatok szerint (datos-base)
-              label: Előzetes előlegfizetés alapadatok szerint (datos-base)
-            '03':
-              help: Forgalom vagy bevétel alapadatok nélkül
-              label: Forgalom vagy bevétel alapadatok nélkül
-            '04':
-              help: Előzetes előlegfizetés alapadatok nélkül
-              label: Előzetes előlegfizetés alapadatok nélkül
-            '05':
-              help: A negyedév mezőgazdasági bevétele
-              label: A negyedév mezőgazdasági bevétele
-            '06':
-              help: Előzetes mezőgazdasági előlegfizetés
-              label: Előzetes mezőgazdasági előlegfizetés
-            '07':
-              help: Előzetes előlegfizetések összege
-              label: Előzetes előlegfizetések összege
-            08:
-              help: Forrásadó és előlegfizetés
-              label: Forrásadó és előlegfizetés
-            09:
-              help: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-              label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-            '10':
-              help: Különbözet
-              label: Különbözet
-            '11':
-              help: Korábbi negyedévek negatív eredményei
-              label: Korábbi negyedévek negatív eredményei
-            '12':
-              help: Az állandó lakóhelyre felvett kölcsönök törlesztése
-              label: Az állandó lakóhelyre felvett kölcsönök törlesztése
-            '13':
-              help: Összesen
-              label: Összesen
-            '14':
-              help: Korábbi önadózásokból befizetendő eredmény
-              label: Korábbi önadózásokból befizetendő eredmény
-            '15':
-              help: A bevallás eredménye
-              label: A bevallás eredménye
-            modulos-1-unidades:
-              help: '1. modul (Alkalmazott személyzet): egységek száma'
-              label: '1. modul (Alkalmazott személyzet): egységek száma'
             modulos-1-unidades-anterior:
               help: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
                 (2023), a foglalkoztatási kedvezmény csökkentéséhez'
               label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
                 (2024), a foglalkoztatási kedvezmény csökkentéséhez'
-            modulos-2-unidades:
-              help: '2. modul (Nem alkalmazott személyzet): egységek száma'
-              label: '2. modul (Nem alkalmazott személyzet): egységek száma'
-            modulos-3-unidades:
-              help: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-              label: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-            modulos-4-unidades:
-              help: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-              label: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-            modulos-5-unidades:
-              help: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-              label: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-            modulos-6-unidades:
-              help: '6. modul (tevékenységspecifikus egység, pl. a nem független helyiség
-                fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-              label: '6. modul (tevékenységspecifikus egység, pl. a nem független
-                helyiség fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-            modulos-7-unidades:
-              help: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-              label: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-            modulos-epigrafe:
-              help: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
-              label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
             modulos-indice-inicio-actividad:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2023-01-01
                 után kizárólagos helyiségben indított tevékenység). Az üzemeltető
                 által megadott index (0,80/0,90; 0,60/0,70 ≥33%-os fogyatékosság esetén,
@@ -460,7 +204,6 @@ modelo:
                 a szezonális indexszel (b.2): ha mindkettőt megadják, a szezonális
                 index érvényesül.'
             modulos-indice-pequena-dimension:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: Korrekciós index kisvállalkozások számára (b.1 pont - egy településen,
                 egyetlen helyiségben, alkalmazott nélkül vagy legfeljebb 2 alkalmazottal).
                 Az üzemeltető által megadott index (0,70/0,75/0,80/0,90, HAC/1347/2024
@@ -468,7 +211,6 @@ modelo:
                 adózó tényeit. Soha nem alkalmazandó a különleges indexszel rendelkező
                 tevékenységekre (721.2, 722).
             modulos-indice-temporada:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: 'Szezonális korrekciós index (b.2 pont - szezonális tevékenység,
                 évi legfeljebb 180 nap). Az üzemeltető által megadott index (1,50/1,35/1,25
                 az időtartamtól függően, HAC/1347/2024 rendelet II. melléklet, 2.3.b.2
@@ -476,45 +218,26 @@ modelo:
                 Összeegyeztethetetlen az új tevékenység indítási indexével (b.4):
                 ha mindkettőt megadják, ez érvényesül.'
             modulos-minoracion-inversion:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: Csökkentés beruházási ösztönzők után (a használatban lévő tárgyi
                 vagy immateriális eszközök amortizációja, a beruházási eszközök nyilvántartása
                 szerint). Az üzemeltető által megadott összeg; a motor nem modellez
                 tételenkénti eszköznyilvántartást - lásd a HAC/1347/2024 rendelet
                 II. mellékletének 2.2.b) utasítását és a saját amortizációs táblázatát.
             modulos-pequena-dimension-ignorado-flag:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Belső jelző (1/0): a bejelentett kisvállalkozási korrekciós
                 index (b.1) figyelmen kívül maradt a tevékenység különleges korrekciós
                 indexével való összeférhetetlenség miatt (HAC/1347/2024 rendelet II.
                 melléklet, 2.3.a/b.1 utasítás).'
-            modulos-rendimiento-neto-actividad:
-              help: A Modelo 131 . casilla adóügyi adatai.
-              label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
-                5%-os csökkentés)'
-            modulos-rendimiento-neto-minorado:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Csökkentett nettó jövedelem (2. szakasz: előzetes − foglalkoztatási
-                kedvezmény csökkentése − beruházási kedvezmény csökkentése)'
             modulos-rendimiento-neto-modulos:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: 'Modulok szerinti nettó jövedelem (3. szakasz: csökkentett összeg
                 az általános korrekciós indexekkel kiigazítva - kisvállalkozás, szezonalitás/új
                 tevékenység indítása, többlet - a HAC/1347/2024 rendelet II. mellékletének
                 2.3 utasításában meghatározott sorrendben és összeférhetetlenségekkel)'
-            modulos-rendimiento-neto-previo:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Előzetes nettó jövedelem (1. szakasz: Σ modulegységek × egységenkénti
-                éves hozam)'
             modulos-temporada-inicio-actividad-conflicto-flag:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Belső jelző (1/0): a szezonális korrekciós indexet (b.2) és
                 az új tevékenység indítási korrekciós indexét (b.4) egyidejűleg jelentették
                 be, amelyek kölcsönösen összeférhetetlenek (HAC/1347/2024 rendelet
                 II. melléklet, 2.3 utasítás).'
-            saldo-negativo-fin-periodo:
-              help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
             modelo-131-objective-estimation-instalment:
               field:
@@ -523,128 +246,20 @@ modelo:
             label: Adóév 2025
         '2026':
           casilla:
-            '01':
-              help: Nettó jövedelmek összege
-              label: Nettó jövedelmek összege
-            '02':
-              help: Előzetes előlegfizetés alapadatok szerint (datos-base)
-              label: Előzetes előlegfizetés alapadatok szerint (datos-base)
-            '03':
-              help: Forgalom vagy bevétel alapadatok nélkül
-              label: Forgalom vagy bevétel alapadatok nélkül
-            '04':
-              help: Előzetes előlegfizetés alapadatok nélkül
-              label: Előzetes előlegfizetés alapadatok nélkül
-            '05':
-              help: A negyedév mezőgazdasági bevétele
-              label: A negyedév mezőgazdasági bevétele
-            '06':
-              help: Előzetes mezőgazdasági előlegfizetés
-              label: Előzetes mezőgazdasági előlegfizetés
-            '07':
-              help: Előzetes előlegfizetések összege
-              label: Előzetes előlegfizetések összege
-            08:
-              help: Forrásadó és előlegfizetés
-              label: Forrásadó és előlegfizetés
-            09:
-              help: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-              label: Csökkentés a gazdasági tevékenységből származó nettó jövedelem
-                után
-            '10':
-              help: Különbözet
-              label: Különbözet
-            '11':
-              help: Korábbi negyedévek negatív eredményei
-              label: Korábbi negyedévek negatív eredményei
-            '12':
-              help: Az állandó lakóhelyre felvett kölcsönök törlesztése
-              label: Az állandó lakóhelyre felvett kölcsönök törlesztése
-            '13':
-              help: Összesen
-              label: Összesen
-            '14':
-              help: Korábbi önadózásokból befizetendő eredmény
-              label: Korábbi önadózásokból befizetendő eredmény
-            '15':
-              help: A bevallás eredménye
-              label: A bevallás eredménye
-            modulos-1-unidades:
-              help: '1. modul (Alkalmazott személyzet): egységek száma'
-              label: '1. modul (Alkalmazott személyzet): egységek száma'
             modulos-1-unidades-anterior:
               help: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
                 (2023), a foglalkoztatási kedvezmény csökkentéséhez'
               label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
                 (2025), a foglalkoztatási kedvezmény csökkentéséhez'
-            modulos-2-unidades:
-              help: '2. modul (Nem alkalmazott személyzet): egységek száma'
-              label: '2. modul (Nem alkalmazott személyzet): egységek száma'
-            modulos-3-unidades:
-              help: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-              label: '3. modul (tevékenységspecifikus egység: alapterület, megtett
-                távolság vagy raksúly): egységek száma'
-            modulos-4-unidades:
-              help: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-              label: '4. modul (tevékenységspecifikus egység: villamosenergia- vagy
-                egyéb energiafogyasztás): egységek száma'
-            modulos-5-unidades:
-              help: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-              label: '5. modul (tevékenységspecifikus egység, pl. a független helyiség
-                fennmaradó alapterülete vagy asztalok): egységek száma'
-            modulos-6-unidades:
-              help: '6. modul (tevékenységspecifikus egység, pl. a nem független helyiség
-                fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-              label: '6. modul (tevékenységspecifikus egység, pl. a nem független
-                helyiség fennmaradó alapterülete vagy A típusú gépek): egységek száma'
-            modulos-7-unidades:
-              help: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-              label: '7. modul (tevékenységspecifikus egység, pl. a kemence felülete
-                vagy B típusú gépek): egységek száma'
-            modulos-epigrafe:
-              help: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
-              label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
-                A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
-                ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
-                "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
-                együttható paramétert.
             modulos-minoracion-inversion:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: Csökkentés beruházási ösztönzők után (a használatban lévő tárgyi
                 vagy immateriális eszközök amortizációja, a beruházási eszközök nyilvántartása
                 szerint). Az üzemeltető által megadott összeg; a motor nem modellez
                 tételenkénti eszköznyilvántartást - lásd a HAC/1425/2025 rendelet
                 II. mellékletének 2.2.b) utasítását és a saját amortizációs táblázatát.
-            modulos-rendimiento-neto-actividad:
-              help: A Modelo 131 . casilla adóügyi adatai.
-              label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
-                5%-os csökkentés)'
-            modulos-rendimiento-neto-minorado:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Csökkentett nettó jövedelem (2. szakasz: előzetes − foglalkoztatási
-                kedvezmény csökkentése − beruházási kedvezmény csökkentése)'
             modulos-rendimiento-neto-modulos:
-              help: A Modelo 131 . casilla adóügyi adatai.
               label: 'Modulok szerinti nettó jövedelem (3. szakasz: csökkentett összeg
                 a többlet-korrekciós indexszel kiigazítva)'
-            modulos-rendimiento-neto-previo:
-              help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Előzetes nettó jövedelem (1. szakasz: Σ modulegységek × egységenkénti
-                éves hozam)'
-            saldo-negativo-fin-periodo:
-              help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
-              label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
             modelo-131-objective-estimation-instalment:
               field:

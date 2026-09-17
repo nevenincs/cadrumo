@@ -4,292 +4,265 @@ modelo:
       casilla:
         continuidad:
           actividad-principal-espanola:
-            help: Tax information for casilla 146 of Modelo 184.
-            label: Casilla 146 — tax field
+            label: MAIN ACTIVITY
           base-deduccion-o-importe:
-            help: Tax information for casilla 221-232 of Modelo 184.
-            label: Casilla 221-232 — tax field
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Deduction base / amount
           cesionario-denominacion:
-            help: Tax information for casilla 97-116 of Modelo 184.
-            label: Casilla 97-116 — tax field
+            label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
+              INVESTMENT INSTITUTION
           cesionario-nif:
-            help: 'Casilla information: Casilla 88-96: cesionario nif.'
-            label: 'Casilla 88-96: cesionario nif'
+            label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
+              INVESTMENT INSTITUTION
           clave-declarado:
-            help: 'Casilla information: Casilla 194: clave declarado.'
-            label: 'Casilla 194: clave declarado'
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Reported-party code
           clave-pais-entidad-extranjera:
-            help: 'Casilla information: Casilla 149-150: clave pais entity foreign.'
-            label: 'Casilla 149-150: clave pais entity foreign'
+            label: COUNTRY CODE
           clave-pais-renta:
-            help: 'Casilla information: Casilla 80-81: clave pais income.'
-            label: 'Casilla 80-81: clave pais income'
+            label: COUNTRY CODE
           clave-tipo-participe:
-            help: 'Casilla information: Casilla 81: clave rate participe.'
-            label: 'Casilla 81: clave rate participe'
+            label: PARTICIPANT TYPE CODE
           criterio-cobros-y-pagos:
-            help: Tax information about tax information in casilla 396 of Modelo 184.
-            label: Casilla 396 — tax information
+            label: CASH RECEIPTS AND PAYMENTS BASIS
           declaracion-complementaria-sustitutiva:
-            help: Tax information for casilla 121-122 of Modelo 184.
-            label: Casilla 121-122 — tax field
+            label: SUPPLEMENTARY OR REPLACEMENT RETURN
           epigrafe-iae:
-            help: 'Casilla information: Casilla 84-87: epigrafe iae.'
-            label: 'Casilla 84-87: epigrafe iae'
+            label: IAE GROUP OR HEADING
           fecha-adquisicion:
-            help: 'Casilla information: Casilla 117-124: date acquisition.'
-            label: 'Casilla 117-124: date acquisition'
+            label: Year
           filing-year:
-            help: Tax information for casilla of Modelo 184.
-            label: Casilla — tax field
+            label: Tax year the return refers to
           ganancias-perdidas-patrimoniales-atribuibles:
-            help: 'Casilla information: Casilla 208-220: ganancias perdidas capital-gains
-              atribuibles.'
-            label: 'Casilla 208-220: ganancias perdidas capital-gains atribuibles'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Gains / losses
           gasto-actividad-amortizaciones:
-            help: 'Casilla information: Casilla 362-373: gasto activity amortizaciones.'
-            label: 'Casilla 362-373: gasto activity amortizaciones'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Depreciation
           gasto-actividad-arrendamientos-canones:
-            help: 'Casilla information: Casilla 302-313: gasto activity arrendamientos
-              canones.'
-            label: 'Casilla 302-313: gasto activity arrendamientos canones'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Leases and royalties
           gasto-actividad-consumos-explotacion:
-            help: 'Casilla information: Casilla 278-289: gasto activity consumos explotacion.'
-            label: 'Casilla 278-289: gasto activity consumos explotacion'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Operating consumption
           gasto-actividad-gastos-financieros:
-            help: Tax information about tax information in casilla 350-361 of Modelo
-              184.
-            label: Casilla 350-361 — tax information
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Financial expenses
           gasto-actividad-gastos-personal:
-            help: Tax information about tax information in casilla 266-277 of Modelo
-              184.
-            label: Casilla 266-277 — tax information
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Staff costs
           gasto-actividad-otros-gastos-deducibles:
-            help: Tax information about tax information in casilla 386-395 of Modelo
-              184.
-            label: Casilla 386-395 — tax information
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Other tax-deductible expenses
           gasto-actividad-provisiones:
-            help: 'Casilla information: Casilla 374-385: gasto activity provisiones.'
-            label: 'Casilla 374-385: gasto activity provisiones'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Provisions
           gasto-actividad-reparaciones-conservacion:
-            help: 'Casilla information: Casilla 314-325: gasto activity reparaciones
-              conservacion.'
-            label: 'Casilla 314-325: gasto activity reparaciones conservacion'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Repairs and maintenance
           gasto-actividad-servicios-profesionales:
-            help: 'Casilla information: Casilla 326-337: gasto activity services professional.'
-            label: 'Casilla 326-337: gasto activity services professional'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Independent professional services
           gasto-actividad-suministros:
-            help: 'Casilla information: Casilla 338-349: gasto activity suministros.'
-            label: 'Casilla 338-349: gasto activity suministros'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Utilities
           gasto-actividad-tributos-deducibles:
-            help: 'Casilla information: Casilla 290-301: gasto activity tributos deducibles.'
-            label: 'Casilla 290-301: gasto activity tributos deducibles'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Tax-deductible levies
           gasto-inmobiliario-amortizacion-bienes-muebles:
-            help: 'Casilla information: Casilla 481-488: gasto inmobiliario amortizacion
-              goods muebles.'
-            label: 'Casilla 481-488: gasto inmobiliario amortizacion goods muebles'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Depreciation of movable assets
           gasto-inmobiliario-amortizacion-inmueble:
-            help: 'Casilla information: Casilla 471-480: gasto inmobiliario amortizacion
-              inmueble.'
-            label: 'Box 471-480: property expense — depreciation of the property'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Depreciation of the property
           gasto-inmobiliario-cantidades-devengadas-terceros:
-            help: 'Casilla information: Casilla 451-460: gasto inmobiliario cantidades
-              devengadas terceros.'
-            label: 'Box 451-460: property expense — amounts accrued to third parties'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Amounts accrued by third parties
           gasto-inmobiliario-conservacion-reparacion:
-            help: 'Casilla information: Casilla 408-418: gasto inmobiliario conservacion
-              reparacion.'
-            label: 'Box 408-418: property expense — maintenance and repairs'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Maintenance and repair
           gasto-inmobiliario-intereses-financiacion:
-            help: 'Casilla information: Casilla 397-407: gasto inmobiliario intereses
-              financiacion.'
-            label: 'Casilla 397-407: gasto inmobiliario intereses financiacion'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Interest and other financing costs
           gasto-inmobiliario-intereses-gastos-reparacion:
-            help: Tax information about tax information in casilla 419-429 of Modelo
-              184.
-            label: Casilla 419-429 — tax information
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Outstanding interest and repair or
+              maintenance costs
           gasto-inmobiliario-otros-gastos-deducibles:
-            help: Tax information about tax information in casilla 489-497 of Modelo
-              184.
-            label: Casilla 489-497 — tax information
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Other deductible expenses
           gasto-inmobiliario-primas-seguros:
-            help: 'Casilla information: Casilla 461-470: gasto inmobiliario primas
-              insurance.'
-            label: 'Casilla 461-470: gasto inmobiliario primas insurance'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Insurance premiums
           gasto-inmobiliario-saldos-dudoso-cobro:
-            help: 'Casilla information: Casilla 440-450: gasto inmobiliario saldos
-              dudoso cobro.'
-            label: 'Box 440-450: property expense — doubtful receivables'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Doubtful balances
           gasto-inmobiliario-tributos-recargos:
-            help: 'Casilla information: Casilla 430-439: gasto inmobiliario tributos
-              recargos.'
-            label: 'Box 430-439: property expense — taxes and surcharges'
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Levies and surcharges
           gastos-deducibles-atribuibles:
-            help: Tax information about tax information in casilla 165-176 of Modelo
-              184.
-            label: Casilla 165-176 — tax information
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Expenses / excess negative income
           importe-atribuido-miembro:
-            help: 'Casilla information: Casilla 96-108: amount atribuido miembro.'
-            label: 'Casilla 96-108: amount atribuido miembro'
+            label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
           importe-neto-cifra-negocios:
-            help: 'Casilla information: Casilla 157-171: amount neto cifra negocios.'
-            label: 'Casilla 157-171: amount neto cifra negocios'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Net turnover
           ingresos-integros-atribuibles:
-            help: 'Casilla information: Casilla 151-164: income integros atribuibles.'
-            label: 'Casilla 151-164: income integros atribuibles'
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Gross income / amount of accrued returns / accounting result
           miembro-a-31-diciembre:
-            help: 'Casilla information: Casilla 82: miembro a 31 diciembre.'
-            label: 'Casilla 82: miembro a 31 diciembre'
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Member as at 31 December
           miembro-clave-pais:
-            help: 'Casilla information: Casilla 79-80: miembro clave pais.'
-            label: 'Casilla 79-80: miembro clave pais'
+            label: COUNTRY CODE
           miembro-codigo-provincia:
-            help: Tax information for casilla 77-78 of Modelo 184.
-            label: Casilla 77-78 — tax field
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Province code
           miembro-domicilio-fiscal:
-            help: 'Casilla information: Casilla 120-159: miembro address fiscal.'
-            label: 'Casilla 120-159: miembro address fiscal'
+            label: TAX ADDRESS OF THE ENTITY MEMBER
           miembro-nif:
-            help: 'Casilla information: Casilla 18-26: miembro nif.'
-            label: 'Casilla 18-26: miembro nif'
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: NIF of the member
           miembro-nombre-razon-social:
-            help: Tax information for casilla 36-75 of Modelo 184.
-            label: Casilla 36-75 — tax field
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Surnames and first name, company name or denomination of the member
           miembro-representante-fiscal-nif:
-            help: 'Casilla information: Casilla 27-35: miembro representative fiscal
-              nif.'
-            label: 'Casilla 27-35: miembro representative fiscal nif'
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: NIF of the tax representative
           naturaleza-inmueble:
-            help: Tax information about tax information in casilla 172 of Modelo 184.
-            label: Casilla 172 — tax information
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Nature of the property
           numero-dias-arrendamiento:
-            help: Tax information for casilla 498-500 of Modelo 184.
-            label: Casilla 498-500 — tax field
+            label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
           numero-dias-miembro:
-            help: Tax information for casilla 83-85 of Modelo 184.
-            label: Casilla 83-85 — tax field
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Number of days as a member
           numero-justificante:
-            help: Tax information for casilla 108-120 of Modelo 184.
-            label: Casilla 108-120 — tax field
+            label: IDENTIFYING NUMBER OF THE RETURN
           objeto-entidad-extranjera:
-            help: 'Casilla information: Casilla 148: subject matter entity foreign.'
-            label: 'Casilla 148: subject matter entity foreign'
+            label: PURPOSE
           persona-relacion:
-            help: Tax information about tax information in casilla 59-107 of Modelo
-              184.
-            label: Casilla 59-107 — tax information
+            label: TELEPHONE
           porcentaje-participacion:
-            help: 'Casilla information: Casilla 86-92: percentage participacion.'
-            label: 'Casilla 86-92: percentage participacion'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Participation percentage
           porcentaje-reduccion-renta-atribuible:
-            help: 'Casilla information: Casilla 191-195: percentage reduccion income
-              attributable.'
-            label: 'Casilla 191-195: percentage reduccion income attributable'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Reduction percentage
           porcentaje-renta-atribuible-residentes:
-            help: 'Casilla information: Casilla 151-155: percentage income attributable
-              residents.'
-            label: 'Casilla 151-155: percentage income attributable residents'
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Percentage of attributable income
           porcentaje-titularidad-inmueble:
-            help: Tax information about tax information in casilla 195-199 of Modelo
-              184.
-            label: Casilla 195-199 — tax information
+            label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
           provisiones-y-gastos-dificil-justificacion:
-            help: Tax information about tax information in casilla 160-171 of Modelo
-              184.
-            label: Casilla 160-171 — tax information
+            label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
           reduccion-atribuida-miembro:
-            help: 'Casilla information: Casilla 109-119: reduccion atribuida miembro.'
-            label: 'Box 109-119: reduction allocated to the member'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Reduction
           referencia-catastral:
-            help: 'Casilla information: Casilla 246-265: referencia catastral.'
-            label: 'Casilla 246-265: referencia catastral'
+            label: CADASTRAL REFERENCE
           regimen-determinacion-rendimientos:
-            help: 'Casilla information: Casilla 82: regime determinacion income.'
-            label: 'Casilla 82: regime determinacion income'
+            label: RETURN DETERMINATION REGIME
           rendimiento-neto-minorado-agricola-estimacion-objetiva:
-            help: Tax information for casilla 216-229 of Modelo 184.
-            label: Casilla 216-229 — tax field
+            label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY ACTIVITIES
+              UNDER OBJECTIVE ASSESSMENT
           rendimiento-neto-previo-estimacion-objetiva:
-            help: Tax information for casilla 203-215 of Modelo 184.
-            label: Casilla 203-215 — tax field
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Prior net return of activities under objective assessment
           renta-atribuible-con-derecho-reduccion:
-            help: 'Casilla information: Casilla 196-207: income attributable with
-              derecho reduccion.'
-            label: 'Casilla 196-207: income attributable with derecho reduccion'
+            label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
           renta-atribuible-importe:
-            help: 'Casilla information: Casilla 177-190: income attributable amount.'
-            label: 'Casilla 177-190: income attributable amount'
+            label: Amount of income attributable / net return attributable to the
+              entity member (unsigned, no decimal comma, in euros)
           representante-nif:
-            help: 'Casilla information: Casilla 172-180: representative nif.'
-            label: 'Casilla 172-180: representative nif'
+            label: N.I.F. OF THE REPRESENTATIVE
           representante-nombre:
-            help: 'Casilla information: Casilla 181-220: representative name.'
-            label: 'Casilla 181-220: representative name'
+            label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
           retenciones-ingresos-a-cuenta-atribuibles:
-            help: 'Casilla information: Casilla 233-244: withholdings payments on
-              account atribuibles.'
-            label: 'Casilla 233-244: withholdings payments on account atribuibles'
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Withholdings and payments on account
           situacion-inmueble:
-            help: 'Casilla information: Casilla 245: situacion inmueble.'
-            label: 'Casilla 245: situacion inmueble'
+            label: LOCATION OF THE PROPERTY
           tipo-actividad:
-            help: 'Casilla information: Casilla 83: rate activity.'
-            label: 'Casilla 83: rate activity'
+            label: ACTIVITY TYPE
           tipo-declaracion:
-            help: 'Casilla information: Casilla rate-return: rate return.'
-            label: 'Casilla rate-return: rate return'
+            label: Type of return (original / replacement / supplementary)
           tipo-entidad-espanola:
-            help: 'Casilla information: Casilla 145: rate entity espanola.'
-            label: 'Casilla 145: rate entity espanola'
+            label: ENTITY TYPE
           tipo-entidad-extranjera:
-            help: 'Casilla information: Casilla 147: rate entity foreign.'
-            label: 'Casilla 147: rate entity foreign'
+            label: ENTITY TYPE
           tipo-hoja:
-            help: Tax information about tax information in casilla 76 of Modelo 184.
-            label: Casilla 76 — tax information
+            label: SHEET TYPE
           tipo-renta-atribuida-clave:
-            help: 'Casilla information: Casilla 77: rate income atribuida clave.'
-            label: 'Casilla 77: rate income atribuida clave'
+            label: Attributed-income type key (A=movable capital, C=real-estate capital,
+              D=economic activities, F=gains/losses excl. transfer, G=gains/losses
+              on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne,
+              L=excess negative income from no-treaty countries)
           tipo-renta-atribuida-subclave:
-            help: Tax information about tax information in casilla 78-79 of Modelo
-              184.
-            label: Casilla 78-79 — tax information
+            label: Attributed-income subtype key (granularity by domestic/foreign
+              geographic origin, applicable reductions, etc.)
           tipo-soporte:
-            help: 'Casilla information: Casilla 58: rate soporte.'
-            label: 'Casilla 58: rate soporte'
+            label: MEDIUM TYPE
           tipo3-clave:
-            help: 'Casilla information: Casilla 93: rate income atribuida clave.'
-            label: 'Casilla 93: rate income atribuida clave'
+            label: CODE
           tipo3-dias-arrendamiento:
-            help: Tax information for casilla 200-202 of Modelo 184.
-            label: Casilla 200-202 — tax field
+            label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF THE
+              PROPERTY
           tipo3-referencia-catastral:
-            help: 'Casilla information: Casilla 174-193: referencia catastral.'
-            label: 'Casilla 174-193: referencia catastral'
+            label: CADASTRAL REFERENCE
           tipo3-situacion-inmueble:
-            help: 'Casilla information: Casilla 173: situacion inmueble.'
-            label: 'Casilla 173: situacion inmueble'
+            label: LOCATION OF THE PROPERTY
           tipo3-subclave:
-            help: Tax information about tax information in casilla 94-95 of Modelo
-              184.
-            label: Casilla 94-95 — tax information
+            label: SUB-CODE
           tipo3-tipo-hoja:
-            help: Tax information about tax information in casilla 76 of Modelo 184.
-            label: Casilla 76 — tax information
+            label: SHEET TYPE
           total-registros-socios:
-            help: 'Casilla information: Casilla 136-144: total registros socios.'
-            label: 'Casilla 136-144: total registros socios'
+            label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
           tributacion-impuesto-sociedades:
-            help: Tax information for casilla 156 of Modelo 184.
-            label: Casilla 156 — tax field
+            label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
           valor-adquisicion-o-ajustes-disminuciones:
-            help: Tax information about tax information in casilla 138-150 of Modelo
-              184.
-            label: Casilla 138-150 — tax information
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Acquisition, subscription or book value
           valor-liquidativo-o-ajustes-aumentos:
-            help: Tax information about tax information in casilla 125-137 of Modelo
-              184.
-            label: Casilla 125-137 — tax information
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: 'Net asset value / adjustments: increases'
       field:
         official_name: Modelo 184. Annual informative return of income-attribution
           entities.
@@ -299,349 +272,124 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax year 2015.
-              label: Tax year the return refers to
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax year 2015.
-              label: Type of return (original / replacement / supplementary)
           field:
             label: Modelo 184, tax year 2015
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax years 2016 to 2018.
-              label: Tax year the return refers to
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax years 2016 to 2018.
-              label: Type of return (original / replacement / supplementary)
           field:
             label: Modelo 184, tax years 2016 to 2018
         2019-2021:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax years 2019 to 2021.
-              label: Tax year the return refers to
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax years 2019 to 2021.
-              label: Type of return (original / replacement / supplementary)
           field:
             label: Modelo 184, tax years 2019 to 2021
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax year 2022.
-              label: Tax year the return refers to
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax year 2022.
-              label: Type of return (original / replacement / supplementary)
           field:
             label: Modelo 184, tax year 2022
         2023-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
               help: Box 121-122 of modelo 184, tax years 2023 and 2024.
-              label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax years 2023 and 2024.
-              label: Tax year the return refers to
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Box 146 of modelo 184, tax years 2023 and 2024.
-              label: MAIN ACTIVITY
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
               help: Box 145 of modelo 184, tax years 2023 and 2024.
-              label: ENTITY TYPE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
               help: Box 149-150 of modelo 184, tax years 2023 and 2024.
-              label: COUNTRY CODE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
               help: Box 148 of modelo 184, tax years 2023 and 2024.
-              label: PURPOSE
-            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Percentage of attributable income
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: Box 147 of modelo 184, tax years 2023 and 2024.
-              label: ENTITY TYPE
-            x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Net turnover
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Box 108-120 of modelo 184, tax years 2023 and 2024.
-              label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: Box 59-107 of modelo 184, tax years 2023 and 2024.
-              label: TELEPHONE
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
               help: Box 172-180 of modelo 184, tax years 2023 and 2024.
-              label: N.I.F. OF THE REPRESENTATIVE
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
               help: Box 181-220 of modelo 184, tax years 2023 and 2024.
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax years 2023 and 2024.
-              label: Type of return (original / replacement / supplementary)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Box 58 of modelo 184, tax years 2023 and 2024.
-              label: MEDIUM TYPE
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Box 136-144 of modelo 184, tax years 2023 and 2024.
-              label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
               help: Box 156 of modelo 184, tax years 2023 and 2024.
-              label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
-            x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Deduction base / amount
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: Box 97-116 of modelo 184, tax years 2023 and 2024.
-              label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
-                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
               help: Box 88-96 of modelo 184, tax years 2023 and 2024.
-              label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
-                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmoobmck:
               help: Box 77 of modelo 184, tax years 2023 and 2024.
-              label: Attributed-income type key (A=movable capital, C=real-estate
-                capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses
-                on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne,
-                L=excess negative income from no-treaty countries)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
               help: Box 80-81 of modelo 184, tax years 2023 and 2024.
-              label: COUNTRY CODE
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
               help: Box 396 of modelo 184, tax years 2023 and 2024.
-              label: CASH RECEIPTS AND PAYMENTS BASIS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Box 498-500 of modelo 184, tax years 2023 and 2024.
-              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
               help: Box 84-87 of modelo 184, tax years 2023 and 2024.
-              label: IAE GROUP OR HEADING
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
               help: Box 117-124 of modelo 184, tax years 2023 and 2024.
-              label: Year
-            x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Gains / losses
-            x-ehkn0rpi5pjm2srkdtpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Expenses / excess negative income
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Depreciation
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Leases and royalties
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Operating consumption
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Financial expenses
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Staff costs
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Other tax-deductible expenses
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Provisions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Repairs and maintenance
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Independent professional services
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Utilities
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Tax-deductible levies
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Depreciation of movable assets
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Depreciation of the property
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Amounts accrued by third parties
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Maintenance and repair
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Interest and other financing costs
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Outstanding interest and repair
-                or maintenance costs
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Other deductible expenses
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Insurance premiums
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Doubtful balances
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Levies and surcharges
-            x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Gross income / amount of accrued returns / accounting result
-            x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Reduction percentage
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Box 246-265 of modelo 184, tax years 2023 and 2024.
-              label: CADASTRAL REFERENCE
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
               help: Box 82 of modelo 184, tax years 2023 and 2024.
-              label: RETURN DETERMINATION REGIME
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
               help: Box 196-207 of modelo 184, tax years 2023 and 2024.
-              label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
               help: Box 177-190 of modelo 184, tax years 2023 and 2024.
-              label: Amount of income attributable / net return attributable to the
-                entity member (unsigned, no decimal comma, in euros)
-            x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Withholdings and payments on account
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Box 245 of modelo 184, tax years 2023 and 2024.
-              label: LOCATION OF THE PROPERTY
             x-ehkn0rpi5ppnaoj3dhgncp8:
               help: Box 78-79 of modelo 184, tax years 2023 and 2024.
-              label: Attributed-income subtype key (granularity by domestic/foreign
-                geographic origin, applicable reductions, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
               help: Box 83 of modelo 184, tax years 2023 and 2024.
-              label: ACTIVITY TYPE
             x-ehkn0rpi5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax years 2023 and 2024.
-              label: SHEET TYPE
-            x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Acquisition, subscription or book value
-            x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: 'Net asset value / adjustments: increases'
             x-ehkn0rpj5phmoobmck:
               help: Box 93 of modelo 184, tax years 2023 and 2024.
-              label: CODE
-            x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Reported-party code
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: Box 79-80 of modelo 184, tax years 2023 and 2024.
-              label: COUNTRY CODE
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
               help: Box 81 of modelo 184, tax years 2023 and 2024.
-              label: PARTICIPANT TYPE CODE
-            x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Province code
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Box 200-202 of modelo 184, tax years 2023 and 2024.
-              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF
-                THE PROPERTY
-            x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Number of days as a member
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: Box 120-159 of modelo 184, tax years 2023 and 2024.
-              label: TAX ADDRESS OF THE ENTITY MEMBER
             x-ehkn0rpj5pkmqs3fe9q6a:
               help: Box 96-108 of modelo 184, tax years 2023 and 2024.
-              label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
-            x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Member as at 31 December
-            x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: NIF of the member
-            x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Surnames and first name, company name or denomination of the
-                member
-            x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Nature of the property
-            x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Participation percentage
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: Box 195-199 of modelo 184, tax years 2023 and 2024.
-              label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
               help: Box 160-171 of modelo 184, tax years 2023 and 2024.
-              label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
-            x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Reduction
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Box 174-193 of modelo 184, tax years 2023 and 2024.
-              label: CADASTRAL REFERENCE
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
               help: Box 216-229 of modelo 184, tax years 2023 and 2024.
-              label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY
-                ACTIVITIES UNDER OBJECTIVE ASSESSMENT
-            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Prior net return of activities under objective assessment
-            x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: NIF of the tax representative
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Box 173 of modelo 184, tax years 2023 and 2024.
-              label: LOCATION OF THE PROPERTY
             x-ehkn0rpj5ppnaoj3dhgncp8:
               help: Box 94-95 of modelo 184, tax years 2023 and 2024.
-              label: SUB-CODE
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax years 2023 and 2024.
-              label: SHEET TYPE
           construct:
             modelo-184-informative:
               field:
@@ -653,313 +401,96 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
               help: Box 121-122 of modelo 184, tax year 2025.
-              label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax year 2025.
-              label: Tax year the return refers to
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Box 146 of modelo 184, tax year 2025.
-              label: MAIN ACTIVITY
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
               help: Box 145 of modelo 184, tax year 2025.
-              label: ENTITY TYPE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
               help: Box 149-150 of modelo 184, tax year 2025.
-              label: COUNTRY CODE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
               help: Box 148 of modelo 184, tax year 2025.
-              label: PURPOSE
-            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Percentage of attributable income
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: Box 147 of modelo 184, tax year 2025.
-              label: ENTITY TYPE
-            x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Net turnover
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Box 108-120 of modelo 184, tax year 2025.
-              label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: Box 59-107 of modelo 184, tax year 2025.
-              label: TELEPHONE
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
               help: Box 172-180 of modelo 184, tax year 2025.
-              label: N.I.F. OF THE REPRESENTATIVE
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
               help: Box 181-220 of modelo 184, tax year 2025.
-              label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Box tipo-declaracion of modelo 184, tax year 2025.
-              label: Type of return (original / replacement / supplementary)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Box 58 of modelo 184, tax year 2025.
-              label: MEDIUM TYPE
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: Field declared on modelo 184, the informative return of income-attribution
                 entities.
               label: Total number of entity records
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Box 136-144 of modelo 184, tax year 2025.
-              label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
               help: Box 156 of modelo 184, tax year 2025.
-              label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
-            x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Deduction base / amount
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: Box 97-116 of modelo 184, tax year 2025.
-              label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
-                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
               help: Box 88-96 of modelo 184, tax year 2025.
-              label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
-                INVESTMENT INSTITUTION
             x-ehkn0rpi5phmoobmck:
               help: Box 77 of modelo 184, tax year 2025.
-              label: Attributed-income type key (A=movable capital, C=real-estate
-                capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses
-                on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne,
-                L=excess negative income from no-treaty countries)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
               help: Box 80-81 of modelo 184, tax year 2025.
-              label: COUNTRY CODE
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
               help: Box 396 of modelo 184, tax year 2025.
-              label: CASH RECEIPTS AND PAYMENTS BASIS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Box 498-500 of modelo 184, tax year 2025.
-              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
               help: Box 84-87 of modelo 184, tax year 2025.
-              label: IAE GROUP OR HEADING
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
               help: Box 117-124 of modelo 184, tax year 2025.
-              label: Year
-            x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Gains / losses
-            x-ehkn0rpi5pjm2srkdtpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Expenses / excess negative income
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Depreciation
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Leases and royalties
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Operating consumption
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Financial expenses
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Staff costs
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Other tax-deductible expenses
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Provisions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Repairs and maintenance
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Independent professional services
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Utilities
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Economic-activity expenses. Tax-deductible levies
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Depreciation of movable assets
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Depreciation of the property
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Amounts accrued by third parties
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Maintenance and repair
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Interest and other financing costs
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Outstanding interest and repair
-                or maintenance costs
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Other deductible expenses
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Insurance premiums
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Doubtful balances
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: Tax-deductible expense declared in modelo 184's entity record.
-                The design splits it into an integer and a decimal part.
-              label: Real-estate capital expenses. Levies and surcharges
-            x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Gross income / amount of accrued returns / accounting result
-            x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Reduction percentage
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Box 246-265 of modelo 184, tax year 2025.
-              label: CADASTRAL REFERENCE
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
               help: Box 82 of modelo 184, tax year 2025.
-              label: RETURN DETERMINATION REGIME
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
               help: Box 196-207 of modelo 184, tax year 2025.
-              label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
               help: Box 177-190 of modelo 184, tax year 2025.
-              label: Amount of income attributable / net return attributable to the
-                entity member (unsigned, no decimal comma, in euros)
-            x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Withholdings and payments on account
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Box 245 of modelo 184, tax year 2025.
-              label: LOCATION OF THE PROPERTY
             x-ehkn0rpi5ppnaoj3dhgncp8:
               help: Box 78-79 of modelo 184, tax year 2025.
-              label: Attributed-income subtype key (granularity by domestic/foreign
-                geographic origin, applicable reductions, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
               help: Box 83 of modelo 184, tax year 2025.
-              label: ACTIVITY TYPE
             x-ehkn0rpi5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax year 2025.
-              label: SHEET TYPE
-            x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Acquisition, subscription or book value
-            x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: 'Net asset value / adjustments: increases'
             x-ehkn0rpj5phmoobmck:
               help: Box 93 of modelo 184, tax year 2025.
-              label: CODE
-            x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: Reported-party code
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: Box 79-80 of modelo 184, tax year 2025.
-              label: COUNTRY CODE
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
               help: Box 81 of modelo 184, tax year 2025.
-              label: PARTICIPANT TYPE CODE
-            x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Province code
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Box 200-202 of modelo 184, tax year 2025.
-              label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF
-                THE PROPERTY
-            x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Number of days as a member
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: Box 120-159 of modelo 184, tax year 2025.
-              label: TAX ADDRESS OF THE ENTITY MEMBER
             x-ehkn0rpj5pkmqs3fe9q6a:
               help: Box 96-108 of modelo 184, tax year 2025.
-              label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
-            x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Member as at 31 December
-            x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: NIF of the member
-            x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Surnames and first name, company name or denomination of the
-                member
-            x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: Field of the member declared in modelo 184's type 3 record.
-              label: Nature of the property
-            x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Participation percentage
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: Box 195-199 of modelo 184, tax year 2025.
-              label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
               help: Box 160-171 of modelo 184, tax year 2025.
-              label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
-            x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Reduction
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Box 174-193 of modelo 184, tax year 2025.
-              label: CADASTRAL REFERENCE
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
               help: Box 216-229 of modelo 184, tax year 2025.
-              label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY
-                ACTIVITIES UNDER OBJECTIVE ASSESSMENT
-            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: Amount declared on modelo 184. The design splits it into an integer
-                and a decimal part.
-              label: Prior net return of activities under objective assessment
-            x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Field declared on modelo 184, the informative return of income-attribution
-                entities.
-              label: NIF of the tax representative
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Box 173 of modelo 184, tax year 2025.
-              label: LOCATION OF THE PROPERTY
             x-ehkn0rpj5ppnaoj3dhgncp8:
               help: Box 94-95 of modelo 184, tax year 2025.
-              label: SUB-CODE
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Box 76 of modelo 184, tax year 2025.
-              label: SHEET TYPE
           construct:
             modelo-184-informative:
               field:

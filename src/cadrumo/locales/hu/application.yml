@@ -855,6 +855,10 @@ application:
         választhat biztonságosan kanonikus casilla.id értéket.'
       calculate_semantic_role_missing: 'A modell revíziója nem tartalmaz casillát
         ezzel a szemantikus szereppel: %{semantic_role}.'
+      calculate_text_casilla_numeric_value: A(z) %{key} (%{label}) --casilla értéke
+        egy nem numerikus, data_type=%{data_type} típusú bevallói választóra vonatkozik,
+        amely a jövedelmet szerző adóalanyt nevezi meg, nem összeget. Add meg az összeget
+        a saját numerikus rovatában, és tartsd fenn ezt a rovatot a tag kiválasztásához.
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
       calculate_typed_text_input_invalid: A --casilla érték nem érvényes a rovat deklarált

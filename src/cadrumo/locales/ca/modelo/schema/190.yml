@@ -88,7 +88,6 @@ modelo:
           payee-ceuta-melilla-clave:
             help: Informació fiscal sobre informació fiscal de la casella 152 del
               Modelo 190.
-            label: Ceuta o Melilla
           payee-clave-percepcion:
             help: Informació fiscal sobre informació fiscal de la casella 78 del Modelo
               190.
@@ -158,9 +157,9 @@ modelo:
               Modelo 190.
             label: Discapacitat
           payee-emerging-stock-excess-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 388 del
-              Modelo 190.
-            label: Casella 388 — informació fiscal
+            help: Dada del perceptor declarada en el registre de tipus 2 del model
+              190.
+            label: Excessos per lliurament d'accions d'empreses emergents
           payee-family-situation:
             help: Informació fiscal sobre situació familiar del perceptor de la casella
               157 del Modelo 190.
@@ -200,7 +199,6 @@ modelo:
           payee-nif:
             help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
               Modelo 190.
-            label: NIF del perceptor
           payee-pension-compensatoria:
             help: Informació fiscal sobre pensió compensatòria de la casella 197-209
               del Modelo 190.
@@ -261,6 +259,34 @@ modelo:
             help: Informació fiscal sobre informació fiscal de la casella 109-121
               del Modelo 190.
             label: Casella 109-121 — informació fiscal
+          prestacion-incapacidad:
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+              de la clau B.01 en l'exercici.
+            label: Tipus de prestació de la clau B.01. 03. Incapacitat permanent total
+              o parcial
+          prestacion-jubilacion:
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+              de la clau B.01 en l'exercici.
+            label: Tipus de prestació de la clau B.01. 01. Jubilació
+          prestacion-no-contributiva:
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+              de la clau B.01 en l'exercici.
+            label: Tipus de prestació de la clau B.01. 04. Pensions no contributives
+              per invalidesa o jubilació
+          prestacion-resto:
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+              de la clau B.01 en l'exercici.
+            label: Tipus de prestació de la clau B.01. 05. Resta de prestacions de
+              l'art. 17.2.a).1a de la Llei 35/2006
+          prestacion-viudedad:
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+              de la clau B.01 en l'exercici.
+            label: Tipus de prestació de la clau B.01. 02. Viduïtat
+          rendimientos-trabajo-fondos-emprendimiento:
+            help: Dada del perceptor declarada en el registre de tipus 2 del model
+              190.
+            label: Rendiments del treball per la gestió de fons vinculats a l'emprenedoria,
+              la innovació i el desenvolupament de l'activitat econòmica
           representante-legal-nif:
             help: Informació fiscal sobre informació fiscal de la casella 27-35 del
               Modelo 190.
@@ -283,51 +309,40 @@ modelo:
           guanys patrimonials i imputacions de rendes. Resum anual.
         title: Resum anual de retencions del treball i d'activitats
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Consulteu la informació de la casella: Declaració complementària.'
-              label: Declaració complementària
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: Informació fiscal sobre informació fiscal de la casella 176-225
                 del Modelo 190.
-              label: Correu electrònic de la persona amb qui relacionar-se
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Informació fiscal de la casella 108-120 del Modelo 190.
-              label: Número identificatiu de la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Informació fiscal de la casella 123-135 del Modelo 190.
               label: Número identificatiu de la declaració anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: Informació fiscal sobre informació fiscal de la casella 145-160
-                del Modelo 190.
               label: Import total de les percepcions
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Informació fiscal sobre informació fiscal de la casella 68-107
-                del Modelo 190.
               label: Cognoms i nom de la persona amb qui relacionar-se
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Informació fiscal sobre informació fiscal de la casella 59-67
-                del Modelo 190.
               label: Telèfon de la persona amb qui relacionar-se
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: 'Consulteu la informació de la casella: Import total de retencions
                 e ingressos a compte.'
               label: Import total de retencions i ingressos a compte
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: Informació fiscal de la casella 122 del Modelo 190.
-              label: Declaració substitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: Informació fiscal de la casella 136-144 del Modelo 190.
               label: Nombre total de percepcions
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Any de naixement
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Anualitats per aliments
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -373,15 +388,9 @@ modelo:
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Ceuta o Melilla
-            x-e1in4opecdm62tj5:
-              help: Informació fiscal sobre informació fiscal de la casella 78 del
-                Modelo 190.
-              label: Clau de percepció
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Complement d'ajuda per a la infància
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -397,7 +406,6 @@ modelo:
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Contracte o relació
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -447,19 +455,12 @@ modelo:
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Discapacitat
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Exercici de meritació
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: Dada del perceptor declarada en el registre de tipus 2 del model
-                190.
-              label: Excessos per lliurament d'accions d'empreses emergents
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Despeses deduïbles
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Dada del perceptor declarada al model 190. El disseny divideix
                 els imports en part entera i part decimal.
@@ -486,8 +487,6 @@ modelo:
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: Informació fiscal sobre informació fiscal de la casella 122-134
-                del Modelo 190.
               label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -496,10 +495,8 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Mobilitat geogràfica
             x-e1in4opedpkmc:
               help: 'Consulteu la informació de la casella: NIF del perceptor.'
-              label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -507,7 +504,6 @@ modelo:
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: NIF del representant legal
             x-e1in4opedpnmqojick:
               help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
                 del perceptor.'
@@ -515,14 +511,9 @@ modelo:
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Pensions compensatòries
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: Informació fiscal sobre informació fiscal de la casella 82-94
-                del Modelo 190.
               label: Percepció íntegra dinerària no derivada d'incapacitat laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: Informació fiscal sobre informació fiscal de la casella 109-121
-                del Modelo 190.
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
@@ -561,16 +552,11 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: Informació fiscal sobre informació fiscal de la casella 95-107
-                del Modelo 190.
               label: Retencions practicades sobre les percepcions dineràries
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: Informació fiscal sobre informació fiscal de la casella 79-80
-                del Modelo 190.
               label: Subclau de percepció
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -587,47 +573,30 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: 'Consulteu la informació de la casella: Declaració complementària.'
-              label: Declaració complementària
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
               help: Informació fiscal sobre informació fiscal de la casella 176-225
                 del Modelo 190.
-              label: Correu electrònic de la persona amb qui relacionar-se
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Informació fiscal de la casella 108-120 del Modelo 190.
-              label: Número identificatiu de la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Informació fiscal de la casella 123-135 del Modelo 190.
               label: Número identificatiu de la declaració anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: Informació fiscal sobre informació fiscal de la casella 145-160
-                del Modelo 190.
               label: Import total de les percepcions
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: Informació fiscal sobre informació fiscal de la casella 68-107
-                del Modelo 190.
               label: Cognoms i nom de la persona amb qui relacionar-se
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: Informació fiscal sobre informació fiscal de la casella 59-67
-                del Modelo 190.
               label: Telèfon de la persona amb qui relacionar-se
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
               help: 'Consulteu la informació de la casella: Import total de retencions
                 e ingressos a compte.'
               label: Import total de retencions i ingressos a compte
-            x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: Informació fiscal de la casella 122 del Modelo 190.
-              label: Declaració substitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: Informació fiscal de la casella 136-144 del Modelo 190.
               label: Nombre total de percepcions
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Any de naixement
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Anualitats per aliments
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -673,15 +642,9 @@ modelo:
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Ceuta o Melilla
-            x-e1in4opecdm62tj5:
-              help: Informació fiscal sobre informació fiscal de la casella 78 del
-                Modelo 190.
-              label: Clau de percepció
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Complement d'ajuda per a la infància
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -697,7 +660,6 @@ modelo:
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Contracte o relació
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dada del perceptor declarada al model 190, per al minim per descendents
                 o ascendents.
@@ -747,19 +709,12 @@ modelo:
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Discapacitat
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Exercici de meritació
-            x-e1in4opecls66pbjdtpiqob3cdkmurj5ecmmarb5e9jmarjkclpg:
-              help: Dada del perceptor declarada en el registre de tipus 2 del model
-                190.
-              label: Excessos per lliurament d'accions d'empreses emergents
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Despeses deduïbles
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Dada del perceptor declarada al model 190. El disseny divideix
                 els imports en part entera i part decimal.
@@ -786,8 +741,6 @@ modelo:
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: Informació fiscal sobre informació fiscal de la casella 122-134
-                del Modelo 190.
               label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -796,10 +749,8 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Mobilitat geogràfica
             x-e1in4opedpkmc:
               help: 'Consulteu la informació de la casella: NIF del perceptor.'
-              label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -807,7 +758,6 @@ modelo:
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: NIF del representant legal
             x-e1in4opedpnmqojick:
               help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
                 del perceptor.'
@@ -815,39 +765,11 @@ modelo:
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
-              label: Pensions compensatòries
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: Informació fiscal sobre informació fiscal de la casella 82-94
-                del Modelo 190.
               label: Percepció íntegra dinerària no derivada d'incapacitat laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: Informació fiscal sobre informació fiscal de la casella 109-121
-                del Modelo 190.
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
-            x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
-              help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
-                de la clau B.01 en l'exercici.
-              label: Tipus de prestació de la clau B.01. 03. Incapacitat permanent
-                total o parcial
-            x-e1in4opee1p6asrkc5hmirre5ll7aoj9dhgm6qbfdo:
-              help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
-                de la clau B.01 en l'exercici.
-              label: Tipus de prestació de la clau B.01. 01. Jubilació
-            x-e1in4opee1p6asrkc5hmirre5ln6ubb3dtn78sj9c9qn8qbmc4:
-              help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
-                de la clau B.01 en l'exercici.
-              label: Tipus de prestació de la clau B.01. 04. Pensions no contributives
-                per invalidesa o jubilació
-            x-e1in4opee1p6asrkc5hmirre5lp6asrkds:
-              help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
-                de la clau B.01 en l'exercici.
-              label: Tipus de prestació de la clau B.01. 05. Resta de prestacions
-                de l'art. 17.2.a).1a de la Llei 35/2006
-            x-e1in4opee1p6asrkc5hmirre5lr6itb4cli62p0:
-              help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
-                de la clau B.01 en l'exercici.
-              label: Tipus de prestació de la clau B.01. 02. Viduïtat
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -860,11 +782,6 @@ modelo:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Reduccions aplicables
-            x-e1in4opee9imsp39dlkmarjkdtpiqpjfdpi6uspdclmn0sj5dpi6irb9cln78ro:
-              help: Dada del perceptor declarada en el registre de tipus 2 del model
-                190.
-              label: Rendiments del treball per la gestió de fons vinculats a l'emprenedoria,
-                la innovació i el desenvolupament de l'activitat econòmica
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dada del perceptor declarada al model 190. El disseny divideix
                 els imports en part entera i part decimal.
@@ -889,16 +806,11 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: Informació fiscal sobre informació fiscal de la casella 95-107
-                del Modelo 190.
               label: Retencions practicades sobre les percepcions dineràries
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: Informació fiscal sobre informació fiscal de la casella 79-80
-                del Modelo 190.
               label: Subclau de percepció
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model

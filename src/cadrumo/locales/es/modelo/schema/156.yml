@@ -11,108 +11,62 @@ modelo:
         2003-y-siguientes:
           casilla:
             afiliado-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                afiliado o mutualista.'
               label: NIF del afiliado o mutualista
             afiliado-nombre:
-              help: 'Consulte la información correspondiente a la casilla: Apellidos
-                y nombre del afiliado o mutualista.'
               label: Apellidos y nombre del afiliado o mutualista
             cotizacion-abril:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de abril: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-agosto:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de agosto: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-diciembre:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de diciembre: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-enero:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de enero: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-febrero:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de febrero: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-julio:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de julio: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-junio:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de junio: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-marzo:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de marzo: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-mayo:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de mayo: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-noviembre:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de noviembre: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-octubre:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de octubre: situacion mensual e importe de la cuota
                 devengada'
             cotizacion-septiembre:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: 'Cotizacion de septiembre: situacion mensual e importe de la
                 cuota devengada'
             declaracion-complementaria-sustitutiva:
-              help: 'Consulte la información correspondiente a la casilla: Declaración
-                complementaria o sustitutiva.'
               label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 156.
               label: Razon social del declarante
             numero-afiliacion:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                de afiliacion.'
               label: Número de afiliacion
             numero-identificativo-anterior:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración anterior.'
               label: Número identificativo de la declaración anterior
             numero-justificante:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                de justificante de la declaración.'
               label: Número de justificante de la declaración
             numero-total-afiliados:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                total de registros de afiliados o mutualistas.'
               label: Número total de registros de afiliados o mutualistas
             persona-relacion:
-              help: 'Consulte la información correspondiente a la casilla: Persona
-                con quien relacionarse.'
               label: Persona con quien relacionarse
             x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-156-informative:

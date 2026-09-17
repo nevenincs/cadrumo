@@ -4,13 +4,39 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'Consulte la información correspondiente a la casilla: Ejercicio
-              al que se refiere la declaración.'
-            label: Casilla— ejercicio fiscal
+            label: Ejercicio al que se refiere la declaración
+          m165-declaracion-complementaria-sustitutiva:
+            label: Declaración complementaria o sustitutiva
+          m165-declarante-razon-social:
+            label: Denominacion o razon social del declarante
+          m165-fecha-adquisicion:
+            label: Fecha de adquisicion de las acciones o participaciones
+          m165-fecha-constitucion:
+            label: Fecha de constitucion
+          m165-importe-fondos-propios:
+            label: Importe de los fondos propios
+          m165-importe-suscripcion:
+            label: Importe de la suscripcion o adquisicion
+          m165-importe-total-suscripciones:
+            label: Importe total de las suscripciones o adquisiciones
+          m165-numero-identificativo-anterior:
+            label: Número identificativo de la declaración anterior
+          m165-numero-identificativo-declaracion:
+            label: Número identificativo de la declaración
+          m165-numero-total-declarados:
+            label: Número total de declarados
+          m165-persona-relacion:
+            label: Persona con quien relacionarse
+          m165-porcentaje-participacion:
+            label: Porcentaje de participacion
+          m165-representante-legal-nif:
+            label: NIF del representante legal
+          m165-socio-nif:
+            label: NIF del socio o participe
+          m165-socio-nombre:
+            label: Apellidos y nombre del socio o participe
           tipo-declaracion:
-            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
-              (originaria / sustitutiva / complementaria).'
-            label: 'Casilla tipo-declaración: tipo declaración'
+            label: Tipo de declaración (originaria / sustitutiva / complementaria)
       field:
         official_name: Modelo 165. Declaración informativa de certificaciones individuales
           emitidas a los socios o partícipes de entidades de nueva o reciente creación.
@@ -18,87 +44,9 @@ modelo:
           (informativa anual)
       revision:
         2013-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
-              label: Ejercicio al que se refiere la declaración
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2016-2022:
-          casilla:
-            declaracion-complementaria-sustitutiva:
-              help: 'Consulte la información correspondiente a la casilla: Declaración
-                complementaria o sustitutiva.'
-              label: Declaración complementaria o sustitutiva
-            declarante-razon-social:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 165.
-              label: Denominacion o razon social del declarante
-            fecha-adquisicion:
-              help: 'Consulte la información correspondiente a la casilla: Fecha de
-                adquisición de las acciones o participaciones.'
-              label: Fecha de adquisicion de las acciones o participaciones
-            fecha-constitucion:
-              help: 'Consulte la información correspondiente a la casilla: Fecha de
-                constitucion.'
-              label: Fecha de constitucion
-            importe-fondos-propios:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                de los fondos propios.'
-              label: Importe de los fondos propios
-            importe-suscripcion:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                de la suscripcion o adquisición.'
-              label: Importe de la suscripcion o adquisicion
-            importe-total-suscripciones:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                total de las suscripciones o adquisiciones.'
-              label: Importe total de las suscripciones o adquisiciones
-            numero-identificativo-anterior:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración anterior.'
-              label: Número identificativo de la declaración anterior
-            numero-identificativo-declaracion:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración.'
-              label: Número identificativo de la declaración
-            numero-total-declarados:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                total de declarados.'
-              label: Número total de declarados
-            persona-relacion:
-              help: 'Consulte la información correspondiente a la casilla: Persona
-                con quien relacionarse.'
-              label: Persona con quien relacionarse
-            porcentaje-participacion:
-              help: 'Consulte la información correspondiente a la casilla: Porcentaje
-                de participacion.'
-              label: Porcentaje de participacion
-            representante-legal-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                representante legal.'
-              label: NIF del representante legal
-            socio-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                socio o participe.'
-              label: NIF del socio o participe
-            socio-nombre:
-              help: 'Consulte la información correspondiente a la casilla: Apellidos
-                y nombre del socio o participe.'
-              label: Apellidos y nombre del socio o participe
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
-              label: Ejercicio al que se refiere la declaración
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-165-informative:
               field:
@@ -106,91 +54,42 @@ modelo:
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2023-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
-              label: Ejercicio al que se refiere la declaración
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: 'Consulte la información correspondiente a la casilla: Declaración
-                complementaria o sustitutiva.'
               label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              help: Información fiscal sobre información fiscal de la casilla  del
-                Modelo 165.
               label: Denominacion o razon social del declarante
             empresa-emergente:
-              help: 'Consulte la información correspondiente a la casilla: Empresa
-                emergente.'
               label: Empresa emergente
             fecha-adquisicion:
-              help: 'Consulte la información correspondiente a la casilla: Fecha de
-                adquisición de las acciones o participaciones.'
               label: Fecha de adquisicion de las acciones o participaciones
             fecha-constitucion:
-              help: 'Consulte la información correspondiente a la casilla: Fecha de
-                constitucion.'
               label: Fecha de constitucion
             importe-fondos-propios:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                de los fondos propios.'
               label: Importe de los fondos propios
             importe-suscripcion:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                de la suscripcion o adquisición.'
               label: Importe de la suscripcion o adquisicion
             importe-total-suscripciones:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                total de las suscripciones o adquisiciones.'
               label: Importe total de las suscripciones o adquisiciones
             numero-identificativo-anterior:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración anterior.'
               label: Número identificativo de la declaración anterior
             numero-identificativo-declaracion:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                identificativo de la declaración.'
               label: Número identificativo de la declaración
             numero-total-declarados:
-              help: 'Consulte la información correspondiente a la casilla: Número
-                total de declarados.'
               label: Número total de declarados
             persona-relacion:
-              help: 'Consulte la información correspondiente a la casilla: Persona
-                con quien relacionarse.'
               label: Persona con quien relacionarse
             porcentaje-participacion:
-              help: 'Consulte la información correspondiente a la casilla: Porcentaje
-                de participacion.'
               label: Porcentaje de participacion
             representante-legal-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                representante legal.'
               label: NIF del representante legal
             socio-nif:
-              help: 'Consulte la información correspondiente a la casilla: NIF del
-                socio o participe.'
               label: NIF del socio o participe
             socio-nombre:
-              help: 'Consulte la información correspondiente a la casilla: Apellidos
-                y nombre del socio o participe.'
               label: Apellidos y nombre del socio o participe
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
-              label: Ejercicio al que se refiere la declaración
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-165-informative:
               field:

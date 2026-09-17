@@ -9,180 +9,8 @@ modelo:
           filing-year:
             help: 'A Modelo 232 . casilla adóügyi adatai: adóév.'
             label: Az esedékesség éve
-          related-party-fjo-1:
-            help: 'A casilla adatai: Casilla 3.vinculada.1.fjo: related party fjo
-              1.'
-            label: 'Casilla 3.vinculada.1.fjo: related party fjo 1'
-          related-party-fjo-2:
-            help: 'A casilla adatai: Casilla 3.vinculada.2.fjo: related party fjo
-              2.'
-            label: 'Casilla 3.vinculada.2.fjo: related party fjo 2'
-          related-party-fjo-3:
-            help: 'A casilla adatai: Casilla 3.vinculada.3.fjo: related party fjo
-              3.'
-            label: 'Casilla 3.vinculada.3.fjo: related party fjo 3'
-          related-party-fjo-4:
-            help: 'A casilla adatai: Casilla 3.vinculada.4.fjo: related party fjo
-              4.'
-            label: 'Casilla 3.vinculada.4.fjo: related party fjo 4'
-          related-party-fjo-5:
-            help: 'A casilla adatai: Casilla 3.vinculada.5.fjo: related party fjo
-              5.'
-            label: 'Casilla 3.vinculada.5.fjo: related party fjo 5'
-          related-party-importe-1:
-            help: 'A casilla adatai: Casilla 3.vinculada.1.összeg: related party összeg
-              1.'
-            label: 'Casilla 3.vinculada.1.összeg: related party összeg 1'
-          related-party-importe-2:
-            help: 'A casilla adatai: Casilla 3.vinculada.2.összeg: related party összeg
-              2.'
-            label: 'Casilla 3.vinculada.2.összeg: related party összeg 2'
-          related-party-importe-3:
-            help: 'A casilla adatai: Casilla 3.vinculada.3.összeg: related party összeg
-              3.'
-            label: 'Casilla 3.vinculada.3.összeg: related party összeg 3'
-          related-party-importe-4:
-            help: 'A casilla adatai: Casilla 3.vinculada.4.összeg: related party összeg
-              4.'
-            label: 'Casilla 3.vinculada.4.összeg: related party összeg 4'
-          related-party-importe-5:
-            help: 'A casilla adatai: Casilla 3.vinculada.5.összeg: related party összeg
-              5.'
-            label: 'Casilla 3.vinculada.5.összeg: related party összeg 5'
-          related-party-ingreso-pago-1:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-ingreso-pago-2:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-ingreso-pago-3:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-ingreso-pago-4:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-ingreso-pago-5:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-location-1:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-location-2:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-location-3:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-location-4:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-location-5:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-metodo-1:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-metodo-2:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-metodo-3:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-metodo-4:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-metodo-5:
-            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
-          related-party-name-1:
-            help: A Modelo 232 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
-          related-party-name-2:
-            help: A Modelo 232 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
-          related-party-name-3:
-            help: A Modelo 232 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
-          related-party-name-4:
-            help: A Modelo 232 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
-          related-party-name-5:
-            help: A Modelo 232 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
-          related-party-nif-1:
-            help: 'A casilla adatai: Casilla 3.vinculada.1.nif: related party nif
-              1.'
-            label: 'Casilla 3.vinculada.1.nif: related party nif 1'
-          related-party-nif-2:
-            help: 'A casilla adatai: Casilla 3.vinculada.2.nif: related party nif
-              2.'
-            label: 'Casilla 3.vinculada.2.nif: related party nif 2'
-          related-party-nif-3:
-            help: 'A casilla adatai: Casilla 3.vinculada.3.nif: related party nif
-              3.'
-            label: 'Casilla 3.vinculada.3.nif: related party nif 3'
-          related-party-nif-4:
-            help: 'A casilla adatai: Casilla 3.vinculada.4.nif: related party nif
-              4.'
-            label: 'Casilla 3.vinculada.4.nif: related party nif 4'
-          related-party-nif-5:
-            help: 'A casilla adatai: Casilla 3.vinculada.5.nif: related party nif
-              5.'
-            label: 'Casilla 3.vinculada.5.nif: related party nif 5'
-          related-party-tipo-operacion-1:
-            help: 'A casilla adatai: Casilla 3.vinculada.1.kulcs-operacion: related
-              party kulcs operacion 1.'
-            label: 'Casilla 3.vinculada.1.kulcs-operacion: related party kulcs operacion
-              1'
-          related-party-tipo-operacion-2:
-            help: 'A casilla adatai: Casilla 3.vinculada.2.kulcs-operacion: related
-              party kulcs operacion 2.'
-            label: 'Casilla 3.vinculada.2.kulcs-operacion: related party kulcs operacion
-              2'
-          related-party-tipo-operacion-3:
-            help: 'A casilla adatai: Casilla 3.vinculada.3.kulcs-operacion: related
-              party kulcs operacion 3.'
-            label: 'Casilla 3.vinculada.3.kulcs-operacion: related party kulcs operacion
-              3'
-          related-party-tipo-operacion-4:
-            help: 'A casilla adatai: Casilla 3.vinculada.4.kulcs-operacion: related
-              party kulcs operacion 4.'
-            label: 'Casilla 3.vinculada.4.kulcs-operacion: related party kulcs operacion
-              4'
-          related-party-tipo-operacion-5:
-            help: 'A casilla adatai: Casilla 3.vinculada.5.kulcs-operacion: related
-              party kulcs operacion 5.'
-            label: 'Casilla 3.vinculada.5.kulcs-operacion: related party kulcs operacion
-              5'
-          related-party-tipo-vinculacion-1:
-            help: 'A casilla adatai: Casilla 3.vinculada.1.kulcs-vinculacion: related
-              party kulcs vinculacion 1.'
-            label: 'Casilla 3.vinculada.1.kulcs-vinculacion: related party kulcs vinculacion
-              1'
-          related-party-tipo-vinculacion-2:
-            help: 'A casilla adatai: Casilla 3.vinculada.2.kulcs-vinculacion: related
-              party kulcs vinculacion 2.'
-            label: 'Casilla 3.vinculada.2.kulcs-vinculacion: related party kulcs vinculacion
-              2'
-          related-party-tipo-vinculacion-3:
-            help: 'A casilla adatai: Casilla 3.vinculada.3.kulcs-vinculacion: related
-              party kulcs vinculacion 3.'
-            label: 'Casilla 3.vinculada.3.kulcs-vinculacion: related party kulcs vinculacion
-              3'
-          related-party-tipo-vinculacion-4:
-            help: 'A casilla adatai: Casilla 3.vinculada.4.kulcs-vinculacion: related
-              party kulcs vinculacion 4.'
-            label: 'Casilla 3.vinculada.4.kulcs-vinculacion: related party kulcs vinculacion
-              4'
-          related-party-tipo-vinculacion-5:
-            help: 'A casilla adatai: Casilla 3.vinculada.5.kulcs-vinculacion: related
-              party kulcs vinculacion 5.'
-            label: 'Casilla 3.vinculada.5.kulcs-vinculacion: related party kulcs vinculacion
-              5'
           tipo-ejercicio-232:
-            help: 'A casilla adatai: Casilla 2.adókötelezettség keletkezése.kulcs:
-              kulcs adóév 232.'
-            label: 'Casilla 2.adókötelezettség keletkezése.kulcs: kulcs adóév 232'
+            help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
       field:
         official_name: Modelo 232. A kapcsolt felek közötti ügyletek, valamint az
           adóparadicsomnak minősített országokkal vagy területekkel kapcsolatos ügyletek
@@ -371,14 +199,7 @@ modelo:
               help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
                 5 - A kapcsolat típusa
-            x-chim6r1ecdn62p8:
-              help: A főtevékenység NACE-kódja
-              label: A főtevékenység NACE-kódja
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Az esedékesség éve
-              label: Az esedékesség éve
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
               label: Üzleti év típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
           construct:
@@ -547,7 +368,6 @@ modelo:
               help: Az esedékesség éve
               label: Az adóztatandó esemény adóéve
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
           construct:

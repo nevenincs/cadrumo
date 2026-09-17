@@ -5,16 +5,12 @@ modelo:
         continuidad:
           filing-year:
             help: Tax information for casilla of Modelo 576.
-            label: Casilla — tax field
+            label: Accrual year
       field:
         official_name: Modelo 576. Special Tax on Certain Means of Transport. Self-assessment.
         title: IEDMT - self-assessment on registration of certain means of transport
       revision:
         '2007':
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 576.
-              label: Accrual year
           field:
             label: Order EHA/1981/2005, tax year 2007
         2008-y-siguientes:
@@ -116,9 +112,6 @@ modelo:
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: Tax information for casilla 45 of Modelo 576.
               label: Cause of the taxable event
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 576.
-              label: Accrual year
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: Tax information about tax information in casilla 41 of Modelo
                 576.
