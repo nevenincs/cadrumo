@@ -232,7 +232,9 @@ def _import_external_m303_baseline(
     A Modelo 303 import must carry typed filing-instance evidence and the
     declaration-type header, which the ``filing-record import`` verb has no
     input for, so the baseline is imported through the application service the
-    verb delegates to.
+    verb delegates to. It arrives as a register entry, the channel that records
+    the period's observation and with it the result disposition an amendment
+    of that period carries forward.
     """
     _seed_justificante(csv=csv, period=period, modelo="303")
     bucket_id = resolve_active_bucket_id()
@@ -247,7 +249,7 @@ def _import_external_m303_baseline(
         record = import_external_filing_evidence(
             work_unit_id=work_unit_id,
             casilla_values=casilla_values,
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id=csv,
             filing_instance_evidence=general_m303_filing_evidence(work_unit.period, reference=csv, operation=operation),
             actor="aeat-import",
@@ -257,7 +259,7 @@ def _import_external_m303_baseline(
             filing_repository=ports.filing_repository,
             observation_repository=ports.observation_repository,
             source_headers=source_headers,
-        )
+        ).filing_record
     return record.filing_record_id
 
 

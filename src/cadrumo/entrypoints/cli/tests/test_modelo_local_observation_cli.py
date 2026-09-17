@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -224,7 +225,7 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
 
 
-def _observe_local(*arguments: str) -> dict[str, object]:
+def _observe_local(*arguments: str) -> dict[str, Any]:
     result = invoke_cached_cli(
         [
             "--format",

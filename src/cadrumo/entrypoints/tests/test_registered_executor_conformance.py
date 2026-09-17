@@ -618,7 +618,7 @@ def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthority
         observation_repository=CalculationObservationRepository(),
         expected_tax_id=SEEDED_SOURCE_TAX_ID,
         clock=evidence_clock,
-    )
+    ).filing_record
     return str(record.filing_record_id), str(casilla_id)
 
 

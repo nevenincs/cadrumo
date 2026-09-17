@@ -35,7 +35,6 @@ from ...application.modelo.filing_actions import (
     list_filing_records,
     list_verification_reports,
 )
-from ...application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
 from ...application.modelo.local_observation_actions import (
     OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
     LocalObservationPorts,
@@ -56,7 +55,7 @@ from ...core.json_contract import Notice
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ._filing_chain_payloads import (
     ObservationLayersPayload,
     filing_reconciliation_lines,
@@ -157,6 +156,7 @@ def _import_record(
     casilla_values: dict[CasillaId, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
+    declared_kind: FilingDeclarationKind | None,
     actor: str,
     file: Path | None,
 ) -> ExternalFilingImportResult:
@@ -175,6 +175,8 @@ def _import_record(
             operation=authority_operation(ctx),
         )
         if file is not None:
+            if declared_kind is not None:
+                raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_declared_kind_file_error"))
             return import_external_filing_source(
                 ExternalFilingBaselineSource(
                     modelo=str(work_unit.modelo),
@@ -197,6 +199,7 @@ def _import_record(
             casilla_values=casilla_values,
             evidence_kind=evidence_kind,
             evidence_reference_id=evidence_reference_id,
+            declared_kind=declared_kind,
             actor=actor or _actor(),
             expected_tax_id=expected_tax_id,
             observation_repository=calculation_ports.observation_repository,
@@ -297,16 +300,19 @@ def filing_record_import(
     actor: str = "aeat-import",
     set_overrides: list[str] | None = None,
     file: Path | None = None,
+    declared_kind: FilingDeclarationKind | None = None,
 ) -> None:
-    """Import AEAT external evidence as a current :class:`ModeloRecord`.
+    """Reconcile AEAT external evidence with the period's filing chain.
 
     Typer validates :class:`ExternalEvidenceKind` at the boundary, the CLI parses
     each ``--set`` value
     into a :class:`CasillaId` decimal, resolves the active profile tax id, and
-    delegates to :func:`import_external_filing_evidence`.
-    The result is emitted as :class:`FilingRecordImportResult`; it is an
-    AEAT-attested baseline for the amendment path, not a live submission from
-    this application.
+    delegates to :func:`import_external_filing_evidence`, which decides how the
+    AEAT entry joins the chain. ``--declared-kind`` states the declaration kind
+    AEAT records, which a presentation after a confirmed declaration requires.
+    The result is emitted as :class:`FilingRecordImportResult`: the in-force
+    AEAT-attested entry and the reconciliation outcome, never a live submission
+    from this application.
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
     casilla_values = _import_input_values(set_overrides, file)
@@ -316,20 +322,12 @@ def filing_record_import(
         casilla_values=casilla_values,
         evidence_kind=evidence_kind,
         evidence_reference_id=evidence_reference_id,
+        declared_kind=declared_kind,
         actor=actor,
         file=file,
     )
     reconciliation = imported.reconciliation
     notices = filing_reconciliation_notices((reconciliation,))
-    if reconciliation.outcome is FilingReconciliationOutcome.UNVERIFIABLE:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.filing_record.import_unverifiable",
-                modelo=reconciliation.modelo,
-                period=reconciliation.period.registry_token,
-                filing_year=reconciliation.filing_year,
-            ),
-        )
     record = imported.filing_record
     # The payload derives the evidence kind and reference from the record's own
     # external evidence, so the in-force AEAT-backed record is the source passed.
