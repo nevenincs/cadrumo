@@ -19,21 +19,21 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 
-from ..compiler.loader import load_catalogue_file
-from ..maintenance_support import resolve_record_design_binary
-from . import _export_tree, render_profile, render_profile_eligibility
-from .joined_record_design import (
+from ...compiler.loader import load_catalogue_file
+from ...maintenance_support import resolve_record_design_binary
+from .. import _export_tree, render_profile, render_profile_eligibility
+from ..joined_record_design import (
     JoinedRecordDesign,
     JoinedRecordDesignField,
     JoinedRecordDesignRecord,
 )
-from .record_design_intermediate import (
+from ..record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from .render_profile import (
+from ..render_profile import (
     OfficialSourceEvidence,
     RenderProfile,
     RenderProfileAnchor,
@@ -51,11 +51,11 @@ from .render_profile import (
     validate_render_profile,
     validate_render_profile_authority,
 )
-from .render_profile_eligibility import (
+from ..render_profile_eligibility import (
     _is_source_reserved_field,
     project_render_profile_eligibility,
 )
-from .semantic_map import SemanticMap
+from ..semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -324,7 +324,7 @@ def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> 
 def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
     production_paths = tuple(
         path
-        for path in scan_directory(Path(__file__).parents[1] / "pipeline", pattern="*.py")
+        for path in scan_directory(Path(__file__).parents[2] / "pipeline", pattern="*.py")
         if not path.name.startswith("test_")
     )
     class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
@@ -885,7 +885,7 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         filing_year=2025,
         design_epoch="2025",
     )
-    profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
+    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025"
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)
@@ -1011,7 +1011,7 @@ def test_real_m390_2022_profile_exactly_covers_source_eligibility_and_binds_day_
         filing_year=2022,
         design_epoch="2022",
     )
-    profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_390" / "2022"
+    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_390" / "2022"
     profile = load_render_profile(profile_directory)
     evidence = load_render_profile_source_evidence(resolved.path, profile)
     validate_render_profile_authority(profile, design_identity, eligibility, evidence)
@@ -1096,7 +1096,7 @@ def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations
         design_epoch="2025",
     )
     profile = load_render_profile(
-        Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025",
+        Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025",
     )
     first_rule = profile.width_17_rules[0]
     assert isinstance(first_rule.evidence, OfficialSourceEvidence)
@@ -1183,7 +1183,7 @@ def test_real_source_loader_refuses_a_linked_official_binary_before_hashing(tmp_
         design_epoch="2025",
     )
     profile = load_render_profile(
-        Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025",
+        Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025",
     )
     linked_source = tmp_path / resolved.path.name
     linked_source.symlink_to(resolved.path)
@@ -1260,7 +1260,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
 
 def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
     """Deterministic partitioning keeps every authored fragment reviewable."""
-    profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_200" / "2025"
+    profile_directory = Path(__file__).parents[2] / "render_profiles" / "modelo_200" / "2025"
     paths = scan_directory(profile_directory, pattern="*.toml")
     assert paths
     assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)

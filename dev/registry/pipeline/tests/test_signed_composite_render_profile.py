@@ -18,11 +18,11 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
     render_fixed_width_export_field,
 )
 
-from ..compiler.loader import load_catalogue_file
-from . import _export_tree
-from .joined_record_design import JoinedRecordDesignField
-from .record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
-from .render_profile import (
+from ...compiler.loader import load_catalogue_file
+from .. import _export_tree
+from ..joined_record_design import JoinedRecordDesignField
+from ..record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
+from ..render_profile import (
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileDesignIdentity,
@@ -35,8 +35,8 @@ from .render_profile import (
     render_profile_digest,
     validate_render_profile_authority,
 )
-from .render_profile_eligibility import RenderProfileEligibility, project_render_profile_eligibility
-from .semantic_map import SemanticMapEntry
+from ..render_profile_eligibility import RenderProfileEligibility, project_render_profile_eligibility
+from ..semantic_map import SemanticMapEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -325,7 +325,7 @@ def test_committed_modelo_296_profile_enrols_the_exact_hash_verified_parser_anch
         filing_year=2024,
         design_epoch="2024",
     )
-    profile = load_render_profile(Path(__file__).parents[1] / "render_profiles/modelo_296/2024")
+    profile = load_render_profile(Path(__file__).parents[2] / "render_profiles/modelo_296/2024")
     fields = tuple(field for sheet in intermediate.sheets for field in sheet.fields)
     field = next(
         field

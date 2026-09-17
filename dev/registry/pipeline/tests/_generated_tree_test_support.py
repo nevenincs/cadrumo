@@ -12,25 +12,25 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..compiler.loader import load_registry_tree, load_shared_catalogues
-from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
-from ._tree_validation import GeneratedExportTreeValidationContext
-from .candidate_staging import (
+from ...compiler.loader import load_registry_tree, load_shared_catalogues
+from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
+from .._tree_validation import GeneratedExportTreeValidationContext
+from ..candidate_staging import (
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
 )
-from .export_fragment_provenance import ExportFragmentTarget
-from .generated_tree_inventory import GeneratedExportTree
-from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
-from .record_design_intermediate import load_record_design_intermediate
-from .render_profile import (
+from ..export_fragment_provenance import ExportFragmentTarget
+from ..generated_tree_inventory import GeneratedExportTree
+from ..joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..record_design_intermediate import load_record_design_intermediate
+from ..render_profile import (
     RenderProfile,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from .semantic_map import SemanticMap, load_semantic_map
+from ..semantic_map import SemanticMap, load_semantic_map
 
 #: The enrolled generated tree the isolated fixtures materialise.
 #:
@@ -44,7 +44,7 @@ ISOLATED_TREE: Final[GeneratedExportTree] = GeneratedExportTree(
 )
 
 #: The repository root, so authoring inputs resolve independently of the working directory.
-_REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_REPOSITORY_ROOT: Final[Path] = Path(__file__).resolve().parents[4]
 
 
 def isolated_authority(tree: GeneratedExportTree, root: Path) -> Path:

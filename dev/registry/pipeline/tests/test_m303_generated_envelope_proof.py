@@ -69,24 +69,24 @@ from cadrumo.domain.prorrata_register.register import (
     SectorDefinition,
 )
 
-from ..compiler.authority import compiled_bundled_authority
-from ..compiler.loader import load_modelo_directory, load_registry_tree
-from ..compiler.supplementary_orden import compile_supplementary_ordenes
-from ._export_tree import render_complete_export_tree
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
-from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_validation import GeneratedExportTreeValidationContext
-from .candidate_staging import stage_continuity_metadata
-from .cli import stage_published_modelo
-from .export_fragment_provenance import (
+from ...compiler.authority import compiled_bundled_authority
+from ...compiler.loader import load_modelo_directory, load_registry_tree
+from ...compiler.supplementary_orden import compile_supplementary_ordenes
+from .._export_tree import render_complete_export_tree
+from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
+from .._tree_validation import GeneratedExportTreeValidationContext
+from ..candidate_staging import stage_continuity_metadata
+from ..cli import stage_published_modelo
+from ..export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
 )
-from .generated_tree_inventory import generated_export_trees
-from .render_check import parsed_tree_file
+from ..generated_tree_inventory import generated_export_trees
+from ..render_check import parsed_tree_file
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -468,7 +468,7 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         # demand the defect back. The row is consulted rather than the subject
         # hard-coded, so this reverts to a strict equality claim the moment the
         # revision is republished and its row retires.
-        from .generated_tree_dispositions import record_drift_dispositions
+        from ..generated_tree_dispositions import record_drift_dispositions
 
         drifting = {item.subject for item in record_drift_dispositions()}
         subject = f"{tree.modelo}/{tree.revision}"

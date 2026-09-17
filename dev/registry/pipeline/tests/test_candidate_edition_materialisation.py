@@ -20,10 +20,10 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ..compiler.edition_materialisation import materialise_edition
-from ..compiler.loader import load_modelo_directory
-from .candidate_staging import stage_generated_export_candidate
-from .cli import supporting_modelos
+from ...compiler.edition_materialisation import materialise_edition
+from ...compiler.loader import load_modelo_directory
+from ..candidate_staging import stage_generated_export_candidate
+from ..cli import supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

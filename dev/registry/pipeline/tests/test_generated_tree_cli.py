@@ -13,24 +13,19 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.authority import compiled_bundled_authority
-from ._export_tree import render_complete_export_tree
-from ._generated_tree_test_support import (
-    ISOLATED_TREE,
-    isolated_authorities,
-    write_isolated_generated_authority_tree,
-)
-from ._tree_publication import (
+from ...compiler.authority import compiled_bundled_authority
+from .._export_tree import render_complete_export_tree
+from .._tree_publication import (
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
     require_expected_target_state,
 )
-from ._tree_validation import GeneratedExportTreeValidationContext
-from .candidate_staging import (
+from .._tree_validation import GeneratedExportTreeValidationContext
+from ..candidate_staging import (
     retarget_bootstrap_construct_export_layout,
     stage_continuity_metadata,
 )
-from .cli import (
+from ..cli import (
     GeneratedTreeInvocation,
     PreparedGeneratedTreeInvocation,
     app,
@@ -40,13 +35,18 @@ from .cli import (
     require_republication_eligibility,
     reviewed_bootstrap_target,
 )
-from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
-from .generated_tree_dispositions import record_drift_dispositions
-from .render_check import (
+from ..export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ..generated_tree_dispositions import record_drift_dispositions
+from ..render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
     revision_render_inputs,
+)
+from ._generated_tree_test_support import (
+    ISOLATED_TREE,
+    isolated_authorities,
+    write_isolated_generated_authority_tree,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -269,7 +269,7 @@ def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> Non
     same discipline for the bootstrap-target roster: prune a row once its tree
     is committed, rather than leaving it to silently accumulate.
     """
-    path = Path(__file__).resolve().parents[1] / "pipeline" / "generated_export_bootstrap_targets.toml"
+    path = Path(__file__).resolve().parents[2] / "pipeline" / "generated_export_bootstrap_targets.toml"
     payload = parse_toml(path.read_text("utf-8"))
     targets = payload["targets"]
     assert targets, "the bootstrap-target roster must not be silently emptied"

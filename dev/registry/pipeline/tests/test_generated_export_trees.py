@@ -33,26 +33,26 @@ from cadrumo.domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 
-from ..compiler.authority import compiled_bundled_authority
-from ..compiler.loader import (
+from ...compiler.authority import compiled_bundled_authority
+from ...compiler.loader import (
     load_modelo_directory,
 )
-from ._export_tree import render_complete_export_tree
-from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
-from ._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .candidate_staging import (
+from .._export_tree import render_complete_export_tree
+from .._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
+from .._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from ..candidate_staging import (
     stage_continuity_metadata,
 )
-from .cli import stage_published_modelo
-from .export_fragment_provenance import (
+from ..cli import stage_published_modelo
+from ..export_fragment_provenance import (
     ExportFragmentTarget,
 )
-from .generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
-from .generated_tree_inventory import GeneratedExportTree, generated_export_trees
-from .joined_record_design import design_view
-from .render_check import compare_revision_against_committed, parsed_tree_file
-from .source_defects import source_defects_for
+from ..generated_tree_dispositions import record_drift_dispositions, render_refusal_dispositions
+from ..generated_tree_inventory import GeneratedExportTree, generated_export_trees
+from ..joined_record_design import design_view
+from ..render_check import compare_revision_against_committed, parsed_tree_file
+from ..source_defects import source_defects_for
+from ._generated_tree_test_support import isolated_authorities, isolated_authority, supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -167,6 +167,11 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
 
     registry_root = isolated_authority(tree, tmp_path)
     revision_root = registry_root / "modelos" / "390" / "revisions" / "2022"
+    continuity_metadata_modelo_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", tree.modelo),
+        tmp_path,
+        revision=tree.revision,
+    )
 
     assert not (revision_root / "export").exists()
     assert not (revision_root / "export_layouts").exists()
@@ -200,6 +205,7 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
             filing_year=tree.filing_year,
             period=tree.period,
             supporting_modelos=supporting_modelos(tree),
+            continuity_metadata_modelo_root=continuity_metadata_modelo_root,
         ),
         joined=joined,
         semantic_map=semantic_map,
@@ -519,9 +525,7 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
 
     validate(metadata_modelo_root)
 
-    with pytest.raises(
-        RegistryValidationError, match="evolution references a revision that the modelo does not declare"
-    ):
+    with pytest.raises(RegistryValidationError, match="has no predecessor edition to continue"):
         validate(None)
 
     missing_metadata_root = tmp_path / "missing-metadata" / tree.modelo

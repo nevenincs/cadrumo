@@ -8,20 +8,20 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler.authority import compiled_bundled_authority
-from ..compiler.loader import load_registry_tree
-from ._export_tree import render_complete_export_tree
-from .record_design_intermediate import (
+from ...compiler.authority import compiled_bundled_authority
+from ...compiler.loader import load_registry_tree
+from .._export_tree import render_complete_export_tree
+from ..record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
     load_record_design_intermediate,
 )
-from .render_check import GeneratedExportBootstrapTransport, revision_render_inputs
-from .semantic_map import (
+from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
+from ..semantic_map import (
     SemanticMapEntry,
     load_semantic_map,
 )
-from .source_defects import source_defects_for
+from ..source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

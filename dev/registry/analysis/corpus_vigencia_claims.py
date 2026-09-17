@@ -75,9 +75,9 @@ class Excerpt:
     api_url: str | None
 
 
-def survey() -> Iterator[Excerpt]:
-    """Classify every bundled excerpt by how checkable its version claim is."""
-    for path in sorted(_CORPUS.glob("*.html")):
+def survey(corpus: Path = _CORPUS) -> Iterator[Excerpt]:
+    """Classify every excerpt under ``corpus`` by how checkable its version claim is."""
+    for path in sorted(corpus.glob("*.html")):
         head = path.read_text(encoding="utf-8", errors="replace")[:2000]
         vigencia = _VIGENCIA.search(head)
         api = _API.search(head)

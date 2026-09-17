@@ -39,33 +39,33 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import (
 )
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..compiler.loader import load_registry_tree
-from ._export_tree import (
+from ...compiler.loader import load_registry_tree
+from .._export_tree import (
     ExportTreeTransportProfile,
     _literal_derivation,
     _numeric_derivation,
     render_complete_export_tree,
 )
-from .joined_record_design import JoinedRecordDesignField, join_record_design_semantics
-from .record_design_intermediate import (
+from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
+from ..record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from .render_profile import (
+from ..render_profile import (
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from .render_profile_eligibility import (
+from ..render_profile_eligibility import (
     _states_no_wire_fact,
     project_render_profile_eligibility,
 )
-from .semantic_map import (
+from ..semantic_map import (
     SemanticMapEntry,
     load_semantic_map,
 )
-from .source_defects import (
+from ..source_defects import (
     NoteGovernedAmountDeclaration,
     NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
@@ -328,7 +328,7 @@ class TestTheValidatorMatchesWhatTheRendererPassesIt:
     def test_the_renderer_passes_the_type_the_validator_declares(self) -> None:
         import inspect
 
-        from . import _export_tree
+        from .. import _export_tree
 
         hints = inspect.signature(validate_source_defect_declarations).parameters
         annotation = hints["source"].annotation

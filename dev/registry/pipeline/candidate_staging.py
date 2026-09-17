@@ -162,12 +162,13 @@ def stage_continuity_metadata(
     Which edition a sibling inherits from is the ``predecessor`` it declares,
     and the loader alone follows that chain; continuity evolution records play
     no part in choosing what is staged. In a modelo where no edition names a
-    predecessor, every sibling states its own rows and is copied as it stands.
-    Once any edition names one, a sibling's own files may be only the rows it
-    changed, and the target it may inherit through is the one revision a
-    witness must not hold. Every sibling is then staged as the complete edition
-    the loader resolves for it, carrying no predecessor declaration, so each
-    loads on its own and none depends on a chain the witness cannot supply.
+    predecessor or a storage baseline, every sibling states its own rows and is
+    copied as it stands. Once any edition names one, a sibling's own files may be
+    only the rows it changed or stored against another edition, and the target
+    it may read through is the one revision a witness must not hold. Every
+    sibling is then staged as the complete edition the loader resolves for it,
+    carrying no predecessor or storage declaration, so each loads on its own
+    and none depends on a chain the witness cannot supply.
     """
     definition = load_modelo_directory(source_modelo_root)
     if revision not in definition.revisions:
@@ -179,11 +180,14 @@ def stage_continuity_metadata(
     metadata_modelo_root = staging_root / "continuity-metadata" / str(definition.id)
     metadata_modelo_root.mkdir(parents=True)
     shutil.copy2(source_modelo_root / "manifest.toml", metadata_modelo_root / "manifest.toml")
-    names_a_predecessor = any(
-        isinstance(item.predecessor, DeclaredPredecessor) for item in definition.revisions.values()
+    reads_another_edition = any(
+        isinstance(item.predecessor, DeclaredPredecessor)
+        or item.casilla_storage_baseline is not None
+        or item.family_storage_baseline is not None
+        for item in definition.revisions.values()
     )
     for sibling_id in siblings:
-        if names_a_predecessor:
+        if reads_another_edition:
             _stage_complete_sibling(source_modelo_root, metadata_modelo_root, revision=sibling_id)
             continue
         source_revision_root = source_modelo_root / "revisions" / sibling_id

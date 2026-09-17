@@ -18,8 +18,8 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 
-from ..compiler.loader import load_modelo_directory
-from .generated_tree_dispositions import (
+from ...compiler.loader import load_modelo_directory
+from ..generated_tree_dispositions import (
     GeneratedTreeBelowSupportedFilingYearsDisposition,
     below_floor_dispositions,
     disposition_ledger_from_path,
