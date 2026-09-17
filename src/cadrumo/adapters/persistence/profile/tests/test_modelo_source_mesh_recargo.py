@@ -54,6 +54,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
         *,
         transaction_repository: TransactionCatalogueRepository,
         invoice_repository: InvoiceCatalogueRepository | None = None,
+        objects: SecureObjectRepository,
     ) -> None:
         super().__init__(
             transaction_repository=transaction_repository,
@@ -67,6 +68,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
             ),
             prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=transaction_repository.bucket_id,
+                objects=objects,
             ),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=transaction_repository.bucket_id,
@@ -141,6 +143,7 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
         LedgerIvaAggregationSourceResolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
+            objects=secure_objects,
         ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

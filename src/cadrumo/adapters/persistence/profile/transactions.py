@@ -51,9 +51,10 @@ See Also:
 
 from __future__ import annotations
 
+import functools
 import json
 import weakref
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -95,7 +96,7 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
-from ..storage.errors import SecureObjectRowIdentityError
+from ..storage.errors import SecureObjectRowIdentityError, StorageError
 from ..storage.secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
@@ -318,6 +319,26 @@ def _migrated_iva_rate_kind(
     return rate_kinds[0]
 
 
+def _translating_storage_failures[**P, R](method: Callable[P, R]) -> Callable[P, R]:
+    """Report an unreadable store as a ledger storage failure at the port boundary.
+
+    Callers above the adapter degrade on the domain persistence error; a raw
+    storage error would escape that and fail the whole calculation instead.
+    """
+
+    @functools.wraps(method)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return method(*args, **kwargs)
+        except StorageError as exc:
+            raise LedgerStorageError(
+                "transaction catalogue storage could not be read",
+                context={"operation": method.__name__},
+            ) from exc
+
+    return wrapper
+
+
 class TransactionCatalogueRepository:
     """Repository over the encrypted SQL-backed transaction catalogue.
 
@@ -408,6 +429,7 @@ class TransactionCatalogueRepository:
         lines.extend(f"{transaction_id}\t{revisions[row_keys[transaction_id]]}" for transaction_id in sorted(row_keys))
         return sha256_hex("\n".join(lines).encode(UTF_8_ENCODING))
 
+    @_translating_storage_failures
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue, assembled from this bucket's rows.
 
@@ -749,6 +771,7 @@ class TransactionCatalogueRepository:
             len(extra_writes),
         )
 
+    @_translating_storage_failures
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
 
@@ -802,6 +825,7 @@ class TransactionCatalogueRepository:
         )
         return TransactionCatalogue.from_transactions(transactions)
 
+    @_translating_storage_failures
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
         """Return only the securely addressed transaction rows.
 
@@ -884,6 +908,7 @@ class TransactionCatalogueRepository:
             index_complete=True,
         )
 
+    @_translating_storage_failures
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 

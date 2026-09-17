@@ -69,6 +69,7 @@ from cadrumo.application.calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.live.errors import LiveApplicationError, LiveApplicationInputError
 from cadrumo.application.live.filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
@@ -96,7 +97,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -1684,50 +1685,36 @@ def test_fixture_csv_constants_still_match_the_receipts() -> None:
     assert parse_justificante_bytes(_modelo_303_justificante_pdf_bytes()).csv == _MODELO_303_FIXTURE_CSV
 
 
-def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+def test_an_incomplete_prior_filing_observation_never_reaches_the_store(tmp_path: Path) -> None:
+    """Official Modelo 303 evidence without its carry pair is refused at the write door.
+
+    The prefill would otherwise have to refuse it later; the canonical ingress
+    refuses it before storage, so no reader can ever see the incomplete filing.
+    """
+    support = published_supported_filing_years()
+    assert support is not None
+    year = support.horizon
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=year,
+        period="1T",
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=year,
+            period="1T",
+            casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+        ),
+    )
+    with _indexed_authority_for_test().operation(), _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        repository.save(
+        with pytest.raises(M303CarryIngressError):
             repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2026,
-                    period="1T",
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=2026,
-                        period="1T",
-                        casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
-                    ),
-                ),
+                observation,
                 source_kind="aeat_sede_justificante",
                 captured_at=_CAPTURED_AT,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="303",
-                        filing_year=2026,
-                        period="1T",
-                        observations=registry_grounded_observations(
-                            modelo="303",
-                            filing_year=2026,
-                            period="1T",
-                            casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
-                        ),
-                    )
-                ),
+                stamped_revision_id=revision_id_for_observation(observation),
             )
-        )
-
-        target_snapshot = _registry_snapshot("303", 2026, "2T")
-
-        with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
-            resolve_bindings_from_local_store(
-                target_snapshot,
-                repository=repository,
-                captured_at=_CAPTURED_AT,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-                operation=_authority_operation_for_test,
-            )
+        assert tuple(repository.iter_records()) == ()
 
 
 def _filed_130_observation(

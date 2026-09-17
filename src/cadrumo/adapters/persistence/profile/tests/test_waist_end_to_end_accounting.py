@@ -58,6 +58,7 @@ from .....domain.attachments.service import AttachmentFileContent, AttachmentIng
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.invoices.models import Invoice
 from .....domain.iva.classification import InvoiceKind
+from ....inbound.einvoice.shape import probe_document_shape
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -115,16 +116,8 @@ runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=Fals
 
 @pytest.fixture
 def evidence_input_ports() -> EvidenceInputPorts:
-    """Provide the application-owned shape probe for the real storage path."""
-
-    def probe(data: bytes) -> DocumentShape:
-        if data.startswith(b"%PDF-"):
-            return DocumentShape.PDF_TEXT_LAYER
-        if data.startswith(b"\x89PNG\r\n\x1a\n"):
-            return DocumentShape.IMAGE
-        return DocumentShape.UNKNOWN
-
-    return EvidenceInputPorts(document_shape_probe=probe)
+    """Provide the production shape probe for the real storage path."""
+    return EvidenceInputPorts(document_shape_probe=probe_document_shape)
 
 
 def _structured_draft() -> InvoiceDraft:

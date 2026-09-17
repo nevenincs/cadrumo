@@ -190,7 +190,7 @@ _M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479", 
 _M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553", surface="test casilla id")
 _M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577", surface="test casilla id")
 _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id("1391", surface="test casilla id")
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = f"renta-{_YEAR}-modelo-100-estimacion-directa-es-normal"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero: this persona files no other income and has no

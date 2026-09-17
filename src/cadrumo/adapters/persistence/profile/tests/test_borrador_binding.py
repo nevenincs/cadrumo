@@ -137,9 +137,15 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
 
 
 def _zero_relation_values() -> dict[RelationId, Decimal]:
+    """Zero every quarterly relation the borrador does not itself supply.
+
+    Relations share their binding's identity, so a filler for the
+    borrador-sourced binding would contradict the borrador value.
+    """
     return {
         binding.id: Decimal("0")
         for binding, _ in relation_prefill_bindings_for_period(_modelo_100_registry_snapshot().revision)
+        if binding.id != _DECIMAL_BINDING
     }
 
 
