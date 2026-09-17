@@ -155,7 +155,10 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
     assert secret_paths == {
         ("aeat", "config", "login"),
         ("aeat", "config", "passphrase", "change"),
+        ("aeat", "config", "passphrase", "reset"),
         ("aeat", "config", "profile", "create"),
+        ("aeat", "config", "profile", "recovery", "enable"),
+        ("aeat", "config", "profile", "recovery", "disable"),
         ("aeat", "config", "profile", "archive", "import"),
         ("aeat", "config", "auth", "certificate", "secret", "set"),
     }
