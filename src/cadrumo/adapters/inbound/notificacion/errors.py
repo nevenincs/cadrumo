@@ -51,7 +51,7 @@ class SancionParseError(NotificacionParseError):
         Args:
             message: Human-readable description of the failure.
             context: Optional structured context forwarded to the
-                :class:`core.errors.CadrumoError` boundary.
+                :class:`core.errors.hierarchy.CadrumoError` boundary.
             translated_message: Optional locale key rendered at the CLI.
             missing: Field names with no label hit.
             malformed: Field names whose value failed shape validation.

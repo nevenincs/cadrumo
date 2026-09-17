@@ -1,13 +1,13 @@
 """``aeat config google credential-source ...`` — select the Google credential source.
 
-Wires the per-profile :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
+Wires the per-profile :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
 persisted by the ``google-sa-impersonation`` core slice
-(:func:`~adapters.outbound.google.save_credential_source_selection` /
-:func:`~adapters.outbound.google.load_credential_source_selection`) into an
+(:func:`~adapters.outbound.google.session_store.save_credential_source_selection` /
+:func:`~adapters.outbound.google.session_store.load_credential_source_selection`) into an
 operator verb, so a gestor can opt a profile into service-account impersonation
-(:attr:`~core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`) without
+(:attr:`~core.google_credential_source.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`) without
 a programmatic call, or restore the default interactive OAuth Desktop flow
-(:attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP`).
+(:attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`).
 
 Two commands:
 
@@ -15,40 +15,40 @@ Two commands:
   <sa-email>] [--scope <scope> ...] [--delegate <sa-email> ...] [--subject
   <user-email>] [--lifetime-seconds <seconds>]`` — persist the selection for
   the active profile via
-  :func:`~adapters.outbound.google.save_credential_source_selection`.
+  :func:`~adapters.outbound.google.session_store.save_credential_source_selection`.
   ``--target-principal`` is required exactly when ``--kind
   service-account-impersonation`` is chosen; the underlying
-  :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` /
-  :class:`~adapters.outbound.google.GoogleImpersonationConfig` validators
+  :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` /
+  :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig` validators
   enforce the pairing.
 - ``show`` — report the persisted selection for the active profile, reading
-  :attr:`~adapters.outbound.google.GoogleImpersonationConfig.target_principal`
+  :attr:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig.target_principal`
   directly to render the exact SA email an operator would grant IAM roles to,
   and falling back to reporting the
-  :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default when no
+  :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP` default when no
   selection has been persisted.
 
 Neither command performs a live ADC discovery or IAM token exchange; the
 persisted selection is dispatched by
-:func:`~adapters.outbound.storage.build_google_credentials` the next time a
+:func:`~adapters.outbound.storage.factory.build_google_credentials` the next time a
 Google-backed command builds credentials for this profile
 (``aeat-architecture-boundaries`` — this CLI module delegates to
 the landed persistence and resolver primitives; it does not re-implement
 credential resolution).
 
 See Also:
-    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
+    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
         Persisted per-profile selection this CLI writes and reads.
-    :class:`~adapters.outbound.google.GoogleImpersonationConfig`
+    :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`
         Service-account impersonation configuration validated for the
         non-default credential-source kind.
-    :class:`~core.GoogleCredentialSourceKind`
+    :class:`~core.google_credential_source.GoogleCredentialSourceKind`
         Closed credential-source taxonomy accepted by the CLI.
-    :func:`~adapters.outbound.google.save_credential_source_selection`
+    :func:`~adapters.outbound.google.session_store.save_credential_source_selection`
         Persistence primitive used by ``set``.
-    :func:`~adapters.outbound.google.load_credential_source_selection`
+    :func:`~adapters.outbound.google.session_store.load_credential_source_selection`
         Persistence primitive used by ``show``.
-    :func:`~adapters.outbound.storage.build_google_credentials`
+    :func:`~adapters.outbound.storage.factory.build_google_credentials`
         Runtime factory that later consumes the stored selection.
     :mod:`~entrypoints.cli.config._google_credential_source_payloads`
         Typed JSON payload schemas emitted by this command group.
@@ -308,11 +308,11 @@ def google_credential_source_set(
     """Persist the active profile's Google credential-source selection.
 
     ``--kind service-account-impersonation`` requires ``--target-principal``
-    and stores a :class:`~adapters.outbound.google.GoogleImpersonationConfig`;
+    and stores a :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`;
     ``--kind oauth-desktop`` restores the interactive-consent default and
     rejects every impersonation-only option. Neither branch performs a live
     ADC discovery or IAM token exchange — that happens lazily the next time
-    :func:`~adapters.outbound.storage.build_google_credentials` builds
+    :func:`~adapters.outbound.storage.factory.build_google_credentials` builds
     credentials for this profile.
     """
     scopes = scopes or []
@@ -343,8 +343,8 @@ def google_credential_source_view(
     """Report the active profile's persisted Google credential-source selection.
 
     A profile with no persisted selection reports the
-    :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
-    factory dispatch (:func:`~adapters.outbound.storage.build_google_credentials`)
+    :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
+    factory dispatch (:func:`~adapters.outbound.storage.factory.build_google_credentials`)
     applies — a missing record is a valid, expected state, never an error.
     """
     active = _resolve_active_profile_or_refuse()

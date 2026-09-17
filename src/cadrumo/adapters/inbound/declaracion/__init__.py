@@ -3,7 +3,7 @@
 The package exposes :func:`parse_declaracion` for filesystem PDF input and
 :func:`parse_declaracion_bytes` for in-memory or decrypted PDF bytes. Both entry
 points return :class:`InboundDeclaracionObservation` records interpreted through a
-validated :class:`~domain.calculations.registry.RegistrySnapshot`.
+validated :class:`~domain.calculations.registry.schema.RegistrySnapshot`.
 
 Parsing resolves :class:`TemplateRevision` and period, selects one
 :class:`~domain.calculations.registry.schema_extraction.ExtractionProfileDefinition` with
@@ -12,7 +12,7 @@ Parsing resolves :class:`TemplateRevision` and period, selects one
 an explicit profile id, registry profile selection must find exactly one match.
 
 Returned observations stamp a re-resolvable
-:class:`~domain.calculations.registry.RegistrySnapshotRef`,
+:class:`~domain.calculations.registry.schema_references.RegistrySnapshotRef`,
 privacy-preserving source reference, and SHA-256. They are observations, not
 calculation authority; filing workflow, persistence, tax-law classification,
 and CLI presentation live outside inbound parsing.

@@ -67,7 +67,7 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
             context=_profile_creation_context_for_test(),
         )
 
-        overview = build_profile_overview(record)
+        overview = build_profile_overview(record, schema=published_profile_schema())
         field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
         cli = validate_profile_values({_TAX_ID_PATH: blank}, operation=_authority_operation_for_test)
 
@@ -86,7 +86,7 @@ def test_overview_and_key_authority_agree_on_a_real_value() -> None:
             context=_profile_creation_context_for_test(),
         )
 
-        overview = build_profile_overview(record)
+        overview = build_profile_overview(record, schema=published_profile_schema())
         field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
 
         assert field.present is True

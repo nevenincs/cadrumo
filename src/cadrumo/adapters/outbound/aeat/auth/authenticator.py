@@ -1,7 +1,7 @@
 """Certificate-backed live-AEAT authenticator.
 
 This module implements the certificate concrete for the application
-:class:`application.auth.AuthProvider` contract. It composes
+:class:`application.auth.providers.AuthProvider` contract. It composes
 :class:`CertificateBundle` loading, a
 :class:`CertificateContextProvisioner`-backed browser context, and the
 canonical protected-resource probe into a narrow async provider surface.

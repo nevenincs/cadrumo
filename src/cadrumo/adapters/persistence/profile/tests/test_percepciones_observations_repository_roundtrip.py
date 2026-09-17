@@ -29,6 +29,7 @@ from .....adapters.persistence.storage.errors import PathContainmentError, Secur
 from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
+    PercepcionObservationPersistenceError,
     PercepcionObservationPorts,
     percepcion_observation_key,
     persist_percepcion_observations,
@@ -427,8 +428,9 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
             payload=write_b.payload,
         )
 
-        with pytest.raises(SecureObjectRowIdentityError):
+        with pytest.raises(PercepcionObservationPersistenceError) as raised:
             repo.load_observations("190", period)
+        assert isinstance(raised.value.__cause__, SecureObjectRowIdentityError)
 
 
 @pytest.mark.parametrize(

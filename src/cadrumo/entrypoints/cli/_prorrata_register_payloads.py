@@ -8,7 +8,7 @@ conformance gate bind the ``aeat app ledger prorrata`` leaves to a schema.
 The register the operator writes here (regime election, differentiated-sector
 partition) is the ingress that makes the LIVA art. 106 especial apportionment and
 the arts. 9.1.c / 101 per-sector apportionment
-(:class:`~domain.prorrata_register.ProrrataRegister`) fire on the live M303
+(:class:`~domain.prorrata_register.register.ProrrataRegister`) fire on the live M303
 aggregation path; before this surface existed the register was written only by
 the settlement auto-seed (general / ninguna).
 """
@@ -31,7 +31,7 @@ class ProrrataEspecialTransitionPayload(OutputSchema):
 class ProrrataEntryPayload(OutputSchema):
     """One ``(ejercicio, sector)`` register entry.
 
-    Mirrors :class:`~domain.prorrata_register.ProrrataRegisterEntry`'s
+    Mirrors :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`'s
     ``model_dump(mode='json')`` with the decimal percentages and volumes rendered
     as strings at the emit site.
     """

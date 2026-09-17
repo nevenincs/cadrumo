@@ -9,18 +9,18 @@ hand the caller a plain ``{casilla_code: Decimal}`` mapping keyed by the raw
 spreadsheet token (not yet validated against any registry revision).
 
 Casilla-id canonicalisation, registry-membership validation, and
-:class:`~domain.calculations.registry.CasillaObservation` construction
-remain owned by :func:`~application.modelo._local_observation_actions.record_operator_local_observation`,
+:class:`~domain.calculations.registry.bindings.CasillaObservation` construction
+remain owned by :func:`~application.modelo.local_observation_actions.record_operator_local_observation`,
 which this module's CLI caller feeds directly — there is no second casilla
 validation path here (``aeat-calculation-aggregation`` companion: one
 validation authority, not two).
 
 See Also:
-    :func:`~application.modelo._local_observation_actions.record_operator_local_observation`:
+    :func:`~application.modelo.local_observation_actions.record_operator_local_observation`:
         Consumes the parsed mapping, validates every casilla id against the
-        law-determined :class:`~domain.calculations.registry.RegistrySnapshot`,
+        law-determined :class:`~domain.calculations.registry.schema.RegistrySnapshot`,
         and persists the non-official observation.
-    :mod:`adapters.inbound.financial.providers._csv`:
+    :mod:`adapters.inbound.financial.providers.csv`:
         Sibling tabular-ingest module for bank-statement rows; this module is
         deliberately smaller — a casilla-value sheet has two logical columns
         and no bank-layout detection, date parsing, or currency handling.

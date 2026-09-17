@@ -51,7 +51,7 @@ structurally rather than imported by name so this module carries no
 platform-specific import.
 
 See Also:
-    :class:`~adapters.persistence.storage.master_key.BucketSession`
+    :class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`
         The in-process materialisation this persisted record re-opens.
 """
 

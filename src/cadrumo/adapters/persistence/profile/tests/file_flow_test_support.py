@@ -10,9 +10,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
@@ -86,6 +83,9 @@ from cadrumo.domain.modelos.filing_record import ModeloRecord
 from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import (

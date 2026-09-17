@@ -7,7 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -27,6 +26,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -55,7 +56,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(
 ) -> None:
     """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         "200",
         filing_year=2025,
         period=period.registry_token,
@@ -151,7 +152,7 @@ def _m200_bundle_with_casilla_value(
 ) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         "200",
         filing_year=2025,
         period=period.registry_token,
@@ -239,7 +240,7 @@ def _m303_bundle_with_period_override(
 ) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one ``period_code`` ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "1T")
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period=period.registry_token)
+    snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period.registry_token)
     bucket_id = _M303_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:
@@ -329,7 +330,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     advisory fires, never the ambiguous-relacion one.
     """
     period = Period.from_year_and_code(_MATERNIDAD_CEILINGED_FILING_YEAR, "0A")
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         "100",
         filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
         period=period.registry_token,

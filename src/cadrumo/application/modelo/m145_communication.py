@@ -15,10 +15,10 @@ See Also:
         Closed backend action vocabulary for the local communication workflow.
     :func:`build_m145_communication_service_contract`
         Builder that reads the registry snapshot and refuses filing-like drift.
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Registry revision whose application links, legal refs, source refs, and
         export layouts ground the returned contract.
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority`
         Bundled authority loader that supplies the Modelo 145 snapshot.
 """
 

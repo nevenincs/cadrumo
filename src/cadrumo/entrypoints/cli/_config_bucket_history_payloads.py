@@ -7,7 +7,7 @@ module.
 The nested event row previously crossed the envelope as a bare
 ``dict[str, object]``, so an empty row, a bogus event type, or an unparseable
 timestamp reached the operator unchallenged even though the encrypted
-:class:`~cadrumo.domain.buckets.BucketEventHistoryCatalogue` that produced it
+:class:`~cadrumo.domain.buckets.event.BucketEventHistoryCatalogue` that produced it
 refuses all three. :class:`BucketHistoryEventPayload` re-uses the canonical
 identity aliases and closed enums from :mod:`cadrumo.domain.buckets` rather than
 re-declaring their shape, following the projection pattern
@@ -43,7 +43,7 @@ from ...domain.buckets.event import (
 class BucketHistoryEventPayload(OutputSchema):
     """One append-only bucket event row in the profile-history envelope.
 
-    Mirrors :class:`~cadrumo.domain.buckets.BucketEvent`'s operator-facing
+    Mirrors :class:`~cadrumo.domain.buckets.event.BucketEvent`'s operator-facing
     projection. Enum members and ``datetime`` values render to the same JSON the
     former hand-built mapping emitted, so the wire form is unchanged.
     ``payload_version`` is the discriminator a consumer needs to interpret the

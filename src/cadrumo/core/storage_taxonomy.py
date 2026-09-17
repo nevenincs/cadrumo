@@ -90,7 +90,7 @@ class StorageScope(StrEnum):
     The keystore anchor is a second, independent bucket-id-parameterized root,
     not a nested subdirectory of the bucket it unlocks. Production states this
     as the load-bearing invariant it is
-    (:func:`~adapters.persistence.storage.bucket.validate_keystore_separation`):
+    (:func:`~adapters.persistence.storage.bucket.keystore_paths.validate_keystore_separation`):
     the keystore lives at ``<root>/keystore/<bucket-id>/``, sibling to
     ``buckets/``, and a configuration that resolves it under ``buckets/`` is
     refused so a later unlock cannot silently violate the separation.

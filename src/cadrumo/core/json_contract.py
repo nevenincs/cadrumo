@@ -11,7 +11,7 @@ these primitives directly from this module and route JSON mode through
 
 :func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
 :class:`Notice` values via :func:`derive_status` and applies
-:func:`core.redaction.redact_structured_for_cli_output` to the
+:func:`core.redaction.rules.redact_structured_for_cli_output` to the
 entire envelope before writing stdout.  Text output remains owned by
 :func:`core.output_rendering.render_command_output`, so redaction
 and the ``reveal_cli_identifiers_opt_in`` switch stay consistent across
@@ -125,7 +125,7 @@ class EnvelopeStatus(StrEnum):
     success-envelope authority for computing it.
 
     :func:`emit_json_success` never emits :attr:`ERROR`; blocking
-    failures route through the shared :class:`~core.errors.CadrumoError`
+    failures route through the shared :class:`~core.errors.hierarchy.CadrumoError`
     boundary instead of being smuggled into stdout notices.
     """
 
@@ -273,7 +273,7 @@ class Notice(BaseModel):
             keys and executable command prose are rejected here.
 
     Blocking failures are not notices; they raise an
-    :class:`~core.errors.CadrumoError` and emit on stderr. Command payload
+    :class:`~core.errors.hierarchy.CadrumoError` and emit on stderr. Command payload
     schemas should also avoid reintroducing bespoke advisory, hint, or
     warning fields inside ``result`` when a :class:`Notice` can carry the
     same non-blocking diagnostic.
@@ -333,7 +333,7 @@ class OutputSchemaError(CadrumoError):
     """Raised when a strict CLI output contract is violated.
 
     It deliberately inherits
-    :class:`core.errors.CadrumoError` so registry defects route through
+    :class:`core.errors.hierarchy.CadrumoError` so registry defects route through
     the shared CLI error boundary instead of bypassing structured output.
     """
 
@@ -515,10 +515,10 @@ def emit_json_success(
     The ``status`` is derived from the supplied notices
     (:func:`derive_status`) so the JSON outcome and the shell exit code
     never disagree. The assembled envelope is redacted through
-    :func:`core.redaction.redact_structured_for_cli_output` before
+    :func:`core.redaction.rules.redact_structured_for_cli_output` before
     :func:`_write_json_document` writes it.
 
-    This helper is stdout-only. Any raised :class:`~core.errors.CadrumoError`
+    This helper is stdout-only. Any raised :class:`~core.errors.hierarchy.CadrumoError`
     is handled by the CLI error boundary, which renders the sibling stderr
     envelope instead of returning a success document with an error-shaped
     ``result``.
@@ -572,7 +572,7 @@ def _record_captured_envelope(envelope_payload: object) -> None:
     The deterministic-output substrate captures the verbatim emitted
     envelope so a recorded run can be replayed and asserted byte-identical
     after masking. Capture is off by default: when no
-    :func:`core.observability.capture_envelopes` scope is active the
+    :func:`core.observability.capture.capture_envelopes` scope is active the
     recorder is a single ``ContextVar.get`` returning ``None``. The call
     is fully best-effort — a capture failure must never disturb the emit
     contract. The import is lazy so :mod:`core.json_contract` keeps

@@ -61,11 +61,14 @@ def _base_interpreter_pythonpath() -> str:
 _DURABLE_SNAPSHOT_SOURCE = dedent(
     """
     def durable_snapshot(root):
+        # SQLite's shared-memory WAL index is rewritten by plain reads and
+        # rebuilt from the WAL on open; it is coordination, not durable state.
         return {
             str(path.relative_to(root)): path.read_bytes()
             for path in root.rglob("*")
             if path.is_file()
             and "log" not in path.name.lower()
+            and not path.name.endswith("-shm")
         }
     """
 )
@@ -143,10 +146,16 @@ _HARNESS = (
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
                 exit_code = exit_code or 97
         if payload.get("assert_dispatch_state_unchanged"):
-            if durable_snapshot(settings.cadrumo_local_storage_root) == before_dispatch:
+            after_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+            if after_dispatch == before_dispatch:
                 print("S14_STATE_UNCHANGED", file=sys.stderr)
             else:
-                print("S14_STATE_CHANGED", file=sys.stderr)
+                changed = sorted(
+                    path
+                    for path in set(before_dispatch) | set(after_dispatch)
+                    if before_dispatch.get(path) != after_dispatch.get(path)
+                )
+                print("S14_STATE_CHANGED", changed, file=sys.stderr)
                 exit_code = exit_code or 98
     finally:
         try:
@@ -246,10 +255,16 @@ _WINDOWS_HANDLE_HARNESS = (
                 print("S13_DESCRIPTOR_OPEN", file=sys.stderr)
                 exit_code = exit_code or 97
         if payload.get("assert_dispatch_state_unchanged"):
-            if durable_snapshot(settings.cadrumo_local_storage_root) == before_dispatch:
+            after_dispatch = durable_snapshot(settings.cadrumo_local_storage_root)
+            if after_dispatch == before_dispatch:
                 print("S14_STATE_UNCHANGED", file=sys.stderr)
             else:
-                print("S14_STATE_CHANGED", file=sys.stderr)
+                changed = sorted(
+                    path
+                    for path in set(before_dispatch) | set(after_dispatch)
+                    if before_dispatch.get(path) != after_dispatch.get(path)
+                )
+                print("S14_STATE_CHANGED", changed, file=sys.stderr)
                 exit_code = exit_code or 98
     finally:
         try:

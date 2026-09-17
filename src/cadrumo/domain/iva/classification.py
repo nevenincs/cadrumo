@@ -802,6 +802,7 @@ def _selector_union[T](value: str, resolve: Callable[[str], frozenset[T]]) -> fr
         resolved |= resolve(member)
     return frozenset(resolved)
 
+
 def _kind_predicate_values(
     value: str,
     *,
@@ -1122,6 +1123,11 @@ def classify_iva(
         category = category_catalogue.require(category)
         if category == category_catalogue.require("domestic_exempt") and criteria.rate_tier is not None:
             rate_catalogue.require(criteria.rate_tier)
+        projected_year = operation.supported_filing_years().projection_coordinate(criteria.transaction_date.year)
+        if projected_year is None:
+            raise IvaValidationError(
+                f"transaction year {criteria.transaction_date.year} falls outside the supported filing years"
+            )
         return IvaClassificationResult(
             category=category,
             rate=rate,
@@ -1133,7 +1139,7 @@ def classify_iva(
                 rule.rule_id,
                 on=criteria.transaction_date,
                 operation=operation,
-                projected_year=criteria.transaction_date.year,
+                projected_year=projected_year,
             ),
         )
     fallback = next((rule for rule in projected_rules if rule.rule_id == "R99_fallthrough"), None)

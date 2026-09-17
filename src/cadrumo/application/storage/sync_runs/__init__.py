@@ -11,13 +11,13 @@ last changed, which is a different question, and is unavailable entirely when a
 run fails partway.
 
 See Also:
-    :class:`~core.SyncSurface`
+    :class:`~core.sync_surface.SyncSurface`
         The closed two-member set of surfaces a run can cover.
-    :data:`~adapters.persistence.storage.SYNC_RUN_RECORDS_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.SYNC_RUN_RECORDS_NAMESPACE`
         Encrypted profile-local namespace these records are written to, whose
         key grammar keeps every run distinct rather than collapsing to a last
         one.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         The single-writer batch primitive a caller co-writes the record and its
         bucket event through, by binding both repositories to one instance.
 """

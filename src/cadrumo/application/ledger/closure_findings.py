@@ -40,7 +40,7 @@ operator is still deciding.
 See Also:
     :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding`
         The finding record produced here.
-    :class:`~core.DraftDiscrepancyKind`
+    :class:`~core.draft_discrepancy.DraftDiscrepancyKind`
         The closed kind axis; this module never widens it.
     :func:`~application.ledger.evidence_draft.printed_total_discrepancy`
         The confirm-time, document-versus-record counterpart.

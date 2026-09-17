@@ -14,6 +14,8 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ...domain.calculations.registry.inventory_bindings import InventoryProvider
 from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.row_source_identity import RowSourceIdentity
@@ -34,9 +36,9 @@ from .source_mesh import (
 _SOURCE = BindingSourceKind.INVENTORY
 _OWNED_SOURCES = (_SOURCE,)
 _VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
-    "complete_acquisition_cost": "casilla_0181",
-    "closing_minus_opening_positive": "casilla_0177",
-    "opening_minus_closing_positive": "casilla_0182",
+    "complete_acquisition_cost": "complete_acquisition_total",
+    "closing_minus_opening_positive": "variation_increase_value",
+    "opening_minus_closing_positive": "variation_decrease_value",
 }
 _OPERATION_ANNOTATION = InventoryProvider.model_fields["row_field"].annotation
 _CANONICAL_OPERATIONS = get_args(getattr(_OPERATION_ANNOTATION, "__value__", _OPERATION_ANNOTATION))
@@ -109,6 +111,20 @@ def _resolve_inventory_binding_template(
         return _template_refusal_resolution(
             binding_ids,
             "inventory binding must rest on the selected filing coordinate",
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+        )
+
+    # Refuse an inapplicable filing year here, before the encrypted ledger is
+    # read: the projection would refuse it anyway, but only after a load.
+    try:
+        applicable_filing_year = resolve_inventory_anexo_d_filing_year(filing_year=filing_year)
+    except RegistryValidationError:
+        applicable_filing_year = None
+    if applicable_filing_year != filing_year:
+        return _template_refusal_resolution(
+            binding_ids,
+            "inventory row template is not applicable for the filing year",
             resolver_id=resolver_id,
             owned_sources=owned_sources,
         )

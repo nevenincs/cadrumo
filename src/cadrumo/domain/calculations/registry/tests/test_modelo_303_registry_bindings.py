@@ -234,10 +234,10 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
 
 
 @pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
-def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_casilla_43_stays_manual(
+def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     revision_id: str,
 ) -> None:
-    """The live capital-goods resolver owns a binding slot; the official box remains operator-visible."""
+    """The live capital-goods resolver fills the official box it is declared for."""
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
     bindings = {binding.id: binding for binding in revision.bindings}
@@ -253,12 +253,12 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_is_declared_while_ca
     assert binding_source_casilla_ids(binding) == ()
 
     casilla_43 = casillas[_M303_BIENES_INVERSION_REGULARIZACION_CASILLA]
-    assert casilla_43.input_kind is InputKind.MANUAL
-    assert casilla_43.binding is None
+    assert casilla_43.input_kind is InputKind.BOUND
+    assert casilla_43.binding == _M303_BIENES_INVERSION_REGULARIZACION_BINDING
 
 
 @pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
-def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44_stays_manual(
+def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     revision_id: str,
 ) -> None:
     modelo, _ = load_modelo_303()
@@ -266,8 +266,8 @@ def test_modelo_303_prorrata_regularizacion_binding_is_declared_while_casilla_44
     casilla = {item.id: item for item in revision.casillas}[_M303_PRORRATA_REGULARIZACION_CASILLA]
     binding = {item.id: item for item in revision.bindings}[_M303_PRORRATA_REGULARIZACION_BINDING]
 
-    assert casilla.input_kind is InputKind.MANUAL
-    assert casilla.binding is None
+    assert casilla.input_kind is InputKind.BOUND
+    assert casilla.binding == _M303_PRORRATA_REGULARIZACION_BINDING
     assert binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert binding_source_modelo(binding) == "303"
     assert binding_source_casilla_ids(binding) == _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS

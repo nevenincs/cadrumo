@@ -2,7 +2,7 @@
 
 ``BlobManifest`` and ``BlobReference`` restated the lowercase-hex-64 rule in a
 module-local helper plus per-model field validators. The restatement agreed
-with :data:`~core.identity.ContentDigest` on every malformed value --
+with :data:`~core.identity.digest.ContentDigest` on every malformed value --
 uppercase, non-hex, wrong length, and the path-traversal shapes the store must
 refuse -- which is exactly what made the one divergence invisible: the
 canonical alias strips surrounding whitespace, so a valid digest arriving

@@ -11,12 +11,12 @@ See Also:
         commands.
     :mod:`application.state_projection`
         Canonical readiness projection consumed by status and test results.
-    :class:`application.workflow.WorkflowState`
+    :class:`application.workflow.state_models.WorkflowState`
         Encrypted state envelope carrying the persisted
         :class:`application.auth.models.AuthState`.
-    :class:`core.AuthProviderDescription`
+    :class:`core.auth_provider.AuthProviderDescription`
         Provider-readiness description that feeds provider catalogue output.
-    :class:`application.auth.AuthenticatedAeatSessionResult`
+    :class:`application.auth.sessions.AuthenticatedAeatSessionResult`
         Live-session result consumed by :class:`AuthLoginResult`.
 """
 
@@ -86,7 +86,7 @@ class AuthConfigureResult(BaseModel):
 
     The provider selection has already been written to
     :class:`application.auth.models.AuthState` inside
-    :class:`application.workflow.WorkflowState` when this result is
+    :class:`application.workflow.state_models.WorkflowState` when this result is
     returned.
 
     ``complete`` reports whether the provider is now operationally
@@ -126,7 +126,7 @@ class AuthStatusResult(BaseModel):
     Built from
     :class:`application.state_projection.OperatorStateProjection`.
     Provider readiness mirrors
-    :class:`application.state_projection.ProjectionAuthReadiness`;
+    :class:`application.state_projection_auth.ProjectionAuthReadiness`;
     active-profile fields mirror
     :class:`application.state_projection.ProjectionActiveProfile`.
     """
@@ -194,7 +194,7 @@ class LiveAuthPreflightReport(BaseModel):
 
     Combines the :class:`AuthTestResult` readiness fields with live-auth
     identity-alignment settings before
-    :class:`core.access_gate.AeatAccessGate` can allow an authenticated
+    :class:`core.access_gate.gate.AeatAccessGate` can allow an authenticated
     read.
     """
 
@@ -228,7 +228,7 @@ class AuthLoginResult(BaseModel):
     """Result of an operator-triggered live authentication attempt.
 
     Summarises the
-    :class:`application.auth.AuthenticatedAeatSessionResult` produced by
+    :class:`application.auth.sessions.AuthenticatedAeatSessionResult` produced by
     the provider-session lifecycle without exposing session material.
     """
 
@@ -343,7 +343,7 @@ class CertificateSourceCheckEntry(BaseModel):
     """Expiry/rotation verdict for one registered certificate source.
 
     Reuses the same local PKCS#12 health classification
-    :func:`application.auth.probe_provider_configuration` runs for the
+    :func:`application.auth.operator_probes.probe_provider_configuration` runs for the
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
     source in the ``certificate_sources`` registry on
@@ -356,7 +356,7 @@ class CertificateSourceCheckEntry(BaseModel):
         certificate_path: Filesystem path of the source's PKCS#12 bundle.
         friendly_name: Optional human-readable label.
         active: Whether this source is the currently selected one.
-        result: Typed :class:`application.auth.ProviderProbeResult` verdict.
+        result: Typed :class:`application.auth.probes.ProviderProbeResult` verdict.
         summary: Localised one-line operator-facing verdict.
         days_until_expiry: Whole days until ``not_after``, when the
             certificate could be parsed; negative when already expired;

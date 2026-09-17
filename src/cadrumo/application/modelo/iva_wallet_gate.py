@@ -2,8 +2,8 @@
 
 Modelo 303 prior-compensation belongs to the IVA wallet authority, not to the
 generic previous-filing source mesh. This module uses the calculation
-:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` and
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` to route the wallet
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` and
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` to route the wallet
 decision into the prior-compensation binding, then checks a persisted
 :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
 against the exported or filed
@@ -11,27 +11,27 @@ against the exported or filed
 
 The gate is deliberately repository-backed: transient wallet decisions cannot
 feed the Modelo 303 engine unless the same decision is already present in
-:class:`~cadrumo.application.calculations.IvaWalletDecisionRepositoryProtocol` for the
+:class:`~cadrumo.application.calculations.observations_repository.IvaWalletDecisionRepositoryProtocol` for the
 work-unit taxpayer and period. Calculation, verification, internal filing, and
 export all replay this authority instead of trusting a caller-provided binding
 value for casilla 110. Blocked, missing, stale, target-mismatched, or
 amount-mismatched decisions raise
-:class:`~cadrumo.application.modelo.ModeloIvaWalletReconciliationBlockedError`
+:class:`~cadrumo.application.modelo.iva_wallet_gate.ModeloIvaWalletReconciliationBlockedError`
 before a revision, filing record, or fichero-BOE artefact can be persisted.
 
 The only lazy path is local-authority derivation for a bucket-scoped
 :class:`~WorkUnit`: it can persist a non-blocking local
 recurrence decision, and a ``first_period_zero`` decision is accepted only when
 profile activity-start evidence and the
-:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` prove every prior
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` prove every prior
 Modelo 303 compensation dependency is pre-activity.
 
 See Also:
-    :func:`~cadrumo.application.calculations.reconcile_modelo_303_iva_compensation`:
+    :func:`~cadrumo.application.calculations.iva_wallet_reconciliation.reconcile_modelo_303_iva_compensation`:
         Builds and persists the reconciliation decision consumed here.
-    :class:`~cadrumo.application.calculations.IvaWalletDecisionSourceResolver`:
+    :class:`~cadrumo.application.calculations.iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`:
         Projects a non-blocking decision into calculation binding values.
-    :func:`~cadrumo.application.modelo.verification_actions._require_cross_period_clean_state`:
+    ``cadrumo.application.modelo.verification_actions._require_cross_period_clean_state``:
         Treats matching IVA-wallet authority as the Modelo 303 compensation gate.
     :func:`~cadrumo.application.modelo.export.export_modelo_revision`:
         Replays this gate before writing a Modelo 303 export artefact.
@@ -336,7 +336,7 @@ def resolve_iva_compensation_decision_for_calculation(
 
     The :class:`~WorkUnit` fixes the bucket, taxpayer profile
     lookup, target period, and registry revision; the
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` is passed to the
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` is passed to the
     lazy reconciliation path when no caller-supplied or persisted wallet decision
     exists. A supplied decision must match the persisted
     :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
@@ -569,12 +569,12 @@ def apply_iva_compensation_decision_binding(
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` defines the
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` defines the
     binding channel; the decision amount is written only after target period and
     taxpayer identity checks pass. Caller and backend inputs for the same binding
     or casilla must either match the selected decision amount or are refused as
     conflicts. The effective value is then produced through
-    :class:`~cadrumo.application.calculations.IvaWalletDecisionSourceResolver`, so
+    :class:`~cadrumo.application.calculations.iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`, so
     the calculation source mesh records the IVA-wallet provenance instead of a
     generic ``previous_filing`` source.
     """
@@ -619,7 +619,7 @@ def require_persisted_iva_compensation_decision_for_work_unit(
 ) -> object:
     """Require a supplied Modelo 303 wallet decision to match the persisted decision.
 
-    The optional :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
+    The optional :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
     grounds first-period-zero decisions; when omitted, the function resolves the
     snapshot from the supplied :class:`~WorkUnit`. This check
     prevents a transient or stale

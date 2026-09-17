@@ -2,9 +2,9 @@
 
 One canonical home for the :data:`IBAN_SHAPE_RE` pattern and
 :func:`iban_mod_97` check residue, consumed by
-:data:`domain.calculations.registry._schema.IbanString` for registry
+:data:`~domain.calculations.registry.schema_scalars.IbanString` for registry
 casillas declaring ``data_type = "iban"`` and by the secure-storage
-:class:`~domain.deadlines.RefundAccount` model. Keeping the primitives in
+:class:`~domain.deadlines.models.RefundAccount` model. Keeping the primitives in
 ``core`` lets each domain validate an IBAN without importing the other.
 
 Canonicalising the printed form is :func:`normalise_iban`, which lives here
@@ -60,8 +60,8 @@ def iban_mod_97(canonical: str) -> int:
 
     Existing callers normalize separators and case and independently re-check
     :data:`IBAN_SHAPE_RE` before calling this; see
-    :func:`domain.calculations.registry._schema._validate_iban_string` and
-    :meth:`domain.deadlines.RefundAccount._validate_iban`. Those call-site
+    :func:`domain.calculations.registry.schema_scalars._validate_iban_string` and
+    ``domain.deadlines.models._validate_iban``. Those call-site
     gates are harmless belt-and-braces now that the shape is enforced here
     too, but they must not be the ONLY thing standing between a malformed
     string and a "valid" answer: a caller that forgets its own gate must

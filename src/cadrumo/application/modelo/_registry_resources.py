@@ -11,7 +11,7 @@ not declare, before a work unit records a law-determined registry identity.
 See Also:
     :mod:`cadrumo.core.resources`:
         Owns the packaged resource registry and bundled-path resolution.
-    :class:`cadrumo.domain.calculations.registry.PinnedAuthorityOperation`:
+    :class:`cadrumo.domain.calculations.registry.authority.PinnedAuthorityOperation`:
         Loads and validates modelo definitions, then serves registry snapshots.
     :mod:`cadrumo.application.modelo._registry_helpers`:
         Owns import/amendment registry checks.

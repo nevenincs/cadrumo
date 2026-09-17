@@ -4,7 +4,7 @@ Shared private helpers for
 :mod:`~adapters.persistence.profile.filing_drafts`: a bucket-id resolver and
 a runtime factory that
 returns a
-:class:`~adapters.persistence.storage.SecureObjectRepository` bound to
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` bound to
 the active profile bucket. Both live in the persistence adapter alongside the
 repositories they serve, so the secure-object coupling is a same-layer
 ``adapters -> adapters.persistence.storage`` import rather than a
@@ -13,7 +13,7 @@ repositories they serve, so the secure-object coupling is a same-layer
 See Also:
     :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared resolver for explicit-or-active profile bucket ids.
-    :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
+    :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`
         Runtime storage factory used after the filing bucket id is resolved.
     :mod:`~adapters.persistence.profile.filing_drafts`
         Draft repository consumer of these filing runtime helpers.

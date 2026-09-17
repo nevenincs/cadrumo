@@ -11,7 +11,7 @@ See Also:
     - :mod:`domain.auth.apoderamientos` for the shipped scope catalogue,
       ``ALL`` expansion, comma rejection, deduplication, and unknown-scope
       refusal rules.
-    - :class:`application.auth.ApoderadoService` for encrypted,
+    - :class:`application.auth.apoderado_service.ApoderadoService` for encrypted,
       bucket-scoped represented-party configuration built on this vocabulary.
 """
 

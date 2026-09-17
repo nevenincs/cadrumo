@@ -1,11 +1,11 @@
 """Governed-persistence repository for the invoice catalogue.
 
 :class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
-:class:`~domain.invoices.InvoiceCatalogue`. It stores the catalogue as an
+:class:`~domain.invoices.models.InvoiceCatalogue`. It stores the catalogue as an
 encrypted byte object via
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass` using
-an :class:`~adapters.persistence.storage.Envelope` wrapper; no plaintext
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass` using
+an :class:`~adapters.persistence.storage.envelope.contract.Envelope` wrapper; no plaintext
 invoice row, JSON catalogue, or envelope file lands on disk. The
 Envelope-wrapping mechanic itself is owned by
 :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
@@ -13,11 +13,11 @@ Envelope-wrapping mechanic itself is owned by
 bucket-ownership guard, which the shared kernel has no domain knowledge of.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`. It lives in
+:class:`~domain.invoices.protocols.InvoiceCatalogueRepositoryProtocol`. It lives in
 the persistence adapter (not in :mod:`domain.invoices`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
-typed :class:`~domain.invoices.InvoiceCatalogue` model, its narrow port,
-and the :class:`~domain.invoices.InvoicePersistenceError` boundary error.
+typed :class:`~domain.invoices.models.InvoiceCatalogue` model, its narrow port,
+and the :class:`~domain.invoices.errors.InvoicePersistenceError` boundary error.
 """
 
 from __future__ import annotations
@@ -56,16 +56,16 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
 class InvoiceCatalogueRepository:
     """Repository over encrypted SQL-backed :class:`InvoiceCatalogue` storage.
 
-    :data:`adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE` is
+    :data:`adapters.persistence.storage.secure_object_namespaces.INVOICE_CATALOGUE_NAMESPACE` is
     the central profile-local namespace, schema-version, sensitivity, and
     singleton-key contract for the encrypted invoice catalogue row. The
     :class:`InvoiceCatalogue` payload is wrapped in
-    :class:`~adapters.persistence.storage.Envelope` before
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` before
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     persists it, and :meth:`to_secure_object_write` exposes the same write for
     transaction/event co-commit paths. This class exposes the concrete load/save
     implementation behind
-    :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`, composing
+    :class:`~domain.invoices.protocols.InvoiceCatalogueRepositoryProtocol`, composing
     :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared envelope/exists/load/save mechanic and retaining only the
     invoice-specific bucket-ownership guard.
@@ -166,10 +166,10 @@ class InvoiceCatalogueRepository:
             instance when no database object is present.
 
         Raises:
-            :class:`~adapters.persistence.storage.ClassificationError`:
+            :class:`~adapters.persistence.storage.errors.ClassificationError`:
                 If the persisted object's classification is not the
                 sensitivity ``INVOICE_CATALOGUE_NAMESPACE`` declares.
-            :class:`~adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~adapters.persistence.storage.errors.EnvelopeVersionError`:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
@@ -181,10 +181,10 @@ class InvoiceCatalogueRepository:
         """Persist ``catalogue`` atomically under the file lock.
 
         The on-disk database value is an encrypted
-        :class:`~adapters.persistence.storage.Envelope` BLOB at the
-        :class:`~adapters.persistence.storage.SensitivityClass`
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` BLOB at the
+        :class:`~core.classification.policies.SensitivityClass`
         ``FINANCIAL`` classification declared by
-        :data:`adapters.persistence.storage.INVOICE_CATALOGUE_NAMESPACE`.
+        :data:`adapters.persistence.storage.secure_object_namespaces.INVOICE_CATALOGUE_NAMESPACE`.
         No plaintext invoice row lands on disk.
 
         Args:
@@ -258,9 +258,9 @@ class InvoiceCatalogueRepository:
     ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
-        The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`~adapters.persistence.storage.Envelope`
-        and :class:`~adapters.persistence.storage.SensitivityClass`
+        The returned :class:`~core.secure_object_write.SecureObjectWrite`
+        carries the same :class:`~adapters.persistence.storage.envelope.contract.Envelope`
+        and :class:`~core.classification.policies.SensitivityClass`
         classification that :meth:`save` would persist directly.
 
         Args:

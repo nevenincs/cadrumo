@@ -58,7 +58,7 @@ def _active_bucket() -> str:
 
 
 def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport, *, command: str) -> None:
-    """Render a :class:`~application.modelo.ModeloReconciliationReport` through the typed envelope.
+    """Render a :class:`~application.modelo.reconciliation.ModeloReconciliationReport` through the typed envelope.
 
     ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
     ``modelo.reconcile.file``); reconciliation advisories ride the typed

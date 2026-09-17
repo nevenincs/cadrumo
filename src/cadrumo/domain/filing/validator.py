@@ -28,7 +28,7 @@ requires registry ``legal_refs`` provenance. Neither model subsumes the
 other; do not collapse them.
 
 See Also:
-    :func:`~cadrumo.application.modelo.verify_modelo_revision`:
+    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision`:
         The pre-file verification gate this validator runs inside, which
         owns :class:`ModeloVerificationFinding` and the persisted
         :class:`VerificationReport`.

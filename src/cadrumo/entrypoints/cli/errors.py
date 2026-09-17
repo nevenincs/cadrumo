@@ -422,7 +422,7 @@ class CliCommandGroupUnavailableError(CadrumoError):
     A command group's module is imported lazily, the first time an operator
     dispatches into that subtree. When the import fails with a
     :exc:`ModuleNotFoundError` naming a package outside the
-    :data:`~core.OPTIONAL_EXTRAS` registry, the missing package is a *required*
+    :data:`~core.optional_extras.OPTIONAL_EXTRAS` registry, the missing package is a *required*
     dependency: the installation is incomplete, not merely un-extended.
 
     Degrading that case to an unavailable-command placeholder would turn a hard
@@ -615,7 +615,7 @@ def sandbox_notice_for_error() -> Notice | None:
     discardable sandbox bucket renders byte-identically to the same failure
     against the operator's real profile. Delegates to the one resolver the
     success path uses
-    (:func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`)
+    (:func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket`)
     and collapses any failure to ``None`` for the same reason
     :func:`active_profile_label_for_error` does: resolving a purely-advisory
     indicator must never mask the original error being reported.
@@ -681,7 +681,7 @@ def render_error_payload(
     spine fields an error document carries. In JSON mode the sandbox
     :class:`Notice` rides the ``notices`` channel; in text mode the same notice
     renders through
-    :func:`~cadrumo.application.operator_output.sandbox_banner_line`, the same
+    :func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_banner_line`, the same
     formatter the text-mode success path uses, so the banner is byte-identical
     across success and failure. A supplied ``action`` is the already-resolved
     application verdict projection: JSON places it in the canonical error

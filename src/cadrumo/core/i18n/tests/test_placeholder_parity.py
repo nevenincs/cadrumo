@@ -171,7 +171,7 @@ def _enclosing_context_keys(tree: ast.AST, call: ast.Call) -> frozenset[str]:
                     for key in keyword.value.keys
                     if isinstance(key, ast.Constant) and isinstance(key.value, str)
                 )
-    return frozenset()
+    return frozenset[str]()
 
 
 # ---------------------------------------------------------------------------

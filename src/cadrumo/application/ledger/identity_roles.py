@@ -11,7 +11,7 @@ entirely unrelated entity, and no downstream check can tell.
 **First-match is the defect.** The fix is not a better scan order: any total order
 over the candidates is still a guess wearing a ranking. When role evidence does
 not pick exactly one candidate, the resolution is
-:attr:`~core.FieldGroundingOutcome.AMBIGUOUS` with every candidate surfaced, and
+:attr:`~core.field_grounding.FieldGroundingOutcome.AMBIGUOUS` with every candidate surfaced, and
 the operator -- who has the document -- decides.
 
 Two exclusions are applied before candidacy, and both are load-bearing:
@@ -24,7 +24,7 @@ does not evade exclusion against a stored ``B12345674``.
 
 That exclusion asks an IDENTITY question, never a validity one, and routes
 through :func:`~core.identity.tax_id.same_tax_identifier` -- the same predicate
-:func:`~application.invoices.counterparty_is_the_filer` uses, so a document
+:func:`~application.invoices.self_counterparty.counterparty_is_the_filer` uses, so a document
 cannot evade one while being caught by the other. Routing it through
 :func:`canonical_identity_token` instead makes it a validity question, and then
 a filer whose stored identifier is foreign, or Spanish with a bad control
@@ -34,7 +34,7 @@ verifying a *candidate*; the two are not interchangeable.
 **A checksum failure is recorded, not silently dropped.** An identifier that fails
 its control character is a real fact about the document -- it is what makes the
 true supplier invisible to a validating scan -- so it surfaces as an
-:attr:`~core.DraftDiscrepancyKind.IDENTITY_UNVERIFIED` finding rather than
+:attr:`~core.draft_discrepancy.DraftDiscrepancyKind.IDENTITY_UNVERIFIED` finding rather than
 vanishing. That is the difference between "we could not verify the supplier" and
 "we found a supplier", and the operator needs the first when the first is true.
 
@@ -42,7 +42,7 @@ vanishing. That is the difference between "we could not verify the supplier" and
 prints no counterparty identifier at all, or prints only the filer's own, states
 no role for this resolver to get wrong: a factura simplificada may legitimately
 omit the recipient's NIF, and an ordinary domestic ticket identifies no customer.
-Those raise no :attr:`~core.DraftDiscrepancyKind.ROLE_UNRESOLVED`. An
+Those raise no :attr:`~core.draft_discrepancy.DraftDiscrepancyKind.ROLE_UNRESOLVED`. An
 UNVERIFIABLE one still does, because that is the measured defect above. The
 distinction is not cosmetic: every discrepancy kind blocks confirmation by
 construction, so a blocker firing across the legitimate population is one an
@@ -50,7 +50,7 @@ operator learns to clear unread -- and then clears on the checksum case too.
 
 Withholding the finding never asserts that the role is fine. The resolution
 carries ``resolved=None`` under an
-:attr:`~core.FieldGroundingOutcome.UNANCHORED` envelope whose note says the
+:attr:`~core.field_grounding.FieldGroundingOutcome.UNANCHORED` envelope whose note says the
 document stated nothing, so the absence reads as "not asked" at every consumer.
 
 **EU identifiers count.** A Spanish-only check silently discards every intra-EU
@@ -171,7 +171,7 @@ def canonical_identity_token(
     determine, and the ladder's own first rung already reads this prefix.
 
     The prefix is read through
-    :func:`~domain.iva.country_code_for_printed_tax_identifier`, the single
+    :func:`~domain.iva.establishment.country_code_for_printed_tax_identifier`, the single
     authority on which country a printed number names, rather than by matching
     two leading letters here: the prefix alone is not evidence, and that
     authority requires the body to match the structure its own prefix claims.

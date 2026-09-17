@@ -1,6 +1,6 @@
 """Export-exemption-reason schema axis for registry casillas.
 
-Hydrates the TOML token into the closed :class:`~core.ExportExemptionReason`
+Hydrates the TOML token into the closed :class:`~core.export_exemption_reason.ExportExemptionReason`
 vocabulary at the registry boundary, so an unknown token is refused at load with
 the accepted set named rather than reaching a downstream branch on a raw string.
 """

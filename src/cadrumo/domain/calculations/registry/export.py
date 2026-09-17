@@ -201,9 +201,8 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
       (:func:`~application.filing._export_parity.boe_representable_casilla_ids`), which passes
       only the records this filing's disposition actually emits, so a casilla the
       disposition suppresses is not demanded; and
-    - the registry-build export-exemption gate
-      (:func:`~domain.calculations.registry._validate_export_exemption.validate_export_exemption_declarations`),
-      which passes EVERY declared record, so a casilla addressed on any
+    - the registry-build export-exemption validation, which passes EVERY
+      declared record, so a casilla addressed on any
       disposition needs no exemption reason.
 
     The two scopes are deliberate and the build scope is the wider one: build
@@ -213,7 +212,7 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
     A casilla addressed only through a ``BINDING``-kind field is NOT in this set —
     such a field names the binding, not the casilla, so no casilla-keyed scan can
     see it. That is a real representation channel, not an oversight, which is why
-    :attr:`~core.ExportExemptionReason.FILED_VIA_BINDING_FIELD` exists to declare
+    :attr:`~core.export_exemption_reason.ExportExemptionReason.FILED_VIA_BINDING_FIELD` exists to declare
     it rather than the scan being widened to guess at it.
 
     Args:
@@ -595,7 +594,7 @@ def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, in
     The slot-geometry check that asks whether two fields claim the same bytes. Its
     slot-WIDTH sibling asks whether the bytes one field claims can hold what that
     field supplies, and lives at registry-build time rather than here: see
-    :func:`cadrumo.domain.calculations.registry.validate_export_field_widths.validate_draft_field_slot_width`.
+    ``cadrumo.domain.calculations.registry.validate_export_field_widths.validate_draft_field_slot_width``.
     """
     for index, current in enumerate(sorted_ranges):
         for other in sorted_ranges[index + 1 :]:

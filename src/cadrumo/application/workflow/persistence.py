@@ -1,7 +1,7 @@
 """Encrypted persistence for workflow state and workflow runs.
 
 Workflow state is stored as an
-:class:`~adapters.persistence.storage.Envelope`-wrapped record in the
+:class:`~adapters.persistence.storage.envelope.contract.Envelope`-wrapped record in the
 secure-object backend. The load path deserialises the envelope and validates
 it; callers receive a typed :class:`WorkflowState` or a diagnostic error class
 rather than a raw payload.
@@ -11,17 +11,17 @@ the classification travels with the record rather than being re-decided at each
 write site.
 
 See Also:
-    :class:`~application.workflow.WorkflowState`
+    :class:`~application.workflow.state_models.WorkflowState`
         Typed encrypted state payload persisted by
         :class:`WorkflowStateRepository`.
-    :class:`~application.workflow.WorkflowStateResetFingerprint`
+    :class:`~application.workflow.events.WorkflowStateResetFingerprint`
         Row-level, plaintext-free reset audit summary emitted before deletion.
     :func:`application.workflow.events.emit_workflow_state_reset`
         Writes the append-only ``workflow_state.reset`` bucket event before the
         state row is removed.
     :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
         Stores the emitted reset event in the bucket event history.
-    :class:`~application.workflow.WorkflowResult`
+    :class:`~application.workflow.run_models.WorkflowResult`
         Terminal workflow run record persisted separately by
         :class:`WorkflowRunRepository`.
 """
@@ -301,7 +301,7 @@ class WorkflowStateRepository:
         Lets callers co-transactionally persist the workflow state and a
         sibling secure-object payload (typically an updated
         bucket-event-history catalogue) via a single
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
         call.
         """
         return self._persistence.prepare_state_write(
@@ -499,12 +499,12 @@ def workflow_state_repository() -> WorkflowStateRepository:
 
     When an active profile bucket is present, the repository is backed by
     the bucket's own encrypted database resolved through
-    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`
+    :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction
     time. A cold root with no active bucket pointer is the bootstrap
     exception: it receives an explicit bare
-    :class:`~adapters.persistence.storage.SecureObjectRepository` so
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` so
     bootstrap-exempt recovery reads can still observe an absent state.
     """
     from ...core.bucket_pointer import resolve_active_bucket_id

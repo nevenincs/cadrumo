@@ -3,9 +3,9 @@
 The defining ``store`` module owns the typed :class:`SecretRecord` payload and
 the :class:`SecretStore`
 repository that wraps records in
-:class:`adapters.persistence.storage.envelope.Envelope`, persists
+:class:`adapters.persistence.storage.envelope.contract.Envelope`, persists
 them via
-:class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`,
+:class:`adapters.persistence.storage.blob_store.blob_store.EncryptedBlobStore`,
 and indexes natural keys by HMAC-SHA256 lookup digest.
 
 The index is deliberately not a plaintext inventory: secret keys,

@@ -38,7 +38,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -60,6 +59,8 @@ from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvena
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -84,7 +85,7 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
@@ -175,7 +176,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 def _deducible_cuota(objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation) -> Decimal:
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(_txns()))
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -245,7 +246,7 @@ def test_each_art106_regla_isolated(
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime.from_registry("especial"))

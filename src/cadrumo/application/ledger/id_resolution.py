@@ -10,7 +10,7 @@ operator lineage handle across edits:
   automatically as the bucket fills; it is never hard-coded to 8.
 - :func:`resolve_transaction_id` accepts a user-supplied prefix and
   returns the matching canonical 64-character hash, raising
-  :exc:`cadrumo.domain.transactions.TransactionIdPrefixError` on
+  :exc:`cadrumo.domain.transactions.errors.TransactionIdPrefixError` on
   zero-match or ambiguous-prefix conditions.
 - :func:`resolve_lineage_transaction_id` extends that resolver with a
   read-side lineage lookup: when a prefix names no *live* row but it
@@ -25,7 +25,7 @@ trivially. Empty input and non-hex characters are refused.
 Lineage resolution is a *read-side lookup convenience over the
 authoritative content-addressed id*, not a change to how ids are minted.
 The content hash (see
-:func:`cadrumo.domain.transactions.derive_transaction_id`) remains the single
+:func:`cadrumo.domain.transactions.models.derive_transaction_id`) remains the single
 authority for storage, audit, and machine consumers; this module never
 freezes an id across an edit. It only lets a historical handle resolve to
 the row that now carries the edited content.
@@ -133,7 +133,7 @@ def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
     so the read-side handle set and the write-side guard set are computed
     by one authority: the transaction's own current id plus every
     ``previous_transaction_id`` recorded in its
-    :class:`cadrumo.domain.transactions.TransactionEditLineageEntry` chain.
+    :class:`cadrumo.domain.transactions.lineage_models.TransactionEditLineageEntry` chain.
     """
     return transaction_modelo_source_ids(transaction)
 
@@ -165,7 +165,7 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
        ``update`` that edits an id-affecting fact re-derives the
        content-addressed id and removes the old id from the catalogue,
        recording it as a ``previous_transaction_id`` on the heir's
-       :class:`cadrumo.domain.transactions.TransactionEditLineageEntry`
+       :class:`cadrumo.domain.transactions.lineage_models.TransactionEditLineageEntry`
        chain. If ``prefix`` (or an unambiguous prefix of it) names a
        superseded id in exactly one live row's lineage, that row's
        *current* id is returned.
@@ -179,7 +179,7 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
     Args:
         prefix: A user-supplied prefix or full id. Lowercase hex.
         catalogue: The active bucket's loaded
-            :class:`cadrumo.domain.transactions.TransactionCatalogue`.
+            :class:`cadrumo.domain.transactions.models.TransactionCatalogue`.
 
     Returns:
         The unique full transaction id of the live row that ``prefix``

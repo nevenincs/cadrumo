@@ -194,7 +194,7 @@ def build_obligation_coverage(
     scope is ``advised``, and the CLI raises a default-visible advisory for it.
 
     Args:
-        profile: The operator's three-axis :class:`~domain.deadlines.TaxpayerProfile`.
+        profile: The operator's three-axis :class:`~domain.deadlines.models.TaxpayerProfile`.
         surfaced_modelos: The modelo codes positively resolved by a registry
             deadline window and an applicable verdict for the queried schedule
             horizon. They need not have an entry inside the UI date range; an

@@ -5,16 +5,16 @@ carries no SQL/crypto coupling: the :class:`ImportSummary` record returned by a
 ledger import and the :func:`transaction_object_key` /
 :func:`transaction_index_object_key` secure-object key-derivation helpers. The
 namespace and schema-version metadata are owned solely by the registry
-authority :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`;
+authority :data:`adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`;
 this domain port never redeclares them. The concrete encrypted SQL repository
 lives in the persistence adapter
 :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`,
 behind the read-side
-:class:`~cadrumo.domain.transactions.TransactionCatalogueRepositoryProtocol`; the
+:class:`~cadrumo.domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`; the
 domain package depends only on the structural port.
 
 The namespace authority is
-:data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`; this module
+:data:`adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`; this module
 derives the bucket-local transaction row keys with :func:`transaction_object_key`
 and the membership-index key with :func:`transaction_index_object_key`.
 """
@@ -29,7 +29,7 @@ from .errors import LedgerStorageError
 from .models import BucketTransactionRef
 
 #: Registered locale key for every key-derivation refusal in this module.
-#: Read from the class's own bound :class:`~core.errors.ErrorCode` rather than
+#: Read from the class's own bound :class:`~core.errors.error_codes.ErrorCode` rather than
 #: restated as a literal, so the raise sites and the error registry cannot
 #: drift apart. The refusals below carry this key plus locale-neutral facts and
 #: author no sentence: ``str(exc)`` prefers a positional argument over the key,
@@ -42,7 +42,7 @@ def transaction_index_object_key(bucket_id: str) -> str:
     """Return the per-bucket transaction-membership-index secure-object key.
 
     The index row shares
-    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`
     with the per-transaction rows and bounds reads/deletions to one bucket.
     """
     trimmed = bucket_id.strip()
@@ -65,7 +65,7 @@ def transaction_object_key(bucket_id: str, transaction_id: str) -> str:
     bucket id (``transaction:{bucket_id}:{transaction_id}``); cross-bucket
     aggregation must qualify with ``(bucket_id, tx_id)`` because ``tx_id`` alone
     is unique only within one bucket. Rows live under
-    :data:`adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`.
+    :data:`adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`.
     """
     trimmed = bucket_id.strip()
     if not trimmed:

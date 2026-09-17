@@ -1,8 +1,8 @@
 """Canonical two-stage retention selection for the LLM secure-object stores.
 
-The response cache (:class:`~adapters.outbound.llm.LLMCache`), the usage
-ledger (:class:`~adapters.outbound.llm.UsageRecorder`), and the run-telemetry
-recorder (:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`) each bound
+The response cache (:class:`~adapters.outbound.llm.cache.LLMCache`), the usage
+ledger (:class:`~adapters.outbound.llm.usage.UsageRecorder`), and the run-telemetry
+recorder (:class:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder`) each bound
 their store under one operational obligation: an age cutoff, then an
 oldest-first record-count cap. The namespaces, the settings that supply the
 bounds, and the record timestamp field differ per store by design -- the cache

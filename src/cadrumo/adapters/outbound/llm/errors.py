@@ -2,7 +2,7 @@
 
 All public LLM exceptions inherit from
 :class:`~llm.LLMError`, which extends
-:class:`~core.errors.CadrumoError`. Provider adapters surface
+:class:`~core.errors.hierarchy.CadrumoError`. Provider adapters surface
 :exc:`~llm.LLMProviderError` and
 :exc:`~llm.LLMRateLimitError`, cache and usage storage
 surface :exc:`~llm.LLMCacheError`, and strict model
@@ -44,7 +44,7 @@ class LLMTransientTransportError(LLMProviderError):
     and a malformed 2xx body are deterministic -- the identical request fails
     identically forever -- so retrying them burns the budget and delays the real
     refusal. Retryability is declared once, on the registered
-    :class:`~core.errors.ErrorCode` for each class, and the transport reads it
+    :class:`~core.errors.error_codes.ErrorCode` for each class, and the transport reads it
     from there rather than keeping a second list of its own.
 
     A subclass rather than a sibling, so every existing ``except
@@ -58,7 +58,7 @@ class LLMPdfRasterisationError(LLMError):
 
 
 class LLMCacheError(LLMError):
-    """Raised when :class:`~adapters.outbound.llm.LLMCache` storage fails."""
+    """Raised when :class:`~adapters.outbound.llm.cache.LLMCache` storage fails."""
 
 
 class LLMRateLimitError(LLMProviderError):

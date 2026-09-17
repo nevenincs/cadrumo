@@ -221,7 +221,7 @@ def resolve_active_provider_kind(
     operator login surface and the live-read session bring-up so the two
     cannot disagree: the precedence is an explicit ``requested_provider``,
     then the selection persisted by ``aeat config auth configure`` in the
-    witnessed :class:`application.workflow.WorkflowState`, then
+    witnessed :class:`application.workflow.state_models.WorkflowState`, then
     ``fallback_provider``. :class:`Settings` is a fallback, never an
     override, because the persisted selection is the operator's recorded
     decision while a settings value is only a deployment default.

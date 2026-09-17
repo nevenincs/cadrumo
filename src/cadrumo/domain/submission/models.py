@@ -9,9 +9,9 @@ authorize a live AEAT write; live-write refusal stays with the core access gate
 and application facades compose these records into draft/import flows.
 
 See Also:
-    :class:`cadrumo.domain.submission.SubmissionEngine`
+    :class:`cadrumo.domain.submission.engine.SubmissionEngine`
         Runs preflight and reads these records from the repository.
-    :func:`cadrumo.application.modelo.import_external_filing_evidence`
+    :func:`cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`
         Attaches external filing evidence to a modelo record from a
         validated justificante.
     :class:`~ModeloRecord`

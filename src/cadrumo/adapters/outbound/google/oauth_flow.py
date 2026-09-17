@@ -1,6 +1,6 @@
 """Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs an operator-supplied :class:`adapters.outbound.google.OAuthClient`
+Runs an operator-supplied :class:`adapters.outbound.google.records.OAuthClient`
 through Google's loopback IP + PKCE Desktop flow using
 ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``.
 The operating system picks an ephemeral loopback port and opens the
@@ -9,16 +9,16 @@ consent screen in the operator's default browser.
 Two policy gates fire before any network IO happens:
 
 1. The caller must pass a profile identity resolved by
-   :func:`adapters.outbound.google.resolve_active_profile`.
+   :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
 2. :func:`adapters.outbound.google.oauth_flow.require_resolvable_profile_record`
    refuses a profile whose canonical record session cannot be opened.
 
 See Also:
-    :func:`adapters.outbound.google.run_login_flow` executes the login
+    :func:`adapters.outbound.google.oauth_flow.run_login_flow` executes the login
     path, :func:`adapters.outbound.google.oauth_flow.credentials_to_records`
-    produces :class:`adapters.outbound.google.OAuthToken` and
-    :class:`adapters.outbound.google.OAuthMetadata`, and
-    :data:`adapters.outbound.google.REQUIRED_SCOPES` defines the consent
+    produces :class:`adapters.outbound.google.records.OAuthToken` and
+    :class:`adapters.outbound.google.records.OAuthMetadata`, and
+    :data:`adapters.outbound.google.records.REQUIRED_SCOPES` defines the consent
     surface the Google account must grant.
 """
 
@@ -60,10 +60,10 @@ def require_interactive_terminal() -> None:
     or another agent) ``stdin`` is not a TTY, no operator can complete the
     flow, and the receiver would block forever. This guard eliminates that
     silent-hang failure mode before
-    :func:`adapters.outbound.google.run_login_flow` calls the local server.
+    :func:`adapters.outbound.google.oauth_flow.run_login_flow` calls the local server.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthNonInteractiveError`:
+        :exc:`adapters.outbound.google.errors.GoogleAuthNonInteractiveError`:
             When ``sys.stdin`` is not attached to a terminal.
     """
     if not stdin_is_tty():
@@ -84,9 +84,9 @@ def require_resolvable_profile_record(profile_id: str) -> None:
     """Refuse the consent flow when the active profile cannot be resolved.
 
     ``profile_id`` is the immutable profile identity returned by
-    :func:`adapters.outbound.google.resolve_active_profile`. The guard reads the
+    :func:`adapters.outbound.google.active_profile.resolve_active_profile`. The guard reads the
     profile bucket pointer through
-    :func:`application.workflow.read_profile_bucket_by_id` and opens the
+    :func:`application.workflow.profile_bucket_scan.read_profile_bucket_by_id` and opens the
     canonical user-profile record through its lifecycle service, so a profile
     that is committed but has no live record session is refused BEFORE any
     network IO rather than midway through consent.
@@ -94,7 +94,7 @@ def require_resolvable_profile_record(profile_id: str) -> None:
     Nothing is read out of the record: existence is the whole precondition.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
+        :exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError`:
             When the profile bucket pointer or the canonical profile-record
             session cannot be resolved.
     """
@@ -150,32 +150,32 @@ def credentials_to_records(
     """Map OAuth credential fields into persisted Google session records.
 
     The consent screen must grant every scope in
-    :data:`adapters.outbound.google.REQUIRED_SCOPES`. The returned
-    :class:`adapters.outbound.google.OAuthToken` carries the refresh
+    :data:`adapters.outbound.google.records.REQUIRED_SCOPES`. The returned
+    :class:`adapters.outbound.google.records.OAuthToken` carries the refresh
     credential and the returned
-    :class:`adapters.outbound.google.OAuthMetadata` carries the linked
+    :class:`adapters.outbound.google.records.OAuthMetadata` carries the linked
     Google account, granted scope tuple, and issuance timestamps used by the
     session store.
 
     Args:
         refresh_token: The refresh token returned by the consent screen.
         token_uri: The token endpoint URL mirrored from
-            :class:`adapters.outbound.google.OAuthClient`.
+            :class:`adapters.outbound.google.records.OAuthClient`.
         account_email: The Google account that completed the consent.
         granted_scopes: Scopes the consent screen actually granted.
         issued_at: Timestamp the credential was first issued.
 
     Returns:
-        A 2-tuple of (:class:`adapters.outbound.google.OAuthToken`,
-        :class:`adapters.outbound.google.OAuthMetadata`) ready for
-        :class:`adapters.persistence.storage.SecureObjectRepository`
+        A 2-tuple of (:class:`adapters.outbound.google.records.OAuthToken`,
+        :class:`adapters.outbound.google.records.OAuthMetadata`) ready for
+        :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         persistence through :mod:`adapters.outbound.google.session_store`.
         Both records validate strict pydantic invariants; metadata refuses
         granted-scope tuples missing any
-        :data:`adapters.outbound.google.REQUIRED_SCOPES` member.
+        :data:`adapters.outbound.google.records.REQUIRED_SCOPES` member.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthScopeInsufficientError`:
+        :exc:`adapters.outbound.google.errors.GoogleAuthScopeInsufficientError`:
             When ``granted_scopes`` omits any required scope. Re-raised
             separately from the pydantic ``ValidationError`` so the CLI can
             surface a concrete remediation hint.
@@ -217,17 +217,17 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
 
     Args:
         client: Operator-imported
-            :class:`adapters.outbound.google.OAuthClient` metadata.
+            :class:`adapters.outbound.google.records.OAuthClient` metadata.
         profile: Active profile UUID resolved by
-            :func:`adapters.outbound.google.resolve_active_profile`.
+            :func:`adapters.outbound.google.active_profile.resolve_active_profile`.
 
     Returns:
-        A 2-tuple of (:class:`adapters.outbound.google.OAuthToken`,
-        :class:`adapters.outbound.google.OAuthMetadata`) ready for
+        A 2-tuple of (:class:`adapters.outbound.google.records.OAuthToken`,
+        :class:`adapters.outbound.google.records.OAuthMetadata`) ready for
         persistence.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthError`: Any
+        :exc:`adapters.outbound.google.errors.GoogleAuthError`: Any
             typed OAuth refusal with concrete remediation context.
     """
     require_resolvable_profile_record(profile)
@@ -252,7 +252,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
 
     Imports ``google_auth_oauthlib`` lazily so the failure mode of a
     missing transitive dependency surfaces as a typed
-    :exc:`adapters.outbound.google.GoogleAuthNetworkError` rather than
+    :exc:`adapters.outbound.google.errors.GoogleAuthNetworkError` rather than
     an opaque ``ImportError``.
     """
     try:
@@ -385,7 +385,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
 
     Verification requires the audience (our OAuth client_id) to match
     the token's ``aud`` claim.
-    :data:`adapters.outbound.google.REQUIRED_SCOPES` must include the
+    :data:`adapters.outbound.google.records.REQUIRED_SCOPES` must include the
     ``openid`` + ``userinfo.email`` pair for Google to include the ``email``
     claim in the ID token.
 
@@ -397,10 +397,10 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         The verified email address extracted from the ID token payload.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthScopeInsufficientError`:
+        :exc:`adapters.outbound.google.errors.GoogleAuthScopeInsufficientError`:
             When the credential carries no ``id_token`` or the verified payload
             has no ``email`` claim.
-        :exc:`adapters.outbound.google.GoogleAuthNetworkError`: When
+        :exc:`adapters.outbound.google.errors.GoogleAuthNetworkError`: When
             ``google.oauth2.id_token`` is not importable or the verification
             HTTP fetch fails.
     """

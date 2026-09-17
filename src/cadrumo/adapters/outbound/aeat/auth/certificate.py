@@ -3,7 +3,7 @@
 This module is the public surface for loading and evaluating certificates used
 for authentication against the Spanish tax authority's Sede Electrónica.
 
-:class:`adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
+:class:`adapters.outbound.aeat.auth.authenticator.AeatAuthenticator` consumes this
 surface by loading a :class:`CertificateBundle` into a :class:`LoadedCertificate`,
 recording :class:`CertificateHealth`, and deriving the taxpayer NIF/NIE through
 :func:`extract_nif_from_subject`.
@@ -18,11 +18,11 @@ Design constraints:
 * Parsed private-key material and the raw PKCS#12 bytes live in
   :class:`pydantic.PrivateAttr` fields on :class:`LoadedCertificate`,
   so they can never be leaked via ``model_dump`` or ``repr``.
-* All errors inherit from :class:`core.errors.CadrumoError` via
+* All errors inherit from :class:`core.errors.hierarchy.CadrumoError` via
   :class:`CertificateError`.
 
 See Also:
-    :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    :class:`adapters.outbound.aeat.auth.providers.CertificateContextProvisioner`
     for wiring :class:`LoadedCertificate` into browser contexts.
 """
 
@@ -171,7 +171,7 @@ class CertificateBundle(BaseModel):
 class LoadedCertificate(BaseModel):
     """A parsed, validated, in-memory PKCS#12 certificate.
 
-    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` uses this
+    :class:`adapters.outbound.aeat.auth.authenticator.AeatAuthenticator` uses this
     record for NIF/NIE extraction, :class:`CertificateHealth` evaluation,
     and browser-context provisioning.
 
@@ -291,7 +291,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
 
     This is the canonical decode path for certificate auth. It feeds
-    :class:`adapters.outbound.aeat.auth.AeatAuthenticator`, operator
+    :class:`adapters.outbound.aeat.auth.authenticator.AeatAuthenticator`, operator
     probes, and backend provisioning surfaces with the same
     :class:`LoadedCertificate` contract.
 
@@ -470,7 +470,7 @@ def evaluate_loaded_certificate_health(
     """Compute a :class:`CertificateHealth` from an already-loaded cert.
 
     The helper exists so callers that have already paid the PKCS#12
-    decode cost, such as :class:`adapters.outbound.aeat.auth.AeatAuthenticator`
+    decode cost, such as :class:`adapters.outbound.aeat.auth.authenticator.AeatAuthenticator`
     or operator probes, can reuse the parsed record rather than re-reading the
     bundle from disk.
 

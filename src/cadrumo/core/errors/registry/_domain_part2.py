@@ -1,7 +1,7 @@
-"""Ordered domain :class:`~cadrumo.core.errors.ErrorCode` registry shard.
+"""Ordered domain :class:`~cadrumo.core.errors.error_codes.ErrorCode` registry shard.
 
 Rows map domain-layer exception qualnames to stable
-:class:`~cadrumo.core.errors.ErrorCategory` values and locale message keys.
+:class:`~cadrumo.core.errors.error_codes.ErrorCategory` values and locale message keys.
 """
 
 from ..error_codes import ErrorCategory, ErrorCode

@@ -25,7 +25,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -53,6 +52,8 @@ from cadrumo.domain.transactions.models import (
     TransactionCatalogue,
 )
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+from .published_authority_support import published_authority_operation
 
 
 class _InvoiceCatalogueReader:
@@ -189,12 +190,12 @@ def _provenance(provider_id: str) -> RawProvenance:
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return published_authority_operation().snapshot("303", filing_year=2025, period="1T").revision
 
 
 @cache
 def _m130_revision() -> ModeloRevision:
-    return compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    return published_authority_operation().revision_with_export_layouts("130", "2019-y-siguientes")
 
 
 def _without_fact(revision: ModeloRevision, source: str, fact: str) -> ModeloRevision:

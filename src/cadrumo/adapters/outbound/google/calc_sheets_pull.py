@@ -2,10 +2,10 @@
 
 Pairs with :mod:`~adapters.outbound.google.calc_sheets_apply`. The export
 side materialises a
-:class:`~application.storage.calc_sheets.SheetExportPlan` as a real Google
+:class:`~application.storage.calc_sheets.records.SheetExportPlan` as a real Google
 Sheets workbook; this module reads the operator's edits back out, validates the
 workbook is still bound to the
-:class:`~domain.calculations.registry.RegistrySnapshot` the engine
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` the engine
 compiled it from, and returns typed records the caller can inspect, compute
 from, or assemble into ledger / filing inputs.
 
@@ -25,15 +25,15 @@ Two safety gates fire before any value is read:
    The pull is refused with a typed error before coordinates are read.
 
 The pull adapter does NOT mutate any local state; it returns a
-:class:`~adapters.outbound.google.PullResult` and leaves applying the
+:class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` and leaves applying the
 edits to the caller.
 
 See Also:
-    :func:`~adapters.outbound.google.pull_operator_edits` reads the
+    :func:`~adapters.outbound.google.calc_sheets_pull.pull_operator_edits` reads the
     workbook,
-    :func:`~adapters.outbound.google.compute_from_pull` maps a matching
+    :func:`~adapters.outbound.google.calc_sheets_pull.compute_from_pull` maps a matching
     pull into
-    :class:`~domain.calculations.registry.RegistryCalculationResult`.
+    :class:`~domain.calculations.registry.formula_runtime.RegistryCalculationResult`.
 """
 
 from __future__ import annotations
@@ -457,9 +457,9 @@ def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     as an int or float and only a cell the operator forced to plain text arrives
     as a string. That string is the operator's own writing, which is why it goes
     to the extraction contract rather than to
-    :func:`~core.decimal.coerce_decimal`: the tolerant coercer resolves the
+    :func:`~core.decimal.coercion.coerce_decimal`: the tolerant coercer resolves the
     ambiguous Spanish ``1.000`` to one euro, while
-    :func:`~core.decimal.coerce_finite_european_decimal` yields no value for it
+    :func:`~core.decimal.coercion.coerce_finite_european_decimal` yields no value for it
     and the cell stays a string for the caller to refuse — the same judgement
     ``_coerce_edit_value_to_decimal`` already applies to a spreadsheet edit
     further down this module, over the same workbook.
@@ -490,11 +490,11 @@ def pull_operator_edits(
     pull``. It verifies the Drive ownership marker, reads developer metadata,
     classifies metadata against ``snapshot``, reads operator/binding/relation
     cells plus Detalle row-set blocks, and returns a
-    :class:`~adapters.outbound.google.PullResult`.
+    :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult`.
 
     Args:
         snapshot: The
-            :class:`~domain.calculations.registry.RegistrySnapshot` the
+            :class:`~domain.calculations.registry.schema.RegistrySnapshot` the
             workbook was compiled against. Used to derive the layout (cell
             addresses for every casilla / binding / relation) and to validate
             the workbook's developer-metadata stamps.
@@ -506,16 +506,16 @@ def pull_operator_edits(
             the ``drive.file`` + ``spreadsheets`` scopes.
 
     Returns:
-        A :class:`~adapters.outbound.google.PullResult` carrying the
+        A :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` carrying the
         operator edits, binding edits, relation edits, and the metadata-match
         verdict. A non-matching stamp is refused before the live layout is
         derived, so no operator cells are read under coordinates that may have
         shifted since export.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
             When ``spreadsheet_id`` is blank.
-        :exc:`~adapters.outbound.storage.OutboundStorageError`: When
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: When
             Drive or Sheets rejects the request, the target is missing, quota
             is exhausted, or the workbook fails the app-owned marker gate.
     """
@@ -986,7 +986,7 @@ def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: _PullResult,
 ) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a :class:`~adapters.outbound.google.PullResult`.
+    """Run the local Decimal runtime against a :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult`.
 
     Maps each edit family back to the runtime contract:
 
@@ -1009,19 +1009,19 @@ def compute_from_pull(
 
     Args:
         snapshot: The
-            :class:`~domain.calculations.registry.RegistrySnapshot` the
+            :class:`~domain.calculations.registry.schema.RegistrySnapshot` the
             workbook was compiled against. Used to derive input casilla
             identifiers, active relation periods, and the metadata-match gate.
-        pull: The :class:`~adapters.outbound.google.PullResult` carrying
+        pull: The :class:`~adapters.outbound.google.calc_sheets_pull_records.PullResult` carrying
             the operator-edited cells to compute from.
 
     Returns:
-        A :class:`~domain.calculations.registry.RegistryCalculationResult`
+        A :class:`~domain.calculations.registry.formula_runtime.RegistryCalculationResult`
         produced by
-        :func:`~domain.calculations.registry.calculate_registry_snapshot`.
+        :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageConflictError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError`:
             When ``pull`` does not bind to ``snapshot`` by metadata verdict and
             registry-SHA stamp.
     """

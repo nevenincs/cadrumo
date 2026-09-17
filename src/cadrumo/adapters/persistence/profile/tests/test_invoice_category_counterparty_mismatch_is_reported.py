@@ -36,7 +36,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
@@ -60,6 +59,7 @@ from ..catalogue_reads import InvoiceCatalogueReadAdapter
 from ..invoices import InvoiceCatalogueRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -109,7 +109,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
 
 def _screen(secure_objects: SecureObjectRepository) -> CalculationSourceResolution:
     """Run the public IVA resolver and return its diagnostic-bearing resolution."""
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="303",

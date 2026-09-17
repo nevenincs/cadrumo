@@ -2,8 +2,8 @@
 
 These exceptions are raised by previous-filing, binding-prefill, IVA
 compensation, and encrypted observation-repository services at the application
-boundary. Every class inherits from :class:`~core.errors.CoreError`;
-validation failures use :class:`~core.errors.CoreValidationError` so CLI
+boundary. Every class inherits from :class:`~core.errors.hierarchy.CoreError`;
+validation failures use :class:`~core.errors.hierarchy.CoreValidationError` so CLI
 and API callers receive registry-backed envelopes instead of generic
 ``ValueError`` or ``TypeError`` failures.
 
@@ -15,13 +15,13 @@ presentation boundary.
 A narrow subset is additionally a *safety* disposition: the calculation
 observed evidence whose contradiction cannot be resolved by choosing one side,
 because either choice silently changes a declared amount. Those raise sites
-attach a :class:`~application.operator_actions.PreconditionVerdict` whose
-``no_recovery_outcome`` is :attr:`~core.NoRecoveryOutcome.SAFETY`, so the CLI
+attach a :class:`~application.operator_actions.models.PreconditionVerdict` whose
+``no_recovery_outcome`` is :attr:`~core.operator_action_enums.NoRecoveryOutcome.SAFETY`, so the CLI
 boundary projects an explicit "there is deliberately no recovery here" instead
 of manufacturing a retry that would re-derive the same contradiction.
 
 See Also:
-    :mod:`application.calculations._binding_prefill`:
+    :mod:`application.calculations.binding_prefill`:
         Previous-filing binding readers that raise
         :exc:`BindingPrefillTypeError`.
     :mod:`application.calculations.iva_compensation_history`:
@@ -84,10 +84,10 @@ def calculation_no_recovery_verdict(
         condition: The calculation condition that failed.
         facts: Stable machine facts, never prose, describing the observation.
         outcome: The closed no-recovery reason. Defaults to
-            :attr:`~core.NoRecoveryOutcome.SAFETY`.
+            :attr:`~core.operator_action_enums.NoRecoveryOutcome.SAFETY`.
 
     Returns:
-        The :class:`~application.operator_actions.PreconditionVerdict` carrying
+        The :class:`~application.operator_actions.models.PreconditionVerdict` carrying
         the failed condition and its explicit no-recovery outcome.
     """
     from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -115,9 +115,9 @@ class BindingPrefillTypeError(CoreValidationError):
 
     Binding selectors flow through pydantic with a union value type, so static
     analysis loses the per-key shape. This error is raised by the selector
-    narrowing helpers in :mod:`application.calculations._binding_prefill`.
+    narrowing helpers in :mod:`application.calculations.binding_prefill`.
     It protects
-    :func:`~application.calculations._binding_prefill.resolve_bindings_from_local_store`
+    :func:`~application.calculations.binding_prefill.resolve_bindings_from_local_store`
     from selector values that do not match the expected ``int | str`` or
     ``str | tuple[str, ...]`` shape.
     """
@@ -128,7 +128,7 @@ class ObservationKeyError(CoreValidationError):
 
     The repository key for a ``(modelo, filing_year, period)`` triple must
     satisfy
-    :func:`~adapters.persistence.storage.safe_repository_id` for string
+    :func:`~adapters.persistence.storage.path_safety.safe_repository_id` for string
     components and fall within the supported year range ``[2000, 2099]`` for
     the integer year component. The key builders in
     :mod:`application.calculations.observations_repository` raise this
@@ -161,13 +161,13 @@ class ObservationEvidenceDisplacementError(_CalculationPreconditionErrorMixin, C
 class ObservationCasillaReferenceError(CoreValidationError):
     """Raised when a persisted filing observation names undeclared casillas.
 
-    :class:`~application.calculations.CalculationObservationRepositoryProtocol`
+    :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
     is the encrypted calculation-history substrate for cross-period and
     cross-modelo reads. It must not persist a
-    :class:`~domain.calculations.registry.RegistryModeloObservation` whose
+    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` whose
     casilla keys are only syntactically valid ``CasillaId`` strings; every key
     must be declared by the resolved
-    :class:`~domain.calculations.registry.RegistrySnapshot` for that
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot` for that
     modelo, year, and period via
-    :func:`~domain.calculations.registry.undeclared_casilla_ids`.
+    :func:`~domain.calculations.registry.casilla_membership.undeclared_casilla_ids`.
     """

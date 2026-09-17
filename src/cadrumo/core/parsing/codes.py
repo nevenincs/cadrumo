@@ -7,7 +7,7 @@ its shape check, so the same token could be accepted at one boundary and
 refused at the next.
 
 These are pure functions at the ``core`` layer. They raise the registered
-:class:`~core.errors.CoreValidationError` ancestry, and a Pydantic validator
+:class:`~core.errors.hierarchy.CoreValidationError` ancestry, and a Pydantic validator
 delegating here translates that failure to ``ValueError`` at its narrow
 boundary. Each caller re-raises its own domain error to keep operator
 diagnostics boundary-specific.

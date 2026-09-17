@@ -24,11 +24,13 @@ covering a year stops answering for it.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 
 from ..classification import (
     CustomerTaxStatus,
@@ -45,13 +47,16 @@ from .classification_authority_support import classify_with_registry_rules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_GROUNDED_DAY = date(2025, 6, 15)
-"""A day inside every grounded rule's declared span."""
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
 
-_FIRST_GROUNDED_DAY = date(2022, 1, 1)
-_LAST_GROUNDED_DAY = date(2026, 12, 31)
-_BEFORE_GROUNDING = date(2021, 12, 31)
-_AFTER_GROUNDING = date(2027, 1, 1)
+_GROUNDED_DAY = date(_SUPPORT.horizon, 6, 15)
+"""A day inside the authored support span."""
+
+_FIRST_GROUNDED_DAY = date(_SUPPORT.floor, 1, 1)
+_LAST_GROUNDED_DAY = date(_SUPPORT.horizon, 12, 31)
+_BEFORE_GROUNDING = _FIRST_GROUNDED_DAY - timedelta(days=1)
+_AFTER_GROUNDING = _LAST_GROUNDED_DAY + timedelta(days=1)
 
 
 def _services_b2b_eu_outbound(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassificationCriteria:
@@ -150,8 +155,11 @@ def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
         pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"),
     ):
-        classify_with_registry_rules(
-            _domestic_at_general_rate(on=_AFTER_GROUNDING), operation=_authority_operation_for_test
+        place_of_supply_rule(
+            "R_not_declared",
+            on=_GROUNDED_DAY,
+            operation=_authority_operation_for_test,
+            projected_year=_GROUNDED_DAY.year,
         )
 
 
@@ -202,9 +210,20 @@ def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
             assert grounding.window is not None
             assert grounding.window.covers_year(day.year)
 
-        for day in (_BEFORE_GROUNDING, _AFTER_GROUNDING):
-            with pytest.raises(IvaCatalogueError, match=str(day.year)):
-                classify_with_registry_rules(_services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test)
+        # Below the supported floor the support gate refuses; above the horizon
+        # the registry carries the newest authored grounding forward.
+        with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+            classify_with_registry_rules(
+                _services_b2b_eu_outbound(on=_BEFORE_GROUNDING), operation=_authority_operation_for_test
+            )
+        carried = classify_with_registry_rules(
+            _services_b2b_eu_outbound(on=_AFTER_GROUNDING), operation=_authority_operation_for_test
+        ).place_of_supply
+        at_horizon = classify_with_registry_rules(
+            _services_b2b_eu_outbound(on=_LAST_GROUNDED_DAY), operation=_authority_operation_for_test
+        ).place_of_supply
+        assert carried is not None
+        assert carried == at_horizon
 
 
 def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:

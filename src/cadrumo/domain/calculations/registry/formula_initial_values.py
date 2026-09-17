@@ -1,10 +1,10 @@
 """Initial-value assembly for registry formula evaluation.
 
-The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` declares the
+The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` declares the
 casilla and binding slots that seed
 :func:`cadrumo.domain.calculations.registry.formula_runtime.calculate_registry_snapshot`;
 materialisation emits
-:class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows carrying
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` rows carrying
 registry provenance.
 
 See Also:
@@ -51,9 +51,9 @@ def materialise_observations(
     """Project per-casilla runtime state into the canonical observation tuple.
 
     Each returned
-    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` is either
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` is either
     preserved from computed provenance or rebuilt from a
-    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` legal/source
+    :class:`~cadrumo.domain.calculations.registry.schema_surfaces.CasillaDefinition` legal/source
     reference set.
     """
     resolved_text_values = text_values or {}
@@ -102,9 +102,9 @@ def initial_values(
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
     """Build initial numeric casilla values and absent-by-design markers.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~cadrumo.core.CasillaId` membership, formula
-    targets, and :class:`~cadrumo.domain.calculations.registry.BindingId` slots
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
+    :class:`~cadrumo.core.casilla_id.CasillaId` membership, formula
+    targets, and :class:`~cadrumo.domain.calculations.registry.ids.BindingId` slots
     before formula evaluation starts.
     """
     casillas = casillas_by_id(revision)
@@ -159,9 +159,9 @@ def binding_values_with_absent_by_design_defaults(
 ) -> dict[BindingId, Decimal]:
     """Add structural zeroes for absent-by-design binding slots.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` binding
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` binding
     declarations are inspected through
-    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` so
+    :class:`~cadrumo.domain.calculations.registry.schema.BindingDefinition` so
     previous-filing and relation-prefill slots can default only when the
     selected target period has no required source period.
     """
@@ -212,7 +212,7 @@ def _reject_unknown_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
-    """Reject supplied :class:`~cadrumo.core.CasillaId` keys."""
+    """Reject supplied :class:`~cadrumo.core.casilla_id.CasillaId` keys."""
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
         raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
@@ -262,7 +262,7 @@ def _observation_backed_bindings_for_bound_casilla(
     casilla: CasillaDefinition,
     bindings_by_id: Mapping[BindingId, BindingDefinition],
 ) -> tuple[BindingDefinition, ...]:
-    """Return bound :class:`~cadrumo.domain.calculations.registry.BindingDefinition` slots."""
+    """Return bound :class:`~cadrumo.domain.calculations.registry.schema.BindingDefinition` slots."""
     if casilla.input_kind != InputKind.BOUND:
         return ()
     return tuple(

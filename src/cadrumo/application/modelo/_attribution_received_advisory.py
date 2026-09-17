@@ -22,7 +22,7 @@ Two symmetric triggers, both ADVISORY / WARNING:
   explain it; the member is prompted to capture the facts.
 
 See Also:
-    :func:`~application.modelo._verification_actions._append_revision_advisory_findings`:
+    :func:`~application.modelo.verification_actions._append_revision_advisory_findings`:
         Verification collector that appends this advisory beside the reduction
         and objective-estimation advisories.
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`:

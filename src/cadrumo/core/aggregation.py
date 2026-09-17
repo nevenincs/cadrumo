@@ -74,7 +74,7 @@ class BindingAggregation(BaseModel):
     closed :class:`BindingAggregationOp` set is the only key real binding
     aggregation mappings carry in the registry authoring tree. The model is
     strict and frozen, matching the registry schema's
-    :data:`~core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    :data:`~core.models.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
     a stray extra key is rejected at registry-build validation rather than
     silently re-parsed at resolve time.
     """
@@ -125,7 +125,7 @@ class AggregationCaptureKind(StrEnum):
 
     CAPTURE PROVENANCE, and a different axis from two neighbours it is easy to
     confuse with. It is not
-    :class:`~application.calculations.ObservationSourceKind`, which classifies
+    :class:`~application.calculations.observations_repository.ObservationSourceKind`, which classifies
     whether a persisted modelo observation is official AEAT filing evidence; and
     it is not the inner ``source_kind`` on a retención observation, which records
     whether the underlying row came from a ledger transaction or a payable
@@ -197,7 +197,7 @@ class CalculationSourceLineageRole(StrEnum):
 class BindingSourceKind(StrEnum):
     """The single canonical closed set of binding/source-mesh tokens.
 
-    Every :class:`~domain.calculations.registry.BindingDefinition`
+    Every :class:`~domain.calculations.registry.schema.BindingDefinition`
     declares exactly one ``source`` drawn from the registry-declared subset of
     this enum. The same enum also carries mesh-only source decisions such as
     :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
@@ -526,7 +526,7 @@ it in here silently widens two registry validation guards.
 class BindingTypedEnumKind(StrEnum):
     """The closed set of substrate enum-class names a binding value bridges.
 
-    A :class:`~domain.calculations.registry.BindingDefinition` whose
+    A :class:`~domain.calculations.registry.schema.BindingDefinition` whose
     value bridges a closed-membership substrate axis declares ``typed_enum`` =
     one of these members. Each value is the NAME of the closed enum class a
     consumer routes the binding value through:
@@ -543,7 +543,7 @@ class BindingTypedEnumKind(StrEnum):
     annotation token that was previously a bare ``str`` in
     ``BindingDefinition.typed_enum``. Those tokens live in registry TOML and
     flow through operator-facing surfaces (``bindings list`` table, the
-    :class:`~domain.calculations.registry._query_reports.ModeloBindingQueryRow`
+    :class:`~domain.calculations.registry.query_reports.ModeloBindingQueryRow`
     projection, the borrador resolver, the Sheets-pull router); a
     :class:`~enum.StrEnum` serialises to its value, so
     narrowing the field from ``str | None`` to this enum changes the static type
@@ -553,7 +553,7 @@ class BindingTypedEnumKind(StrEnum):
     Declared in :mod:`core` as a closed value set per the architecture
     contract; the loader hydrates the registry TOML's raw token to its member at
     the schema boundary (see
-    :meth:`~domain.calculations.registry.BindingDefinition._coerce_typed_enum`).
+    :meth:`~domain.calculations.registry.schema.BindingDefinition._coerce_typed_enum`).
     It is the closed-set *annotation* on the binding, distinct from the engine
     ``input_channel`` (how a formula consumes the value); a binding may carry a
     ``typed_enum`` yet still be a numeric ``decimal`` channel.

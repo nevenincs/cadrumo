@@ -12,7 +12,7 @@ actual operations and regularises the provisional deductions (art. 105.Cuatro).
 This module is the CARRY HOME for that lifecycle: a durable per-ejercicio
 :class:`ProrrataRegister`, one :class:`ProrrataRegisterEntry` per
 ``(ejercicio, sector)`` carrying the regime, the provisional percentage in force
-with its regulated :class:`~core.ProrrataProvisionalProvenance`, and — once
+with its regulated :class:`~core.prorrata_register.ProrrataProvisionalProvenance`, and — once
 settled — the definitive percentage with the annual volume inputs it derived
 from. The pure precedence-ladder resolver
 (:func:`resolve_provisional_percentage`) selects the in-force provisional

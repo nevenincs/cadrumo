@@ -16,7 +16,7 @@ the value at the write boundary, and turns an already-malformed manifest on
 disk into a reported scan issue rather than a crash.
 
 See Also:
-    :data:`~core.identity.BucketId`
+    :data:`~core.identity.bucket.BucketId`
         The immutable machine identity this label accompanies.
 """
 

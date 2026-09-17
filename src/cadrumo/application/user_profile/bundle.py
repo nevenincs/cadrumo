@@ -98,13 +98,18 @@ def serialize_profile_bundle(
         profile_decode_context=profile_decode_context,
     )
 
-    return UserProfilePortableExport(
-        bundle_schema_version=BUNDLE_SCHEMA_VERSION,
-        profile=record,
-        work_units=work_units,
-        ledger_transactions=ledger_transactions,
-        calculation_revisions=calculation_revisions,
-        filing_records=filing_records,
-        carried_objects=carried_objects,
-        coverage_manifest=coverage_manifest,
+    # The profile record validates only against its pinned schema, so the
+    # bundle is built through the same decode context that loaded it.
+    return UserProfilePortableExport.model_validate(
+        {
+            "bundle_schema_version": BUNDLE_SCHEMA_VERSION,
+            "profile": record,
+            "work_units": work_units,
+            "ledger_transactions": ledger_transactions,
+            "calculation_revisions": calculation_revisions,
+            "filing_records": filing_records,
+            "carried_objects": carried_objects,
+            "coverage_manifest": coverage_manifest,
+        },
+        context=profile_decode_context,
     )

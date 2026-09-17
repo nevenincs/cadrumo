@@ -7,7 +7,7 @@ to a :class:`BucketEventHistoryRepository` on every mutating verb.
 A :class:`PurchaseInvoiceEvidence` record is the MIDDLE tier of the three-rung
 evidence progression, and owns no bytes of its own:
 
-1. :class:`~cadrumo.domain.attachments.Attachment` owns byte custody. It is
+1. :class:`~cadrumo.domain.attachments.models.Attachment` owns byte custody. It is
    strictly content-addressed (``attachment_id == sha256`` of the stored bytes),
    immutable, and carries no fiscal figures. ``aeat app ledger attach`` and
    ``aeat app ledger doclink`` link one directly to a transaction.
@@ -18,7 +18,7 @@ evidence progression, and owns no bytes of its own:
    digest, not a content digest, so several records may describe one byte
    payload; the bytes themselves are stored once, as the ``Attachment`` written
    at ``add`` time and read back through ``attachment_id``.
-3. :class:`~cadrumo.domain.invoices.Invoice` is the CONFIRMED fiscal document,
+3. :class:`~cadrumo.domain.invoices.models.Invoice` is the CONFIRMED fiscal document,
    whose counterparty name, tax id, country, totals, currency, and lines are all
    REQUIRED. ``aeat app ledger evidence confirm`` promotes tier 2 to tier 3 once
    the operator supplies or accepts those figures.
@@ -171,7 +171,7 @@ def derive_purchase_invoice_evidence_id(
 ) -> str:
     """Return the content-addressed id for a purchase-invoice evidence record.
 
-    Mirrors :func:`cadrumo.domain.transactions.derive_transaction_id`: the id is a
+    Mirrors :func:`cadrumo.domain.transactions.models.derive_transaction_id`: the id is a
     SHA-256 digest (truncated to 16 hex chars, the prior surrogate's width) over
     the record's identifying fields, so it is stable under a frozen-clock replay
     and directly referenceable as an ``aeat app ledger evidence`` argument,

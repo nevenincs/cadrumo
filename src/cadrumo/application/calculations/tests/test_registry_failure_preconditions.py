@@ -95,5 +95,5 @@ def test_registry_failure_resolution_rejects_an_undeclared_domain_condition() ->
     # the value must stay honestly outside RegistryFailureCondition rather than
     # be waved past the checker with a cast or an ignore comment.
     unclassified = replace(base, condition="registry.test.unclassified", facts={"observed": False})
-    with pytest.raises(AssertionError, match="unclassified calculation-registry failure condition"):
+    with pytest.raises(ValueError, match="unclassified calculation-registry failure condition"):
         calculation_registry_failure_verdict(unclassified)

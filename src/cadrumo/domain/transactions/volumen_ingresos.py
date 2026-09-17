@@ -8,7 +8,7 @@ gets exactly one of them wrong, and it is the *inclusion* that breaks — a file
 operating subsidy silently dropped out of the declared volume.
 
 See Also:
-    :class:`~core.ConceptoIngreso`
+    :class:`~core.concepto_ingreso.ConceptoIngreso`
         The closed set this reads.
 """
 

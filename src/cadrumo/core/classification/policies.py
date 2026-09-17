@@ -179,8 +179,8 @@ class RedactionStrategy(StrEnum):
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
 
-    The rule shape is stable; :func:`core.redaction.redact` and
-    :func:`core.redaction.redact_structured` consume tuples of
+    The rule shape is stable; :func:`core.redaction.rules.redact` and
+    :func:`core.redaction.rules.redact_structured` consume tuples of
     rules and apply them in order.
 
     Attributes:
@@ -195,7 +195,7 @@ class RedactionRule(BaseModel):
 
     Where a rule applies is NOT declared here. It is decided by the
     policies that name the rule in their ``redaction_rules``, and
-    :func:`core.redaction.default_rules_for` reads nothing else. This
+    :func:`core.redaction.rules.default_rules_for` reads nothing else. This
     record once also carried an ``applies_to`` tuple of sensitivity
     classes, which was a second declaration of that same fact: never
     consulted, free to disagree with the policy table, and typed against
@@ -228,7 +228,7 @@ class ClassificationPolicy(BaseModel):
             :attr:`RedactionRule.name`) that apply when this class
             participates in audit-sink writes. Resolution to live
             :class:`RedactionRule` instances is performed by
-            :func:`core.redaction.default_rules_for`; the policy
+            :func:`core.redaction.rules.default_rules_for`; the policy
             carries names only so the table can be loaded eagerly
             without depending on the rule registry.
     """

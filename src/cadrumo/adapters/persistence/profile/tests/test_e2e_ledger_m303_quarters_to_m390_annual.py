@@ -46,7 +46,6 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -121,6 +120,8 @@ from cadrumo.entrypoints.adapter_composition import (
     build_verification_repository_bundle,
 )
 from cadrumo.tests.env_scope import ready_clave_settings
+
+from .published_authority_support import published_authority_operation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -492,7 +493,7 @@ def _wallet_decision(
         taxpayer_nif=taxpayer_nif,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
-        target_registry_snapshot_ref=compiled_bundled_authority()
+        target_registry_snapshot_ref=published_authority_operation()
         .snapshot("303", filing_year=filing_year, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -514,7 +515,7 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
         _create_profile_record_for_test(
-            context=compiled_bundled_authority().profile_create_context(),
+            context=published_authority_operation().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -548,7 +549,7 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
     seed_test_profile_record(
         _create_profile_record_for_test(
-            context=compiled_bundled_authority().profile_create_context(),
+            context=published_authority_operation().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -636,7 +637,7 @@ def _calculate_m303_quarter_revision(
         modelo="303",
         filing_year=filing_year,
         period=typed_period,
-        revision_id=compiled_bundled_authority()
+        revision_id=published_authority_operation()
         .snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
         .revision.id,
         ports=WorkLifecyclePorts(
@@ -775,7 +776,7 @@ def _calculate_m390_annual(
     CalculationRevisionCatalogueRepository(objects=secure_objects)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=filing_year, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",

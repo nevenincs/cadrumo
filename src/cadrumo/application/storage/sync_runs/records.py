@@ -10,7 +10,7 @@ unavailable at all when the run fails partway.
 
 Why a second run-record store rather than an existing one
 ---------------------------------------------------------
-:class:`~adapters.outbound.llm.LLMRunRecord` is a shipped local encrypted
+:class:`~adapters.outbound.llm.run_telemetry.LLMRunRecord` is a shipped local encrypted
 run-record store, and it is deliberately not extended here. Its fields are
 provider-call accounting -- caller, provider, model, duration, succeeded,
 error kind -- and not one of them carries a SUBJECT. It cannot express what was
@@ -178,7 +178,7 @@ class SyncRunRecord(BaseModel):
     Carries the surface, the scope the run actually resolved, the instant it
     finished, how many units it reached and how many of those diverged, plus the
     id of the bucket event it is co-written with. Read
-    :class:`~core.SyncSurface` for why the surface axis is a closed set and why
+    :class:`~core.sync_surface.SyncSurface` for why the surface axis is a closed set and why
     it has exactly two members.
 
     ``succeeded`` is not redundant against ``divergence_count``. A run can

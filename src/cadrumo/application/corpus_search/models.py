@@ -7,8 +7,8 @@ so the provenance carried alongside each result (corpus_ref, source
 path, document id, permalink) is contract, not decoration.
 
 See Also:
-    :func:`~application.corpus_search.search_corpus`
-        Runtime service that returns :class:`~application.corpus_search.RetrievalResponse`.
+    :func:`~application.corpus_search.runtime.search_corpus`
+        Runtime service that returns :class:`~application.corpus_search.models.RetrievalResponse`.
 
 Notes:
     External adapters may project this response while preserving its typed

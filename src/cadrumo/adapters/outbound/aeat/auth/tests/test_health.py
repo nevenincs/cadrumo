@@ -29,6 +29,7 @@ from ..certificate import (
     health,
     load_certificate,
 )
+from ..errors import AuthValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -221,12 +222,12 @@ def test_pre_expiry_error_is_cadrumo_error() -> None:
 def test_evaluate_rejects_inverted_thresholds(tmp_path: Path) -> None:
     now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
-    with pytest.raises(ValueError, match=r"warn_days|critical_days|threshold"):
+    with pytest.raises(AuthValidationError, match=r"warn_days|critical_days|threshold"):
         evaluate_loaded_certificate_health(cert, warn_days=10, critical_days=30, now=now)
 
 
 def test_evaluate_rejects_nonpositive_critical(tmp_path: Path) -> None:
     now = _NOW
     cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
-    with pytest.raises(ValueError, match=r"critical_days|must be positive|greater than"):
+    with pytest.raises(AuthValidationError, match=r"critical_days|must be positive|greater than"):
         evaluate_loaded_certificate_health(cert, warn_days=60, critical_days=0, now=now)

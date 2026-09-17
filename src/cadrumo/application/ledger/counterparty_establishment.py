@@ -47,7 +47,7 @@ See Also:
         This module produces a member of it and opens no second route.
     :func:`~application.ledger.identity_roles.canonical_identity_token`
         The identifier authority the counterparty key is derived from.
-    :class:`~domain.iva.IvaTerritorialScope`
+    :class:`~domain.iva.classification.IvaTerritorialScope`
         The territory a confirmed fact carries.
 """
 
@@ -169,7 +169,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
             store sees whom each record is about — the key alone is a digest.
         territorial_scope: The territory the operator confirmed.
         source: Who established it. Constrained to
-            :attr:`~core.ClassifierInputSource.OPERATOR_ASSERTION`: the ladder's
+            :attr:`~core.classifier_input_source.ClassifierInputSource.OPERATOR_ASSERTION`: the ladder's
             earlier rungs read printed evidence per document and are re-read per
             document, so a document-sourced value cached here would answer as an
             assertion and take the contradiction channel offline.

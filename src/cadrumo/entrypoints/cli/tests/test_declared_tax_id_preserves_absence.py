@@ -20,6 +20,7 @@ import pytest
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....application.user_profile.projections import projection_for_taxpayer
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
@@ -59,7 +60,9 @@ def test_declared_tax_id_is_empty_for_no_record_at_all() -> None:
     assert declared_tax_id(None) == ""
 
 
-def test_projection_fabricates_where_the_declared_read_preserves_absence() -> None:
+def test_projection_fabricates_where_the_declared_read_preserves_absence(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The two reads disagree for an undeclared identity, and that is the defect being fixed.
 
     Asserted against the real projection rather than a copy of its default, so a
@@ -69,7 +72,7 @@ def test_projection_fabricates_where_the_declared_read_preserves_absence() -> No
     """
     empty = _record()
 
-    projected = projection_for_taxpayer(empty).tax_id
+    projected = projection_for_taxpayer(empty, schema=authority_operation.profile_schema()).tax_id
     declared = declared_tax_id(empty)
 
     assert projected, "the projection is expected to substitute a placeholder NIF"

@@ -2,15 +2,15 @@
 
 This is the annual first-slice expense projection behind the
 ``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
-:class:`~domain.transactions.TransactionCatalogue` and a
-:class:`~domain.invoices.InvoiceCatalogue` from the application-owned catalogue
+:class:`~domain.transactions.models.TransactionCatalogue` and a
+:class:`~domain.invoices.models.InvoiceCatalogue` from the application-owned catalogue
 read capabilities, uses purchase-invoice evidence to validate deductible-expense
 facts, and returns
-binding-ready :class:`~domain.renta.RentaDeductibleExpenseObservation`
+binding-ready :class:`~domain.renta.ledger_expenses.RentaDeductibleExpenseObservation`
 records.
 
 The source-mesh resolver in :mod:`~.modelo_bindings` applies the target
-:class:`~domain.calculations.registry.ModeloRevision`, resolves registry
+:class:`~domain.calculations.registry.schema.ModeloRevision`, resolves registry
 bindings, and reports source issues or unrouted expenses on its
 :class:`~.source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
 projection is intentionally separate in :mod:`~.renta_gasto_ledger`.
@@ -449,7 +449,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
 
     Also derives the activity's IVA-deduction ratio (:func:`resolve_iva_deduction_ratio`)
     from the bucket's ``iva.regime`` profile fact and its
-    :class:`~domain.prorrata_register.ProrrataRegister`, so the non-recoverable
+    :class:`~domain.prorrata_register.register.ProrrataRegister`, so the non-recoverable
     share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for
     an exempt or prorrata-rationed activity. ``prorrata_register_repository``
     supplies the canonical register store explicitly.

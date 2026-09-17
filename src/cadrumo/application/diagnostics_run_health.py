@@ -9,7 +9,7 @@ session is diagnosable without leaving the host:
   duration/outcome metadata for every LLM classification, split-proposal, and
   completion run (see :class:`~llm.LLMClient` and
   :mod:`~application.ledger.llm_classification`); and
-* :func:`~application.auth.test_operator_auth` reports whether an
+* :func:`~application.auth.operator.test_operator_auth` reports whether an
   encrypted AEAT session token is present on disk and whether it has passed
   its idle deadline.
 
@@ -51,7 +51,7 @@ See Also:
         Application-owned read contract that supplies every run row this module reads.
     :class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord`
         Timing/outcome-only record projected into each diagnostic report.
-    :func:`~application.auth.test_operator_auth`
+    :func:`~application.auth.operator.test_operator_auth`
         Local auth-session probe folded into the run-health report.
     :mod:`~entrypoints.cli._app_diagnostics`
         CLI transport for the run-health, runs, latency, errors, and

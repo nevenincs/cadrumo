@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .published_authority_support import published_authority_operation
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
@@ -50,5 +50,4 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> N
 
 
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = next(item for item in compiled_bundled_authority().modelos if item.id == modelo)
-    return modelo_def.revisions[revision_id]
+    return published_authority_operation().revision_with_export_layouts(modelo, revision_id)

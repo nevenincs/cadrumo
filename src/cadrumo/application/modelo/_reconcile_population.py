@@ -20,8 +20,8 @@ a casilla's input closure is independent evidence when the operator supplied the
 casilla directly, when the operator overrode the binding, when the binding reads
 declared census facts, or when the binding is bucket-local and the revision
 actually consumed ledger transactions. Carry bindings
-(:attr:`~core.BindingSourceKind.PREVIOUS_FILING`,
-:attr:`~core.BindingSourceKind.RELATION_PREFILL`) and relation references never
+(:attr:`~core.aggregation.BindingSourceKind.PREVIOUS_FILING`,
+:attr:`~core.aggregation.BindingSourceKind.RELATION_PREFILL`) and relation references never
 count, because their values originate in the same filed-observation store the
 comparison's filed side is read from: counting them would let the scope be
 satisfied by the very figures under comparison.
@@ -38,13 +38,13 @@ populated only with invoices and no ledger transactions scores as empty — agai
 a false negative, and again the safe direction.
 
 See Also:
-    :func:`~application.modelo.detect_casilla_divergences`
+    :func:`~application.modelo.reconcile_casilla.detect_casilla_divergences`
         The pure comparison this scope is passed to.
     :class:`~CalculationRevision`
         Persisted revision whose supplied inputs are read.
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Registry revision supplying the formula graph walked here.
-    :class:`~core.BindingSourceKind`
+    :class:`~core.aggregation.BindingSourceKind`
         Canonical source taxonomy separating carry bindings from evidence.
 """
 
@@ -80,7 +80,7 @@ class CasillaPopulationScope(BaseModel):
     """Which casillas of one persisted revision are worth reconciling.
 
     ``comparable_casilla_ids`` is the scope to pass to
-    :func:`~application.modelo.detect_casilla_divergences`;
+    :func:`~application.modelo.reconcile_casilla.detect_casilla_divergences`;
     ``unpopulated_casilla_ids`` is its complement over the same candidate set and
     is carried so a caller can report what was withheld rather than silently
     narrowing. The three ``supplied_*`` fields record the evidence the verdict

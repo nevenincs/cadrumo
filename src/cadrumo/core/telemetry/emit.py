@@ -1,20 +1,20 @@
 """The single remote-telemetry emit call site.
 
-:func:`~core.telemetry.emit_telemetry_event` is the ONLY function a producer
+:func:`~core.telemetry.emit.emit_telemetry_event` is the ONLY function a producer
 calls to emit a remote-eligible telemetry event. It composes the consent gate
-(:func:`~core.telemetry.telemetry_emit_permitted`) with a pluggable
-:class:`~core.telemetry.TelemetrySink`; when the gate refuses, emission is a
+(:func:`~core.telemetry.consent.telemetry_emit_permitted`) with a pluggable
+:class:`~core.telemetry.emit.TelemetrySink`; when the gate refuses, emission is a
 pure no-op -- nothing is constructed, nothing is written, nothing is sent.
 
-:class:`~core.telemetry.LocalNoopTelemetrySink`, deliberately does
+:class:`~core.telemetry.emit.LocalNoopTelemetrySink`, deliberately does
 nothing observable: it exists so callers and tests can exercise the full
 gate-then-emit sequence without a real transport, proving the payload a
 network sink would send is already the allowlisted, scrubbed shape.
 
 See Also:
-    :func:`~core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.schema.build_telemetry_payload`
         Constructs the allowlisted payload consumed here.
-    :class:`~core.telemetry.HttpTelemetrySink`
+    :class:`~core.telemetry.http_sink.HttpTelemetrySink`
         Optional network transport that implements the same sink protocol.
 """
 
@@ -32,11 +32,11 @@ __all__ = ["LocalNoopTelemetrySink", "TelemetrySink", "emit_telemetry_event"]
 
 
 class TelemetrySink(Protocol):
-    """A destination for an allowlisted :class:`~core.telemetry.TelemetryEventPayload`.
+    """A destination for an allowlisted :class:`~core.telemetry.schema.TelemetryEventPayload`.
 
     Implementations of this protocol are the only place a telemetry payload
     can leave this function's caller. :class:`LocalNoopTelemetrySink`
-    transmits nothing over the network; :class:`~core.telemetry.HttpTelemetrySink`
+    transmits nothing over the network; :class:`~core.telemetry.http_sink.HttpTelemetrySink`
     implements the same protocol for a call site that opts into real
     transmission.
     """
@@ -51,7 +51,7 @@ class LocalNoopTelemetrySink:
 
     Used as the default sink: the safe default is to accept the
     already-gated, already-allowlisted payload and discard it. This lets
-    :func:`~core.telemetry.emit_telemetry_event` be called end-to-end (gate,
+    :func:`~core.telemetry.emit.emit_telemetry_event` be called end-to-end (gate,
     schema validation, sink dispatch) without any observable network or disk
     side effect.
     """
@@ -72,16 +72,16 @@ def emit_telemetry_event(
 
     Args:
         payload: The already-constructed, already-allowlisted
-            :class:`~core.telemetry.TelemetryEventPayload` (build it with
-            :func:`~core.telemetry.build_telemetry_payload` so its
+            :class:`~core.telemetry.schema.TelemetryEventPayload` (build it with
+            :func:`~core.telemetry.schema.build_telemetry_payload` so its
             counters/timings are schema-validated).
         settings: Resolved deployment settings.
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky; re-affirm at every call
             site.
         sink: The destination to hand the payload to when permitted. Defaults
-            to :class:`~core.telemetry.LocalNoopTelemetrySink` (no caller
-            opts into :class:`~core.telemetry.HttpTelemetrySink` here).
+            to :class:`~core.telemetry.emit.LocalNoopTelemetrySink` (no caller
+            opts into :class:`~core.telemetry.http_sink.HttpTelemetrySink` here).
 
     Returns:
         ``True`` when the event was handed to the sink; ``False`` when the

@@ -7,8 +7,8 @@ operator if a reader can be pointed at the exact identity that did not hold, and
 an open free-text kind would let "the model seemed unsure" wear the same shape
 as "base plus cuota does not equal the printed total".
 
-Declared in ``core`` alongside :class:`~core.FieldOrigin` and
-:class:`~core.FieldGroundingOutcome`, which it travels with: origin says how a
+Declared in ``core`` alongside :class:`~core.field_origin.FieldOrigin` and
+:class:`~core.field_grounding.FieldGroundingOutcome`, which it travels with: origin says how a
 value was obtained, grounding outcome says what checking it survived, and this
 says which check it failed.
 
@@ -16,7 +16,7 @@ A new member is added when a new deterministic check lands, never to describe a
 suspicion no code evaluates.
 
 **Membership means BLOCKING.** Every member maps to a
-:class:`~core.ConfirmationBlockReason`, and the confirmation gate refuses to
+:class:`~core.confirmation_gate.ConfirmationBlockReason`, and the confirmation gate refuses to
 import while one does not, so a condition placed here is one an operator must
 answer individually before the draft may be confirmed at all. That is why the
 country-vocabulary conditions are deliberately absent rather than listed and
@@ -24,7 +24,7 @@ exempted: an uncatalogued country code is a gap in this system's own bundled
 vocabulary, which carries a bounded subset of the world's jurisdictions, so
 blocking on it would refuse a draft for every real jurisdiction outside that
 subset. Those conditions are reported on the non-blocking advisory channel
-instead -- see :func:`~application.ledger.country_vocabulary_advisory` -- on the
+instead -- see :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory` -- on the
 terms the unconsumed-IVA advisory already holds to: an alert only earns the
 operator's attention if every firing is a genuine defect in the document.
 """

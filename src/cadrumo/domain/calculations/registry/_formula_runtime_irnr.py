@@ -1,6 +1,6 @@
 """IRNR / Modelo 210 formula-op evaluators for the registry runtime.
 
-Extracted from :mod:`~domain.calculations.registry._formula_runtime` to
+Extracted from :mod:`~domain.calculations.registry.formula_runtime` to
 keep that module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
@@ -9,19 +9,19 @@ still lives in :func:`~domain.calculations.registry.formula_runtime.evaluate_wit
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling
-:mod:`~domain.calculations.registry._formula_runtime_ops` helpers. The
+:mod:`~domain.calculations.registry.formula_runtime_ops` helpers. The
 shared error types, the unresolved-outcome reason enum, and the generic
 numeric-casilla-value accessor live in ``_formula_runtime_ops`` (not in
 ``_formula_runtime`` itself) so this module can depend on them without a
 runtime import cycle back into the dispatcher module.
 
 See Also:
-    :mod:`~domain.calculations.registry._formula_runtime`
+    :mod:`~domain.calculations.registry.formula_runtime`
         Owns the dispatcher and :class:`~domain.calculations.registry.formula_runtime.EvalContext`.
-    :mod:`~domain.calculations.registry._formula_runtime_ops`
+    :mod:`~domain.calculations.registry.formula_runtime_ops`
         Owns the shared unresolved-formula error types,
         :class:`RegistryUnresolvedOutcomeReason`, and
-        :func:`~domain.calculations.registry._formula_runtime_ops.numeric_casilla_value`.
+        :func:`~domain.calculations.registry.formula_runtime_ops.numeric_casilla_value`.
 """
 
 from __future__ import annotations
@@ -105,7 +105,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
     ``irnr.convenio.override`` governed fact at the explicit filing-period
     devengo date. On a
     matched override it branches on the typed
-    :class:`~core.ConvenioOverrideKind`:
+    :class:`~core.irnr.ConvenioOverrideKind`:
 
     * ``flat`` replaces the domestic rate outright,
     * ``ceiling`` applies ``min(domestic, treaty)`` so "más favorable" is

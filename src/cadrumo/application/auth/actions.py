@@ -1,6 +1,6 @@
 """State transitions for workflow-owned authentication readiness.
 
-:func:`update_auth` returns a new :class:`application.workflow.WorkflowState`
+:func:`update_auth` returns a new :class:`application.workflow.state_models.WorkflowState`
 whose :class:`application.auth.models.AuthState` snapshot reflects provider
 configuration, authentication, or subject changes.
 """

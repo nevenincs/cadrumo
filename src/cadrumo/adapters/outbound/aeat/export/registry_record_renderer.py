@@ -1,7 +1,7 @@
 """Render a registry-declared fixed-width record into fichero-BOE bytes.
 
 This is the bridge between the registry's declarative export layout
-(:class:`domain.calculations.registry.ExportRecordDefinition`, which says
+(:class:`domain.calculations.registry.schema_exports.ExportRecordDefinition`, which says
 *what* each field is and where it sits) and the public registry fixed-width
 codec (which says *how* a field becomes bytes). It exists so an
 application-layer caller can hand over a record declaration plus the values an
@@ -23,7 +23,7 @@ coupling the port removes. The domain error carries the same diagnosis in its
 See Also:
     :class:`application.modelo._ports.FicheroBoeRecordRenderer`
         The structural port this class satisfies.
-    :func:`domain.calculations.registry.render_fixed_width_export_field`
+    :func:`domain.calculations.registry.fixed_width_codec.render_fixed_width_export_field`
         The canonical exact-width field codec reused by this renderer.
 """
 

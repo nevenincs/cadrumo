@@ -38,7 +38,7 @@ def canonical_profile_bucket_id(profile_id: str | UUID) -> str:
     UUID; this states the bridge from either spelling of that identity — the
     canonical string or a ``uuid.UUID`` object — to the one canonical string
     every persisted address composes on. It is the named counterpart of
-    :func:`cadrumo.core.identity.canonical_bucket_id`, on the profile side of
+    :func:`cadrumo.core.identity.bucket.canonical_bucket_id`, on the profile side of
     the boundary: where that function states a bucket identity, this one
     states a profile identity that is about to BECOME a bucket address.
 

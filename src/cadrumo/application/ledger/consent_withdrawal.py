@@ -16,7 +16,7 @@ side; this layer receives its projection so it can enumerate the honest history
 without reversing the dependency direction.
 
 See Also:
-    :class:`~domain.evidence_consent.EvidenceConsentLedgerEntry`
+    :class:`~domain.evidence_consent.record.EvidenceConsentLedgerEntry`
         One recorded off-host dispatch; the unit this survey enumerates.
 """
 

@@ -6,13 +6,13 @@ stateful work to the application Modelo 145 service, and emits typed envelopes
 through the sibling rendering/payload modules.
 
 See Also:
-    :func:`~application.modelo.create_m145_communication_record`
+    :func:`~application.modelo.m145_communication_records.create_m145_communication_record`
         Application service used by the ``create`` command.
-    :func:`~application.modelo.validate_m145_communication_record`
+    :func:`~application.modelo.m145_communication_records.validate_m145_communication_record`
         Application validation service used by the ``validate`` command.
-    :func:`~application.modelo.export_m145_communication_record`
+    :func:`~application.modelo.m145_communication_records.export_m145_communication_record`
         Application export service used by the ``export`` command.
-    :func:`~application.modelo.mark_m145_communication_record_delivered_to_payer`
+    :func:`~application.modelo.m145_communication_records.mark_m145_communication_record_delivered_to_payer`
         Local payer-delivery transition wired by this CLI group.
     :mod:`~entrypoints.cli._modelo_m145_parsing`
         CLI-only parsing helpers for casilla assignments and actor labels.

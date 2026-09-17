@@ -1,6 +1,6 @@
 """Concrete observability errors layered over :class:`CadrumoObservabilityError`.
 
-The base class :class:`cadrumo.core.errors.CadrumoObservabilityError` lives in
+The base class :class:`cadrumo.core.errors.hierarchy.CadrumoObservabilityError` lives in
 :mod:`cadrumo.core.errors` so other subpackages can catch it without
 importing observability internals. This module declares the leaf error types
 raised by :func:`record_event`, :func:`run_context`, and :func:`load_trace`.
@@ -17,7 +17,7 @@ class RunContextMissingError(CadrumoObservabilityError):
     """Raised when :func:`record_event` runs outside an active :func:`run_context`.
 
     Caused by calling the recorder from a thread that did not propagate
-    the contextvar bound by :func:`cadrumo.core.observability.run_context`,
+    the contextvar bound by :func:`cadrumo.core.observability.context.run_context`,
     or by calling it from CLI bootstrap code that runs before the run
     context enters.
     """

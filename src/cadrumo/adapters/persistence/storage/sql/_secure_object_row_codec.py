@@ -11,16 +11,16 @@ ciphertext.
 See Also:
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Repository that owns the write funnel and delegates row decoding here.
-    :func:`~adapters.persistence.storage.sql._secure_object_crypto.derive_revision_id`
+    :func:`~adapters.persistence.storage.sql.secure_object_crypto.derive_revision_id`
         Deterministic revision-id primitive the write funnel stamps rows with.
-    :func:`~adapters.persistence.storage.sql._secure_object_crypto.verify_revision_self_consistency`
+    :func:`~adapters.persistence.storage.sql.secure_object_crypto.verify_revision_self_consistency`
         Integrity check applied before decrypting an existing row.
     :func:`~adapters.persistence.storage.sql._secure_object_schema.build_revision_ancestor_ids`
         Revision-lineage helper used to persist ancestor chains.
     :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord`
         Plaintext record returned after classification, schema, lineage, and
         AEAD checks pass.
-    :func:`~adapters.persistence.storage.crypto.secure_object_payload_aad`
+    :func:`~adapters.persistence.storage.crypto.encrypted_columns.secure_object_payload_aad`
         Associated-data builder that binds ciphertext to row identity.
     :class:`SensitivityClass`
         Expected row classification validated before a row is decoded.

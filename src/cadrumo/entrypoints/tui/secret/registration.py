@@ -26,7 +26,7 @@ freshly created profile exactly as it was, with its passphrase as its only
 door.
 
 See Also:
-    :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
+    :func:`~cadrumo.application.user_profile.registration.register_profile_with_credentials`
         The application door this screen drives; it creates the profile,
         provisions the key material, and leaves the session unlocked.
     :func:`~cadrumo.application.user_profile.recovery_custody.enroll_profile_recovery`

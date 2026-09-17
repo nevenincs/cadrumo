@@ -3,7 +3,7 @@
 The live justificante pull retrieves the authentic, AEAT-signed
 *justificante de presentación* PDF for a filed work unit through the
 read-only sede surface (``capture_justificante`` →
-:class:`~cadrumo.adapters.outbound.aeat.sede.SedeCapture`) and persists it
+:class:`~cadrumo.adapters.outbound.aeat.sede.schema.SedeCapture`) and persists it
 as a bucket-scoped, content-addressed secure object. The persisted
 artefact is the durable, official evidence the local reconciler reads —
 the operator no longer hand-downloads the receipt.
@@ -12,9 +12,9 @@ This service is a stateful :class:`SnapshotService` sibling of the
 Modelo 100 borrador service: it keys supersession on the
 ``(modelo, filing_year, period)`` axis so a re-filed period's fresh
 capture supersedes the prior ACTIVE one, and it persists each snapshot
-through a :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
+through a :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
 at FINANCIAL sensitivity under
-:data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
+:data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
 and records each capture as a lifecycle event via
 :class:`BucketEventHistoryRepository`.
 
@@ -26,7 +26,7 @@ derivation and dedup.
 See Also:
     :mod:`cadrumo.application.live`
         Public read-only live facade that orchestrates capture and reports
-        :class:`~cadrumo.application.live.JustificanteCaptureOutcome`.
+        :class:`~cadrumo.application.live.justificante.JustificanteCaptureOutcome`.
     :func:`cadrumo.application.live.filed_observation_persistence.enroll_filed_justificante_evidence`
         Filed-history path that performs the same metadata registration and
         current-record evidence stamping from declaration-register artefacts.
@@ -231,7 +231,7 @@ def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -
     """Return the secure-object key for one bucket's justificante-capture snapshot.
 
     The key shape is the object-key grammar declared by
-    :data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
     """
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
@@ -343,11 +343,11 @@ class JustificanteCaptureSnapshotRepository:
     a deliberate divergence from the shared base.
 
     The namespace, sensitivity, schema version, and key grammar come from
-    :data:`cadrumo.adapters.persistence.storage.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
     Each :class:`JustificanteCaptureSnapshot` is written through an
     :class:`~cadrumo.adapters.persistence.storage.Envelope` so the captured PDF,
     CSV, and expediente metadata stay inside the encrypted
-    :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     bucket store.
     """
 

@@ -7,16 +7,16 @@ provenance, confidence ranges, identifier tuples, lineage text, and non-negative
 tax amount fields without turning those rules into a separate public API.
 
 See Also:
-    :class:`~domain.transactions.Transaction`
+    :class:`~domain.transactions.models.Transaction`
         Strict transaction record whose validators delegate to these helpers.
-    :class:`~domain.transactions.RawTransaction`
+    :class:`~domain.transactions.raw_transaction.RawTransaction`
         Upstream row model accepted directly or coerced from JSON-compatible
         payloads.
-    :class:`~domain.transactions.BusinessClassification`
+    :class:`~domain.transactions.enums.BusinessClassification`
         Classification enum coupled to ``business_pct`` by this module.
-    :class:`~domain.transactions.TransactionValidationError`
+    :class:`~domain.transactions.errors.TransactionValidationError`
         Typed domain error raised for validation failures.
-    :func:`~core.time.validate_utc_aware`
+    :func:`~core.time.utc.validate_utc_aware`
         UTC-awareness gate wrapped into the transaction error hierarchy.
 """
 

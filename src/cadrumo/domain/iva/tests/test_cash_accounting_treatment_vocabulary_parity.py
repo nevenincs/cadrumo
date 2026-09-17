@@ -70,6 +70,9 @@ def test_the_acogido_state_is_grounded_on_its_own_article(operation: PinnedAutho
     """
     entries = _vocabulary_entries(operation)
     catalogue = resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=operation)
-    refs = entries[f"{_PREFIX}{catalogue.supplier_regime_token.value}.legal_refs"].split(",")
+    (acogido,) = catalogue.all_treatments - {catalogue.none_token, catalogue.supplier_regime_token}
+    refs = entries[f"{_PREFIX}{acogido.value}.legal_refs"].split(",")
+    supplier_refs = entries[f"{_PREFIX}{catalogue.supplier_regime_token.value}.legal_refs"].split(",")
 
     assert "ley-37-1992:art-163-terdecies" in refs
+    assert "ley-37-1992:art-163-terdecies" not in supplier_refs

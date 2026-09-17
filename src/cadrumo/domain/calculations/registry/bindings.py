@@ -1,18 +1,18 @@
 """Data binding helpers for registry-backed factual inputs.
 
 This module owns the
-:class:`~domain.calculations.registry.CasillaObservation` envelope emitted
+:class:`~domain.calculations.registry.bindings.CasillaObservation` envelope emitted
 by the formula runtime and the
-:class:`~domain.calculations.registry.BindingDefinition` helper
+:class:`~domain.calculations.registry.schema.BindingDefinition` helper
 surface that turns factual binding values into bound casilla inputs.
 
 See Also:
-    :mod:`domain.calculations.registry._formula_runtime`
+    :mod:`domain.calculations.registry.formula_runtime`
         Runtime that emits typed observations and consumes resolved bound
         casilla inputs.
-    :mod:`domain.calculations.registry._formula_initial_values`
+    :mod:`domain.calculations.registry.formula_initial_values`
         Initial-value assembler that calls the bound-casilla helpers here.
-    :mod:`domain.calculations.registry._schema`
+    :mod:`domain.calculations.registry.schema`
         Registry schema definitions for casillas, bindings, and revisions.
 """
 
@@ -116,7 +116,7 @@ CasillaObservationValueKindValue = Literal[
 class CasillaObservation(BaseModel):
     """One typed casilla observation emitted by the formula runtime.
 
-    Carries a :class:`~core.CasillaId`, final
+    Carries a :class:`~core.casilla_id.CasillaId`, final
     scalar value (numeric :class:`decimal.Decimal` or validated text), required
     legal/source provenance, and
     optional formula lineage. When ``formula_id`` is set, the runtime computed
@@ -126,7 +126,7 @@ class CasillaObservation(BaseModel):
     bound) and the trace fields are empty.
 
     Used as the primary storage for
-    :class:`~domain.calculations.registry.RegistryCalculationResult`;
+    :class:`~domain.calculations.registry.formula_runtime.RegistryCalculationResult`;
     derived ``values`` and ``entries`` views project from it.
     """
 
@@ -211,7 +211,7 @@ class RegistryModeloObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
     Storage is ``observations``: a typed tuple of
-    :class:`~domain.calculations.registry.CasillaObservation` carrying full
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` carrying full
     formula provenance. The :attr:`casilla_values` property provides a read-only
     mapping view for downstream consumers.
     """
@@ -295,7 +295,7 @@ def resolve_bound_casilla_binding_value(
 ) -> tuple[Decimal | None, tuple[BindingId, ...]]:
     """Resolve equivalent binding facts for one casilla, rejecting disagreements.
 
-    A bound :class:`~domain.calculations.registry.CasillaDefinition` can
+    A bound :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` can
     declare reviewed alternate bindings when multiple registry source paths
     represent the same factual amount. Supplying two equivalent source values is
     legal only if they agree exactly; otherwise accepting either one would
@@ -335,11 +335,11 @@ def resolve_available_bound_inputs_by_casilla_id(
         revision: The :class:`ModeloRevision`
             whose bound casillas are inspected.
         binding_values: Decimal values keyed by
-            :class:`~domain.calculations.registry.BindingId`.
+            :class:`~domain.calculations.registry.ids.BindingId`.
 
     Returns:
         A ``dict`` keyed by
-        :class:`~cadrumo.core.CasillaId` for every bound
+        :class:`~cadrumo.core.casilla_id.CasillaId` for every bound
         casilla whose binding value is currently available.
 
     See Also:

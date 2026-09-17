@@ -9,7 +9,7 @@ outside the application layer. The public application facade continues to export
 The gate adapts one persisted
 :class:`CalculationRevision` and its
 :class:`WorkUnit` into
-:class:`~cadrumo.application.workflow.WorkflowEngine` inputs. It scopes deadline
+:class:`~cadrumo.application.workflow.engine.WorkflowEngine` inputs. It scopes deadline
 and filing-window checks with :class:`TaxpayerProfile`,
 and locally approves filing drafts through the transient
 :class:`TransactionCatalogue` used by the filing
@@ -17,22 +17,22 @@ surface.
 
 The gate is a precondition runner, not the owner of verification reports or
 filing records. :mod:`~cadrumo.application.modelo.verification_actions` invokes it
-with :class:`~cadrumo.application.workflow.WorkflowPurpose.VERIFY` after local
+with :class:`~cadrumo.application.workflow.run_models.WorkflowPurpose.VERIFY` after local
 verification findings have granted, while
 :mod:`~cadrumo.application.modelo.filing_actions` invokes it with
-:class:`~cadrumo.application.workflow.WorkflowPurpose.FILE` before local
+:class:`~cadrumo.application.workflow.run_models.WorkflowPurpose.FILE` before local
 mark-as-filed persistence. Aborted workflow runs are persisted for audit and then
-surfaced as :class:`~cadrumo.application.modelo.ModeloWorkflowGateError`.
+surfaced as :class:`~cadrumo.application.modelo.action_errors.ModeloWorkflowGateError`.
 
 See Also:
     :mod:`~cadrumo.application.workflow.engine`:
         Owns deadline-independence for VERIFY and late-local FILE behavior.
     :mod:`~cadrumo.application.workflow._deadline_stage`:
         Selects the workflow obligation before submission preflight is reached.
-    :class:`~cadrumo.domain.submission.SubmissionEngine`:
+    :class:`~cadrumo.domain.submission.engine.SubmissionEngine`:
         Runs the read-only preflight gates using the deadline-window checker
         configured here.
-    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`:
+    :class:`~cadrumo.domain.submission.protocols.DeadlineWindowChecker`:
         Protocol satisfied by the revision deadline-window adapter below.
     :class:`~cadrumo.application.modelo.workflow_gate_ports.WorkflowGatePorts`:
         Required application-owned persistence capabilities for this gate.
@@ -93,7 +93,7 @@ def _deadline_window_period_for_registry_period(
 ) -> Period | None:
     """Return the typed :class:`~cadrumo.core.Period` declared by the registry deadline window.
 
-    Delegates entirely to :func:`~cadrumo.domain.deadlines.resolve_filing_window`,
+    Delegates entirely to :func:`~cadrumo.domain.deadlines.plazo.resolve_filing_window`,
     the single matching authority for "which registry deadline window covers this
     filing target" — this helper only projects the matched window's
     :class:`~cadrumo.core.Period` rather than its dates. Returns ``None`` when the
@@ -225,7 +225,7 @@ class _RevisionDraftBuilder:
         summary's draft count and the CLI's draft lookup all read an empty
         store and report zero forever -- an operator reads that as having no
         drafts rather than as the application not keeping them.
-        :attr:`~domain.filing.ModeloDraft.draft_id` is a content address, so
+        :attr:`~domain.filing.schema.ModeloDraft.draft_id` is a content address, so
         re-running the gate over unchanged inputs rewrites the same row rather
         than accumulating near-duplicates.
 
@@ -260,10 +260,10 @@ class _RevisionDraftBuilder:
 class _RevisionDeadlineWindowChecker:
     """Checks the same deadline schedule the workflow gate already computed.
 
-    This adapter satisfies :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
-    and is passed to :class:`~cadrumo.domain.submission.SubmissionEngine` for
+    This adapter satisfies :class:`~cadrumo.domain.submission.protocols.DeadlineWindowChecker`
+    and is passed to :class:`~cadrumo.domain.submission.engine.SubmissionEngine` for
     submission-preflight window checks. The workflow engine decides by
-    :class:`~cadrumo.application.workflow.WorkflowPurpose` whether that preflight
+    :class:`~cadrumo.application.workflow.run_models.WorkflowPurpose` whether that preflight
     window check is relevant; this adapter only answers the raw "is the window
     open today?" question.
     """
@@ -323,7 +323,7 @@ def build_revision_workflow_engine(
 
     The engine is wired with:
 
-    * a deadline adapter over :class:`~cadrumo.domain.deadlines.DeadlineEngine`;
+    * a deadline adapter over :class:`~cadrumo.domain.deadlines.engine.DeadlineEngine`;
     * a revision-backed inputs provider that replays persisted calculation values;
     * a draft builder that validates and locally approves a registry draft;
     * a submission engine using the configured auth provider.

@@ -10,9 +10,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
-
-# Import concrete model classes only after the record bootstrap has completed.
-from .._anexo_d_records import InventoryAnexoDResult
 from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,
@@ -23,6 +20,7 @@ from ..records import (
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
+    InventoryAnexoDResult,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
     InventoryClosingAuthority,
@@ -247,7 +245,7 @@ def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
         compute_inventory_anexo_d_projection(
             _ledger(movements=(_purchase(),)).model_copy(update={"period_movements": (tampered_purchase,)})
         )
-    with pytest.raises(InventoryLedgerError, match="grounded only"):
+    with pytest.raises(InventoryLedgerError, match="not applicable for the filing year"):
         compute_inventory_anexo_d_projection(_ledger().model_copy(update={"year": 2024}))
     out_of_period = _purchase().model_copy(update={"movement_date": date(2024, 12, 31)})
     with pytest.raises(InventoryLedgerError, match="outside its filing year"):
@@ -301,7 +299,7 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
     assert result.closing_conflict is not None
     correlated_physical_fingerprint = "8" * 64
     for mutation in (
-        {"casilla_0181": Decimal("1.00")},
+        {"complete_acquisition_total": Decimal("1.00")},
         {"acquisition_fingerprints": ()},
         {"acquisition_fingerprints": result.acquisition_fingerprints * 2},
         {"acquisition_fingerprints": ("7" * 64,)},
@@ -323,7 +321,7 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         {
             "selected_authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
             "authoritative_closing_value": result.movement_derived_closing_value,
-            "casilla_0177": result.movement_derived_closing_value - result.opening_value,
+            "variation_increase_value": result.movement_derived_closing_value - result.opening_value,
         },
         {"opening_value": Decimal("100.001")},
         {"closing_conflict": result.closing_conflict.model_copy(update={"actividad_id": "other"})},
@@ -341,7 +339,7 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         update={
             "selected_authority": InventoryClosingAuthority.MOVEMENT_DERIVED,
             "authoritative_closing_value": result.movement_derived_closing_value,
-            "casilla_0177": result.movement_derived_closing_value - result.opening_value,
+            "variation_increase_value": result.movement_derived_closing_value - result.opening_value,
         }
     )
     reminted = correlated.model_copy(update={"projection_fingerprint": correlated.expected_projection_fingerprint})

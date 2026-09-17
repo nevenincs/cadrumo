@@ -1,14 +1,14 @@
 """Registry-scoped casilla id membership helpers.
 
 The helpers inspect one
-:class:`~domain.calculations.registry.ModeloRevision` and return canonical
-:class:`~domain.calculations.registry.CasillaDefinition` membership keyed
+:class:`~domain.calculations.registry.schema.ModeloRevision` and return canonical
+:class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` membership keyed
 only by declared ``casilla.id`` values.
 
 See Also:
     :mod:`core.casilla_id`
-        Shape validation for :class:`~core.CasillaId`.
-    :mod:`domain.calculations.registry._formula_runtime_ops`
+        Shape validation for :class:`~core.casilla_id.CasillaId`.
+    :mod:`domain.calculations.registry.formula_runtime_ops`
         Runtime input canonicalisation that rejects undeclared casillas through
         these helpers.
     :mod:`application.modelo._registry_helpers`
@@ -33,7 +33,7 @@ def duplicate_casilla_ids(casilla_ids: Iterable[CasillaId]) -> tuple[CasillaId, 
     """Return the ids appearing more than once in ``casilla_ids``, sorted.
 
     For a collection that must address each casilla exactly once — a
-    revision's :class:`~domain.calculations.registry.CasillaDefinition`
+    revision's :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`
     declarations, a calculation result's observation and unresolved rows — a
     repeated id makes the downstream mapping resolve by position and drop
     every row but the last. This is the one fold that names the repeats so
@@ -53,8 +53,8 @@ def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinitio
 
     Args:
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` whose
-            :class:`~domain.calculations.registry.CasillaDefinition`
+            :class:`~domain.calculations.registry.schema.ModeloRevision` whose
+            :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`
             declarations are inspected.
     """
     duplicate_ids = duplicate_casilla_ids(casilla.id for casilla in revision.casillas)
@@ -70,8 +70,8 @@ def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinitio
 def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return canonical ids declared by a registry revision.
 
-    The returned :class:`~core.CasillaId` set is
-    scoped to one :class:`~domain.calculations.registry.ModeloRevision`; it
+    The returned :class:`~core.casilla_id.CasillaId` set is
+    scoped to one :class:`~domain.calculations.registry.schema.ModeloRevision`; it
     is stronger than shape validation alone.
     """
     return frozenset(casillas_by_id(revision))
@@ -84,9 +84,9 @@ def undeclared_casilla_ids(
     """Return ids not declared by a registry revision.
 
     The ``revision`` argument is a
-    :class:`~domain.calculations.registry.ModeloRevision`. Use this after
+    :class:`~domain.calculations.registry.schema.ModeloRevision`. Use this after
     raw keys have already been validated as
-    :class:`~core.CasillaId` shape-compatible.
+    :class:`~core.casilla_id.CasillaId` shape-compatible.
     """
     return tuple(sorted(set(casilla_ids) - declared_casilla_ids(revision)))
 
@@ -95,10 +95,10 @@ def casilla_noncanonical_reference_tokens(revision: ModeloRevision) -> dict[str,
     """Return refused metadata tokens for a registry revision.
 
     The ``revision`` argument is a
-    :class:`~domain.calculations.registry.ModeloRevision`.
+    :class:`~domain.calculations.registry.schema.ModeloRevision`.
     The keys are printed numbers, form numbers, and export refs that are not
     canonical ``casilla.id`` values. Values are the canonical candidate
-    :class:`~core.CasillaId` entries.
+    :class:`~core.casilla_id.CasillaId` entries.
     """
     tokens: dict[str, set[CasillaId]] = {}
     for casilla in revision.casillas:
@@ -113,7 +113,7 @@ def casilla_noncanonical_reference_targets(revision: ModeloRevision, token: str)
     """Return canonical ids whose revision metadata matches a token.
 
     The ``revision`` argument is a
-    :class:`~domain.calculations.registry.ModeloRevision`. Callers use
+    :class:`~domain.calculations.registry.schema.ModeloRevision`. Callers use
     this to reject printed numbers, form numbers, and export refs while still
     naming the canonical casilla candidates in diagnostics.
     """

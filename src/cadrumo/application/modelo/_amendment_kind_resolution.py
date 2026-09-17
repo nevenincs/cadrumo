@@ -27,7 +27,7 @@ See Also:
     :func:`~domain.calculations.registry.amendment_regime_policy.resolve_amendment_kind_regime_for_period`:
         Registry-projected per-modelo, period-aware permitted-kind policy this
         module binds to :class:`~CalculationRevisionAmendmentKind`.
-    :func:`~application.modelo.amend_modelo_revision`:
+    :func:`~application.modelo.amendment_actions.amend_modelo_revision`:
         The composition path that calls this module's guard before building
         the amendment revision.
 """
@@ -101,17 +101,17 @@ def liability_direction_for_amendment(
     """Classify whether a correction increases, decreases, or leaves liability unchanged.
 
     Thin, typed wrapper over
-    :func:`~core.classify_amendment_liability_direction` for callers
+    :func:`~core.amendment_kind_regime.classify_amendment_liability_direction` for callers
     inside the modelo application layer. ``baseline_result`` and
     ``corrected_result`` are the modelo's signed final-result casilla value
     before and after the operator's overrides.
 
     The classification is load-bearing only for pre-rectificativa periods:
-    :attr:`~core.AmendmentLiabilityDirection.INCREASE` is
+    :attr:`~core.amendment_kind_regime.AmendmentLiabilityDirection.INCREASE` is
     ``complementaria`` territory (LGT art. 122.2); ``DECREASE`` is
     ``solicitud de rectificación`` territory (LGT art. 120.3) that a
     self-filed complementaria cannot lawfully carry — see
-    :func:`~application.modelo.amend_modelo_revision`'s pre-rectificativa
+    :func:`~application.modelo.amendment_actions.amend_modelo_revision`'s pre-rectificativa
     complementaria-direction guard.
     """
     return AmendmentLiabilityDirection(
@@ -123,7 +123,7 @@ def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> 
     """Sum the modelo's declared final-result casilla(s) from a casilla-value map.
 
     Returns ``None`` when the modelo has no declared result-disposition spec
-    (:func:`~core.result_disposition_casilla_ids`); callers must then skip
+    (:func:`~core.result_disposition.result_disposition_casilla_ids`); callers must then skip
     the liability-direction guard rather than compare against a fabricated
     zero baseline.
     """
@@ -149,7 +149,7 @@ def assert_complementaria_liability_direction_permitted(
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
     ``COMPLEMENTARIA``, sums the modelo's declared final-result casilla(s)
-    (:func:`~core.result_disposition_casilla_ids`) before and after the
+    (:func:`~core.result_disposition.result_disposition_casilla_ids`) before and after the
     operator's overrides and refuses when the correction lowers the declared
     liability — that correction is legally a ``solicitud de rectificación``
     (LGT art. 120.3), not a complementaria (LGT art. 122.2).

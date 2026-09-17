@@ -1,12 +1,12 @@
 """Encrypted SQL persistence for the capital-goods IVA regularización register.
 
-The :class:`domain.bienes_inversion.BienesInversionIvaRegister` document is
+The :class:`domain.bienes_inversion.register.BienesInversionIvaRegister` document is
 stored as a ``FINANCIAL``
-:class:`adapters.persistence.storage.SensitivityClass` secure object in the
+:class:`~core.classification.policies.SensitivityClass` secure object in the
 primary database through
-:class:`adapters.persistence.storage.SecureObjectRepository`. The singleton
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`. The singleton
 namespace, default object key, schema version, and custody contracts come from
-:data:`adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`.
+:data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`.
 
 The register is authoritative primary state (the operator declares each tracked
 capital good), not a rebuildable cache; it therefore carries a strict
@@ -46,9 +46,9 @@ class BienesInversionIvaRegisterRepository:
     """Governed repository for the encrypted register singleton.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`
+    :data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
     """
 
     def __init__(
@@ -61,7 +61,7 @@ class BienesInversionIvaRegisterRepository:
 
         Args:
             bucket_id: Explicit bucket to bind to, resolved through
-                :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
+                :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`.
                 Lets a caller that already knows the target bucket (e.g. the
                 calculate-path advisory collector, which receives ``bucket_id``
                 from its context rather than the process-global active-profile

@@ -4,7 +4,7 @@ This module implements the counter-sign slice deferred by
 :mod:`~application.modelo.review_package_signing`: that module adds an
 AUTHENTICITY layer over a review package's checksum manifest by having the
 operator sign the manifest digest with their own Ed25519 keypair
-(:func:`~application.modelo.sign_review_package`). It makes no claim
+(:func:`~application.modelo.review_package_signing.sign_review_package`). It makes no claim
 about what the RECEIVING accountant did with the package once it arrived.
 
 A :class:`CounterSignedReceipt` closes that loop: the accountant signs a
@@ -13,9 +13,9 @@ bytes plus a short free-text note (e.g. a verdict such as "reviewed, no
 changes" or "see attached corrections"). Verifying the receipt
 (:func:`verify_counter_signed_receipt`) re-checks BOTH layers -- the
 operator's original signature against the operator's public key (delegating
-to :func:`~application.modelo.verify_review_package_signature`, so the
+to :func:`~application.modelo.review_package_signing.verify_review_package_signature`, so the
 checksum-manifest integrity re-check happens first, exactly as it does for a
-bare :class:`~application.modelo.SignedReviewPackage`), and the
+bare :class:`~application.modelo.review_package_signing.SignedReviewPackage`), and the
 accountant's counter-signature against the accountant's public key -- so a
 receipt only verifies clean when neither party's signature nor the note text
 has been tampered with.
@@ -29,7 +29,7 @@ invalidates the counter-signature, because the bytes it covers changed.
 Key custody (``sensitive-financial-data-secure-storage-only`` /
 ``no-legacy-compatibility``): the counter-signer's (accountant's) keypair is
 minted and persisted through the exact same
-:func:`~application.modelo.ensure_review_package_signing_keypair`
+:func:`~application.modelo.review_package_signing.ensure_review_package_signing_keypair`
 primitive the operator uses, scoped to whatever ``bucket_id`` the caller
 supplies for the counter-signer's identity -- there is no separate key-custody
 mechanism to introduce. The private key never leaves that primitive as raw
@@ -73,7 +73,7 @@ class ReviewPackageCounterSigningError(CadrumoError):
 class CounterSignedReceipt(BaseModel):
     """A review package's operator signature, counter-signed by an accountant.
 
-    Wraps the operator's :class:`~application.modelo.SignedReviewPackage`
+    Wraps the operator's :class:`~application.modelo.review_package_signing.SignedReviewPackage`
     verbatim (the ``original_signature`` field) alongside the accountant's own
     Ed25519 signature over ``original_signature.signature_hex`` plus ``note``.
     Binding the counter-signature to the ORIGINAL SIGNATURE BYTES (rather than
@@ -115,7 +115,7 @@ def counter_sign_review_package(
 
     Does NOT re-verify the operator's ``signed_package`` signature or the
     underlying archive's checksum manifest -- that is
-    :func:`~application.modelo.verify_review_package_signature`'s job,
+    :func:`~application.modelo.review_package_signing.verify_review_package_signature`'s job,
     and it is re-run unconditionally inside
     :func:`verify_counter_signed_receipt`. Counter-signing a signature that
     later turns out to be invalid is not itself an error: the receipt's
@@ -125,11 +125,11 @@ def counter_sign_review_package(
 
     Args:
         signed_package: The operator's :class:`SignedReviewPackage` envelope
-            (see :func:`~application.modelo.sign_review_package`).
+            (see :func:`~application.modelo.review_package_signing.sign_review_package`).
         counter_signer_keypair: The accountant's
-            :class:`~application.modelo.ReviewPackageSigningKeypair`
+            :class:`~application.modelo.review_package_signing.ReviewPackageSigningKeypair`
             (minted the same way as the operator's, via
-            :func:`~application.modelo.ensure_review_package_signing_keypair`
+            :func:`~application.modelo.review_package_signing.ensure_review_package_signing_keypair`
             scoped to the accountant's own identity).
         note: Optional free-text counter-signer note or verdict (e.g.
             ``"reviewed, no changes"``). Bound into the signed message, so
@@ -160,7 +160,7 @@ def verify_counter_signed_receipt(
     """Verify BOTH signature layers of a counter-signed review-package receipt.
 
     First re-verifies the operator's original signature via
-    :func:`~application.modelo.verify_review_package_signature` --
+    :func:`~application.modelo.review_package_signing.verify_review_package_signature` --
     which itself re-runs the checksum-manifest integrity check against the
     package's CURRENT bytes before touching any Ed25519 signature, so a
     tampered archive fails here regardless of either signature. Only once

@@ -49,11 +49,11 @@ Thai supplier was otherwise byte-identical, all the way to the operator, to one
 carrying no address block at all.
 
 **The judgement is borrowed, not restated.** Which bucket a code falls in is
-asked of :func:`~domain.iva.record_country_code_status` -- the record-token sibling of
+asked of :func:`~domain.iva.establishment.record_country_code_status` -- the record-token sibling of
 the printed-value axis, which admits the alpha-3 spelling Facturae states and is
 the one authority the confirm path's relief guard asks the same question of --
 and whether the country already settled the territory is asked of
-:func:`~domain.iva.territorial_scope_for_country`. Neither rule is spelled here.
+:func:`~domain.iva.establishment.territorial_scope_for_country`. Neither rule is spelled here.
 A second copy of the user-assigned ranges sitting upstream of the authority that
 owns them is the drift this module is placed to avoid, and it would be the
 weaker copy.
@@ -73,9 +73,9 @@ See Also:
     :func:`~application.ledger.party_attribution.party_attribution_advisory`
         The sibling advisory, on the same non-blocking channel and projected by
         the same review surface.
-    :func:`~domain.iva.record_country_code_status`
+    :func:`~domain.iva.establishment.record_country_code_status`
         The authority on which of the two kinds a stated code is.
-    :class:`~core.DraftDiscrepancyKind`
+    :class:`~core.draft_discrepancy.DraftDiscrepancyKind`
         The blocking axis this deliberately does not join.
 """
 
@@ -245,7 +245,7 @@ def country_vocabulary_advisory(
 
     Non-blocking by construction: the result is an advisory model with no route
     into :func:`~application.ledger.confirmation_gate.confirmation_blockers`, and the conditions it
-    reports have no member on :class:`~core.DraftDiscrepancyKind`. Making one
+    reports have no member on :class:`~core.draft_discrepancy.DraftDiscrepancyKind`. Making one
     block again takes a deliberate change to that axis, not an edit here.
 
     Args:

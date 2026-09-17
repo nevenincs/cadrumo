@@ -4,15 +4,15 @@
 repository port — which declares ``to_secure_object_write(...) -> SecureObjectWrite``
 in :mod:`~domain.modelos` — and the storage adapter that persists it. It is a
 pure value object depending only on :mod:`~core`
-(:data:`~core.STRICT_FROZEN_CONFIG`,
-:class:`~core.classification.SensitivityClass`), so a domain port can name it
+(:data:`~core.models.STRICT_FROZEN_CONFIG`,
+:class:`~core.classification.policies.SensitivityClass`), so a domain port can name it
 in a method signature without importing the ``cadrumo.adapters`` layer. The storage
 adapter (:mod:`~adapters.persistence.storage`) re-exports it unchanged.
 
 See Also:
-    :class:`~core.SecureObjectWrite`
+    :class:`~core.secure_object_write.SecureObjectWrite`
         Public core facade export for this DTO.
-    :class:`~core.classification.SensitivityClass`
+    :class:`~core.classification.policies.SensitivityClass`
         Classification carried by every prepared secure-object write.
     :class:`~CalculationRevisionCatalogueRepositoryProtocol`
         Domain repository port that can prepare a calculation catalogue write
@@ -20,9 +20,9 @@ See Also:
     :class:`~ModeloRecordCatalogueRepositoryProtocol`
         Domain repository port that can co-write filing records through the same
         DTO.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Storage adapter that consumes these prepared writes.
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
+    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
         Unit-of-work API that persists one or more prepared writes atomically.
 """
 
@@ -46,7 +46,7 @@ class SecureObjectWrite(BaseModel):
 
     ``written_at`` must be a UTC-aware instant. That contract is enforced at
     the storage write funnel rather than declared here as
-    :data:`~core.time.UtcInstant`: this DTO is imported during ``core``
+    :data:`~core.time.utc.UtcInstant`: this DTO is imported during ``core``
     package initialisation, and reaching ``core.time`` from here loads
     ``core.config`` through the clock's logger and closes an import cycle.
     The funnel is the honest single owner in any case -- the constraint is a
@@ -57,7 +57,7 @@ class SecureObjectWrite(BaseModel):
     its own read-time self-consistency gate permanently.
 
     See Also:
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save`
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
             Direct write boundary carrying the same UTC-aware contract.
     """
 

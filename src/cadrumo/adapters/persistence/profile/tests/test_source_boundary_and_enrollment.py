@@ -28,11 +28,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -67,10 +62,16 @@ from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -234,7 +235,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
     # all enrolled.  Gate must not raise.
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
+    revision = published_authority_operation().snapshot("303", filing_year=2026, period="1T").revision
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -251,7 +252,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
 
-    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
+    revision = published_authority_operation().snapshot("303", filing_year=2026, period="1T").revision
     # The typed provider union is closed, so a novel kind only exists as a
     # stand-in exposing the one attribute the gate reads.
     synthetic_binding = SimpleNamespace(id="synthetic-test-binding", source="synthetic_novel_source_xyz")
@@ -396,7 +397,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
     # spelling of the label.
     expected_label = build_profile_preflight_requirement(
         missing_path,
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     ).label
     assert expected_label != missing_path, "label collapsed to the raw path; the assertion below is vacuous"
     assert expected_label in str(context.get("missing", "")), context
@@ -714,5 +715,4 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
 
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = compiled_bundled_authority().modelo(modelo)
-    return modelo_def.revisions[revision_id]
+    return published_authority_operation().revision_with_export_layouts(modelo, revision_id)

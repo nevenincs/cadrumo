@@ -10,7 +10,7 @@ application-owned lifecycle ports, emits the matching
 capability for list/view read-back.
 
 The closed event-kind axis comes from
-:class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, whose values are
+:class:`~cadrumo.domain.calculations.registry.censo_modelos.CensoModeloEventKind`, whose values are
 derived from the registry-owned censo foundation. Modelo 037 remains historical
 metadata and is intentionally outside this recording surface.
 
@@ -20,7 +20,7 @@ See Also:
         routing.
     :mod:`cadrumo.entrypoints.cli._modelo_m036_cli`
         Thin Typer boundary that turns CLI verbs into these application commands.
-    :class:`cadrumo.domain.buckets.BucketEventType`
+    :class:`cadrumo.domain.buckets.event.BucketEventType`
         Declares the ``CENSO_DECLARATION_ALTA``,
         ``CENSO_DECLARATION_MODIFICACION``, and ``CENSO_DECLARATION_BAJA`` audit
         events emitted here.
@@ -64,7 +64,7 @@ def derive_m036_declaration_id(
     record, not silently coalesced with the pre-acuse draft.
 
     The ``event_kind`` member is a
-    :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, so the
+    :class:`~cadrumo.domain.calculations.registry.censo_modelos.CensoModeloEventKind`, so the
     digest can only describe one of the registry-backed ``alta``,
     ``modificacion``, or ``baja`` lifecycle events.
     """
@@ -90,7 +90,7 @@ class M036DeclarationCommand(BaseModel):
     NOT trigger any local filing action.
 
     ``event_kind`` is typed as
-    :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`, preserving
+    :class:`~cadrumo.domain.calculations.registry.censo_modelos.CensoModeloEventKind`, preserving
     the registry foundation's closed event set at the application boundary.
     """
 
@@ -241,8 +241,8 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
     profile-B declaration lands in bucket A and A's history claims B filed it.
 
     Both values are compared in their canonical stripped form, matching the
-    :data:`~cadrumo.core.identity.BucketId` and
-    :data:`~cadrumo.core.identity.ProfileId` boundary constraints, so
+    :data:`~cadrumo.core.identity.bucket.BucketId` and
+    :data:`~cadrumo.core.identity.profile.ProfileId` boundary constraints, so
     surrounding whitespace cannot manufacture a mismatch or hide one.
     """
     from ..live.errors import LiveApplicationInputError
@@ -372,8 +372,8 @@ def record_m036_declaration(
             anything is derived, stored or emitted.
 
     See Also:
-        :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`
-        :class:`cadrumo.domain.buckets.BucketEventType`
+        :class:`~cadrumo.domain.calculations.registry.censo_modelos.CensoModeloEventKind`
+        :class:`cadrumo.domain.buckets.event.BucketEventType`
         :class:`M036LifecyclePorts`
     """
     _require_profile_owns_bucket(profile_id=command.profile_id, bucket_id=bucket_id)

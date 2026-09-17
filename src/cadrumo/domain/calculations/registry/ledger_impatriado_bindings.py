@@ -210,7 +210,7 @@ class ImpatriadoIncomeObservationProtocol(Protocol):
 
     The registry only needs these attributes to resolve
     ``ledger_impatriado_income_aggregation`` bindings; the full
-    :class:`~cadrumo.application.aggregation._impatriado_income_ledger.ImpatriadoIncomeObservation`
+    :class:`~cadrumo.application.aggregation.impatriado_income_ledger.ImpatriadoIncomeObservation`
     satisfies this protocol without any explicit declaration.
     """
 

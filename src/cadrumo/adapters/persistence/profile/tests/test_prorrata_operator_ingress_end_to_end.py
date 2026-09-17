@@ -34,7 +34,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -62,6 +61,8 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
@@ -81,7 +82,7 @@ _REVISION = "2022"
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _raw(provider_id: str) -> RawTransaction:
@@ -150,7 +151,7 @@ def _deducible_cuota(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Decimal:
-    revision = compiled_bundled_authority().modelo("303").revisions[_REVISION]
+    revision = published_authority_operation().revision_with_export_layouts("303", _REVISION)
     aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_PERIOD,

@@ -39,7 +39,7 @@ See Also:
         The encrypted per-perceptor store this projection feeds through
         ``persist_retencion_observations``, the one shared write path every
         producer calls.
-    :class:`~cadrumo.domain.iva.IvaRetencionRole`
+    :class:`~cadrumo.domain.iva.components.IvaRetencionRole`
         The declared per-(category, kind) role this module routes on, rather
         than re-deriving the direction from the invoice kind.
 """

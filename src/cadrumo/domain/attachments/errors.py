@@ -2,7 +2,7 @@
 
 Every error raised inside the attachment subpackage inherits from
 :exc:`AttachmentError`, which itself derives from
-:exc:`core.errors.CadrumoError`. Callers can therefore catch the family
+:exc:`core.errors.hierarchy.CadrumoError`. Callers can therefore catch the family
 root for coarse handling or branch on the specific subclasses.
 """
 
@@ -22,8 +22,8 @@ class AttachmentError(CadrumoError):
 class AttachmentValidationError(AttachmentError):
     """Raised when an attachment payload fails domain validation.
 
-    Used both by pydantic-driven validation on :class:`domain.attachments.Attachment`
-    and by :class:`adapters.persistence.storage.AttachmentStore` when an untrusted
+    Used both by pydantic-driven validation on :class:`domain.attachments.models.Attachment`
+    and by :class:`adapters.persistence.storage.attachment.AttachmentStore` when an untrusted
     digest token does not match the expected 64-character lowercase hex shape.
     """
 

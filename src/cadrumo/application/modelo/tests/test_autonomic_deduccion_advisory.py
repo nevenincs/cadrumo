@@ -21,7 +21,7 @@ See Also:
         Verify-path advisory under test.
     :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`:
         Calculate-path fail-closed injector this advisory complements.
-    :class:`~domain.calculations.registry.RegistrySnapshot`:
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`:
         Registry authority used to resolve the casilla-1039 semantic role.
     :class:`CasillaId`:
         Canonical casilla identifier type for the advisory finding.

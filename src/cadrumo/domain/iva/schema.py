@@ -472,14 +472,11 @@ class IvaRateRecord(_IvaStrictFrozen):
     @pydantic_validation_boundary
     def _validate_window(self) -> IvaRateRecord:
         """Ensure :attr:`effective_from` precedes :attr:`effective_until`."""
-        from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
-
         if self.effective_until is not None and self.effective_from > self.effective_until:
             raise IvaValidationError(
                 f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
                 f"effective_from {self.effective_from} is after effective_until {self.effective_until}",
             )
-        require_iva_rate_kind(self.kind, effective_date=self.effective_from)
         _require_grounded_rate_refs(self)
         return self
 

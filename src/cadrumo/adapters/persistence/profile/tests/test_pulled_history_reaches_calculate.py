@@ -44,10 +44,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
+from pydantic import AnyHttpUrl
+
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
-from pydantic import AnyHttpUrl
 
 from .....application.calculations.observations_repository import ObservationSourceKind
 from .....application.live.filed_observation_persistence import persist_filed_calculation_observation

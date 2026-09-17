@@ -2,7 +2,7 @@
 
 Exposes :class:`SubmissionEngine`, the only sanctioned surface for
 running preflight gates and reading historical
-:class:`cadrumo.domain.submission.ModeloPresentado` records persisted under
+:class:`cadrumo.domain.submission.models.ModeloPresentado` records persisted under
 the secure SQL object backend.
 
 AEAT remote writes and write-shaped portal walks are permanently
@@ -12,7 +12,7 @@ See Also:
     :class:`~cadrumo.domain.submission.Preflight`
         Ordered draft, finding, deadline-window, and auth-provider gate runner
         delegated to by :meth:`SubmissionEngine.preflight`.
-    :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
+    :class:`~cadrumo.domain.submission.protocols.DeadlineWindowChecker`
         Injected protocol that answers the filing-window question without
         coupling this domain package to the deadline engine implementation.
     the application workflow submission protocol

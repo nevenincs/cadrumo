@@ -65,7 +65,7 @@ def _parse_predicate_date(raw: str) -> _date | None:
 
     Accepts the ISO form (the cutoff literal shape) and the Spanish day-first
     operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``, both resolved by the
-    canonical :func:`core.parsing.parse_date` contract rather than a local
+    canonical :func:`core.parsing.dates.parse_date` contract rather than a local
     format list. Used by the ``deduccion_requires_adquisicion_before`` advisory
     to read the acquisition-date TEXT casilla and the cutoff literal.
 
@@ -280,7 +280,7 @@ def evaluate_predicate_expression(
     """Return True when the predicate holds, False when it is violated.
 
     Supports the DSL operators registered in
-    :data:`~domain.calculations.registry._schema_verification.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
+    :data:`~domain.calculations.registry.schema_verification.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
@@ -303,7 +303,7 @@ def evaluate_predicate_expression(
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The
     authoring-time validator in
-    :mod:`~domain.calculations.registry._validate_surfaces` is the gate
+    ``domain.calculations.registry._validate_surfaces`` is the gate
     against typos reaching this branch.
     """
     predicate = parse_verification_predicate_expression(expression)
@@ -693,7 +693,7 @@ def evaluate_verification_predicates(
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
     ``predicates`` are
-    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+    :class:`~domain.calculations.registry.schema_verification.VerificationPredicateDefinition`
     entries from the selected registry snapshot. The returned records are
     :class:`~ModeloVerificationFinding` values.
 
@@ -709,7 +709,7 @@ def evaluate_verification_predicates(
     WARNING-severity ADVISORY finding and the verified-complete grant remains
     possible if no blocking findings exist.
 
-    ``profile`` is a :class:`~domain.deadlines.TaxpayerProfile` threaded
+    ``profile`` is a :class:`~domain.deadlines.models.TaxpayerProfile` threaded
     through to support profile-state-aware predicate operators such as
     ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
     operators ignore the parameter.

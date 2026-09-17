@@ -15,7 +15,7 @@ did durably publish it writes the owed ``PROFILE_EXPORTED`` audit event into
 encrypted local secure-object storage.
 
 This module is the transport adapter over
-:func:`~application.user_profile.reconcile_prepared_exports`. It emits
+:func:`~application.user_profile.bundle_export.reconcile_prepared_exports`. It emits
 :class:`~entrypoints.cli.config._archive_reconcile_payloads.ProfileBundleReconcileResult`
 through :func:`emit_envelope`, and reports both halves of the outcome through
 the typed :class:`Notice` channel per

@@ -83,7 +83,7 @@ _InvoiceRowField = Literal[
 
 # Canonical invoice-shaped binding source kinds, imported from
 # :data:`core.aggregation.INVOICE_BINDING_SOURCE_KINDS`, which derives the
-# set from :class:`~core.BindingSourceKind` (the single source-kind
+# set from :class:`~core.aggregation.BindingSourceKind` (the single source-kind
 # taxonomy) rather than hand-listing strings. Cross-domain consumers import the
 # taxonomy from its defining core module.
 __all__ = [
@@ -588,7 +588,7 @@ def resolve_invoice_family_row_values(
     tui-architecture modelo 347 contraparte binding inventory reference).
     That now falls out of ``cohort_by_source`` directly rather than needing a
     grouping-keyed exception: every ``contraparte_clave`` binding declares the
-    combined-direction :attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
+    combined-direction :attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`
     source (see that member's docstring), so ``binding.source`` is already
     identical across claves and the cohort key naturally coincides. M349's own
     two groupings, which still declare distinct ``payable_invoice`` /

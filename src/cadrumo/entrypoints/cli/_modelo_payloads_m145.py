@@ -12,12 +12,12 @@ See Also:
         Behavior handlers that emit these payloads.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Renderer that converts application results into these payload classes.
-    :class:`~application.modelo.M145CommunicationRecord`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationRecord`
         Persisted record projected by :class:`M145CommunicationRecordPayload`.
-    :class:`~application.modelo.M145CommunicationValidationResult`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationValidationResult`
         Backend validation result represented by
         :class:`M145CommunicationValidationResultPayload`.
-    :class:`~application.modelo.M145CommunicationExportResult`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationExportResult`
         Backend export result represented by
         :class:`M145CommunicationExportResultPayload`.
 """

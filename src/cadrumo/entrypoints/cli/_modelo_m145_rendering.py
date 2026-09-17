@@ -11,11 +11,11 @@ See Also:
         Typed payload classes returned by the JSON envelope.
     :func:`~entrypoints.cli.common.emit_envelope`
         Shared CLI output path used by each emitter in this module.
-    :class:`~application.modelo.M145CommunicationRecord`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationRecord`
         Application record rendered by record mutation emitters.
-    :class:`~application.modelo.M145CommunicationValidationResult`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationValidationResult`
         Application validation result rendered by validation emitters.
-    :class:`~application.modelo.M145CommunicationExportResult`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationExportResult`
         Application export result rendered by export emitters.
 """
 

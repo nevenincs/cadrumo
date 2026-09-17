@@ -2,21 +2,21 @@
 
 The factory is the single entry point upper layers (sync coordinator,
 CLI commands, application services) call to obtain a
-:class:`adapters.outbound.storage.StorageProvider` configured for the
+:class:`adapters.outbound.storage.protocol.StorageProvider` configured for the
 active profile. :class:`core.config.Settings` drives the choice:
 
 - ``cadrumo_storage_provider_kind`` selects the backend.
 - ``cadrumo_local_storage_root`` chooses the root directory for the local
   backend.
 - ``cadrumo_google_drive_root_folder_id`` plus the per-profile persisted
-  :class:`~core.GoogleCredentialSourceKind` selection
-  (:class:`~adapters.outbound.google.GoogleCredentialSourceSelection`,
+  :class:`~core.google_credential_source.GoogleCredentialSourceKind` selection
+  (:class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`,
   loaded via :mod:`adapters.outbound.google.session_store`) parameterise
   the Drive backend's credentials — either the default per-profile
-  :class:`~adapters.outbound.google.OAuthClient` /
-  :class:`~adapters.outbound.google.OAuthToken` records, or a
+  :class:`~adapters.outbound.google.records.OAuthClient` /
+  :class:`~adapters.outbound.google.records.OAuthToken` records, or a
   service-account impersonation grant resolved via
-  :func:`~adapters.outbound.google.resolve_impersonated_credentials`.
+  :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`.
 
 Composition order:
 
@@ -27,12 +27,12 @@ Composition order:
    :class:`adapters.outbound.storage.local.LocalFileSystemProvider`
    rooted at ``cadrumo_local_storage_root / profile``; ``GOOGLE_DRIVE`` calls
    :func:`build_google_credentials`, which reads the profile's persisted
-   :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` (a
+   :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` (a
    missing selection defaults to
-   :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, preserving the
+   :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, preserving the
    existing default byte-for-byte) and dispatches to either the
    OAuth-Desktop hydration or
-   :func:`~adapters.outbound.google.resolve_impersonated_credentials`, then
+   :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`, then
    instantiates
    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
    keyed on ``cadrumo_google_drive_root_folder_id``.
@@ -103,21 +103,21 @@ def build_google_credentials(*, profile: str) -> Credentials:
     """Resolve Google ``Credentials`` for the profile's chosen credential source.
 
     Reads the profile's persisted
-    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
-    (:func:`~adapters.outbound.google.load_credential_source_selection`). A
+    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
+    (:func:`~adapters.outbound.google.session_store.load_credential_source_selection`). A
     missing selection defaults to
-    :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, so a profile that has
+    :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, so a profile that has
     never opted into service-account impersonation gets byte-for-byte the same
     behaviour as before this dispatch existed.
 
     - ``OAUTH_DESKTOP`` (the default): hydrates ``Credentials`` from the
-      per-profile :class:`~adapters.outbound.google.OAuthClient` and
-      :class:`~adapters.outbound.google.OAuthToken` records via
+      per-profile :class:`~adapters.outbound.google.records.OAuthClient` and
+      :class:`~adapters.outbound.google.records.OAuthToken` records via
       :func:`_build_oauth_desktop_credentials`.
     - ``SERVICE_ACCOUNT_IMPERSONATION``: delegates to
-      :func:`~adapters.outbound.google.resolve_impersonated_credentials`
+      :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`
       with the persisted
-      :class:`~adapters.outbound.google.GoogleImpersonationConfig`
+      :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`
       (per ``aeat-architecture-boundaries``: this factory
       never re-implements ADC discovery or impersonation wrapping).
 
@@ -148,8 +148,8 @@ def build_google_credentials(*, profile: str) -> Credentials:
 def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
     """Hydrate Google ``Credentials`` from the per-profile OAuth records.
 
-    Loads :class:`~adapters.outbound.google.OAuthClient` and
-    :class:`~adapters.outbound.google.OAuthToken` through
+    Loads :class:`~adapters.outbound.google.records.OAuthClient` and
+    :class:`~adapters.outbound.google.records.OAuthToken` through
     :func:`adapters.outbound.google.session_store.load_client` and
     :func:`adapters.outbound.google.session_store.load_token`. Imports the
     upstream library lazily so unit tests for the local backend do not pay the
@@ -219,7 +219,7 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
        ``cadrumo_google_drive_root_folder_id``; overrides for one-off / CI /
        debugging without persisting state)
     2. Per-profile persisted
-       :class:`adapters.outbound.google.DriveConfig` record (canonical
+       :class:`adapters.outbound.google.records.DriveConfig` record (canonical
        operator enrolment state)
 
     Returns the empty string when neither source is configured.

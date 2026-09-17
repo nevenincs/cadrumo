@@ -36,6 +36,7 @@ from ..governed_fact_scope import CandidateFactAuthority, governed_facts_in_scop
 from ..iva_flow_catalogue import require_iva_flow_direction
 from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider
+from ..schema import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -165,7 +166,10 @@ def _scoped_facts() -> CandidateFactAuthority:
             entries=_SCOPED_CATEGORY_ENTRIES,
         ),
     )
-    return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}))
+    return CandidateFactAuthority(
+        GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}),
+        SupportedFilingYearsCatalogue(floor=2022, horizon=2026),
+    )
 
 
 def _provider_payload(rate_kinds: tuple[IvaRateKind, ...], *, flow_direction: IvaFlowDirection) -> dict[str, object]:

@@ -8,7 +8,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, ValidationError
 
 from cadrumo.adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
@@ -44,6 +43,8 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     reconcile_iva_compensation_wallet,
 )
 
+from .published_authority_support import published_authority_operation
+
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
 
@@ -61,7 +62,7 @@ _OTHER_TAXPAYER_REF = "87654321X"
 
 @cache
 def _m303_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
 
 
 def _local_recurrence_source(
@@ -180,7 +181,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
         local_recurrence_source=_local_recurrence_source(Decimal("1200")),
         decided_at=_NOW,
     )
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
@@ -366,7 +367,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
         decision_repository = IvaWalletDecisionRepository()
         with bundled_indexed_authority().operation() as operation:
@@ -438,7 +439,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
 
         with bundled_indexed_authority().operation() as operation:
@@ -467,7 +468,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
 ) -> None:
     """A wallet decision cannot leave the observation repository's encrypted bucket."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
@@ -513,7 +514,7 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
-        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
+        snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="2T")
 
         with bundled_indexed_authority().operation() as operation:
             report = reconcile_modelo_303_iva_compensation(

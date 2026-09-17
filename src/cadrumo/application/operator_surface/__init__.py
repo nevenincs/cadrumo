@@ -12,7 +12,7 @@ Root-surface declarations flow through :func:`get_operator_surface_contract`,
 :class:`OperatorSurfaceContract`. Source-kind aliases remain parser-only
 :class:`SourceKindAlias` records that resolve through
 :func:`resolve_source_kind_alias` to canonical
-:class:`core.BindingSourceKind` members. No operator-specific source-kind
+:class:`core.aggregation.BindingSourceKind` members. No operator-specific source-kind
 taxonomy is introduced here.
 
 Help and landing surfaces are defined by :func:`build_help_document`,

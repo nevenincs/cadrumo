@@ -34,10 +34,10 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.directory_scan import scan_directory
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.classification import InvoiceKind, TransactionKind
-from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaRateKind
 from ....tests.inventory import REPO_ROOT
@@ -266,11 +266,10 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
     assert context["expected_iva_amount"] == "19.00"
 
 
-def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
-    """When the supply date is before any registered rate window, the
-    substrate raises :class:`IvaRateNotFoundError`. The wrapper
-    must propagate that signal — the line cannot be aggregated
-    without an applicable rate."""
+def test_validation_refuses_a_supply_date_outside_the_supported_filing_years() -> None:
+    """A supply date outside the registry's supported filing years has no
+    authority to classify or rate it, so the wrapper refuses the line
+    rather than aggregating it without an applicable rate."""
 
     candidate = _candidate(
         transaction_date=date(1900, 1, 1),
@@ -279,7 +278,7 @@ def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
         base=Decimal("100"),
         iva=Decimal("19"),
     )
-    with pytest.raises(IvaRateNotFoundError, match=r"DE|1900|rate"):
+    with pytest.raises(RegistryValidationError, match="1900 falls outside the supported filing years"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -382,7 +381,7 @@ def test_aggregator_returns_zero_when_no_candidates_match_a_binding() -> None:
 
 def test_no_parallel_oss_ioss_aggregator_exists() -> None:
     """The application aggregator at
-    ``src/cadrumo/application/aggregation/_oss_ioss.py`` is the sole
+    ``src/cadrumo/application/aggregation/oss_ioss.py`` is the sole
     surface that consumes
     :func:`resolve_ledger_oss_aggregation_binding_values` outside the
     registry's own tests. Any other module that hand-rolls an OSS /
@@ -390,7 +389,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
     must be removed."""
 
     source_root = REPO_ROOT / "src" / "cadrumo"
-    canonical = source_root / "application" / "aggregation" / "_oss_ioss.py"
+    canonical = source_root / "application" / "aggregation" / "oss_ioss.py"
     forbidden_pattern = "resolve_ledger_oss_aggregation_binding_values"
     offenders: list[Path] = []
     for py_file in scan_directory(source_root, pattern="*.py", recursive=True):

@@ -1,4 +1,4 @@
-"""Local-filesystem :class:`adapters.outbound.storage.StorageProvider` implementation.
+"""Local-filesystem :class:`adapters.outbound.storage.protocol.StorageProvider` implementation.
 
 Stores objects under a configurable root directory. Each namespace is
 a subdirectory; each object is a single file named

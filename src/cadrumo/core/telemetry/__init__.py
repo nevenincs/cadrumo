@@ -10,17 +10,17 @@ the retired evidence cloud-read gate's shape
 exactly (gestor-mode absolute bar -> deployment opt-in -> tier -> per-
 invocation acknowledgement, all ANDed, never sticky). The payload contract is
 a closed, code-authored allowlist
-(:class:`~core.telemetry.TelemetryEventPayload`): there is no ``extra`` field,
+(:class:`~core.telemetry.schema.TelemetryEventPayload`): there is no ``extra`` field,
 no free-text field wide enough to carry operator content, and no metric key can
 be emitted remotely unless it is explicitly registered in
-:data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY` with ``remote_allowed=True``.
+:data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY` with ``remote_allowed=True``.
 
-:func:`~core.telemetry.emit_telemetry_event`'s default sink,
-:class:`~core.telemetry.LocalNoopTelemetrySink`, discards the payload -- this
+:func:`~core.telemetry.emit.emit_telemetry_event`'s default sink,
+:class:`~core.telemetry.emit.LocalNoopTelemetrySink`, discards the payload -- this
 proves the gate-then-schema-then-emit pipeline end-to-end without any real
 transmission.
-:class:`~core.telemetry.HttpTelemetrySink` is the real network-transmitting
-implementation of the same :class:`~core.telemetry.TelemetrySink` protocol: it
+:class:`~core.telemetry.http_sink.HttpTelemetrySink` is the real network-transmitting
+implementation of the same :class:`~core.telemetry.emit.TelemetrySink` protocol: it
 is structurally inert (a pure no-op) unless a caller both builds it with a
 configured ``settings.cadrumo_telemetry_endpoint`` AND the consent gate already
 permitted emission, and any transport failure is swallowed rather than raised.
@@ -30,11 +30,11 @@ application-level ``diagnostics.llm_run`` payload shape used by the diagnostics
 telemetry flush path.
 
 See Also:
-    :func:`~core.telemetry.telemetry_emit_permitted`
+    :func:`~core.telemetry.consent.telemetry_emit_permitted`
         Consent gate every remote-eligible event must pass.
-    :func:`~core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.schema.build_telemetry_payload`
         Payload builder that enforces the metric allowlist before emission.
-    :class:`~core.telemetry.HttpTelemetrySink`
+    :class:`~core.telemetry.http_sink.HttpTelemetrySink`
         Optional network sink; never the default transport.
 """
 

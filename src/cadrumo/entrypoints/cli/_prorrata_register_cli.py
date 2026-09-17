@@ -5,9 +5,9 @@ The commands delegate register persistence to
 :mod:`._prorrata_register_payloads`. This is the operator ingress that reaches
 the LIVA art. 106 prorrata-especial apportionment and the arts. 9.1.c / 101
 per-sector apportionment on the live M303 aggregation path: ``elect-especial``
-writes an ``ESPECIAL`` :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+writes an ``ESPECIAL`` :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`
 so :func:`~application.aggregation.iva_ledger._apply_especial_apportionment` fires, and
-``declare-sector`` writes a :class:`~domain.prorrata_register.SectorDefinition`
+``declare-sector`` writes a :class:`~domain.prorrata_register.register.SectorDefinition`
 so the register becomes sectorized and
 :func:`~application.aggregation.iva_ledger._apply_sector_apportionment` fires. Fail-closed:
 a taxpayer who elects nothing keeps the whole-entity general apportionment the

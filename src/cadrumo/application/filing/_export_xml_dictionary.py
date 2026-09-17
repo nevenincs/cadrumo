@@ -6,16 +6,16 @@ resolved by the registry schema provider, then writes only a local XML payload
 for the draft export path.
 
 See Also:
-    :func:`~application.filing.export_draft`
+    :func:`~application.filing.export.export_draft`
         Draft export service that selects this renderer for XML dictionary
         layouts.
-    :class:`~domain.filing.ModeloDraft`
+    :class:`~domain.filing.schema.ModeloDraft`
         Approved declaration draft whose casilla and header values are rendered.
-    :class:`~domain.calculations.registry.ExportLayoutDefinition`
+    :class:`~domain.calculations.registry.schema_exports.ExportLayoutDefinition`
         Registry export layout carrying dictionary and XSD source references.
-    :class:`~domain.calculations.registry.XmlDictionaryEntry`
+    :class:`~domain.calculations.registry.export_parse.XmlDictionaryEntry`
         Parsed dictionary row consumed while projecting XML fields.
-    :func:`~domain.calculations.registry.xml_dictionary_entries`
+    :func:`~domain.calculations.registry.export_parse.xml_dictionary_entries`
         Registry helper that reads the official dictionary source.
     :class:`~application.filing.runtime.RegistrySchemaAccessor`
         Runtime schema provider that resolves source roots and references.
@@ -116,9 +116,9 @@ def render_xml_dictionary_layout(
 
     Args:
         layout: Registry
-            :class:`~domain.calculations.registry.ExportLayoutDefinition`
+            :class:`~domain.calculations.registry.schema_exports.ExportLayoutDefinition`
             whose format is ``xml_dictionary``.
-        draft: Approved :class:`~domain.filing.ModeloDraft` supplying casilla
+        draft: Approved :class:`~domain.filing.schema.ModeloDraft` supplying casilla
             values, modelo, and period metadata.
         headers: Normalized declaration header values such as identity fields.
         dictionary_values: Values addressed by the dictionary field id AEAT

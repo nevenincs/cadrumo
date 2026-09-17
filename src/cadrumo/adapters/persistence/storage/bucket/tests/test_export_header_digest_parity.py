@@ -2,7 +2,7 @@
 
 ``ExportArchiveHeader.manifest_digest`` restated the lowercase-hex-64 rule in a
 local validator alongside private length and alphabet constants. The restated
-rule agreed with :data:`~core.identity.ContentDigest` on every malformed value
+rule agreed with :data:`~core.identity.digest.ContentDigest` on every malformed value
 -- uppercase, non-hex, short -- which is exactly what made the divergence hard
 to notice: it appeared only on a *valid* digest that arrived with surrounding
 whitespace, which the canonical alias strips and the local rule refused.

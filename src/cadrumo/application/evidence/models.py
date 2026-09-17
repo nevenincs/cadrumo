@@ -123,7 +123,7 @@ class EvidenceRecordRef(BaseModel):
 
     ``object_type`` names the :class:`BucketEventObjectType` of the
     record; ``object_id`` is its stable store key; ``content_sha256`` is
-    the canonical :data:`~core.identity.ContentDigest` of the record's raw
+    the canonical :data:`~core.identity.digest.ContentDigest` of the record's raw
     payload bytes, so a non-hex digest is refused on construction rather
     than at the later verification pass that recomputes it;
     ``payload_size_bytes`` is the byte count used for

@@ -174,7 +174,7 @@ class ModeloReconciliationRecord(BaseModel):
     the actor. It is written to the encrypted profile-scoped reconciliation
     store selected by :class:`ModeloReconciliationPersistencePort` in the same
     unit of work as the ``MODELO_RECONCILED``
-    :class:`~domain.buckets.BucketEvent` whose id it carries, so the event log
+    :class:`~domain.buckets.event.BucketEvent` whose id it carries, so the event log
     and the detail store cannot disagree about what was reconciled.
 
     Grounding is **stored, not re-derived**. Each :class:`ModeloReconciliationDiff`
@@ -226,7 +226,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     :class:`ModeloReconciliationRecord` into the encrypted profile-scoped
     reconciliation store selected by :class:`ModeloReconciliationPersistencePort`,
     in the same unit of work as the slim ``MODELO_RECONCILED``
-    :class:`~domain.buckets.BucketEvent` it emits. This typed entry projects one
+    :class:`~domain.buckets.event.BucketEvent` it emits. This typed entry projects one
     such record so the operator can enumerate past reconciliation verdicts, and
     the grounded divergences behind them, without re-parsing any evidence.
 
@@ -321,7 +321,7 @@ def list_modelo_reconciliations(
 
     Reads the encrypted store the bound :class:`ModeloReconciliationPersistencePort`
     co-writes with each ``MODELO_RECONCILED``
-    :class:`~domain.buckets.BucketEvent`, filtered to ``bucket_id`` and ordered
+    :class:`~domain.buckets.event.BucketEvent`, filtered to ``bucket_id`` and ordered
     oldest-first by the reconciliation instant. Each record is projected onto a
     typed :class:`ModeloReconciliationHistoryEntry` — verdict, source kind, diff
     count, the grounded diffs themselves, actor, and reconciliation instant are

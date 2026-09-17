@@ -3,7 +3,7 @@
 Assembles a shareable, checksum-verifiable review package (``build``) and
 verifies one already received (``verify``). All verbs are local-only: they
 never contact AEAT. ``build`` internally reuses
-:func:`~application.modelo.export_modelo_revision` to obtain the
+:func:`~application.modelo.export.export_modelo_revision` to obtain the
 fichero-BOE draft bytes it bundles, so it inherits every export-time safety
 gate (evidence completeness, cross-period clean state, IVA wallet
 reconciliation) and also appends the usual ``MODELO_EXPORTED`` bucket event —
@@ -17,7 +17,7 @@ the Ed25519 authenticity layer
 the full operator-shares / accountant-receives / accountant-counter-signs /
 operator-verifies workflow is reachable without touching the application
 layer directly. Every signing/counter-signing keypair is minted and persisted
-through :class:`~adapters.persistence.storage.SecureObjectRepository` at
+through :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
 ``SECRET`` sensitivity, scoped to whichever bucket runs the verb (the active
 profile by default, or an explicit ``--bucket-id``); only the PUBLIC half of
 a keypair is ever surfaced in CLI output. ``verify`` remains an INTEGRITY
@@ -34,7 +34,7 @@ the required application recipient-registry capability
 (populated by ``aeat config collab recipient add``); ``decrypt`` mints-or-loads
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
-:func:`~application.modelo.ensure_recipient_encryption_keypair`) and
+:func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`) and
 composes :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`
 around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
@@ -42,17 +42,17 @@ never written to disk except as the final recovered archive the operator
 explicitly requests via ``--output``.
 
 See Also:
-    :func:`~application.modelo.build_review_package`
+    :func:`~application.modelo.review_package.build_review_package`
         Application builder for checksum-verifiable review packages.
-    :func:`~application.modelo.sign_review_package`
+    :func:`~application.modelo.review_package_signing.sign_review_package`
         Ed25519 authenticity primitive wired by ``sign``.
-    :func:`~application.modelo.encrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`
         X25519 confidentiality primitive wired by ``encrypt-for-recipient``.
     :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`
         Trusted-recipient public-key capability used before encryption.
     :mod:`~entrypoints.cli._modelo_review_package_payloads`
         Typed JSON payload schemas emitted by this CLI group.
-    :mod:`~entrypoints.cli.config._collab`
+    :mod:`~entrypoints.cli.config.collab`
         Configuration surface that registers recipient fingerprints.
 """
 

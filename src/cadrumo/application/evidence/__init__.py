@@ -10,7 +10,7 @@ relational truth.
 Bundle manifests can reference :class:`~WorkUnit`,
 :class:`~CalculationRevision`, and
 :class:`~ModeloRecord` payloads by stable id, with each
-record typed by :class:`domain.buckets.BucketEventObjectType`. They are
+record typed by :class:`domain.buckets.event.BucketEventObjectType`. They are
 audit packaging records, not purchase-invoice evidence or official AEAT filing
 evidence claims.
 

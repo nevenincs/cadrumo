@@ -17,7 +17,7 @@ extra becomes one instructive :class:`MissingOptionalExtraError` naming
 
 These records describe package availability only. They do not decide whether an
 operator has opted into Google export, browser automation, or hosted LLM usage;
-that consent surface is represented separately by :class:`~core.ServiceCapability`.
+that consent surface is represented separately by :class:`~core.capabilities.ServiceCapability`.
 """
 
 from __future__ import annotations
@@ -94,8 +94,8 @@ OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHR
 class MissingOptionalExtraError(CoreError):
     """Raised when a feature is reached but its optional extra is not installed.
 
-    Descends from :class:`~core.errors.CoreError` so the project-wide
-    :class:`~core.errors.CadrumoError` boundary sees the refusal. Application
+    Descends from :class:`~core.errors.hierarchy.CoreError` so the project-wide
+    :class:`~core.errors.hierarchy.CadrumoError` boundary sees the refusal. Application
     probes report the same missing package as a
     :class:`application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.

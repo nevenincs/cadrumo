@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from ....core.hashing import content_hash_hex
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -169,7 +170,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     assert first.canonical_hash == second.canonical_hash
     assert [fact.path for fact in first.facts] == ["identity.tax_id", "usage_ratios.business_ratio"]
 
-    with pytest.raises(ValueError, match="cannot snapshot an incomplete profile record"):
+    with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
         UserProfileSnapshot.from_profile(
             profile.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}),
             context=_CREATE_CONTEXT,

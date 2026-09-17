@@ -4,7 +4,7 @@
 artefact the state was read from and flows into compensation history. Bounded only to 64 characters it accepted any 64-character
 string, so a non-digest was persistable beside otherwise valid history and
 later resolvable as if it content-addressed the artefact. It is now
-:data:`~cadrumo.core.identity.ContentDigest`.
+:data:`~cadrumo.core.identity.digest.ContentDigest`.
 
 Anti-tautology: ``"z" * 64`` and ``"A" * 64`` both satisfy the previous length
 bound exactly, so a guard that only checked length accepts them and fails this

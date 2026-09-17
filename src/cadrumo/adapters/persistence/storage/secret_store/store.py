@@ -1,12 +1,12 @@
 """Encrypted, file-locked store for secret and session-bearing records.
 
-Layered on top of :class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`
+Layered on top of :class:`adapters.persistence.storage.blob_store.blob_store.EncryptedBlobStore`
 and :func:`core.locks.exclusive_file_lock`, the store persists
 short-lived bearer state and long-lived authentication material under a
 stable string key. ``SECRET_STORE_CLASSES`` below is the one statement of
 which :class:`SensitivityClass` members those are; every refusal and
 docstring here reads it rather than restating it. Each record is wrapped in an
-:class:`adapters.persistence.storage.envelope.Envelope` of
+:class:`adapters.persistence.storage.envelope.contract.Envelope` of
 :class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
 by the active bucket session's data key using AES-256-GCM, and indexed by
 an HMAC-SHA256 digest of the natural-key string so consumers can query
@@ -14,13 +14,13 @@ an HMAC-SHA256 digest of the natural-key string so consumers can query
 
 A JSON catalogue file at ``store_dir / "index.json"`` maps the hex
 digest of each key to the underlying
-:class:`adapters.persistence.storage.blob_store.BlobReference`.
+:class:`adapters.persistence.storage.blob_store.blob_store.BlobReference`.
 Every mutation acquires ``exclusive_file_lock(store_dir / "secrets.lock")``
 so parallel writers serialise rather than race.
 
 The retention contract is enforced at write time: SECRET- and SESSION-class
 records MUST carry an ``expires_at`` field; the store raises
-:exc:`~adapters.persistence.storage.RetentionPolicyError`
+:exc:`~adapters.persistence.storage.errors.RetentionPolicyError`
 when it is absent.
 """
 
@@ -228,7 +228,7 @@ class _SecretIndex(BaseModel):
 class SecretStore:
     """Repository for the substrate's secret and session-bearing state.
 
-    Wraps an :class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`
+    Wraps an :class:`adapters.persistence.storage.blob_store.blob_store.EncryptedBlobStore`
     behind a digest-keyed index so callers can query records by their
     natural string key without that key ever appearing in plaintext on
     disk. Mutating operations are serialised via
@@ -308,7 +308,7 @@ class SecretStore:
         The mapping keys need no separate shape check, and adding one would be
         unreachable code rather than defence in depth. A ``dict`` key carries
         no pydantic annotation, but ``digest_hex`` does: it is a canonical
-        :data:`~core.identity.ContentDigest`, so once the equality above holds
+        :data:`~core.identity.digest.ContentDigest`, so once the equality above holds
         the key is that same validated value. A malformed key either differs
         from its entry's digest -- caught here -- or matches it, in which case
         the entry itself failed validation above.
@@ -399,11 +399,11 @@ class SecretStore:
             record: The :class:`SecretRecord` to persist.
             overwrite: If ``True``, replace any existing record at the
                 same key. If ``False`` (default), raise
-                :exc:`~adapters.persistence.storage.SecretAlreadyExistsError`
+                :exc:`~adapters.persistence.storage.errors.SecretAlreadyExistsError`
                 on collision.
 
         Returns:
-            The :class:`adapters.persistence.storage.blob_store.BlobReference`
+            The :class:`adapters.persistence.storage.blob_store.blob_store.BlobReference`
             for the freshly written blob.
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
@@ -646,7 +646,7 @@ class SecretStore:
                 mandates it.
 
         Returns:
-            The :class:`adapters.persistence.storage.blob_store.BlobReference`
+            The :class:`adapters.persistence.storage.blob_store.blob_store.BlobReference`
             of the rotated blob.
 
         """

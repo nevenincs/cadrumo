@@ -15,7 +15,7 @@ be on the document", a question this predicate can answer. On a RECEIVED
 invoice the issuer is the counterparty (the supplier), and the destinatario
 whose NIF case 3.º would require is the PROFILE HOLDER -- this app's own
 taxpayer, whose own NIF is not a fact this record needs to track (it is
-already known) and not a field :class:`~cadrumo.domain.invoices.Invoice`
+already known) and not a field :class:`~cadrumo.domain.invoices.models.Invoice`
 carries. There is no second, RECEIVED-side version of this predicate to
 build; the question case 3.º asks has no unknown left to answer there.
 
@@ -32,12 +32,12 @@ this module does not attempt to close (it is a different question -- factura
 completeness for deduction purposes generally, not the narrow destinatario-
 NIF case 3.º asks about on the ISSUED side).
 
-:class:`~cadrumo.domain.invoices.Invoice` has nowhere to carry establishment
+:class:`~cadrumo.domain.invoices.models.Invoice` has nowhere to carry establishment
 even for the ISSUED side -- it is a pure domain record with no profile
 dependency, by design (a domain model does not reach into repository/profile
 state) -- and it is not a NEW fact this app needs to learn:
-:class:`~cadrumo.domain.deadlines.TaxpayerProfile` already carries
-:attr:`~cadrumo.domain.deadlines.TaxpayerProfile.fiscal_residency` (TRLIRNR
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` already carries
+:attr:`~cadrumo.domain.deadlines.models.TaxpayerProfile.fiscal_residency` (TRLIRNR
 RDLeg 5/2004 art. 2), which this module reads rather than duplicating.
 
 **The approximation, stated rather than hidden, with its error direction
@@ -45,7 +45,7 @@ named.** ``fiscal_residency`` is an IRPF-RESIDENCE axis (national-level:
 resident in Spain vs not); TAI establishment is an IVA-TERRITORIAL axis that
 excludes Canarias (IGIC territory) and Ceuta/Melilla (IPSI territory) even
 though both are part of Spain. These are two different axes that happen to
-look like one word. :class:`~cadrumo.domain.deadlines.TaxpayerProfile`
+look like one word. :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`
 carries no field distinguishing a Canarias- or Ceuta/Melilla-resident
 taxpayer from a mainland one, so this predicate CANNOT currently tell them
 apart: a Canarias-resident autónomo reads ``fiscal_residency ==
@@ -58,7 +58,7 @@ reports "established" and so wrongly demands a counterparty NIF the law does
 not actually require there. It never does the reverse (it never reports
 "established" as ``False`` for someone who genuinely is). No
 ``EstablecimientoPermanente``-style territorial axis exists on
-:class:`~cadrumo.domain.deadlines.TaxpayerProfile` today to close this;
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` today to close this;
 designing one is a real schema decision with its own blast radius and is
 explicitly NOT this module's job.
 ``test_a_canarias_or_ceuta_melilla_resident_is_a_pinned_known_limitation`` in
@@ -66,9 +66,9 @@ the test suite pins the current (wrong-but-safe) behaviour so the day that
 axis is added, the test fails and points at exactly what to fix.
 
 See Also:
-    :class:`cadrumo.domain.deadlines.FiscalResidency`
+    :class:`cadrumo.domain.contribuyente.renta_codes.FiscalResidency`
         The two-member closed enum this predicate reads.
-    :class:`cadrumo.domain.deadlines.TaxpayerProfile`
+    :class:`cadrumo.domain.deadlines.models.TaxpayerProfile`
         Owns the per-taxpayer residency fact; one profile per bucket.
 """
 
@@ -90,7 +90,7 @@ def issuer_established_in_tai(profile: TaxpayerProfile) -> bool:
 
     ``fiscal_residency is None`` is treated as ``RESIDENT_IRPF``, matching
     the field's own documented default for engine consumers
-    (:attr:`~cadrumo.domain.deadlines.TaxpayerProfile.fiscal_residency`).
+    (:attr:`~cadrumo.domain.deadlines.models.TaxpayerProfile.fiscal_residency`).
 
     Args:
         profile: The bucket's :class:`TaxpayerProfile`.
@@ -111,7 +111,7 @@ def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: 
     Case 3.º applies to a domestic operation (``counterparty_country ==
     "ES"``) whose issuer -- the :class:`TaxpayerProfile` holder passed as
     ``profile`` -- is established in the TAI. Scoped to
-    :attr:`~cadrumo.domain.invoices.Invoice.kind` ``ISSUED`` only: case 3.º
+    :attr:`~cadrumo.domain.invoices.models.Invoice.kind` ``ISSUED`` only: case 3.º
     asks about the DESTINATARIO's NIF, which on an ISSUED invoice is the
     counterparty this predicate can evaluate; on a RECEIVED invoice the
     destinatario is the profile holder, whose own NIF is not a question this
@@ -125,10 +125,10 @@ def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: 
     already carries one has nothing further to ask for.
 
     The ``kind`` check is defence in depth rather than the only thing
-    preventing a false positive: :class:`~cadrumo.domain.invoices.Invoice`'s
+    preventing a false positive: :class:`~cadrumo.domain.invoices.models.Invoice`'s
     own class-consistency validator already refuses a received simplified invoice
     with no tax id, so ``counterparty_tax_id is None`` alone already implies
-    ``kind is ISSUED`` for every :class:`~cadrumo.domain.invoices.Invoice`
+    ``kind is ISSUED`` for every :class:`~cadrumo.domain.invoices.models.Invoice`
     reachable through normal construction. The check is kept, and tested via
     a bypassed-validation construction, so this function's own contract does
     not silently depend on that domain invariant never changing.

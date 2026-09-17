@@ -27,7 +27,7 @@ __all__ = [
 
 
 def _parse_deadline_window_period(value: object) -> Period:
-    """Hydrate a deadline-window period through :class:`~core.Period`."""
+    """Hydrate a deadline-window period through :class:`~core.period.Period`."""
     if isinstance(value, Period):
         return value
     if isinstance(value, Mapping):

@@ -1,15 +1,15 @@
 """Application contracts for past-filing casilla observations.
 
-Stores :class:`~domain.calculations.registry.RegistryModeloObservation`
+Stores :class:`~domain.calculations.registry.bindings.RegistryModeloObservation`
 records — ``(modelo, filing_year, period, casilla_values)`` — as encrypted audit
 envelopes in the
-:class:`~adapters.persistence.storage.SecureObjectRepository`.
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 Past-filing value rows are bound to
-:data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`;
+:data:`~adapters.persistence.storage.secure_object_namespaces.CALCULATION_OBSERVATIONS_NAMESPACE`;
 IVA wallet decisions are split between the latest-state
-:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
+:data:`~adapters.persistence.storage.secure_object_namespaces.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`
 and immutable
-:data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
+:data:`~adapters.persistence.storage.secure_object_namespaces.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`
 namespaces.
 The records are the substrate read by
 :class:`~._multi_year.PreviousFilingSourceResolver` and
@@ -23,10 +23,10 @@ will write here when an operator successfully files via the app,
 and the live-AEAT capture path will write here when justificantes
 are parsed. This module exposes only the typed read/write surface.
 
-Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
+Sensitivity is :class:`~core.classification.policies.SensitivityClass`
 ``AUDIT`` — these records reconstruct exactly what was filed and so are
 identity-bearing tax substrate. They are stored encrypted at rest through an
-:class:`~adapters.persistence.storage.Envelope`-wrapped repository.
+:class:`~adapters.persistence.storage.envelope.contract.Envelope`-wrapped repository.
 
 The store is value-centric. Clean-state proof still has to join these rows with
 filing records, verification reports, and justificante evidence through
@@ -204,7 +204,7 @@ class ObservationEnvelopePayload(BaseModel):
     ``stamped_revision_id``, and source-specific ``source_metadata``. The model
     does not encrypt that metadata; the secure repository envelope does.
 
-    ``captured_at`` is the canonical :data:`~core.time.UtcInstant`. A bare
+    ``captured_at`` is the canonical :data:`~core.time.utc.UtcInstant`. A bare
     ``datetime`` field admitted a naive value, so a capture instant with no
     zone reached persistence and every later comparison against a UTC-aware
     instant was answering a different question than it appeared to.
@@ -406,9 +406,9 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
 def observation_key(modelo: str, period: Period) -> str:
     """Stable repository key for a ``(modelo, Period)`` pair.
 
-    Validated through :func:`~adapters.persistence.storage.safe_repository_id`
+    Validated through :func:`~adapters.persistence.storage.path_safety.safe_repository_id`
     so each component is constrained to the
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     id contract before composition.
     """
     filing_period = require_observation_period(period)

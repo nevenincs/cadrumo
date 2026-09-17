@@ -3,7 +3,7 @@
 These records are read by the on-host inference package, which holds no
 repository handle of its own. Their previous home, ``evidence_draft``, also
 wires :class:`~cadrumo.adapters.persistence.profile.invoices.InvoiceCatalogueRepository`
-and :class:`~cadrumo.adapters.persistence.storage.AttachmentStore`, so importing
+and :class:`~cadrumo.adapters.persistence.storage.attachment.AttachmentStore`, so importing
 a draft record pulled the whole persistence subtree into every consumer that
 only wanted the shape -- including the outbound LLM adapter, whose distance from
 persistence is what the operator's in-memory inference exemption rests on.
@@ -141,7 +141,7 @@ class FieldProvenance(BaseModel):
     distinguishable from a model-read one all the way to the operator's screen.
 
     Carries no numeric confidence, deliberately and permanently. See
-    :class:`~core.FieldOrigin` and :class:`~core.FieldGroundingOutcome` for the
+    :class:`~core.field_origin.FieldOrigin` and :class:`~core.field_grounding.FieldGroundingOutcome` for the
     two axes that are facts: how the value was obtained, and what checking it
     survived.
 
@@ -427,7 +427,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
     Every field is optional: a field the extractor cannot ground in the
     document's text is left ``None`` rather than guessed. The operator reviews
     this draft and supplies or corrects fields before any
-    :class:`~domain.invoices.Invoice` is minted from it -- this model is
+    :class:`~domain.invoices.models.Invoice` is minted from it -- this model is
     never itself persisted as a filing-grade record.
 
     Attributes:
@@ -443,7 +443,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
             address, copied verbatim, or ``None``. Transcriptive like every
             other copied field: it carries the printed code and never the
             territory read off it. That reading belongs to
-            :func:`~domain.iva.territorial_scope_for_spanish_postal_code`,
+            :func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code`,
             which is the deterministic evidence separating the three Spanish
             IVA territories -- the first two digits of a Spanish code are the
             province -- and which refuses an unreadable code rather than
@@ -459,7 +459,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
             "Alemania", "Deutschland" or "Allemagne", so recording a code would
             mean the reading stage translated, and translation is inference.
             The match against the bounded vocabulary belongs to
-            :func:`~domain.iva.country_code_for_printed_country_name`, which is
+            :func:`~domain.iva.establishment.country_code_for_printed_country_name`, which is
             a deterministic lookup rather than a judgement.
         customer_country: The same for the party billed by the invoice, carried
             separately for the reason the postal codes are: an issuer in Las
@@ -478,7 +478,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
             ``ESP`` and UBL states ``ES``; both arrive here in the single form
             every country surface downstream is keyed by, resolved through the
             registry correspondence in
-            :func:`~domain.iva.country_code_for_stated_country_code`. Normalising
+            :func:`~domain.iva.establishment.country_code_for_stated_country_code`. Normalising
             at the boundary rather than downstream is what keeps a Facturae
             document from failing an alpha-2 shape check in silence, with its
             country element present, read, and establishing nothing.
@@ -539,7 +539,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
             anchorable like every other copied field: it carries what the paper
             says, never a category derived from it. The derivation belongs to
             the deterministic classifier downstream, because an
-            :class:`~domain.iva.IvaCategory` token is printed on no invoice and
+            :class:`~domain.iva.schema.IvaCategory` token is printed on no invoice and
             a reading stage asked for one would have to infer.
         currency: ISO-4217 code for the currency the amounts are printed in,
             or ``None`` when the document shows no currency marker. Left

@@ -7,12 +7,14 @@ assessment code under test, so a wrong floor would fail these tests.
 
 from __future__ import annotations
 
+from calendar import isleap
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
 import pytest
 
 from ....core.calendar_shift import shift_by_calendar_years
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..floor import RetainableFilingRecord, RetentionFloorAssessment, assess_retention_floor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -57,15 +59,21 @@ def _safe_erase_date(filed_at: datetime) -> datetime:
     return assessment.retained[0].earliest_safe_erase_date
 
 
+def _supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the bundled registry declares no supported filing years"
+    return support.years
+
+
 def test_safe_erase_date_adds_four_year_floor() -> None:
-    assert _safe_erase_date(_dt(2021, 6, 30)) == _dt(2025, 6, 30)
+    year = _supported_years()[0]
+    assert _safe_erase_date(_dt(year, 6, 30)) == _dt(year + _LGT_FLOOR_YEARS, 6, 30)
 
 
 def test_leap_day_filed_at_clamps_to_28_february() -> None:
-    # 2024-02-29 + 4 years lands in 2028 (also a leap year), so no clamp.
-    assert _safe_erase_date(_dt(2024, 2, 29)) == _dt(2028, 2, 29)
-    # 2020-02-29 + 4 years would be 2024-02-29 (leap) — still valid.
-    assert _safe_erase_date(_dt(2020, 2, 29)) == _dt(2024, 2, 29)
+    # A leap day plus four years lands on another leap year, so no clamp.
+    leap_year = next(year for year in _supported_years() if isleap(year) and isleap(year + _LGT_FLOOR_YEARS))
+    assert _safe_erase_date(_dt(leap_year, 2, 29)) == _dt(leap_year + _LGT_FLOOR_YEARS, 2, 29)
     # A one-year floor from a leap day into a non-leap year clamps to 28 Feb.
     assert shift_by_calendar_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 

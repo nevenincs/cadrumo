@@ -126,10 +126,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -159,8 +155,13 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -359,7 +360,7 @@ def _calculate_m200(
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",
@@ -489,7 +490,7 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     and validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = compiled_bundled_authority()
+    authority = published_authority_operation()
     snapshot = authority.snapshot(
         _M200,
         filing_year=_FILING_YEAR,

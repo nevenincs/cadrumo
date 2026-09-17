@@ -65,7 +65,7 @@ class DescendantRecordBase(DescendantRecordFields):
         Required date of birth.
     relacion
         The legal relationship linking this descendant to the contribuyente
-        (:class:`~cadrumo.core.DescendantRelacion`). Defaults to
+        (:class:`~cadrumo.core.descendant_relacion.DescendantRelacion`). Defaults to
         the registry-declared ordinary-descendant token, so an absent
         fact means an ordinary descendant. Art. 58.1 assimilates tutela and
         acogimiento for the tranches while Art. 58.2 names only "adopción o

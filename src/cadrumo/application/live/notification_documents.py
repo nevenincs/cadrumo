@@ -1,7 +1,7 @@
 """Encrypted custody for the documents AEAT serves behind a notificación.
 
 One capture, three writes, in this order: the PDF bytes go into the encrypted
-content-addressed :class:`adapters.persistence.storage.AttachmentStore`, the
+content-addressed :class:`adapters.persistence.storage.attachment.AttachmentStore`, the
 sanción reading is derived from those bytes in memory, and a
 :class:`NotificationDocumentRecord` binding the certificado to the resulting
 ``attachment_id`` is persisted as its own encrypted secure-object row.
@@ -17,8 +17,8 @@ not this application's.
 
 The legal guard governs this whole module by construction rather than by
 convention. Fetching runs through
-:func:`~adapters.outbound.aeat.sede.fetch_notification_document`, which calls
-:func:`~adapters.outbound.aeat.sede.assert_notification_content_readable`
+:func:`~adapters.outbound.aeat.sede.notifications.fetch_notification_document`, which calls
+:func:`~adapters.outbound.aeat.sede.notifications.assert_notification_content_readable`
 before anything crosses the wire, so a notification AEAT has not recorded as
 read produces no AEAT contact, no bytes, no attachment and no record. This
 module re-asserts the same guard before it does any work of its own — not
@@ -437,7 +437,7 @@ class NotificationDocumentService:
         """Fetch one already-read notification's document and take custody of it.
 
         The guard runs twice on this path — here, and again inside
-        :func:`~adapters.outbound.aeat.sede.fetch_notification_document` before
+        :func:`~adapters.outbound.aeat.sede.notifications.fetch_notification_document` before
         any request is issued. The first check is what guarantees a refused row
         produces no AEAT contact at all rather than a request that is discarded
         afterwards.

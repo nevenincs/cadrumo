@@ -19,9 +19,9 @@ application-owned :class:`InventoryServicePorts` bundle. The executable
 composition root supplies concrete storage capabilities, while the service
 emits bucket-scoped inventory events for audit-significant verbs. Movement
 commands are converted into
-:class:`domain.contribuyente.inventory.MovementRecord` rows, while
+:class:`domain.contribuyente.inventory.records.MovementRecord` rows, while
 valuation previews delegate FIFO/PMP math to
-:func:`domain.contribuyente.inventory.compute_inventory_valuation`.
+:func:`domain.contribuyente.inventory.valuation.compute_inventory_valuation`.
 
 See Also:
     :class:`InventoryService`
@@ -33,7 +33,7 @@ See Also:
         Application command projected into a domain movement row.
     :class:`InventoryValuationPreviewResult`
         Result contract for report-only valuation previews.
-    :class:`domain.contribuyente.inventory.InventoryLedger`
+    :class:`domain.contribuyente.inventory.records.InventoryLedger`
         Canonical domain ledger valued by the inventory substrate.
 """
 

@@ -14,7 +14,7 @@ See Also:
     :class:`~ExternalEvidenceKind`
         Closed evidence-kind catalogue; live captures stamp
         ``AEAT_LIVE_CAPTURE``.
-    :class:`cadrumo.application.calculations.CalculationObservationRepositoryProtocol`
+    :class:`cadrumo.application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
         Repository that receives the registry-grounded filed-declaration
         observations consumed by cross-period resolvers.
 """
@@ -173,7 +173,7 @@ def persist_filed_calculation_observation(
     """Promote one AEAT filed-declaration observation into calculation history.
 
     The persisted row is a registry-grounded
-    :class:`cadrumo.domain.calculations.registry.RegistryModeloObservation`
+    :class:`cadrumo.domain.calculations.registry.bindings.RegistryModeloObservation`
     stamped with the law-selected registry revision when it can be resolved.
     """
     if not _is_active_filed_observation(observation):

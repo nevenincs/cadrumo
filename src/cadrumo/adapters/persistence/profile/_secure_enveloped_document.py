@@ -12,10 +12,10 @@ decides which kernel it enrolls in, never the other way round:
 - :class:`ProfileBareModelSecurePersistence` stores the document's own
   ``model_dump_json()`` bytes directly. Classification, schema version, and
   write timestamp live ONLY as columns on the encrypted SQL row
-  (:class:`~adapters.persistence.storage.SecureObjectWrite`); nothing is
+  (:class:`~core.secure_object_write.SecureObjectWrite`); nothing is
   duplicated inside the JSON payload.
 - :class:`ProfileEnvelopedModelSecurePersistence` (this module) wraps the
-  document in :class:`~adapters.persistence.storage.Envelope` before
+  document in :class:`~adapters.persistence.storage.envelope.contract.Envelope` before
   serialising, so classification/schema-version/written-at are duplicated
   BOTH as SQL-row columns AND as fields inside the stored JSON. The inner
   fields are re-checked against the consumer's expectation on every load, as
@@ -58,7 +58,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
     The namespace definition remains the authority for object key, sensitivity,
     and schema version. ``save`` delegates to :meth:`to_secure_object_write` so
     an ordinary singleton save and a caller-composed co-commit write build the
-    identical :class:`~adapters.persistence.storage.Envelope` bytes and cannot
+    identical :class:`~adapters.persistence.storage.envelope.contract.Envelope` bytes and cannot
     drift apart.
     """
 
@@ -105,15 +105,15 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
 
         The outer SQL-row classification/schema-version columns are checked by
         the underlying ``expected_class``/``max_supported_version`` load
-        arguments; the inner :class:`~adapters.persistence.storage.Envelope`
+        arguments; the inner :class:`~adapters.persistence.storage.envelope.contract.Envelope`
         fields are re-checked independently as defense-in-depth against a row
         whose embedded payload metadata has drifted from its own columns.
 
         Raises:
-            :class:`~adapters.persistence.storage.ClassificationError`: The
+            :class:`~adapters.persistence.storage.errors.ClassificationError`: The
                 inner envelope's classification disagrees with this
                 repository's declared sensitivity.
-            :class:`~adapters.persistence.storage.EnvelopeVersionError`: The
+            :class:`~adapters.persistence.storage.errors.EnvelopeVersionError`: The
                 inner envelope's schema version is not the consumer's current
                 version.
         """
@@ -189,7 +189,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         Callers that need to co-commit this document with sibling secure
         objects pass the returned value into their existing ``save_many``
         transaction. The returned write carries the identical
-        :class:`~adapters.persistence.storage.Envelope` bytes :meth:`save`
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` bytes :meth:`save`
         would persist directly.
 
         ``expected_revision_id`` is the compare-and-swap half, and without it a

@@ -1,7 +1,7 @@
 """Typed error hierarchy for corpus-manifest validation.
 
 Defines the leaf exceptions raised by the corpus-manifest loader and
-verifier. All inherit from :class:`core.errors.CadrumoError` so any
+verifier. All inherit from :class:`core.errors.hierarchy.CadrumoError` so any
 caller catching the framework's base error type also catches manifest
 failures.
 """

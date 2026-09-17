@@ -14,19 +14,19 @@ regulated number. That belongs in the domain, not behind an optional install.
 
 The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
-stays in sync with :class:`cadrumo.domain.transactions.BusinessClassification`:
+stays in sync with :class:`cadrumo.domain.transactions.enums.BusinessClassification`:
 adding a new value automatically requires a developer to decide
 whether it belongs in the default LLM choice set.
 
 The prompt spec is parametrized:
 
-- ``classifications``: which :class:`cadrumo.domain.transactions.BusinessClassification`
+- ``classifications``: which :class:`cadrumo.domain.transactions.enums.BusinessClassification`
   values the LLM may pick. Defaults to the four *decision* states
   (``BUSINESS`` / ``PERSONAL`` / ``MIXED`` / ``PROCESSED_UNCLASSIFIED``).
   Pipeline-state values (``NOT_YET_PROCESSED``, ``SKIPPED_BY_RULE``,
   ``FAILED_VALIDATION``) are excluded because they are not LLM
   decisions -- they are internal pipeline bookkeeping.
-- ``categories``: optional :class:`cadrumo.domain.categories.SpendingCategory`
+- ``categories``: optional :class:`cadrumo.domain.categories.spending_category.SpendingCategory`
   values the LLM may additionally attach. Empty by default
   (classification-only). When populated, the response includes a
   ``category`` field.
@@ -267,7 +267,7 @@ class CategoryChoice:
 
 @dataclass(frozen=True, slots=True)
 class IvaCategoryChoice:
-    """One allowed :class:`cadrumo.domain.iva.IvaCategory` paired with an LLM-facing hint."""
+    """One allowed :class:`cadrumo.domain.iva.schema.IvaCategory` paired with an LLM-facing hint."""
 
     value: IvaCategory
     hint: str
@@ -323,10 +323,10 @@ class PromptSpec:
         return frozenset(choice.value for choice in self.categories)
 
     def allowed_iva_categories(self) -> frozenset[IvaCategory]:
-        """Return the set of :class:`cadrumo.domain.iva.IvaCategory` values the LLM may emit (empty = none).
+        """Return the set of :class:`cadrumo.domain.iva.schema.IvaCategory` values the LLM may emit (empty = none).
 
         Returns:
-            Frozenset of :class:`cadrumo.domain.iva.IvaCategory` values the LLM may
+            Frozenset of :class:`cadrumo.domain.iva.schema.IvaCategory` values the LLM may
             select from; empty when the spec does not ask for an IVA category.
         """
         return frozenset(choice.value for choice in self.iva_categories)
@@ -378,7 +378,7 @@ def prompt_spec_with_every_spending_category(
     categories far more accurately against the real AEAT terminology
     than against mangled snake_case. Categories with no registered
     profile (none today; every
-    :class:`cadrumo.domain.categories.SpendingCategory` member is covered)
+    :class:`cadrumo.domain.categories.spending_category.SpendingCategory` member is covered)
     fall back to the humanised enum value.
 
     Args:
@@ -392,7 +392,7 @@ def prompt_spec_with_every_spending_category(
 
     Returns:
         A :class:`PromptSpec` whose ``categories`` tuple covers every
-        registered :class:`cadrumo.domain.categories.SpendingCategory`.
+        registered :class:`cadrumo.domain.categories.spending_category.SpendingCategory`.
     """
     category_choices = tuple(
         CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))

@@ -1,4 +1,4 @@
-"""Domain-layer :class:`~cadrumo.core.errors.ErrorCode` registry aggregator.
+"""Domain-layer :class:`~cadrumo.core.errors.error_codes.ErrorCode` registry aggregator.
 
 Combines the ordered domain shards into the tuple consumed by
 :mod:`cadrumo.core.errors.error_codes`.

@@ -1,12 +1,12 @@
 """Provider-specific AEAT session details and context provisioners.
 
-:class:`core.AuthProviderKind` and :class:`core.AuthProviderDescription` are
-the layer-neutral provider authorities. :class:`application.auth.AuthProvider`
+:class:`core.auth_provider.AuthProviderKind` and :class:`core.auth_provider.AuthProviderDescription` are
+the layer-neutral provider authorities. :class:`application.auth.providers.AuthProvider`
 is the application protocol, and
-:func:`core.i18n.describe_auth_provider_operator_impact` is the canonical
+:func:`core.i18n.auth_provider.describe_auth_provider_operator_impact` is the canonical
 localized renderer. This module owns only the provider-specific payloads
-used by :class:`adapters.outbound.aeat.auth.AeatSession` and
-:class:`adapters.outbound.aeat.auth.AeatLoginAssertion`, plus the
+used by :class:`~application.auth.session_types.AeatSession` and
+:class:`~application.auth.session_types.AeatLoginAssertion`, plus the
 certificate browser-context provisioner that wires PKCS#12 credentials into
 Playwright contexts.
 """

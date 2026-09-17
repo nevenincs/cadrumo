@@ -14,7 +14,7 @@ adapter-owned and neither layer needs to import the other's module to make the
 contract hold.
 
 See Also:
-    :class:`domain.calculations.registry.ExportRecordDefinition`
+    :class:`domain.calculations.registry.schema_exports.ExportRecordDefinition`
         Registry declaration of one fixed-width record, carrying the field
         coordinates, encoding, and line ending a renderer works from.
 """

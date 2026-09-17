@@ -274,8 +274,8 @@ def build_corpus_manifest(
         corpus_root_name: Stable identifier for this corpus (logged in
             the manifest body so an operator can grep for it).
         generated_at: Optional override for the timestamp. When ``None``
-            the canonical clock :func:`core.time.now` is consulted, so
-            the deterministic-output seam (:func:`core.time.frozen_clock`)
+            the canonical clock :func:`core.time.clock.now` is consulted, so
+            the deterministic-output seam (:func:`core.time.clock.frozen_clock`)
             pins it under replay; an explicit value still overrides.
 
     Returns:

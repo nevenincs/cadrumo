@@ -23,11 +23,11 @@ the only rate this module can print is one it was handed.
 
 What arrives, and what each part is for:
 
-* IVA rate percentages for the requested :class:`~core.Period` -- every record
+* IVA rate percentages for the requested :class:`~core.period.Period` -- every record
   whose effective window OVERLAPS it, because a period is a span and RD-ley
   4/2024 stepped part of the reducido and super-reducido tiers mid-year.
 * Retención rate percentages, the RIRPF art. 95 figures.
-* The no-printed-tax :class:`~domain.iva.IvaCategory` members, rendered here into
+* The no-printed-tax :class:`~domain.iva.schema.IvaCategory` members, rendered here into
   the prose tokens the model reads.
 * The regime mentions RD 1619/2012 art. 6.1 obliges an issuer to print. The
   prompt asks the model to COPY one if printed, never to choose one -- a closed
@@ -270,7 +270,7 @@ def default_extraction_period() -> Period:
     eventually be made two ways.
 
     Returns:
-        :class:`~core.Period`: The current civil year's annual period.
+        :class:`~core.period.Period`: The current civil year's annual period.
     """
     from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 

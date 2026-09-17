@@ -27,7 +27,7 @@ answer rather than a write from here.
 chooses from the two natures or declines. Declining is spelled with a token that
 exists only in this reply shape --
 :data:`UNDETERMINED_SUPPLY_NATURE` -- and never as a
-:class:`~domain.iva.SupplyNature` member: the domain enum has two members and no
+:class:`~domain.iva.supply_nature.SupplyNature` member: the domain enum has two members and no
 "unknown" precisely because a stored "we could not tell" is indistinguishable
 from a fact at every later reader. A proposal that declines carries ``None``.
 
@@ -38,11 +38,11 @@ enumerated allow-list can be proved to come from the enum rather than from a
 template literal.
 
 See Also:
-    :func:`~domain.iva.derive_supply_nature_from_citation`
+    :func:`~domain.iva.supply_nature.derive_supply_nature_from_citation`
         The printed-citation route, which decides by law and outranks this.
-    :func:`~domain.iva.supply_nature_implied_by_category`
+    :func:`~domain.iva.supply_nature.supply_nature_implied_by_category`
         The category route, which also decides by law and outranks this.
-    :func:`~domain.iva.supply_nature_is_required`
+    ``domain.iva.supply_nature_is_required``
         The laziness rule that bounds the population reaching this at all.
 """
 
@@ -91,7 +91,7 @@ make the same invoice propose differently on a retry."""
 UNDETERMINED_SUPPLY_NATURE: Final[str] = "undetermined"
 """The reply token a model uses to decline, spelled once.
 
-Deliberately NOT a :class:`~domain.iva.SupplyNature` member. That enum carries
+Deliberately NOT a :class:`~domain.iva.supply_nature.SupplyNature` member. That enum carries
 two natures and no "unknown" because a stored "we could not tell" reads as a
 fact to everything downstream; this token lives in the reply shape only, and a
 declining proposal carries ``None`` on the far side of the parser.
@@ -155,7 +155,7 @@ class _ProposalReply(BaseModel):
 def permitted_supply_natures() -> tuple[SupplyNature, ...]:
     """Return every nature a model may choose, in declaration order.
 
-    Derived from :class:`~domain.iva.SupplyNature` itself rather than from a
+    Derived from :class:`~domain.iva.supply_nature.SupplyNature` itself rather than from a
     list held here, so the vocabulary offered to the model, the vocabulary the
     parser accepts and the vocabulary the allow-list enforces cannot disagree.
     """
@@ -259,7 +259,7 @@ class SupplyNatureProposer:
     itself the client would answer on the configured frontier model for a task
     that is choosing between two words. The role resolves through
     :func:`~application.provisioning.select_model_for_role` against
-    :attr:`~core.ModelRole.SUPPLY_NATURE_PROPOSAL`, which names the WEAKEST
+    :attr:`~core.model_catalogue.ModelRole.SUPPLY_NATURE_PROPOSAL`, which names the WEAKEST
     catalogued candidate clearing the capability, licence and headroom bars --
     and that role clears wherever the column-role mapper does, because it is
     the same selection job over a smaller vocabulary.

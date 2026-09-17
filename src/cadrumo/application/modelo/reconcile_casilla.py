@@ -12,7 +12,7 @@ sides declare the casilla but the amounts disagree beyond tolerance),
 declaration omitted it), and ``extra_in_filed`` (the filed declaration prints a
 casilla the computed revision never resolved a value for). The comparison is
 scoped to the registry's own reconciliation policy
-(:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`)
+(:meth:`~domain.calculations.registry.schema.RegistrySnapshot.verification_policy`)
 so the compared set is declared registry data, never an ad hoc casilla list.
 The canonical after-filing reconcile flow owns this comparison.
 
@@ -27,10 +27,10 @@ See Also:
         casilla comparison to this pure primitive.
     :class:`~CalculationRevision`
         Persisted computed revision whose ``casilla_values`` are compared.
-    :class:`~domain.calculations.registry.RegistryVerificationPolicy`
+    :class:`~domain.calculations.registry.schema_verification.RegistryVerificationPolicy`
         Registry-declared scope and tolerance used before divergences are
         surfaced.
-    :class:`~adapters.inbound.pdf.ExtractedCasilla`
+    :class:`~adapters.inbound.pdf.extracted_casilla.ExtractedCasilla`
         Parsed declaration row shape that feeds the filed-value mapping.
     :class:`CasillaDivergence`
         Typed row returned for each surfaced disagreement.
@@ -108,7 +108,7 @@ def detect_casilla_divergences(
             (``revision.casilla_values``).
         filed: ``{casilla_id: value}`` printed on the filed declaration, decoded
             from the declaration parser's
-            :class:`~adapters.inbound.pdf.ExtractedCasilla` rows.
+            :class:`~adapters.inbound.pdf.extracted_casilla.ExtractedCasilla` rows.
         scope: Optional casilla-id-to-anything mapping restricting comparison to
             its keys (typically the registry's ``verification_policy()``
             ``computed_casilla_ids``). When supplied, both ``computed`` and

@@ -1,6 +1,6 @@
 """The blocking half of the human review gate: what cannot be confirmed blind.
 
-A draft is a proposal. Turning one into an :class:`~domain.invoices.Invoice` is
+A draft is a proposal. Turning one into an :class:`~domain.invoices.models.Invoice` is
 the moment a machine reading becomes a filing-grade fact, and this module is the
 only thing standing between the two. It answers one question --- *which of this
 draft's problems must a human answer before it may be confirmed at all* --- and
@@ -15,15 +15,15 @@ has a hundred documents waiting. Every resolution names ONE blocker by its id.
 
 **Completeness is by construction, not by diligence.**
 :data:`BLOCKING_REASON_BY_DISCREPANCY_KIND` maps every member of
-:class:`~core.DraftDiscrepancyKind` to a
-:class:`~core.ConfirmationBlockReason`, and the module refuses to import if a
+:class:`~core.draft_discrepancy.DraftDiscrepancyKind` to a
+:class:`~core.confirmation_gate.ConfirmationBlockReason`, and the module refuses to import if a
 member is missing. A new deterministic check therefore cannot land as a finding
 that quietly fails to block --- the tree stops instead. That is the opposite of a
 hand-listed set, which passes silently while covering half the axis.
 
 The second blocker source is the grounding pass rather than the discrepancy
 checks: a counterparty identifier whose reading was
-:attr:`~core.FieldGroundingOutcome.AMBIGUOUS` produced competing candidates and
+:attr:`~core.field_grounding.FieldGroundingOutcome.AMBIGUOUS` produced competing candidates and
 no decision. That is not an arithmetic failure and raises no
 :class:`~application.ledger.invoice_draft_records.DraftDiscrepancyFinding`, but confirming it picks one
 real taxpayer's identifier over another's by accident.
@@ -31,7 +31,7 @@ real taxpayer's identifier over another's by accident.
 See Also:
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The proposal this gate guards.
-    :func:`~application.ledger.closure_findings`
+    :func:`~application.ledger.closure_findings.closure_findings`
         Where the arithmetic blockers come from.
     :class:`~application.ledger.confirmation_record.InvoiceConfirmationRecord`
         What the resolutions are persisted into once the confirm succeeds.
@@ -78,7 +78,7 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
 }
 """Which review-gate reason each deterministic check's failure raises.
 
-Total over :class:`~core.DraftDiscrepancyKind` by construction --- the assertion
+Total over :class:`~core.draft_discrepancy.DraftDiscrepancyKind` by construction --- the assertion
 below fails the import when a member is unmapped, so a newly-landed check cannot
 produce a finding that silently does not block. Every member maps to a reason
 because every member names a real defect: an unmapped member would be a check
@@ -87,7 +87,7 @@ the check's own existence rather than hidden in this table.
 
 A deterministic condition the product decides NOT to block on is therefore not
 represented here at all. It is reported through the non-blocking advisory channel
-instead -- :func:`~application.ledger.country_vocabulary_advisory` and
+instead -- :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory` and
 :func:`~application.ledger.party_attribution.party_attribution_advisory` are the two -- which the
 review surface projects onto the envelope's typed notices. An exemption row in
 this table would be the worse shape: the reader could no longer tell a blocking

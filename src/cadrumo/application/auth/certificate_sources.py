@@ -28,7 +28,7 @@ for this module.
 See Also:
     :class:`~application.auth.models.AuthState`
         Persisted local auth selection embedded in workflow state.
-    :func:`~application.auth.configure_operator_auth`
+    :func:`~application.auth.operator.configure_operator_auth`
         Configures the active auth *provider*; this module manages
         certificate *sources* within the certificate provider.
 """
@@ -76,7 +76,7 @@ def register_certificate_source(
     :func:`~application.auth.certificate_sources.select_certificate_source`
     explicitly to activate it.
 
-    Returns the updated :class:`~application.workflow.WorkflowState`.
+    Returns the updated :class:`~application.workflow.state_models.WorkflowState`.
     """
     normalized_name = name.strip()
     if not normalized_name:
@@ -122,7 +122,7 @@ def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowSta
     Raises:
         CertificateSourceNotFoundError: When ``name`` is not registered.
 
-    Returns the updated :class:`~application.workflow.WorkflowState`.
+    Returns the updated :class:`~application.workflow.state_models.WorkflowState`.
     """
     auth = auth_state(state)
     normalized_name = name.strip()

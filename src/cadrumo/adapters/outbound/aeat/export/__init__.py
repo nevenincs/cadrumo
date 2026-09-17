@@ -3,11 +3,11 @@
 AEAT remote submission and write-shaped portal walks are permanently
 forbidden. The local submission lifecycle is owned by
 :mod:`domain.submission`, including
-:class:`domain.submission.SubmissionEngine`,
-:class:`domain.submission.Preflight`, and
-:class:`domain.submission.SubmissionPreflightError`. Any live-write
+:class:`domain.submission.engine.SubmissionEngine`,
+:class:`domain.submission.preflight.Preflight`, and
+:class:`domain.submission.errors.SubmissionPreflightError`. Any live-write
 attempt is refused at the core access gate by
-:class:`core.access_gate.LiveSubmitForbiddenError`.
+:class:`core.access_gate.errors.LiveSubmitForbiddenError`.
 
 Inert namespace. The renderer is reached at
 :mod:`~adapters.outbound.aeat.export.registry_record_renderer`, which raises

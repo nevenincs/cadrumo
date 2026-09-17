@@ -11,7 +11,7 @@ This module attaches the log-record secret scrubber. Every handler
 attached through :func:`configure_logging` receives a
 :class:`SecretScrubbingFilter` so sensitive fields are redacted before
 formatting. Shape-based NIF, URL, and bearer-token matching is delegated
-to :func:`~cadrumo.core.redaction.redact_for_log`; this module keeps only
+to :func:`~cadrumo.core.redaction.rules.redact_for_log`; this module keeps only
 logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes. Per-run JSONL handlers are attached with
 :func:`attach_run_sink` so the same filter protects observability output.
@@ -109,7 +109,7 @@ class LogExtra(RootModel[dict[str, LogExtraValue]]):
     Upgrades the historical ``Mapping[str, object]`` return annotation on
     service-layer ``as_extra()`` log-field helpers (e.g.
     :class:`~cadrumo.application.aggregation.service.PerModeloAggregationLogFields`,
-    :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract`'s
+    :class:`~cadrumo.application.operator_surface.models.OperatorSurfaceContract`'s
     ``log_fields``): every current emitter only ever writes flat, non-secret
     scalars into :meth:`logging.Logger.debug`'s ``extra=`` mapping, so
     accepting bare ``object`` values understated the real contract. A future

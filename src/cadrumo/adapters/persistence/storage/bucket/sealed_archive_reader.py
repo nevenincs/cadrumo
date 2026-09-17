@@ -51,7 +51,7 @@ class SealedArchiveContents:
     directions: the writer stored whatever it was handed, and this
     reader returns those bytes verbatim without parsing, validating or
     verifying them. It names no payload type on purpose. An
-    :class:`~adapters.persistence.storage.Envelope` is one thing a
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` is one thing a
     caller may put here and was for a time the only one, which is how
     the writer's own documentation came to promise it; the transport
     never required it and must not, or it could refuse a sealed payload

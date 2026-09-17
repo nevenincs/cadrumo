@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from typing import override
 
 import pytest
 
@@ -10,11 +12,12 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..authority import PinnedAuthorityOperation
+from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import (
     AuthorityComponentCodecError,
     AuthorityComponentKind,
     AuthorityComponentQuery,
+    AuthorityGenerationPin,
     ExportLayoutComponentQuery,
     GovernedFactComponentQuery,
     ModeloDirectoryComponentQuery,
@@ -206,6 +209,20 @@ def test_directory_refuses_duplicate_revision_metadata_even_with_one_matching_en
         ModeloRevisionDirectory.model_validate(document)
 
 
+@dataclass(slots=True)
+class _PublishedFactReader(FakeAuthorityComponentReader):
+    """Serve governed facts from the published generation; every other component stays fixture-owned."""
+
+    published: PinnedAuthorityOperation | None = None
+
+    @override
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        if isinstance(query, GovernedFactComponentQuery) and query not in self.components:
+            assert self.published is not None
+            self.components[query] = self.published.governed_fact(query.fact_id)
+        return FakeAuthorityComponentReader.load(self, query, pin=pin)
+
+
 def test_indexed_snapshot_uses_directory_endpoint_context_without_loading_prior_revision() -> None:
     modelo, catalogues = _modelo_and_catalogues("322")
     revision = modelo.revisions["2023"]
@@ -231,18 +248,17 @@ def test_indexed_snapshot_uses_directory_endpoint_context_without_loading_prior_
         components[ReferenceComponentQuery(reference_id, AuthorityComponentKind.SOURCE_REFERENCE)] = catalogues.sources[
             reference_id
         ]
-    for fact_id, fact in catalogues.facts.facts.items():
-        components[GovernedFactComponentQuery(str(fact_id))] = fact
-    reader = FakeAuthorityComponentReader(components)
-    operation = PinnedAuthorityOperation(reader, reader.pin())
+    with bundled_indexed_authority().operation() as published:
+        reader = _PublishedFactReader(components, published=published)
+        operation = PinnedAuthorityOperation(reader, reader.pin())
 
-    with validating_governed_facts(operation):
-        snapshot = operation.snapshot(
-            modelo.id,
-            filing_year=2023,
-            period="01",
-            grade=RegistryAuthorityGrade.APPLICABILITY,
-        )
+        with validating_governed_facts(operation):
+            snapshot = operation.snapshot(
+                modelo.id,
+                filing_year=2023,
+                period="01",
+                grade=RegistryAuthorityGrade.APPLICABILITY,
+            )
 
     assert snapshot.revision.id == revision.id
     assert "aeat-dr-322-2022" in snapshot.sources

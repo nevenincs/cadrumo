@@ -412,7 +412,7 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     """
     binding = next(b for b in _snapshot().revision.bindings if b.id == _DISPATCH_BINDING)
     assert binding.source == "profile"
-    assert binding.typed_enum == "LegalEntityForm"
+    assert binding.value.typed_enum == "LegalEntityForm"
     assert selector_as_dict(binding).get("field") == "legal_entity_form"
     assert "ley-27-2014:art-29" in binding.legal_refs
 

@@ -48,13 +48,13 @@ class _AttachmentFileReader(Protocol):
 def _is_image(data: bytes) -> bool:
     """Return whether the bytes are an image this product can actually read.
 
-    Delegates to :func:`~core.detect_image_media_type`, the single sniffer, so
+    Delegates to :func:`~core.image_media_type.detect_image_media_type`, the single sniffer, so
     the probe's notion of "image" and the vision transport's cannot diverge.
     A local magic-byte tuple here diverged in BOTH directions: it omitted WebP,
     which it structurally could not express because a single-offset
     ``startswith`` cannot match a magic split across offsets 0 and 8, so a WebP
     receipt probed ``UNKNOWN`` and was refused at admission despite
-    :class:`~core.ImageMediaType` carrying a member for exactly that case; and
+    :class:`~core.image_media_type.ImageMediaType` carrying a member for exactly that case; and
     it admitted BMP and TIFF, which the sniffer refuses, so those passed
     admission and raised later against evidence already accepted.
     """

@@ -220,7 +220,7 @@ class Transaction(BaseModel):
         business_pct: Required when ``business_classification`` is
             :attr:`BusinessClassification.MIXED`; ``None`` otherwise.
         invoice_id: Optional invoice foreign key.
-        category_id: Optional :class:`domain.categories.SpendingCategory`
+        category_id: Optional :class:`domain.categories.spending_category.SpendingCategory`
             foreign key.
         taxable_base: Optional IVA-exclusive base amount.
         iva_rate: Optional IVA rate expressed as a decimal fraction.
@@ -241,7 +241,7 @@ class Transaction(BaseModel):
             cuota treatment is unaffected. ``None`` for every operation that
             is not an art. 104.Tres judgment exclusion.
         input_classification: Operator-declared LIVA art. 106 prorrata-especial
-            per-input use classification (:class:`~domain.iva.InputClassification`):
+            per-input use classification (:class:`~domain.iva.prorrata.InputClassification`):
             ``EXCLUSIVELY_DEDUCTIBLE`` (regla 1.ª, deducted in full),
             ``EXCLUSIVELY_NON_DEDUCTIBLE`` (regla 2.ª, no deduction), or
             ``COMMON`` (regla 3.ª, deducted at the general percentage). Meaningful
@@ -250,7 +250,7 @@ class Transaction(BaseModel):
             this classification. ``None`` for rows that are not under especial or
             carry no per-input use declaration.
         concepto_ingreso: Operator-declared income concept
-            (:class:`~core.ConceptoIngreso`) for base-inclusion purposes. RD
+            (:class:`~core.concepto_ingreso.ConceptoIngreso`) for base-inclusion purposes. RD
             439/2007 art. 110.1.c) fixes the agrarian pago fraccionado on the
             *volumen de ingresos ... excluidas las subvenciones de capital y las
             indemnizaciones*, and the distinction runs INSIDE subsidies -- a
@@ -261,7 +261,7 @@ class Transaction(BaseModel):
             defaulting the other way would drop real income out of a declared
             volume.
         tipo_actividad: Operator-declared Modelo 036 tipo de actividad
-            (:class:`~core.TipoActividad`) the row's activity income belongs to.
+            (:class:`~core.tipos_actividad.TipoActividad`) the row's activity income belongs to.
             Present so a return that splits casillas by activity can route each
             row to the right one -- Modelo 131 carries the estimación-objetiva
             volume in casilla 01 and the agrarian volume in casilla 08, and
@@ -336,12 +336,12 @@ class Transaction(BaseModel):
             issued side outside the Union is export treatment,
             zero-rated, so an unrecorded establishment silently
             exempted a supply. The code is handed to
-            :func:`~domain.iva.territorial_scope_for_country`, which
+            :func:`~domain.iva.establishment.territorial_scope_for_country`, which
             answers from the closed vocabulary and refuses a code that
             names no country, so ``XX`` establishes nothing rather than
             establishing an export.
 
-            This mirrors :class:`~domain.invoices.Invoice`, which has
+            This mirrors :class:`~domain.invoices.models.Invoice`, which has
             always stored the country and derived the Member State.
             The two models disagreeing about how one fact is held is
             what let the ledger path lose a distinction the invoice
@@ -789,7 +789,7 @@ class Transaction(BaseModel):
         current record explicitly declares the jurisdiction unknown.
 
         The shape policy is owned by
-        :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction`, shared
+        :func:`~core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`, shared
         with the application-layer ledger command and payload models, so the
         two boundaries cannot drift apart on which tokens they accept. Only
         the domain error type is re-raised here.
@@ -807,8 +807,8 @@ class Transaction(BaseModel):
 
         Shape only, and deliberately not membership. Whether a code names a
         country this codebase can place is a separate question with a separate
-        authority -- :func:`~domain.iva.territorial_scope_for_country` and
-        :func:`~domain.iva.stated_country_code_status` -- and asking it here
+        authority -- :func:`~domain.iva.establishment.territorial_scope_for_country` and
+        :func:`~domain.iva.establishment.stated_country_code_status` -- and asking it here
         would refuse a real jurisdiction the bundled vocabulary has simply not
         catalogued yet. Those exist at any given moment -- the vocabulary is a
         bounded subset that grows -- so a membership check at construction would
@@ -819,7 +819,7 @@ class Transaction(BaseModel):
         remove.
 
         The shape policy is the same
-        :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction` that owns
+        :func:`~core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction` that owns
         ``source_jurisdiction`` above, so one model does not accept two
         different spellings of a country code.
         """
@@ -833,15 +833,15 @@ class Transaction(BaseModel):
         """Return the Member State the counterparty is established in, or ``None``.
 
         Derived from :attr:`counterparty_country` rather than stored beside it,
-        matching :class:`~domain.invoices.Invoice`. Two stored copies of one
+        matching :class:`~domain.invoices.models.Invoice`. Two stored copies of one
         establishment fact can disagree, and the disagreement is silent.
 
         ``None`` covers three different situations and deliberately does not
         distinguish them, because a Member State accessor is the wrong place to:
         no country was recorded, the country is outside the Union, or the code
         names no country at all. A caller that must tell those apart asks
-        :func:`~domain.iva.territorial_scope_for_country` for the territory and
-        :func:`~domain.iva.stated_country_code_status` for why nothing resolved.
+        :func:`~domain.iva.establishment.territorial_scope_for_country` for the territory and
+        :func:`~domain.iva.establishment.stated_country_code_status` for why nothing resolved.
         Reading this ``None`` as "outside the Union" is exactly the inference
         that let an unrecorded establishment zero-rate a supply.
         """

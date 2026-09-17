@@ -30,7 +30,7 @@ backoff owed to a single failure. That tolerance is not one of the ones above
 while a lost increment only helps whoever is guessing.
 
 See Also:
-    :class:`~adapters.persistence.storage.master_key.BucketSession`
+    :class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`
         The unlock session whose authentication attempts this throttle guards.
 """
 
@@ -71,7 +71,7 @@ class LoginThrottleState(BaseModel):
     Carries only a non-negative failure count and the timestamp of the most
     recent failure. It never holds a passphrase, key, or any other secret.
 
-    ``last_failure_at`` is a canonical :data:`~core.time.UtcInstant` because
+    ``last_failure_at`` is a canonical :data:`~core.time.utc.UtcInstant` because
     the whole backoff is a comparison against it. A bare ``datetime`` admitted
     two shapes the sidecar must never carry: a naive stamp, which made
     :func:`_evaluate_state` raise a raw ``TypeError`` out of the security gate

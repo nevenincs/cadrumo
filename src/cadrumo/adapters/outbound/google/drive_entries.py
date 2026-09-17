@@ -30,7 +30,7 @@ The module also owns two invariants the duplicated copies did not enforce:
 See Also:
     :func:`adapters.outbound.google.api.execute_request`
         Executor that maps Drive transport failures onto the typed
-        :class:`adapters.outbound.storage.OutboundStorageError` hierarchy.
+        :class:`adapters.outbound.storage.errors.OutboundStorageError` hierarchy.
 """
 
 from __future__ import annotations
@@ -126,7 +126,7 @@ def require_drive_entry_id(
         The validated Drive object ID.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
             When the entry carries no ``id``, a non-string ``id``, or a blank
             one. Without this the caller's ``entry["id"]`` raised a raw
             :exc:`KeyError` out of the provider boundary.
@@ -180,9 +180,9 @@ def find_owned_drive_entry(
         The owned entry mapping, or ``None`` when no such entry exists.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageConflictError`: When a
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError`: When a
             same-named entry exists but is not app-owned.
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`: When
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`: When
             an owned entry carries no usable ID.
     """
     query = build_owned_entry_query(parent_id=parent_id, name=name, mime_type=mime_type)

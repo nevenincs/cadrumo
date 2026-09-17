@@ -36,7 +36,7 @@ __all__ = [
 
 
 def _canonical_bucket_id(bucket_id: str) -> str:
-    """Return ``bucket_id`` under the canonical :data:`~core.identity.BucketId` contract.
+    """Return ``bucket_id`` under the canonical :data:`~core.identity.bucket.BucketId` contract.
 
     The key and lock helpers stripped and rejected blanks for themselves but
     never consumed the canonical alias, so they also accepted identifiers past
@@ -45,7 +45,7 @@ def _canonical_bucket_id(bucket_id: str) -> str:
     address the same way, fragmenting storage ownership for one profile.
 
     The rule itself is not restated here. It lives beside the alias it
-    enforces, as :func:`~core.identity.canonical_bucket_id`; this wrapper only
+    enforces, as :func:`~core.identity.bucket.canonical_bucket_id`; this wrapper only
     translates the shared refusal into this domain's own error class, which is
     exactly why the shared helper raises the plain builtin.
 
@@ -66,7 +66,7 @@ def usage_ratios_object_key(bucket_id: str) -> str:
 
     Raises:
         UsageRatioPersistenceError: When ``bucket_id`` is not a canonical
-            :data:`~core.identity.BucketId`.
+            :data:`~core.identity.bucket.BucketId`.
     """
     return f"profile:{_canonical_bucket_id(bucket_id)}"
 

@@ -31,6 +31,7 @@ from ....core.hashing import (
     sha256_hex,
 )
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
+from ....core.type_guards import is_object_mapping
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
@@ -330,9 +331,11 @@ def decode_authority_component(
         if isinstance(query, SnapshotGlobalsComponentQuery):
             facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
             fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
-            if not isinstance(document, Mapping):
+            if not is_object_mapping(document):
                 raise AuthorityComponentCodecError("snapshot globals component payload must be a mapping")
-            support = SupportedFilingYearsCatalogue.model_validate(document.get("supported_filing_years"), strict=False)
+            support = SupportedFilingYearsCatalogue.model_validate(
+                document.get("supported_filing_years"), strict=False
+            )
             candidate = CandidateFactAuthority(fact_catalogue, support)
             source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
             with validating_governed_facts(source):

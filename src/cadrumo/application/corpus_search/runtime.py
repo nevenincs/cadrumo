@@ -12,7 +12,7 @@ lookup need no model, no vectors, and no network. The service has no degraded
 mode because it has no optional half to degrade from.
 
 See Also:
-    :func:`~application.corpus_search.run_retrieval`
+    :func:`~application.corpus_search._retrieval.run_retrieval`
         Retrieval primitive this runtime service provisions and calls.
 """
 

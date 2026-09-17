@@ -47,8 +47,8 @@ adapters:
           igényel; először hívja meg az authenticate() metódust.
   browser:
     errors:
-      not_provisioned: Az AEAT-automatizálás által indított Chromium böngésző nincs
-        telepítve ezen a gépen. Telepítse, majd próbálja újra.
+      not_provisioned: Az AEAT-automatizálás által indított böngésző nincs telepítve
+        ezen a gépen. Töltse le, majd próbálja újra.
   google:
     calc_sheets:
       errors:

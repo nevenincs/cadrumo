@@ -8,18 +8,18 @@ add diagnostics for source kinds that would otherwise default to a silent zero.
 See Also:
     :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
         Bucket-backed calculate path that composes these staging helpers.
-    :class:`~application.aggregation.CalculationSourceResolution`
+    :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
         Source-mesh envelope merged and diagnosed by this module.
-    :func:`~application.aggregation.merge_source_resolutions`
+    :func:`~application.aggregation.source_resolution_operations.merge_source_resolutions`
         Merge primitive used after staged prorrata and bienes-inversion
         resolutions are produced.
-    :func:`~application.aggregation.collect_unhandled_source_diagnostics`
+    :func:`~application.aggregation.source_resolution_operations.collect_unhandled_source_diagnostics`
         Diagnostic sweep used to surface declared-but-unhandled source kinds.
-    :class:`~application.calculations.ProrrataRegularizacionSourceResolver`
+    :class:`~application.calculations.prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Resolver fed by materialised current-year prorrata registry values.
-    :class:`~application.calculations.BienesInversionRegularizacionSourceResolver`
+    :class:`~application.calculations.bienes_inversion_regularizacion.BienesInversionRegularizacionSourceResolver`
         Dependent capital-goods resolver composed with the staged prorrata pass.
-    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+    :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
         Registry engine invoked without persistence to materialise current-year
         casilla values for staged resolvers.
 """

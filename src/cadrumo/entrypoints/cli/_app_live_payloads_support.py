@@ -7,11 +7,12 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 
 
+@pydantic_validation_boundary
 def _is_a_registry_period_token(value: str) -> str:
     """Return ``value`` when it is a bare registry period code, else refuse.
 

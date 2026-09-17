@@ -215,7 +215,9 @@ class TestTextExtractionPrompt:
 
         errors = raised.value.errors(include_url=False)
         assert len(errors) == 1
-        nested = errors[0]["ctx"]["error"]
+        # The validation boundary carries the registered error as the cause of
+        # the ValueError pydantic requires.
+        nested = errors[0]["ctx"]["error"].__cause__
         assert isinstance(nested, LLMValidationError)
         verdict = nested.terminal_precondition_verdict
         assert verdict is not None

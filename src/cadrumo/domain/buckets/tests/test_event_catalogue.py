@@ -90,7 +90,8 @@ def test_catalogue_rejects_key_that_does_not_match_event_id() -> None:
     # The refusal names both sides as machine facts rather than a sentence, so
     # the assertion pins the mismatch itself and not a phrase a translation or
     # a reword would break.
-    cause = raised.value.errors()[0]["ctx"]["error"]
+    # The validation boundary keeps the registered refusal as the builtin error's cause.
+    cause = raised.value.errors()[0]["ctx"]["error"].__cause__
     assert cause.context == {
         "catalogue_key": bogus_key,
         "event_id": event.event_id,

@@ -15,7 +15,7 @@ the operator has to be told about. The contract runs afterwards, over an
 already-valid record, and its verdict is data.
 
 What "grounded" means is decided by the Axis-A component-expectation table
-(:func:`~cadrumo.domain.iva.category_components`), not by inspecting which
+(:func:`~cadrumo.domain.iva.components.category_components`), not by inspecting which
 fields happen to be populated. That is the whole point: field nullness cannot
 distinguish "this component does not exist in law" from "nobody recorded it",
 and conflating the two is what let an IVA-exempt professional service and an

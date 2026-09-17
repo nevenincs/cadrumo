@@ -1,6 +1,6 @@
 """Amendment actions for externally filed modelo baselines.
 
-:func:`~cadrumo.application.modelo.amend_modelo_revision` starts from a current, externally evidenced
+:func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision` starts from a current, externally evidenced
 :class:`ModeloRecord`, builds a corrected
 :class:`CalculationRevision` with an explicit
 :class:`CalculationRevisionAmendmentKind`, supersedes the
@@ -22,7 +22,7 @@ new revision keeps legal/source provenance for both overridden and inherited
 casillas.
 
 See Also:
-    :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
+    :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
         Creates the AEAT-attested baseline that this module amends.
     :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
         Carries or rebuilds observation provenance for the corrected casilla map.
@@ -321,7 +321,7 @@ def amend_modelo_revision[CasillaKey](
         ``aeat app modelo work amend``:
             CLI command that validates ``--from-filing-record``, ``--kind``,
             ``--reason``, and ``--set`` before calling this service.
-        :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
+        :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
             Production import path that creates accepted external-evidence
             baselines.
         :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:

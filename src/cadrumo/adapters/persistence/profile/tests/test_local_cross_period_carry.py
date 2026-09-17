@@ -36,11 +36,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.application.calculations.tests.cross_period_verdict_support import has_non_official_local_chain
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence

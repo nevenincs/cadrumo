@@ -2,7 +2,7 @@
 
 These guard-violation errors are raised by the pure carry-forward,
 reconciliation, and balance logic. Each uses the canonical registered
-:class:`~cadrumo.core.errors.CadrumoError` ancestry, so the failure reaches the
+:class:`~cadrumo.core.errors.hierarchy.CadrumoError` ancestry, so the failure reaches the
 typed error registry with a stable code and structured context. Pydantic
 validators translate a registered failure to ``ValueError`` at their narrow
 validator boundary when scalar validation or coercion crosses that protocol.
@@ -27,7 +27,7 @@ class IvaCompensationYearRangeError(CadrumoError):
     Replaces bare :exc:`ValueError` at the year-range guards in
     :func:`iva_compensation_period_key` and
     :func:`build_iva_compensation_carry_forward_report`. Its canonical
-    registered ancestry is :class:`~cadrumo.core.errors.CadrumoError`; a
+    registered ancestry is :class:`~cadrumo.core.errors.hierarchy.CadrumoError`; a
     Pydantic validator translates it to ``ValueError`` at its narrow boundary
     when these scalar checks are performed there.
     """
@@ -38,7 +38,7 @@ class IvaCompensationDecimalParseError(CadrumoError):
 
     Replaces the bare :exc:`ValueError` re-raised from
     :exc:`~decimal.InvalidOperation` inside the casilla-decimal coercion helper.
-    Its canonical registered ancestry is :class:`~cadrumo.core.errors.CadrumoError`;
+    Its canonical registered ancestry is :class:`~cadrumo.core.errors.hierarchy.CadrumoError`;
     a Pydantic validator translates it to ``ValueError`` at its narrow boundary
     while the direct helper chains the original :exc:`~decimal.InvalidOperation`
     cause.

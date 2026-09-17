@@ -141,7 +141,7 @@ def transcribe_text_layer(
         text_layer_ports: Required application capability for reading PDF pages.
 
     Returns:
-        The transcription, stamped :attr:`~cadrumo.core.FieldOrigin.TEXT_LAYER`
+        The transcription, stamped :attr:`~cadrumo.core.field_origin.FieldOrigin.TEXT_LAYER`
         with the extractor that produced it and content-addressed to the source
         bytes.
 

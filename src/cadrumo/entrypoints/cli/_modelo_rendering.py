@@ -5,7 +5,7 @@ This module turns modelo application/domain records such as
 :class:`~CalculationRevision`,
 :class:`~ModeloRecord`,
 :class:`~VerificationReport`, and
-:class:`~cadrumo.application.modelo.ModeloWorkDeadlinePosture` into CLI text lines
+:class:`~cadrumo.application.modelo.work_plazo.ModeloWorkDeadlinePosture` into CLI text lines
 and CommandSpec-declared JSON payload fragments. The payload side feeds
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.WorkUnitPayload`,
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`,
@@ -672,7 +672,7 @@ def casilla_inline_trace(obs: CasillaObservation) -> str | None:
     """Render the inline formula trace for one computed casilla observation.
 
     Returns the ``op(refs) = op(values) = value`` trace string for a formula
-    observation (a :class:`~cadrumo.domain.calculations.registry.CasillaObservation`
+    observation (a :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`
     whose ``formula_id`` and ``op`` are set), sourced entirely from the
     already-computed operand lineage on the typed observation. Returns ``None``
     for an input / bound casilla that carries no formula, so those rows render
@@ -747,7 +747,7 @@ def casilla_trace_verbose_line(obs: CasillaObservation) -> str:
     """Render the full LedgerEntry detail for one computed casilla observation.
 
     Exposes the complete typed
-    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` trace -
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` trace -
     ``op``, ``formula_id``, ``operand_refs``, ``operand_casilla_refs`` and
     ``operand_values`` - on a single tab-delimited line beneath its casilla row
     when the operator passes ``--verbose``.

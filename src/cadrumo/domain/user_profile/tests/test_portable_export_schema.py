@@ -36,6 +36,15 @@ _BINARY_PAYLOAD = b"\x00not-json\xffattachment-bytes"
 _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
 
+def _export(**fields: object) -> UserProfilePortableExport:
+    """Build a bundle the way export does: under the pinned profile context."""
+    return UserProfilePortableExport.model_validate(fields, context=_profile_creation_context_for_test())
+
+
+def _reload(payload: str) -> UserProfilePortableExport:
+    return UserProfilePortableExport.model_validate_json(payload, context=_profile_creation_context_for_test())
+
+
 def _profile() -> UserProfileRecord:
     return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
@@ -106,10 +115,10 @@ def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
     re-default to ``COMPLETE`` and fail the identity check).
     """
     record = _campaign_record()
-    bundle = UserProfilePortableExport(bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT)
+    bundle = _export(bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT)
     assert bundle.bundle_schema_version == 3
 
-    reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
+    reloaded = _reload(bundle.model_dump_json())
 
     assert reloaded.bundle_schema_version == 3
     assert reloaded.profile == record
@@ -129,27 +138,23 @@ def test_portable_export_campaign_roundtrip_is_not_tautological() -> None:
     tautological the mangled bundle would still compare equal.
     """
     record = _campaign_record()
-    payload = UserProfilePortableExport(
-        bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT
-    ).model_dump_json()
+    payload = _export(bundle_schema_version=_SHAPE_UNDER_TEST, profile=record, exported_at=_INSTANT).model_dump_json()
 
     mangled = payload.replace("Consultoria informatica", "Corrupted on the wire")
     assert "Corrupted on the wire" in mangled, "payload mutation did not apply"
 
     with pytest.raises(ValidationError, match="content digest does not match"):
-        UserProfilePortableExport.model_validate_json(mangled)
+        _reload(mangled)
 
 
 def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> None:
-    bundle = UserProfilePortableExport(
-        bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT
-    )
+    bundle = _export(bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT)
 
     assert bundle.bundle_schema_version == 3
     assert bundle.carried_objects == ()
     assert bundle.coverage_manifest == CoverageManifest()
 
-    reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
+    reloaded = _reload(bundle.model_dump_json())
     assert reloaded.bundle_schema_version == 3
     assert reloaded.profile == bundle.profile
     assert reloaded.carried_objects == ()
@@ -171,7 +176,7 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
         row_counts_by_namespace={"cadrumo.domain.buckets.event_history": 1},
     )
 
-    bundle = UserProfilePortableExport(
+    bundle = _export(
         bundle_schema_version=_SHAPE_UNDER_TEST,
         profile=_profile(),
         exported_at=_INSTANT,
@@ -179,7 +184,7 @@ def test_carried_secure_object_and_coverage_manifest_round_trip_binary_payload()
         coverage_manifest=coverage,
     )
 
-    reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
+    reloaded = _reload(bundle.model_dump_json())
 
     assert reloaded.carried_objects == (carried,)
     assert reloaded.carried_objects[0].object_key == _OBJECT_KEY
@@ -198,9 +203,7 @@ def test_portable_export_schema_rejects_extra_fields_and_is_frozen() -> None:
             },
         )
 
-    bundle = UserProfilePortableExport(
-        bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT
-    )
+    bundle = _export(bundle_schema_version=_SHAPE_UNDER_TEST, profile=_profile(), exported_at=_INSTANT)
     with pytest.raises(ValidationError, match="frozen"):
         bundle.bundle_schema_version = 4
 

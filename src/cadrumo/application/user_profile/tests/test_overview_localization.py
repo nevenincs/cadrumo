@@ -30,7 +30,12 @@ from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..overview import MASKED_PLACEHOLDER, build_profile_overview
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation"), pytest.mark.usefixtures("operation")]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_application,
+    pytest.mark.usefixtures("authority_operation"),
+    pytest.mark.usefixtures("operation"),
+]
 
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
@@ -47,7 +52,7 @@ def _record() -> UserProfileRecord:
 
 def _overview_in(language: str):
     with override_settings(cadrumo_output_language=language):
-        return build_profile_overview(_record())
+        return build_profile_overview(_record(), schema=published_profile_schema())
 
 
 def test_section_titles_change_with_the_output_language() -> None:
@@ -169,7 +174,7 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
         update={"facts": (*_record().facts, UserProfileFact(path=instance_path, value="censo.iae_epigrafe"))},
     )
     with override_settings(cadrumo_output_language="en"):
-        overview = build_profile_overview(record)
+        overview = build_profile_overview(record, schema=schema)
     projected = {field.path for section in overview.sections for field in section.fields}
 
     assert projected == (set(schema.field_paths) - namespaces) | {instance_path}

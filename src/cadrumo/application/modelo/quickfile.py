@@ -4,12 +4,12 @@
 services for one ``(modelo, filing_year, period)`` target and returns a typed
 :class:`QuickfileResult` recording every stage's outcome. It resolves readiness,
 resumes or creates the work unit
-(:func:`application.modelo.ensure_modelo_work_unit_for_active_target`),
+(:func:`application.modelo.work_addressing.ensure_modelo_work_unit_for_active_target`),
 calculates a draft revision
-(:func:`application.modelo.calculate_modelo_work_revision`), verifies it
-(:func:`application.modelo.verify_modelo_revision`), and exports the
+(:func:`application.modelo.calculate_input.calculate_modelo_work_revision`), verifies it
+(:func:`application.modelo.verification_actions.verify_modelo_revision`), and exports the
 verified revision to a local fichero-BOE artefact
-(:func:`application.modelo.export_modelo_revision`).
+(:func:`application.modelo.export.export_modelo_revision`).
 
 This orchestrator re-implements no stage: every step delegates to the
 authoritative application service, preserving each service's guards, lifecycle
@@ -21,17 +21,17 @@ halted and why.
 The chain is BUILD + EXPORT only. It never performs a live AEAT submission and
 never contacts AEAT: the terminal step is the local fichero-BOE export the human
 files themselves through the AEAT sede (see
-:func:`application.modelo.export_modelo_revision`, which is local-only, and
+:func:`application.modelo.export.export_modelo_revision`, which is local-only, and
 the ``sensitive-financial-data-secure-storage-only`` rule). The internal ``file`` record step is
 deliberately excluded: export consumes the ``VERIFICADO_COMPLETO`` revision
 directly.
 
 See Also:
-    :func:`application.modelo.calculate_modelo_work_revision`:
+    :func:`application.modelo.calculate_input.calculate_modelo_work_revision`:
         The calculate stage this orchestrator drives.
-    :func:`application.modelo.verify_modelo_revision`:
+    :func:`application.modelo.verification_actions.verify_modelo_revision`:
         The verify stage; a non-granted report halts the chain.
-    :func:`application.modelo.export_modelo_revision`:
+    :func:`application.modelo.export.export_modelo_revision`:
         The terminal local export stage.
 """
 
@@ -130,7 +130,7 @@ class QuickfileStageOutcome:
     """The typed result of one quickfile stage.
 
     ``translated_message`` and ``context`` carry the originating
-    :class:`core.errors.CadrumoError` metadata verbatim so the transport layer
+    :class:`core.errors.hierarchy.CadrumoError` metadata verbatim so the transport layer
     can localise the refusal without the application layer depending on i18n.
     """
 
@@ -175,7 +175,7 @@ class QuickfileCommand(BaseModel):
         bucket_id: The active profile bucket the chain runs against.
         modelo: AEAT modelo code (e.g. ``111``, ``130``, ``303``).
         filing_year: Filing year of the target period.
-        period: Typed :class:`~core.Period` for the filing target.
+        period: Typed :class:`~core.period.Period` for the filing target.
         registry_revision_id: Optional assertion of the law-determined registry
             revision. When supplied it is validated against
             :func:`law_selected_revision_for_work_target`; it never overrides
@@ -241,12 +241,12 @@ def run_modelo_quickfile(
 
     Each stage delegates to its authoritative application service. The chain
     halts at the first stage that refuses (a raised
-    :class:`core.errors.CadrumoError`, or an ungranted verification), records
+    :class:`core.errors.hierarchy.CadrumoError`, or an ungranted verification), records
     the refusal, and marks the remaining stages skipped.
 
     ``build_calculation_inputs`` is the transport-supplied factory that turns the
     resolved work-unit id into a validated
-    :class:`~application.modelo.WorkCalculateInputBundle`; the input bundle
+    :class:`~application.modelo.calculate_input.WorkCalculateInputBundle`; the input bundle
     can only be validated once the work unit (and therefore its registry
     revision) is known, so the factory is invoked after the create stage.
 
@@ -531,7 +531,7 @@ def _resolve_readiness(
 
     Readiness is imported lazily so loading this orchestrator does not import
     ``application.state_projection`` at module load time. A raised
-    :class:`core.errors.CadrumoError` degrades to ``None`` (advisory only):
+    :class:`core.errors.hierarchy.CadrumoError` degrades to ``None`` (advisory only):
     readiness never blocks the chain, so a projection failure must not abort it.
     """
     from ..state_projection import ModeloReadinessRequest, build_operator_state_projection

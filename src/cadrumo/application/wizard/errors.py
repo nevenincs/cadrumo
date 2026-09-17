@@ -92,11 +92,11 @@ class WizardAnswerTypeError(ProfileAnswerTypeError):
     """Raised when a :class:`SetupAnswers` field coercion receives an unexpected type.
 
     Each ``@field_validator`` in :mod:`cadrumo.domain.user_profile.setup_answers`'s :class:`SetupAnswers`
-    raises :class:`~cadrumo.core.errors.ProfileAnswerTypeError` (the canonical core
+    raises :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError` (the canonical core
     type); this subclass is retained so application-layer code and tests that
     catch :class:`WizardAnswerTypeError` by name continue to work.
 
-    Inherits from the registered :class:`~cadrumo.core.errors.ProfileAnswerTypeError`
+    Inherits from the registered :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError`
     family, whose validation failures are translated to ``ValueError`` at the
     Pydantic field-validator boundary while this typed exception remains in the
     error registry.

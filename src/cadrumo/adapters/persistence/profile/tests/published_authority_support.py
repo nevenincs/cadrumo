@@ -20,10 +20,15 @@ _LEASES = ExitStack()
 _LEASE_CONTEXT = contextvars.copy_context()
 
 
+def _enter_published_authority_lease() -> PinnedAuthorityOperation:
+    """Enter the published-authority lease, returning the pinned operation."""
+    return _LEASES.enter_context(bundled_indexed_authority().operation())
+
+
 @cache
 def published_authority_operation() -> PinnedAuthorityOperation:
     """Lease the published generation once per process, as runtime reads it."""
-    return _LEASE_CONTEXT.run(_LEASES.enter_context, bundled_indexed_authority().operation())
+    return _LEASE_CONTEXT.run(_enter_published_authority_lease)
 
 
 def release_published_authority_operation() -> None:

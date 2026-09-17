@@ -7,11 +7,11 @@ ledger preflight through the application-facing transaction port before
 calculation proceeds.
 
 See Also:
-    :func:`~application.modelo._calculation_actions.calculate_modelo_revision`:
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision`:
         Consumes the prepared bundle before persisting a draft revision.
-    :func:`~application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+    :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, enum, and date binding channels.
-    :mod:`~application.modelo._iva_wallet_gate`:
+    :mod:`~application.modelo.iva_wallet_gate`:
         Applies the persisted Modelo 303 IVA-wallet authority during preparation.
 """
 
@@ -134,9 +134,9 @@ def prepare_calculation(
     requirements. ``ledger_preflight_transaction_repository`` may provide a
     :class:`TransactionCatalogueRepositoryProtocol` for the ledger-tax readiness check.
     ``iva_compensation_decision_repository`` may provide the matching
-    :class:`~application.calculations.IvaWalletDecisionRepositoryProtocol` for the
+    :class:`~application.calculations.observations_repository.IvaWalletDecisionRepositoryProtocol` for the
     Modelo 303 wallet authority, while
-    :class:`~application.live.Borrador100SnapshotRepository` supplies the
+    :class:`~application.live.borrador_100.Borrador100SnapshotRepository` supplies the
     optional Modelo 100 borrador tier.
 
     Returns:

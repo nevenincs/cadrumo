@@ -16,7 +16,7 @@ class CoreNotFoundError(CoreError):
     """Raised when a requested resource or record cannot be located.
 
     Domain- and application-layer not-found errors should descend from this
-    class rather than directly from :class:`core.errors.CadrumoError` so
+    class rather than directly from :class:`core.errors.hierarchy.CadrumoError` so
     callers can catch the whole not-found surface with a single
     ``except CoreNotFoundError`` clause.
 

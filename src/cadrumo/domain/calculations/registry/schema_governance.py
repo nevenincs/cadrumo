@@ -9,7 +9,7 @@ and on an edition that inherits rows ``reviewed_against`` — and this module ow
 the rules that keep a declaration honest.
 
 The stamp is optional and its absence reads as
-:attr:`~cadrumo.core.RevisionReviewStatus.PENDING_REVIEW`, so an unstamped revision
+:attr:`~cadrumo.core.revision_review.RevisionReviewStatus.PENDING_REVIEW`, so an unstamped revision
 is a visible unreviewed backlog entry rather than a silent pass. That fail-closed
 default is what makes the remaining rules matter: the only way to leave the backlog
 is to make a claim, and a claim that cannot be checked is worse than the backlog it
@@ -71,9 +71,9 @@ different subjects, which is why they carry different markers, but they need the
 same guarantee and the loader refuses both sets in the same place.
 
 See Also:
-    :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`
         Declares the stamp scalars and delegates its validators here.
-    :data:`~cadrumo.domain.calculations.registry.REVISION_GOVERNANCE_FIELDS`
+    :data:`~cadrumo.domain.calculations.registry.schema.REVISION_GOVERNANCE_FIELDS`
         The stamp vocabulary, derived from the field markers this module documents.
 """
 

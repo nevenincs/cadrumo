@@ -56,7 +56,7 @@ See Also:
         What the resolved scopes are carried into.
     :class:`~application.ledger.classification_assembly.DeclaredFacts`
         The one channel a resolved scope reaches the assembly through.
-    :class:`~domain.iva.IvaTerritorialScope`
+    :class:`~domain.iva.classification.IvaTerritorialScope`
         The closed territory axis both authorities resolve into.
 """
 

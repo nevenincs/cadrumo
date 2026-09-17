@@ -30,7 +30,6 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
@@ -66,6 +65,7 @@ from ...storage.secure_object_namespaces import MODELO_RECONCILIATION_RECORDS_NA
 from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationRecordRepository, modelo_reconciliation_record_key
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
@@ -99,7 +99,7 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
     # selects, so a fabricated pin diverts reconcile into a snapshot_unavailable
     # advisory instead of reaching the branch under test.
     revision_id = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
         .revision.id
     )

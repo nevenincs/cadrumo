@@ -7,10 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -35,9 +31,14 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -52,7 +53,7 @@ _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projecti
 def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
     registry_casilla = next(
         item
-        for item in compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
@@ -198,7 +199,7 @@ def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     registry_casilla = next(
         item
-        for item in compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in published_authority_operation().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     assert row.delta == Decimal("500.00")
@@ -223,7 +224,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
     merely never having been fed a value small enough to matter.
     """
     published_tolerance = (
-        compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
+        published_authority_operation().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
     )
     assert published_tolerance == Decimal("0.01"), (
         "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance "

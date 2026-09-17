@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
@@ -119,17 +120,22 @@ def _law_determined_prior_revision_id() -> str:
 def _store_prior_settlement_observation(percentage: Decimal = _PRIOR_DEFINITIVE) -> None:
     """Write the prior Modelo 303 settlement observation into the active profile."""
     repository = CalculationObservationRepository()
+    casilla_values, source_headers = modelo_303_filed_disposition(
+        {_PORCENTAJE_ID: percentage},
+        source_locator="prior-settlement:declaration-type",
+    )
     observation = registry_grounded_modelo_observation(
         modelo=Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
-        casilla_values={_PORCENTAJE_ID: percentage},
+        casilla_values=casilla_values,
     )
     repository.save(
         repository.prepare_observation_envelope(
             observation,
             source_kind=_SOURCE_KIND,
             captured_at=_CAPTURED_AT,
+            source_headers=source_headers,
             stamped_revision_id=_law_determined_prior_revision_id(),
         )
     )

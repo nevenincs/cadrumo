@@ -1,6 +1,6 @@
 """Closed review-provenance vocabulary for shipped registry records.
 
-Every :class:`~domain.calculations.registry.ModeloRevision` carries a declared
+Every :class:`~domain.calculations.registry.schema.ModeloRevision` carries a declared
 governance stamp naming who engineered the revision and how far its review has
 progressed. :class:`RevisionReviewStatus` closes that value set so loader
 hydration rejects an unknown token at registry-load time rather than at a
@@ -32,7 +32,7 @@ codebase already ships, none of which can carry this subject:
   and they live outward of the registry domain that needs this value set.
 
 Hydration happens at the registry boundary:
-:func:`~domain.calculations.registry.load_registry_tree` parses the
+``domain.calculations.registry.load_registry_tree`` parses the
 ``revision.toml`` token into the member before strict schema validation.
 """
 

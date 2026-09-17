@@ -2,8 +2,8 @@
 
 :func:`build_overview_backlog` is the application service backing
 ``aeat app overview backlog``. It accepts a
-:class:`~domain.deadlines.TaxpayerProfile`, composes
-:func:`application.overview.build_overview_calendar` over an
+:class:`~domain.deadlines.models.TaxpayerProfile`, composes
+:func:`application.overview.calendar.build_overview_calendar` over an
 operator-supplied date window (defaulting to the last 365 days through today),
 and enumerates every :class:`OverviewCalendarEntry` whose
 ``adjusted_closes_on`` precedes today and whose ``user_state`` indicates it has
@@ -48,7 +48,7 @@ class OverviewBacklog(BaseModel):
     """Outcome of ``build_overview_backlog``.
 
     The model is the backlog-shaped projection of
-    :class:`application.overview.OverviewCalendar`. Items retain the
+    :class:`application.overview.calendar_models.OverviewCalendar`. Items retain the
     original :class:`OverviewCalendarEntry` rows, warnings remain
     :class:`CalendarWarning` rows from the calendar build, and completeness is
     the inherited :class:`CalendarCompleteness` report.
@@ -103,14 +103,14 @@ def build_overview_backlog(
     """Enumerate the operator's past-due obligations.
 
     Args:
-        profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
+        profile: The :class:`~domain.deadlines.models.TaxpayerProfile` whose
             filing obligations are evaluated.
         operation: Caller-owned generation-pinned authority operation shared
             with the composed calendar.
         from_date: Start of the calendar window; defaults to 365 days before ``as_of``.
         to_date: End of the calendar window; defaults to ``as_of``.
         as_of: Reference date for past-due classification; defaults to today.
-        engine: Optional :class:`~domain.deadlines.DeadlineEngine`
+        engine: Optional :class:`~domain.deadlines.engine.DeadlineEngine`
             override.
         raw_values: Optional raw profile values passed through to the engine.
         work_units: Optional Modelo work units loaded by the caller. When no
@@ -124,7 +124,7 @@ def build_overview_backlog(
     the underlying deadline-engine schedule.
 
     Past-due classification uses the
-    :class:`application.overview.OverviewPeriodState` taxonomy: an
+    :class:`application.overview.calendar_models.OverviewPeriodState` taxonomy: an
     obligation is in the backlog iff its
     ``adjusted_closes_on`` precedes ``as_of`` AND its ``user_state``
     is ``LATE``. Filed obligations are excluded by the state mapping;

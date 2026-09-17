@@ -1,17 +1,17 @@
-"""The real network-transmitting :class:`~core.telemetry.TelemetrySink`.
+"""The real network-transmitting :class:`~core.telemetry.emit.TelemetrySink`.
 
-:class:`~core.telemetry.HttpTelemetrySink` is the transport that was
+:class:`~core.telemetry.http_sink.HttpTelemetrySink` is the transport that was
 deliberately deferred until every earlier piece (the consent gate, the
-closed allowlisted :class:`~core.telemetry.TelemetryEventPayload`, and
-:class:`~core.telemetry.LocalNoopTelemetrySink`) proved the pipeline
+closed allowlisted :class:`~core.telemetry.schema.TelemetryEventPayload`, and
+:class:`~core.telemetry.emit.LocalNoopTelemetrySink`) proved the pipeline
 end-to-end without ever touching the network. This module adds the one sink
 that actually POSTs a payload off the operator's host, and it is
 **structurally inert by default**:
-:func:`~core.telemetry.emit_telemetry_event` never constructs a sink on its own,
+:func:`~core.telemetry.emit.emit_telemetry_event` never constructs a sink on its own,
 so an ``HttpTelemetrySink`` only ever exists (and therefore only ever sends)
 when a call site both explicitly builds one AND already passed the four-way
 consent gate
-(:func:`~core.telemetry.telemetry_emit_permitted`).
+(:func:`~core.telemetry.consent.telemetry_emit_permitted`).
 
 Two additional invariants beyond the consent gate keep this sink safe:
 
@@ -19,14 +19,14 @@ Two additional invariants beyond the consent gate keep this sink safe:
    without :attr:`~core.config.Settings.cadrumo_telemetry_endpoint` set (the
    documented default -- ``None``, scaffolded but read by no other transport)
    is a no-op, mirroring
-   :class:`~core.telemetry.LocalNoopTelemetrySink`'s inertness. This
+   :class:`~core.telemetry.emit.LocalNoopTelemetrySink`'s inertness. This
    protects a deployment that flips ``cadrumo_telemetry_opt_in`` and a tier on
    without ever configuring where to send data.
 2. **A transport failure never escapes.** Telemetry is best-effort diagnostic
    signal, never a load-bearing part of any command's outcome; a connection
    refusal, timeout, or non-2xx response is logged at debug level and
    swallowed. The payload itself -- already the allowlisted, non-sensitive
-   :class:`~core.telemetry.TelemetryEventPayload` shape -- is never
+   :class:`~core.telemetry.schema.TelemetryEventPayload` shape -- is never
    logged, so a failure cannot leak transmission content into local logs.
 
 The HTTP transport reuses :mod:`httpx`, the project's single outbound HTTP
@@ -68,7 +68,7 @@ class HttpTelemetrySink:
         endpoint: The remote telemetry collector URL, or ``None``. When
             ``None`` (the default-off posture's natural value for
             ``settings.cadrumo_telemetry_endpoint``),
-            :meth:`~core.telemetry.HttpTelemetrySink.send` is a pure no-op --
+            :meth:`~core.telemetry.http_sink.HttpTelemetrySink.send` is a pure no-op --
             the sink never dials out.
     """
 
@@ -94,7 +94,7 @@ class HttpTelemetrySink:
     def send(self, payload: TelemetryEventPayload) -> None:
         """Best-effort POST of ``payload`` to the configured endpoint.
 
-        A no-op when :attr:`~core.telemetry.HttpTelemetrySink.endpoint` is
+        A no-op when :attr:`~core.telemetry.http_sink.HttpTelemetrySink.endpoint` is
         ``None`` (no transport configured). Any transport-level failure
         (connection error, timeout, non-2xx response) is caught, logged at debug
         level with no payload content, and swallowed -- telemetry delivery
@@ -103,7 +103,7 @@ class HttpTelemetrySink:
         Args:
             payload: The already-gated, already-allowlisted payload to
                 transmit. Only
-                :class:`~core.telemetry.TelemetryEventPayload`'s own JSON
+                :class:`~core.telemetry.schema.TelemetryEventPayload`'s own JSON
                 representation is sent; no other data is attached to the
                 request.
         """

@@ -12,8 +12,8 @@ production code routes on members, and the profile schema / resolver / doctor
 share one authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
-:func:`~application.user_profile.resolve_capability`,
-:func:`~application.user_profile.resolve_active_capability`, and by the
+:func:`~application.user_profile.capabilities.resolve_capability`,
+:func:`~application.user_profile.capabilities.resolve_active_capability`, and by the
 setup wizard's capability questions. The product doctor renders those same
 members beside :class:`~application.provisioning.DependencyStatus` rows
 from :func:`~application.local_reader.probe_local_reader`,
@@ -22,8 +22,8 @@ from :func:`~application.local_reader.probe_local_reader`,
 intent separate from dependency availability.
 
 This enum is deliberately separate from
-:attr:`domain.calculations.registry.ModeloDefinition.capabilities` and
-:data:`domain.calculations.registry.ModeloFilingCapability`. Registry
+:attr:`domain.calculations.registry.schema.ModeloDefinition.capabilities` and
+:data:`domain.calculations.registry.schema_base.ModeloFilingCapability`. Registry
 capabilities describe which workflows a modelo definition supports; service
 capabilities describe what an active profile permits the app to use.
 """
@@ -39,13 +39,13 @@ class ServiceCapability(StrEnum):
     Each value is the dotted profile-schema field leaf under the ``capabilities``
     section (``capabilities.<value>``) so the enum, the schema fact path, and the
     resolver agree on one identifier. Optional package availability is modeled
-    separately through :class:`~core.OptionalExtra` and
-    :func:`~core.require_optional_extra`; a capability records whether the
+    separately through :class:`~core.optional_extras.OptionalExtra` and
+    :func:`~core.optional_extras.require_optional_extra`; a capability records whether the
     profile permits the service, not whether its import/runtime dependency is
     installed.
 
     See Also:
-        :class:`~application.user_profile.CapabilityDecision`
+        :class:`~application.user_profile.capabilities.CapabilityDecision`
             Resolved posture after applying gestor mode, profile facts, defaults,
             and global settings.
         :mod:`entrypoints.cli.config._capabilities_cli`
@@ -86,6 +86,6 @@ class ServiceCapability(StrEnum):
         for the opposite reason -- an unanswered question there would decide,
         by silence, that a taxpayer's document may leave the machine. The
         resolver ANDs the global safety floor on top, yielding a
-        :class:`~application.user_profile.CapabilityDecision`.
+        :class:`~application.user_profile.capabilities.CapabilityDecision`.
         """
         return self is not ServiceCapability.CLOUD_EVIDENCE_UPLOAD

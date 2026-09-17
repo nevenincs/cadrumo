@@ -1,6 +1,6 @@
 """Domain exceptions for :mod:`domain.usage_ratios`.
 
-The hierarchy roots at :class:`core.errors.CadrumoError` so callers may catch
+The hierarchy roots at :class:`core.errors.hierarchy.CadrumoError` so callers may catch
 the project-wide base class when treating the substrate as opaque, or the
 specific subclass when they need to distinguish persistence faults from
 upcoming domain-level failure modes.

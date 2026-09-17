@@ -1,7 +1,7 @@
 """OFX financial provider backed by ``ofxtools``.
 
 Provides :class:`OfxProvider`, an
-:class:`~adapters.inbound.financial.providers.FinancialProvider`
+:class:`~adapters.inbound.financial.providers.base.FinancialProvider`
 implementation that wraps ``ofxtools`` to ingest every statement block
 exposed by an OFX or QFX file. The ``_OfxAccountLike``,
 ``_OfxStatementLike`` and ``_OfxTransactionLike`` Protocol surfaces let the
@@ -16,14 +16,14 @@ than silently degrading. Real bank exports are spec-conformant, so the
 strictness is a correctness gain over the previous permissive parser.
 
 Each OFX transaction is projected into a
-:class:`~adapters.inbound.financial.providers.ParsedLedgerRow`; the signed
+:class:`~adapters.inbound.financial.providers.base.ParsedLedgerRow`; the signed
 ``TRNAMT`` value determines
-:class:`~domain.transactions.TransactionDirection` and the stored raw
+:class:`~domain.transactions.enums.TransactionDirection` and the stored raw
 transaction keeps the absolute magnitude plus OFX-native raw fields.
 
 ``ofxtools`` is GPL-3.0-only and therefore capability-gated behind the
 ``ofx`` optional extra: the import is lazy, guarded by
-:func:`~core.require_optional_extra`, so a bare-core install keeps the rest
+:func:`~core.optional_extras.require_optional_extra`, so a bare-core install keeps the rest
 of the ledger import surface and refuses OFX sources with the extra's typed
 machine identity rather than a rendered installation command.
 """
@@ -135,8 +135,8 @@ def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
 
     The statement's ``CURDEF`` is validated against the same ISO 4217 shape
     policy the CSV column and the persisted
-    :class:`~domain.transactions.RawTransaction` use
-    (:func:`~core.parsing.normalise_iso_4217_currency`). A malformed
+    :class:`~domain.transactions.raw_transaction.RawTransaction` use
+    (:func:`~core.parsing.codes.normalise_iso_4217_currency`). A malformed
     ``CURDEF`` is refused here, naming the statement, rather than being passed
     through to fail later as an opaque model validation error.
 
@@ -193,7 +193,7 @@ class OfxProvider(FinancialProvider):
         as a plain probe miss carrying the extra's machine identity (so
         ``--provider auto`` detection of other formats keeps working), while a
         source that clearly IS OFX raises the typed
-        :class:`~core.MissingOptionalExtraError` — never a silent
+        :class:`~core.optional_extras.MissingOptionalExtraError` — never a silent
         "no provider matched". Neither branch renders an installation command;
         the recovery is resolved downstream from the extra's typed identity.
 

@@ -25,7 +25,7 @@ the participations already recorded for it.
 See :func:`derive_participation_index_id` for the object-key grammar, and the
 ``TransactionParticipationIndexRepository`` for the encrypted persistence
 boundary mirroring the :class:`CalculationRevision` catalogue repository at
-:class:`~cadrumo.adapters.persistence.storage.SensitivityClass` FINANCIAL.
+:class:`~cadrumo.core.classification.policies.SensitivityClass` FINANCIAL.
 """
 
 from __future__ import annotations

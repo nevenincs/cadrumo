@@ -61,7 +61,7 @@ def project_ledger_review_query(
 
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the :class:`~cadrumo.application.review.LedgerReviewStatus` for one bucket-local transaction fact."""
+    """Return the :class:`~cadrumo.application.review.filter.LedgerReviewStatus` for one bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:

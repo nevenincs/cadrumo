@@ -100,7 +100,7 @@ class ModeloHealthRow(BaseModel):
         modelo: AEAT modelo code (e.g. ``"130"``, ``"303"``).
         work_unit_id: The matching :class:`~WorkUnit`
             id, or ``None`` when :attr:`state` is
-            :attr:`~application.overview.ModeloReadinessState.NOT_STARTED`.
+            :attr:`~application.overview.pipeline_health.ModeloReadinessState.NOT_STARTED`.
         state: Current :class:`ModeloReadinessState` for this modelo/period.
         blocking_finding_count: Count of ``BLOCKING`` severity findings from
             the latest verification report against the current revision.
@@ -136,15 +136,15 @@ class PipelineHealthReport(BaseModel):
             found for the period, sorted by modelo code. Empty when no work
             unit has been created for this period yet.
         total_blocking_findings: Sum of every row's
-            :attr:`~application.overview.ModeloHealthRow.blocking_finding_count`.
+            :attr:`~application.overview.pipeline_health.ModeloHealthRow.blocking_finding_count`.
         total_warning_findings: Sum of every row's
-            :attr:`~application.overview.ModeloHealthRow.warning_finding_count`.
+            :attr:`~application.overview.pipeline_health.ModeloHealthRow.warning_finding_count`.
         ready: ``True`` only when the ledger reports no unresolved
             readiness issues (or was not scoped) and every modelo row is
-            :attr:`~application.overview.ModeloReadinessState.FILED` or
-            :attr:`~application.overview.ModeloReadinessState.VERIFIED`, with
+            :attr:`~application.overview.pipeline_health.ModeloReadinessState.FILED` or
+            :attr:`~application.overview.pipeline_health.ModeloReadinessState.VERIFIED`, with
             zero modelos in
-            :attr:`~application.overview.ModeloReadinessState.BLOCKED`.
+            :attr:`~application.overview.pipeline_health.ModeloReadinessState.BLOCKED`.
             ``False`` when any modelo is not started, never verified,
             incomplete, or blocked, or the ledger still carries pending-review
             rows or readiness issues. A pipeline with zero work units for the
@@ -343,7 +343,7 @@ def build_pipeline_health_report(
     Args:
         bucket_id: Active profile bucket the report is scoped to.
         filing_year: Filing year for the requested scope.
-        period: Typed filing :class:`~core.Period` for the requested scope.
+        period: Typed filing :class:`~core.period.Period` for the requested scope.
         ledger_report: Already-built
             :class:`~application.ledger.models.LedgerStatusReport` for
             ``(bucket_id, period)`` (period-scoped, so ``ready`` and
@@ -358,7 +358,7 @@ def build_pipeline_health_report(
             revision yet.
         reports_by_revision_id: Mapping of ``calculation_revision_id`` to its
             :class:`~VerificationReport` rows, sorted
-            oldest-first (the shape :func:`~application.modelo.list_verification_reports`
+            oldest-first (the shape :func:`~application.modelo.filing_actions.list_verification_reports`
             returns). The latest (last) report is used.
 
     Returns:

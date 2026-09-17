@@ -35,7 +35,7 @@ Both paths persist their outcome twice over, in ONE unit of work: a
 :class:`ModeloReconciliationRecord` carrying the grounded diffs and the
 advisories into the encrypted reconciliation record store selected by the
 bound :class:`ModeloReconciliationPersistencePort`, and a slim ``MODELO_RECONCILED``
-:class:`~domain.buckets.BucketEvent` carrying the verdict and the divergence
+:class:`~domain.buckets.event.BucketEvent` carrying the verdict and the divergence
 count. The detail lives in the record because a bucket-event payload value is
 capped at 500 characters and one grounded Modelo 100 casilla diff already
 encodes to a median 303 — two divergences were unpersistable for 99.6% of that
@@ -120,7 +120,7 @@ level but is refused with
 grows one modelo at a time as each modelo's ``declaracion_pdf`` extraction
 profile is confirmed to line up with its registry casilla ids one-to-one (the
 same casilla-id vocabulary its
-:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`
+:meth:`~domain.calculations.registry.schema.verification_policy`
 reconciles, whether that vocabulary is the printed AEAT box number or an
 engine-internal compound id such as ``iva.resultado``).
 
@@ -429,7 +429,7 @@ def modelo_reconcile_bytes(
     caller uploads. A pulled declaración never needs uploading in the first
     place — its per-casilla values are already reconciled against the
     taxpayer's own local calculation by
-    :func:`application.modelo.pulled_filing_divergence_findings`, which reads
+    :func:`application.modelo.pulled_filing_reconcile.pulled_filing_divergence_findings`, which reads
     both sides out of the same bucket the sweep already populated. Use
     :func:`modelo_reconcile` with a local declaración PDF file for
     casilla-level reconcile of a declaración held only on disk.
@@ -652,7 +652,7 @@ def _finalise_reconciliation(
     on the same verdict derivation, report assembly, and persistence.
 
     The :class:`ModeloReconciliationRecord` and the append-only
-    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` land in ONE
+    ``MODELO_RECONCILED`` :class:`~domain.buckets.event.BucketEvent` land in ONE
     persistence unit of work through the bound
     :class:`ModeloReconciliationPersistencePort` — the same co-emit discipline
     :func:`~application.modelo.revision_persistence.persist_filed_revision`
@@ -1029,7 +1029,7 @@ def _reconcile_declaracion_casillas(
 
     Resolves the registry snapshot for ``work_unit`` and folds its verification
     expectations into the canonical
-    :class:`~domain.calculations.registry.RegistryVerificationPolicy` — the
+    :class:`~domain.calculations.registry.schema_verification.RegistryVerificationPolicy` — the
     registry's own declared reconciliation scope, never an ad
     hoc casilla list. ``computed_casilla_ids`` (the coverage-gated set) is
     compared in full, so a casilla the computed revision resolved but the

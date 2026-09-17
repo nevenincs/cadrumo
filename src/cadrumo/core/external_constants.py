@@ -355,7 +355,7 @@ class AeatSection(_Frozen):
     strict :class:`AeatPre303Surface` only on first access via the
     :attr:`pre303` property. A missing or malformed pre303 block thus
     never raises while parsing the registry; it surfaces as a clean
-    :class:`core.errors.CoreValidationError` to the wallet /
+    :class:`core.errors.hierarchy.CoreValidationError` to the wallet /
     representation flows that actually consume it, and leaves
     selector-free commands (``config profile status``, ``modelo list``,
     …) entirely unaffected.
@@ -383,7 +383,7 @@ class AeatSection(_Frozen):
         ``[aeat.pre303]`` block cannot break registry parsing for the
         many CLI paths that never scrape the AEAT portal. When the block
         is broken the leaked :exc:`pydantic.ValidationError` is wrapped
-        in a :class:`core.errors.CoreValidationError` carrying the section
+        in a :class:`core.errors.hierarchy.CoreValidationError` carrying the section
         identity and the failing error's type as machine facts. The wrapper
         renders no prose and copies no validation message: the operator-facing
         text is the registered code's translation key, and the recovery is

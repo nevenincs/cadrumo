@@ -22,7 +22,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -37,6 +36,8 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BINDING_ID = "irpf.previous_year_economic_activity_net_income"
@@ -47,7 +48,7 @@ _SOURCE_CASILLAS = ("0224", "1479", "1553", "1577")
 
 
 def _m130_snapshot():
-    return compiled_bundled_authority().snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    return published_authority_operation().snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
 
 
 def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_of_activity_start(

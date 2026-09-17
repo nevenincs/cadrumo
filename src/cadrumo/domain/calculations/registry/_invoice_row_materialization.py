@@ -197,7 +197,7 @@ _M347_QUARTER_ROW_FIELDS: Mapping[Literal["1T", "2T", "3T", "4T"], str] = {
 def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
     """Return the calendar quarter token ``value`` falls in.
 
-    Routed through :meth:`~core.Period.contains`, the one canonical period
+    Routed through :meth:`~core.period.Period.contains`, the one canonical period
     boundary authority (``aeat-registry-authority-flow``'s period-boundary
     rule) -- no locally re-derived month-range arithmetic. Uses ``value``'s
     OWN calendar year, not a filing-year argument this row-producer has no

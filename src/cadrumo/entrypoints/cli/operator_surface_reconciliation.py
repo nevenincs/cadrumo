@@ -8,7 +8,7 @@ the Click context ``meta`` mapping. A single action target is reconciled from
 the same row projections without loading the command families it cannot reach.
 
 See Also:
-    :class:`~cadrumo.application.operator_surface.OperatorSurfaceReconciliation`
+    :class:`~cadrumo.application.operator_surface.manifest.OperatorSurfaceReconciliation`
         The application-owned reconciliation this module projects into.
 """
 

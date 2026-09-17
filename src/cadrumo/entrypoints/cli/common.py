@@ -718,7 +718,7 @@ def emit_envelope(
 ) -> None:
     """Render a typed result through JSON or text output.
 
-    JSON mode goes through :func:`~cadrumo.application.operator_output.emit_operator_json_success`
+    JSON mode goes through :func:`~cadrumo.application.operator_output.emit.emit_operator_json_success`
     so the payload is wrapped in the shared
     :class:`SchemaEnvelope` spine
     ``{"schema_version": ..., "command": ..., "status": ..., "result": ...,
@@ -729,11 +729,11 @@ def emit_envelope(
     When the active profile bucket is a sandbox, a
     persistent info :class:`Notice` naming the sandbox is prepended to
     ``notices`` (JSON mode, via
-    :func:`~cadrumo.application.operator_output.emit_operator_json_success`)
+    :func:`~cadrumo.application.operator_output.emit.emit_operator_json_success`)
     and a matching banner line is prepended ahead of ``lines`` (text mode),
     so an operator can never mistake a sandbox run for a run against the
     real profile. The indicator is resolved by
-    :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`,
+    :func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket`,
     shared with the setup wizard's own success emitters
     (:mod:`cadrumo.application.wizard.commands`), which sit below this CLI
     package and route through the same funnel rather than a second
@@ -872,9 +872,9 @@ def active_profile_label() -> str | None:
     Resolves the active bucket id through the same core precedence chain
     every command uses (:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id`), then
     resolves its live plaintext manifest label
-    (:func:`~cadrumo.application.workflow.resolve_profile_bucket`) — the
+    (:func:`~cadrumo.application.workflow.profile_bucket_scan.resolve_profile_bucket`) — the
     same non-secret display name
-    :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`
+    :func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket`
     reads,
     never opening the encrypted per-bucket database and never touching the
     redacted profile/bucket UUID. Returns ``None`` when no profile is

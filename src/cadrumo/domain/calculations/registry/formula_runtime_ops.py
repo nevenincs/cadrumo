@@ -2,19 +2,19 @@
 
 The formula evaluator delegates arithmetic dispatch, dated parameter lookup,
 rounding, and input validation here while executing
-:class:`~domain.calculations.registry.ModeloRevision` formula graphs.
-Helpers raise :class:`~domain.calculations.registry.RegistryValidationError`
-so :func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+:class:`~domain.calculations.registry.schema.ModeloRevision` formula graphs.
+Helpers raise :class:`~domain.calculations.registry.errors.RegistryValidationError`
+so :func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
 reports contract failures through the registry error channel.
 
 See Also:
-    :mod:`domain.calculations.registry._formula_runtime`
+    :mod:`domain.calculations.registry.formula_runtime`
         Snapshot evaluator that calls these helpers while materialising
-        :class:`~domain.calculations.registry.RegistrySnapshot` outputs.
-    :mod:`domain.calculations.registry._runtime_graph`
+        :class:`~domain.calculations.registry.schema.RegistrySnapshot` outputs.
+    :mod:`domain.calculations.registry.runtime_graph`
         Formula graph walkers that discover the casilla, binding, relation, and
         parameter refs consumed before operation dispatch starts.
-    :class:`domain.calculations.registry.ValidatedRegistryAuthority`
+    :class:`domain.calculations.registry.authority.ValidatedRegistryAuthority`
         Registry authority loaded by :func:`read_parameter` for ad hoc parameter
         reads outside snapshot execution.
 """
@@ -52,7 +52,7 @@ _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period
 class UnresolvedFormulaDependencyError(RegistrySnapshotError):
     """Raised internally when a non-blocking source gap makes a formula unresolved.
 
-    Shared between :mod:`~domain.calculations.registry._formula_runtime`
+    Shared between :mod:`~domain.calculations.registry.formula_runtime`
     and its per-family op-evaluator siblings (e.g.
     :mod:`~domain.calculations.registry._formula_runtime_irnr`) so a
     family module can signal a deferred dependency without importing back
@@ -113,9 +113,9 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     """Evaluate a resolved formula operation over decimal operands.
 
     Operation names mirror
-    :class:`~domain.calculations.registry.FormulaExpression` ``op`` values
+    :class:`~domain.calculations.registry.schema_formula.FormulaExpression` ``op`` values
     consumed by
-    :func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
+    :func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
     """
     require_formula_operator_arity(op, len(args))
     if op in {"add", "sum", "previous_period_sum"}:
@@ -265,7 +265,7 @@ def resolve_bracket(
 def resolve_dated_value(parameter: ParameterDefinition, date_context: Mapping[str, date]) -> DatedValue:
     """Resolve the one dated value a :class:`ParameterDefinition` selects.
 
-    Exactly one :class:`~domain.calculations.registry._schema_formula.DatedValue` must match
+    Exactly one :class:`~domain.calculations.registry.schema_formula.DatedValue` must match
     the selected date axes for the parameter lookup to be deterministic.
 
     Returns the RECORD rather than its scalar, because a value can carry more
@@ -380,7 +380,7 @@ def resolve_keyed_bracket(
 def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Decimal:
     """Apply a registry rounding rule to a decimal formula result.
 
-    ``money-2`` uses :func:`core.money.round_to_cents`; ``integer`` uses
+    ``money-2`` uses :func:`core.money.rounding.round_to_cents`; ``integer`` uses
     half-up quantization for registry-authored integer targets;
     ``integer-ceiling`` quantizes with :data:`decimal.ROUND_CEILING` for
     the targets whose governing provision takes the result to the next
@@ -418,8 +418,8 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
 ) -> dict[CasillaId, Decimal]:
     """Canonicalise decimal input keys against a :class:`ModeloRevision`.
 
-    Raw string keys become validated :class:`~core.CasillaId`
-    values, then :func:`domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
+    Raw string keys become validated :class:`~core.casilla_id.CasillaId`
+    values, then :func:`domain.calculations.registry.casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """
     _reject_non_string_input_keys(inputs)
@@ -520,7 +520,7 @@ def read_parameter(
 
     The ad hoc public helper loads the same validated registry authority used by
     snapshot callers, narrows to the selected
-    :class:`~domain.calculations.registry.ModeloRevision`, and delegates the
+    :class:`~domain.calculations.registry.schema.ModeloRevision`, and delegates the
     dated value lookup to :func:`resolve_parameter`.
 
     When no operation is supplied, the helper leases one indexed authority

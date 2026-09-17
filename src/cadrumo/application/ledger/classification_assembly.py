@@ -55,7 +55,7 @@ here, correctly, until the evidence question is settled.
 
 **A party's IVA identification is a THIRD thing, asked separately and demanded
 rarely.** Where a party is established and which Member State identifies it are
-two facts (:class:`~domain.iva.PartyFact`), and this module resolves them from
+two facts (:class:`~domain.iva.classification.PartyFact`), and this module resolves them from
 different evidence on purpose: the identification from the party's own printed
 IVA number, which settles it decisively because registration is precisely what
 it asserts; the establishment from the country and postal evidence, which no
@@ -70,7 +70,7 @@ path until those authorities exist. An assertion is the operator's claim, made
 knowingly; a default would be ours, made silently.
 
 See Also:
-    :func:`~domain.iva.classify_iva`
+    :func:`~domain.iva.classification.classify_iva`
         The single rule table. This module produces its input and never
         duplicates its decisions.
     :class:`~application.ledger.classifier_inputs.ClassifierInputs`
@@ -272,7 +272,7 @@ def _unresolved_country_reason(
     two-letter code at all is a reading failure.
 
     Which one applies is asked of
-    :func:`~domain.iva.stated_country_code_status` rather than re-derived, so
+    :func:`~domain.iva.establishment.stated_country_code_status` rather than re-derived, so
     the boundary that narrowed the rung and the sentence explaining the refusal
     cannot drift apart.
     """
@@ -428,7 +428,7 @@ class DeclaredFact[T](BaseModel):
     Attributes:
         value: The fact itself, in its own closed type.
         source: Who established it. Reuses the shipped
-            :class:`~core.ClassifierInputSource` rather than declaring a second
+            :class:`~core.classifier_input_source.ClassifierInputSource` rather than declaring a second
             source vocabulary: the audit envelope already speaks it, so one
             spelling flows from this channel through
             :class:`~application.ledger.classifier_inputs.ClassifierInputFact` to the stamp. A
@@ -462,7 +462,7 @@ class DeclaredFacts(BaseModel):
             supply what a VIES consultation would otherwise settle.
         issuer_scope: Where the issuer is ESTABLISHED, where a country code
             cannot settle it. Never supplies the identification state: they are
-            two facts (:class:`~domain.iva.PartyFact`), and an operator
+            two facts (:class:`~domain.iva.classification.PartyFact`), and an operator
             asserting where a party operates from has not thereby said which
             State registered it.
         customer_scope: The customer's establishment, on the same terms.
@@ -939,7 +939,7 @@ def classify_from_assembled_criteria(
     """Run the single rule table over assembled criteria, or return ``None``.
 
     A thin call rather than a second decision surface. Every classification
-    judgement stays in :func:`~domain.iva.classify_iva`; this module's whole
+    judgement stays in :func:`~domain.iva.classification.classify_iva`; this module's whole
     contribution is deciding whether the table may be consulted at all.
     """
     from ...domain.iva.classification import classify_iva
@@ -1017,7 +1017,7 @@ class IvaCategoryResolution(BaseModel):
         outcome: Which of the five states applies.
         category: The resolved treatment. ``None`` on ``CONTRADICTED`` and
             ``UNRESOLVED`` alike -- on the same terms
-            :class:`~domain.iva.LegendDerivation` withholds one, so a caller
+            :class:`~domain.iva.legend_derivation.LegendDerivation` withholds one, so a caller
             cannot hold the value while ignoring the conflict that produced it.
         classified: What the rule table reached from the operation's own facts,
             where it could place the operation at all. Carried beside the

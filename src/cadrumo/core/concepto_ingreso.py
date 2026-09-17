@@ -26,7 +26,7 @@ operator never marks is included and over-declares. That is the direction the er
 to point, because an unmarked receipt is far more likely to be ordinary than exceptional.
 
 See Also:
-    :func:`~domain.transactions.counts_toward_volumen_de_ingresos`
+    :func:`~domain.transactions.volumen_ingresos.counts_toward_volumen_de_ingresos`
         The predicate consumers use; do not re-derive the membership test.
 """
 

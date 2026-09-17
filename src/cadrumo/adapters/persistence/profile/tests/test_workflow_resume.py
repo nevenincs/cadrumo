@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -60,6 +59,7 @@ from .....tests.aeat_literal_fixtures import aeat_url
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .published_authority_support import published_authority_operation
 
 
 class _ResumeTargetKwargs(TypedDict, total=False):
@@ -335,7 +335,7 @@ def _done_result(run_id: str) -> WorkflowResult:
 
 def _seed_current_revision(work_unit_id: str) -> str:
     repository = CalculationRevisionCatalogueRepository()
-    registry_snapshot_ref = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = published_authority_operation().snapshot("130", filing_year=2026, period="1T").snapshot_ref
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_RESUME_CASILLA: "10"},

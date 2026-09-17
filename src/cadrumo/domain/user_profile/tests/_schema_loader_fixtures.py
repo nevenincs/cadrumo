@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema import ProfileSchemaDefinition
 
 
@@ -36,5 +36,7 @@ def legal_ids_fixture() -> frozenset[str]:
     load, which validates every modelo in the bundled tree before returning
     anything.
     """
-    _modelos, catalogues = bundled_registry_tree()
-    return frozenset(catalogues.legal)
+    # Every published legal reference, not only those a modelo snapshot cites:
+    # the profile schema grounds itself on provisions no modelo names.
+    with bundled_indexed_authority().operation() as operation:
+        return frozenset(operation.legal_reference_ids())

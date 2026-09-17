@@ -258,7 +258,7 @@ def get_engine(settings: Settings | None = None) -> Engine:
     Bucket-routed settings cache the engine under (storage root, bucket id);
     explicit-URL and root-fallback settings cache under the database URL.
     On first access, materialises every ORM table declared on
-    :class:`~adapters.persistence.storage.sql._orm.Base.metadata`
+    :class:`~adapters.persistence.storage.sql.orm.Base.metadata`
     against the new engine. The codebase is forward-only: there is no
     migration history; the schema is whatever the current ORM defines.
 

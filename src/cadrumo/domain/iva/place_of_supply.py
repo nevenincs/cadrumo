@@ -37,9 +37,9 @@ determine the placement is expected to say so, and the two conditions stay
 distinguishable -- an ungrounded rule raises where a silent one answers.
 
 See Also:
-    :class:`~domain.iva.IvaCategory`
+    :class:`~domain.iva.schema.IvaCategory`
         The treatments these rules resolve into.
-    :class:`~domain.iva.SupplyNature`
+    :class:`~domain.iva.supply_nature.SupplyNature`
         The axis a cross-border rule's provisions may or may not fix.
 """
 

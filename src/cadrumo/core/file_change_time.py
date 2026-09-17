@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import ctypes
 import os
+from collections.abc import Callable
 from functools import cache
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 
 class _FileBasicInfo(ctypes.Structure):
@@ -22,9 +23,9 @@ class _FileBasicInfo(ctypes.Structure):
 class _Kernel32Calls(NamedTuple):
     """The three kernel32 entry points this query binds."""
 
-    create: ctypes._NamedFuncPointer
-    query: ctypes._NamedFuncPointer
-    close: ctypes._NamedFuncPointer
+    create: Callable[..., Any]
+    query: Callable[..., Any]
+    close: Callable[..., Any]
 
 
 @cache

@@ -56,7 +56,7 @@ def _validate_iso_date(value: str) -> str:
     Delegates to the canonical :func:`~cadrumo.core.parsing.dates.require_iso8601_date`
     rather than :meth:`datetime.date.fromisoformat` directly: the latter also
     accepts the compact ``YYYYMMDD`` form, which cannot round-trip through the
-    domain records (e.g. :class:`~cadrumo.domain.contribuyente.inventory.MovementRecord`)
+    domain records (e.g. :class:`~cadrumo.domain.contribuyente.inventory.records.MovementRecord`)
     that parse this same field with the canonical helper.
     """
     require_iso8601_date(value)

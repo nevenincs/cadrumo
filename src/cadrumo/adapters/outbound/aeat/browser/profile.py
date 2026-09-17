@@ -1,8 +1,8 @@
 """Profile defaults for Playwright browser sessions.
 
 :class:`Profile` is the small browser-runtime record consumed by
-:class:`adapters.outbound.aeat.browser.BrowserSession`,
-:func:`adapters.outbound.aeat.browser.default_browser_session_factory`, and
+:class:`adapters.outbound.aeat.browser.session.BrowserSession`,
+:func:`adapters.outbound.aeat.browser.factory.default_browser_session_factory`, and
 Sede helpers that open Playwright pages. It carries the profile name, optional
 user agent, and the locale/timezone values
 forwarded into ``browser.new_context(...)``.
@@ -13,9 +13,9 @@ this module therefore does not construct settings or validate external
 constants for commands that never touch the browser adapter.
 
 See Also:
-    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`
+    :meth:`adapters.outbound.aeat.browser.session.BrowserSession.create_context`
         Consumes :class:`Profile` to build Playwright context kwargs.
-    :func:`adapters.outbound.aeat.browser.opened_browser_page`
+    :func:`adapters.outbound.aeat.browser.factory.opened_browser_page`
         Uses :class:`Profile` for short-lived Sede browser contexts.
 """
 
@@ -53,7 +53,7 @@ class Profile:
 
     Auth providers and Sede readers pass decrypted storage state explicitly as
     an in-memory mapping to
-    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`.
+    :meth:`adapters.outbound.aeat.browser.session.BrowserSession.create_context`.
     ``locale`` and ``timezone_id`` default from
     :class:`core.config.Settings` at construction time unless supplied
     explicitly.

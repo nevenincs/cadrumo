@@ -2,8 +2,8 @@
 
 Exposes concrete profile helpers used by the CLI and workflow surfaces.
 The production schema provider requires validated registry snapshots and
-projects them into the :class:`~domain.filing.CasillaSchemaProvider`
-surface consumed by :func:`~application.filing.build_draft`.
+projects them into the :class:`~domain.filing.protocols.CasillaSchemaProvider`
+surface consumed by :func:`~application.filing.draft_construction.build_draft`.
 
 This module is the production entry point through which callers (CLI,
 workflow, services) construct profiles and schema providers.
@@ -13,21 +13,21 @@ Key entry points:
 * :class:`ModeloOperatorProfile` — pydantic v2 record satisfying the
   filing-profile Protocol.
 * :func:`filing_profile_from_taxpayer` — projects taxpayer identity from a
-  domain :class:`~domain.deadlines.TaxpayerProfile` into the runtime
+  domain :class:`~domain.deadlines.models.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 * :func:`schema_provider_from_authority` — projects an explicitly supplied
   validated authority through the same provider surface.
 
 The schema provider consumes a
-:class:`~domain.calculations.registry.RegistrySnapshot` built from a
-:class:`~domain.calculations.registry.ModeloRevision` within a
-:class:`~domain.calculations.registry.ModeloDefinition`, accessed through
-a :class:`~domain.calculations.registry.ValidatedRegistryAuthority` loaded
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` built from a
+:class:`~domain.calculations.registry.schema.ModeloRevision` within a
+:class:`~domain.calculations.registry.schema.ModeloDefinition`, accessed through
+a :class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority` loaded
 from the configured registry root.
 
 See Also:
-    :mod:`application.modelo._workflow_gate`
+    :mod:`application.modelo.workflow_gate`
         Calculation-revision workflow gate that uses this runtime provider to
         build and approve filing drafts.
     :mod:`application.modelo.revision_replay_inputs`
@@ -133,9 +133,9 @@ class RegistryCasillaSchema(BaseModel):
     """Filing schema projection for one registry casilla.
 
     Strict, frozen pydantic v2 projection preserving typed IDs,
-    complete :class:`~domain.calculations.registry.CasillaConstraints` contract
+    complete :class:`~domain.calculations.registry.schema_surfaces.CasillaConstraints` contract
     and regulatory grounding (``legal_refs``, ``source_refs``) from the authoritative
-    :class:`~domain.calculations.registry.CasillaDefinition`.
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`.
     """
 
     model_config = _STRICT_FROZEN
@@ -229,7 +229,7 @@ class CasillaRecordMetadata:
     """Registry-declared official record-design metadata for one casilla.
 
     Projected verbatim from the authoritative
-    :class:`~domain.calculations.registry.CasillaDefinition` — the same
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` — the same
     authority the calculation engine consumes — so the fichero-BOE export parity
     gate can re-ground the rendered casilla's number and segmento against the
     registry declaration at the render choke point rather than trusting the
@@ -312,7 +312,7 @@ class RegistrySchemaAccessor:
 
     The concrete registry-schema accessor (it provides casilla collections
     and modelo subviews from validated registry TOML); structurally
-    satisfies the :class:`~domain.filing.CasillaSchemaProvider` protocol.
+    satisfies the :class:`~domain.filing.protocols.CasillaSchemaProvider` protocol.
     Named an accessor to stay distinct from the settled calculate-mesh resolver
     port.
     """
@@ -371,8 +371,8 @@ class RegistrySchemaAccessor:
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
 
-        Returns a :class:`~domain.filing.CasillaCollection` for the modelo.
-        Raises :exc:`~domain.filing.ModeloBuilderError` when the modelo is
+        Returns a :class:`~domain.filing.protocols.CasillaCollection` for the modelo.
+        Raises :exc:`~domain.filing.errors.ModeloBuilderError` when the modelo is
         absent.
         """
         try:
@@ -412,7 +412,7 @@ def filing_profile_from_taxpayer(
     """Project taxpayer identity into a :class:`ModeloOperatorProfile`.
 
     The common caller passes
-    :class:`~domain.deadlines.TaxpayerProfile`, but the accepted contract is
+    :class:`~domain.deadlines.models.TaxpayerProfile`, but the accepted contract is
     the narrower :class:`TaxpayerProfileIdentity` Protocol. This helper
     deliberately copies only taxpayer identity. Modelo applicability is legal
     filing truth and must come from validated registry data, not a filing-runtime
@@ -442,14 +442,14 @@ def build_runtime_schema_provider(
     """Build a :class:`RegistrySchemaAccessor` from validated snapshots.
 
     ``filing_year`` and ``period`` are required and ``period`` must be a typed
-    :class:`~core.Period`; raw registry tokens are rejected before snapshot lookup.
+    :class:`~core.period.Period`; raw registry tokens are rejected before snapshot lookup.
 
     The provider has no registry or source-root override: filing flows consume
     the immutable authority bundled with the installed package.
 
     Args:
         filing_year: Filing year of the draft or request.
-        period: Typed :class:`~core.Period` matching ``filing_year``.
+        period: Typed :class:`~core.period.Period` matching ``filing_year``.
         modelos: Optional modelo id selection. Blank ids are rejected.
         operation: Optional generation-pinned indexed authority operation. When
             supplied, ``modelos`` must name the requested models explicitly and
@@ -457,10 +457,10 @@ def build_runtime_schema_provider(
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
-        :class:`~domain.filing.CasillaSchemaProvider` surface.
+        :class:`~domain.filing.protocols.CasillaSchemaProvider` surface.
 
     Raises:
-        :class:`~domain.filing.ModeloBuilderError`: When the registry is
+        :class:`~domain.filing.errors.ModeloBuilderError`: When the registry is
             empty, a requested modelo is missing, the period arguments are
             invalid, or no snapshot exists for the requested filing context.
     """
@@ -501,7 +501,7 @@ def schema_provider_from_authority(
     Args:
         authority: Validated registry authority to project.
         filing_year: Filing year of the draft or request.
-        period: Typed :class:`~core.Period` matching ``filing_year``.
+        period: Typed :class:`~core.period.Period` matching ``filing_year``.
         modelos: Optional modelo id selection. Blank ids are rejected.
         operation: Optional generation-pinned indexed authority operation. When
             supplied, it takes precedence over the eager authority for the
@@ -509,10 +509,10 @@ def schema_provider_from_authority(
 
     Returns:
         A :class:`RegistrySchemaAccessor` implementing the filing
-        :class:`~domain.filing.CasillaSchemaProvider` surface.
+        :class:`~domain.filing.protocols.CasillaSchemaProvider` surface.
 
     Raises:
-        :class:`~domain.filing.ModeloBuilderError`: When the registry is
+        :class:`~domain.filing.errors.ModeloBuilderError`: When the registry is
             empty, a requested modelo is missing, the period arguments are
             invalid, or no snapshot exists for the requested filing context.
     """
@@ -740,8 +740,8 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
 
     Args:
         snapshot: The
-            :class:`~domain.calculations.registry.RegistrySnapshot` whose
-            :class:`~domain.calculations.registry.ModeloRevision` is
+            :class:`~domain.calculations.registry.schema.RegistrySnapshot` whose
+            :class:`~domain.calculations.registry.schema.ModeloRevision` is
             projected into filing-runtime casilla schemas.
 
     Returns:
@@ -749,7 +749,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
         casillas and ``registry:{modelo}:{revision}`` schema version.
 
     Raises:
-        :class:`~domain.filing.ModeloBuilderError`: When the snapshot
+        :class:`~domain.filing.errors.ModeloBuilderError`: When the snapshot
             revision contains ambiguous casilla references and cannot be
             projected safely.
     """
@@ -865,7 +865,7 @@ def registry_value_type(data_type: str) -> str:
     """Map a registry casilla data type to the filing runtime value type.
 
     Returns one of the value-type tags consumed by
-    :class:`domain.filing.CasillaSchema`: ``"decimal"``, ``"int"``,
+    :class:`domain.filing.protocols.CasillaSchema`: ``"decimal"``, ``"int"``,
     ``"str"``, ``"bool"``, or ``"date"``.
 
     Raises:

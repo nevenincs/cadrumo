@@ -2120,8 +2120,13 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.cancellation_observed.wait()
-            await asyncio.sleep(0.08)
-            escalating = await supervisor.inspect(operation_id)
+            # Wait for the escalation itself rather than a fixed interval: under
+            # load the cleanup deadline can elapse later than a sleep assumes.
+            async with asyncio.timeout(10):
+                escalating = await supervisor.inspect(operation_id)
+                while escalating.lifecycle is not OperationLifecycle.SETTLING:
+                    await asyncio.sleep(0.01)
+                    escalating = await supervisor.inspect(operation_id)
             executor.release.set()
             finished = await start_task
             assert finished == escalating
@@ -2724,7 +2729,7 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
         running = asyncio.run(run_to_settlement(supervisor, operation_id))
 
-        with pytest.raises(ValueError, match="terminal receipt effect is not declared"):
+        with pytest.raises(OperationDeclarationError, match="terminal receipt effect is not declared"):
             asyncio.run(
                 supervisor.settle(
                     operation_id,

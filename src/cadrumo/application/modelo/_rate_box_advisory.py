@@ -14,12 +14,12 @@ operator needs in order to act, which is why this gate is non-blocking while the
 export gate on the same condition is not.
 
 Both gates read
-:func:`~domain.calculations.registry.rate_box_coverage_shortfalls` over the same
+:func:`~domain.calculations.registry.rate_box_partition.rate_box_coverage_shortfalls` over the same
 derived partitions, so an operator cannot meet a refusal at export that no
 advisory preceded at calculate.
 
 See Also:
-    :mod:`domain.calculations.registry._rate_box_partition`
+    :mod:`domain.calculations.registry.rate_box_partition`
         Derives the two layers and owns the one subtraction both gates read.
     :mod:`application.filing._export_parity`
         The export-side refusal on the same condition.
@@ -57,7 +57,7 @@ def collect_rate_box_coverage_diagnostics(
 
     Returns:
         Tuple of non-blocking
-        :class:`~application.aggregation.CalculationSourceDiagnostic` rows, each
+        :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` rows, each
         naming the unaccounted amount, the tier holding it, and the boxes that
         do not reach it.
     """

@@ -87,7 +87,7 @@ class TranscriberIdentity(BaseModel):
             vision model's identifier. Never a coarse label like ``local``: the
             point is to know which reader's output is being trusted.
         transport: Where the read ran, as the one canonical transport token
-            (:func:`~core.provenance_transport_label`). A transcription is a
+            (:func:`~core.provenance_stamp.provenance_transport_label`). A transcription is a
             durable artefact derived from the document, so one produced
             off-host is an artefact a consent withdrawal must enumerate -- and
             a model identifier reveals its vendor only to a reader who already

@@ -1,8 +1,8 @@
 """Encrypted content-addressed cache for LLM responses.
 
 Each :class:`~llm.CachedEntry` is stored under
-:data:`~adapters.persistence.storage.LLM_CACHE_NAMESPACE` as an encrypted
-secure object with :class:`~core.classification.SensitivityClass`
+:data:`~adapters.persistence.storage.secure_object_namespaces.LLM_CACHE_NAMESPACE` as an encrypted
+secure object with :class:`~core.classification.policies.SensitivityClass`
 ``DIAGNOSTIC`` classification so operator-identifying inputs are redacted
 before persistence.
 """
@@ -48,7 +48,7 @@ class LLMCache:
     The cache derives :class:`~llm.CacheKey` values from
     :class:`~llm.LLMRequest` content and persists
     :class:`~llm.LLMResponse` payloads through
-    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+    :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`.
 
     Args:
         root_dir: Optional logical cache partition override.
@@ -171,8 +171,8 @@ class LLMCache:
         """Write a response to the cache and return the stored entry.
 
         The serialised payload is routed through the substrate's
-        :func:`~core.redaction.redact_structured` helper at
-        :class:`~core.classification.SensitivityClass` ``DIAGNOSTIC``
+        :func:`~core.redaction.rules.redact_structured` helper at
+        :class:`~core.classification.policies.SensitivityClass` ``DIAGNOSTIC``
         class before persistence (the CACHE-class default policy has an empty
         rule set because most caches are public reference data; the LLM cache
         carries identity-bearing inputs and therefore adopts the DIAGNOSTIC
@@ -273,7 +273,7 @@ class LLMCache:
         """Delete cached entries older than the retention window or beyond the count cap.
 
         Two-stage bound mirroring
-        :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.prune`: entries
+        :meth:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: entries
         older than ``retention_days`` (measured against the current time) are
         removed, then -- if more than ``max_records`` remain -- the oldest excess
         entries beyond the cap are removed too. Both bounds default to the

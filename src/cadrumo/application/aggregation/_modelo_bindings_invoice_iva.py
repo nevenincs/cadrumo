@@ -160,7 +160,7 @@ def _invoice_line_iva_observation(
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
         base_amount_eur: ``line.subtotal`` already converted to EUR via
-            :meth:`~domain.invoices.Invoice.line_amount_eur` -- the caller
+            :meth:`~domain.invoices.models.Invoice.line_amount_eur` -- the caller
             gates on a resolvable EUR amount before this is ever invoked, so
             every downstream construction reads this instead of the line's
             own native-currency field.

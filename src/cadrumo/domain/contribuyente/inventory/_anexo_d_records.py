@@ -15,6 +15,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.decimal.constants import MONEY_ZERO
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
@@ -205,6 +206,7 @@ class InventoryAnexoDResult(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
         """Require an exact, mutually exclusive split of the audited basis."""
         _validate_anexo_d_quantised_values(self)

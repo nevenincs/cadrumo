@@ -236,7 +236,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     A folder id has the same shape as a file id — only the ``in parents``
     query disambiguates the two on the Drive side — so a bare id and a
     ``?id=`` link resolve through
-    :func:`~adapters.outbound.google.parse_drive_file_id`.
+    :func:`~adapters.outbound.google.document_link_resolver.parse_drive_file_id`.
 
     A folder URL does not. Drive writes it as ``/drive/folders/<id>`` (with an
     optional ``/u/<n>/`` account segment and a ``?usp=sharing`` suffix), and
@@ -269,12 +269,12 @@ def ledger_evidence_pull_all(
     """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
 
     Lists the folder's children through
-    :func:`~adapters.outbound.google.list_drive_folder_documents` (the
+    :func:`~adapters.outbound.google.document_link_resolver.list_drive_folder_documents` (the
     same ``drive.file``-scoped minimal-scope posture
     :func:`ledger_evidence_pull` uses for a single document), then fetches and
     encrypts each PDF/image child through
-    :func:`~adapters.outbound.google.resolve_document_link` and
-    :func:`~domain.attachments.add_attachment` — the identical
+    :func:`~adapters.outbound.google.document_link_resolver.resolve_document_link` and
+    :func:`~domain.attachments.service.add_attachment` — the identical
     fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
     here. Fetched attachments are content-addressed and deduplicate by
     SHA-256, so re-running the sweep is idempotent. Attachments are stored

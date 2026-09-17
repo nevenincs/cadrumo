@@ -25,7 +25,7 @@ class ActionArgumentBindingSpecification(BaseModel):
     """Declare how an application outcome may materialise one target argument.
 
     This is deliberately distinct from the value-bearing
-    :class:`~cadrumo.application.operator_actions.ActionArgumentBinding` on a
+    :class:`~cadrumo.application.operator_actions.models.ActionArgumentBinding` on a
     verdict.  It admits a source strategy but contains neither a runtime value
     nor a resolution status.
     """

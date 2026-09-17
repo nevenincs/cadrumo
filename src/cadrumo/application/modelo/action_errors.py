@@ -12,7 +12,7 @@ and message key live in :mod:`cadrumo.core.errors.registry`. The richer
 contracts are kept here when the exception must preserve domain context without
 leaking it into rendered error payloads, as with
 :class:`ModeloWorkflowGateError` and its private
-:class:`~cadrumo.application.workflow.WorkflowResult`.
+:class:`~cadrumo.application.workflow.run_models.WorkflowResult`.
 
 See Also:
     :mod:`cadrumo.application.modelo.action_errors`:
@@ -241,7 +241,7 @@ class ModeloCrossPeriodCleanStateError(ModeloPreconditionErrorMixin, ModeloError
 class ModeloWorkflowGateError(ModeloError):
     """Raised when the workflow gate refuses an internal file transition.
 
-    The constructor stores the live :class:`~cadrumo.application.workflow.WorkflowResult`
+    The constructor stores the live :class:`~cadrumo.application.workflow.run_models.WorkflowResult`
     on a private attribute and exposes it through :attr:`result`. The rendered
     error context contains only primitive machine codes (``abort_code`` and
     ``stage``), which keeps CLI JSON/text payloads stable while allowing
@@ -250,7 +250,7 @@ class ModeloWorkflowGateError(ModeloError):
     See Also:
         :func:`cadrumo.application.modelo.workflow_gate.run_revision_workflow_gate`:
             Persists the workflow run and raises this error for aborted results.
-        :func:`cadrumo.core.errors.render_error_text`:
+        :func:`cadrumo.core.errors.error_codes.render_error_text`:
             Renders the primitive context without serialising the live result.
     """
 
@@ -268,7 +268,7 @@ class ModeloWorkflowGateError(ModeloError):
 
     @property
     def result(self) -> WorkflowResult:
-        """Return the live :class:`~cadrumo.application.workflow.WorkflowResult` that triggered the abort."""
+        """Return the live :class:`~cadrumo.application.workflow.run_models.WorkflowResult` that triggered the abort."""
         return self._result
 
     @property

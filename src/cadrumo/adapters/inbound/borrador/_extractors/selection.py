@@ -2,7 +2,7 @@
 
 Registers the concrete extractor classes (one per tax year) and exposes
 :func:`get_extractor` for the public
-:func:`adapters.inbound.borrador.parse_borrador` entry point.
+:func:`adapters.inbound.borrador.parser.parse_borrador` entry point.
 
 The observed-value extraction logic is year-agnostic across the currently
 registered 2021-2025 extractor years: AEAT Renta Web Open borrador PDFs print
@@ -12,13 +12,13 @@ years are in scope without requiring distinct class implementations for each.
 
 This registry is an adapter dispatch table, not a registry-authority lookup.
 Callers that need target-casilla coverage still provide a
-:class:`adapters.inbound.borrador.BorradorExtractionProfile` to
+:class:`adapters.inbound.borrador.schema.BorradorExtractionProfile` to
 the public parser.
 
 See Also:
     :class:`adapters.inbound.borrador._extractors.modelo_100_summary_v2025.Modelo100ObservedV2025Extractor`
         Current year-stable implementation used by every registered year.
-    :class:`adapters.inbound.borrador.BorradorParseMode`
+    :class:`adapters.inbound.borrador.schema.BorradorParseMode`
         Caller-selected observed versus registry-profile validation mode.
 """
 

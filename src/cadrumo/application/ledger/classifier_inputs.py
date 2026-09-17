@@ -21,11 +21,11 @@ What this module deliberately does NOT do is decide the classification, or map
 its inputs into the substrate classifier's own criteria record. It collects
 facts and states their provenance. The mapping needs one authority this
 pipeline does not consult (see
-:class:`~core.CounterpartyTaxablePersonStatus`), and inventing it here would
+:class:`~core.classifier_input_source.CounterpartyTaxablePersonStatus`), and inventing it here would
 put a legal conclusion behind an unverified reading.
 
 See Also:
-    :class:`~domain.iva.IvaInvoiceClassificationCriteria`
+    :class:`~domain.iva.classification.IvaInvoiceClassificationCriteria`
         The substrate classifier's input record these facts eventually feed.
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The read document these evidence-sourced facts are derived from.

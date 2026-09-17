@@ -1,16 +1,16 @@
 """Inbound ``parse_justificante`` entry points.
 
 This thin orchestration layer pairs a text backend selected by
-:class:`~domain.justificante.JustificanteParserBackend` with the regex
+:class:`~domain.justificante.schema.JustificanteParserBackend` with the regex
 extractor in :mod:`adapters.inbound.justificante._extract`. The extractor
 turns AEAT receipt text into a strict
-:class:`~domain.justificante.Justificante`; casilla-complete declaration
+:class:`~domain.justificante.schema.Justificante`; casilla-complete declaration
 PDFs are intentionally out of scope for this adapter.
 
 The filesystem route hashes the PDF before extraction. The bytes route is for
 secure-storage or live-capture flows that already hold decrypted bytes and must
 avoid plaintext temporary files. Both routes surface structured
-:class:`~domain.justificante.JustificanteParseError` attributes for
+:class:`~domain.justificante.errors.JustificanteParseError` attributes for
 missing, malformed, ambiguous, and coverage-related failures.
 """
 
@@ -49,7 +49,7 @@ def parse_justificante(
             when omitted.
 
     Returns:
-        A fully populated :class:`~domain.justificante.Justificante`
+        A fully populated :class:`~domain.justificante.schema.Justificante`
         pydantic v2 record.
 
     Raises:

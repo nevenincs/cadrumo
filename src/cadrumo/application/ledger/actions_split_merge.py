@@ -2,7 +2,7 @@
 
 Split operations load a :class:`TransactionCatalogue` through a
 :class:`TransactionCatalogueRepositoryProtocol`, mark parent and child rows with
-:class:`~cadrumo.domain.transactions.SplitLineage`, append audit events through a
+:class:`~cadrumo.domain.transactions.lineage_models.SplitLineage`, append audit events through a
 :class:`BucketEventHistoryRepositoryProtocol`, and return
 :class:`~cadrumo.application.ledger.models.SplitTransactionResult`. Merge operations
 verify the complete child cohort and return

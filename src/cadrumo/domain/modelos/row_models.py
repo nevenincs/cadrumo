@@ -327,8 +327,8 @@ class Modelo184MemberRow(BaseModel):
 
 # The three coded fields' value sets are AEAT's published Tablas A, C and B
 # of the diseño de registro DR23200. They are declared once in ``core`` --
-# see :class:`~core.TipoVinculacion`, :class:`~core.TipoOperacionVinculada`
-# and :class:`~core.MetodoValoracion` -- because the registry's own
+# see :class:`~core.modelo_232_codigos.TipoVinculacion`, :class:`~core.modelo_232_codigos.TipoOperacionVinculada`
+# and :class:`~core.modelo_232_codigos.MetodoValoracion` -- because the registry's own
 # related-party observation is typed with the same sets.
 
 

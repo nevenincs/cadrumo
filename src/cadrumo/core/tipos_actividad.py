@@ -33,7 +33,7 @@ beside it. Neither isolates porcino or avicultura. The registry carries that par
 with an empty code set so a consumer meets the gap where it looks for the mapping.
 
 See Also:
-    :mod:`~domain.transactions._tipo_actividad_partitions`
+    :mod:`~domain.transactions.tipo_actividad_partitions`
         Reads the registry selectors and resolves a code to its art. 95 partition.
 """
 

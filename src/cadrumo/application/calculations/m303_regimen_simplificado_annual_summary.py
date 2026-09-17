@@ -56,7 +56,7 @@ _SOURCE_CASILLA_VALUES: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "
 class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
     """Raised when a Modelo 390 annual handoff has no exact filed 303 source.
 
-    Roots at :class:`~core.errors.CoreValidationError` like every other refusal
+    Roots at :class:`~core.errors.hierarchy.CoreValidationError` like every other refusal
     in this package, so the class binds to the error registry and its refusal
     carries a code, a category and locale-resolved text. That base already
     carries :exc:`ValueError`, so the resolver keeps the ancestry its callers

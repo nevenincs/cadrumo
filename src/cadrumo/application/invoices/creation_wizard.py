@@ -1,4 +1,4 @@
-"""Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.Invoice`.
+"""Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.models.Invoice`.
 
 ``aeat app ledger invoice wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
@@ -13,23 +13,23 @@ path -- and accumulates every failing field into one refusal
 (``no-silent-under-declaration``: a malformed field is named, never silently
 dropped or reported one-at-a-time when several are wrong).
 
-The write itself delegates to :func:`~application.invoices.create_catalogue_invoice`
--- the sole sanctioned :class:`~domain.invoices.Invoice` writer
+The write itself delegates to :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`
+-- the sole sanctioned :class:`~domain.invoices.models.Invoice` writer
 (``aeat-architecture-boundaries``); this module never persists a
-row itself. Because :class:`~domain.invoices.Invoice` identity is a
+row itself. Because :class:`~domain.invoices.models.Invoice` identity is a
 content-derived hash, a retry that resolves to an already-catalogued identity
 is a guarded no-op (``aeat-cli-contract``): the
 existing record is returned, not re-written or raised as an error, mirroring
 the re-import-of-an-unchanged-file semantics
-:func:`~application.invoices.import_invoices_from_rows` already implements for
+:func:`~application.invoices.bulk_import.import_invoices_from_rows` already implements for
 the bulk path.
 
 See Also:
-    :func:`~application.invoices.create_invoice_via_wizard`
+    :func:`~application.invoices.creation_wizard.create_invoice_via_wizard`
         Public application facade for this guided manual-entry path.
-    :func:`~application.invoices.create_catalogue_invoice`
+    :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`
         Single catalogue writer used after field validation succeeds.
-    :func:`~application.invoices.import_invoices_from_rows`
+    :func:`~application.invoices.bulk_import.import_invoices_from_rows`
         Spreadsheet-oriented sibling path with matching idempotency semantics.
     :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         Automated evidence extraction path this non-interactive wizard
@@ -79,7 +79,7 @@ __all__ = [
 class InvoiceWizardFieldError(BaseModel):
     """One field that failed the wizard's guided validation.
 
-    Mirrors :class:`~application.invoices.BulkInvoiceImportRowFailure`'s
+    Mirrors :class:`~application.invoices.bulk_import.BulkInvoiceImportRowFailure`'s
     ``field``/``reason`` shape so a manual-entry refusal reads consistently
     with the bulk-import refusal surface, minus the row number a single-invoice
     wizard has no use for.

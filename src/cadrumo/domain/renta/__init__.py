@@ -14,7 +14,7 @@ resolved usage-ratio, statutory-cap, and exclusive-use facts; profile
 proportionality rules and citations remain in
 :mod:`domain.categories`, while persisted operator overrides remain in
 :mod:`domain.usage_ratios`. The dated first-slice routing resolver is the
-single Renta-domain projection from :class:`domain.categories.SpendingCategory`
+single Renta-domain projection from :class:`domain.categories.spending_category.SpendingCategory`
 to registry casilla ids for the supported first slice; the registry validates
 those targets through a cross-domain snapshot check installed by the registry
 snapshot builder.
@@ -25,7 +25,7 @@ The maritime surface exposes :class:`MaritimeWorkerFacts`, Art. 7.p and REBECA
 eligibility/calculation helpers, the inactive DA 41 guard, and the RETMAR
 mandatory-filing completeness gate. Exemption calculations resolve their
 target from registry authority and return
-:class:`domain.calculations.registry.CasillaObservation` records with
+:class:`domain.calculations.registry.bindings.CasillaObservation` records with
 legal and source provenance. This domain surface is pure substrate logic:
 repositories, active-profile reads, CLI transport, and live AEAT access belong
 outside :mod:`domain.renta`.

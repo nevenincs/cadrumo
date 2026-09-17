@@ -9,7 +9,7 @@ present a parsed document back to a reader: its output parses to a value
 equal to the one it was given.
 
 :func:`read_toml` and :func:`freeze_toml` are used by the registry
-loader in :mod:`domain.calculations.registry._loader`.
+source loader that parses committed registry definitions.
 :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 

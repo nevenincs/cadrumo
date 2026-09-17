@@ -21,7 +21,7 @@ orchestration layer reads instead of re-parsing strings at every
 ReviewQueue / aggregator call site.
 
 The specs are *parsing* surfaces; the actual filtering logic lives in
-:class:`cadrumo.application.review.ReviewQueue` and the per-scope
+:class:`cadrumo.application.review._aggregator.ReviewQueue` and the per-scope
 adapters.
 """
 
@@ -175,7 +175,7 @@ class InvoiceReviewFilterKey(StrEnum):
         STATUS: Lifecycle state of the invoice (``pending`` /
             ``reviewed`` / ``matched``).
         KIND: Issued-vs-received discriminator. Values come from
-            :class:`domain.iva.InvoiceKind`.
+            :class:`domain.iva.classification.InvoiceKind`.
     """
 
     STATUS = "status"
@@ -273,10 +273,10 @@ def _enum_value_or_raise[E: StrEnum](
             clause value is compared against the enum members ignoring
             case, so an operator may type either case on the command
             line. Used for lowercase-valued enums
-            (:class:`domain.iva.InvoiceKind`, ``issued`` /
+            (:class:`domain.iva.classification.InvoiceKind`, ``issued`` /
             ``received``) and for uppercase-valued enums
-            (:class:`cadrumo.domain.transactions.BusinessClassification`
-            ``BUSINESS``, :class:`~cadrumo.domain.transactions.TransactionDirection`
+            (:class:`cadrumo.domain.transactions.enums.BusinessClassification`
+            ``BUSINESS``, :class:`~cadrumo.domain.transactions.enums.TransactionDirection`
             ``INCOMING``) so ``classification=business`` resolves the same
             as ``classification=BUSINESS``.
 
@@ -559,7 +559,7 @@ class InvoiceReviewFilterSpec(BaseModel):
     Attributes:
         clauses: Raw clauses in input order.
         status: Resolved :class:`InvoiceReviewStatus`.
-        kind: Resolved :class:`domain.iva.InvoiceKind`
+        kind: Resolved :class:`domain.iva.classification.InvoiceKind`
             (``issued`` / ``received``).
     """
 

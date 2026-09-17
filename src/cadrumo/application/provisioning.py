@@ -11,11 +11,11 @@ The on-host readers are probed per role by
 an unpulled model becomes an instructive refusal instead of a raw stack trace.
 The ``aeat config check`` command renders this module's
 statuses as
-:class:`~cadrumo.entrypoints.cli.config._check_payloads.CheckDependencyPayload`
+:class:`~cadrumo.entrypoints.cli.config.check_payloads.CheckDependencyPayload`
 rows beside the active profile's capability posture from
-:func:`~cadrumo.application.user_profile.resolve_active_capability`. Optional-extra
+:func:`~cadrumo.application.user_profile.capabilities.resolve_active_capability`. Optional-extra
 probes walk the core :data:`~cadrumo.core.OPTIONAL_EXTRAS` catalogue of
-:class:`~cadrumo.core.OptionalExtra` records, so CLI diagnostics and adapter import
+:class:`~cadrumo.core.optional_extras.OptionalExtra` records, so CLI diagnostics and adapter import
 guards share one registry.
 """
 
@@ -121,9 +121,9 @@ class DependencyStatus(ProvisioningOutcome):
     records the measured state and ``precondition_verdict`` closes every unavailable
     outcome without embedding presentation or executable text. The model is intentionally
     generic so Ollama, subprocess CLIs, Playwright browser binaries, and
-    :class:`~cadrumo.core.OptionalExtra` package extras all render through the same
+    :class:`~cadrumo.core.optional_extras.OptionalExtra` package extras all render through the same
     payload shape and can be validated into
-    :class:`~cadrumo.entrypoints.cli.config._check_payloads.CheckDependencyPayload`.
+    :class:`~cadrumo.entrypoints.cli.config.check_payloads.CheckDependencyPayload`.
     """
 
     service: str = Field(min_length=1)
@@ -147,7 +147,7 @@ class SystemMemoryReading(BaseModel):
     admission error the contention check exists to prevent.
 
     ``None`` means "not measured", never "zero". See
-    :class:`~core.AcceleratorKind` for the same distinction on the device side.
+    :class:`~core.hardware.AcceleratorKind` for the same distinction on the device side.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -255,8 +255,8 @@ def probe_model_runtime_hardware_floor(
     """Report whether this machine meets the local model runtime's memory floor.
 
     The third capability axis. The product already distinguishes *installed*
-    (:class:`~cadrumo.core.OptionalExtra`) from *permitted*
-    (:class:`~cadrumo.core.ServiceCapability`); this answers *capable* -- and is
+    (:class:`~cadrumo.core.optional_extras.OptionalExtra`) from *permitted*
+    (:class:`~cadrumo.core.capabilities.ServiceCapability`); this answers *capable* -- and is
     named for the floor it measures rather than for the word "capability",
     which already denotes four unrelated concepts in this tree (modelo-revision
     capability, terminal capability, operator service capability, optional-extra
@@ -317,11 +317,11 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
     """Probe whether an optional package extra is importable, never raising.
 
     Wraps the core :func:`optional_extra_available` spec-only check for one
-    :class:`~cadrumo.core.OptionalExtra` (no import, no side effects) in the doctor's
+    :class:`~cadrumo.core.optional_extras.OptionalExtra` (no import, no side effects) in the doctor's
     :class:`DependencyStatus`, retaining only the extra's machine identity when
     absent. The feature-boundary guard is the sibling core
-    :func:`~cadrumo.core.require_optional_extra`, which raises the typed
-    :class:`~cadrumo.core.MissingOptionalExtraError` when a command actually
+    :func:`~cadrumo.core.optional_extras.require_optional_extra`, which raises the typed
+    :class:`~cadrumo.core.optional_extras.MissingOptionalExtraError` when a command actually
     requires the feature.
     """
     if not optional_extra_available(extra):
@@ -361,7 +361,7 @@ class AcceleratorDevice(BaseModel):
 class AcceleratorReading(BaseModel):
     """What the accelerator measurement found: a kind, and the devices behind it.
 
-    ``kind`` is :class:`~core.AcceleratorKind`; an empty ``devices`` tuple is
+    ``kind`` is :class:`~core.hardware.AcceleratorKind`; an empty ``devices`` tuple is
     consistent with both ``NONE`` (measured: there are none) and ``UNKNOWN``
     (not measured), which is precisely why the kind is carried separately rather
     than inferred from the tuple being empty.
@@ -444,8 +444,8 @@ def read_accelerator() -> AcceleratorReading:
     figure, and the runtime's own ``/api/ps`` report (see
     :func:`read_runtime_residents`) is authoritative for how much of it is ours.
 
-    Returns :attr:`~core.AcceleratorKind.UNKNOWN` when NVML is absent or
-    uninitialisable, and :attr:`~core.AcceleratorKind.NONE` only on the positive
+    Returns :attr:`~core.hardware.AcceleratorKind.UNKNOWN` when NVML is absent or
+    uninitialisable, and :attr:`~core.hardware.AcceleratorKind.NONE` only on the positive
     reading that NVML initialised and enumerated zero devices.
     """
     try:
@@ -548,7 +548,7 @@ def binding_free_bytes(profile: HardwareProfile) -> int | None:
     disagree about which figure binds. A device load is bound by device memory,
     a measured-accelerator-free machine by system memory, and an *unmeasurable*
     accelerator by nothing that may be trusted -- which is ``None``, and is why
-    :attr:`~core.AcceleratorKind.UNKNOWN` does not fall through to system
+    :attr:`~core.hardware.AcceleratorKind.UNKNOWN` does not fall through to system
     memory: a card this build cannot read may still be holding the memory a
     load needs.
     """
@@ -668,7 +668,7 @@ class ModelSelection(ProvisioningOutcome):
         """Return the localised non-commercial licence advisory, or an empty string.
 
         Non-empty exactly when
-        :attr:`~core.ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED` is
+        :attr:`~core.model_catalogue.ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED` is
         present, which automatic selection can never produce -- so this string
         appearing is itself the signal that an override reached past the
         commercial posture.
@@ -737,7 +737,7 @@ def select_model_for_role(
     exactly the machines that most need to pull one, while the load itself is
     still failed closed by :func:`assess_model_load_contention` at the act. The
     selection says so with
-    :attr:`~core.ModelSelectionAdvisory.FIT_UNVERIFIED`.
+    :attr:`~core.model_catalogue.ModelSelectionAdvisory.FIT_UNVERIFIED`.
 
     Args:
         role: The role to resolve.
@@ -1154,10 +1154,10 @@ def _local_model_provisioning_refusal(
 
 
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:
-    """Probe every capability-gated :class:`~cadrumo.core.OptionalExtra` into :class:`DependencyStatus` rows.
+    """Probe every capability-gated :class:`~cadrumo.core.optional_extras.OptionalExtra` into :class:`DependencyStatus` rows.
 
     The result set is keyed by the same :data:`~cadrumo.core.OPTIONAL_EXTRAS`
-    catalogue used by :func:`~cadrumo.core.require_optional_extra`, keeping
+    catalogue used by :func:`~cadrumo.core.optional_extras.require_optional_extra`, keeping
     ``aeat config check`` and runtime feature guards aligned.
     """
     return tuple(probe_optional_extra(extra) for extra in OPTIONAL_EXTRAS)

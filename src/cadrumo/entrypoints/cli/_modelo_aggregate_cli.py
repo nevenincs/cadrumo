@@ -140,7 +140,7 @@ def _aggregate_output_lines(
 def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -> Notice:
     """Project one excluded invoice-retención verdict into an operator-facing Notice.
 
-    The excluded half of an :class:`~application.aggregation.InvoiceRetencionRouting`
+    The excluded half of an :class:`~application.aggregation.invoice_retencion.InvoiceRetencionRouting`
     must be surfaced, never dropped -- an excluded retención is a liability the
     taxpayer may still owe. The notice names the typed defect tokens so the
     operator sees exactly why the invoice did not route.

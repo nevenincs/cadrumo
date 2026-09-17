@@ -22,13 +22,13 @@ records a KNOWN GAP rather than a settled absence, so it is the member to grep
 for when asking what the application still does not file.
 
 Hydration happens at the registry boundary:
-:func:`~domain.calculations.registry.load_registry_tree` hands the TOML token to
+``domain.calculations.registry.load_registry_tree`` hands the TOML token to
 strict schema validation, which resolves it to a member here.
 
 See Also:
-    :class:`~domain.calculations.registry.CasillaDefinition`
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`
         Declares the reason on the casilla via ``export_exemption_reason``.
-    :class:`~core.ExportLayoutFormat`
+    :class:`~core.export_layout_format.ExportLayoutFormat`
         The wire shape whose ``FIXED_WIDTH`` member the completeness gate binds.
 """
 

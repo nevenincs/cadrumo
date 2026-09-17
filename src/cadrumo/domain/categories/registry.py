@@ -18,7 +18,7 @@ from ..calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
 )
-from ..calculations.registry.facts.schema import FactSelector, ScalarFactPayload
+from ..calculations.registry.facts.schema import FactSelector
 from ..calculations.registry.schema_base import DateAxis
 from .errors import CategoryValidationError
 from .iva_hint import require_iva_deductibility_hint
@@ -58,17 +58,13 @@ def category_profile_years(
     *,
     operation: PinnedAuthorityOperation,
 ) -> frozenset[int]:
-    """Return filing years fully covered by every authored category profile."""
-    fact = operation.governed_fact(CATEGORY_PROFILE_FACT_ID)
-    grouped: dict[str, set[int]] = {}
-    for variant in fact.variants:
-        category = next((str(s.value) for s in variant.selectors if s.name == "category"), None)
-        if category is not None and variant.valid_from is not None and variant.valid_to is not None:
-            years = grouped.setdefault(category, set[int]())
-            years.update(range(variant.valid_from.year, variant.valid_to.year + 1))
-    groups = list(grouped.values())
-    covered = groups[0].intersection(*groups[1:]) if groups else set[int]()
-    return frozenset[int](covered)
+    """Return the supported filing years every category profile resolves for.
+
+    Profiles resolve through the registry's temporal projection, so coverage is
+    the registry's enumerated support span rather than a reading of each
+    variant's own window.
+    """
+    return frozenset[int](operation.supported_filing_years().years)
 
 
 def resolve_category_profiles(
@@ -161,22 +157,7 @@ def _profile_from_authority_fact(
     if projected_kind.is_statutory_cap and not variants and cap is None and "statutory_cap_eur_per_day" not in values:
         # The profile carries no amount of its own, so the cap is year-referenced
         # and its amounts live only in the dated cap fact.
-        try:
-            resolved_cap = operation.resolve_governed_fact(
-                ScalarFactQuery(
-                    fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
-                    date_axis=DateAxis.FILING_PERIOD,
-                    effective_date=date(year, 12, 31),
-                    selectors=(FactSelector(name="category", value=category),),
-                )
-            )
-        except RegistryValidationError as exc:
-            raise CategoryValidationError(
-                f"category authority has no dated statutory cap for {category}/{year}"
-            ) from exc
-        if not isinstance(resolved_cap, ResolvedScalarFact):
-            raise CategoryValidationError(f"category cap authority returned a non-scalar fact for {category}")
-        cap = resolved_cap.payload.value
+        cap = _resolve_statutory_cap(operation=operation, category=category, year=year).payload.value
         if not materialise_schedule:
             schedule = _declared_cap_schedule(operation=operation, category=category)
             cap = None
@@ -227,24 +208,39 @@ def _declared_cap_schedule(
     operation: PinnedAuthorityOperation,
     category: str,
 ) -> tuple[StatutoryCapAmount, ...]:
-    """Return every dated amount declared for one category cap."""
-    fact = operation.governed_fact(CATEGORY_STATUTORY_CAP_FACT_ID)
+    """Return the cap amount the registry resolves for each supported filing year."""
     schedule: list[StatutoryCapAmount] = []
-    for variant in fact.variants:
-        if variant.date_axis is not DateAxis.FILING_PERIOD or not any(
-            selector.name == "category" and selector.value == category for selector in variant.selectors
-        ):
-            continue
-        if not isinstance(variant.payload, ScalarFactPayload) or variant.valid_to is None:
-            raise CategoryValidationError(
-                f"category authority cap variant {variant.variant_id!r} is not a closed dated amount"
-            )
+    for year in operation.supported_filing_years().years:
+        resolved = _resolve_statutory_cap(operation=operation, category=category, year=year)
         schedule.append(
             StatutoryCapAmount.model_validate(
-                {"value": variant.payload.value, "valid_from": variant.valid_from, "valid_to": variant.valid_to}
+                {"value": resolved.payload.value, "valid_from": date(year, 1, 1), "valid_to": date(year, 12, 31)}
             )
         )
-    return tuple(sorted(schedule, key=lambda amount: amount.valid_from))
+    return tuple(schedule)
+
+
+def _resolve_statutory_cap(
+    *,
+    operation: PinnedAuthorityOperation,
+    category: str,
+    year: int,
+) -> ResolvedScalarFact:
+    """Resolve one category's statutory cap amount for one filing year."""
+    try:
+        resolved = operation.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(year, 12, 31),
+                selectors=(FactSelector(name="category", value=category),),
+            )
+        )
+    except RegistryValidationError as exc:
+        raise CategoryValidationError(f"category authority has no dated statutory cap for {category}/{year}") from exc
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise CategoryValidationError(f"category cap authority returned a non-scalar fact for {category}")
+    return resolved
 
 
 def _cap_variants_from_entries(values: Mapping[str, object], *, category: str) -> tuple[StatutoryCapVariant, ...]:

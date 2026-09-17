@@ -1,24 +1,24 @@
 """Registry-backed formula runtime using typed operation graphs.
 
 Evaluates
-:class:`~domain.calculations.registry.FormulaExpression` trees declared on
-a :class:`~domain.calculations.registry.ModeloRevision` against casilla
+:class:`~domain.calculations.registry.schema_formula.FormulaExpression` trees declared on
+a :class:`~domain.calculations.registry.schema.ModeloRevision` against casilla
 inputs and binding values drawn from a
-:class:`~domain.calculations.registry.RegistrySnapshot`.
+:class:`~domain.calculations.registry.schema.RegistrySnapshot`.
 The calculation entry point :func:`calculate_registry_snapshot` is the
 primary surface used by
-:class:`~domain.calculations.registry.ValidatedRegistryAuthority`-backed
+:class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority`-backed
 callers to produce
-:class:`~domain.calculations.registry.CasillaObservation` rows with full
+:class:`~domain.calculations.registry.bindings.CasillaObservation` rows with full
 provenance.
 
 See Also:
-    :mod:`domain.calculations.registry._runtime_graph`
+    :mod:`domain.calculations.registry.runtime_graph`
         Produces formula evaluation order and dependency projections.
-    :mod:`domain.calculations.registry._formula_runtime_ops`
+    :mod:`domain.calculations.registry.formula_runtime_ops`
         Arithmetic, rounding, and parameter lookup helpers called by this
         evaluator.
-    :mod:`domain.calculations.registry._formula_initial_values`
+    :mod:`domain.calculations.registry.formula_initial_values`
         Builds the initial casilla value map and materialised observation
         envelope for this runtime.
 """
@@ -114,9 +114,9 @@ class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
 
     Carries the per-formula provenance for a single formula-computed
-    :class:`~core.CasillaId`. Entries cover only
+    :class:`~core.casilla_id.CasillaId`. Entries cover only
     casillas computed by a registry formula; input and bound casillas remain in
-    :class:`~domain.calculations.registry.CasillaObservation` storage and
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` storage and
     must be read through :attr:`RegistryCalculationResult.observations`.
     """
 
@@ -159,9 +159,9 @@ class RegistryCalculationResult(BaseModel):
     """Calculated outputs for one registry snapshot.
 
     Canonical storage is :attr:`observations`: a typed tuple of
-    :class:`~domain.calculations.registry.CasillaObservation` covering
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` covering
     every casilla on the
-    :class:`~domain.calculations.registry.RegistrySnapshot` revision
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot` revision
     (inputs, bound, and formula-computed). Each observation carries
     its final scalar ``value`` plus the legal / source provenance for
     that casilla pulled from the registry. Formula-computed
@@ -576,16 +576,16 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     than silently preferred.
 
     The returned :class:`RegistryCalculationResult` stores
-    :class:`~domain.calculations.registry.CasillaObservation` rows for all
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` rows for all
     materialised casillas. Input validation is delegated to
-    :mod:`domain.calculations.registry._formula_runtime_ops` and
-    :mod:`domain.calculations.registry._formula_text_inputs`; initial
+    :mod:`domain.calculations.registry.formula_runtime_ops` and
+    :mod:`domain.calculations.registry.formula_text_inputs`; initial
     casilla values and absent-by-design markers are delegated to
-    :mod:`domain.calculations.registry._formula_initial_values`.
+    :mod:`domain.calculations.registry.formula_initial_values`.
 
     Args:
         snapshot: The
-            :class:`~domain.calculations.registry.RegistrySnapshot` that
+            :class:`~domain.calculations.registry.schema.RegistrySnapshot` that
             supplies the revision, casilla definitions, and formula graph to
             evaluate.
         inputs: Operator-supplied input casilla values; rejected if any value
@@ -594,7 +594,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             date-aware ops; ``filing_period`` defaults to the snapshot's typed
             calculation filing date when present, otherwise its year-end.
         binding_values: Optional resolved numeric binding values keyed by
-            :class:`~domain.calculations.registry.BindingDefinition`
+            :class:`~domain.calculations.registry.schema.BindingDefinition`
             id; Decimal-only.
         enum_binding_values: Optional string-valued bindings (e.g. profile
             CCAA) keyed by binding id; consumed by enum-routed ops.

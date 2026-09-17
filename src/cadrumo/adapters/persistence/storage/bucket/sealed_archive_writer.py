@@ -90,7 +90,7 @@ def write_sealed_archive(
             here.
 
             This deliberately does NOT require an
-            :class:`~adapters.persistence.storage.Envelope`, and said so
+            :class:`~adapters.persistence.storage.envelope.contract.Envelope`, and said so
             once by mistake. The archive is a transport: its guarantee is
             verbatim carriage, and binding it to one payload type would
             couple the transport to whichever caller happened to be first.

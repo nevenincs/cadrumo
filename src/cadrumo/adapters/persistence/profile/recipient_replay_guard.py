@@ -1,9 +1,9 @@
 """Encrypted persistence adapter for recipient-package replay-nonce ledgers.
 
-Every :class:`~application.modelo.RecipientEncryptedPackage` carries a
+Every :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
 :mod:`~application.modelo.review_package_recipient_encryption`). This
-module lets the recipient side of :func:`~application.modelo.decrypt_review_package_for_recipient`
+module lets the recipient side of :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
 refused rather than silently re-accepted.
@@ -16,9 +16,9 @@ the ``aeat-architecture-boundaries`` companion to that
 registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified
-:func:`~application.modelo.decrypt_review_package_for_recipient` call.
+:func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient` call.
 The encrypted row's storage policy is governed by
-:class:`~adapters.persistence.storage.SensitivityClass`.
+:class:`~core.classification.policies.SensitivityClass`.
 
 ``mark_consumed`` composes
 :class:`~adapters.persistence.profile._secure_model_document.ProfileBareModelSecurePersistence`'s
@@ -115,9 +115,9 @@ class RecipientReplayGuardRepository:
     """Governed repository for the encrypted consumed-nonce ledger.
 
     The singleton row is owned by
-    :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE`
     and persisted through
-    :class:`~adapters.persistence.storage.SecureObjectRepository`, mirroring
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`, mirroring
     :class:`~application.modelo.review_package_recipient_registry_ports.RecipientFingerprintRegistryPorts`.
     """
 
@@ -131,10 +131,10 @@ class RecipientReplayGuardRepository:
 
         Args:
             bucket_id: Explicit bucket to bind to, resolved through
-                :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`.
+                :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`.
                 Ignored when ``objects`` is supplied.
             objects: Explicit
-                :class:`~adapters.persistence.storage.SecureObjectRepository`
+                :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
                 override
                 (tests). When neither ``objects`` nor ``bucket_id`` is
                 supplied, defaults to the active-bucket secure object store.
@@ -183,7 +183,7 @@ class RecipientReplayGuardRepository:
 
         Args:
             nonce_hex: The envelope's ``envelope_nonce_hex`` (see
-                :class:`~application.modelo.RecipientEncryptedPackage`).
+                :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage`).
             consumed_at: Optional override for the record's ``consumed_at``
                 timestamp (tests only); defaults to the current UTC time.
 

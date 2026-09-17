@@ -1,8 +1,8 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
-:func:`~cadrumo.application.modelo.export_modelo_revision` accepts a
+:func:`~cadrumo.application.modelo.export.export_modelo_revision` accepts a
 :class:`~CalculationRevision` id, rebuilds and approves a
-:class:`~domain.filing.ModeloDraft` from the revision replay inputs,
+:class:`~domain.filing.schema.ModeloDraft` from the revision replay inputs,
 then writes a fichero-BOE-formatted artefact to the operator-supplied output
 path. A ``MODELO_EXPORTED`` event is appended to the
 :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
@@ -26,11 +26,11 @@ service.
 See Also:
     :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`:
         Reconstructs the filing inputs from the persisted revision.
-    :func:`~cadrumo.application.filing.build_draft`:
+    :func:`~cadrumo.application.filing.draft_construction.build_draft`:
         Builds the transient registry-backed draft that is exported.
-    :func:`~cadrumo.application.filing.export_draft`:
+    ``cadrumo.application.filing.export_draft``:
         Serializes the approved draft through registry export layouts.
-    :func:`~cadrumo.application.modelo.verification_actions.require_cross_period_clean_state`:
+    :func:`~cadrumo.application.modelo.verification_cross_period.require_cross_period_clean_state`:
         Rechecks cross-period filing prerequisites before writing the export.
     :func:`~cadrumo.application.modelo.result_disposition_resolution.resolve_modelo_result_disposition`:
         Determines the fichero declaration type and refund disposition.
@@ -315,7 +315,7 @@ class ModeloExportOutputPathError(ModeloExportError):
 
 
 class ModeloExportCommand(BaseModel):
-    """Strict input contract for :func:`~cadrumo.application.modelo.export_modelo_revision`.
+    """Strict input contract for :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
 
     Attributes:
         calculation_revision_id: SHA-256 hex id of the calculation
@@ -360,10 +360,10 @@ class ModeloExportCommand(BaseModel):
 
 
 class ModeloExportResult(BaseModel):
-    """Receipt produced by :func:`~cadrumo.application.modelo.export_modelo_revision`.
+    """Receipt produced by :func:`~cadrumo.application.modelo.export.export_modelo_revision`.
 
     Composes the lower-level
-    :class:`~cadrumo.application.filing.DeclaracionExportResult` (already a
+    :class:`~cadrumo.application.filing.export_verification.DeclaracionExportResult` (already a
     byte-level receipt of the written file) with the work-unit-level
     identity the operator addresses.
 
@@ -613,11 +613,11 @@ def _approve_export_draft(
 ) -> tuple[Period, ModeloDraft]:
     """Build and approve the export draft for one :class:`~CalculationRevision`.
 
-    The :class:`~cadrumo.domain.deadlines.TaxpayerProfile` is forwarded to
+    The :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` is forwarded to
     :func:`~cadrumo.application.modelo.revision_replay_inputs.revision_filing_replay_inputs`
     so export uses the same profile-applicability relation inputs as the filing
     workflow gate. Returns the resolved :class:`~cadrumo.core.Period` and approved
-    :class:`~domain.filing.ModeloDraft`.
+    :class:`~domain.filing.schema.ModeloDraft`.
     """
     inputs: ModeloInputs = revision_filing_replay_inputs(
         revision=revision,
@@ -1458,7 +1458,7 @@ def export_modelo_revision(
     """Export a verified-complete or filed calculation revision to disk.
 
     ``workflow_profile`` is the
-    :class:`~cadrumo.domain.deadlines.TaxpayerProfile` used to compose the filing
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` used to compose the filing
     draft headers and to replay profile-applicability relation inputs.
 
     Local-only: never contacts AEAT. Re-builds the filing draft from
@@ -1471,23 +1471,23 @@ def export_modelo_revision(
     writing any operator-visible file, the service validates the output path,
     export-layout renderability, profile readiness, ledger evidence, IVA wallet
     decision provenance, and cross-period clean state. It then rebuilds and
-    approves a transient :class:`~domain.filing.ModeloDraft`, builds one typed
+    approves a transient :class:`~domain.filing.schema.ModeloDraft`, builds one typed
     filing producer snapshot, serializes through
-    :func:`~cadrumo.application.filing.export_draft`, appends ``MODELO_EXPORTED`` to
+    ``cadrumo.application.filing.export_draft``, appends ``MODELO_EXPORTED`` to
     the bucket-event-history catalogue, and finally publishes the staged
     artefact onto the operator's path. Any write, event, or publication failure
     discards the staged cleartext artefact before raising.
 
     Returns:
-        :class:`~cadrumo.application.modelo.ModeloExportResult`: The export
+        :class:`~cadrumo.application.modelo.export.ModeloExportResult`: The export
         receipt, including byte size, digest, event id, casilla provenance, and
         any redacted IVA wallet decision provenance.
 
     See Also:
-        :class:`~cadrumo.application.modelo.ModeloExportCommand`:
+        :class:`~cadrumo.application.modelo.export.ModeloExportCommand`:
             Strict input envelope for the revision id, output path, actor, and
             refund election.
-        :func:`~cadrumo.application.filing.build_filing_producer_snapshot`:
+        :func:`~cadrumo.application.filing.producer_snapshot.build_filing_producer_snapshot`:
             Builds the sole typed producer boundary consumed by the renderer.
         :func:`~cadrumo.application.modelo.export._validate_output_path`:
             Refuses unsafe destinations before fichero bytes are written.

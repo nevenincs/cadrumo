@@ -7,9 +7,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -57,6 +54,9 @@ from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInsta
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -352,13 +352,12 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
                 operation=operation,
             )
 
-        from dev.registry.tests.profile_schema_support import load_user_profile_schema
-
+        from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
         from cadrumo.domain.user_profile.labels import profile_field_label
 
         expected_label = profile_field_label(
             "activities",
-            load_user_profile_schema().field("activities.description"),
+            published_profile_schema().field("activities.description"),
         )
         assert excinfo.value.context == {
             "modelo": Modelo("130").value,

@@ -252,7 +252,7 @@ def _validate_date(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
 
     The blank policy is identical to :func:`_validate_integer`. A
     non-blank token is parsed through the canonical core
-    :func:`~cadrumo.core.parsing.parse_date` under the ``"none"``
+    ``cadrumo.core.parsing.parse_date`` under the ``"none"``
     error policy, so a malformed date returns a failing *verdict* rather
     than letting a :exc:`ValueError` escape the pure validator. The
     failure context carries only ``page_id`` — never the raw answer.
@@ -273,7 +273,7 @@ def _validate_decimal(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]
 
     The blank policy is identical to :func:`_validate_integer`. A non-blank token
     must conform to the canonical decimal grammar
-    (:func:`~core.decimal.try_parse_canonical_decimal`): a dot decimal separator,
+    (:func:`~core.decimal.grammar.try_parse_canonical_decimal`): a dot decimal separator,
     no thousands grouping, no comma decimal, no scientific notation, no leading
     ``+``, no underscore digit separator, and no ``NaN``/``Infinity``. The
     grammar subsumes the finiteness guard this previously applied on top of a

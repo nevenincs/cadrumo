@@ -2,7 +2,7 @@
 
 Provider records anchor the storage boundary:
 
-- :class:`adapters.outbound.storage.StorageProvider` - synchronous
+- :class:`adapters.outbound.storage.protocol.StorageProvider` - synchronous
   bytes-in / bytes-out provider Protocol.
 - :class:`ProviderKind` - closed enum naming the v1 backends.
 - :class:`ProviderObjectMetadata` - per-object metadata returned by listing /
@@ -16,7 +16,7 @@ Provider records anchor the storage boundary:
   :class:`RemoteMirrorNamespaceManifest`, :class:`RemoteMirrorIssue`, and
   :class:`RemoteMirrorInspection` - immutable manifest and inspection records
   for remote ciphertext mirror reconciliation by
-  :mod:`adapters.outbound.storage._mirror_manifest`.
+  :mod:`adapters.outbound.storage.mirror_manifest`.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 
 # Every identifier below is a SHA-256 hex digest produced by
 # ``core.hashing.sha256_hex``, so each is the canonical
-# :data:`~core.identity.ContentDigest` shape under a distinct semantic name.
+# :data:`~core.identity.digest.ContentDigest` shape under a distinct semantic name.
 # A length-only constraint accepted uppercase and non-hex 64-character
 # strings that the canonical alias refuses, letting a malformed digest reach
 # a persisted manifest and surface only when a later pass recomputes it.
@@ -46,7 +46,7 @@ _StorageRevisionId = ContentDigest
 
 
 class ProviderKind(StrEnum):
-    """Closed storage backend selector for :func:`adapters.outbound.storage.get_storage_provider`."""
+    """Closed storage backend selector for :func:`adapters.outbound.storage.factory.get_storage_provider`."""
 
     LOCAL_FILESYSTEM = "local_filesystem"
     GOOGLE_DRIVE = "google_drive"
@@ -64,10 +64,10 @@ class RemoteMirrorIssueKind(StrEnum):
 class ProviderObjectMetadata(BaseModel):
     """Per-object metadata returned by storage-provider operations.
 
-    Returned by :class:`adapters.outbound.storage.StorageProvider`
-    methods: :meth:`adapters.outbound.storage.StorageProvider.put`,
-    :meth:`adapters.outbound.storage.StorageProvider.get`, and
-    :meth:`adapters.outbound.storage.StorageProvider.iter_objects`.
+    Returned by :class:`adapters.outbound.storage.protocol.StorageProvider`
+    methods: :meth:`adapters.outbound.storage.protocol.StorageProvider.put`,
+    :meth:`adapters.outbound.storage.protocol.StorageProvider.get`, and
+    :meth:`adapters.outbound.storage.protocol.StorageProvider.iter_objects`.
     ``provider_object_id`` is the backend-native identifier (a filesystem path
     for the local provider, a Drive ``fileId`` for the Google Drive provider).
     The coordinator threads it through subsequent get/delete/patch calls without
@@ -88,7 +88,7 @@ class ProviderProbeReport(BaseModel):
     """Health-check result returned by storage-provider probes.
 
     Returned by
-    :meth:`adapters.outbound.storage.StorageProvider.probe`.
+    :meth:`adapters.outbound.storage.protocol.StorageProvider.probe`.
     ``reachable`` is True iff the backend endpoint responds at all.
     ``writable`` is True iff a sentinel payload write/delete succeeded;
     inherently False when the probe runs in read-only mode.
@@ -129,9 +129,9 @@ class RemoteMirrorNamespaceManifest(BaseModel):
     """Manifest persisted beside remote ciphertext objects for one namespace.
 
     Built by
-    :func:`adapters.outbound.storage.build_remote_mirror_namespace_manifest`
+    :func:`adapters.outbound.storage.mirror_manifest.build_remote_mirror_namespace_manifest`
     and persisted by
-    :func:`adapters.outbound.storage.put_remote_mirror_namespace_manifest`.
+    :func:`adapters.outbound.storage.mirror_manifest.put_remote_mirror_namespace_manifest`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -149,7 +149,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
         """Refuse foreign-namespace children, duplicate object keys, and a disagreeing ``object_count``.
 
         Comparison in
-        :mod:`adapters.outbound.storage._mirror_manifest` keys both manifests
+        :mod:`adapters.outbound.storage.mirror_manifest` keys both manifests
         by ``object_key_hmac``, so a repeated key would silently discard every
         earlier row and hide the revision conflict it carried. The key is one
         object's identity within a namespace, so a repeat is manifest

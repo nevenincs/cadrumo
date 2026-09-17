@@ -2,7 +2,7 @@
 
 Defines the upstream-immutable records every transaction parser must
 emit, before they are wrapped in
-:class:`domain.transactions.Transaction`:
+:class:`domain.transactions.models.Transaction`:
 
 - :class:`RawTransaction` -- the verbatim per-row record.
 - :class:`RawProvenance` -- the source-file metadata pinned to each row.
@@ -101,7 +101,7 @@ class RawProvenance(BaseModel):
         """Fold an uppercase digest to the canonical form BEFORE the shape check.
 
         This is normalisation only; the shape is enforced by
-        :data:`~core.identity.ContentDigest`, which the field is typed as, and
+        :data:`~core.identity.digest.ContentDigest`, which the field is typed as, and
         restating it here would be a second register of one contract.
 
         The ordering is the whole point. ``ContentDigest`` requires lowercase,
@@ -140,14 +140,14 @@ class RawTransaction(BaseModel):
         provider_transaction_id: Provider-assigned native identifier; never
             normalised beyond a strip + non-blank check. This is the bank/feed's
             own id for the row, distinct from the content-addressed
-            :attr:`domain.transactions.Transaction.transaction_id` hash the
+            :attr:`domain.transactions.models.Transaction.transaction_id` hash the
             domain derives from it.
         booked_date: Date the transaction posted to the account.
         value_date: Optional value date; falls back to ``booked_date``
             when ``None``.
         amount: Non-negative magnitude :class:`decimal.Decimal` in
             :attr:`currency`. Flow direction is carried solely by
-            :attr:`domain.transactions.Transaction.direction`; the
+            :attr:`domain.transactions.models.Transaction.direction`; the
             sign is never stored on the amount.
         currency: Three-letter ISO 4217 currency code, uppercase. Trimmed and
             uppercased before validation, so a padded source cell is accepted.
@@ -188,7 +188,7 @@ class RawTransaction(BaseModel):
         """Reject a negative ``amount``; the stored magnitude is non-negative.
 
         Flow direction is carried solely by
-        :attr:`domain.transactions.Transaction.direction`; the sign is
+        :attr:`domain.transactions.models.Transaction.direction`; the sign is
         never stored on the amount. This gate fires on both the import and the
         manual construction paths because every transaction wraps one
         :class:`RawTransaction`.
@@ -210,7 +210,7 @@ class RawTransaction(BaseModel):
         (``" usd "``) normalises to ``"USD"`` here rather than being refused
         for its padding, which is what the CSV and OFX ingest boundaries have
         always done. Delegates the shape policy to
-        :func:`~core.parsing.normalise_iso_4217_currency` so every inbound
+        :func:`~core.parsing.codes.normalise_iso_4217_currency` so every inbound
         surface and this persisted record share one definition.
         """
         try:

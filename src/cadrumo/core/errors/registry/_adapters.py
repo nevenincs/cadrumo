@@ -1,4 +1,4 @@
-"""Adapter-layer :class:`~core.errors.ErrorCode` registry aggregator.
+"""Adapter-layer :class:`~core.errors.error_codes.ErrorCode` registry aggregator.
 
 Combines the ordered adapter shards into the tuple consumed by
 :mod:`core.errors.error_codes`.

@@ -559,7 +559,7 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
     rotated master key still surface for mirroring
     (:func:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.iter_all_records_raw`).
     That means the decrypting read path's
-    :func:`~adapters.persistence.storage.sql.verify_revision_self_consistency`
+    :func:`~adapters.persistence.storage.sql.secure_object_crypto.verify_revision_self_consistency`
     call — which the decode core runs before every decrypt
     (:func:`~adapters.persistence.storage.sql._secure_object_row_codec.decode_secure_object_row`)
     — never otherwise runs on these raw rows at all. Recomputing it here, in

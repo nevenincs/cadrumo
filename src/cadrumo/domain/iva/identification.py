@@ -39,10 +39,10 @@ question about the axis rather than a settled refusal, and the earlier wording
 here read as the latter.
 
 See Also:
-    :class:`~domain.iva.IvaTerritorialScope`
+    :class:`~domain.iva.classification.IvaTerritorialScope`
         The OTHER party fact — where the party is established. A value here
         never implies one there.
-    :class:`~domain.iva.PartyFact`
+    :class:`~domain.iva.classification.PartyFact`
         The closed pair, and the axis a classification branch declares it
         consumes.
 """
@@ -84,7 +84,7 @@ def identification_state_for_printed_tax_identifier(
             member-state catalogues used by this lookup.
 
     Returns:
-        The :class:`~domain.iva.EUMemberState` the number identifies the party
+        The :class:`~domain.iva.schema.EUMemberState` the number identifies the party
         in, or ``None`` when no IVA number was recognised.
 
         ``None`` means the identification was not established, never that the

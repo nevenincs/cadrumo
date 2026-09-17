@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.errors import RegistryValidationError
 from ..profile import CategoryProfile
 from ..proportionality_catalogue import require_proportionality_kind
 from ..registry import resolve_category_profiles
@@ -126,8 +127,21 @@ def test_registry_preserves_conservative_semantics_for_special_categories(
     assert health.proportionality.statutory_cap_period.value == "year_per_person"
 
 
-def test_resolve_category_profiles_rejects_unknown_year(operation: PinnedAuthorityOperation) -> None:
-    """Unsupported handbook years must fail loud."""
+def test_resolve_category_profiles_rejects_a_year_below_the_supported_floor(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A year below the supported floor must fail loud."""
+    below_floor = operation.supported_filing_years().floor - 1
 
-    with pytest.raises(ValueError, match=r"2099|year|unsupported|unknown"):
-        resolve_category_profiles(2099, operation=operation)
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        resolve_category_profiles(below_floor, operation=operation)
+
+
+def test_resolve_category_profiles_carries_the_horizon_forward(operation: PinnedAuthorityOperation) -> None:
+    """With no hard ceiling, a year above the horizon resolves the newest authored profiles."""
+    support = operation.supported_filing_years()
+    assert support.hard_ceiling is None, "a declared ceiling changes what this test may assert"
+
+    carried = resolve_category_profiles(support.horizon + 1, operation=operation)
+
+    assert carried == resolve_category_profiles(support.horizon, operation=operation)

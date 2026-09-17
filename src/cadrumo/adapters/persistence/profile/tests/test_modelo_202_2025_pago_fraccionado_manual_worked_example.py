@@ -77,10 +77,6 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -104,9 +100,13 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.period import calculation_filing_date
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
+from .published_authority_support import published_authority_operation
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -200,7 +200,7 @@ def _calculate_m202(
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period_code)
+    snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period=period_code)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,
@@ -387,7 +387,7 @@ def test_m202_2025_manual_grounding_is_enrolled_and_raises_independently_grounde
     validated data, never hand-computed or asserted from a synthetic
     fixture.
     """
-    authority = compiled_bundled_authority()
+    authority = published_authority_operation()
     snapshot = authority.snapshot(_M202, filing_year=_FILING_YEAR, period="1P")
     policy = snapshot.verification_policy()
 

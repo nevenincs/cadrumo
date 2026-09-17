@@ -359,7 +359,7 @@ def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
     only way to express "unstated" to a pydantic constructor is to leave the
     keyword out, so every door routes through this rather than inventing a
     sentinel — and the type checker sees a plain
-    :class:`~cadrumo.core.DescendantRelacion` at each call site.
+    :class:`~cadrumo.core.descendant_relacion.DescendantRelacion` at each call site.
     """
     return {} if relacion is None else {"relacion": relacion}
 
@@ -373,7 +373,7 @@ def _stored_relacion(
     """Read one descendant's stored relación, refusing a token outside the registry catalogue.
 
     Returns ``None`` for an absent token — UNSTATED, not "ordinary". The two
-    differ: :class:`~domain.contribuyente.DescendantInfo` reads an unstated
+    differ: :class:`~domain.contribuyente.descendant.DescendantInfo` reads an unstated
     relación carrying an inscription date as an adoption, and defaults it to the
     ordinary descendant otherwise. Resolving absence to the ordinary member here
     would pre-empt that reading and turn the adoption record into a
@@ -615,7 +615,7 @@ def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
     ceiling and the Art. 61 norma 2ª exclusion are both skipped, so a typo in a
     figure that would have disqualified the descendant would instead restore
     the full mínimo — the exact silent over-claim
-    :meth:`~domain.contribuyente.DescendantInfo.exceeds_rentas_cap` exists to
+    :meth:`~domain.contribuyente.descendant_record.DescendantRecordBase.exceeds_rentas_cap` exists to
     prevent. A negative figure refuses for the same reason rather than being
     clamped to zero.
     """
@@ -661,7 +661,7 @@ def _flag_bool(raw: str, *, key: str) -> bool:
     CLAIMS. ``CONVIVENCIA`` took ``is not False``, so a typo became ``True``,
     and Art. 58 cohabitation is what qualifies the descendant at all.
     ``CUSTODIA`` took ``is True``, so a typo became ``False``, and
-    :meth:`~domain.contribuyente.RentaFamilyProfile.custodia_compartida_prorrata_factor`
+    :meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.custodia_compartida_prorrata_factor`
     returns the full ``1`` for ``False`` against ``0.5`` for shared custody
     (Art. 61 LIRPF). Opposite booleans, one direction: more deduction than the
     operator asked for.
@@ -672,7 +672,7 @@ def _flag_bool(raw: str, *, key: str) -> bool:
     over-claims, the other quietly under-claims. An unreadable answer is not
     an answer, and the operator is at a command line where they can correct
     it, which is the same call
-    :func:`~cadrumo.core.parsing.parse_bool` is asked to make everywhere else.
+    ``cadrumo.core.parsing.parse_bool`` is asked to make everywhere else.
 
     Absence still means the documented default (``CONVIVENCIA`` true,
     ``CUSTODIA`` false); this governs only a value the operator did supply.

@@ -114,7 +114,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
-        """Return the :class:`~adapters.persistence.storage.StorageHierarchyRegistry` bound here, if any."""
+        """Return the :class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry` bound here, if any."""
         return self._namespace_registry
 
     @property
@@ -278,7 +278,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         raises :class:`SessionExpiredError`. The CLI boundary resolves a
         recovery action only when it can prove a public profile target. On a
         fresh session,
-        calls :meth:`~adapters.persistence.storage.master_key.BucketSession` to roll the deadline
+        calls :meth:`~adapters.persistence.storage.master_key.bucket_session.BucketSession` to roll the deadline
         forward by the configured idle window — the operator's
         active session remains usable for the next window's
         duration without re-authentication.
@@ -359,7 +359,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Used by the archive restore pipeline when the natural key was
         not present in the source bundle. Same
         master-key constraint as
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`.
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`.
         """
         self._check_session_freshness(namespace)
         if len(hashed_object_key) != 32:
@@ -554,7 +554,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Natural object keys are HMAC digested before storage and cannot be
         recovered from the index. Domain repositories that need natural IDs
         should iterate
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.list_records`
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.list_records`
         and read IDs from decrypted payloads.
         """
         self._check_session_freshness(namespace)
@@ -584,7 +584,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Args:
             namespace: The storage namespace whose rows are listed.
             expected_class: The
-                :class:`~adapters.persistence.storage.SensitivityClass`
+                :class:`~core.classification.policies.SensitivityClass`
                 all rows in this namespace must carry.
             max_supported_version: The consumer's current ``schema_version``
                 ceiling; a row above it, or below it without a complete
@@ -952,7 +952,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         """Yield a typed outcome per stored row under ``namespace``.
 
         Each row is represented by either a
-        :class:`~adapters.persistence.storage.sql.SecureObjectRecord` (the
+        :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord` (the
         row decrypts cleanly and matches the consumer's classification and
         schema-version contract) or a
          :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable` (the
@@ -966,7 +966,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         Args:
             namespace: The storage namespace whose rows are scanned.
             expected_class: The
-                :class:`~adapters.persistence.storage.SensitivityClass`
+                :class:`~core.classification.policies.SensitivityClass`
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
                  :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable`.
@@ -980,7 +980,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
 
         Yields:
             One ``SecureObjectListItem`` per stored row — either a
-            :class:`~adapters.persistence.storage.sql.SecureObjectRecord` or
+            :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord` or
              a :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectUnreadable`.
 
         Raises:
@@ -1052,14 +1052,14 @@ class SecureObjectRepository(SecureObjectWriteOperations):
     ) -> SecureObjectRecord | None:
         """Load and decrypt one secure-object row, returning ``None`` when absent.
 
-        Returns a :class:`~adapters.persistence.storage.sql.SecureObjectRecord`
+        Returns a :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord`
         when the row is present and decrypts under the expected class/version.
 
         Args:
             namespace: The storage namespace to look in.
             object_key: The natural string key identifying the record.
             expected_class: The
-                :class:`~adapters.persistence.storage.SensitivityClass`
+                :class:`~core.classification.policies.SensitivityClass`
                 the consumer expects.
             max_supported_version: Highest ``schema_version`` the consumer supports.
         """

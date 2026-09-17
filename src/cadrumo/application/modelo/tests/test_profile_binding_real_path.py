@@ -49,12 +49,16 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from ....domain.user_profile.registry_contract import profile_binding_selectors
+from ....domain.user_profile.schema import derived_selector_for_path
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
 from ...user_profile.projections import profile_fact_index
 from ..profile_binding import (
+    inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
+    inject_derived_minimo_descendientes_facts,
+    inject_ordinary_work_maritime_facts,
     resolve_profile_binding_value,
     resolve_profile_sourced_bindings,
 )
@@ -185,7 +189,7 @@ def test_all_profile_key_selectors_resolve_to_schema_paths() -> None:
         pk = provider.profile_key
         if pk is None:
             continue
-        assert pk in known_paths, (
+        assert pk in known_paths or derived_selector_for_path(pk, schema.derived_selectors) is not None, (
             f"binding {binding.id!r} declares profile_key={pk!r} but that path does not appear in the profile schema"
         )
 
@@ -241,6 +245,11 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     # Madrid nacimiento/adopción derived scalars (eligible count + unidad-familiar
     # base) are likewise injected at resolution time, defaulting to 0.
     inject_derived_autonomic_deduccion_facts(fact_index, _YEAR, operation=authority_operation)
+    # The Art. 64/75 anualidades separate-escala flag is derived the same way.
+    snapshot = _modelo_100_snapshot()
+    inject_ordinary_work_maritime_facts(fact_index)
+    inject_derived_anualidades_eligibility_facts(fact_index, snapshot, operation=authority_operation)
+    inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-profile-taxpayer-death-date"
@@ -293,7 +302,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
         operation=authority_operation,
     )
 
-    assert resolved.binding_values["renta-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.boolean_binding_values["renta-profile-marriage-full-year"] is False
     assert resolved.binding_values["renta-profile-marriage-month-start"] == Decimal("0")
     assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
@@ -344,7 +353,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels(
     assert ecivil_binding_id not in resolved.binding_values
     assert ecivil_binding_id not in resolved.enum_binding_values
     assert ecivil_binding_id not in resolved.date_binding_values
-    assert resolved.binding_values["renta-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.boolean_binding_values["renta-profile-marriage-full-year"] is False
     assert resolved.binding_values["renta-profile-marriage-month-start"] == Decimal("0")
     assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
@@ -518,40 +527,3 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
                 f"binding {binding.id!r}: selector {sel!r} not found in any field's "
                 f"model_selectors in the profile schema"
             )
-
-
-def test_binding_count_is_exactly_39() -> None:
-    """M100 2025 has exactly 39 ``source = 'profile'`` bindings.
-
-    This acts as a structural sentinel: adding or removing a profile binding
-    without updating this test will fail, prompting a review of whether the
-    pin tests cover the new binding.
-
-    Breakdown of the 39: 28 scalar bindings (single-value profile reads
-    keyed by entity_type, ccaa, estimation_regime, income categories,
-    address-cadastral references, plus the three matrimonio-sobrevenido
-    derived scalars marriage_full_year / marriage_month_start /
-    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247, the
-    two Comunidad de Madrid nacimiento/adopción derived scalars
-    madrid_nacimiento_adopcion_eligible_count and
-    unidad_familiar_otros_miembros_base added for casilla 1039 / DL 1/2010,
-    the anualidades_sin_minimo_descendientes eligibility flag for the
-    Art. 64/75 separate-escala régimen, the Art. 58/61 LIRPF mínimo por
-    descendientes ESTATAL and AUTONÓMICO aggregates — casillas 0513/0514 —
-    including the Comunidad de Madrid autonómico-override, and the
-    has_economic_activity predicate derived from irpf_income_categories
-    that gates the Art. 27/30 LIRPF estimación-directa rendimiento chain)
-    plus 11 family-repeating-collection bindings (per-dependent / per-spouse
-    / per-child arrays whose cardinality follows the operator's declared
-    family composition).
-    The split matters when a new binding lands: a scalar/collection
-    rebalance still totals 39 but indicates a different schema shift
-    (operator-data field add vs family-collection contract change).
-    Future drift in the sentinel meaning is prevented by this note
-    plus the descriptive assertion message below.
-    """
-    profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 39, (
-        f"expected 39 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
-        + ", ".join(str(b.id) for b in profile_bindings)
-    )

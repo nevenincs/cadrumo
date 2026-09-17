@@ -1,4 +1,4 @@
-"""Semantic column-role mapping: observed headers to the closed :class:`~core.FieldRole` set.
+"""Semantic column-role mapping: observed headers to the closed :class:`~core.field_role.FieldRole` set.
 
 A delimited export is already a text representation, so reading one is not a
 transcription problem but a **naming** problem: the file states what each column
@@ -11,13 +11,13 @@ present in all three, and not one of the names matches an importer column token
 This module establishes what the columns MEAN, **once per file**, and nothing
 else. It is a selection over a closed allow-list, not a generation task: the
 model is handed the observed headers and the enumerated
-:class:`~core.FieldRole` members and chooses among them. It never sees, copies,
+:class:`~core.field_role.FieldRole` members and chooses among them. It never sees, copies,
 transforms or emits a cell value -- deterministic code does that downstream,
 under the mapping this module produces. That split is the tabular
 anti-fabrication guarantee: a model that cannot touch a value cannot invent one.
 
 **Never refuse whole.** A header no role fits becomes
-:attr:`~core.FieldRole.UNMAPPED` and is reported on
+:attr:`~core.field_role.FieldRole.UNMAPPED` and is reported on
 :attr:`ColumnRoleProposal.unmapped_columns`; the file still imports without that
 column. The same holds for every way a reply can be wrong about a column: a role
 token outside the allow-list, a role a previous column already claimed, a claim
@@ -98,12 +98,12 @@ class ObservedColumn(BaseModel):
 
 
 class RejectedRoleProposal(BaseModel):
-    """A claim naming a role token that is not a :class:`~core.FieldRole` member.
+    """A claim naming a role token that is not a :class:`~core.field_role.FieldRole` member.
 
     The allow-list refusal. The token is kept verbatim so an operator or a
     measurement run can see what was actually proposed rather than a redacted
     "invalid role"; the column itself falls back to
-    :attr:`~core.FieldRole.UNMAPPED`.
+    :attr:`~core.field_role.FieldRole.UNMAPPED`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -145,7 +145,7 @@ class ColumnRoleProposal(BaseModel):
     ``roles`` is positional and always carries exactly one entry per observed
     column, so it can be handed to a positional consumer without further
     checking. Every column the mapping did not establish holds
-    :attr:`~core.FieldRole.UNMAPPED` there AND appears on
+    :attr:`~core.field_role.FieldRole.UNMAPPED` there AND appears on
     :attr:`unmapped_columns`, whichever way it came to be unmapped -- the
     remaining fields say *why*, and are the operator-reportable record of what
     the mapping call got wrong.
@@ -175,7 +175,7 @@ class ColumnRoleProposal(BaseModel):
 class ProposedColumnRole(BaseModel):
     """One column-to-role claim as the model stated it.
 
-    ``role`` is typed ``str`` rather than :class:`~core.FieldRole` **on
+    ``role`` is typed ``str`` rather than :class:`~core.field_role.FieldRole` **on
     purpose**. Validating it as the enum here would make an out-of-allow-list
     token a whole-reply validation failure -- refusing the file over one bad
     column, which is the exact defect this lane exists to remove. Keeping it a
@@ -206,7 +206,7 @@ class ColumnRoleMappingReply(BaseModel):
 def permitted_column_roles() -> tuple[FieldRole, ...]:
     """Return every role a column may be assigned, in declaration order.
 
-    Derived from :class:`~core.FieldRole` itself rather than from a list held
+    Derived from :class:`~core.field_role.FieldRole` itself rather than from a list held
     here, so a role added to the enum is offered to the model, accepted by the
     parser and rejected-if-absent by the allow-list without one edit in this
     module. A hand-kept copy would drift the day the enum grows -- and the enum
@@ -243,7 +243,7 @@ def _role_description_docstring(node: ast.stmt) -> str | None:
 def _role_descriptions() -> Mapping[str, str]:
     """Return each role's documented meaning, keyed by its token.
 
-    Read from :class:`~core.FieldRole`'s own attribute docstrings, so the
+    Read from :class:`~core.field_role.FieldRole`'s own attribute docstrings, so the
     description the model is given is the description the enum declares -- one
     source, and a new member arrives documented. Attribute docstrings are not
     retained at runtime, hence the source read; if the source is unavailable
@@ -450,9 +450,9 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
     """Turn one model reply into a proposal over ``headers``.
 
     Every claim is checked against the allow-list derived from
-    :class:`~core.FieldRole` and against the table's actual columns. A claim
+    :class:`~core.field_role.FieldRole` and against the table's actual columns. A claim
     that fails either check is recorded on the proposal and the column it
-    concerns stays :attr:`~core.FieldRole.UNMAPPED`; the remaining columns are
+    concerns stays :attr:`~core.field_role.FieldRole.UNMAPPED`; the remaining columns are
     unaffected. First claim wins on any collision, so the same reply always
     yields the same proposal.
 
@@ -508,7 +508,7 @@ class SemanticColumnRoleMapper:
     ``cadrumo_llm_model`` -- a frontier hosted model -- for a task that is
     selecting among a handful of short strings. So the model is resolved
     through :func:`~application.provisioning.select_model_for_role` against
-    :attr:`~core.ModelRole.COLUMN_ROLE_MAPPING`, which names the WEAKEST catalogued
+    :attr:`~core.model_catalogue.ModelRole.COLUMN_ROLE_MAPPING`, which names the WEAKEST catalogued
     candidate clearing the capability, licence and headroom bars on this
     machine. Re-pointing that role in the catalogue re-points this lane with no
     edit here.

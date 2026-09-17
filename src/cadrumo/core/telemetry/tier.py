@@ -34,8 +34,8 @@ class TelemetryTier(StrEnum):
             ``remote_allowed``.
         FULL: Counters and timing percentiles are both remote-eligible,
             subject to each individual metric key's own
-            :attr:`~core.telemetry.CounterSpec.remote_allowed` /
-            :attr:`~core.telemetry.TimingSpec.remote_allowed` declaration.
+            ``core.telemetry.schema.remote_allowed`` /
+            ``core.telemetry.schema.remote_allowed`` declaration.
     """
 
     OFF = "off"

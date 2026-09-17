@@ -189,7 +189,7 @@ def refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     Refusing is right rather than advisory: unlike an amount that is merely
     doubtful, a self-naming counterparty is wrong under every reading this
     codebase can represent (see
-    :func:`~application.invoices.counterparty_is_the_filer` for the autoconsumo
+    :func:`~application.invoices.self_counterparty.counterparty_is_the_filer` for the autoconsumo
     scope note). Minting the record and warning about it would put a fabricated
     counterparty identity in the catalogue.
 

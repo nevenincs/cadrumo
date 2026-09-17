@@ -14,9 +14,9 @@ evidence projection rather than the raw HTML, and sliced to the unit the
 citation's anchor names when the source file carries multiple units.
 
 See Also:
-    :class:`~application.corpus_search.CitationResolution`
+    :class:`~application.corpus_search.models.CitationResolution`
         Typed result carrying catalogue metadata and verbatim text.
-    :func:`~application.corpus_search.search_corpus`
+    :func:`~application.corpus_search.runtime.search_corpus`
         Exact citation ids short-circuit through this lookup before ranking.
 
 Notes:

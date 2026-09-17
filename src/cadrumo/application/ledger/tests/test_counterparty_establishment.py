@@ -392,6 +392,7 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
         _confirm(repository, scope=IvaTerritorialScope.from_registry("es_mainland"))
 
     context = raised.value.context
+    assert context is not None
     assert context["confirmed_scope"] == IvaTerritorialScope.from_registry("es_canarias").value
     assert context["asserted_scope"] == IvaTerritorialScope.from_registry("es_mainland").value
 

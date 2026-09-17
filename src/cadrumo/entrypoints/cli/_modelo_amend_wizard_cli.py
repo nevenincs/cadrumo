@@ -7,7 +7,7 @@ grammar ``work amend`` demands. The wizard resolves the work unit's current
 AEAT-attested filing record, shows every one of its casilla values, asks which
 casillas changed and what the corrected value is for each, confirms the legal
 amendment kind and a free-text reason, then calls the exact same
-:func:`~application.modelo.amend_modelo_revision` composition path
+:func:`~application.modelo.amendment_actions.amend_modelo_revision` composition path
 ``work amend`` uses. The wizard is a guided front end over that one write
 path, not a second one (``aeat-architecture-boundaries``).
 
@@ -738,7 +738,7 @@ def work_amend_wizard(
     :class:`~ExternalEvidence`), shows every
     baseline casilla value, prompts which casillas changed and their
     corrected values, confirms the amendment kind and reason, then
-    calls :func:`~application.modelo.amend_modelo_revision`
+    calls :func:`~application.modelo.amendment_actions.amend_modelo_revision`
     through the identical inputs ``work amend`` builds.
     """
     run_modelo_work_amend_wizard(

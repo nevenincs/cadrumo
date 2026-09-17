@@ -4,8 +4,8 @@
 root ``aeat --version`` surface without loading the bundled registry.
 
 :func:`build_config_repair_report` composes environment checks,
-:class:`~application.workflow.WorkflowState` loading,
-:class:`~application.workflow.ActiveProfileHealth` profile storage
+:class:`~application.workflow.state_models.WorkflowState` loading,
+:class:`~application.workflow.profile_health.ActiveProfileHealth` profile storage
 verdicts, :class:`~application.wizard.status.WizardStatusReport`
 readiness and secure-object decryptability into a
 :class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows.
@@ -271,8 +271,8 @@ def build_config_repair_report(
     configuration and secure-state health.
 
     The secure-state branch reads
-    :class:`~application.workflow.WorkflowState`, derives
-    :class:`~application.workflow.ActiveProfileHealth`, and builds a
+    :class:`~application.workflow.state_models.WorkflowState`, derives
+    :class:`~application.workflow.profile_health.ActiveProfileHealth`, and builds a
     :class:`~application.wizard.status.WizardStatusReport`. If that load
     fails, the report still emits profile and auth rows from the redacted health
     verdict so repair remains usable on a cold or degraded storage root.
@@ -579,9 +579,9 @@ def build_profile_check(
     ``report`` supplies the
     :class:`~application.wizard.status.WizardStatusReport` counters and
     next action. ``profile_health`` can override the row when
-    :class:`~application.workflow.ActiveProfileHealth` says the active
+    :class:`~application.workflow.profile_health.ActiveProfileHealth` says the active
     profile bucket is unavailable. ``state`` lets the check expand missing
-    profile keys from :class:`~application.workflow.WorkflowState` into
+    profile keys from :class:`~application.workflow.state_models.WorkflowState` into
     per-key :class:`DiagnosticFinding` rows.
     """
     from .workflow.profile_health import UNREADABLE_PROFILE_STATUSES

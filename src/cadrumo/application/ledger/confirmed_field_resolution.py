@@ -182,14 +182,14 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
     """Return the domestic rate tier the document's own lines charged, or ``None``.
 
     **A tier, not a category.** This resolution used to end in a domestic
-    :class:`~domain.iva.IvaCategory`, which made it a second classifier sitting
+    :class:`~domain.iva.schema.IvaCategory`, which made it a second classifier sitting
     ahead of the rule table and reaching it never -- and it reached that
-    category through :func:`~domain.iva.domestic_categories_by_rate_kind`, the
+    category through :func:`~domain.iva.classification.domestic_categories_by_rate_kind`, the
     exact mapping the table's own ``R05`` rule consults. Stopping at the tier
     keeps every one of the declines below and hands the answer to the table as
     a criteria axis, so the mapping is applied once, where the law is.
 
-    :func:`~domain.iva.rate_kinds_for_declared_rate` answers which tier a
+    :func:`~domain.iva.lookup.rate_kinds_for_declared_rate` answers which tier a
     declared rate WAS on a given date, against the registered rate records; it
     returns a tuple because that question can legitimately have more than one
     answer, so a caller detects ambiguity instead of picking one.
@@ -224,7 +224,7 @@ def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: d
         invoice_date: The resolved issue date the rate must be read against.
 
     Returns:
-        The resolved :class:`~domain.iva.IvaRateKind`, or ``None`` when the
+        The resolved :class:`~domain.iva.schema.IvaRateKind`, or ``None`` when the
         document does not settle it unambiguously.
     """
     if len(draft.iva_breakdown) != 1:

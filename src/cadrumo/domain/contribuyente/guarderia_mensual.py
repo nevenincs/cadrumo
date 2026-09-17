@@ -1,7 +1,7 @@
 """The one grammar for a descendant's month-level guardería spend.
 
 Art. 81.2 LIRPF draws two month boundaries an annual total cannot express, so
-:class:`~domain.contribuyente.GuarderiaMonthSpend` entries are month-granular.
+:class:`~domain.contribuyente.family_types.GuarderiaMonthSpend` entries are month-granular.
 That makes the map a structured value on surfaces that carry only flat strings:
 the ``--descendiente`` flag, the ``renta_family.descendiente.{n}.*`` fact index,
 and one wizard page. This module is the single grammar all three share.
@@ -79,7 +79,7 @@ def parse_guarderia_mensual(raw: str, *, field: str) -> tuple[GuarderiaMonthSpen
         range expanded.
 
     Raises:
-        :class:`~cadrumo.core.errors.ProfileAnswerTypeError`: If any entry is
+        :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError`: If any entry is
             malformed, names a month outside 1-12, inverts a range, repeats a
             month, or carries an amount that is not a non-negative integer.
     """

@@ -10,14 +10,14 @@ row grammar remains stable.
 
 This is a read-only inbound adapter. It does not define Modelo 100
 completeness, resolve a
-:class:`~domain.calculations.registry.RegistrySnapshot`, or make
+:class:`~domain.calculations.registry.schema.RegistrySnapshot`, or make
 filing-grade authority decisions. When callers pass a
 :class:`~adapters.inbound.borrador.schema.BorradorExtractionProfile`, the
 extractor filters to that profile and fails hard if observed coverage is
 insufficient.
 
 Rows are extracted from the concatenated text stream, so
-:class:`~adapters.inbound.pdf.ExtractedCasilla` records preserve the
+:class:`~adapters.inbound.pdf.extracted_casilla.ExtractedCasilla` records preserve the
 printed value and confidence but do not capture per-row bounding boxes.
 """
 

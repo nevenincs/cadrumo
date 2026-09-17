@@ -217,7 +217,7 @@ class ContentionSnapshot(ProvisioningOutcome):
     """The measured verdict on whether one model load is safe to perform right now.
 
     Read the fields as three separate claims. ``admitted`` is the decision.
-    ``causes`` is :class:`~core.ContentionCause` and says *why* a refusal
+    ``causes`` is :class:`~core.hardware.ContentionCause` and says *why* a refusal
     happened, keyed to the condition that applies -- unloading a model Cadrumo
     selected, closing a peer application, or measuring what could not be
     measured. ``residents`` is the attribution evidence: the runtime's own

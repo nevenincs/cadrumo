@@ -1,24 +1,24 @@
 """Governed-persistence repository for submission audit records.
 
 Submission audit records keep the local or imported
-:class:`domain.submission.ModeloPresentado` lifecycle: draft id, modelo,
+:class:`domain.submission.models.ModeloPresentado` lifecycle: draft id, modelo,
 period, taxpayer identity, AEAT receipt metadata when observed, and attempt
 summaries. They are stored as encrypted byte objects in the primary SQL backend
-at ``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass`; no
+at ``AUDIT`` :class:`~core.classification.policies.SensitivityClass`; no
 plaintext submission JSON or envelope file lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`domain.submission.SubmissionRepositoryProtocol`. It lives in the
+:class:`domain.submission.protocols.SubmissionRepositoryProtocol`. It lives in the
 persistence adapter (not in :mod:`domain.submission`) because its base
-:class:`~adapters.persistence.storage.SecureBoundRepository` is
+:class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` is
 SQL/crypto-coupled; the domain package depends only on the structural port.
 
 See Also:
-    :class:`domain.submission.ModeloPresentado`
+    :class:`domain.submission.models.ModeloPresentado`
         Payload model encrypted by this repository.
-    :class:`domain.submission.SubmissionRepositoryProtocol`
+    :class:`domain.submission.protocols.SubmissionRepositoryProtocol`
         Domain-facing read port this repository satisfies structurally.
-    :class:`adapters.persistence.storage.SecureObjectRepository`
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         SQL object store underlying the bound repository.
 """
 
@@ -41,17 +41,17 @@ _log = get_logger(__name__)
 class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
     """Encrypted AUDIT repository for :class:`ModeloPresentado` records.
 
-    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
+    The :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` base
     stores each :class:`ModeloPresentado` in a
-    :class:`~adapters.persistence.storage.Envelope` row under the AUDIT
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` row under the AUDIT
     submission-records namespace. The natural key is the submission id, so the
     list and iteration APIs expose historical filing attempts rather than any
     live submission capability.
 
     See Also:
-        :class:`domain.submission.SubmissionRepositoryProtocol`
+        :class:`domain.submission.protocols.SubmissionRepositoryProtocol`
             Domain read port this class satisfies.
-        :class:`~adapters.persistence.storage.SecureObjectRepository`
+        :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
             SQL object store composed by the bound repository base.
     """
 

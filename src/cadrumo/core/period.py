@@ -24,8 +24,8 @@ widening one to admit a registry coordinate must not widen the other.
 :class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
-:data:`domain.calculations.registry._schema_scalars.PeriodCode` alias and
-:class:`domain.calculations.registry.PeriodSelector` schema. Registry
+:data:`domain.calculations.registry.schema_scalars.PeriodCode` alias and
+:class:`domain.calculations.registry.schema_references.PeriodSelector` schema. Registry
 objects carry bare period tokens; application services that need a concrete
 filing window compose those tokens with a year into :class:`Period`.
 Operator commands follow the same separated shape (``--year YYYY --period
@@ -171,7 +171,7 @@ def is_administrative_period_token(token: str) -> bool:
     Matching is on the registry's own unaccented spelling. A caller reading a
     token off an AEAT-rendered surface — where Spanish prints ``MODIFICACIÓN``,
     ``COMUNICACIÓN``, ``VARIACIÓN`` — folds it with
-    :func:`~cadrumo.core.fold_diacritics` first; admitting accented spellings here
+    :func:`~cadrumo.core.text_fold.fold_diacritics` first; admitting accented spellings here
     would put this predicate and :data:`RegistryPeriodCode` into disagreement
     about the same token.
 
@@ -372,7 +372,7 @@ class Period(BaseModel):
     The model is frozen and hashes by ``(filing_year, code)``, so a ``Period`` is
     a drop-in dict key, set member, and equality target wherever a typed period
     is required. The ledger and aggregation boundary routes through
-    :func:`application.aggregation.aggregation_period_for_modelo`, then uses
+    :func:`application.aggregation.modelo_bindings.aggregation_period_for_modelo`, then uses
     :meth:`contains` as the single date-boundary authority.
 
     Attributes:
@@ -449,7 +449,7 @@ class Period(BaseModel):
         """Return the bare registry period code as a string (e.g. ``"1T"``).
 
         Use this when calling registry APIs that expect the bare
-        :data:`domain.calculations.registry._schema_scalars.PeriodCode` token
+        :data:`domain.calculations.registry.schema_scalars.PeriodCode` token
         rather than a
         structured :class:`Period`.
         """

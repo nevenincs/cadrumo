@@ -15,10 +15,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from pydantic import ValidationError
 from sqlalchemy import select
 
@@ -108,11 +104,15 @@ from cadrumo.domain.modelos.protocols import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports, build_verification_repository_bundle
 
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from .published_authority_support import published_authority_operation
 from .secure_objects_fixture import secure_objects
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -157,7 +157,7 @@ def _inward_export_ports(
 
 def _summary_casilla_ids() -> tuple[CasillaId, ...]:
     requirement = m303_regimen_simplificado_annual_summary_requirement(
-        compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A").revision
+        published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A").revision
     )
     assert requirement is not None
     return tuple(requirement.binding_ids_by_summary_casilla_id)
@@ -197,9 +197,9 @@ def _non_agricultural_source_evidence(
     *, declared_quantity: Decimal = Decimal("1"), operation: PinnedAuthorityOperation
 ) -> FilingInstanceEvidence:
     period = Period.from_year_and_code(_YEAR, "4T")
-    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    registry_snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=published_authority_operation()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -313,7 +313,7 @@ def _persist_presentado_source(
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
     with _indexed_authority_for_test().operation() as operation:
         source_work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -502,7 +502,7 @@ def _calculate_m390_annual(
     calculations: CalculationRevisionCatalogueRepository,
     filings: ModeloRecordCatalogueRepository,
 ):
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
     with _indexed_authority_for_test().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -574,7 +574,7 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     assert dict(handoff.values) == expected
     assert {casilla_id: result.revision.casilla_values[casilla_id] for casilla_id in expected} == expected
     assert not result.revision.relation_overrides
-    target_snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    target_snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
     requirement = m303_regimen_simplificado_annual_summary_requirement(target_snapshot.revision)
     assert requirement is not None
     assert {
@@ -892,7 +892,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
 
 def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar_path() -> None:
     """The registry has one typed value-arrival family, never a box-79 bridge."""
-    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
     requirement = m303_regimen_simplificado_annual_summary_requirement(snapshot.revision)
     assert requirement is not None
     assert set(requirement.binding_ids_by_summary_casilla_id) == set(
@@ -921,9 +921,9 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
     empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty", operation=operation)
     assert empty.m303.regimen_simplificado.calculation_result.activities == ()
 
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
-        scope=m303_regime_composition_simplified_scope("simplified", authority=compiled_bundled_authority()),
+        scope=m303_regime_composition_simplified_scope("simplified", authority=published_authority_operation()),
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=snapshot,

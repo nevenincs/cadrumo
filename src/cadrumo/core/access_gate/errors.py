@@ -1,6 +1,6 @@
 """Policy errors for the AEAT live-access gate.
 
-All errors inherit from :class:`core.errors.CadrumoError` so callers
+All errors inherit from :class:`core.errors.hierarchy.CadrumoError` so callers
 have a single root they can catch at integration boundaries.
 
 ``LiveSubmitForbiddenError`` lives here (rather than in the
@@ -19,7 +19,7 @@ generation remains a local export concern and writes disk artefacts, never
 remote submissions.
 
 See Also:
-    :class:`core.access_gate.AeatAccessGate`
+    :class:`core.access_gate.gate.AeatAccessGate`
         Gate that raises these errors from live-read and live-write checks.
     :class:`LiveSubmitForbiddenError`
         Permanent refusal raised by every attempted live AEAT write.
@@ -34,7 +34,7 @@ class AccessGateSubmissionError(CadrumoError):
     """Base class for live-write access-gate submission policy failures.
 
     Attributes:
-        translated_message: Optional :class:`core.i18n.Translatable`
+        translated_message: Optional :class:`core.i18n.translatable.Translatable`
             payload carrying a user-facing version of the message.
     """
 
@@ -77,7 +77,7 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
 class AeatLiveReadNotEnabledError(CadrumoError):
     """Raised when pytest live-read access is required but the test gate is shut.
 
-    Emitted by :meth:`core.access_gate.AeatAccessGate.require_live_read` during pytest
+    Emitted by :meth:`core.access_gate.gate.AeatAccessGate.require_live_read` during pytest
     execution when ``CADRUMO_LIVE_TESTS_ENABLED`` is not set to ``"1"``.
     Operator-facing live reads are controlled by auth/profile/read-only
     guards rather than this test opt-in variable.

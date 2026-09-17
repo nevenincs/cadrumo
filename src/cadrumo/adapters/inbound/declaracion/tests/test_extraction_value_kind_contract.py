@@ -33,12 +33,12 @@ See Also:
 
 from __future__ import annotations
 
-from typing import Literal, get_args
+from typing import Literal
 
 import pytest
 
 from .....core.casilla_id import validated_casilla_id
-from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
+from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition, ExtractionValueKind
 from ..parser import _classify_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -130,7 +130,7 @@ def test_the_value_kind_vocabulary_is_the_one_this_ruling_adjudicated() -> None:
     added later would inherit neither the "parse directive" reading nor the
     identity contract by default, so it must be adjudicated on its own terms.
     """
-    declared = set(get_args(ExtractionTargetDefinition.model_fields["value_kind"].annotation))
+    declared = {member.value for member in ExtractionValueKind}
 
     assert declared == {"amount", "text", "enum"}, (
         f"value_kind vocabulary changed to {sorted(declared)}; the enum-is-a-hint "

@@ -2,10 +2,10 @@
 
 :class:`VerificationReportCatalogueRepository` persists and loads
 :class:`VerificationReport` entries in a :class:`VerificationReportCatalogue`
-via :class:`~adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`. The
+via :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`. The
 catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
-:class:`~adapters.persistence.storage.Envelope` before serialisation.
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` before serialisation.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~VerificationReportCatalogueRepositoryProtocol`. It
@@ -14,20 +14,20 @@ secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`VerificationReportCatalogue` model and its pure mutators.
 
 See Also:
-    :mod:`~adapters.persistence.profile._modelo_runtime`
+    ``adapters.persistence.profile._modelo_runtime``
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
     :class:`~VerificationReportCatalogue`
         Domain catalogue payload encrypted by this repository.
     :class:`~VerificationReportCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :data:`~adapters.persistence.storage.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
         contract for these secure objects.
     :mod:`~adapters.persistence.profile.modelos_calculation`
         Sibling calculation-revision repository whose revisions are assessed by
         verification reports stored here.
-    :func:`~application.modelo.list_verification_reports`
+    :func:`~application.modelo.filing_actions.list_verification_reports`
         Read-side application service that loads reports through this repository
         boundary.
 """
@@ -66,7 +66,7 @@ class VerificationReportCatalogueRepository:
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because it translates a classification or schema-version mismatch
     into :class:`VerificationReportPersistenceError` via
-    :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
+    :func:`~domain.modelos.errors.raise_catalogue_integrity_error`. This class is
     the concrete load/save implementation behind
     :class:`~VerificationReportCatalogueRepositoryProtocol`.
     """

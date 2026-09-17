@@ -1,7 +1,7 @@
 """Typed exception hierarchy for the Google OAuth Desktop integration.
 
-Every subclass is an :class:`core.errors.CadrumoError` with a stable
-:class:`core.errors.ErrorCode` declared in the adapter error registry.
+Every subclass is an :class:`core.errors.hierarchy.CadrumoError` with a stable
+:class:`core.errors.error_codes.ErrorCode` declared in the adapter error registry.
 That keeps the public CLI taxonomy explicit while
 :mod:`entrypoints.cli.config.google_errors` can map concrete
 :class:`GoogleAuthError` subclasses to localised refusal text. Constructors
@@ -64,7 +64,7 @@ class GoogleAuthError(TerminalPreconditionErrorMixin[PreconditionVerdict], Cadru
     """Base class for every Google OAuth Desktop authentication failure.
 
     Catch this at CLI boundaries that need one Google-auth refusal arm while
-    preserving the concrete :class:`core.errors.ErrorCode` on each leaf.
+    preserving the concrete :class:`core.errors.error_codes.ErrorCode` on each leaf.
     """
 
 

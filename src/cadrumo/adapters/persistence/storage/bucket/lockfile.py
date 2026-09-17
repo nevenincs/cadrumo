@@ -4,7 +4,7 @@ Each bucket carries a single PID-stamped lockfile at ``<bucket-dir>/.lock``
 created via ``os.open`` with ``O_CREAT | O_EXCL | O_WRONLY``; the
 ``O_EXCL`` flag is atomic on every POSIX kernel and on Windows NTFS, so a
 second-process unlock against a held bucket fails fast with
-:class:`adapters.persistence.storage.bucket.BucketBusyError` per
+:class:`adapters.persistence.storage.bucket.errors.BucketBusyError` per
 the substrate locking contract.
 
 The lockfile carries the holder's PID. A stale lock (PID is no longer a
@@ -13,7 +13,7 @@ process exit (SIGKILL, OS crash, container OOM) does not permanently
 strand the bucket; the lazy reclaim is documented under the plan's
 "Lockfile staleness detection" open question.
 
-Every removal goes through :func:`~core.unlink_lockfile`, because a
+Every removal goes through :func:`~core.lockfile_unlink.unlink_lockfile`, because a
 waiting acquirer that opens the lockfile to read its PID blocks the holder's
 unlink on Windows. On the release path that is a wedge rather than a delay --
 the record names a live process, so the lock is never reclaimed as stale -- so
@@ -152,7 +152,7 @@ def _holding_pid_for_error(pid: _PidReadResult) -> int:
 def _unlink_lockfile_if_present(target: Path, *, reason: str) -> bool:
     """Remove a lockfile best-effort; report whether it is gone.
 
-    Delegates to :func:`~core.unlink_lockfile` so this lock and the
+    Delegates to :func:`~core.lockfile_unlink.unlink_lockfile` so this lock and the
     auth-acquisition lock handle a waiter's open read handle identically. A
     single attempt is right for every caller except the release itself: losing
     the race on a stale reclaim or an interpreter-exit sweep costs one more
@@ -174,7 +174,7 @@ def _unlink_released_lockfile(target: Path, paths: BucketLockTarget) -> None:
 
     Raises:
         BucketValidationError: When the removal is still refused after
-            :data:`~core.LOCKFILE_UNLINK_RETRY_SECONDS`, so the operator is told
+            :data:`~core.lockfile_unlink.LOCKFILE_UNLINK_RETRY_SECONDS`, so the operator is told
             the bucket needs the stale lockfile cleared by hand.
     """
     if unlink_lockfile(target, retry_seconds=LOCKFILE_UNLINK_RETRY_SECONDS, reason="release"):

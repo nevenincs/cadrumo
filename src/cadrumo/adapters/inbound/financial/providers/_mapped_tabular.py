@@ -10,7 +10,7 @@ mapping decided per file. Letting the fallback shadow an exact provider would
 silently turn the deterministic parse into an inferred one.
 
 The lane itself is deterministic end to end. :mod:`core.tabular` resolves
-the file's shape, a mapping supplies one :class:`~core.FieldRole` per column,
+the file's shape, a mapping supplies one :class:`~core.field_role.FieldRole` per column,
 and :mod:`._tabular_projection` copies each cell into its role byte-for-byte.
 Only the mapping is a judgement, and it is made once per file over a closed
 allow-list of roles, never over a cell value.
@@ -66,8 +66,8 @@ MAPPED_TABULAR_EXTENSIONS: frozenset[str] = CSV_EXTENSIONS | frozenset({".tsv", 
 #: Roles a bank-movement row cannot do without. ``FieldRole`` is shared with
 #: the invoice-book lane and carries no statement-specific date or movement
 #: amount member, so a statement's booked date reads under
-#: :attr:`~core.FieldRole.INVOICE_DATE` and its amount under
-#: :attr:`~core.FieldRole.GRAND_TOTAL`.
+#: :attr:`~core.field_role.INVOICE_DATE` and its amount under
+#: :attr:`~core.field_role.GRAND_TOTAL`.
 REQUIRED_STATEMENT_ROLES: frozenset[FieldRole] = frozenset({FieldRole.INVOICE_DATE, FieldRole.GRAND_TOTAL})
 
 TabularMappingResolver = Callable[[NormalizedTable], ColumnRoleMapping | None]

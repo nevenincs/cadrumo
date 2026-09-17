@@ -2,22 +2,22 @@
 
 This module converts CLI override tokens into a
 :class:`WorkCalculateInputBundle`, resolves the active work unit's
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision`, and validates
-canonical :class:`~cadrumo.core.CasillaId` values,
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`, and validates
+canonical :class:`~cadrumo.core.casilla_id.CasillaId` values,
 binding channels, relation ids, and shortcut-derived semantic-role casillas
 before the calculate service persists a
 :class:`~CalculationRevision`.
 
 The application result pairs that persisted revision with its parent
 :class:`~WorkUnit` and any non-blocking
-:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` rows
+:class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceDiagnostic` rows
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
     :mod:`cadrumo.entrypoints.cli._modelo_work_calculate_cli`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
-    :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Consumes the validated bundle and persists the draft calculation
         revision.
     :mod:`cadrumo.application.modelo.calculation_resolution`:
@@ -203,7 +203,7 @@ class WorkCalculateInputBundle:
     the optional borrador snapshot id so each downstream channel keeps its
     registry-declared type. ``text_casilla_inputs`` carries operator-supplied
     text-scalar casilla values — every family whose
-    :func:`~cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    :func:`~cadrumo.domain.calculations.registry.schema_scalars.registry_scalar_value_type` is
     ``"str"``, such as Modelo 210's ``tipo_renta`` (``text``) and Modelo 303's
     ``decl.periodo`` (``period_code``) — on
     a channel parallel to ``casilla_inputs``: the registry engine's
@@ -315,7 +315,7 @@ class ModeloWorkCalculationServiceResult:
     metadata.
 
     ``source_diagnostics`` carries the NON-blocking
-    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` rows the
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceDiagnostic` rows the
     source mesh and post-calculation advisory collectors raised. They include
     unresolved or deferred binding sources, unrouted ledger observations, and
     calculate-grade official-box / prior-payment / settlement advisories. The
@@ -351,7 +351,7 @@ def calculate_modelo_work_revision(
     uses the profile the calculation checked.
 
     See Also:
-        :func:`cadrumo.application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Runs source aggregation and persists the calculation revision.
         :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
             Calls this service and serialises the result for the operator.
@@ -520,12 +520,12 @@ def build_work_calculate_input_bundle(
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
     The active work unit determines the
-    :class:`~cadrumo.domain.calculations.registry.ModeloRevision` used for every
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` used for every
     validation step. ``--casilla`` values must be canonical casilla ids; printed
     numbers and ambiguous noncanonical references are refused. A ``--casilla``
-    key whose registry :class:`~cadrumo.domain.calculations.registry.CasillaDefinition`
+    key whose registry :class:`~cadrumo.domain.calculations.registry.schema_surfaces.CasillaDefinition`
     declares a text-scalar ``data_type`` — every family whose
-    :func:`~cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    :func:`~cadrumo.domain.calculations.registry.schema_scalars.registry_scalar_value_type` is
     ``"str"``, so ``text`` (Modelo 210's ``tipo_renta``) alongside
     ``period_code``, ``nif``, ``iban`` and the rest — is routed onto the
     parallel text-casilla channel, canonicalised by that family's own declared
@@ -541,7 +541,7 @@ def build_work_calculate_input_bundle(
 
     Detail rows are checked before engine dispatch, and shortcut flags are
     translated into semantic-role casilla values or backend-owned bindings by
-    :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
+    :func:`cadrumo.application.modelo.calculate_input.apply_calculation_shortcut_inputs`.
     ``profile`` is the work profile the command already loaded; when omitted,
     it is loaded where a profile-backed shortcut first needs it.
     """
@@ -680,14 +680,14 @@ def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinitio
 
     The text channel carries the whole registry string family (``period_code``,
     ``nif``, ``iban``, ``country_code``, ... — every ``data_type`` whose
-    :func:`cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    :func:`cadrumo.domain.calculations.registry.schema_scalars.registry_scalar_value_type` is
     ``"str"``), not only bare ``text``. Each family member declares its own
     validator, so running it here keeps the CLI the operator's first
     instructive surface: a malformed ``period_code`` is refused by name at the
     boundary instead of surfacing as a generic registry error deeper in the
     calculation pipeline. The canonical form the validator returns is what
     reaches the engine, exactly as
-    :func:`cadrumo.domain.calculations.registry.validate_registry_text_scalar`
+    :func:`cadrumo.domain.calculations.registry.schema_scalars.validate_registry_text_scalar`
     would produce there.
     """
     value = _text_value(raw_value, key=key)
@@ -708,7 +708,7 @@ def _text_value(raw_value: str, *, key: str) -> str:
     """Validate that a ``--casilla`` value routed to the text channel is a non-empty string.
 
     Mirrors the registry engine's own
-    :func:`cadrumo.domain.calculations.registry.validated_text_input_casilla_ids`
+    :func:`cadrumo.domain.calculations.registry.formula_text_inputs.validated_text_input_casilla_ids`
     non-empty-string contract at the CLI boundary, so an empty text value
     refuses loudly here instead of surfacing a generic registry error deeper in
     the calculation pipeline. Callers routing a value to a declared text-scalar
@@ -740,7 +740,7 @@ def _projected_m210_tipo_renta_code(official_code: str) -> str:
     detail catalogue by the governed-fact resolver.
 
     On acceptance the operator-entered official code is PROJECTED to its
-    :class:`~cadrumo.core.TipoRentaIrnr` rate-concept token — the value the engine
+    :class:`~cadrumo.core.irnr.TipoRentaIrnr` rate-concept token — the value the engine
     already keys the baseline rate table and treaty overrides on — so the
     operator declares the code the form asks for while the rate machinery keeps
     its conceptual key. (Codes that share a concept, e.g. arrendamiento ``01``
@@ -961,7 +961,7 @@ def _ambiguous_relacion_hijo_ids(
     """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
 
     Reads the active profile's descendiente records directly through the same
-    canonical reconstruction (:func:`~domain.contribuyente.descendant_list_from_facts`)
+    canonical reconstruction (:func:`~domain.contribuyente.descendant_facts.descendant_list_from_facts`)
     every other consumer of this fact set uses, rather than adding a field to
     :class:`~application.modelo.profile_binding.MaternidadMesesResolution`: this
     module already owns loading the profile record for
@@ -970,7 +970,7 @@ def _ambiguous_relacion_hijo_ids(
     months resolution that function answers.
 
     Which relación is ambiguous is stated once, with the manual's reasoning, by
-    :func:`~domain.contribuyente.relacion_is_ambiguous_for_maternidad`. The
+    :func:`~domain.contribuyente.descendant_maternity.relacion_is_ambiguous_for_maternidad`. The
     reasoning used to be written out here AND at the declaration-time surface
     that asks the same question, so a member added to the axis for either
     population would have had to reach two places that only agreed by hand.
@@ -1059,7 +1059,7 @@ def _maternidad_meses_withheld_advisory(
     reaches a child under three "con derecho a la aplicación del mínimo por
     descendientes" OR one inside the age-independent adopción/acogimiento
     entry-date window
-    (:meth:`~domain.contribuyente.DescendantInfo.art_81_1_entry_window_meses`),
+    (:meth:`~domain.contribuyente.descendant_maternity.DescendantMaternityMixin.art_81_1_entry_window_meses`),
     so months declared against a descendant BOTH limbs exclude are correctly
     withheld; withholding them SILENTLY is what this reports.
 
@@ -1398,14 +1398,14 @@ def apply_calculation_shortcut_inputs(
     The DT 12ª pension-rescate shortcut is fact-gated by the apartado-3 time
     window (LIRPF DT 12ª.4, added by Ley 26/2014). When the operator declares the
     contingencia year and the window predicate
-    (:func:`~cadrumo.domain.modelos.dt12_regime_window_eligibility`) proves the
+    (:func:`~cadrumo.domain.modelos.dt12_reduccion.dt12_regime_window_eligibility`) proves the
     window CLOSED, the 40% reducción injection is WITHHELD — the legally correct
     no-régimen result, since applying an out-of-window reducción would be a silent
     over-reduction (under-declaration of tax per ``no-silent-under-declaration``).
     When the window is open the reducción injects as usual; when the contingencia
     year is absent the reducción injects with an unverified-window advisory. Every
     branch surfaces a non-blocking
-    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`; calculate
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceDiagnostic`; calculate
     never aborts on the window verdict.
 
     Returns:

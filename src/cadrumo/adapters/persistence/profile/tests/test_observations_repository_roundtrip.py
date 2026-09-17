@@ -19,7 +19,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import admitted_revision_id, compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -43,6 +42,7 @@ from cadrumo.application.calculations.observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
 )
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -55,6 +55,8 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -71,7 +73,7 @@ _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 @cache
 def _revision_id(modelo: str, filing_year: int, period: str) -> str:
-    return admitted_revision_id(compiled_bundled_authority(), modelo, filing_year=filing_year, period=period)
+    return str(published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period).revision.id)
 
 
 def _populated_observation() -> RegistryModeloObservation:
@@ -567,8 +569,10 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             mutate=mutate,
         )
 
-        with pytest.raises(ValidationError, match="legal_refs"):
+        with pytest.raises(PersistenceDegradationError) as raised:
             repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        assert isinstance(raised.value.__cause__, ValidationError)
+        assert "legal_refs" in str(raised.value.__cause__)
 
 
 def test_iva_wallet_reconciliation_decision_v2_roundtrip_preserves_reason_identity_and_operator_explanation(

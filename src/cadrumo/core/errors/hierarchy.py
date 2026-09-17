@@ -264,8 +264,8 @@ class RedactionError(CoreError):
     """Raised when a redaction helper receives an argument of the wrong type.
 
     Replaces bare :class:`TypeError` previously raised by
-    :func:`core.redaction.redact` and
-    :func:`core.redaction.redact_for_cli_output` when passed a
+    :func:`core.redaction.rules.redact` and
+    :func:`core.redaction.rules.redact_for_cli_output` when passed a
     non-``str`` argument.
     """
 

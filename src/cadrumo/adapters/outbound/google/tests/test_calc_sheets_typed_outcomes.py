@@ -134,7 +134,7 @@ import json
 import sys
 
 from {module} import {call}
-from cadrumo.adapters.outbound.storage import OutboundStorageNetworkError
+from cadrumo.adapters.outbound.storage.errors import OutboundStorageNetworkError
 
 
 class _MissingGoogleApiFinder(importlib.abc.MetaPathFinder):

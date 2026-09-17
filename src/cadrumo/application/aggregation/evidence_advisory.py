@@ -97,7 +97,7 @@ def _row_has_deduction_grade_evidence(transaction: Transaction) -> bool:
 
     ``invoice_id`` is credited alongside ``purchase_invoice_evidence_id``, not
     instead of it. It references the reconciliation-catalogue
-    :class:`~cadrumo.domain.invoices.Invoice` record, which only exists behind
+    :class:`~cadrumo.domain.invoices.models.Invoice` record, which only exists behind
     the sanctioned catalogue writer's content validators (RD 1619/2012 art. 6),
     and ``ledger link`` refuses to stamp a ``Transaction.invoice_id`` that does
     not resolve to one already in that catalogue -- so its mere presence on the

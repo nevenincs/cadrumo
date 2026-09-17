@@ -210,7 +210,7 @@ def try_record_legal_hold_snapshot(
     The deletion preflight cannot read a profile's encrypted records -- it runs
     against profiles it has not unlocked -- so this plaintext snapshot is how
     the legal-hold position stays knowable without the key. Mirrors
-    :func:`~cadrumo.application.filing.try_record_filing_retention_snapshot`
+    :func:`~cadrumo.application.filing.retention.try_record_filing_retention_snapshot`
     exactly: same best-effort contract, same reason a caller that exists to do
     something else must never be refused over a deletion-support record.
 

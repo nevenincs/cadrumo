@@ -1,9 +1,9 @@
 """Typed per-modelo support-matrix registry.
 
-:class:`~domain.calculations.registry.ModeloEntry` is the first-class typed
+:class:`~domain.calculations.registry.support_matrix.ModeloEntry` is the first-class typed
 roll-up of "what does modelo X actually support", derived entirely from the loaded
-:class:`~domain.calculations.registry.ModeloDefinition` /
-:class:`~domain.calculations.registry.ModeloRevision` records — never
+:class:`~domain.calculations.registry.schema.ModeloDefinition` /
+:class:`~domain.calculations.registry.schema.ModeloRevision` records — never
 hand-maintained. It composes existing registry primitives rather than
 re-implementing them:
 
@@ -14,10 +14,10 @@ re-implementing them:
   while, recomputing every field this row already carries from the same
   primitives, and was retired rather than delegated once the fork was measured;
 * rename tracking reads the revision's already-declared
-  :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+  :class:`~domain.calculations.registry.schema_surfaces.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);
 * portal-compatibility tracking reads the revision's declared
-  :class:`~domain.calculations.registry.LiveCrossReferenceDecision` entries
+  :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision` entries
   (surface kind and evidence tier).
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
@@ -25,13 +25,13 @@ capability, rename record, or portal cross-reference reports an explicit
 empty/False value, never a fabricated positive.
 
 See Also:
-    :func:`~domain.calculations.registry.build_support_matrix`
+    :func:`~domain.calculations.registry.support_matrix.build_support_matrix`
         Pure builder that folds the
-        :class:`~domain.calculations.registry.ValidatedRegistryAuthority` into
+        :class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority` into
         typed rows.
-    :class:`~domain.calculations.registry._query_reports.ModeloSupportMatrixReport`
+    :class:`~domain.calculations.registry.query_reports.ModeloSupportMatrixReport`
         Query-service envelope returned by
-        :meth:`~domain.calculations.registry.RegistryQueryService.support_matrix`.
+        :meth:`~entrypoints.cli._modelo_discovery_cli.support_matrix`.
     :func:`~application.modelo.registry_discovery.registry_support_matrix`
         Application query used by CLI discovery without re-reading registry
         authority directly.
@@ -72,7 +72,7 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
     """Return the revision with the most recent ``valid_from`` for ``modelo``.
 
     A modelo always declares at least one revision
-    (:meth:`~domain.calculations.registry.ModeloDefinition._validate_revisions`
+    (:meth:`~domain.calculations.registry.schema.ModeloDefinition._validate_revisions`
     enforces this at load time), so the max is always well-defined.
     """
     return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
@@ -137,7 +137,7 @@ def revision_capability_probe(revision: ModeloRevision, *, modelo_id: str) -> Re
 class ModeloRenameRecord(BaseModel):
     """One declared per-ejercicio casilla continuity evolution.
 
-    Projects a :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
+    Projects a :class:`~domain.calculations.registry.schema_surfaces.CasillaContinuidadEvolutionDefinition`
     already declared on the revision — this record never invents rename
     history; it surfaces what the registry already tracks per continuity
     chain (``continuidad_id``).
@@ -162,7 +162,7 @@ class ModeloRenameRecord(BaseModel):
 class ModeloPortalCompatibilityRef(BaseModel):
     """One declared AEAT-portal cross-reference for a modelo revision.
 
-    Projects a :class:`~domain.calculations.registry.LiveCrossReferenceDecision`
+    Projects a :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision`
     already declared on the revision — the registry's own record of which live
     AEAT surface the modelo has been cross-checked against and under what
     evidence tier.
@@ -187,7 +187,7 @@ class ModeloEntry(BaseModel):
     Derived entirely from the loaded registry authority — every field is a
     direct read or fold over the modelo's latest revision, never a
     hand-maintained value. See
-    :func:`~domain.calculations.registry.build_support_matrix`.
+    :func:`~domain.calculations.registry.support_matrix.build_support_matrix`.
 
     Attributes:
         modelo_id: The AEAT modelo identifier (e.g. ``"303"``).
@@ -284,11 +284,11 @@ def build_support_matrix(authority: ValidatedRegistryAuthority) -> tuple[ModeloE
 
     Args:
         authority: The
-            :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
+            :class:`~domain.calculations.registry.authority.ValidatedRegistryAuthority`
             to probe.
 
     Returns:
-        Every modelo's :class:`~domain.calculations.registry.ModeloEntry`,
+        Every modelo's :class:`~domain.calculations.registry.support_matrix.ModeloEntry`,
         sorted by ``modelo_id``.
     """
     from .queries import RegistryQueryService

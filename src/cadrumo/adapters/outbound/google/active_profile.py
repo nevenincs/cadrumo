@@ -3,7 +3,7 @@
 Every ``aeat config google ...`` command and every secure-store read or write
 performed by :mod:`adapters.outbound.google.oauth_flow` and
 :mod:`adapters.outbound.google.session_store` is scoped to one AEAT
-profile. :func:`adapters.outbound.google.resolve_active_profile` obtains
+profile. :func:`adapters.outbound.google.active_profile.resolve_active_profile` obtains
 that profile's immutable bucket UUID through
 :func:`core.bucket_pointer.resolve_active_bucket_id`, the operator-facing precedence
 chain driven by :class:`core.config.Settings` and the plaintext
@@ -11,7 +11,7 @@ active-profile pointer file.
 
 There is no global Google session, no shared cross-profile token, and no
 multi-account binding within a single profile. A missing profile is raised as
-:exc:`adapters.outbound.google.GoogleAuthProfileUnboundError` so the CLI
+:exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError` so the CLI
 and storage factory render the same localised repair guidance.
 """
 
@@ -30,7 +30,7 @@ def resolve_active_profile() -> str:
         non-empty string.
 
     Raises:
-        :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
+        :exc:`adapters.outbound.google.errors.GoogleAuthProfileUnboundError`:
             When the :func:`core.bucket_pointer.resolve_active_bucket_id` precedence
             chain resolves to no profile. The error carries factual context
             naming the failed resolution attempt for renderers.

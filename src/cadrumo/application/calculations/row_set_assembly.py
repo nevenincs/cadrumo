@@ -7,17 +7,17 @@ detail rows as a flat tuple of
 records grouped by the row-set's grouping key. To consume those rows in the
 local-store ingest path the codebase needs typed observations of the matching
 domain shape (for example,
-:class:`~domain.calculations.registry.WithholdingObservation` for modelo
+:class:`~domain.calculations.registry.withholding_bindings.WithholdingObservation` for modelo
 190 / 193, or
-:class:`~domain.calculations.registry.Modelo720RowObservation` for modelo
+:class:`~domain.calculations.registry.detail_record_bindings.Modelo720RowObservation` for modelo
 720). Each assembler looks up binding selectors in the
-:class:`~domain.calculations.registry.ModeloRevision` supplied by the
+:class:`~domain.calculations.registry.schema.ModeloRevision` supplied by the
 caller.
 
 The assemblers in this module bridge the two: they walk a row-set's
 cells, group them by ``row_index``, look up each cell's binding in
 the revision to derive its
-:class:`~domain.calculations.registry.BindingRowSetSelector`
+:class:`~domain.calculations.registry.binding_selector_utils.BindingRowSetSelector`
 ``row_field`` key, and construct the matching observation type from the
 per-row field mapping plus a small set of synthesized defaults
 (``source_id``, ``transaction_date``) that the Detalle layout doesn't carry.
@@ -29,7 +29,7 @@ source-specific repository helpers. Adding a new detail-record source adds a new
 assembler here and a dispatch entry for its row-set grouping.
 
 See Also:
-    :func:`~domain.calculations.registry.binding_row_set_selector`
+    :func:`~domain.calculations.registry.binding_selector_utils.binding_row_set_selector`
         Typed projection used to read row-set selector fields without probing raw
         selector dictionaries.
     :class:`~core.aggregation.RowSetGroupingKind`
@@ -174,9 +174,9 @@ def assemble_observations_for_grouping(
             ``atribucion`` / ``refund`` / ``donativo``).
         cells: Per-row cell shapes consumed by the chosen assembler.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             look up typed
-            :class:`~domain.calculations.registry.BindingRowSetSelector`
+            :class:`~domain.calculations.registry.binding_selector_utils.BindingRowSetSelector`
             projections.
         filing_year: AEAT filing year carried through to the produced
             observations' provenance.
@@ -185,7 +185,7 @@ def assemble_observations_for_grouping(
     ``source_kind`` identifies the assembler that ran (``withholding`` /
     ``related_party`` / ``foreign_asset`` / ``atribucion`` /
     ``refund`` / ``donativo``). Raises
-    :class:`~domain.calculations.registry.RegistryValidationError` for groupings
+    :class:`~domain.calculations.registry.errors.RegistryValidationError` for groupings
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
     """
@@ -214,7 +214,7 @@ def assemble_observations_for_snapshot(
     """Assemble one row set against the authoritative selected registry snapshot.
 
     This is the application command at the row-observation boundary.  It
-    deliberately accepts a :class:`~domain.calculations.registry.RegistrySnapshot`
+    deliberately accepts a :class:`~domain.calculations.registry.schema.RegistrySnapshot`
     rather than a caller-selected ``ModeloRevision`` so its assembly uses the
     same law-selected revision and filing year as calculation.  It delegates
     all grouping and row validation to the closed dispatcher.
@@ -315,9 +315,9 @@ def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
     """Return ``binding_id → selector.row_field`` for every row-producer binding.
 
     Uses
-    :func:`~domain.calculations.registry.binding_row_set_selector`
+    :func:`~domain.calculations.registry.binding_selector_utils.binding_row_set_selector`
     rather than raw selector access, preserving the typed
-    :class:`~domain.calculations.registry.BindingRowSetSelector` contract
+    :class:`~domain.calculations.registry.binding_selector_utils.BindingRowSetSelector` contract
     closed by the registry selector validation gates.
     """
     lookup: dict[str, str] = {}
@@ -765,7 +765,7 @@ def assemble_withholding_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default dates.
 
@@ -776,13 +776,13 @@ def assemble_withholding_observations(
       * ``country_code`` -- defaults to ``ES`` per the AEAT diseno de
         registro convention for unspecified perceptors.
       * ``clave`` is NOT synthesised. A missing clave raises
-        :class:`~domain.calculations.registry.RegistryValidationError`
+        :class:`~domain.calculations.registry.errors.RegistryValidationError`
         because the Modelo 190/193 distinct percepciones count is keyed by
         perceptor plus clave/subclave; supplied values are validated against
         :class:`~core.aggregation.RetencionClave`.
 
     Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.WithholdingObservation`.
+    :class:`~domain.calculations.registry.withholding_bindings.WithholdingObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -805,13 +805,13 @@ def assemble_related_party_observations(
         cells: Per-row cell shapes the assembler projects into typed
             observations.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             look up typed row-set selector projections.
         filing_year: AEAT filing year carried through to each observation's
             provenance.
 
     Returns a tuple of
-    :class:`~domain.calculations.registry.RelatedPartyOperationObservation`
+    :class:`~domain.calculations.registry.detail_record_bindings.RelatedPartyOperationObservation`
     instances.
     """
     by_row = _cells_by_row(cells)
@@ -871,13 +871,13 @@ def assemble_foreign_asset_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default
             acquisition dates.
 
     Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.Modelo720RowObservation`.
+    :class:`~domain.calculations.registry.detail_record_bindings.Modelo720RowObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -932,13 +932,13 @@ def assemble_atribucion_observations(
         cells: Per-row cell shapes the assembler projects into typed
             member observations.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             look up typed row-set selector projections.
         filing_year: AEAT filing year carried through to each observation's
             provenance.
 
     Each element in the returned tuple is an
-    :class:`~domain.calculations.registry.AtributionMemberObservation`.
+    :class:`~domain.calculations.registry.detail_record_bindings.AtributionMemberObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -985,13 +985,13 @@ def assemble_refund_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default
             operation dates.
 
     Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.RefundOperationObservation`.
+    :class:`~domain.calculations.registry.detail_record_bindings.RefundOperationObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -1033,7 +1033,7 @@ def assemble_withholding296_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default dates.
     """
@@ -1057,7 +1057,7 @@ def assemble_gasto193_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive default dates.
 
@@ -1108,13 +1108,13 @@ def assemble_donativo_observations(
     Args:
         cells: Row-set cells exported from the calc sheet.
         revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` used to
+            :class:`~domain.calculations.registry.schema.ModeloRevision` used to
             map binding ids to row fields.
         filing_year: Calendar year of the filing; used to derive the default
             transaction date.
 
     Each element in the returned tuple is a
-    :class:`~domain.calculations.registry.DonativoDonorObservation`.
+    :class:`~domain.calculations.registry.donativo_bindings.DonativoDonorObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)

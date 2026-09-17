@@ -2,14 +2,14 @@
 
 This module backs the ``aeat app modelo work preview-maritime-exemption`` CLI
 surface. It reads the active profile's ``maritime_worker.*`` facts, normalises
-them into :class:`cadrumo.domain.renta.MaritimeWorkerFacts`, delegates legal
+them into :class:`cadrumo.domain.renta.maritime_exemption.MaritimeWorkerFacts`, delegates legal
 pathway selection and typed observation creation to
-:func:`cadrumo.application.calculations.resolve_maritime_exemption`, and returns a
+:func:`cadrumo.application.calculations.maritime_exemption_service.resolve_maritime_exemption`, and returns a
 :class:`ModeloMaritimeExemptionPreview` for transport rendering.
 
 The RETMAR mandatory-filing completeness gate is handled here rather than in
 the CLI transport. When the legal resolver raises
-:class:`cadrumo.domain.renta.ProfileCompletenessError`, the service preserves the
+:class:`cadrumo.domain.renta.maritime_exemption.ProfileCompletenessError`, the service preserves the
 original profile facts and reruns the calculation with only
 ``retmar_registered`` cleared, allowing the CLI to emit both the warning and the
 same observation payload shape used by non-warning previews.
@@ -18,11 +18,11 @@ See Also:
     :mod:`cadrumo.entrypoints.cli._modelo_maritime_cli`:
         Serves the CLI command that serialises this preview into operator
         payloads.
-    :func:`cadrumo.application.calculations.resolve_maritime_exemption`:
+    :func:`cadrumo.application.calculations.maritime_exemption_service.resolve_maritime_exemption`:
         Legal application service that produces the typed observations.
-    :class:`cadrumo.domain.renta.MaritimeWorkerFacts`:
+    :class:`cadrumo.domain.renta.maritime_exemption.MaritimeWorkerFacts`:
         Closed profile fact carrier consumed by the maritime selectors.
-    :class:`cadrumo.domain.renta.ProfileCompletenessError`:
+    :class:`cadrumo.domain.renta.maritime_exemption.ProfileCompletenessError`:
         Warning-class gate used for RETMAR mandatory-filing disclosure.
 """
 
@@ -56,13 +56,13 @@ class ModeloMaritimeExemptionPreview:
     """Resolved active-profile maritime preview returned to the CLI renderer.
 
     Attributes:
-        facts: Original :class:`~cadrumo.domain.renta.MaritimeWorkerFacts` read
+        facts: Original :class:`~cadrumo.domain.renta.maritime_exemption.MaritimeWorkerFacts` read
             from the active profile. These facts are preserved even when RETMAR
             warning handling reruns the calculation with a cleared flag.
         result: :class:`~cadrumo.application.calculations.maritime_exemption_service.MaritimeExemptionResult`
             containing typed observations and the derived casilla-value view.
         retmar_warning_error: Optional
-            :class:`~cadrumo.domain.renta.ProfileCompletenessError` for the CLI to
+            :class:`~cadrumo.domain.renta.maritime_exemption.ProfileCompletenessError` for the CLI to
             translate into ``retmar_warning`` while still emitting observations.
 
     Read ``retmar_mandatory_filing`` from this preview, never from
@@ -128,14 +128,14 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
 
     The profile store exposes encrypted fact values as raw strings, so this
     adapter narrows the closed literal fields accepted by
-    :class:`~cadrumo.domain.renta.MaritimeWorkerFacts` and converts absent or falsy
+    :class:`~cadrumo.domain.renta.maritime_exemption.MaritimeWorkerFacts` and converts absent or falsy
     boolean facts to ``False``. It does not evaluate legal eligibility; the
     returned facts are passed unchanged to the maritime exemption resolver.
 
     See Also:
-        :func:`cadrumo.application.user_profile.fact_value`:
+        :func:`cadrumo.application.user_profile.projections.fact_value`:
             Reads a stored profile fact by dotted path.
-        :func:`cadrumo.application.workflow.workflow_state_repository`:
+        :func:`cadrumo.application.workflow.persistence.workflow_state_repository`:
             Supplies the active profile record.
     """
     state = workflow_state_repository().load()
@@ -193,7 +193,7 @@ def preview_maritime_exemption_for_active_profile(
     inputs.
 
     RETMAR registration is a non-blocking warning for this preview: the first
-    resolver call records the :class:`~cadrumo.domain.renta.ProfileCompletenessError`,
+    resolver call records the :class:`~cadrumo.domain.renta.maritime_exemption.ProfileCompletenessError`,
     then the calculation is rerun with ``retmar_registered=False`` so the
     operator still receives the observation payload. The returned
     :class:`ModeloMaritimeExemptionPreview` keeps the original facts, the rerun
@@ -212,7 +212,7 @@ def preview_maritime_exemption_for_active_profile(
         resolved observations, and an optional RETMAR warning error.
 
     See Also:
-        :func:`cadrumo.application.calculations.resolve_maritime_exemption`:
+        :func:`cadrumo.application.calculations.maritime_exemption_service.resolve_maritime_exemption`:
             Performs DA 41, RETMAR, Art. 7.p), and REBECA resolution.
         :class:`cadrumo.application.calculations.maritime_exemption_service.MaritimeExemptionResult`:
             Typed observation carrier stored on the preview.

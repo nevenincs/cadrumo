@@ -1,4 +1,4 @@
-"""Application-layer :class:`~cadrumo.core.errors.ErrorCode` registry aggregator.
+"""Application-layer :class:`~cadrumo.core.errors.error_codes.ErrorCode` registry aggregator.
 
 Combines the ordered application shards into the tuple consumed by
 :mod:`cadrumo.core.errors.error_codes`.

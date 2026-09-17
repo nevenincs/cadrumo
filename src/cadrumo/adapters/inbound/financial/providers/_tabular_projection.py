@@ -1,7 +1,7 @@
 """Deterministic projection of normalized tabular rows under a column-role mapping.
 
 Consumes a :class:`~core.tabular.NormalizedTable` plus a
-:class:`ColumnRoleMapping` — one :class:`~core.FieldRole` per column, decided
+:class:`ColumnRoleMapping` — one :class:`~core.field_role.FieldRole` per column, decided
 once for the whole file — and copies every cell into its role. The copy is the
 whole of the operation: :func:`project_table` performs no stripping, no
 separator rewriting, no date parsing and no type coercion, so a projected value
@@ -14,13 +14,13 @@ value is not, and is done only by this module. A projection step that
 at the far end from one that invented the number, which is why the property is
 byte equality rather than equality-after-normalization.
 
-A column whose role is :attr:`~core.FieldRole.UNMAPPED` is reported in
+A column whose role is :attr:`~core.field_role.FieldRole.UNMAPPED` is reported in
 :attr:`ProjectedTable.unmapped_columns` and copied nowhere. The file is never
 refused for carrying one: an export the product does not fully understand still
 yields every column it does.
 
 See Also:
-    :class:`~core.FieldRole`
+    :class:`~core.field_role.FieldRole`
         The closed vocabulary a column's meaning is mapped onto.
     :mod:`core.tabular`
         Produces the normalized table this module projects.

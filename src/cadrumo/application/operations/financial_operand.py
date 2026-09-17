@@ -81,7 +81,7 @@ class OperationTransientFinancialOperandDeclaration(_OperandModel):
     """
 
     operand_kind: OperationFinancialOperandKind
-    # Deliberately NOT :obj:`~core.parsing.IsoCurrencyCode`, and stated here
+    # Deliberately NOT :obj:`~core.parsing.codes.IsoCurrencyCode`, and stated here
     # so the divergence is a decision rather than an oversight. That annotation
     # NORMALISES -- it would accept an authored "eur" and quietly uppercase it.
     # This is a registry-authored declaration, not operator input, so a sloppy

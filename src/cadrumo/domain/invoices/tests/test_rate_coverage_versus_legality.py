@@ -64,21 +64,22 @@ _COVERAGE_GAP_KEY = "errors.iva.rate_registry_coverage_gap"
 def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
     """The tripwire that replaces the deleted uncovered-date fixture.
 
-    Every ES tier's coverage now reaches back at least as far as
-    2012-09-01 (super-reducido reaches 1995-01-01, further still), so no date
-    is covered for one tier and uncovered for another -- the exact shape the
+    Every ES tier's coverage reaches back past the supported floor (the standing
+    tiers open in 2012, super-reducido earlier still), so no supported date is
+    covered for one tier and uncovered for another -- the exact shape the
     coverage-versus-legality distinction needs a live example of. This asserts
-    the closure directly: the day it goes false, a tier has narrowed again and
-    the refusal tests this module used to carry (deleted alongside the fixture
-    that anchored them) should be restored against the date that reopens.
+    the closure at the floor, the earliest date the registry serves: the day it
+    goes false, a tier has narrowed again and the refusal tests this module used
+    to carry should be restored against the date that reopens.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        floor = _authority_operation_for_test.supported_filing_years().date_envelope().floor
         for kind in _POSITIVE_TIERS:
             assert rate_table_covers(
-                EUMemberState.from_registry("es"), date(2012, 9, 1), kind, operation=_authority_operation_for_test
+                EUMemberState.from_registry("es"), floor, kind, operation=_authority_operation_for_test
             ), (
-                f"{kind.value} no longer covers 2012-09-01 -- a per-tier coverage gap may have "
-                "reopened; restore a refusal test pinned to the date that exposes it"
+                f"{kind.value} no longer covers the supported floor {floor.isoformat()} -- a per-tier "
+                "coverage gap may have reopened; restore a refusal test pinned to the date that exposes it"
             )
 
 
@@ -148,7 +149,7 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
     which is the test that will tell us when one can.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        for year in (2011, 2012, 2013, 2023, 2024, 2025, 2026):
+        for year in _authority_operation_for_test.supported_filing_years().years:
             for month in (1, 6, 12):
                 probe = date(year, month, 1)
                 expected = any(
@@ -180,9 +181,10 @@ def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
     becomes possible again and should be restored.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        day = date(2010, 1, 1)
+        envelope = _authority_operation_for_test.supported_filing_years().date_envelope()
+        day = envelope.floor
         separating: list[date] = []
-        while day < date(2027, 1, 1):
+        while day <= envelope.horizon:
             if rate_table_covers(
                 EUMemberState.from_registry("es"), day, operation=_authority_operation_for_test
             ) != rate_table_covers_any_positive_tier(

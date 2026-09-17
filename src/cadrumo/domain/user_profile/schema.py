@@ -527,7 +527,7 @@ def boolean_value_refusal(field: ProfileFieldDefinition, value: object) -> str |
     Readability, not spelling, is the test. A taxpayer answering ``sí`` is
     saying yes, and refusing that while accepting ``true`` would be a
     vocabulary rule dressed up as a type rule. The judgement therefore comes
-    from :func:`~cadrumo.core.parsing.parse_bool`, the one boolean vocabulary
+    from ``cadrumo.core.parsing.parse_bool``, the one boolean vocabulary
     the rest of the codebase already reads answers with, rather than a set
     spelled out here that could drift from it.
 

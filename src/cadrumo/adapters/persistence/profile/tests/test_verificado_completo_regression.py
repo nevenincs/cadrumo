@@ -28,10 +28,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
+from pydantic import AnyHttpUrl, TypeAdapter
+
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
-from pydantic import AnyHttpUrl, TypeAdapter
 
 from .....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from .....application.modelo.action_errors import StoredCalculationDriftError

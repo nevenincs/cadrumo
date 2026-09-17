@@ -9,7 +9,7 @@ See Also:
         Pure FIFO lot projection and four-year review policy.
     :mod:`application.calculations.iva_wallet_balance`
         Offline balance query built from this repository.
-    :mod:`application.calculations._iva_wallet_reconciliation`
+    :mod:`application.calculations.iva_wallet_reconciliation`
         Wallet/local-history reconciliation consumer for Modelo 303 prior
         compensation.
 """

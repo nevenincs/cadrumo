@@ -309,18 +309,18 @@ class TestModulos2024DateAxisBoundaries:
             assert value.valid_from == date(2024, 1, 1)
             assert value.valid_to == date(2024, 12, 31)
 
-    def test_2024_and_2025_coefficient_tables_are_distinct_parameter_ids(self) -> None:
-        """The 2024 and 2025 revisions each own a year-scoped parameter id;
-        neither revision's snapshot resolves the other year's parameter."""
-        snapshot_2024 = published_snapshot(
-            "131", filing_year=2024, period="1T", grade=RegistryAuthorityGrade.CALCULATION
-        )
-        snapshot_2025 = published_snapshot(
-            "131", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.CALCULATION
-        )
-        ids_2024 = {parameter.id for parameter in snapshot_2024.revision.parameters}
-        ids_2025 = {parameter.id for parameter in snapshot_2025.revision.parameters}
-        assert "m131-modulos-coeficientes" in ids_2024
-        assert "m131-modulos-coeficientes" not in ids_2025
-        assert "m131-modulos-coeficientes" in ids_2025
-        assert "m131-modulos-coeficientes" not in ids_2024
+    def test_2024_and_2025_coefficient_tables_are_year_scoped(self) -> None:
+        """The 2024 and 2025 revisions share the coefficient parameter's identity;
+        neither revision's snapshot carries a row dated in the other year."""
+        for year in (2024, 2025):
+            snapshot = published_snapshot(
+                "131", filing_year=year, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+            )
+            coeficientes = next(
+                parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
+            )
+            assert coeficientes.keyed_brackets, year
+            for row in coeficientes.keyed_brackets:
+                assert row.valid_from is not None
+                assert row.valid_from.year == year
+                assert row.valid_to is None or row.valid_to.year == year

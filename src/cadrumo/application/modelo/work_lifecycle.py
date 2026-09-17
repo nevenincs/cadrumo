@@ -5,7 +5,7 @@ This module creates, lists, renames, and discards
 :class:`~cadrumo.domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`.
 Each mutating action emits a typed event through
 :class:`~cadrumo.domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`, giving
-:func:`cadrumo.application.modelo.assemble_work_unit_history` a complete
+:func:`cadrumo.application.modelo.history.assemble_work_unit_history` a complete
 timeline from creation through discard.
 
 The lifecycle layer mutates the work-unit catalogue only. It does not choose
@@ -19,7 +19,7 @@ programmatic callers observe the same safety boundary as the CLI.
 See Also:
     :mod:`cadrumo.application.modelo.work_addressing`:
         Resolves natural or exact operator targets before lifecycle mutation.
-    :func:`cadrumo.application.modelo.assemble_work_unit_history`:
+    :func:`cadrumo.application.modelo.history.assemble_work_unit_history`:
         Reads the emitted bucket events into a chronological work-unit timeline.
     :class:`CalculationRevision`:
         Defines calculation attempts and current/filed pointers under a work unit.

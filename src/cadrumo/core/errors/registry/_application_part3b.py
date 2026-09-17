@@ -1,4 +1,4 @@
-"""Ordered application :class:`~core.errors.ErrorCode` registry shard.
+"""Ordered application :class:`~core.errors.error_codes.ErrorCode` registry shard.
 
 Rows map Modelo, operations, operator-surface, and prorrata application
 exception qualnames to stable categories and canonical locale message keys.

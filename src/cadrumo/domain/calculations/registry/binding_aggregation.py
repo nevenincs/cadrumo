@@ -9,10 +9,10 @@ single :func:`binding_aggregation_op` accessor every binding resolver and
 validator consumes.
 
 See Also:
-    :mod:`domain.calculations.registry._bindings`
+    :mod:`domain.calculations.registry.bindings`
         Cross-family binding resolver and validator dispatch that consumes this
         accessor.
-    :mod:`domain.calculations.registry.relation_aggregation`
+    :mod:`~domain.calculations.registry.binding_aggregation`
         Relation sibling whose op axis is intentionally separate.
     :mod:`core.aggregation`
         Core enum/model definitions for binding source kinds and aggregation ops.
@@ -58,7 +58,7 @@ def binding_aggregation_op(binding: BindingDefinition) -> BindingAggregationOp:
     """Return the typed :class:`~core.aggregation.BindingAggregationOp` a binding declares, or its default.
 
     When the
-    :class:`~domain.calculations.registry.BindingDefinition` carries an
+    :class:`~domain.calculations.registry.schema.BindingDefinition` carries an
     explicit :class:`~core.aggregation.BindingAggregation`, its typed ``op``
     is returned. When ``aggregation`` is ``None``, the declared per-family
     default for the binding's ``source`` is applied in this one place.

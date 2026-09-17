@@ -106,11 +106,11 @@ def _rounding_rule_for(
     """Map a registry rounding code to (rule_name, scale).
 
     The workbook is the SECOND interpreter of the registry rounding
-    vocabulary: :func:`domain.calculations.registry._formula_runtime_ops.apply_rounding`
+    vocabulary: :func:`domain.calculations.registry.formula_runtime_ops.apply_rounding`
     evaluates it on the calculate path, and this renderer emits the live
     spreadsheet equivalent. A code handled in one and not the other makes
     the pull path and the calculate path disagree on the same casilla, so
-    every :class:`~domain.calculations.registry.RegistryRoundingCode`
+    every :class:`~domain.calculations.registry.schema_rounding.RegistryRoundingCode`
     member must be answered here.
     """
     if formula.rounding is None:

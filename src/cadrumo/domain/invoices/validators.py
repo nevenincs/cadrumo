@@ -7,7 +7,7 @@ surfaces the error as a validation error in the enclosing
 ``Invoice`` model.
 
 The registry-grounded :func:`is_eu_member_state_code` helper anchors the EU
-axis to the substrate's registry-projected :class:`cadrumo.domain.iva.EUMemberState`
+axis to the substrate's registry-projected :class:`cadrumo.domain.iva.schema.EUMemberState`
 token. Modelo 369 binding selectors and the OSS / IOSS classifier
 boundary checks consume these helpers so the EU membership decision
 flows from the substrate, not from a hand-maintained list.
@@ -49,7 +49,7 @@ def validate_country_code(value: str) -> str:
     """Normalise and validate an ISO-3166 alpha-2 country code.
 
     Folds case, unlike
-    :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`, which
+    :func:`~cadrumo.core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`, which
     refuses a lowercase token so the regulatory treatment of a ledger row is
     never guessed. A counterparty's country is a label on an invoice rather than
     a treatment selector, so folding an operator's ``"es"`` here costs nothing.
@@ -75,7 +75,7 @@ def is_eu_member_state_code(value: str) -> bool:
     """Return ``True`` when ``value`` matches one of the 27 EU Member State codes.
 
     The membership check is anchored to
-    :class:`cadrumo.domain.iva.EUMemberState`; if fact 0131 changes
+    :class:`cadrumo.domain.iva.schema.EUMemberState`; if fact 0131 changes
     (Brexit-style additions or withdrawals) the helper picks up the
     selected membership automatically.
 
@@ -97,7 +97,7 @@ def validate_iva_number(value: str, country: str) -> str:
 
     For an EU Member State (and Northern Ireland ``XI``) the number is matched
     against the country's published NIF-IVA structural pattern, sourced from the
-    central :data:`cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS` authority: a malformed
+    central ``cadrumo.core.identity.nif_iva.NIF_IVA_FORMATS`` authority: a malformed
     intra-community IVA number is bounced by AEAT's Modelo 349 validator, so the
     refusal names the country and the expected format. Live VIES existence is not
     checked — only the structure. For a non-EU counterparty (no published

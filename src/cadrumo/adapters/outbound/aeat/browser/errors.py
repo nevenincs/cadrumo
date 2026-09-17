@@ -7,13 +7,13 @@ stable :class:`BrowserFailureMode`. That mode is copied into the structured
 without parsing message text.
 
 See Also:
-    :class:`adapters.outbound.aeat.browser.BrowserSession`
+    :class:`adapters.outbound.aeat.browser.session.BrowserSession`
         Central owner that emits these browser errors.
-    :class:`adapters.outbound.aeat.browser.EvasionStrategy`
+    :class:`adapters.outbound.aeat.browser.evasion.EvasionStrategy`
         Strategy hook whose setup failures surface as :class:`BrowserEvasionError`.
-    :class:`adapters.outbound.aeat.browser.SiteHealthStatus`
+    :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`
         Site-health record carried separately by
-        :class:`core.errors.SiteHealthError` when AEAT itself returns a
+        :class:`core.errors.hierarchy.SiteHealthError` when AEAT itself returns a
         classified non-OK response.
 """
 

@@ -8,9 +8,9 @@ entregas comprendidas en el artículo 25 (an entrega intracomunitaria exenta,
 which always devengues under art. 75.Uno.8.º regardless of any advance
 received).
 
-:class:`~cadrumo.domain.invoices.Invoice` already carries both cases behind
-one field: :attr:`~cadrumo.domain.invoices.Invoice.operation_date` records the
-date, and :attr:`~cadrumo.domain.invoices.Invoice.operation_date_role` records
+:class:`~cadrumo.domain.invoices.models.Invoice` already carries both cases behind
+one field: :attr:`~cadrumo.domain.invoices.models.Invoice.operation_date` records the
+date, and :attr:`~cadrumo.domain.invoices.models.Invoice.operation_date_role` records
 which of art. 75's two clauses it answers. The art. 25 exclusion and the
 "money was actually received" precondition are enforced at construction time
 on the invoice itself, so a record carrying an ``ADVANCE_PAYMENT_RECEIVED``
@@ -39,13 +39,13 @@ separately for its own amount, is not representable by a single date and is
 not attempted here.
 
 See Also:
-    :attr:`cadrumo.domain.invoices.Invoice.operation_date`
+    :attr:`cadrumo.domain.invoices.models.Invoice.operation_date`
         The recorded devengo-relevant date this module reads.
-    :attr:`cadrumo.domain.invoices.Invoice.operation_date_role`
+    :attr:`cadrumo.domain.invoices.models.Invoice.operation_date_role`
         The discriminator naming which art. 75 clause the date answers.
     :class:`cadrumo.core.aggregation.InvoiceDevengoRank`
         The marker naming which source produced the resolved date.
-    :func:`cadrumo.domain.transactions.transaction_eligible_date_span`
+    :func:`cadrumo.domain.transactions.dates.transaction_eligible_date_span`
         The equivalent ledger-transaction-side devengo span, already wired
         into IVA period attribution.
 """
@@ -79,7 +79,7 @@ _PROXY_SAMPLE_LIMIT: Final = 5
 """How many invoice numbers the advisory names before eliding the rest.
 
 Chosen so the rendered message stays inside
-:data:`~application.aggregation.DIAGNOSTIC_MESSAGE_MAX_LENGTH` for realistic
+:data:`~application.aggregation.source_mesh.DIAGNOSTIC_MESSAGE_MAX_LENGTH` for realistic
 invoice numbering. The bound truncates rather than raises, so overflowing it
 would silently swallow the elision notice and leave the operator reading a
 sample they could not tell was incomplete.
@@ -112,12 +112,12 @@ def resolve_invoice_devengo(invoice: Invoice) -> InvoiceDevengo:
         invoice: The invoice whose devengo date is being resolved.
 
     Returns:
-        The recorded :attr:`~cadrumo.domain.invoices.Invoice.operation_date`
+        The recorded :attr:`~cadrumo.domain.invoices.models.Invoice.operation_date`
         ranked :attr:`~cadrumo.core.aggregation.InvoiceDevengoRank.OPERATION_DATE_DECLARED`
         when the invoice carries one -- either art. 75.Uno's operation date or
         art. 75.Dos's collection date, both read identically here because the
         role says WHICH clause supplied the date, not how it is used --
-        otherwise :attr:`~cadrumo.domain.invoices.Invoice.issued_at` ranked
+        otherwise :attr:`~cadrumo.domain.invoices.models.Invoice.issued_at` ranked
         :attr:`~cadrumo.core.aggregation.InvoiceDevengoRank.ISSUE_DATE_PROXY`.
     """
     operation_date = invoice.operation_date

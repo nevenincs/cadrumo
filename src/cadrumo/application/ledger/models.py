@@ -96,8 +96,8 @@ def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     body, replacing four identical inline copies.
 
     The shape policy itself is owned by
-    :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction`, shared with
-    :meth:`domain.transactions.Transaction._validate_source_jurisdiction`, so
+    :func:`~core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`, shared with
+    :meth:`domain.transactions.models.Transaction._validate_source_jurisdiction`, so
     the application and domain boundaries cannot drift apart on which
     jurisdiction tokens they accept. This wrapper exists only to keep the
     application-layer :class:`ValueError` boundary.
@@ -1032,7 +1032,7 @@ class LedgerExportResult(BaseModel):
         """Refuse a result whose metadata contradicts the bytes it carries.
 
         These seven fields are redeclared here independently of
-        :class:`~application.export.TabularExportResult`, which produces them,
+        :class:`~application.export.tabular.TabularExportResult`, which produces them,
         so this copy could disagree with its own payload even when the
         producer's did not. The export action anchors ``row_count``,
         ``byte_size`` and ``sha256`` into a durable
@@ -1040,7 +1040,7 @@ class LedgerExportResult(BaseModel):
         outlives the payload that would disprove it.
 
         Verified through the export package's one
-        :func:`~application.export.verify_export_metadata` contract rather
+        :func:`~application.export.tabular.verify_export_metadata` contract rather
         than a second local re-derivation.
 
         Raises:

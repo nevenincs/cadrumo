@@ -457,7 +457,7 @@ def build_bienes_inversion_regularizacion_advisory(
     """Project the register and build the fallback advisory diagnostic.
 
     Returns the register projection plus a non-blocking
-    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` when the register
     holds in-window, art-108-eligible, non-disposed goods for
     ``regularizacion_year`` — so a taxpayer who owns capital goods in their
     regularisation window is alerted that casilla 43 may be due, rather than
@@ -533,7 +533,7 @@ def build_bienes_inversion_transmision_advisory(
     """Project the register's art-110 disposals and build the advisory diagnostic.
 
     Returns the register-wide transmisión projection plus a non-blocking
-    :class:`~application.aggregation.CalculationSourceDiagnostic` when the register
+    :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` when the register
     holds a good disposed of in ``disposal_year`` with window time remaining — so
     a taxpayer who sold, transmitted, or otherwise disposed of a tracked capital
     good is alerted that the art-110 single regularización is due on casilla 43,

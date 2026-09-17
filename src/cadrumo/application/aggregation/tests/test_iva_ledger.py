@@ -16,6 +16,7 @@ from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
@@ -145,7 +146,6 @@ _Q2_2026 = _period(2026, "2T")
 # data currently STOPS will be falsified every time the data is corrected, and
 # it fails by reporting the wrong reason rather than by looking wrong. Anchor it
 # to the earliest provision the table can ever cite, which is what this is.
-_Q2_1994 = _period(1994, "2T")
 _BUCKET_ID = "14141414-1414-4414-8414-141414141414"
 _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 
@@ -273,6 +273,7 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
             ledger_profile_id="test-profile",
             operation=_authority_operation_for_test,
         )
+    assert refusal.value.context is not None
     assert refusal.value.context["has_investment_asset_register"] is False
 
 
@@ -741,50 +742,31 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
     ]
 
 
-def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
-    """21 % before September 2012 is a correct rate; only the date is unsupported.
+def test_a_period_below_the_supported_floor_is_refused_before_any_row_is_read() -> None:
+    """A correct rate on a date below the supported floor; the period is what is unsupported.
 
-    A row outside the table's coverage cannot be classified whatever rate it
-    carries. This previously reported ``UNSUPPORTED_IVA_RATE``, which told the
-    filer that the one figure they had right was wrong and sent them to correct
-    it. The two conditions carry separate reasons, and that is what is asserted.
-
-    THE PROBE MOVED FROM 2023 TO 2012, and the docstring's old premise -- "the
-    rate table holds CURRENT rates, no member state has a record before 2024" --
-    was not a fact about the law but a defect in the table. ``effective_from``
-    carried a bulk-refresh boundary, so 2022 and 2023 refused despite sitting
-    inside prescripción. Both years now classify correctly, which is the point
-    of that correction.
-
-    The distinction under test is untouched and still worth a gate. It has moved
-    to where coverage genuinely ends: 21 % was fixed by RDL 20/2012 art. 23.Dos
-    with effect from 1 September 2012, and the table carries nothing before it.
+    Every row must fall inside its period, so a row dated before the supported
+    floor can only arrive inside a period that is itself below the floor. That
+    period is refused at the support gate, whatever rates its rows carry, rather
+    than blaming any row's rate. The per-row coverage issue is reserved for a
+    supported date no positive tier reaches, which the rate-coverage tripwire
+    keeps unreachable today.
     """
+    with _indexed_authority_for_test().operation() as operation:
+        below_floor = operation.supported_filing_years().floor - 1
+    period = _period(below_floor, "2T")
     transaction = _transaction(
         "row-pre-registry",
-        booked_date=date(1994, 4, 5),
-        value_date=date(1994, 4, 5),
+        booked_date=period.start_date,
+        value_date=period.start_date,
         iva_rate=Decimal("0.21"),
     )
 
-    result = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2_1994,
-    )
-
-    assert result.observations == ()
-    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
-    assert "filing year is outside the supported window" in result.issues[0].detail
-    # The 21 % is named as NOT the thing to correct -- a filer who reads only
-    # the number in the message must not go looking for a rate error.
-    assert "not what needs correcting" in result.issues[0].detail
-    # The message must not describe the table's extent in terms a data change
-    # can falsify. It once said the table "holds current rates only", which was
-    # true when written and stopped being true the moment the windows were
-    # corrected back to 2012 -- with nothing tying the sentence to the data it
-    # described. It now states the condition the branch actually tested.
-    assert "current rates only" not in result.issues[0].detail
-    assert "no tier bearing a positive rate" in result.issues[0].detail
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        aggregate_iva_ledger_observations(
+            TransactionCatalogue.from_transactions((transaction,)),
+            period=period,
+        )
 
 
 def test_the_applied_rate_survives_tier_resolution() -> None:

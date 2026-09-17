@@ -21,7 +21,7 @@ a manifest-level surface cannot decrypt the profile record and therefore cannot
 assess retention, keeping the class only because "that refusal names the
 assessment as the missing capability". The capability now exists, and the
 precise claim matters because the loose version of it was wrong:
-:meth:`~application.filing.FilingRetentionAuthority.assess` computes the
+:meth:`~application.filing.retention.FilingRetentionAuthority.assess` computes the
 retained count, the floor and the safe-erase date from a plaintext filing
 snapshot, so ASSESSING needs no session. Producing that snapshot still does --
 it summarises the bucket's encrypted filing catalogue -- so the deferral was

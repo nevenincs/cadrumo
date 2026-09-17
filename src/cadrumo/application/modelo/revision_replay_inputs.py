@@ -5,11 +5,11 @@
 :class:`~domain.modelos.work_unit.WorkUnit` into the flat Modelo-input map
 the filing runtime accepts. Stored operator inputs, binding overrides, and
 relation overrides are replayed directly; calculated informational casillas are
-recovered from the :class:`~domain.calculations.registry.RegistrySnapshot`
+recovered from the :class:`~domain.calculations.registry.schema.RegistrySnapshot`
 only when the snapshot is still loadable. When a workflow
 :class:`TaxpayerProfile` is available, profile applicability can also synthesize
 explicit zeroes for relation slots whose source modelo is
-:class:`~domain.calculations.registry.ApplicabilityVerdict`
+:class:`~domain.calculations.registry.applicability.ApplicabilityVerdict`
 ``NOT_APPLICABLE``.
 
 This is not a recalculation path. It rehydrates the persisted replay surface the
@@ -306,7 +306,7 @@ def _m232_detail_row_replay_inputs(
     indexed ``binding_id -> row-index`` maps Modelo 349 uses.
 
     The row-to-casilla mapping comes from the domain authority
-    :func:`~domain.modelos.m232_related_party_row_casilla_values`, the same one
+    :func:`~domain.modelos.m232_row_materialisation.m232_related_party_row_casilla_values`, the same one
     the observation materialiser reads, so a persisted row cannot reach one
     surface and silently vanish from the other -- which is exactly what happened
     while replay had no M232 branch at all: valid operator-supplied rows stayed

@@ -558,18 +558,21 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         ) from exc
 
 
-def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
+def iva_rate_kind(rate: IvaRate, on_date: date | None = None) -> IvaRateKind | None:
     """Return the substrate rate tier for an invoice line rate slot.
 
     The out-of-scope slot has no OSS/IOSS rate tier because it is outside the
     taxable-supply universe; callers that need a Modelo 369 candidate should
     skip or reject it explicitly. Numeric and exempt slots return their
-    corresponding :class:`IvaRateKind`; nonnumeric slots return ``None``.
+    corresponding :class:`IvaRateKind`; a slot whose declared substrate kind is
+    the catalogue's non-rate token returns ``None``.
     """
-    declarations = _iva_rate_slot_registry_declarations(rate, today_madrid())
-    if declarations["numeric"] != "true":
+    coordinate = on_date or today_madrid()
+    declarations = _iva_rate_slot_registry_declarations(rate, coordinate)
+    non_rate = resolve_iva_rate_kind_catalogue(effective_date=coordinate).non_rate_token
+    if declarations.get("substrate_kind") == non_rate:
         return None
-    return _iva_rate_slot_kind(declarations, today_madrid())
+    return _iva_rate_slot_kind(declarations, coordinate)
 
 
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:

@@ -44,12 +44,18 @@ def test_convenio_kind_is_projected_by_the_validated_fact_authority(*, operation
     snapshot_globals = operation.load(SnapshotGlobalsComponentQuery(), pin=operation.generation)
     assert isinstance(snapshot_globals, SnapshotGlobalCatalogues)
     convenio = snapshot_globals.convenio
-    treaty = next(iter(convenio.treaties.values()))
-    row = treaty.overrides[0]
+    # A treaty row may predate the supported filing years; resolve one that applies inside them.
+    floor = date(operation.supported_filing_years().floor, 1, 1)
+    treaty, row = next(
+        (candidate, override_row)
+        for candidate in convenio.treaties.values()
+        for override_row in candidate.overrides
+        if override_row.valid_to is None or override_row.valid_to >= floor
+    )
     override = resolve_convenio_override(
         country_code=treaty.country_code,
         tipo_renta=row.tipo_renta,
-        devengo_date=row.valid_from,
+        devengo_date=max(row.valid_from, floor),
         operation=operation,
     )
 

@@ -3,13 +3,13 @@
 This module is the concrete adapter behind
 :class:`application.auth.protocols.SessionStoreProtocol`. It stores
 :class:`PersistedBrowserSession` payloads in
-:data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`,
+:data:`adapters.persistence.storage.secure_object_namespaces.AEAT_BROWSER_SESSION_NAMESPACE`,
 whose registry entry pins the records to bucket-local
-``SESSION`` :class:`~adapters.persistence.storage.SensitivityClass`
+``SESSION`` :class:`~core.classification.policies.SensitivityClass`
 storage, schema version, process-local custody, and logical-path object-key
 grammar.
 
-:class:`~adapters.persistence.storage.SecureObjectRepository` encrypts
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` encrypts
 payload bytes and digests the logical object key at the column boundary, so
 Playwright cookies, local storage, and provider metadata never appear as
 plaintext files.
@@ -64,7 +64,7 @@ class PersistedBrowserSession(BaseModel):
     """Encrypted Playwright storage state plus provider-owned metadata.
 
     This is the typed payload stored under
-    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`.
+    :data:`adapters.persistence.storage.secure_object_namespaces.AEAT_BROWSER_SESSION_NAMESPACE`.
     ``storage_state`` carries the payload returned by
     ``BrowserContext.storage_state()``. ``metadata`` remains a provider-owned
     mapping so certificate auth and Cl@ve Móvil can persist different validated
@@ -95,7 +95,7 @@ def exists(path: Path) -> bool:
     """Return whether an encrypted session exists for logical ``path``.
 
     ``path`` is the logical storage-state identifier produced by
-    :func:`~application.auth.storage_state_paths` or provider-specific
+    :func:`~application.auth.sessions.storage_state_paths` or provider-specific
     helpers, not a plaintext file path to inspect.
     """
     repository = _repository_for_path(path)
@@ -106,9 +106,9 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     """Persist ``storage_state`` and ``metadata`` in the browser-session namespace.
 
     The values are wrapped in a :class:`PersistedBrowserSession` envelope before
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     encrypts the serialized JSON payload. The namespace definition supplies the
-    ``SESSION`` :class:`~adapters.persistence.storage.SensitivityClass`
+    ``SESSION`` :class:`~core.classification.policies.SensitivityClass`
     classification and schema version. ``storage_state``/``metadata`` are
     validated JSON-safe here (mirroring :func:`_storage_state_sha256`) so the
     caller-facing boundary stays the wide ``Mapping[str, object]`` shape
@@ -135,9 +135,9 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
     Returns ``None`` when the logical key is absent. A present record is read
     from
-    :data:`adapters.persistence.storage.AEAT_BROWSER_SESSION_NAMESPACE`
+    :data:`adapters.persistence.storage.secure_object_namespaces.AEAT_BROWSER_SESSION_NAMESPACE`
     with the expected
-    :class:`~adapters.persistence.storage.SensitivityClass` and current
+    :class:`~core.classification.policies.SensitivityClass` and current
     namespace schema version.
     """
     repository = _repository_for_path(path)

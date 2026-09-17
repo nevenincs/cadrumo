@@ -1,11 +1,11 @@
 """Redaction-rule registry and the :func:`redact` helper family.
 
-The :class:`core.classification.RedactionRule` shape lives in
+The :class:`core.classification.policies.RedactionRule` shape lives in
 :mod:`core.classification` so the :class:`SensitivityClass` policy
 table can reference rule names without a circular import. This module ships:
 
 * a small in-memory registry of default
-  :class:`core.classification.RedactionRule` instances keyed by
+  :class:`core.classification.policies.RedactionRule` instances keyed by
   name (NIF, URL, OAuth bearer token, opaque bearer token);
 * :func:`redact`, the flat-string helper that applies a tuple of
   rules in declared order;
@@ -18,12 +18,12 @@ table can reference rule names without a circular import. This module ships:
   profile for rendered text and JSON-shaped payloads;
 * :func:`default_rules_for` and :func:`default_rules_for_class`, the
   resolvers that turn rule names stored on a
-  :class:`core.classification.ClassificationPolicy` into the
-  underlying :class:`core.classification.RedactionRule`
+  :class:`core.classification.policies.ClassificationPolicy` into the
+  underlying :class:`core.classification.policies.RedactionRule`
   instances.
 
 The redaction strategies, defined in
-:class:`core.classification.RedactionStrategy`, are:
+:class:`core.classification.policies.RedactionStrategy`, are:
 
 ``SHA256_PREFIX``
     Replace the matched span with ``sha256:<first-8-hex>`` of its

@@ -3,10 +3,10 @@
 :class:`CalculationRevisionCatalogueRepository` persists and loads
 :class:`~CalculationRevision` records in a
 :class:`~CalculationRevisionCatalogue` via
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`.
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`.
 Each catalogue is wrapped in
-:class:`~adapters.persistence.storage.Envelope` before being written to
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` before being written to
 the encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
@@ -14,23 +14,23 @@ This concrete repository is the persistence adapter behind the read-side
 lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`~CalculationRevisionCatalogue` model, the pure
-:func:`~domain.modelos.upsert_calculation_revision` mutator, and the
+:func:`~domain.modelos.calculation_repository.upsert_calculation_revision` mutator, and the
 :class:`~CalculationRevisionPersistenceError` boundary error.
 The namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning persisted envelopes.
 
 See Also:
-    :mod:`~adapters.persistence.profile._modelo_runtime`
+    ``adapters.persistence.profile._modelo_runtime``
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
     :class:`~CalculationRevisionCatalogue`
         Domain catalogue payload encrypted by this repository.
     :class:`~CalculationRevisionCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
         contract for these secure objects.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Runtime-created encrypted storage boundary used for load/save.
 """
 
@@ -75,7 +75,7 @@ _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision
 class CalculationRevisionCatalogueRepository:
     """Repository over encrypted SQL-backed calculation-revision catalogue storage.
 
-    :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
     write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
@@ -83,9 +83,9 @@ class CalculationRevisionCatalogueRepository:
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because it translates a classification or schema-version mismatch
     into :class:`CalculationRevisionPersistenceError` via
-    :func:`~domain.modelos.raise_catalogue_integrity_error`, and runs the
+    :func:`~domain.modelos.errors.raise_catalogue_integrity_error`, and runs the
     post-load ledger-evidence coverage gate
-    (:func:`~domain.modelos.assert_revision_snapshot_evidence_coverage`) the
+    (:func:`~domain.modelos.calculation_revision.assert_revision_snapshot_evidence_coverage`) the
     shared kernel has no domain knowledge of. The class exposes the concrete
     load/save implementation behind
     :class:`~CalculationRevisionCatalogueRepositoryProtocol`.
@@ -125,7 +125,7 @@ class CalculationRevisionCatalogueRepository:
         per filing profile, and each profile owns its own encrypted bucket. This
         property exposes the resolved bucket identifier, or ``None`` when the
         repository was constructed against a caller-supplied
-        :class:`~adapters.persistence.storage.SecureObjectRepository`
+        :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         rather than a resolved bucket.
 
         Returns:
@@ -151,7 +151,7 @@ class CalculationRevisionCatalogueRepository:
         A calculation revision is a dated, computed version of a modelo's casilla
         values (a casilla is a numbered box on an AEAT form); the catalogue is the
         keyed collection of those revisions. The stored record is decrypted, its
-        :class:`~adapters.persistence.storage.Envelope` parsed, and its
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` parsed, and its
         sensitivity classification and schema version checked before the payload
         is returned. When nothing has been persisted yet, an empty
         :class:`CalculationRevisionCatalogue` is returned rather than raising.
@@ -328,7 +328,7 @@ class CalculationRevisionCatalogueRepository:
 
         Wraps the catalogue (the keyed collection of a modelo's dated
         calculation revisions) in an
-        :class:`~adapters.persistence.storage.Envelope` stamped with the
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` stamped with the
         current schema version, write time, and ``FINANCIAL`` sensitivity
         classification, then writes the serialised envelope to the encrypted
         store under this repository's namespace and key. An existing catalogue
@@ -379,9 +379,9 @@ class CalculationRevisionCatalogueRepository:
     ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
-        The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`~adapters.persistence.storage.Envelope`
-        and :class:`~adapters.persistence.storage.SensitivityClass`
+        The returned :class:`~core.secure_object_write.SecureObjectWrite`
+        carries the same :class:`~adapters.persistence.storage.envelope.contract.Envelope`
+        and :class:`~core.classification.policies.SensitivityClass`
         classification that :meth:`save` would persist directly. It can be
         co-emitted with related secure objects (e.g. the participation index) in
         one :meth:`save_with_secure_object_writes` unit of work.
@@ -410,7 +410,7 @@ class CalculationRevisionCatalogueRepository:
         Args:
             catalogue: The :class:`CalculationRevisionCatalogue` to persist.
             extra_writes: Additional
-                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                :class:`~core.secure_object_write.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
             expected_revision_id: The revision :meth:`load_revisioned` reported
                 for the catalogue this one was derived from. Atomicity is what

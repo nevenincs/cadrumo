@@ -5,7 +5,7 @@ A ``previous_filing`` binding whose selector declares
 satisfied by EVERY grupo member's filing for a
 ``(modelo, filing_year, period)`` key, not by a single filer's. Both the
 binding-prefill gatherer
-(:mod:`~application.calculations._binding_prefill`, which must enumerate the
+(:mod:`~application.calculations.binding_prefill`, which must enumerate the
 members rather than load one observation by key) and the cross-period
 clean-state gate
 (:mod:`~application.calculations.cross_period_clean_state`, which must mark the
@@ -37,7 +37,7 @@ def per_grupo_member_requirement_keys(
     A structural fold over the revision's declared bindings and the law-determined
     filing coordinate; it never reads validated evidence, so it takes the compiled
     :class:`ModeloRevision` directly rather than a filing-grade
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings are scanned for a

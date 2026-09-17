@@ -2,18 +2,18 @@
 
 This module implements the signing slice deferred by
 :mod:`~application.modelo.review_package`: that module's
-:func:`~application.modelo.verify_review_package` is an INTEGRITY check
+:func:`~application.modelo.review_package.verify_review_package` is an INTEGRITY check
 only (did every archived member arrive byte-for-byte as built); it makes no
 claim about WHO built the package. This module adds the AUTHENTICITY layer on
 top of that integrity check by signing the package's self-attesting
-:attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` digest with a
+:attr:`~core.corpus_manifest.manifest.CorpusManifest.manifest_sha256` digest with a
 per-profile Ed25519 keypair.
 
 Signing the manifest digest (not the archive bytes or a re-derived hash) means
 the signature transitively covers every archived member: the digest is a
 SHA-256 over the canonical JSON of the manifest's per-file entries, and a
 tampered member is already caught by
-:func:`~core.corpus_manifest.verify_corpus_bundle` before signature
+:func:`~core.corpus_manifest.manifest.verify_corpus_bundle` before signature
 verification is even attempted (see :func:`verify_review_package_signature`).
 
 Key custody (``sensitive-financial-data-secure-storage-only`` /
@@ -128,8 +128,8 @@ class SignedReviewPackage(BaseModel):
     """Signature envelope binding a review package's manifest digest to a signer.
 
     ``manifest_sha256`` is the review package's own self-attesting
-    :attr:`~core.corpus_manifest.CorpusManifest.manifest_sha256` (recovered
-    via :func:`~application.modelo.verify_review_package`), NOT a
+    :attr:`~core.corpus_manifest.manifest.CorpusManifest.manifest_sha256` (recovered
+    via :func:`~application.modelo.review_package.verify_review_package`), NOT a
     re-derived hash of the archive bytes: signing the manifest digest
     transitively covers every archived member because the manifest digest
     already covers every per-file checksum record.
@@ -187,7 +187,7 @@ def sign_review_package(
     """Verify ``package_path``'s checksum manifest, then sign its digest.
 
     Delegates the integrity check entirely to
-    :func:`~application.modelo.assert_review_package_verifies` (no
+    :func:`~application.modelo.review_package.assert_review_package_verifies` (no
     hashing logic is re-derived here): a package that is not checksum-clean
     raises before any signature is produced, so a signature can never be
     minted over a package this module itself cannot vouch is intact.
@@ -203,7 +203,7 @@ def sign_review_package(
         FileNotFoundError: If ``package_path`` does not exist.
         ReviewPackageIntegrityError: If the package fails checksum-manifest
             verification (propagated from
-            :func:`~application.modelo.assert_review_package_verifies`).
+            :func:`~application.modelo.review_package.assert_review_package_verifies`).
     """
     with bundled_indexed_authority().operation() as operation:
         manifest = assert_review_package_verifies(package_path, operation=operation)
@@ -232,7 +232,7 @@ def verify_review_package_signature(
     """Verify ``signed_package``'s signature against ``public_key_hex``.
 
     Re-runs the checksum-manifest integrity check (a fresh
-    :func:`~core.corpus_manifest.verify_corpus_bundle` call, not a trust
+    :func:`~core.corpus_manifest.manifest.verify_corpus_bundle` call, not a trust
     of ``signed_package.manifest_sha256``) first. This matters because
     ``manifest_sha256`` is a digest over the embedded manifest's OWN recorded
     per-file hashes -- it does NOT change if an archived member's bytes are
@@ -259,7 +259,7 @@ def verify_review_package_signature(
         mismatch or invalid-signature outcome -- signature verification is an
         authenticity *check*, not an assertion; callers that want a raising
         assertion should call :func:`sign_review_package`'s sibling
-        :func:`~application.modelo.assert_review_package_verifies` first
+        :func:`~application.modelo.review_package.assert_review_package_verifies` first
         and test this function's boolean themselves.
     """
     try:
@@ -282,8 +282,8 @@ def verify_review_package_signature(
 def _package_manifest_sha256(package_path: Path) -> str:
     """Return the package's current self-attesting corpus manifest digest.
 
-    Re-runs :func:`~core.corpus_manifest.verify_corpus_bundle` directly
-    (the same checksum layer :func:`~application.modelo.verify_review_package`
+    Re-runs :func:`~core.corpus_manifest.manifest.verify_corpus_bundle` directly
+    (the same checksum layer :func:`~application.modelo.review_package.verify_review_package`
     delegates to) so the digest reflects the archive's CURRENT bytes, never a
     cached value, and is available even when the caller only needs the digest
     rather than the full review-specific verification result.

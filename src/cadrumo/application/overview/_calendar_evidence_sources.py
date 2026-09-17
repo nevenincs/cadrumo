@@ -327,7 +327,7 @@ def filing_evidence_from_calculation_observation(
     """Project official calculation observations into AEAT-submitted evidence.
 
     Only official AEAT source kinds with active register metadata are accepted.
-    A matching loaded :class:`~cadrumo.domain.justificante.Justificante` upgrades
+    A matching loaded :class:`~cadrumo.domain.justificante.schema.Justificante` upgrades
     the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
     otherwise the row remains submitted-observed evidence.
     """
@@ -455,7 +455,7 @@ def filing_evidence_from_justificante_capture_snapshot(
 
     The persisted snapshot is accepted only when it is active, carries a typed
     :class:`~cadrumo.core.Period`, and resolves to loaded
-    :class:`~cadrumo.domain.justificante.Justificante` metadata for the same filing
+    :class:`~cadrumo.domain.justificante.schema.Justificante` metadata for the same filing
     target.
     """
     if not _capture_snapshot_is_active(snapshot):

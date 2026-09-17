@@ -75,7 +75,7 @@ _BLOB_STORE_DIRNAME = _BLOB_MANIFEST_PATH_DEFINITION.grammar.removeprefix("<root
 _BLOB_MANIFEST_SUFFIX = _BLOB_MANIFEST_PATH_DEFINITION.grammar.rsplit("<sha256>", maxsplit=1)[1]
 _BLOB_CIPHERTEXT_SUFFIX = ".enc"
 
-# Every digest below is the canonical :data:`~core.identity.ContentDigest`.
+# Every digest below is the canonical :data:`~core.identity.digest.ContentDigest`.
 # The module previously restated the lowercase-hex-64 rule in a local helper
 # plus a per-model field validator. The restatement matched the canonical
 # alias on every malformed value -- which is what hid the one place it did

@@ -10,16 +10,16 @@ one dedicated payload home.
 See Also:
     :mod:`~entrypoints.cli._modelo_review_package_cli`
         CLI transport that populates these result payloads.
-    :func:`~application.modelo.build_review_package`
+    :func:`~application.modelo.review_package.build_review_package`
         Application build primitive represented by
         :class:`ModeloReviewPackageBuildResult`.
-    :func:`~application.modelo.sign_review_package`
+    :func:`~application.modelo.review_package_signing.sign_review_package`
         Application signing primitive represented by
         :class:`ModeloReviewPackageSignResult`.
-    :func:`~application.modelo.encrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`
         Recipient-sealing primitive represented by
         :class:`ModeloReviewPackageEncryptForRecipientResult`.
-    :func:`~application.modelo.import_feedback_package`
+    :func:`~application.modelo.review_package_feedback.import_feedback_package`
         Feedback-import primitive represented by
         :class:`ModeloReviewPackageImportFeedbackResult`.
 """
@@ -44,8 +44,8 @@ class ModeloReviewPackageBuildResult(OutputSchema):
     """Review-package build result (path reference only — no raw bytes in envelope).
 
     Identity, count, and timestamp fields mirror
-    :class:`~cadrumo.application.modelo.ReviewPackageManifest` /
-    :class:`~cadrumo.application.modelo.ReviewPackageBuildResult` so a
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageManifest` /
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageBuildResult` so a
     malformed manifest field is refused at the CLI boundary too.
     """
 
@@ -73,7 +73,7 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     counter-sign verification are surfaced by the sibling ``sign`` /
     ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` verbs.
     Identity and timestamp fields mirror
-    :class:`~cadrumo.application.modelo.ReviewPackageManifest`.
+    :class:`~cadrumo.application.modelo.review_package.ReviewPackageManifest`.
     """
 
     operation: str = "modelo.review_package.verify"
@@ -100,9 +100,9 @@ class ModeloReviewPackageSignResult(OutputSchema):
     Carries only the exportable public half of the signer's keypair and the
     path to the written signature envelope — the private key never appears
     in this payload (it stays inside the encrypted per-bucket keystore; see
-    :func:`~application.modelo.ensure_review_package_signing_keypair`).
+    :func:`~application.modelo.review_package_signing.ensure_review_package_signing_keypair`).
     Identity, digest, and timestamp fields mirror
-    :class:`~cadrumo.application.modelo.SignedReviewPackage`.
+    :class:`~cadrumo.application.modelo.review_package_signing.SignedReviewPackage`.
     """
 
     operation: str = "modelo.review_package.sign"
@@ -131,7 +131,7 @@ class ModeloReviewPackageCounterSignResult(OutputSchema):
     Carries only the exportable public half of the counter-signer's keypair
     and the path to the written receipt envelope — the private key never
     appears in this payload. Digest and timestamp fields mirror
-    :class:`~cadrumo.application.modelo.CounterSignedReceipt`.
+    :class:`~cadrumo.application.modelo.review_package_counter_sign.CounterSignedReceipt`.
     """
 
     operation: str = "modelo.review_package.counter_sign"
@@ -160,10 +160,10 @@ class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
 
     The private ephemeral sender key never appears in this payload (it exists
     only transiently in process memory for the duration of the call, per
-    :func:`~application.modelo.encrypt_review_package_for_recipient`).
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`).
     ``valid_until`` is ``None`` when the sealed package never expires.
     Timestamp fields mirror
-    :class:`~cadrumo.application.modelo.RecipientEncryptedPackage`.
+    :class:`~cadrumo.application.modelo.recipient_encryption.RecipientEncryptedPackage`.
     """
 
     operation: str = "modelo.review_package.encrypt_for_recipient"
@@ -182,9 +182,9 @@ class ModeloReviewPackageDecryptResult(OutputSchema):
     The recipient's own private key never appears in this payload (it is
     minted-or-loaded from encrypted secure storage and used only transiently
     to decrypt, per
-    :func:`~application.modelo.ensure_recipient_encryption_keypair`).
+    :func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`).
     ``review_only`` asserts the recovered package carries no filing authority
-    -- see :func:`~application.modelo.decrypt_review_package_for_recipient`.
+    -- see :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`.
     """
 
     operation: str = "modelo.review_package.decrypt"
@@ -200,11 +200,11 @@ class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
     The recipient (accountant/gestor) seals structured feedback back to the
     originator (taxpayer) so only the originator's private key can open it,
     reusing the same X25519 ECIES construction as the forward direction (see
-    :func:`~application.modelo.encrypt_feedback_package_for_originator`).
+    :func:`~application.modelo.review_package_feedback.encrypt_feedback_package_for_originator`).
     Only the exportable originator public key appears here; no private key of
     either party is ever surfaced. ``has_counter_sign`` reports whether a
     counter-signed receipt was bundled with the note. Identity and timestamp
-    fields mirror :class:`~cadrumo.application.modelo.RecipientEncryptedPackage`.
+    fields mirror :class:`~cadrumo.application.modelo.recipient_encryption.RecipientEncryptedPackage`.
     """
 
     operation: str = "modelo.review_package.encrypt_feedback"
@@ -226,12 +226,12 @@ class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     receipt -- re-verifies BOTH signature layers against their locally-held
     review-package archive before accepting it and attaching the verified
     countersignature to their own approval journal
-    (:func:`~application.modelo.import_feedback_package`,
-    :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`).
+    (:func:`~application.modelo.review_package_feedback.import_feedback_package`,
+    :func:`~application.modelo.review_package_collab_audit.emit_collab_feedback_countersign_attached_event`).
     No private key of either party appears in this payload.
     ``counter_signature_verified`` is ``None`` when the feedback carried no
     formal sign-off, ``True`` when a bundled receipt verified clean. Identity
-    fields mirror :class:`~cadrumo.application.modelo.FeedbackPackage`.
+    fields mirror :class:`~cadrumo.application.modelo.review_package_feedback.FeedbackPackage`.
     """
 
     operation: str = "modelo.review_package.import_feedback"

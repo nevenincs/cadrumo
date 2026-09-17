@@ -7,7 +7,7 @@ model:
   (``ley-58-2003:art-27.2``), it resolves directly through the structured
   lookup, no ranking needed;
 * the FTS5 lexical index
-  (:mod:`~application.corpus_search._lexical_index`) for exact and stemmed
+  (:mod:`~application.corpus_search.lexical_index`) for exact and stemmed
   in-prose recall, ranked by BM25 over the diacritic-folded and Spanish-stemmed
   columns.
 

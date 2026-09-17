@@ -34,7 +34,7 @@ class BindingEncodedOptionPayload(OutputSchema):
     """One accepted decimal encoding of a boolean-typed decimal-channel binding.
 
     Projection of
-    :class:`~domain.calculations.registry.BooleanBindingEncodedValue`.
+    :class:`~domain.calculations.registry.binding_selector_utils.BooleanBindingEncodedValue`.
     ``encoded_value`` is the decimal the operator types on ``--binding``,
     ``boolean_meaning`` is the affirmative/negative sense it carries, and
     ``registry_value`` is the underlying casilla token the boolean maps to. The
@@ -65,7 +65,7 @@ class BindingGroundingPayload(OutputSchema):
 
     binding_id: BindingId
     source: str
-    """The typed :class:`~core.BindingSourceKind` value rendered as a string."""
+    """The typed :class:`~core.aggregation.BindingSourceKind` value rendered as a string."""
     readiness: str
     typed_enum: str | None
     legal_refs: LegalRefs
@@ -76,7 +76,7 @@ class BindingGroundingPayload(OutputSchema):
     Non-empty only for ``source = "relation_prefill"`` bindings, where the
     operator supplies each value through ``--relation RELATION_ID=VALUE``
     rather than ``--binding``. Derived from the resolved revision's
-    fold slots (:class:`~domain.calculations.registry.RelationPrefillProvider`
+    fold slots (:class:`~domain.calculations.registry.relation_prefill_bindings.RelationPrefillProvider`
     ``target_binding``), so a relation-fed binding's source is discoverable
     before a calculation is attempted, for any modelo.
     """

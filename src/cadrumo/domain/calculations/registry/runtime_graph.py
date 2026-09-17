@@ -1,7 +1,7 @@
 """Runtime graph helpers for validated registry formulas.
 
-Walks :class:`~cadrumo.domain.calculations.registry.FormulaExpression` trees
-declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` to
+Walks :class:`~cadrumo.domain.calculations.registry.schema_formula.FormulaExpression` trees
+declared on a :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` to
 extract casilla, binding, parameter, and date-binding references, and
 produces topologically sorted evaluation orders for the formula engine.
 Dangling expression references and formula dependency cycles are rejected
@@ -38,10 +38,10 @@ if TYPE_CHECKING:
 
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, ...]:
-    """Return all :class:`~cadrumo.core.CasillaId` refs.
+    """Return all :class:`~cadrumo.core.casilla_id.CasillaId` refs.
 
     The input is a validated
-    :class:`~cadrumo.domain.calculations.registry.FormulaExpression` tree.
+    :class:`~cadrumo.domain.calculations.registry.schema_formula.FormulaExpression` tree.
     """
     refs: list[CasillaId] = []
     _collect_casilla_refs(expression, refs)
@@ -49,10 +49,10 @@ def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, .
 
 
 def expression_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
-    """Return all :class:`~cadrumo.domain.calculations.registry.BindingId` refs.
+    """Return all :class:`~cadrumo.domain.calculations.registry.ids.BindingId` refs.
 
     The input is a validated
-    :class:`~cadrumo.domain.calculations.registry.FormulaExpression` tree.
+    :class:`~cadrumo.domain.calculations.registry.schema_formula.FormulaExpression` tree.
     """
     refs: list[BindingId] = []
     _collect_binding_refs(expression, refs)
@@ -60,7 +60,7 @@ def expression_binding_refs(expression: FormulaExpression) -> tuple[BindingId, .
 
 
 def expression_date_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
-    """Return all date-binding :class:`~cadrumo.domain.calculations.registry.BindingId` refs.
+    """Return all date-binding :class:`~cadrumo.domain.calculations.registry.ids.BindingId` refs.
 
     ``date_binding`` leaves carry date-valued profile facts (e.g.
     birth_date) consumed by the ``age_at_year_end`` op.  They are
@@ -74,7 +74,7 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[Binding
 
 
 def expression_parameter_refs(expression: FormulaExpression) -> tuple[ParameterId, ...]:
-    """Return all :class:`~cadrumo.domain.calculations.registry.ParameterId` refs.
+    """Return all :class:`~cadrumo.domain.calculations.registry.ids.ParameterId` refs.
 
     Walks both the direct ``parameter = "..."`` leaf and the
     ``dispatch_table = { key = "param_id" }`` leaf introduced by the
@@ -158,7 +158,7 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             formula graph is inspected for enum dispatch binding references.
     """
     refs: list[BindingId] = []
@@ -180,7 +180,7 @@ def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             formula graph is inspected for ``date_binding`` leaf references.
     """
     refs: list[BindingId] = []
@@ -219,7 +219,7 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             formulas to topologically sort.
     """
     computed_targets = {formula.target_casilla_id for formula in revision.formulas}

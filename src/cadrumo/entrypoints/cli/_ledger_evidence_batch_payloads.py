@@ -5,7 +5,7 @@ Every model here is referenced as an :class:`OutputSchema` deferred target, so t
 payload is, rather than being an untyped dict assembled at the emit site.
 
 Split into its own module rather than added to
-:mod:`~entrypoints.cli._ledger_business_payloads`, following the same pattern
+:mod:`~entrypoints.cli.ledger_business_payloads`, following the same pattern
 that module's own docstring documents for
 :mod:`~entrypoints.cli._ledger_rule_payloads` and
 :mod:`~entrypoints.cli._ledger_llm_payloads`: one transport family per module,

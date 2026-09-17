@@ -1,7 +1,7 @@
 """Error classes for the sealed bucket-export archive read / write path.
 
 The classes descend from the existing domain
-:class:`domain.buckets.BucketExportError` /
+:class:`domain.buckets.errors.BucketExportError` /
 :class:`BucketImportError` so the CLI boundary's
 ``command_error_boundary`` routes them through the same surface as
 the other bucket-maintenance verbs.

@@ -1,10 +1,10 @@
 """:class:`StorageProvider` Protocol - the v1 storage backend contract.
 
 Concrete backends implement this Protocol behind
-:func:`adapters.outbound.storage.get_storage_provider`. The coordinator
+:func:`adapters.outbound.storage.factory.get_storage_provider`. The coordinator
 depends only on this public surface, the provider records
 :class:`ProviderObjectMetadata` and :class:`ProviderProbeReport`, and the typed
-:class:`adapters.outbound.storage.OutboundStorageError` hierarchy;
+:class:`adapters.outbound.storage.errors.OutboundStorageError` hierarchy;
 concrete backend classes remain private implementation details.
 
 Bytes are the unit of payload. Encryption + classification + envelope
@@ -26,8 +26,8 @@ class StorageProvider(Protocol):
     """Bytes-in / bytes-out per-namespace object store.
 
     The protocol is selected by
-    :func:`adapters.outbound.storage.get_storage_provider` from the
-    configured :class:`adapters.outbound.storage.ProviderKind`, but
+    :func:`adapters.outbound.storage.factory.get_storage_provider` from the
+    configured :class:`adapters.outbound.storage.records.ProviderKind`, but
     callers operate only on the protocol plus :class:`ProviderObjectMetadata`
     and :class:`ProviderProbeReport` boundary records.
 
@@ -37,7 +37,7 @@ class StorageProvider(Protocol):
     the first read/write operation.
 
     Provider methods translate expected backend failures into the
-    :class:`adapters.outbound.storage.OutboundStorageError` hierarchy at
+    :class:`adapters.outbound.storage.errors.OutboundStorageError` hierarchy at
     this boundary. Native backend exceptions should not cross the Protocol
     surface except for programming errors.
     """
@@ -62,7 +62,7 @@ class StorageProvider(Protocol):
                 application layer; providers do not decrypt or inspect.
             content_hash: Cryptographic hash of ``payload`` for integrity
                 round-tripping
-                (:class:`adapters.outbound.storage.OutboundStorageIntegrityError`
+                (:class:`adapters.outbound.storage.errors.OutboundStorageIntegrityError`
                 raised on read if the stored hash diverges).
             label: Human-readable suffix appended to the filename for
                 operator orientation. Derived from the per-namespace

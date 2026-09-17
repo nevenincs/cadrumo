@@ -1,9 +1,9 @@
 """Pdfplumber-backed page text extraction for declaración PDFs.
 
 Wraps :mod:`pdfplumber` behind
-:func:`~adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text`
+``adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text``
 and
-:func:`~adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text_from_bytes`,
+``adapters.inbound.declaracion._parsers._pdfplumber_backend.extract_pages_text_from_bytes``,
 which return one stripped text string per page. Errors from the underlying
 library and pathological inputs (missing file, scan-only PDF without an OCR
 layer) are translated into

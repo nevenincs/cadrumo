@@ -1,6 +1,6 @@
 """Filing-record actions for modelo calculation revisions.
 
-:func:`~cadrumo.application.modelo.file_modelo_revision` promotes a verified
+:func:`~cadrumo.application.modelo.filing_actions.file_modelo_revision` promotes a verified
 :class:`CalculationRevision` into a current
 :class:`ModeloRecord` after the
 :class:`WorkflowEngine` preflight gate passes. Filing
@@ -17,7 +17,7 @@ delegates cross-period carry projection to
 which stamps locally-filed observations as non-official ``app_filing`` evidence.
 
 See Also:
-    :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
+    :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
         Separate AEAT-attested import path that creates
         :class:`ExternalEvidence` baselines; this local
         filing action deliberately does not.
@@ -29,7 +29,7 @@ See Also:
     :func:`~cadrumo.application.modelo.result_disposition_resolution.resolve_modelo_result_disposition`:
         Resolves the shared Modelo 303 refund/carry disposition before the file
         transition persists.
-    :func:`~cadrumo.application.modelo.verification_actions._require_cross_period_clean_state`:
+    ``cadrumo.application.modelo.verification_actions._require_cross_period_clean_state``:
         Rechecks cross-period dependencies before local filing state is written.
 """
 
@@ -227,14 +227,14 @@ def file_modelo_revision(
     See Also:
         :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
             Performs the repository writes once all gates pass.
-        :func:`~cadrumo.application.modelo.import_external_filing_evidence`:
+        :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
             Creates official-evidence baselines for imported filings; use that
             path when a :class:`ExternalEvidence` reference
             must be carried.
         :func:`~cadrumo.application.modelo.filed_revision_observation.persist_filed_revision_observation`:
             Saves the non-official ``app_filing`` observation used by later
             ``previous_filing`` calculations.
-        :func:`~cadrumo.application.modelo.export_modelo_revision`:
+        :func:`~cadrumo.application.modelo.export.export_modelo_revision`:
             Sibling local finish line that writes the fichero-BOE artefact
             without requiring this internal file marker.
     """

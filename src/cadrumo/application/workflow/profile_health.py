@@ -7,13 +7,13 @@ Confirmed pointer repairs coordinate mutation through the public
 :func:`~cadrumo.application.user_profile.profile_pointer.active_profile_pointer_transaction` boundary.
 
 See Also:
-    :class:`~application.workflow.ProfileBucketPointer`
+    :class:`~application.workflow.profile_bucket_models.ProfileBucketPointer`
         Current committed-capsule projection resolved before secure profile
         records are loaded.
     :mod:`application.workflow.profile_bucket_scan`
         Resolves anchored current-capsule label projections without opening
         encrypted profile facts.
-    :class:`~application.workflow.WorkflowState`
+    :class:`~application.workflow.state_models.WorkflowState`
         Supplies the active profile record through the secure workflow-state
         repository when the active bucket is readable.
     :class:`~domain.user_profile.values.UserProfileRecord`

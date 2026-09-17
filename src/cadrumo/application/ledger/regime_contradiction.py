@@ -1,14 +1,14 @@
 """Turning a self-contradicting document into a finding the confirm gate refuses past.
 
 The consumer of the legend axis's contradicted outcome. That axis
-(:func:`~domain.iva.derive_category_from_regime_legend`) decides whether the
+(:func:`~domain.iva.legend_derivation.derive_category_from_regime_legend`) decides whether the
 regime an issuer printed in words agrees with the tax the document charged; this
 module does no deciding of its own. It reads the outcome as data and enrols it,
 which is the whole reason the axis returns a typed record rather than a category
 or ``None``.
 
 **Why the judgement is not repeated here.** The statutory expectation lives on
-:class:`~domain.iva.RegimeLegend` as ``expects_repercutido_line``, exactly so one
+:class:`~domain.iva.regime_legend.RegimeLegend` as ``expects_repercutido_line``, exactly so one
 place decides what a mention implies. Re-testing that here would make two
 authorities on the same question, and the second would drift the moment the
 regulation's encoding changed -- the failure the legend table was introduced to
@@ -27,11 +27,11 @@ the conflict and stops; the operator holds the document and is the only party wh
 can say whether the mention or the line does not belong.
 
 See Also:
-    :func:`~domain.iva.derive_category_from_regime_legend`
+    :func:`~domain.iva.legend_derivation.derive_category_from_regime_legend`
         The axis whose contradicted outcome this enrols.
     :data:`~application.ledger.confirmation_gate.BLOCKING_REASON_BY_DISCREPANCY_KIND`
         Where the finding's kind becomes a review-gate refusal.
-    :func:`~application.ledger.closure_findings`
+    :func:`~application.ledger.closure_findings.closure_findings`
         The arithmetic siblings this finding sits beside, and is not one of.
 """
 

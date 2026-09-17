@@ -7,15 +7,15 @@ See Also:
     :mod:`~entrypoints.cli._modelo_review_package_payloads`
         Strict result schemas populated by this module for build, verify,
         signing, recipient encryption, and feedback flows.
-    :func:`~application.modelo.build_review_package`
+    :func:`~application.modelo.review_package.build_review_package`
         Application build primitive whose manifest is projected into build
         result payloads and text lines.
-    :func:`~application.modelo.sign_review_package`
+    :func:`~application.modelo.review_package_signing.sign_review_package`
         Ed25519 authenticity primitive represented by the signing projections.
-    :func:`~application.modelo.encrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`
         X25519 recipient-sealing primitive represented by encrypt/decrypt
         projections.
-    :func:`~application.modelo.import_feedback_package`
+    :func:`~application.modelo.review_package_feedback.import_feedback_package`
         Originator-side feedback import primitive represented by the feedback
         projection.
 """

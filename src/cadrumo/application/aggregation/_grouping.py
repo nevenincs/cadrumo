@@ -198,7 +198,7 @@ class LedgerCasillaObservation(Protocol):
     casilla the row feeds, and the transaction id recorded in its provenance.
 
     Domain-qualified to stay distinct from
-    :class:`~domain.calculations.registry.CasillaObservation`, the concrete
+    :class:`~domain.calculations.registry.bindings.CasillaObservation`, the concrete
     formula-runtime carrier: this is a structural read surface over the
     ledger-projection models, keyed on ``target_casilla_id``, not that model's
     ``casilla_id`` value shape.

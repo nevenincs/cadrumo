@@ -577,7 +577,9 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
         await pilot.click("#aeat-sync-operation-0")
-        await pilot.click("#aeat-sync-operation-0")
+        await pilot.pause()
+        # The one-shot guard is the disabled control itself; nothing can hand off twice.
+        assert screen.query_one("#aeat-sync-operation-0", Button).disabled
     assert calls == [
         AeatSyncOperationRequestV1(
             action=ActionReference(action_id="operator.profile.edit"),
@@ -587,7 +589,8 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
     refused = AeatSyncOverviewScreen(_controller())
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
         await pilot.pause()
-        await pilot.click("#aeat-sync-operation-0")
+        # Without a host door no control is offered; the refusal is stated instead.
+        assert not refused.query("#aeat-sync-operation-0")
         assert tr("tui.aeat_sync.refusal.operation_handoff") in str(
             refused.query_one("#aeat-sync-status", Static).render()
         )
@@ -789,22 +792,22 @@ async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_ident
         (
             "en",
             "Operation could not be started.",
-            "Operation handoff is unavailable.",
+            "AEAT operations can't be started from this session.",
         ),
         (
             "es",
             "No se pudo iniciar la operación.",
-            "La entrega de la operación no está disponible.",
+            "Las operaciones con la AEAT no se pueden iniciar desde esta sesión.",
         ),
         (
             "ca",
             "No s'ha pogut iniciar l'operació.",
-            "El lliurament de l'operació no està disponible.",
+            "Les operacions amb l'AEAT no es poden iniciar des d'aquesta sessió.",
         ),
         (
             "hu",
             "A műveletet nem sikerült elindítani.",
-            "A művelet átadása nem érhető el.",
+            "AEAT-műveletek ebből a munkamenetből nem indíthatók.",
         ),
     ),
 )
@@ -834,7 +837,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
             refused = AeatSyncOverviewScreen(_controller())
             async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
                 await pilot.pause()
-                await pilot.click("#aeat-sync-operation-0")
+                assert not refused.query("#aeat-sync-operation-0")
                 assert refusal_copy in str(refused.query_one("#aeat-sync-status", Static).render())
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
@@ -946,7 +949,8 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
                     assert expected != "tui.aeat_sync.action.pull_filed_all"
                     assert str(button.label) == expected
                     await pilot.click("#aeat-sync-operation-0")
-                    await pilot.click("#aeat-sync-operation-0")
+                    await pilot.pause()
+                    assert button.disabled
     finally:
         I18N_STRICT_MISSING_KEYS.reset(token)
 
@@ -961,10 +965,14 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
 async def test_overview_census_label_is_distinct_and_notification_listing_has_no_operation(locale: str) -> None:
     """Local census review is not pull copy; notifications remain a local route."""
+
+    async def handoff(_request: AeatSyncOperationRequestV1) -> None:
+        return None
+
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         with override_settings(cadrumo_output_language=locale):
-            census = AeatSyncOverviewScreen(_controller())
+            census = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
             async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
                 await pilot.pause()
                 label = str(census.query_one("#aeat-sync-operation-0", Button).label)

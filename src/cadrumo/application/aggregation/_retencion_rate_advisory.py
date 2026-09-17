@@ -27,7 +27,7 @@ carrying, say, the ordinary empleado rate would fold into the trabajo block and
 file silently. This module surfaces that as a non-blocking
 :class:`~.source_mesh.CalculationSourceDiagnostic` on the calculate path,
 grounded in the registry-backed
-:func:`~domain.transactions.load_administrador_retencion_rates` rate set
+:func:`~domain.transactions.retencion_facts.load_administrador_retencion_rates` rate set
 (``no-silent-under-declaration``). The rate figures and their legal grounding
 are regulatory data read from the registry, never literals in this or the core
 layer (``aeat-registry-authority-flow``). Because
@@ -334,7 +334,7 @@ def _profile_suggests_sectoral_activity(
     profile's activity axis and estimation regime are independent, so the
     regime is only a surrogate when the direct activity signal is silent.
 
-    :attr:`~domain.deadlines.TaxpayerProfile.irpf_activity_kind` is the one
+    :attr:`~domain.deadlines.models.TaxpayerProfile.irpf_activity_kind` is the one
     signal here that is not a surrogate: it is the activity axis itself,
     operator-declared, so it answers the question asked rather than one
     correlated with it. It is therefore consulted FIRST and its answer is
@@ -512,7 +512,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
     the diagnostic.
 
     The rate set is read from governed facts via
-    :func:`~domain.transactions.statutory_activity_retencion_rates`, so the
+    :func:`~domain.transactions.retencion_facts.statutory_activity_retencion_rates`, so the
     comparison tracks the grounded legal figures rather than a literal restated
     here, and a newly-grounded rate widens the conforming band automatically.
 

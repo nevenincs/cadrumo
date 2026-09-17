@@ -29,9 +29,9 @@ how alarming they sound.
 See Also:
     :class:`~application.ledger.confirm_establishment.ConfirmedEstablishment`
         The resolution these notices read; every field of it was unread before.
-    :class:`~core.IvaCategoryOutcome`
+    :class:`~core.iva_category_resolution.IvaCategoryOutcome`
         Which rung established the treatment, or why none did.
-    :class:`~core.ConfirmationBlockReason`
+    :class:`~core.confirmation_gate.ConfirmationBlockReason`
         The reason axis the carried review items address under.
     :class:`~core.json_contract.Notice`
         The one diagnostic channel this projects onto.

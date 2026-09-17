@@ -1,8 +1,8 @@
 """Error hierarchy for the Modelo 100 borrador parser.
 
 The hierarchy specialises
-:class:`~domain.justificante.PdfModeloImportError` with Modelo 100
-exceptions raised by :func:`adapters.inbound.borrador.parse_borrador`,
+:class:`~domain.justificante.errors.PdfModeloImportError` with Modelo 100
+exceptions raised by :func:`adapters.inbound.borrador.parser.parse_borrador`,
 the artefact detector, and coverage validation. It is an inbound parse-error
 boundary; callers should inspect the structured attributes on
 :class:`BorradorParseError` rather than parsing rendered messages.
@@ -21,7 +21,7 @@ class BorradorParseError(PdfModeloImportError):
     Base class for every borrador-specific failure raised by the inbound
     parser. Subclasses, such as :class:`ArtefactNotRecognisedError`, refine the
     failure mode while preserving the
-    :class:`~domain.justificante.PdfModeloImportError` import-family
+    :class:`~domain.justificante.errors.PdfModeloImportError` import-family
     contract.
 
     When the error originates from an extraction-coverage failure the

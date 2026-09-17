@@ -5,7 +5,7 @@ referenced payload's bytes. A digest that is not lowercase hex-64 can never
 match a recomputed hash, so accepting one only defers the failure to a later
 verification pass -- and lets the machine-facing CLI boundary emit a digest
 the application model would refuse. Both the record and its CLI projection
-therefore pin :data:`~core.identity.ContentDigest`.
+therefore pin :data:`~core.identity.digest.ContentDigest`.
 """
 
 from __future__ import annotations

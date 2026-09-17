@@ -180,7 +180,7 @@ def resolve_modelo_work_unit_refresh_target(
     Every definition below addresses one work unit, so the settled receipt's
     ``subject_ref`` is that unit's identifier. It is validated here rather
     than trusted: a subject that is not a well-formed
-    :data:`~cadrumo.core.identity.WorkUnitId` raises, and the resolving
+    :data:`~cadrumo.core.identity.hex_ids.WorkUnitId` raises, and the resolving
     service turns that into a typed refusal instead of handing a frontend a
     target it cannot read.
     """

@@ -1,16 +1,16 @@
 """JSON payload schemas for ``aeat app modelo support-matrix``.
 
-Projects :class:`~domain.calculations.registry.ModeloEntry` (and its
+Projects :class:`~domain.calculations.registry.support_matrix.ModeloEntry` (and its
 nested rename / portal-compatibility records) onto the CLI's strict
 :class:`~core.json_contract.OutputSchema` contract. Every field mirrors the
 domain report unchanged; this module only pins the JSON transport shape.
 
 See Also:
-    :class:`~domain.calculations.registry.ModeloSupportMatrixReport`
+    :class:`~domain.calculations.registry.query_reports.ModeloSupportMatrixReport`
         Domain query-service envelope this payload serializes.
     :func:`~application.modelo.registry_discovery.registry_support_matrix`
         Application query the CLI command calls to obtain the report.
-    :func:`~entrypoints.cli._modelo_discovery_cli._support_matrix_entry_payload`
+    ``entrypoints.cli._modelo_discovery_cli._support_matrix_entry_payload``
         Transport mapper from a domain row to this module's payload schema.
 """
 

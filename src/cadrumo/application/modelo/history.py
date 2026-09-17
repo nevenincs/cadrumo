@@ -15,10 +15,10 @@ narrows to the other.
 
 The catalogue substrate is the bucket-scoped append-only event log exposed by
 :class:`~cadrumo.domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`. Events scoped to a work unit land under
-four :class:`cadrumo.domain.buckets.BucketEventObjectType` values:
+four :class:`cadrumo.domain.buckets.event.BucketEventObjectType` values:
 ``WORK_UNIT``, ``CALCULATION_REVISION``, ``VERIFICATION_REPORT``, and
 ``FILING_RECORD``. The assembler walks each related object id and merges the
-emitted :class:`cadrumo.domain.buckets.BucketEvent` streams in
+emitted :class:`cadrumo.domain.buckets.event.BucketEvent` streams in
 chronological order.
 
 The normalized records remain the source of relational truth:
@@ -32,13 +32,13 @@ catalogues.
 The assembler is pure read: no mutation, no remote contact.
 
 See Also:
-    :func:`cadrumo.application.modelo.create_work_unit`:
+    :func:`cadrumo.application.modelo.work_lifecycle.create_work_unit`:
         Emits work-unit create, rename, and discard events.
-    :func:`cadrumo.application.modelo.calculate_modelo_work_revision`:
+    :func:`cadrumo.application.modelo.calculate_input.calculate_modelo_work_revision`:
         Persists calculation revisions and ``MODELO_CALCULATION_CREATED`` events.
-    :func:`cadrumo.application.modelo.verify_modelo_revision`:
+    :func:`cadrumo.application.modelo.verification_actions.verify_modelo_revision`:
         Persists verification reports and verification pass/refusal events.
-    :func:`cadrumo.application.modelo.file_modelo_revision`:
+    :func:`cadrumo.application.modelo.filing_actions.file_modelo_revision`:
         Persists local filing records and filing/supersession events.
 """
 
@@ -173,13 +173,13 @@ def assemble_work_unit_history(
     """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
     Events are merged from object-scoped
-    :class:`cadrumo.domain.buckets.BucketEvent` streams and ordered by
+    :class:`cadrumo.domain.buckets.event.BucketEvent` streams and ordered by
     :func:`bucket_event_order_key`. The work unit itself is loaded to confirm it
     exists (raising :class:`WorkUnitNotFoundError` if not) and to discover every
     :class:`CalculationRevision`, :class:`~VerificationReport`,
     and :class:`ModeloRecord` id that belongs to its lifecycle.
 
-    Rows are the validated :class:`cadrumo.domain.buckets.BucketEvent` values
+    Rows are the validated :class:`cadrumo.domain.buckets.event.BucketEvent` values
     themselves, not a restatement of them: a read model repeating that field set
     can only lose constraints its source already enforces, and this one had
     already dropped ``bucket_id``, ``payload_version`` and the content-address
@@ -191,7 +191,7 @@ def assemble_work_unit_history(
     underlying records.
 
     See Also:
-        :meth:`cadrumo.domain.buckets.BucketEventHistoryCatalogue.for_object`:
+        :meth:`cadrumo.domain.buckets.event.BucketEventHistoryCatalogue.for_object`:
             Supplies each object-scoped event stream merged here.
         :class:`WorkUnitHistory`:
             The immutable read model returned to callers.
@@ -264,7 +264,7 @@ projection detail.
 def admitted_modelo_history_event_types() -> frozenset[BucketEventType]:
     """Return every event type admissible into a per-modelo history, derived from the taxonomy.
 
-    Derived at call time from :class:`cadrumo.domain.buckets.BucketEventType`
+    Derived at call time from :class:`cadrumo.domain.buckets.event.BucketEventType`
     rather than recorded as a literal set, because a literal one drifts
     silently. The adapter this policy was lifted from held a hand-written set
     admitting 11 of the 22 live members, and the drift was not theoretical:

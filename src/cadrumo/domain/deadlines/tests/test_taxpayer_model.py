@@ -19,7 +19,10 @@ from pydantic import ValidationError
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
+    published_supported_filing_years,
+)
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
 from ...calculations.registry.errors import RegistryValidationError
@@ -624,9 +627,16 @@ class TestMultiplePagadoresReducedLimitSchedule:
         for year, expected in cases:
             assert resolve_multiple_pagadores_reduced_limit(year, facts=_deadline_facts(year)) == expected, year
 
-    @pytest.mark.parametrize("filing_year", (2015, 2027))
-    def test_reduced_limit_fails_closed_outside_the_published_mapping(self, filing_year: int) -> None:
-        with pytest.raises(RegistryValidationError, match=f"has no entry for {filing_year}"):
+    @pytest.mark.parametrize("edge", ("below_floor", "past_horizon"))
+    def test_reduced_limit_fails_closed_outside_the_published_mapping(self, edge: str) -> None:
+        support = published_supported_filing_years()
+        assert support is not None
+        if edge == "below_floor":
+            filing_year, refusal = support.floor - 1, "outside the supported filing years"
+        else:
+            filing_year = support.horizon + 1
+            refusal = f"has no entry for {filing_year}"
+        with pytest.raises(RegistryValidationError, match=refusal):
             resolve_multiple_pagadores_reduced_limit(filing_year, facts=_deadline_facts(filing_year))
 
     def test_reduced_limit_resolution_retains_mapping_provenance(self) -> None:

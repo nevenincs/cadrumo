@@ -1,6 +1,6 @@
 """Deletion-path validation for the bucket-maintenance service.
 
-Used by: :class:`~application.bucket_maintenance.BucketMaintenanceService`
+Used by: :class:`~application.bucket_maintenance.service.BucketMaintenanceService`
 to resolve the deletion paths of a real, non-link bucket root before any
 manifest read or destructive assessment.
 

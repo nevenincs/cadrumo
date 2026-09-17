@@ -1,8 +1,8 @@
 """Backend readiness preflight for bucket-scoped ledger transactions.
 
 :func:`preflight_ledger_tax_readiness` loads a
-:class:`~cadrumo.domain.transactions.TransactionCatalogue` via
-:class:`~cadrumo.domain.transactions.TransactionCatalogueRepositoryProtocol` from the
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue` via
+:class:`~cadrumo.domain.transactions.protocols.TransactionCatalogueRepositoryProtocol` from the
 active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
 in-memory analysis. The report is consumed by modelo readiness projection and
 ledger read surfaces; it is not a calculation engine and never mutates the

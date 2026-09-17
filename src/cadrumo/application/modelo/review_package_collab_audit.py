@@ -4,7 +4,7 @@ Every trust-boundary crossing on the review-package recipient-encryption
 surface -- registering or removing a trusted recipient, sealing a package for
 a recipient, decrypting a sealed package, and counter-signing a received
 package -- emits a typed
-:class:`~domain.buckets.BucketEvent` so an operator can reconstruct the
+:class:`~domain.buckets.event.BucketEvent` so an operator can reconstruct the
 collaboration timeline from the bucket-event-history catalogue, mirroring
 every other material workflow transition in the codebase (the pattern
 established by ``_iva_wallet_seed.py`` and ``_revision_persistence.py``).
@@ -21,7 +21,7 @@ a future audit query distinguish "who was trusted / what was sealed" from
 Every function in this module is a thin, pure composition over
 :func:`~application.modelo.revision_persistence.emit_modelo_bucket_event`
 (``aeat-architecture-boundaries``): none of them open a
-:class:`~adapters.persistence.storage.SecureObjectRepository` write path
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` write path
 of their own for the recipient registry, the encryption primitives, or the
 review-package build/verify layer -- those already own their persistence.
 This module's only write is the bucket-event-history append.
@@ -34,13 +34,13 @@ bucket-event payload convention (short strings, no credentials).
 :func:`emit_collab_feedback_countersign_attached_event` records,
 on the ORIGINATOR's own bucket, that a recipient's counter-signed receipt
 (recovered from an imported
-:class:`~application.modelo.FeedbackPackage`, see
+:class:`~application.modelo.review_package_feedback.FeedbackPackage`, see
 :mod:`~application.modelo.review_package_feedback`) was verified and
 attached to the originator's approval journal -- the mirror image of
 :func:`emit_collab_package_counter_signed_event`, which records the
 counter-signer's OWN act of signing on their bucket. Reuses the same
 ``COLLAB_PACKAGE_COUNTER_SIGNED`` event type (no new
-:class:`~domain.buckets.BucketEventType` member): the enum member names
+:class:`~domain.buckets.event.BucketEventType` member): the enum member names
 the FACT that a counter-signature exists for a package, not which party's
 bucket recorded it, exactly as ``COLLAB_PACKAGE_DECRYPTED`` already serves
 both the forward (accountant decrypts the original package) and reverse (the
@@ -91,12 +91,12 @@ def emit_collab_recipient_registered_event(
     """Append a ``COLLAB_RECIPIENT_REGISTERED`` event for a newly-trusted recipient.
 
     Args:
-        record: The :class:`~application.modelo.RecipientFingerprintRecord`
+        record: The :class:`~application.modelo.review_package_recipient_registry.RecipientFingerprintRecord`
             just added to the fingerprint registry.
         bucket_id: The bucket the registry entry was added to.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
-        actor: Actor label (see :class:`~domain.buckets.BucketEvent`).
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
+        actor: Actor label (see :class:`~domain.buckets.event.BucketEvent`).
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
@@ -130,7 +130,7 @@ def emit_collab_recipient_removed_event(
         recipient_id: The removed record's ``recipient_id``.
         bucket_id: The bucket the registry entry was removed from.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
         actor: Actor label.
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
@@ -162,12 +162,12 @@ def emit_collab_package_encrypted_event(
     hence ``collab_event.*`` rather than ``privacy_event.*``.
 
     Args:
-        envelope: The :class:`~application.modelo.RecipientEncryptedPackage`
+        envelope: The :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage`
             just produced by
-            :func:`~application.modelo.encrypt_review_package_for_recipient`.
+            :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`.
         bucket_id: The sender's bucket.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
         actor: Actor label.
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
@@ -200,17 +200,17 @@ def emit_collab_package_decrypted_event(
     """Append a ``COLLAB_PACKAGE_DECRYPTED`` event.
 
     Recorded on the RECIPIENT's bucket after a successful
-    :func:`~application.modelo.decrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`
     call: decrypted package bytes were read, so this is a
     ``privacy_event.*``-prefixed disclosure event, not a bare
     ``collab_event.*`` transport event.
 
     Args:
-        envelope: The :class:`~application.modelo.RecipientEncryptedPackage`
+        envelope: The :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage`
             that was just successfully decrypted.
         bucket_id: The recipient's own bucket.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
         actor: Actor label.
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
@@ -242,16 +242,16 @@ def emit_collab_package_counter_signed_event(
     """Append a ``COLLAB_PACKAGE_COUNTER_SIGNED`` event.
 
     Recorded on the counter-signer's (accountant's) bucket after
-    :func:`~application.modelo.counter_sign_review_package`: a
+    :func:`~application.modelo.review_package_counter_sign.counter_sign_review_package`: a
     trust/transport-boundary action (attesting to a signature already
     received), hence ``collab_event.*``.
 
     Args:
-        receipt: The :class:`~application.modelo.CounterSignedReceipt`
+        receipt: The :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt`
             just produced.
         bucket_id: The counter-signer's own bucket.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
         actor: Actor label.
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
@@ -283,9 +283,9 @@ def emit_collab_feedback_countersign_attached_event(
     """Append a ``COLLAB_PACKAGE_COUNTER_SIGNED`` event to the ORIGINATOR's journal.
 
     Recorded on the originator's OWN bucket after
-    :func:`~application.modelo.import_feedback_package` has already
+    :func:`~application.modelo.review_package_feedback.import_feedback_package` has already
     verified the imported feedback's
-    :class:`~application.modelo.CounterSignedReceipt` (i.e.
+    :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt` (i.e.
     ``imported.counter_signature_verified`` is ``True``): the countersigned
     approval is now attached to the originator's approval journal, closing
     the collaboration round trip. Reuses ``COLLAB_PACKAGE_COUNTER_SIGNED``
@@ -293,16 +293,16 @@ def emit_collab_feedback_countersign_attached_event(
     fact, recorded from the other party's bucket.
 
     Args:
-        imported: The :class:`~application.modelo.ImportedFeedback`
+        imported: The :class:`~application.modelo.review_package_feedback.ImportedFeedback`
             returned by
-            :func:`~application.modelo.import_feedback_package`. Must
+            :func:`~application.modelo.review_package_feedback.import_feedback_package`. Must
             carry a verified counter-signed receipt
             (``counter_signature_verified is True``); calling this with
             unverified or absent feedback is a caller error, not a runtime
             state this function silently tolerates.
         bucket_id: The originator's own bucket.
         repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+            :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`.
         actor: Actor label.
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.

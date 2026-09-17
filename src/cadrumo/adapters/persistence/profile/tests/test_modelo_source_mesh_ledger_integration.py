@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import text
 
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
@@ -36,6 +35,8 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.repository import transaction_index_object_key
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
@@ -44,7 +45,7 @@ runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=Fals
 
 
 def _revision() -> ModeloRevision:
-    return compiled_bundled_authority().modelo("303").revisions["2022"]
+    return published_authority_operation().revision_with_export_layouts("303", "2022")
 
 
 def _transaction(provider_id: str) -> Transaction:

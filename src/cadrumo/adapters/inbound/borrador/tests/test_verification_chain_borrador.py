@@ -140,16 +140,15 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
     Supplies zero values for the retenciones bindings (no prior-period filings
     in the corpus scenario) and SimplificadaModalidad (casilla 0168 = S → 0).
     """
-    pfx = f"renta-{year}-"
     return {
-        f"{pfx}modelo-100-estimacion-directa-es-normal": Decimal("0"),
-        f"{pfx}modelo-111-retenciones-periodicas": Decimal("0"),
-        f"{pfx}modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero for a childless profile.
-        f"{pfx}profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica: non-Madrid corpus fixture mirrors the estatal zero.
-        f"{pfx}profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 
@@ -164,10 +163,9 @@ def _enum_binding_values_for_year(year: int) -> dict[str, str]:
 
 def _relation_values_for_year(year: int) -> dict[str, Decimal]:
     """Return relation-channel values for absent quarterly pago fraccionado evidence."""
-    pfx = f"renta-{year}-"
     return {
-        f"{pfx}rel-130-pagos-fraccionados": Decimal("0"),
-        f"{pfx}rel-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
 
 

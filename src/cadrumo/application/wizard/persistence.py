@@ -431,7 +431,7 @@ class _GuarderiaSpend(TypedDict):
     """The two guardería fields ``_safe_guarderia_spend`` resolves as a pair.
 
     Declared rather than returned as a bare mapping so the ``**`` unpack into
-    :class:`~cadrumo.domain.contribuyente.DescendantInfo` stays checkable: a
+    :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` stays checkable: a
     ``dict[str, object]`` makes both values ``object`` at the call site, which
     reads as a type error against every field on the record.
     """
@@ -484,9 +484,9 @@ def descendant_facts_from_answers(
     The setup flow's descendant repeating group keys each instance answer
     as ``descendientes#<index>.<page-id>``. This reads the live instance
     count from the count page, reconstructs one
-    :class:`~cadrumo.domain.contribuyente.DescendantInfo` per index, and
+    :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` per index, and
     delegates to
-    :func:`~cadrumo.domain.contribuyente.descendant_facts_from_list` so the
+    :func:`~cadrumo.domain.contribuyente.descendant_facts.descendant_facts_from_list` so the
     emitted ``renta_family.descendiente.{n}.*`` paths and the derived
     aggregates are the single canonical projection the
     ``_minimo_descendientes_facts`` injector and the registry selectors
@@ -518,8 +518,8 @@ def descendant_answers_from_record(
 
     The inverse of :func:`descendant_facts_from_answers`: reads the
     ``renta_family.descendiente.{n}.*`` facts a record carries, reconstructs
-    each :class:`~cadrumo.domain.contribuyente.DescendantInfo` through the
-    canonical :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`,
+    each :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` through the
+    canonical :func:`~cadrumo.domain.contribuyente.descendant_facts.descendant_list_from_facts`,
     and emits the ``descendientes-count`` answer plus one
     ``descendientes#<index>.<page-id>`` answer per populated field. This is the
     exact page-keyed shape :func:`~cadrumo.application.flows.resume.resume_flow`

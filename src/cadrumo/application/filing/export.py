@@ -4,7 +4,7 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 - modelo export writes an
   AEAT declaration file from a validated registry snapshot for an approved
-  :class:`domain.filing.ModeloDraft` and reports the byte-level
+  :class:`domain.filing.schema.ModeloDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
 - modelo export verification re-reads a previously
@@ -15,28 +15,28 @@ The CLI exposes two primitives the application layer must back end-to-end:
 
 The records are structured return values for renderers, persistence, and
 JSON round trips. Runtime export requires registry-backed
-:class:`domain.calculations.registry.ExportLayoutDefinition` records,
+:class:`domain.calculations.registry.schema_exports.ExportLayoutDefinition` records,
 and verification parses payloads through
-:func:`domain.calculations.registry.parse_export_payload`.
+:func:`domain.calculations.registry.export_parse.parse_export_payload`.
 
 The records intentionally do not embed the AEAT submission lifecycle
 (:mod:`domain.submission`) — local export and live submit are
 separate concerns and live submit is permanently forbidden.
 
 This module is the draft-level renderer. The work-unit export service in
-:mod:`application.modelo._export` rebuilds an approved
-:class:`domain.filing.ModeloDraft` from a
+:mod:`application.modelo.export` rebuilds an approved
+:class:`domain.filing.schema.ModeloDraft` from a
 :class:`~CalculationRevision`, then delegates here to write
 and verify the fichero-BOE bytes.
 
 See Also:
-    :func:`application.modelo._export.export_modelo_revision`
+    :func:`application.modelo.export.export_modelo_revision`
         Higher-level work-unit export service that replays a calculation
         revision before calling this draft renderer.
     :mod:`adapters.outbound.aeat.export`
         Outbound export-format adapter errors and fixed-width helper
         namespace.
-    :class:`core.access_gate.LiveSubmitForbiddenError`
+    :class:`core.access_gate.errors.LiveSubmitForbiddenError`
         Core refusal raised for every attempted live AEAT write.
     :mod:`domain.submission`
         Local-only submitted-state lifecycle, separate from file export.
@@ -434,10 +434,10 @@ def export_draft(
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
     The function selects the active registry
-    :class:`~domain.calculations.registry.ExportLayoutDefinition`,
+    :class:`~domain.calculations.registry.schema_exports.ExportLayoutDefinition`,
     renders its fixed-width records, writes only ``output_path``, and
     never contacts AEAT. Live submission is outside this surface and is
-    refused by :class:`core.access_gate.LiveSubmitForbiddenError`.
+    refused by :class:`core.access_gate.errors.LiveSubmitForbiddenError`.
 
     Args:
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
@@ -467,10 +467,10 @@ def export_draft(
         :func:`verify_export`
             Re-read a local export file and compare parser-covered casillas
             against the approved draft.
-        :func:`application.modelo._export.export_modelo_revision`
+        :func:`application.modelo.export.export_modelo_revision`
             Work-unit-facing export orchestration that supplies an approved
             draft reconstructed from a calculation revision.
-        :func:`domain.calculations.registry.parse_export_payload`
+        :func:`domain.calculations.registry.export_parse.parse_export_payload`
             Registry parser used by the verification path.
     """
     if (output_path is None) == (payload_consumer is None):

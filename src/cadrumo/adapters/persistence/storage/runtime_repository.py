@@ -121,7 +121,7 @@ def secure_object_repository_for_staged_bucket(
 
     The one route the storage runtime cannot serve, and the reason is
     structural rather than an oversight.
-    :meth:`~adapters.persistence.storage.StorageRuntime.secure_object_repository`
+    :meth:`~adapters.persistence.storage.runtime.StorageRuntime.secure_object_repository`
     rebuilds its settings from a storage root plus an active profile, so it
     always resolves the FINAL ``buckets/<bucket_id>/`` path; and capsule
     creation writes revision one into a staging directory that becomes that

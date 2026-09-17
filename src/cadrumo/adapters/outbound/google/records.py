@@ -1,21 +1,21 @@
 """Pydantic records for the Google OAuth and Drive configuration boundary.
 
 The per-profile Google session persists
-:class:`adapters.outbound.google.OAuthClient`,
-:class:`adapters.outbound.google.OAuthToken`, and
-:class:`adapters.outbound.google.OAuthMetadata` through
+:class:`adapters.outbound.google.records.OAuthClient`,
+:class:`adapters.outbound.google.records.OAuthToken`, and
+:class:`adapters.outbound.google.records.OAuthMetadata` through
 :mod:`adapters.outbound.google.session_store`.
-:class:`adapters.outbound.google.DriveConfig` stores the Drive root
+:class:`adapters.outbound.google.records.DriveConfig` stores the Drive root
 folder selected for the profile and is read by
-:func:`adapters.outbound.storage.get_storage_provider` when building the
-Drive backend. :class:`adapters.outbound.google.DriveAppProperties`
+:func:`adapters.outbound.storage.factory.get_storage_provider` when building the
+Drive backend. :class:`adapters.outbound.google.records.DriveAppProperties`
 captures the typed ``appProperties`` commit-log schema at the storage boundary.
 See :mod:`adapters.outbound.google.impersonation` for
-:class:`adapters.outbound.google.GoogleCredentialSourceSelection`, the
-per-profile persisted choice of :class:`core.GoogleCredentialSourceKind`.
+:class:`adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`, the
+per-profile persisted choice of :class:`core.google_credential_source.GoogleCredentialSourceKind`.
 
 The OAuth scope constants come from :class:`core.config.Settings` and are
-bundled as :data:`adapters.outbound.google.REQUIRED_SCOPES` for login,
+bundled as :data:`adapters.outbound.google.records.REQUIRED_SCOPES` for login,
 refresh, and validation flows. Every record is frozen, strict, and forbids
 extra fields.
 """
@@ -99,7 +99,7 @@ class OAuthClient(BaseModel):
 
     Carries the JSON the operator downloaded from the Cloud Console after
     creating a Desktop application OAuth client.
-    :func:`adapters.outbound.google.save_client` stores
+    :func:`adapters.outbound.google.session_store.save_client` stores
     this record under the SECRET classification because ``client_secret`` is a
     long-lived credential. ``client_id`` and ``project_id`` can surface in
     status output for operator orientation.
@@ -141,9 +141,9 @@ class OAuthClient(BaseModel):
 class OAuthToken(BaseModel):
     """The refresh credential issued by Google for a per-profile login.
 
-    :func:`adapters.outbound.google.run_login_flow` returns
-    this record with :class:`adapters.outbound.google.OAuthMetadata`.
-    :func:`adapters.outbound.google.save_token` persists
+    :func:`adapters.outbound.google.oauth_flow.run_login_flow` returns
+    this record with :class:`adapters.outbound.google.records.OAuthMetadata`.
+    :func:`adapters.outbound.google.session_store.save_token` persists
     it under the SECRET classification. The refresh token is re-persisted on
     every successful refresh because Google may rotate it. Access tokens are
     held in memory only and rebuilt from the refresh token on process start.
@@ -173,10 +173,10 @@ class OAuthMetadata(BaseModel):
     """Audit fields surfaced by `aeat config google status` and refresh policy.
 
     This is the non-secret companion record to
-    :class:`adapters.outbound.google.OAuthToken`.
-    :func:`adapters.outbound.google.save_metadata`
+    :class:`adapters.outbound.google.records.OAuthToken`.
+    :func:`adapters.outbound.google.session_store.save_metadata`
     persists which Google account the operator linked, which
-    :data:`adapters.outbound.google.REQUIRED_SCOPES` the consent screen
+    :data:`adapters.outbound.google.records.REQUIRED_SCOPES` the consent screen
     granted, when the credential was issued, when it was last refreshed, and
     whether the most recent refresh hit a hard ``invalid_grant`` requiring
     re-consent.
@@ -200,9 +200,9 @@ class OAuthMetadata(BaseModel):
         """Reject metadata that omits any required scope.
 
         The CLI login flow may only persist
-        :class:`adapters.outbound.google.OAuthMetadata` after the consent
+        :class:`adapters.outbound.google.records.OAuthMetadata` after the consent
         screen returns every scope in
-        :data:`adapters.outbound.google.REQUIRED_SCOPES` (``openid`` +
+        :data:`adapters.outbound.google.records.REQUIRED_SCOPES` (``openid`` +
         ``email`` + ``drive.file`` + ``spreadsheets``). Guards against
         accidental writes that would leave the integration unable to call
         Sheets, Drive, or display which account is linked.
@@ -216,9 +216,9 @@ class OAuthMetadata(BaseModel):
 class DriveConfig(BaseModel):
     """Per-profile Drive backend configuration persisted alongside OAuth records.
 
-    :func:`adapters.outbound.google.save_drive_config`
+    :func:`adapters.outbound.google.session_store.save_drive_config`
     persists the operator's chosen ``cadrumo-vault/`` parent folder id.
-    :func:`adapters.outbound.storage.get_storage_provider` reads it after
+    :func:`adapters.outbound.storage.factory.get_storage_provider` reads it after
     :class:`core.config.Settings`; the
     ``CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`` setting remains an override for
     one-off and CI runs.

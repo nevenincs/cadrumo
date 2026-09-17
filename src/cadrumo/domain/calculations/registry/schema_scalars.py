@@ -184,7 +184,7 @@ def _validate_country_code(value: object) -> object:
     :data:`~cadrumo.core.country_code.COUNTRY_CODE_ALPHA2_PATTERN`: uppercase
     ASCII letters, exact length 2. A lowercase token is REFUSED rather than
     folded, matching
-    :func:`~cadrumo.core.parsing.normalise_iso_3166_alpha2_jurisdiction`: a
+    :func:`~cadrumo.core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`: a
     country code on a casilla selects a regulatory treatment, so the operator
     declares the canonical code rather than having one guessed.
 

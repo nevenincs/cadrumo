@@ -12,10 +12,10 @@ starting Playwright, so the fallback classes are placeholders for importability,
 not a second execution path.
 
 See Also:
-    :func:`adapters.outbound.aeat.browser.default_browser_session_factory`
+    :func:`adapters.outbound.aeat.browser.factory.default_browser_session_factory`
         Production browser factory that reaches the guarded Playwright startup
         path.
-    :class:`adapters.outbound.aeat.browser.BrowserError`
+    :class:`adapters.outbound.aeat.browser.errors.BrowserError`
         Browser-layer envelope raised when the optional extra or Playwright
         startup fails.
     :func:`adapters.outbound.aeat.sede._browser_stage.run_playwright_stage`

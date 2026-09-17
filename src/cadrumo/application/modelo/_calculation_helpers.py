@@ -2,9 +2,9 @@
 
 The helpers load mutable :class:`~WorkUnit` records, resolve
 their law-determined
-:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`, and project engine,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`, and project engine,
 imported, or amended values into
-:class:`~cadrumo.domain.calculations.registry.CasillaObservation` provenance rows.
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` provenance rows.
 Amendment helpers reuse the baseline
 :class:`~CalculationRevision` where a corrected casilla was
 not overridden, and rebuild overridden rows from the selected snapshot so
@@ -17,7 +17,7 @@ See Also:
         Reuses amendment observation projection for corrected filing records.
     :func:`cadrumo.domain.calculations.registry.authority.bundled_indexed_authority`:
         Leases the packaged indexed registry generation for snapshot resolution.
-    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationResult`:
+    :class:`~cadrumo.domain.calculations.registry.formula_runtime.RegistryCalculationResult`:
         Registry-engine result whose values and formula entries are projected
         into typed observations.
 """
@@ -129,7 +129,7 @@ def resolve_registry_snapshot_for_work_unit(
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     operation: PinnedAuthorityOperation | None = None,
 ) -> RegistrySnapshot:
-    """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
+    """Resolve and return the :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 
     After resolution the snapshot's revision id is asserted equal to the work
     unit's pinned ``revision_id`` via :func:`assert_snapshot_matches_work_unit_revision`
@@ -187,14 +187,14 @@ def build_typed_observations(
     engine_result: RegistryCalculationResult,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
+    """Build :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` rows.
 
     The engine result is already the canonical grounded envelope, including
     text-family casillas that do not appear in its Decimal-only ``values``
     projection. This boundary verifies every observation still belongs to the
     selected registry revision, then preserves the envelope unchanged. Any
     observation without a registry casilla definition raises
-    :class:`cadrumo.application.modelo.CasillaProvenanceMissingError` through
+    :class:`cadrumo.application.modelo.action_errors.CasillaProvenanceMissingError` through
     :func:`cadrumo.application.modelo._calculation_helpers.casilla_observation_for`
     rather than emitting an ungrounded row.
     """
@@ -217,16 +217,16 @@ def external_filing_observations(
     casilla_values: Mapping[CasillaId, Decimal],
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows for imports.
+    """Build :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` rows for imports.
 
-    The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` supplies the
     provenance for imported values that have no
-    :class:`~cadrumo.domain.calculations.registry.RegistryCalculationEntry`
+    :class:`~cadrumo.domain.calculations.registry.formula_runtime.RegistryCalculationEntry`
     in the current process. This keeps imported AEAT baselines on the same
     typed-observation contract as locally calculated revisions.
 
     See Also:
-        :func:`cadrumo.application.modelo.import_external_filing_evidence`:
+        :func:`cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
             Persists the external-evidence baseline that consumes these rows.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
@@ -252,10 +252,10 @@ def casilla_observation_for(
 
     Formula entries contribute formula id, operand lineage, and legal/source
     refs. Non-formula casillas use the
-    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` selected by
-    the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`. A missing
+    :class:`~cadrumo.domain.calculations.registry.schema_surfaces.CasillaDefinition` selected by
+    the :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`. A missing
     definition is a hard provenance error because emitting a
-    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` without
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` without
     ``legal_refs`` and ``source_refs`` would erase legal grounding.
     """
     if entry is not None:
@@ -294,18 +294,18 @@ def amendment_observations(
     baseline_revision: CalculationRevision,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
-    """Build amendment :class:`~cadrumo.domain.calculations.registry.CasillaObservation` rows.
+    """Build amendment :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` rows.
 
     The baseline :class:`~CalculationRevision` contributes
     unchanged observations for casillas the amendment did not override. Newly
     overridden casillas are rebuilt from the
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` so the persisted
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` so the persisted
     amendment revision carries legal/source provenance even when the imported
     baseline had sparse observation rows. A corrected casilla absent from the
-    snapshot raises :class:`cadrumo.application.modelo.CasillaProvenanceMissingError`.
+    snapshot raises :class:`cadrumo.application.modelo.action_errors.CasillaProvenanceMissingError`.
 
     See Also:
-        :func:`cadrumo.application.modelo.amend_modelo_revision`:
+        :func:`cadrumo.application.modelo.amendment_actions.amend_modelo_revision`:
             Uses these rows for the corrected amendment revision.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)

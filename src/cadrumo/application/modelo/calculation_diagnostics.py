@@ -5,20 +5,20 @@ executes the registry formula engine, and persists the calculated revision. This
 module then fans out advisory-only checks over the loaded
 :class:`ModeloRevision` and the computed :class:`CasillaId` value map, returning
 non-blocking
-:class:`~application.aggregation.CalculationSourceDiagnostic` rows for the
+:class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` rows for the
 caller to append to source mesh diagnostics. It does not compute, override, or
 persist casilla values.
 
 The prior-payment collectors need persisted filing observations, so the
 coordinator shares one
-:class:`~application.calculations.CalculationObservationRepositoryProtocol` instance
+:class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol` instance
 across them. The official-box and settlement collectors read only the revision
 structure and calculated casilla values. Together the collectors extend the
 source mesh's no-silent-under-declaration diagnostics with checks whose evidence
 only exists after the revision has been calculated.
 
 See Also:
-    :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
     :func:`~application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
@@ -95,7 +95,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     informational and non-blocking; the
     calculation result already exists, and the caller merely appends these rows
     to the source mesh's existing
-    :class:`~application.aggregation.CalculationSourceDiagnostic`
+    :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic`
     sequence.
 
     The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
@@ -135,14 +135,14 @@ def collect_bucket_aggregation_advisory_diagnostics(
 
     Returns:
         Tuple of
-        :class:`~application.aggregation.CalculationSourceDiagnostic`
+        :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic`
         advisory rows, or an empty tuple when no post-calculation advisory fires.
 
     See Also:
-        :class:`~application.calculations.CalculationObservationRepositoryProtocol`:
+        :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
-        :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """

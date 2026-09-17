@@ -13,8 +13,8 @@ screen:
 * :func:`wait_for_own_name_representation_selector` -- waiting for AEAT to
   render the own-name selector, parameterised by the settings-derived
   selector strings and by the caller's own error identity, so
-  :class:`~cadrumo.core.errors.AeatLoginAssertionError`
-  and :class:`~adapters.outbound.aeat.sede.SedeNavigationError` remain
+  :class:`~cadrumo.core.errors.hierarchy.AeatLoginAssertionError`
+  and :class:`~adapters.outbound.aeat.sede.errors.SedeNavigationError` remain
   distinct domain errors rather than being collapsed into one.
 * :func:`continue_button_selectors` / :func:`click_first_matching_selector`
   -- the continue-button selector-fallback chain for AEAT's pre303 alert

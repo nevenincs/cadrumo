@@ -1,16 +1,16 @@
 """Canonical telemetry error types.
 
 Declared alongside the schema/consent/emit modules per the project's
-error-taxonomy convention: every :class:`~core.errors.CadrumoError`
+error-taxonomy convention: every :class:`~core.errors.hierarchy.CadrumoError`
 subclass binds to a registered
-:class:`~core.errors.ErrorCode` row (``core/errors/registry/_core.py``).
+:class:`~core.errors.error_codes.ErrorCode` row (``core/errors/registry/_core.py``).
 
 See Also:
     :class:`~cadrumo.core.telemetry.errors.TelemetrySchemaError`
         Telemetry schema failure defined by this module.
-    :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`
+    :data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY`
         Closed metric allowlist whose integrity violations raise this error.
-    :func:`~core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.schema.build_telemetry_payload`
         Payload builder that enforces the registry before emission.
 """
 
@@ -26,7 +26,7 @@ class TelemetrySchemaError(CoreError):
 
     This is a development/authoring-time integrity failure, not an operator-
     facing refusal: the metric-key registry
-    (:data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`) is the closed allowlist
+    (:data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY`) is the closed allowlist
     a telemetry producer must enroll in before it can emit a counter or timing.
     A key that is not registered for its command means a producer was added
     without registering its schema entry first — the exact gap

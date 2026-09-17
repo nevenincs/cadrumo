@@ -14,9 +14,9 @@ or sink logic:
   aggregates the same local, non-sensitive LLM run-timing signal
   :func:`~application.diagnostics_run_health.build_run_health_report` already
   reads (:class:`~application.diagnostics_run_health_ports.DiagnosticRunTelemetryPort`)
-  into ONE allowlisted :class:`~core.telemetry.TelemetryEventPayload` via
-  :func:`~core.telemetry.build_telemetry_payload`, and reports whether the
-  consent gate (:func:`~core.telemetry.telemetry_emit_permitted`) would
+  into ONE allowlisted :class:`~core.telemetry.schema.TelemetryEventPayload` via
+  :func:`~core.telemetry.schema.build_telemetry_payload`, and reports whether the
+  consent gate (:func:`~core.telemetry.consent.telemetry_emit_permitted`) would
   currently permit sending it. This function never sends anything: it is the
   ``--dry-run`` preview surface. ``build_telemetry_flush_preview`` is also the
   payload-construction step the real (non-dry-run) flush reuses, so preview and
@@ -25,9 +25,9 @@ or sink logic:
   send: it reuses the identical
   preview payload, re-checks the consent gate, and -- only when both the gate
   permits AND an endpoint is configured -- hands the payload to a real
-  :class:`~core.telemetry.HttpTelemetrySink`. When the gate refuses or no
+  :class:`~core.telemetry.http_sink.HttpTelemetrySink`. When the gate refuses or no
   endpoint is configured, it is a pure no-op (mirroring
-  :func:`~core.telemetry.emit_telemetry_event`'s own no-op contract), so
+  :func:`~core.telemetry.emit.emit_telemetry_event`'s own no-op contract), so
   calling this function is always safe regardless of posture.
 
 No producer here reads transaction content, profile identity, or file
@@ -43,7 +43,7 @@ See Also:
         Local-only LLM run accounting source aggregated by the flush preview.
     :mod:`~entrypoints.cli._app_diagnostics_telemetry`
         CLI transport that exposes status and dry-run-safe flush commands.
-    :class:`~core.telemetry.TelemetryEventPayload`
+    :class:`~core.telemetry.schema.TelemetryEventPayload`
         Closed allowlisted payload shape built by preview and reused by send.
 """
 
@@ -89,7 +89,7 @@ class TelemetryStatusReport(BaseModel):
     Projects the raw :class:`~core.config.Settings` telemetry fields
     plus the derived ``would_emit`` verdict a hypothetical fully-acknowledged
     invocation would currently receive from
-    :func:`~core.telemetry.telemetry_emit_permitted`. Never triggers an
+    :func:`~core.telemetry.consent.telemetry_emit_permitted`. Never triggers an
     emission; this is a read-only report.
     """
 
@@ -105,7 +105,7 @@ class TelemetryStatusReport(BaseModel):
 class TelemetryFlushPreview(BaseModel):
     """The payload a flush would send, plus whether it would currently send at all.
 
-    ``payload`` is the exact allowlisted :class:`~core.telemetry.TelemetryEventPayload`
+    ``payload`` is the exact allowlisted :class:`~core.telemetry.schema.TelemetryEventPayload`
     :func:`~application.diagnostics_telemetry.flush_telemetry` would hand to the
     sink; ``gate_permits`` and ``would_send`` are evaluated against the SAME
     ``acknowledged`` value the caller supplied (never hardcoded to ``True``), so
@@ -181,7 +181,7 @@ def build_telemetry_flush_preview(
     Aggregates every locally recorded LLM run
     (:class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord`, read via
     :func:`~application.diagnostics_run_health.build_run_health_report`)
-    into one ``diagnostics.llm_run`` :class:`~core.telemetry.TelemetryEventPayload`.
+    into one ``diagnostics.llm_run`` :class:`~core.telemetry.schema.TelemetryEventPayload`.
     This is the sole payload-construction step; both the ``--dry-run`` preview
     and the real
     :func:`~application.diagnostics_telemetry.flush_telemetry` call this function
@@ -190,7 +190,7 @@ def build_telemetry_flush_preview(
     ``gate_permits``/``would_send`` are evaluated against ``acknowledged``
     exactly as supplied -- defaulting to ``False`` (the honest state of a bare
     ``--dry-run`` invocation with no acknowledgement flag), never hardcoded to
-    ``True``. This mirrors :func:`~core.telemetry.telemetry_emit_permitted`'s
+    ``True``. This mirrors :func:`~core.telemetry.consent.telemetry_emit_permitted`'s
     own never-sticky per-invocation acknowledgement contract.
 
     Args:
@@ -238,7 +238,7 @@ def flush_telemetry(
     (with the SAME ``acknowledged`` value) for payload construction and verdict
     computation, so the returned report always reflects the real invocation's
     acknowledgement -- never a hardcoded optimistic verdict. Delegates the
-    actual gate check and dispatch to :func:`~core.telemetry.emit_telemetry_event`
+    actual gate check and dispatch to :func:`~core.telemetry.emit.emit_telemetry_event`
     (``aeat-architecture-boundaries``): this function never
     re-implements the consent gate or the HTTP transport.
 
@@ -246,7 +246,7 @@ def flush_telemetry(
     non-``off`` tier, gestor mode off) AND ``acknowledged`` is ``True`` for
     THIS invocation (never sticky) AND ``settings.cadrumo_telemetry_endpoint`` is
     configured. Any missing condition makes this call a pure no-op -- nothing
-    is sent -- mirroring :func:`~core.telemetry.emit_telemetry_event`'s own
+    is sent -- mirroring :func:`~core.telemetry.emit.emit_telemetry_event`'s own
     no-op contract.
 
     Args:

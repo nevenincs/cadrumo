@@ -1,6 +1,6 @@
 """Canonical domain errors for the :mod:`cadrumo.domain.deadlines` subpackage.
 
-Every error inherits from :class:`cadrumo.core.errors.CadrumoError` so callers have
+Every error inherits from :class:`cadrumo.core.errors.hierarchy.CadrumoError` so callers have
 a single root they can catch when integrating with the deadline engine.
 """
 
@@ -14,7 +14,7 @@ class DeadlineError(CadrumoError):
 
 
 class ProfileError(DeadlineError):
-    """Raised when an :class:`cadrumo.domain.deadlines.TaxpayerProfile` cannot be loaded or validated."""
+    """Raised when an :class:`cadrumo.domain.deadlines.models.TaxpayerProfile` cannot be loaded or validated."""
 
 
 class ScheduleComputationError(DeadlineError):

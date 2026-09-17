@@ -216,13 +216,13 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
 
     Reads persisted calculation observations across every modelo — the profile
     as a whole, not one filing — through the same
-    :meth:`~cadrumo.application.calculations.CalculationObservationRepository.iter_records`
+    :meth:`~cadrumo.adapters.persistence.profile.calculation_observations.CalculationObservationRepository.iter_records`
     read the ``config profile status`` full-screen surface already uses, and
     projects the application
-    :func:`~cadrumo.application.overview.no_aeat_history_notice` advisory
+    :func:`~cadrumo.application.overview.calendar_evidence.no_aeat_history_notice` advisory
     through the live action resolver so its ``cli_path`` is populated the way
     every other envelope notice's action is (the application layer's bare
-    :func:`~cadrumo.application.operator_actions.next_action` carries only the
+    :func:`~cadrumo.application.operator_actions.catalogue.next_action` carries only the
     action id). The one shared function keeps the CLI envelope and the TUI
     from silently diverging on when this advisory fires or what it suggests.
 

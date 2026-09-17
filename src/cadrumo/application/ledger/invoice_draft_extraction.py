@@ -2,7 +2,7 @@
 
 Holds the reading layer that decides which reader a given document is handed
 to, and the three readers' wiring. It never persists an
-:class:`~domain.invoices.Invoice` and never guesses a value no reader could
+:class:`~domain.invoices.models.Invoice` and never guesses a value no reader could
 ground in the document: every field a reader could not recover is left ``None``
 rather than fabricated (``no-silent-under-declaration`` in spirit: an unconfident
 field is absent, not invented).
@@ -32,7 +32,7 @@ stored MIME type:
   on-host LOCAL vision reader (:mod:`~llm.evidence_draft_vision`) -- the same
   rasterise-then-read-with-Ollama transport
   :class:`~llm.vision_classifier.LocalVisionLLMClassifier` already uses for
-  classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and never a
+  classification, gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` and never a
   cloud call.
 
 The escalation is one-directional and the asymmetry is deliberate. A document
@@ -222,7 +222,7 @@ def extract_invoice_draft_from_evidence(
 
     Returns:
         :class:`InvoiceDraft`: The best-effort extracted fields, for operator
-        review. Never itself persisted as an :class:`~domain.invoices.Invoice`.
+        review. Never itself persisted as an :class:`~domain.invoices.models.Invoice`.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
@@ -770,7 +770,7 @@ def _extract_invoice_fields_via_vision(
     only thing an anchor could be compared against was the reply that asserted
     it.
 
-    Gated by :attr:`~core.ServiceCapability.LLM_VISION` -- an operator who has
+    Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision

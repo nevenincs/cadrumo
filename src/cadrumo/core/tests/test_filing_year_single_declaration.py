@@ -109,14 +109,17 @@ def _restated_windows() -> dict[str, str]:
             continue
         relative = path.relative_to(_SRC).as_posix()
         for owner, node in _annotated_names(tree):
-            if node.target.id not in FILING_YEAR_FIELD_NAMES:
+            target = node.target
+            if not isinstance(target, ast.Name):
+                continue
+            if target.id not in FILING_YEAR_FIELD_NAMES:
                 continue
             spelled = _spelled_bounds(node.annotation) | _spelled_bounds(node.value)
             if spelled:
                 # Keyed by owner and name, not line: a line key goes stale on
                 # the next edit above it.
-                site = f"{relative}::{owner}{node.target.id}"
-                findings[site] = f"{node.target.id} spells {sorted(spelled)}"
+                site = f"{relative}::{owner}{target.id}"
+                findings[site] = f"{target.id} spells {sorted(spelled)}"
     return findings
 
 

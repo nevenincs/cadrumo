@@ -10,7 +10,7 @@ through this package:
 - **Declaración** — post-filing copy with a CSV stamp.
 
 The parser extracts printed casilla/value rows as observed filing data. This
-adapter does not resolve :class:`~domain.calculations.registry.RegistrySnapshot`
+adapter does not resolve :class:`~domain.calculations.registry.schema.RegistrySnapshot`
 objects or decide filing-grade completeness by itself. Completeness is enforced
 only when the caller supplies a
 :class:`~adapters.inbound.borrador.schema.BorradorExtractionProfile`

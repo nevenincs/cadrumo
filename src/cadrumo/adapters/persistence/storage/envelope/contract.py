@@ -11,15 +11,15 @@ consumer adheres to. It pins:
 - the payload itself (typed strict pydantic v2 model);
 - optional encryption metadata (when the payload is at-rest ciphertext).
 
-The :func:`~adapters.persistence.storage.save_envelope` and
-:func:`~adapters.persistence.storage.load_envelope` helpers atomically
+The :func:`~adapters.persistence.storage.envelope.contract.save_envelope` and
+:func:`~adapters.persistence.storage.envelope.contract.load_envelope` helpers atomically
 write and read non-sensitive envelope JSON via
 :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard tier).
 
 The substrate refuses any payload whose ``schema_version`` differs from
 the consumer's expected version, or which fails classification validation.
 Sensitive repositories use
-:class:`~adapters.persistence.storage.SecureBoundRepository`, which stores
+:class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`, which stores
 the envelope payload shape in encrypted SQL secure objects rather than files.
 """
 
@@ -110,9 +110,9 @@ class EncryptionMetadata(BaseModel):
         """Build metadata from an encrypted blob.
 
         Returns:
-            :class:`~adapters.persistence.storage.EncryptionMetadata`
+            :class:`~adapters.persistence.storage.envelope.contract.EncryptionMetadata`
             derived from an
-            :class:`~adapters.persistence.storage.EncryptedBlob`.
+            :class:`~adapters.persistence.storage.crypto.aead.EncryptedBlob`.
         """
         return cls(
             nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
@@ -121,7 +121,7 @@ class EncryptionMetadata(BaseModel):
         )
 
     def to_blob(self) -> EncryptedBlob:
-        """Reconstruct the :class:`~adapters.persistence.storage.EncryptedBlob` from encoded fields."""
+        """Reconstruct the :class:`~adapters.persistence.storage.crypto.aead.EncryptedBlob` from encoded fields."""
         try:
             return EncryptedBlob(
                 nonce=base64.b64decode(self.nonce_b64.encode("ascii"), validate=True),
@@ -146,9 +146,9 @@ class Envelope[PayloadT: BaseModel](BaseModel):
             expected version. Older and newer versions are refused.
         written_at: Timezone-aware datetime captured at write time.
         classification: The
-            :class:`~adapters.persistence.storage.SensitivityClass` declared by the
+            :class:`~core.classification.policies.SensitivityClass` declared by the
             writer. Mismatches at load time raise
-            :class:`~adapters.persistence.storage.ClassificationError`.
+            :class:`~adapters.persistence.storage.errors.ClassificationError`.
         payload: The typed payload. Plaintext is stored when
             ``encryption`` is ``None``; ciphertext lives in
             ``encryption.ciphertext_b64`` when present, and ``payload``
@@ -180,7 +180,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
-        """Return the :class:`~adapters.persistence.storage.Envelope` parameterised for ``payload_cls``.
+        """Return the :class:`~adapters.persistence.storage.envelope.contract.Envelope` parameterised for ``payload_cls``.
 
         This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
         at call sites. The returned class is the concrete generic alias Pydantic
@@ -213,7 +213,7 @@ def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
     Args:
-        envelope: The :class:`~adapters.persistence.storage.Envelope` to write.
+        envelope: The :class:`~adapters.persistence.storage.envelope.contract.Envelope` to write.
         path: Destination file. Parent directory is created if absent.
 
     Raises:
@@ -243,15 +243,15 @@ def load_envelope[PayloadT: BaseModel](
             (e.g. ``Envelope[MyPayloadV1]``). Pydantic uses this to
             validate the JSON against the typed payload.
         expected_class: The
-            :class:`~adapters.persistence.storage.SensitivityClass` the consumer
+            :class:`~core.classification.policies.SensitivityClass` the consumer
             expects. Mismatch raises
-            :class:`~adapters.persistence.storage.ClassificationError`.
+            :class:`~adapters.persistence.storage.errors.ClassificationError`.
         max_supported_version: The current ``schema_version`` the
             consumer expects. Any different version raises
-            :class:`~adapters.persistence.storage.EnvelopeVersionError`.
+            :class:`~adapters.persistence.storage.errors.EnvelopeVersionError`.
 
     Returns:
-        The validated :class:`~adapters.persistence.storage.Envelope` at the consumer's expected version.
+        The validated :class:`~adapters.persistence.storage.envelope.contract.Envelope` at the consumer's expected version.
 
     Raises:
         ClassificationError: If the on-disk classification does not

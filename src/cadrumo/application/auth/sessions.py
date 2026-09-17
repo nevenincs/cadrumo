@@ -12,7 +12,7 @@ See Also:
         used to serialize live authentication.
     :mod:`application.live.session`
         Read-only live-entry helper that calls this module only after
-        :class:`core.access_gate.AeatAccessGate` allows a live read.
+        :class:`core.access_gate.gate.AeatAccessGate` allows a live read.
     :mod:`adapters.outbound.aeat.auth`
         Concrete providers and persisted-session store implementations.
 """

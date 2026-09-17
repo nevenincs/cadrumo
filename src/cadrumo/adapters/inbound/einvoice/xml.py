@@ -60,7 +60,7 @@ class EInvoiceXmlParseError(CadrumoError):
     that returned half a record on malformed input would be worse than a model:
     it would look exact while being wrong.
 
-    :class:`~cadrumo.core.errors.CadrumoError` binds the refusal to the error
+    :class:`~cadrumo.core.errors.hierarchy.CadrumoError` binds the refusal to the error
     registry, so an operator receives a stable code and translated message.
     XML parsing is not a Pydantic callback, so the adapter raises this
     registered type directly rather than leaking a builtin validation base.

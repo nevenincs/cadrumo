@@ -1,17 +1,17 @@
 """Source-mesh resolver for governed invoice records.
 
 :class:`InvoiceCatalogueSourceResolver` reads the
-:class:`~domain.invoices.InvoiceCatalogue` supplied through its application-owned
+:class:`~domain.invoices.models.InvoiceCatalogue` supplied through its application-owned
 read capability. It projects those records into the calculation mesh as
-:class:`~application.aggregation.CalculationSourceResolution` values for
-:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE`,
-:attr:`~core.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
-:attr:`~core.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
+:class:`~application.aggregation.source_mesh.CalculationSourceResolution` values for
+:attr:`~core.aggregation.BindingSourceKind.COLLECTIBLE_INVOICE`,
+:attr:`~core.aggregation.BindingSourceKind.PAYABLE_INVOICE`, and the combined-direction
+:attr:`~core.aggregation.BindingSourceKind.M347_THIRD_PARTY_OPERATION`.
 
-The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
+The :class:`~domain.invoices.models.Invoice` aggregate is the sole invoice record and
 the reconciliation and link authority. Records reach the mesh only once they can
 be represented as registry
-:class:`~domain.calculations.registry.InvoiceObservation` facts, with Modelo 349
+:class:`~domain.calculations.registry.invoice_bindings.InvoiceObservation` facts, with Modelo 349
 summary bindings, detail rows, transaction ids, and source provenance emitted
 through one resolver envelope.
 """
@@ -108,7 +108,7 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
 
 #: The claves an invoice's IVA category alone determines, keyed by side.
 #:
-#: Values are :class:`~cadrumo.core.IntracomOperationType` MEMBERS, never the
+#: Values are :class:`~cadrumo.core.aggregation.IntracomOperationType` MEMBERS, never the
 #: clave letters, because the member's ``value`` IS the letter the diseño de
 #: registro defines: a literal beside the enum is a copy that can drift from
 #: the thing it copies with nothing to catch it. The mismatch that makes this
@@ -158,7 +158,7 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
     ``aeat app ledger invoice`` CLI. An *issued* invoice (we billed a customer)
     is *collectible*; a *received* invoice (a vendor billed us) is *payable*.
 
-    Returns the canonical :class:`~core.BindingSourceKind` member rather than a
+    Returns the canonical :class:`~core.aggregation.BindingSourceKind` member rather than a
     locally-declared direction enum: the settlement taxonomy has exactly one
     home per ``aeat-registry-bindings``.
 
@@ -353,7 +353,7 @@ def _m349_incoherent_verdict(
 
     Modelo 349 is the one invoice-sourced surface whose declared figure is
     conditioned on the declared IVA treatment: the clave is CHOSEN from
-    :attr:`~cadrumo.domain.invoices.Invoice.iva_category`, and the base
+    :attr:`~cadrumo.domain.invoices.models.Invoice.iva_category`, and the base
     declared under it is the base imponible of an operation the record asserts
     is exenta under LIVA art. 25. A record simultaneously claiming that
     exemption and carrying a repercuted cuota contradicts itself, and the
@@ -367,7 +367,7 @@ def _m349_incoherent_verdict(
     there would drop real above-threshold operations out of an informativa on
     the strength of an unrelated missing field. The OSS/IOSS path is excluded
     for the same reason plus a stronger one: no
-    :class:`~cadrumo.domain.iva.IvaCategory` member names an OSS operation at
+    :class:`~cadrumo.domain.iva.schema.IvaCategory` member names an OSS operation at
     all -- the OSS axis is the regime and transaction kind -- so every
     legitimate OSS invoice would come back ungrounded, and that path already
     runs the coherence check that does apply to it, cross-checking the
@@ -378,7 +378,7 @@ def _m349_incoherent_verdict(
     the reason is structural: **an absent category does not mean the operation
     was inexpressible, it usually means the clave came from somewhere else.**
     :func:`_intracommunity_clave` consults an explicit
-    :attr:`~cadrumo.domain.invoices.Invoice.operation_type` FIRST and returns
+    :attr:`~cadrumo.domain.invoices.models.Invoice.operation_type` FIRST and returns
     without ever reading ``iva_category``, so a record carrying a directly
     declared clave legitimately carries no category at all. Since this check
     runs only after the clave is settled, treating absence as disqualifying
@@ -388,7 +388,7 @@ def _m349_incoherent_verdict(
     That reasoning is deliberately independent of what the category enum
     happens to contain, because the previous justification was not and went
     stale. It asserted that an ordinary prestacion or adquisicion de servicios
-    intracomunitaria "maps to no :class:`~cadrumo.domain.iva.IvaCategory`
+    intracomunitaria "maps to no :class:`~cadrumo.domain.iva.schema.IvaCategory`
     member at all, because the enum names goods, acquisitions and triangulation
     but not services". The enum has since gained
     ``INTRA_COMMUNITY_SERVICE_SUPPLY`` and
@@ -891,7 +891,7 @@ def _m347_operation_clave(
 def _intracommunity_clave(invoice: Invoice) -> str | None:
     """Return the Modelo 349 clave de operación for one invoice, or ``None``.
 
-    :class:`~cadrumo.core.IntracomOperationType` is the clave authority -- its
+    :class:`~cadrumo.core.aggregation.IntracomOperationType` is the clave authority -- its
     member VALUES are the letters the diseño de registro defines, which is why
     the explicit branch below returns the value directly rather than mapping it.
     The category branches are a fallback for an invoice that carries no

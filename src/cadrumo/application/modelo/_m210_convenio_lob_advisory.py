@@ -16,14 +16,14 @@ operator to confirm LOB eligibility against the specific treaty text — never
 silently trusting the residence declaration (``no-silent-under-declaration``).
 
 The advisory is derived from the canonical ``irnr.convenio.override`` fact and
-the filer's :class:`~domain.deadlines.TaxpayerProfile`
+the filer's :class:`~domain.deadlines.models.TaxpayerProfile`
 ``country_of_fiscal_residence``.
 
 See Also:
     :func:`~application.modelo._m210_rate.resolve_m210_rate`
         Application-layer replay of the same tipo-de-gravamen resolution path;
         this advisory reads the same governed fact to detect a matched override.
-    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 advisories using the same non-blocking mechanism.
     ``irnr.convenio.override``

@@ -247,7 +247,7 @@ class NifIvaCheckSedeDriver:
         per NIF in ``expected`` (sorted alphabetically), and finally a
         ``discard-session`` action. The sequence is used by the remote-state
         guard pre-flight to validate that all planned operations are within the
-        driver's declared :class:`~domain.calculations.registry.RemoteStateGuardPolicy`.
+        driver's declared :class:`~domain.calculations.registry.remote_state_guard.RemoteStateGuardPolicy`.
 
         Args:
             payload: Raw oracle payload bytes. Not read by this driver; the
@@ -256,7 +256,7 @@ class NifIvaCheckSedeDriver:
                 VIES validity is to be checked. At least one entry is required.
 
         Returns:
-            An immutable tuple of :class:`~domain.calculations.registry.RemoteOperation`
+            An immutable tuple of :class:`~domain.calculations.registry.remote_state_guard.RemoteOperation`
             records in execution order.
 
         Raises:
@@ -333,7 +333,7 @@ class NifIvaCheckSedeDriver:
             expected: Mapping keyed by NIF whose VIES validity is to be checked.
 
         Returns:
-            A :class:`~domain.calculations.registry.CheckerObservation`
+            A :class:`~domain.calculations.registry.checker_oracle_flow.CheckerObservation`
             with the collected verdicts and evidence locator.
         """
         result = self.collect(payload, expected=expected)

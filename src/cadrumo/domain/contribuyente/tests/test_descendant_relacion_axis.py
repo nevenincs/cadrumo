@@ -25,6 +25,7 @@ from functools import cache
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.descendant_relacion import DescendantRelacion
@@ -160,20 +161,29 @@ def test_a_fostered_then_adopted_child_gets_three_periods_in_total_not_six() -> 
     count on the adoption and grant six periods where the law allows three,
     which under-declares.
     """
+    # The window facts start where the registry declares them; the fostering
+    # year is the first year they resolve for.
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact("madrid-birth-adoption-following-periods")
+        first_year = max(
+            operation.supported_filing_years().floor,
+            min(variant.valid_from.year for variant in fact.variants if variant.valid_from is not None),
+        )
+    fostering = date(first_year, 5, 1)
     child = DescendantInfo(
         birth_date=_OLD_BIRTH,
         relacion=DescendantRelacion.from_registry("adoptado"),
-        acogimiento_resolucion_date=date(2019, 5, 1),
-        inscripcion_registro_civil_date=date(2022, 6, 1),
+        acogimiento_resolucion_date=fostering,
+        inscripcion_registro_civil_date=date(first_year + 2, 6, 1),
     )
 
-    assert child.art_58_2_entry_date() == date(2019, 5, 1)
+    assert child.art_58_2_entry_date() == fostering
     granted = [
         year
-        for year in range(2019, 2026)
+        for year in range(first_year, first_year + 4)
         if child.is_eligible_minimo_incremento_menor_tres(year, context=_family_context(year))
     ]
-    assert granted == [2019, 2020, 2021]
+    assert granted == [first_year, first_year + 1, first_year + 2]
 
 
 def test_the_madrid_window_anchors_on_the_adoption_while_art_58_2_anchors_earlier() -> None:

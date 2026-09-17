@@ -4,7 +4,7 @@ CLI discovery commands call this module instead of constructing the eager
 legacy query service or reading the registry authority directly. Each query
 leases one indexed operation and returns the domain query report unchanged.
 
-The ``*_for_scope`` helpers accept a concrete :class:`~core.Period` and
+The ``*_for_scope`` helpers accept a concrete :class:`~core.period.Period` and
 pass its filing year plus bare registry token into the query service, so
 revision selection stays inside the authority-backed registry layer.
 """
@@ -86,7 +86,7 @@ def registry_modelo_codes(*, operation: PinnedAuthorityOperation) -> tuple[str, 
 def registry_support_matrix(*, operation: PinnedAuthorityOperation) -> ModeloSupportMatrixReport:
     """Return the registry-wide per-modelo support/capability matrix.
 
-    Every :class:`~domain.calculations.registry.ModeloEntry` is derived
+    Every :class:`~domain.calculations.registry.support_matrix.ModeloEntry` is derived
     directly from the loaded registry authority (calc-grade, manifest, export
     formats, extractor, declared casilla renames, declared deprecation
     decisions, and declared AEAT-portal cross-references) — never

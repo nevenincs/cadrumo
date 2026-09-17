@@ -2,7 +2,7 @@
 
 Provides :class:`ReviewQueue`, which combines the per-source adapters
 in :mod:`cadrumo.application.review.source_adapters` into one deterministically
-sorted tuple of :class:`cadrumo.application.review.ReviewItem` values.
+sorted tuple of :class:`cadrumo.application.review.models.ReviewItem` values.
 """
 
 from __future__ import annotations

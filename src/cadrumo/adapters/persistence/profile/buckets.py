@@ -1,12 +1,12 @@
 """Encrypted SQL repository for the bucket-event-history catalogue.
 
 :class:`BucketEventHistoryRepository` persists
-:class:`~domain.buckets.BucketEventHistoryCatalogue` through
-:class:`~adapters.persistence.storage.SecureObjectRepository`, which
+:class:`~domain.buckets.event.BucketEventHistoryCatalogue` through
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`, which
 handles encrypted BLOB storage and key management for the active profile
 bucket. Each stored record is wrapped in an
-:class:`~adapters.persistence.storage.Envelope` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`.
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`.
 
 The write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
 :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
@@ -22,12 +22,12 @@ would be a silent, observable error-message regression for every caller and
 test that depends on the specific translated message.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`. It lives in
+:class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`. It lives in
 the persistence adapter (not in :mod:`~domain.buckets`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
-typed :class:`~domain.buckets.BucketEventHistoryCatalogue` model, its
+typed :class:`~domain.buckets.event.BucketEventHistoryCatalogue` model, its
 narrow port, and the
-:class:`~domain.buckets.BucketEventHistoryPersistenceError` boundary error.
+:class:`~domain.buckets.event_repository.BucketEventHistoryPersistenceError` boundary error.
 The namespace/version constants are redeclared here as the persisted-envelope
 contract; the strings are preserved to avoid orphaning persisted envelopes.
 
@@ -35,14 +35,14 @@ See Also:
     :mod:`~domain.buckets`
         Public bucket-event facade that owns the catalogue, event taxonomy, and
         repository protocol.
-    :class:`~domain.buckets.BucketEventHistoryCatalogue`
+    :class:`~domain.buckets.event.BucketEventHistoryCatalogue`
         Domain payload encrypted by this repository.
-    :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`
+    :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :data:`~adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.BUCKET_EVENT_HISTORY_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
         contract for these secure objects.
-    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`
+    :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
         Runtime storage factory used when no secure-object repository is injected.
     :mod:`~application.bucket_maintenance`
         Application lifecycle surface that records bucket-maintenance events
@@ -78,19 +78,19 @@ _CATALOGUE_SENSITIVITY = BUCKET_EVENT_HISTORY_NAMESPACE.sensitivity
 class BucketEventHistoryRepository:
     """Repository over encrypted SQL-backed event-history catalogue storage.
 
-    :data:`~adapters.persistence.storage.BUCKET_EVENT_HISTORY_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.BUCKET_EVENT_HISTORY_NAMESPACE`
     is the central profile-local namespace, schema-version, sensitivity, and
     singleton-key contract for the encrypted
-    :class:`~domain.buckets.BucketEventHistoryCatalogue`. The catalogue
+    :class:`~domain.buckets.event.BucketEventHistoryCatalogue`. The catalogue
     preserves the append-only
-    :class:`~domain.buckets.BucketEvent` history, is wrapped in
-    :class:`~adapters.persistence.storage.Envelope`, and is persisted
-    through :class:`~adapters.persistence.storage.SecureObjectRepository`.
+    :class:`~domain.buckets.event.BucketEvent` history, is wrapped in
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope`, and is persisted
+    through :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
     The same envelope can be emitted as a
-    :class:`~adapters.persistence.storage.SecureObjectWrite` when sibling
+    :class:`~core.secure_object_write.SecureObjectWrite` when sibling
     catalogue updates need one transaction. This class exposes the concrete
     load/save implementation behind
-    :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`, composing
+    :class:`~domain.buckets.protocols.BucketEventHistoryRepositoryProtocol`, composing
     :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the write-path envelope mechanic (see module docstring for why the
     read path stays separate).
@@ -122,7 +122,7 @@ class BucketEventHistoryRepository:
 
         Returns:
             The
-            :class:`~adapters.persistence.storage.SecureObjectRepository`
+            :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
             backing this repository.
         """
         return self._objects
@@ -136,11 +136,11 @@ class BucketEventHistoryRepository:
 
         Returns:
             The deserialised
-            :class:`~domain.buckets.BucketEventHistoryCatalogue`, or a fresh
+            :class:`~domain.buckets.event.BucketEventHistoryCatalogue`, or a fresh
             empty instance when no database object is present.
 
         Raises:
-            :class:`~domain.buckets.BucketEventHistoryPersistenceError`: If
+            :class:`~domain.buckets.event_repository.BucketEventHistoryPersistenceError`: If
                 secure-object classification, envelope version, or payload
                 validation fails.
         """
@@ -218,7 +218,7 @@ class BucketEventHistoryRepository:
 
         Args:
             catalogue: The
-                :class:`~domain.buckets.BucketEventHistoryCatalogue` to
+                :class:`~domain.buckets.event.BucketEventHistoryCatalogue` to
                 persist.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
@@ -282,9 +282,9 @@ class BucketEventHistoryRepository:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
         The returned
-        :class:`~adapters.persistence.storage.SecureObjectWrite` carries the
-        same :class:`~adapters.persistence.storage.Envelope` and
-        :class:`~adapters.persistence.storage.SensitivityClass`
+        :class:`~core.secure_object_write.SecureObjectWrite` carries the
+        same :class:`~adapters.persistence.storage.envelope.contract.Envelope` and
+        :class:`~core.classification.policies.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
         write = self._storage.to_secure_object_write(catalogue)

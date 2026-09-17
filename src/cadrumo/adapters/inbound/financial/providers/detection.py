@@ -2,7 +2,7 @@
 
 Exposes ``detect_provider``, the entry point the financial-ingest application
 layer calls to pick a concrete
-:class:`~adapters.inbound.financial.providers.FinancialProvider` for an
+:class:`~adapters.inbound.financial.providers.base.FinancialProvider` for an
 arbitrary path. The detection strategy combines extension hinting with
 magic-byte sniffing so a misnamed file (a PDF saved as ``.csv``, an XLSX inside
 a ``.txt``, etc.) still routes to the right parser.
@@ -56,7 +56,7 @@ def detect_provider(path: Path) -> FinancialProvider | None:
 
     Walks an extension- and content-prioritised candidate list and
     returns the first provider whose ``validate_source`` result is an
-    ``is_valid`` :class:`~adapters.inbound.financial.providers.ProviderValidation`.
+    ``is_valid`` :class:`~adapters.inbound.financial.providers.base.ProviderValidation`.
 
     Args:
         path: Source document to classify.

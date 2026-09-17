@@ -157,9 +157,9 @@ def modelo_work_deadline_posture(
             :class:`~cadrumo.core.Period` select a registry filing window.
         reference_on: Optional date from which the caller observes the voluntary
             deadline. Defaults to the current Europe/Madrid civil date
-            (:func:`cadrumo.core.time.today_madrid`) — the AEAT filing plazo is a
+            (:func:`cadrumo.core.time.clock.today_madrid`) — the AEAT filing plazo is a
             Spanish-calendar boundary — which derives from the clock seam so a
-            :func:`~cadrumo.core.time.frozen_clock` scope pins it. It drives the
+            :func:`~cadrumo.core.time.clock.frozen_clock` scope pins it. It drives the
             deadline posture and conditional preview rate; it is not a
             presentation date.
 

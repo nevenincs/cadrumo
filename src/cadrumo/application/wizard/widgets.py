@@ -27,6 +27,7 @@ from ...core.identity.documents import IdentityError
 from ...core.parsing.utils import parse_bool
 from ...core.redaction.rules import redact_validation_context as _redact_validation_context
 from ...core.spanish_postcode import is_spanish_postcode
+from ...core.type_guards import is_object_list_or_tuple
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from .errors import WizardValidationError
 from .models import WizardQuestion, WizardWidget
@@ -81,7 +82,7 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     # not what the operator retypes. Vocabularies are rendered as prose here,
     # once, rather than at each call site.
     choices = render_context.get("choices")
-    if isinstance(choices, list | tuple):
+    if is_object_list_or_tuple(choices):
         render_context["choices"] = ", ".join(str(choice) for choice in choices)
     error_context = _redact_validation_context(render_context)
     translated = tr(message_key, **render_context)
