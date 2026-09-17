@@ -34,7 +34,7 @@ def _observations_from_requirements(
 ) -> tuple[RegistryModeloObservation, ...]:
     observed: dict[tuple[str, int, str], dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        for period_index, period in enumerate(requirement.periods):
+        for period_index, period in enumerate(_one_cadence(requirement.periods)):
             key = (requirement.source_modelo, requirement.filing_year, period)
             casilla_values = observed.setdefault(key, {})
             casilla_values[requirement.source_casilla_ids[0]] = value_for(requirement, period_index)
@@ -54,6 +54,19 @@ def _observations_from_requirements(
         )
         for (modelo, filing_year, period), casilla_values in sorted(observed.items())
     )
+
+
+def _one_cadence(periods: Iterable[str]) -> tuple[str, ...]:
+    """Keep the first listed filing cadence of a relation admitting several.
+
+    Supplying every admitted cadence would be two competing filed histories,
+    which relation resolution refuses; a filer files exactly one.
+    """
+    ordered = tuple(periods)
+    if not ordered:
+        return ordered
+    quarterly = ordered[0].endswith("T")
+    return tuple(period for period in ordered if period.endswith("T") == quarterly)
 
 
 @cache
