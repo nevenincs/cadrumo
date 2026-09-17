@@ -293,8 +293,11 @@ def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(
         signal="import-boundaries",
     )
 
-    assert status == 1
+    # No schema-v2 health payload reached the wrapper, so the run is an
+    # operational failure; the transcript deductions are still reported.
+    assert status == 7
     envelope = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert envelope["classification"] == "tool_failure"
     deductions = envelope["deductions"]
     assert deductions["schema_version"] == 1
     assert deductions["contract_paths"] == {
