@@ -47,6 +47,7 @@ from typing import NamedTuple
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
+from ...core.casilla_id import validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.filing_year import FilingYear
@@ -61,7 +62,7 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ...core.result_disposition import ResultDisposition
+from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import now as _utc_now
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -136,8 +137,10 @@ from ._row_source_identity_replay import attach_revision_row_source_identities
 from .action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloChargeAccountMissingError,
     ModeloPreconditionErrorMixin,
     ModeloPriorDomiciliationElectionRefusedError,
+    ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -740,6 +743,15 @@ def _build_export_producer_snapshot(
         work_unit=work_unit,
         operation=operation,
     )
+    nota_three_refund_account = _require_export_accounts(
+        command,
+        work_unit=work_unit,
+        revision=revision,
+        workflow_profile=workflow_profile,
+        resolved_result_disposition=resolved_result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election.election,
+        amendment_evidence=amendment_evidence,
+    )
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
@@ -767,6 +779,7 @@ def _build_export_producer_snapshot(
             amendment_evidence=amendment_evidence,
             refund_account=iva_profile.refund_account if iva_profile is not None else None,
             charge_account=iva_profile.charge_account if iva_profile is not None else None,
+            nota_three_refund_account=nota_three_refund_account,
             m303_filing_facts=m303_filing_facts,
             # Read separately from the identity pair: AEAT's "persona con quien
             # relacionarse" is a third party, and under a gestor it is routinely
@@ -784,6 +797,49 @@ def _build_export_producer_snapshot(
                 "cause_type": type(exc).__name__,
             },
         ) from exc
+
+
+def _require_export_accounts(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    resolved_result_disposition: ResultDisposition,
+    prior_domiciliation_election: PriorDomiciliationElection,
+    amendment_evidence: AmendmentEvidence | None,
+) -> bool:
+    """Refuse an export whose bank-account page has no account to carry.
+
+    Returns whether Modelo 303 Nota 3 requires the refund account on the
+    account page even though the disposition itself is not a refund: a
+    rectificativa stating casilla 111 under a kept prior domiciliation.
+    """
+    iva_profile = workflow_profile.iva
+    context = {"calculation_revision_id": command.calculation_revision_id}
+    if resolved_result_disposition is ResultDisposition.DOMICILIACION:
+        charge_account = iva_profile.charge_account if iva_profile is not None else None
+        if charge_account is None:
+            raise ModeloChargeAccountMissingError(
+                "a domiciliacion export requires a charge account on file",
+                context=context,
+            )
+        return False
+    nota_three = (
+        str(work_unit.modelo) == Modelo("303").value
+        and amendment_evidence is not None
+        and amendment_evidence.is_rectificativa
+        and prior_domiciliation_election is PriorDomiciliationElection.KEEP
+        and revision.casilla_values.get(validated_casilla_id("111", surface="M303 Nota 3 account page")) is not None
+    )
+    if result_disposition_is_refund(resolved_result_disposition) or nota_three:
+        refund_account = iva_profile.refund_account if iva_profile is not None else None
+        if refund_account is None or not (refund_account.iban or refund_account.swift_bic):
+            raise ModeloRefundAccountMissingError(
+                "the export's account page requires a refund account on file",
+                context=context,
+            )
+    return nota_three and not result_disposition_is_refund(resolved_result_disposition)
 
 
 def _require_export_identity(
@@ -1341,14 +1397,20 @@ def _resolve_modelo_exportprior_domiciliation(
             "Modelo 303 export requires an explicit prior-domiciliation election",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
-    if is_m303 and command.product_software_identity is None:
+    export_layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
+    # The product/software identity belongs to the layout's envelope prefix -- a
+    # filing envelope or an auxiliary header -- not to one modelo id.
+    renders_envelope_prefix = bool(export_layouts) and (
+        export_layouts[0].filing_envelope is not None or export_layouts[0].auxiliary_envelope_header is not None
+    )
+    if renders_envelope_prefix and command.product_software_identity is None:
         raise ModeloExportError(
-            "Modelo 303 export requires explicit product/software identity authority",
+            f"Modelo {work_unit.modelo} export requires explicit product/software identity authority",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
-    if not is_m303 and command.product_software_identity is not None:
+    if not renders_envelope_prefix and command.product_software_identity is not None:
         raise ModeloExportError(
-            "product/software identity is only admitted for the Modelo 303 filing envelope",
+            "product/software identity is only admitted for a layout that renders an envelope prefix",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
     prior_domiciliation_election = resolveprior_domiciliation_election(
