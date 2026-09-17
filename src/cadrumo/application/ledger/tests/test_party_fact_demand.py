@@ -42,6 +42,7 @@ from ....domain.iva.classification import (
     IvaInvoiceClassificationCriteria,
     PartyFact,
     classify_iva,
+    resolve_iva_classification_inputs,
 )
 from ....domain.iva.schema import IvaCategory
 from ....domain.iva.supply_nature import SupplyNature
@@ -274,6 +275,7 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
         together instead of drifting.
         """
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            projected = resolve_iva_classification_inputs(effective_date=_DATE, operation=_authority_operation_for_test)
             unplaced = classify_iva(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
@@ -284,6 +286,9 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
                     direction=InvoiceKind.ISSUED,
                 ),
                 operation=_authority_operation_for_test,
+                rules=projected.rules,
+                rate_categories=projected.rate_categories,
+                rate_territories=projected.rate_territories,
             )
             assert unplaced.category == IvaCategory("unknown")
             assert PartyFact.IVA_IDENTIFICATION_STATE in unplaced.consumes_party_facts

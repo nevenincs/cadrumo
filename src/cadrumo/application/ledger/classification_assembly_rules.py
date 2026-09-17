@@ -208,8 +208,8 @@ def domestic_rate_tier_is_reachable(
     Lazy in the idiom the supply-nature demand already uses: asked only where
     the law forks on it. A cross-border operation wants a domestic tier only
     where the law brings it back here -- a B2C service under LIVA art. 69.Uno.2.º
-    is realizada in the TAI and taxed at a Spanish rate -- and the four kinds
-    routed to reverse charge before the domestic rule runs never want one.
+    is realizada in the TAI and taxed at a Spanish rate -- and the kinds routed
+    to reverse charge before the domestic rule runs never want one.
 
     Union semantics over the still-open axes, matching the identification demand
     directly below: an operation that MIGHT land on a branch needing the tier is

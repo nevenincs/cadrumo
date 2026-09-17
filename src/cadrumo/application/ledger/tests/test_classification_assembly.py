@@ -525,7 +525,6 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
             TransactionKind("construction_reverse_charge"),
             TransactionKind("waste_reverse_charge"),
             TransactionKind("electronics_reverse_charge"),
-            TransactionKind("immovable_property"),
         ):
             assert not domestic_rate_tier_is_required(
                 issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -533,6 +532,23 @@ def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
                 kind=kind,
                 operation=_authority_operation_for_test,
             ), kind
+        # Immovable property is not a reverse-charge kind: a consumer's supply is
+        # routed to the exempt row, while a business recipient reaches the
+        # rate-tier row, because a taxed delivery is charged at a Spanish rate.
+        assert not domestic_rate_tier_is_required(
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            kind=TransactionKind("immovable_property"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2c_consumer"),
+            operation=_authority_operation_for_test,
+        )
+        assert domestic_rate_tier_is_required(
+            issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
+            kind=TransactionKind("immovable_property"),
+            customer_tax_status=CustomerTaxStatus.from_registry("b2b_iva_registered"),
+            operation=_authority_operation_for_test,
+        )
         assert domestic_rate_tier_is_required(
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
             customer_residency=IvaTerritorialScope.from_registry("es_mainland"),
