@@ -85,7 +85,7 @@ class TransactionDateIndexRow(Base):
     year the date falls in, and the inclusive span of every date the row can
     file an observation under. No amount, counterparty, description,
     NIF, or other financial content may ever be added to this table; it is
-    plaintext by design (:class:`~adapters.persistence.storage.SensitivityClass`
+    plaintext by design (:class:`~core.classification.policies.SensitivityClass`
     ``CACHE``) and correctness never depends on it being present or fresh --
     a missing or incomplete index falls back to the full encrypted scan.
 
@@ -100,7 +100,7 @@ class TransactionDateIndexRow(Base):
             year-scoped candidate-id query does not need a date-range
             predicate at all.
         eligible_from: Earliest date this row can file an observation under,
-            per :func:`~domain.transactions.transaction_eligible_date_span`.
+            per :func:`~domain.transactions.dates.transaction_eligible_date_span`.
             Equal to ``filing_date`` unless an IVA criterio-de-caja timing
             override moves the row's devengo or collection dates off it.
         eligible_to: Latest such date, inclusive. A period-scoped partition

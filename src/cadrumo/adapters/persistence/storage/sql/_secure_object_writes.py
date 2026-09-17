@@ -134,7 +134,7 @@ class SecureObjectWriteOperations:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`
         instead.
 
         Args:
@@ -142,7 +142,7 @@ class SecureObjectWriteOperations:
             object_key: Natural string identifier for this record. Digested
                 via HMAC before being stored on disk.
             classification: The
-                :class:`~adapters.persistence.storage.SensitivityClass`
+                :class:`~core.classification.policies.SensitivityClass`
                 for this record.
             schema_version: Envelope schema version to stamp on the row.
             written_at: UTC-aware write timestamp. A naive or
@@ -267,7 +267,7 @@ class SecureObjectWriteOperations:
         """Encrypt and upsert one byte payload keyed by a pre-computed digest.
 
         The 32-byte ``hashed_object_key`` is passed straight through
-        the :class:`~adapters.persistence.storage.HashedLookup` column
+        the :class:`~adapters.persistence.storage.crypto.encrypted_columns.HashedLookup` column
         without re-hashing. Used by
         the archive restore path to round-trip rows whose natural key
         is not present in the bundle (e.g. the path-keyed setup-profile
@@ -279,7 +279,7 @@ class SecureObjectWriteOperations:
                 produced by ``HashedLookup.compute`` under the same master key
                 the row was originally written with).
             classification:
-                :class:`~adapters.persistence.storage.SensitivityClass`
+                :class:`~core.classification.policies.SensitivityClass`
                 to upsert at.
             schema_version: Envelope schema version captured on the row.
             written_at: UTC-aware datetime captured on the row. A naive or
@@ -333,9 +333,9 @@ class SecureObjectWriteOperations:
         """Shared secure-object upsert implementation.
 
         Backs
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save`
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
         and
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`.
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`.
         """
         self._enforce_registered_write_policy(
             namespace=namespace,

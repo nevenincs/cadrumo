@@ -13,7 +13,7 @@ prefix, an outbound namespace, a per-run id) that cannot be enumerable
 :data:`STORAGE_PATH_DEFINITIONS` is consumed by
 ``namespace_registry.STORAGE_NAMESPACE_REGISTRY``, which combines it with
 the SQL namespace definitions into one
-:class:`~adapters.persistence.storage.StorageHierarchyRegistry`. Nothing
+:class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry`. Nothing
 here reaches back into ``namespace_registry.py``, so there is no cycle.
 """
 

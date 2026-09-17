@@ -39,7 +39,7 @@ class ExportArchiveHeader(BaseModel):
     """Plaintext frontmatter for a sealed bucket-export archive.
 
     ``manifest_digest`` is the canonical
-    :data:`~core.identity.ContentDigest` of the archive manifest. It
+    :data:`~core.identity.digest.ContentDigest` of the archive manifest. It
     previously carried a locally-restated lowercase-hex-64 rule, which agreed
     with the canonical alias on every malformed value but disagreed on a valid
     one: the alias strips surrounding whitespace, so a digest that arrived

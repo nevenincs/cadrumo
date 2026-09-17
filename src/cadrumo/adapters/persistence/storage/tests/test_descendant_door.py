@@ -143,9 +143,14 @@ def test_stale_prompt_baseline_refuses_without_overwriting_the_newer_record(
     isolated_profile: TestRuntimeProfile,
 ) -> None:
     _state, _projection, baseline, _output = _run(_one_descendant_keys())
+    # A concurrent edit publishes a newer record; answers identical to a
+    # baseline are a no-op, so the stale submission must actually change it.
+    _state, _projection, concurrent, _output = _run(
+        _resume_missing_optional_answers() + "\x1b[B\r2\r\x152021-02-02\r\r"
+    )
+    assert concurrent.record_revision > baseline.record_revision
     with bundled_indexed_authority().operation() as operation:
-        _definition, resumed = build_descendant_door(baseline, operation=operation)
-        concurrent = persist_descendant_door_answers(resumed.answers, baseline=baseline, operation=operation)
+        _definition, resumed = build_descendant_door(concurrent, operation=operation)
 
         with pytest.raises(CadrumoError, match="compare-and-swap") as excinfo:
             persist_descendant_door_answers(resumed.answers, baseline=baseline, operation=operation)

@@ -8,7 +8,7 @@ enum, three frozen records, and one error builder over nothing but
 :mod:`core` and the storage error hierarchy.
 
 That difference is what makes the split load-bearing rather than cosmetic.
-:class:`~adapters.persistence.storage.sql.SecureObjectRepository` re-checks
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` re-checks
 session freshness on every operation and must raise the same refusal the
 runtime raises, so it needs this vocabulary -- but it emphatically does not
 need the runtime aggregate, and the runtime constructs the repository. Holding

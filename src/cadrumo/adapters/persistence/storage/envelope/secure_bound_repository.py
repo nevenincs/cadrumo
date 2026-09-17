@@ -1,14 +1,14 @@
 """Generic SQL-backed envelope repository for secure objects.
 
 Concrete domain and application repositories that wrap
-:class:`adapters.persistence.storage.SecureObjectRepository`
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
 all share the same boilerplate:
-:class:`adapters.persistence.storage.Envelope` wrapping, namespace,
+:class:`adapters.persistence.storage.envelope.contract.Envelope` wrapping, namespace,
 sensitivity, schema-version, Pydantic payload type, and a function that
 extracts the natural id from the payload.
 
 This module provides
-:class:`adapters.persistence.storage.SecureBoundRepository`, a
+:class:`adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`, a
 generic base class that captures that shared shape exactly once. Concrete
 subclasses override the four class-level descriptors (``namespace``,
 ``payload_type``, ``sensitivity``, ``schema_version``) and implement
@@ -17,7 +17,7 @@ subclasses override the four class-level descriptors (``namespace``,
 ``delete``, ``iter_ids``, and ``iter_records`` for free.
 
 The base class does NOT replace
-:class:`adapters.persistence.storage.SecureObjectRepository`; it
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`; it
 composes one.
 """
 
@@ -59,7 +59,7 @@ def _active_bucket_objects_or_default(settings: Settings | None = None) -> Secur
 
     When an active profile bucket is available the repository is backed by
     the bucket's own encrypted database, resolved through
-    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket_or_default_route`
+    :func:`adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket_or_default_route`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction time.
     A missing active bucket uses the process-default route for explicit
@@ -75,18 +75,18 @@ class SecureBoundRepository[T: BaseModel]:
     Subclasses MUST set class attributes:
 
     - :attr:`namespace`: the
-      :class:`adapters.persistence.storage.SecureObjectRepository`
+      :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
       namespace string for this payload family
       (e.g. ``"cadrumo.domain.filing.drafts"``).
     - :attr:`payload_type`: the typed Pydantic model class wrapped by the
       envelope.
     - :attr:`sensitivity`: the
-      :class:`adapters.persistence.storage.SensitivityClass` that every
+      :class:`~core.classification.policies.SensitivityClass` that every
       row in this namespace MUST carry; mismatches raise
-      :class:`adapters.persistence.storage.ClassificationError`.
+      :class:`adapters.persistence.storage.errors.ClassificationError`.
     - :attr:`schema_version`: the current envelope schema version this
       consumer expects; rows whose version differs from it raise
-      :class:`adapters.persistence.storage.EnvelopeVersionError`.
+      :class:`adapters.persistence.storage.errors.EnvelopeVersionError`.
 
     Subclasses MUST implement :meth:`extract_identifier` so that
     :meth:`save` and :meth:`iter_ids` can recover the natural id from
@@ -186,7 +186,7 @@ class SecureBoundRepository[T: BaseModel]:
 
         Returns:
             The
-            :class:`adapters.persistence.storage.SecureObjectRepository`
+            :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
             backing this logical repository.
         """
         return self._objects
@@ -305,8 +305,8 @@ class SecureBoundRepository[T: BaseModel]:
         """Return the prepared upsert for ``payload`` without committing it.
 
         The caller hands the returned
-        :class:`adapters.persistence.storage.SecureObjectWrite` to
-        :meth:`adapters.persistence.storage.SecureObjectRepository.save_many`
+        :class:`~core.secure_object_write.SecureObjectWrite` to
+        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
         (or ``apply_batch``) alongside a sibling repository's write, so both
         land in ONE SQL unit of work and a crash between them is impossible.
         That is the same co-emit shape the filing path already uses to keep the
@@ -315,7 +315,7 @@ class SecureBoundRepository[T: BaseModel]:
         this, and this method extends it to every envelope-bound repository.
 
         The write carries the identical
-        :class:`adapters.persistence.storage.Envelope`, classification and
+        :class:`adapters.persistence.storage.envelope.contract.Envelope`, classification and
         schema version :meth:`save` would persist directly — both build it
         through :meth:`_identified_envelope`, so the committed and the prepared
         forms cannot drift apart.
@@ -336,9 +336,9 @@ class SecureBoundRepository[T: BaseModel]:
 
         The deletion counterpart of :meth:`to_secure_object_write`, so a caller
         that must remove some rows and write others can hand both to
-        :meth:`adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
         and land the whole change in ONE SQL unit of work.
-        :class:`adapters.persistence.storage.SecureObjectDeletion` addresses a
+        :class:`adapters.persistence.storage.sql.secure_object_records.SecureObjectDeletion` addresses a
         row by its stored HMAC digest, so the natural id is bound here with the
         same digest the storage column uses.
         """
@@ -357,7 +357,7 @@ class SecureBoundRepository[T: BaseModel]:
         through leaves the store holding neither the old set nor the new one.
 
         An identifier that is BOTH stale and replaced is written, not deleted:
-        :meth:`adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
         applies writes before deletions, so a row carried across the replacement
         would otherwise be upserted and then removed in the same transaction.
 
@@ -431,7 +431,7 @@ class SecureBoundRepository[T: BaseModel]:
         extra: the stored key is already an HMAC digest of the natural id.
 
         Fail-closed twice over.
-        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
+        :meth:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.list_records`
         scans the whole namespace and raises ``SecureObjectUnreadableError`` if
         any row is unreadable, so a full consumption never yields a readable
         subset past a corrupt row; and a misfiled row raises rather than being
@@ -474,7 +474,7 @@ class SecureBoundRepository[T: BaseModel]:
         """Yield every persisted payload whose identity matches the key it is filed under.
 
         Streams each payload straight from
-        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
+        :meth:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.list_records`
         without buffering the whole namespace or sorting it in memory. Order
         is storage-defined (the ``object_key`` digest order), not the
         natural-id order; a caller that needs a specific order sorts the

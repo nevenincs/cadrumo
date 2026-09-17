@@ -1,15 +1,15 @@
 """Encrypted SQL-backed content-addressed attachment store implementation.
 
 Concrete adapter-layer implementation of the
-:class:`~domain.attachments.AttachmentStoreProtocol`. The
+:class:`~domain.attachments.protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
 reads/writes encrypted attachment blobs and manifests through the
-:class:`~adapters.persistence.storage.SecureObjectRepository` persistence
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` persistence
 substrate. Blob rows are framed byte payloads governed by
-:data:`adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE`; manifest
+:data:`adapters.persistence.storage.secure_object_namespaces.ATTACHMENT_BLOB_NAMESPACE`; manifest
 rows wrap :class:`Attachment` payloads in
-:class:`~adapters.persistence.storage.Envelope` records governed by
-:data:`adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` records governed by
+:data:`adapters.persistence.storage.secure_object_namespaces.ATTACHMENT_MANIFEST_NAMESPACE`.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
 byte objects (invoice PDFs, bank statements, supporting documents) that are
@@ -198,13 +198,13 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store.
 
-    Implements :class:`~domain.attachments.AttachmentStoreProtocol`
+    Implements :class:`~domain.attachments.protocols.AttachmentStoreProtocol`
     by storing raw document bytes under their SHA-256 digest in
-    :data:`adapters.persistence.storage.ATTACHMENT_BLOB_NAMESPACE` and
+    :data:`adapters.persistence.storage.secure_object_namespaces.ATTACHMENT_BLOB_NAMESPACE` and
     encrypted :class:`Attachment` manifests in
-    :data:`adapters.persistence.storage.ATTACHMENT_MANIFEST_NAMESPACE`.
+    :data:`adapters.persistence.storage.secure_object_namespaces.ATTACHMENT_MANIFEST_NAMESPACE`.
     Both namespaces are profile-local FINANCIAL custody surfaces; the
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     encrypts the stored rows and HMAC-digests the object keys.
     """
 
@@ -499,7 +499,7 @@ def resolve_attachment_store(store: AttachmentStoreProtocol | None) -> Attachmen
     """Return the injected byte-custody port, or construct the default concrete store.
 
     Every service that accepts an optional
-    :class:`~domain.attachments.AttachmentStoreProtocol` so a test can inject a
+    :class:`~domain.attachments.protocols.AttachmentStoreProtocol` so a test can inject a
     real store into an isolated profile needs the same fallback, and that
     fallback names a concrete adapter. Resolving it here -- in the module that
     owns :class:`AttachmentStore` -- keeps the construction to one site. A copy

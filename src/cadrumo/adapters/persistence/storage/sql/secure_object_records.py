@@ -1,7 +1,7 @@
 """Pydantic records for SQL secure object persistence.
 
 Secure object read/write records carry
-:class:`~adapters.persistence.storage.SensitivityClass` so repository
+:class:`~core.classification.policies.SensitivityClass` so repository
 policy can enforce the expected storage classification.
 """
 
@@ -17,7 +17,7 @@ from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Every digest-shaped column below is written by ``core.hashing.sha256_hex``
 # (directly, or via ``derive_revision_id``), so the canonical
-# :data:`~core.identity.ContentDigest` alias is the shape they already carry.
+# :data:`~core.identity.digest.ContentDigest` alias is the shape they already carry.
 # A length-only constraint additionally admitted uppercase and non-hex
 # 64-character strings, which the canonical alias refuses.
 
@@ -52,15 +52,15 @@ class SecureObjectDeletion(BaseModel):
     """One secure-object row removal addressed by its raw HMAC digest.
 
     Deletions are addressed by the stored ``object_key`` digest (the
-    :class:`~adapters.persistence.storage.HashedLookup` column value)
+    :class:`~adapters.persistence.storage.crypto.encrypted_columns.HashedLookup` column value)
     rather than the natural key, because a diff-based writer enumerates the
     *stored* rows by digest and cannot recover their natural keys (those are
     recoverable only by decrypting each payload). The 32-byte digest passes
     straight through the ``HashedLookup`` column comparison without re-hashing,
     the same convention
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_with_raw_key`
+    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_with_raw_key`
     and
-    :meth:`~adapters.persistence.storage.SecureObjectRepository.exists_by_raw_key`
+    :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.exists_by_raw_key`
     use.
     """
 

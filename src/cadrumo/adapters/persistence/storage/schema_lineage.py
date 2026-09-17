@@ -17,7 +17,7 @@ the wrong gate.
 
 Layer two carries a second equality alongside the version one:
 :func:`inner_envelope_classification_is_expected` re-checks the inner
-envelope's :class:`~adapters.persistence.storage.SensitivityClass` against
+envelope's :class:`~core.classification.policies.SensitivityClass` against
 what the caller's own namespace declares, as defense-in-depth against a row
 whose embedded payload metadata has drifted from the outer columns layer one
 already gated. Callers use this predicate so the equality rule remains owned
@@ -76,7 +76,7 @@ def inner_envelope_version_is_current(stored_version: int, current_version: int)
 
     This is the *layer two* contract described in the module docstring, and it
     is an equality rather than a ceiling. By the time a consumer validates the
-    inner :class:`~adapters.persistence.storage.Envelope`, layer one has
+    inner :class:`~adapters.persistence.storage.envelope.contract.Envelope`, layer one has
     already refused a future outer row or chain-upgraded an older one to
     ``current_version``, so the only remaining ways an inner stamp can differ
     are drift and corruption — neither of which a ceiling detects on the
@@ -103,7 +103,7 @@ def inner_envelope_version_is_current(stored_version: int, current_version: int)
         stored_version: The ``schema_version`` read from the inner envelope.
         current_version: The namespace's declared current ``schema_version``,
             which every caller derives from its
-            :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
+            :class:`~adapters.persistence.storage.secure_object_namespaces.SecureObjectNamespaceDefinition`
             rather than restating as a literal.
 
     Returns:
@@ -121,7 +121,7 @@ def inner_envelope_classification_is_expected(
     The classification sibling of :func:`inner_envelope_version_is_current`: the
     same *layer two* defense-in-depth re-check, on the same equality contract,
     for the same reason. By the time a consumer validates the inner
-    :class:`~adapters.persistence.storage.Envelope`, the outer SQL row's
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope`, the outer SQL row's
     ``expected_class`` argument has already gated the row once; this predicate
     is the second, independent look at the payload's own embedded statement, so
     a row whose payload bytes drifted from its own columns is still caught.
@@ -139,8 +139,8 @@ def inner_envelope_classification_is_expected(
         stored: The classification read from the inner envelope.
         expected: The classification the caller's namespace declares, which
             every caller derives from its own
-            :class:`~adapters.persistence.storage.SensitivityClass` constant or
-            :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
+            :class:`~core.classification.policies.SensitivityClass` constant or
+            :class:`~adapters.persistence.storage.secure_object_namespaces.SecureObjectNamespaceDefinition`
             rather than restating as a literal.
 
     Returns:

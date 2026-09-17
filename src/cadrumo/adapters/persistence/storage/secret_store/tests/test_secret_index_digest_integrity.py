@@ -9,7 +9,7 @@ without consequence is not an integrity field.
 
 The tampering under test is deliberately a *well-formed* digest that is simply
 the wrong one. That distinction is the whole point of this module: typing the
-field through :data:`~core.identity.ContentDigest` already refuses garbage, so
+field through :data:`~core.identity.digest.ContentDigest` already refuses garbage, so
 a test that rewrote ``digest_hex`` to ``"z" * 64`` would be refused by field
 validation before the agreement check was ever consulted, and so would prove
 nothing about the key/value agreement. The module was verified against a build

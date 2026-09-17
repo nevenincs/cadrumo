@@ -2,7 +2,7 @@
 
 Every digest-shaped field on the SQL secure-object records is written by
 ``core.hashing.sha256_hex`` (directly, or through ``derive_revision_id``), so
-each one is a :data:`~core.identity.ContentDigest`. Before these records were
+each one is a :data:`~core.identity.digest.ContentDigest`. Before these records were
 typed through that alias they carried a length-only ``min_length=64,
 max_length=64`` constraint, which admits ``"z" * 64`` and ``"A" * 64`` -- values
 no digest function can produce. A malformed digest therefore reached a

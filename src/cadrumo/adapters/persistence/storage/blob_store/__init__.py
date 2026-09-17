@@ -7,7 +7,7 @@ plaintext corpus blobs; every other class is ciphertext with a per-blob wrapped
 data-encryption key.
 
 The defining ``materialisation`` module owns :func:`get_secret_store`, the route-canonical
-:class:`adapters.persistence.storage.secret_store.SecretStore` factory. Domain
+:class:`adapters.persistence.storage.secret_store.store.SecretStore` factory. Domain
 repositories and calculation sources should depend on higher-level secure-object
 or repository APIs, not on blob paths directly. The package initializer exports
 no symbols.
