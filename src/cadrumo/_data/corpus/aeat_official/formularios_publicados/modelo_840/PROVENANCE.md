@@ -60,7 +60,7 @@ live URL. Re-verify on the next corpus refresh.
 | `01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf.extracted.md` | generated text sidecar (`dev.docs.preprocess`) |
 
 The stored filename follows the `01-<modelo>-<listing-slug>-pdf.pdf` convention
-that `dev/corpus/sync_aeat_record_design_corpus.py` derives from an AEAT page
+that the record-design corpus synchronisation derives from an AEAT page
 listing title; AEAT's own filename (`mod840e_es_es.pdf`) is preserved in
 `manifest.json` as `original_filename`.
 

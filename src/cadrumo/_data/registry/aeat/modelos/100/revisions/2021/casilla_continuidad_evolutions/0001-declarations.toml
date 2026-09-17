@@ -3161,7 +3161,7 @@ to_revision = "2021"
 evolution_kind = "label_evolved"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form"]
-# Grounding: aeat-dr-100-2020-dictionary:1047 y aeat-dr-100-2021-dictionary:1201; Barcelona Mobile World Capital, columna Aplicado, M21BWCA -> M21MWCA. Identidad adjudicada en dev/registry/aeip/adjudications.toml.
+# Grounding: aeat-dr-100-2020-dictionary:1047 y aeat-dr-100-2021-dictionary:1201; Barcelona Mobile World Capital, columna Aplicado, M21BWCA -> M21MWCA. Identidad adjudicada en el registro de adjudicaciones de identidad.
 [[revisions."2021".casilla_continuidad_evolutions]]
 id = "m100-1702-2020-2021-unchanged"
 continuidad_id = "irpf-aeip-barcelona-mobile-world-capital-aplicado"
