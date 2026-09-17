@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
+from ..core.errors.hierarchy import CoreValidationError
 from ..core.foreign_asset_obligation import ForeignAssetObligationGroup
 from ..core.modelo import Modelo
 from ..core.revision_review import RevisionReviewStatus
@@ -134,7 +135,7 @@ def foreign_asset_declaration_thresholds_for_parameters(
     """
     try:
         modelo_member = Modelo(modelo)
-    except ValueError as exc:
+    except CoreValidationError as exc:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract") from exc
     initial_parameter_id = _INITIAL_PARAMETER_IDS.get(modelo_member)
     redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo_member)

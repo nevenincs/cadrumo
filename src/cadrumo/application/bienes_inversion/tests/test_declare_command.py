@@ -26,7 +26,7 @@ from ..declare_command import (
 )
 from ..service import BienesInversionRegisterService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "88888888-8888-4888-8888-888888888888"
 

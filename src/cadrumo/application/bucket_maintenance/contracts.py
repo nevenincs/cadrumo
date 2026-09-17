@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.retention.floor import RetentionFloorAssessment
@@ -47,6 +48,7 @@ class BucketDeletionAssessment(BaseModel):
     retention: RetentionFloorAssessment | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_existence_shape(self) -> BucketDeletionAssessment:
         present_fields = (self.label, self.fingerprint, self.retention)
         if self.exists and any(value is None for value in present_fields):
