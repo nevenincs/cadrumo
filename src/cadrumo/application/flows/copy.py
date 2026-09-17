@@ -83,6 +83,7 @@ def resolve_copy(ref: CopyRef) -> str:
     if ref.kind is CopyRefKind.LOCALE_KEY:
         rendered = tr(
             ref.ref,
+            default=_UNRESOLVED_SENTINEL,
         )
         if rendered == _UNRESOLVED_SENTINEL:
             raise FlowCopyResolutionError(
