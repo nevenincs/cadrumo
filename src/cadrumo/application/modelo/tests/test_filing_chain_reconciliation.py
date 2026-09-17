@@ -1,9 +1,7 @@
 """Reconciliation of AEAT register entries against a period's filing chain.
 
-Runs the service over an isolated encrypted profile with the bundled registry.
-The pending-local observation layer operations are recorded by a subclass of
-the real observation repository, because their storage is outside this
-service; every other port is the real profile repository.
+Runs the service over an isolated encrypted profile with the bundled registry
+and the real profile repositories, including both observation layers.
 """
 
 from __future__ import annotations
@@ -41,9 +39,9 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
@@ -76,39 +74,6 @@ _C02: CasillaId = validated_casilla_id("02")
 _M111_RESULT: CasillaId = validated_casilla_id("30")
 
 
-class _PendingLayerRecorder(CalculationObservationRepository):
-    """Real observation repository that records pending-local layer requests."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.promoted: list[tuple[str, Period, ObservationSourceKind, Mapping[str, str]]] = []
-        self.cleared: list[tuple[str, Period]] = []
-
-    def promote_pending_local(
-        self,
-        modelo: str,
-        period: Period,
-        *,
-        member_nif: str | None = None,
-        source_kind: ObservationSourceKind,
-        source_metadata: Mapping[str, str],
-        captured_at: datetime,
-    ) -> tuple[SecureObjectWrite, ...]:
-        self.promoted.append((modelo, period, source_kind, dict(source_metadata)))
-        return ()
-
-    def clear_pending_local(
-        self,
-        modelo: str,
-        period: Period,
-        *,
-        member_nif: str | None = None,
-        captured_at: datetime,
-    ) -> tuple[SecureObjectWrite, ...]:
-        self.cleared.append((modelo, period))
-        return ()
-
-
 @dataclass(frozen=True, slots=True)
 class _Profile:
     ports: FilingReconciliationPorts
@@ -116,7 +81,7 @@ class _Profile:
     revisions: CalculationRevisionCatalogueRepository
     filings: ModeloRecordCatalogueRepository
     events: BucketEventHistoryRepository
-    observations: _PendingLayerRecorder
+    observations: CalculationObservationRepository
 
 
 @pytest.fixture
@@ -128,7 +93,7 @@ def profile(tmp_path: Path) -> Iterator[_Profile]:
         revisions = CalculationRevisionCatalogueRepository(objects=objects)
         filings = ModeloRecordCatalogueRepository(objects=objects)
         events = BucketEventHistoryRepository(objects=objects)
-        observations = _PendingLayerRecorder()
+        observations = CalculationObservationRepository()
         ports = FilingReconciliationPorts(
             filing_repository=filings,
             calculation_repository=revisions,
@@ -231,6 +196,19 @@ def _seed_local_filing(
         justificante_repository=profile.ports.justificante_repository,
     )
     profile.revisions.save(draft.revisions)
+    profile.observations.save(
+        profile.observations.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo=work_unit.modelo,
+                filing_year=2026,
+                period=_PERIOD.registry_token,
+                observations=draft.revision.observations,
+            ),
+            source_kind=ObservationSourceKind.APP_FILING,
+            stamped_revision_id=work_unit.revision_id,
+            captured_at=at,
+        ),
+    )
     record_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=draft.revision.calculation_revision_id,
@@ -391,10 +369,12 @@ def test_matching_casillas_confirm_the_pending_entry(profile: _Profile, operatio
     assert confirmed.external_evidence is not None
     assert confirmed.external_evidence.reference_id == "EXP-1"
     assert confirmed.aeat_register is not None and confirmed.aeat_register.expediente_id == "EXP-1"
-    [(modelo, period, source_kind, metadata)] = profile.observations.promoted
-    assert (modelo, period, source_kind) == ("130", _PERIOD, ObservationSourceKind.AEAT_CSV_REGISTER)
-    assert metadata["filing_record_id"] == pending.filing_record_id
-    assert profile.observations.cleared == []
+    layers = profile.observations.load_observation_layers("130", _PERIOD)
+    assert layers.pending_local is None
+    assert layers.official is not None
+    assert layers.official.source_kind is ObservationSourceKind.AEAT_CSV_REGISTER
+    assert layers.official.source_metadata["filing_record_id"] == pending.filing_record_id
+    assert layers.official.observation.casilla_values[_C01] == Decimal("1500")
 
 
 def test_different_casillas_contradict_the_pending_correction(
@@ -442,8 +422,11 @@ def test_different_casillas_contradict_the_pending_correction(
     pending_revision = profile.revisions.load().get(pending.calculation_revision_id)
     assert pending_revision is not None
     assert pending_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
-    assert profile.observations.cleared == [("130", _PERIOD)]
-    assert profile.observations.promoted == []
+    layers = profile.observations.load_observation_layers("130", _PERIOD)
+    assert layers.pending_local is None
+    assert layers.official is not None
+    assert layers.official.source_metadata["filing_record_id"] == appended.filing_record_id
+    assert layers.official.observation.casilla_values[_C01] == Decimal("1700")
 
 
 def test_entry_without_content_leaves_the_pending_entry_unstamped(

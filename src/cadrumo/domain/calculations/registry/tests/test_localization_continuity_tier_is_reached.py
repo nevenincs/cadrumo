@@ -162,3 +162,17 @@ def test_an_unresolvable_chain_returns_nothing(
     _install(tmp_path, catalogues)
 
     assert resolve_modelo_localization(_chained_casilla().localization_keys, locale="en") is None
+
+
+def test_a_translation_without_spanish_source_is_not_served(
+    tmp_path: Path,
+    catalogues: dict[str, dict[str, str | None]],
+) -> None:
+    """A translation renders Spanish text; with no Spanish text on the chain it has no source."""
+    casilla = _chained_casilla()
+    continuity_help = f"{casilla.localization_keys[-1].removesuffix('.label')}.help"
+    catalogues["en"][continuity_help] = "Enter or review the amount for this self-assessment."
+    _install(tmp_path, catalogues)
+
+    assert casilla.get_help("en") is None
+    assert casilla.get_help("es") is None

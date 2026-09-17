@@ -16,6 +16,8 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....application.calculations.observations_repository import (
     CalculationObservationStorageProtocol,
     ObservationEnvelopePayload,
+    ObservationLayers,
+    ObservationOverride,
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
@@ -200,6 +202,44 @@ class InMemoryObservationRepository:
     def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
         return iter(self._records)
 
+    def load_observation_layers(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+    ) -> ObservationLayers:
+        return ObservationLayers(
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+            member_nif=member_nif,
+        )
+
+    def promote_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        source_kind: ObservationSourceKind,
+        source_metadata: Mapping[str, str],
+        captured_at: datetime,
+    ) -> tuple[SecureObjectWrite, ...]:
+        del modelo, period, member_nif, source_kind, source_metadata, captured_at
+        return ()
+
+    def clear_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        replacement_official: ObservationEnvelopePayload | None = None,
+    ) -> tuple[SecureObjectWrite, ...]:
+        del modelo, period, member_nif, replacement_official
+        return ()
+
     def prepare_observation_envelope(
         self,
         observation: RegistryModeloObservation,
@@ -212,7 +252,7 @@ class InMemoryObservationRepository:
         source_headers: tuple[object, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        replace_official_evidence: bool = False,
+        override: ObservationOverride | None = None,
     ) -> ObservationEnvelopePayload:
         del (
             observation,
@@ -224,7 +264,7 @@ class InMemoryObservationRepository:
             source_headers,
             result_disposition,
             prior_domiciliation_election,
-            replace_official_evidence,
+            override,
         )
         raise AssertionError("review observation fake does not prepare envelopes")
 

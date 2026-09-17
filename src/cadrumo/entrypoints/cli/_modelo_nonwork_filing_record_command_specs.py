@@ -122,6 +122,19 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
+            OptionSpec(
+                name="declared_kind",
+                declarations=("--declared-kind",),
+                value=ValueContract(
+                    DeferredTarget("...domain.modelos.filing_record", "FilingDeclarationKind", __package__)
+                ),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.filing_record.import_declared_kind_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_import", __package__)),
