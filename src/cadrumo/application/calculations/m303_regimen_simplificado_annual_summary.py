@@ -3,6 +3,9 @@
 The annual Modelo 390 simplified-regime section is not a relation fold over
 observations.  It consumes one exact, filed-and-current Modelo 303 calculation
 revision and retains that source identity as a frozen target calculation input.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
@@ -179,6 +182,9 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         been derived.  Verification, filing, and export re-run this exact
         source selection so a later source-pointer/evidence/result drift cannot
         be hidden behind an otherwise valid target-revision hash.
+
+        Core types:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
         """
         requirement = m303_regimen_simplificado_annual_summary_requirement(self._registry_snapshot.revision)
         persisted = target_revision.m303_regimen_simplificado_annual_summary_handoff
@@ -466,7 +472,11 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     regimen_simplificado_applies: bool,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Fail closed when a persisted M390 handoff no longer re-resolves exactly."""
+    """Fail closed when a persisted M390 handoff no longer re-resolves exactly.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     # The calculation rung, not the filing rung. This precondition asks the
     # revision whether it DECLARES the annual-summary requirement and, when it
     # does, re-resolves the sources behind the persisted handoff. It renders no

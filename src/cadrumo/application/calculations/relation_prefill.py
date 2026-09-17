@@ -441,6 +441,9 @@ def scoped_relation_source_requirements(
     the named source periods: AEAT instructions say no M111 should be presented
     when no subject rents were paid, so M190 can fold the remaining filed
     quarters without requiring a nonexistent blank M111.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     requirements = relation_source_requirements(
         snapshot.revision,

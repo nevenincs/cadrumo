@@ -62,7 +62,11 @@ def relation_prefill_period_zero_default_binding_ids(
     period: str,
     operation: PinnedAuthorityOperation,
 ) -> frozenset[BindingId]:
-    """Resolve relation-prefill default binding identities from the registry."""
+    """Resolve relation-prefill default binding identities from the registry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     return _registry_relation_prefill_binding_ids(
         revision,
         modelo=modelo,
@@ -80,7 +84,11 @@ def modelo_202_first_period_previous_payment_defaults(
     period: str,
     operation: PinnedAuthorityOperation,
 ) -> dict[BindingId, Decimal]:
-    """Resolve relation-prefill default values from the selected registry revision."""
+    """Resolve relation-prefill default values from the selected registry revision.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     default_binding_ids = relation_prefill_period_zero_default_binding_ids(
         revision,
         modelo=modelo,

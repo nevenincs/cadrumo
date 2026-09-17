@@ -1,4 +1,8 @@
-"""Previous-filing source-mesh adapter."""
+"""Previous-filing source-mesh adapter.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
