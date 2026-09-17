@@ -56,6 +56,9 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # "super" only occurs bound in the official rate name "super-reducido".
     # "inter vivos" is Latin, and "bitcoin" is the asset name.
     "es": frozenset({"Coin", "Comic", "Name", "bitcoin", "impon", "inter", "name", "super"}),
+    # Proper names (Sorolla, Illes Balears, Tokio) and correct inflections:
+    # "sorok" (rows), "egyenleget" (accusative), "nekik" (to them).
+    "hu": frozenset({"Illes", "Sorolla", "Tokio", "egyenleget", "nekik", "sorok"}),
 }
 
 
