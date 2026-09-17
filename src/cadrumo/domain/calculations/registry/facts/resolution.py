@@ -21,7 +21,7 @@ from ..schema_base import (
     RevisionReviewStatusField,
     SourceCitation,
 )
-from ..schema_references import PeriodSelector, RegistryValidityWindow, TemporalProjectionDirection
+from ..schema_references import PeriodSelector, TemporalProjectionDirection, TemporalSupportEnvelope
 from .schema import (
     BracketFactPayload,
     EntitySetFactPayload,
@@ -34,7 +34,6 @@ from .schema import (
     GovernedFact,
     GovernedFactCatalogue,
     GovernedFactFamily,
-    GovernedFactVariant,
     MappingFactPayload,
     MultiOutputFactPayload,
     OverrideFactPayload,
@@ -302,12 +301,13 @@ def resolve_governed_fact(
     query: GovernedFactQuery,
     *,
     authority_digest: str,
+    support: TemporalSupportEnvelope,
 ) -> ResolvedGovernedFact:
-    """Resolve one query through its exact or nearest authored temporal window."""
+    """Resolve one query through the variant window containing it."""
     fact = catalogue.facts.get(query.fact_id)
     if fact is None:
         raise RegistryValidationError(f"governed fact {query.fact_id!r} is not registered")
-    return resolve_validated_governed_fact(fact, query, authority_digest=authority_digest)
+    return resolve_validated_governed_fact(fact, query, authority_digest=authority_digest, support=support)
 
 
 def resolve_validated_governed_fact(
@@ -315,6 +315,7 @@ def resolve_validated_governed_fact(
     query: GovernedFactQuery,
     *,
     authority_digest: str,
+    support: TemporalSupportEnvelope,
 ) -> ResolvedGovernedFact:
     """Resolve one query from an already validated immutable fact.
 
@@ -322,6 +323,13 @@ def resolve_validated_governed_fact(
     content-addressed component.  Runtime point reads must not wrap that model
     in a new ``GovernedFactCatalogue`` and validate the same static graph again
     for every temporal query.
+
+    ``support`` is the registry's single filing-year envelope, the same one that
+    gates modelo revisions: a coordinate outside it is refused, a first variant
+    omitting ``valid_from`` reaches its floor, and an open final variant carries
+    past its horizon. An explicit endpoint is a legal boundary, so a coordinate
+    in a gap between explicit windows resolves to nothing rather than to the
+    nearest variant.
     """
     if fact.fact_id != query.fact_id:
         raise RegistryValidationError(
@@ -332,11 +340,13 @@ def resolve_validated_governed_fact(
             f"governed fact {query.fact_id!r} has family {fact.family.value!r}, not {query.family.value!r}",
         )
     query_selectors = _selector_identity(query.selectors)
-    if fact.support is not None and not fact.support.admits_coordinate(query.effective_date):
+    coordinate_year = query.filing_year if query.filing_year is not None else query.effective_date.year
+    if not support.admits_coordinate(coordinate_year):
         raise RegistryValidationError(
-            f"governed fact {query.fact_id!r} query falls outside its hard support boundaries"
+            f"governed fact {query.fact_id!r} query year {coordinate_year} falls outside the supported filing years"
         )
-    windows = fact.materialized_windows()
+    date_support = support.date_envelope()
+    windows = fact.materialized_windows(date_support)
     track = tuple(
         (variant, windows[variant.variant_id])
         for variant in fact.variants
@@ -347,12 +357,6 @@ def resolve_validated_governed_fact(
     candidates = tuple((variant, window) for variant, window in track if window.contains_date(query.effective_date))
     projection_direction = TemporalProjectionDirection.AUTHORED
     projected_from_date: date | None = None
-    if not candidates:
-        candidates, projection_direction, projected_from_date = _projection_candidates(
-            fact,
-            track,
-            effective_date=query.effective_date,
-        )
     if not candidates:
         raise RegistryValidationError(f"governed fact {query.fact_id!r} has no variant for the exact query context")
     candidate_variants = tuple(variant for variant, _window in candidates)
@@ -371,9 +375,7 @@ def resolve_validated_governed_fact(
     source_revision_ids: tuple[RegistryRevisionNodeId, ...] = (
         tuple(winner.source_revision_ids) if winner.ownership is FactOwnership.GENERATED else (winner.variant_id,)
     )
-    projected_coordinate = (
-        fact.support.projection_coordinate(query.effective_date) if fact.support is not None else query.effective_date
-    )
+    projected_coordinate = date_support.projection_coordinate(query.effective_date)
     if projected_coordinate is not None and projected_coordinate != query.effective_date:
         projection_direction = TemporalProjectionDirection.FORWARD
         projected_from_date = projected_coordinate
@@ -422,52 +424,6 @@ def _period_matches(period_selector: PeriodSelector | None, query: _FactQuery) -
             for selector_period in period_selector.periods_for_year(query.filing_year)
         )
     )
-
-
-def _projection_candidates(
-    fact: GovernedFact,
-    track: tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
-    *,
-    effective_date: date,
-) -> tuple[
-    tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
-    TemporalProjectionDirection,
-    date | None,
-]:
-    support = fact.support
-    if (support is not None and not support.admits_coordinate(effective_date)) or not track:
-        return (), TemporalProjectionDirection.AUTHORED, None
-    before = tuple(item for item in track if item[1].valid_to is not None and item[1].valid_to < effective_date)
-    after = tuple(item for item in track if item[1].valid_from > effective_date)
-    if before and after:
-        previous_boundary = max(valid_to for _, window in before if (valid_to := window.valid_to) is not None)
-        next_boundary = min(item[1].valid_from for item in after)
-        if effective_date - previous_boundary <= next_boundary - effective_date:
-            return (
-                tuple(item for item in before if item[1].valid_to == previous_boundary),
-                TemporalProjectionDirection.FORWARD,
-                previous_boundary,
-            )
-        return (
-            tuple(item for item in after if item[1].valid_from == next_boundary),
-            TemporalProjectionDirection.BACKWARD,
-            next_boundary,
-        )
-    if before:
-        boundary = max(valid_to for _, window in before if (valid_to := window.valid_to) is not None)
-        return (
-            tuple(item for item in before if item[1].valid_to == boundary),
-            TemporalProjectionDirection.FORWARD,
-            boundary,
-        )
-    if after:
-        boundary = min(item[1].valid_from for item in after)
-        return (
-            tuple(item for item in after if item[1].valid_from == boundary),
-            TemporalProjectionDirection.BACKWARD,
-            boundary,
-        )
-    return (), TemporalProjectionDirection.AUTHORED, None
 
 
 def _transitive_precedence(

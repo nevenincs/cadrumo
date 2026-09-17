@@ -6,6 +6,7 @@ from functools import cache
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from .....core.period import Period
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..bindings import CasillaObservation, RegistryModeloObservation
@@ -25,6 +26,21 @@ def _casilla_inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal
     return validated_casilla_id_map(values, surface="cross-dependency calculation input casillas")
 
 
+def _one_filed_cadence(requirement: RegistryFoldRequirement) -> tuple[tuple[int, str], ...]:
+    """Return the indexed periods of the first declared cadence only.
+
+    A source declared over alternative cadences (Modelo 111 quarterly or
+    monthly) is filed under exactly one of them, so a fixture that observed
+    every declared period would describe a filer no resolver can accept.
+    """
+    first_kind = Period.from_year_and_code(requirement.filing_year, requirement.periods[0]).kind
+    return tuple(
+        (index, period)
+        for index, period in enumerate(requirement.periods)
+        if Period.from_year_and_code(requirement.filing_year, period).kind == first_kind
+    )
+
+
 def _observations_from_requirements(
     requirements: Iterable[RegistryFoldRequirement],
     value_for: Callable[[RegistryFoldRequirement, int], Decimal],
@@ -34,7 +50,7 @@ def _observations_from_requirements(
 ) -> tuple[RegistryModeloObservation, ...]:
     observed: dict[tuple[str, int, str], dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        for period_index, period in enumerate(requirement.periods):
+        for period_index, period in _one_filed_cadence(requirement):
             key = (requirement.source_modelo, requirement.filing_year, period)
             casilla_values = observed.setdefault(key, {})
             casilla_values[requirement.source_casilla_ids[0]] = value_for(requirement, period_index)

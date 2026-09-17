@@ -1277,6 +1277,12 @@ class RegistryCatalogues(RegistryModel):
     sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
     runtime: RuntimeRegistryCatalogues = Field(default_factory=RuntimeRegistryCatalogues)
 
+    def require_supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        """Return the registry's single support envelope, refusing a catalogue set without it."""
+        if self.supported_filing_years is None:
+            raise RegistryValidationError("registry catalogues declare no supported filing years")
+        return self.supported_filing_years
+
 
 class SnapshotGlobalCatalogues(RegistryModel):
     """Small registry-wide values required while assembling a point snapshot."""
@@ -1286,13 +1292,15 @@ class SnapshotGlobalCatalogues(RegistryModel):
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],
         validate_default=True,
     )
+    supported_filing_years: SupportedFilingYearsCatalogue
 
     @classmethod
     def from_catalogues(cls, catalogues: RegistryCatalogues) -> SnapshotGlobalCatalogues:
-        """Project only globals consumed by snapshot construction."""
+        """Project only globals consumed by snapshot construction and fact resolution."""
         return cls(
             convenio=catalogues.convenio,
             supplementary_ordenes=catalogues.supplementary_ordenes,
+            supported_filing_years=catalogues.require_supported_filing_years(),
         )
 
 

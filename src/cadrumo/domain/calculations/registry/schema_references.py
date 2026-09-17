@@ -474,6 +474,18 @@ class TemporalSupportEnvelope(RegistryModel, OrderedSupportEnvelope[int]):
         projected = super().projection_coordinate(coordinate)
         return projected if isinstance(projected, int) else None
 
+    def date_envelope(self) -> DateSupportEnvelope:
+        """Project the filing-year envelope onto the effective-date axis.
+
+        Every date-addressed registry declaration shares this one envelope, so a
+        governed fact never states a floor or ceiling of its own.
+        """
+        return DateSupportEnvelope(
+            floor=date(self.floor, 1, 1),
+            horizon=date(self.horizon, 12, 31),
+            hard_ceiling=None if self.hard_ceiling is None else date(self.hard_ceiling, 12, 31),
+        )
+
 
 def _validate_legal_governed_periods(
     legal_id: str,

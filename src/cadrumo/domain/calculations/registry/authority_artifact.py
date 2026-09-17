@@ -44,7 +44,13 @@ from .governed_fact_scope import CandidateFactAuthority, validating_governed_fac
 from .provenance import NormativeCorpusProvenance
 from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .runtime_catalogues import RuntimeRegistryCatalogues
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, SnapshotGlobalCatalogues
+from .schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    SnapshotGlobalCatalogues,
+    SupportedFilingYearsCatalogue,
+)
 from .schema_exports import ExportLayoutDefinition
 from .tax_id_format import tax_id_format_from_catalogue
 from .temporal import ModeloRevisionDirectory
@@ -305,7 +311,12 @@ def decode_authority_component(
             fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
             tax_id_format = tax_id_format_from_catalogue(fact_catalogue)
             context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
-            candidate = CandidateFactAuthority(fact_catalogue)
+            directories = tuple(item for item in dependencies if isinstance(item, ModeloRevisionDirectory))
+            if len(directories) != 1 or directories[0].supported_filing_years is None:
+                raise AuthorityComponentCodecError(
+                    "modelo revision component must depend on its directory's supported filing years"
+                )
+            candidate = CandidateFactAuthority(fact_catalogue, directories[0].supported_filing_years)
             source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
             with validating_governed_facts(source):
                 return ModeloRevision.model_validate(document, strict=False, context=context)
@@ -319,7 +330,10 @@ def decode_authority_component(
         if isinstance(query, SnapshotGlobalsComponentQuery):
             facts = tuple(item for item in dependencies if isinstance(item, GovernedFact))
             fact_catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
-            candidate = CandidateFactAuthority(fact_catalogue)
+            if not isinstance(document, Mapping):
+                raise AuthorityComponentCodecError("snapshot globals component payload must be a mapping")
+            support = SupportedFilingYearsCatalogue.model_validate(document.get("supported_filing_years"), strict=False)
+            candidate = CandidateFactAuthority(fact_catalogue, support)
             source = _ObservedFactAuthority(candidate, fact_query_observer) if fact_query_observer else candidate
             with validating_governed_facts(source):
                 return SnapshotGlobalCatalogues.model_validate(document, strict=False)

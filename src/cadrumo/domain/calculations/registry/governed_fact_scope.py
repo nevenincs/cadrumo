@@ -28,6 +28,7 @@ from weakref import ReferenceType, ref
 from ....core.errors.hierarchy import InternalInvariantError
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .facts.schema import GovernedFactCatalogue
+from .schema_references import TemporalSupportEnvelope
 
 UNPUBLISHED_CANDIDATE_DIGEST: Final = "0" * 64
 """The identity a candidate carries while it is being validated.
@@ -52,6 +53,7 @@ class CandidateFactAuthority:
     """Resolve governed facts from the catalogue currently being validated."""
 
     catalogue: GovernedFactCatalogue
+    support: TemporalSupportEnvelope
     authority_digest: str = UNPUBLISHED_CANDIDATE_DIGEST
     _resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
         default_factory=dict, init=False, repr=False, compare=False
@@ -62,7 +64,12 @@ class CandidateFactAuthority:
         cached = self._resolutions.get(query)
         if cached is not None:
             return cached
-        resolved = resolve_governed_fact(self.catalogue, query, authority_digest=self.authority_digest)
+        resolved = resolve_governed_fact(
+            self.catalogue,
+            query,
+            authority_digest=self.authority_digest,
+            support=self.support,
+        )
         if len(self._resolutions) >= 1024:
             self._resolutions.pop(next(iter(self._resolutions)))
         self._resolutions[query] = resolved

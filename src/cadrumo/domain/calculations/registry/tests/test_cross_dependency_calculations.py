@@ -51,10 +51,12 @@ from .....core.period import Period
 from .....tests.inventory import FIXTURES_DIR
 from ....period import calculation_filing_date
 from ..binding_selector_utils import selector_as_dict
+from ..binding_temporal import BindingTemporalKind
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
 from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import (
     RegistryFoldRequirement,
     relation_prefill_bindings_for_period,
@@ -711,7 +713,6 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -722,9 +723,15 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        # Art. 75 Ley 19/1994 maritime-worker exemption path; neutral false
+        # when the chain under test is unrelated.
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     assert set(relation_values) == {
@@ -817,9 +824,13 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     assert result.values[casilla_1577] == attributed_income
@@ -966,6 +977,12 @@ def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_060
     assert selector_as_dict(binding) == {
         "source_modelo": "131",
         "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA,
+        "relation_kind": RelationKind.CROSS_MODEL_OUTPUT,
+        "dependency_role": RelationDependencyRole.INSTALMENT_TO_FINAL_SETTLEMENT,
+        "temporal": {
+            "kind": BindingTemporalKind.SAME_FILING_YEAR_PERIODS,
+            "source_periods": ("1T", "2T", "3T", "4T"),
+        },
     }
 
 
@@ -1001,12 +1018,18 @@ def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_cha
     assert result_high - result_low == Decimal("600")
 
 
+# Carry coordinates follow the published envelope rather than pinned years, so
+# the cases move with the floor and horizon.
+_SUPPORTED_YEARS = published_supported_filing_years()
+assert _SUPPORTED_YEARS is not None
+
+
 @pytest.mark.parametrize(
     ("filing_year", "source_year", "source_values", "expected_binding"),
     [
         (
-            2023,
-            2022,
+            _SUPPORTED_YEARS.floor + 1,
+            _SUPPORTED_YEARS.floor,
             _casilla_inputs(
                 {
                     "0224": Decimal("4000"),
@@ -1018,8 +1041,8 @@ def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_cha
             Decimal("8500"),
         ),
         (
-            2026,
-            2025,
+            _SUPPORTED_YEARS.horizon,
+            _SUPPORTED_YEARS.horizon - 1,
             _casilla_inputs(
                 {
                     "0224": Decimal("5000"),
@@ -1116,9 +1139,11 @@ def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_
     if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("5")
     if relation_id == "renta-modelo-190-retenciones-anuales":
-        return Decimal("40")
+        # Each annual summary restates its quarterly withholdings (111 -> 190,
+        # 123 -> 193); the registry holds each pair as equivalent sources.
+        return Decimal("10")
     if relation_id == "renta-modelo-193-retenciones-anuales":
-        return Decimal("50")
+        return Decimal("80")
     if relation_id == "renta-modelo-184-atribucion-actividades-economicas":
         return Decimal("60")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
