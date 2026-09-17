@@ -281,14 +281,16 @@ def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field
     bindings = snapshot.revision.bindings
     assert bindings  # sanity: this fixture coordinate carries a real fold slot
 
-    endpoints = relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID)
+    endpoints = relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID, source_modelo="184")
 
     assert len(endpoints) == 1
     assert endpoints[0].relation_id == _RELATION_BINDING_ID
     assert endpoints[0].casilla_id == _RELATION_SOURCE_CASILLA_ID
 
     # A different casilla id must never match.
-    assert relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla") == ()
+    assert relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla", source_modelo="184") == ()
+    # Nor may the same casilla id of a different modelo.
+    assert relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID, source_modelo="100") == ()
 
 
 def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
@@ -712,9 +714,12 @@ def test_static_inspection_schema_records_project_four_reference_kinds_and_relat
     assert kinds == {"casilla", "binding", "formula", "parameter"}
 
     relation_folds = fold_slots(inspection.bindings)
+    # Every fold here reads another modelo, so its source casillas never
+    # belong to this schema; only a self-sourced fold would contribute.
     expected_sources = tuple(
         (binding_id, source_casilla_id)
         for binding_id, provider in relation_folds
+        if str(provider.source_modelo) == "100"
         for source_casilla_id in provider.declared_source_casilla_ids
     )
     expected_targets = tuple((binding_id, binding_id) for binding_id, _provider in relation_folds)
@@ -730,7 +735,7 @@ def test_static_inspection_schema_records_project_four_reference_kinds_and_relat
         for endpoint in record.relation_endpoints
         if endpoint.kind == "relation_target_binding"
     )
-    assert expected_sources
+    assert any(str(provider.source_modelo) != "100" for _binding_id, provider in relation_folds)
     assert expected_targets
     assert sorted(actual_sources) == sorted(expected_sources)
     assert sorted(actual_targets) == sorted(expected_targets)

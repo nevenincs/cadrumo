@@ -378,9 +378,15 @@ async def _settle(pilot: Pilot[None], screen: LocalReaderScreen, settled: Callab
             await pilot.press("escape")
             continue
         await pilot.app.workers.wait_for_complete()
-        if pilot.app.screen.id == screen.id and settled():
+        if pilot.app.screen.id != screen.id:
+            continue
+        if settled():
             return
-    raise AssertionError("the page never reached the settled state")
+        # Closing the modal detaches the operation; the page re-measures once
+        # on close, which can precede the operation's end. Re-measure as the
+        # operator's refresh would until the outcome is visible.
+        screen.action_refresh_status()
+    raise AssertionError(f"the page never reached the settled state: {screen.status!r}")
 
 
 def _text_resident(screen: LocalReaderScreen) -> bool:

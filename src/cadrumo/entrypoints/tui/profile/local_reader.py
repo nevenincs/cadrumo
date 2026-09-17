@@ -323,6 +323,9 @@ class OperationLocalReaderDoor:
 
     async def settled_result(self, controller: OperationController) -> LocalReaderProvisionPublicResultV1 | None:
         """Resolve the settled public result through the composed result door."""
+        # The modal can close while the operation still runs; the result is
+        # only defined once it has concluded.
+        await self.services.submission.settled(controller.operation_id)
         observed = await controller.observe(0)
         if not isinstance(observed, OperationObservationSuccessV1):
             return None
