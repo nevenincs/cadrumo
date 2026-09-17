@@ -6,7 +6,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.inventory import FIXTURES_DIR
+from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
 from ._parser_boundary_m100_support import (
     _M100_CORPUS_IDS,
@@ -26,7 +28,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
     _M100_CORPUS_PARAMS,
     ids=_M100_CORPUS_IDS,
 )
-def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
+def test_parser_extracts_modelo_100_profile_targets_from_corpus(
+    pdf_stem: str, year: int, operation: PinnedAuthorityOperation
+) -> None:
     """Round-trip: parse M100 IRPF annual corpus PDFs and verify all 21 covered casillas.
 
     Four delivery chunks:
@@ -53,6 +57,14 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     formula-bracket anchor available.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{pdf_stem}.pdf"
+
+    if not operation.supported_filing_years().admits_filing_year(year):
+        # An ejercicio outside the registry's support envelope has no design to
+        # read it against, so the parser refuses rather than guessing one.
+        with pytest.raises(DeclaracionParseError) as refusal:
+            parse_declaracion(pdf_path, modelo_override="100", año_override=year, period_override="0A")
+        assert refusal.value.translated_message == "adapters.inbound.declaracion.errors.registry_snapshot_required"
+        return
 
     filing = parse_declaracion(
         pdf_path,
