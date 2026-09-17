@@ -35,15 +35,18 @@ async def active_verified_session(
     operation: str = "live-filed-read",
     target_url: str | None = None,
     operator_scope_ports: OperatorScopePorts,
+    guarded_read_context: str | None = None,
 ) -> tuple[AeatSession, Settings]:
     """Return an authenticated session and :class:`Settings` after the live-read gate.
 
     The ``operation`` and optional ``target_url`` are forwarded to the
     authentication service for diagnostics and provider routing after
     :class:`AeatAccessGate` has authorized a read-only live operation.
+    ``guarded_read_context`` names a guarded caller, such as a test run, whose
+    read the gate refuses unless the live-test opt-in is enabled.
     """
     settings = load_settings()
-    AeatAccessGate(settings).require_live_read()
+    AeatAccessGate(settings).require_live_read(guarded_read_context=guarded_read_context)
     with bundled_indexed_authority().operation() as authority_operation:
         result = await ensure_authenticated_aeat_session(
             settings,

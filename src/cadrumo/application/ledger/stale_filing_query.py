@@ -120,6 +120,10 @@ def read_stale_ledger_filings(
 
     Returns:
         One entry per drifted filing owned by ``bucket_id``.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     findings: list[LedgerStaleFilingV1] = []
     for revision, verdict in detector(revisions=revisions, catalogue=transactions):

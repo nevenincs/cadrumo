@@ -297,6 +297,10 @@ def project_affected_declaration_reconciliations(
 
     Every input is preloaded.  Missing or cross-bucket declaration identity is
     refused instead of silently dropping an affected revision.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     rows: list[LedgerAffectedDeclarationRefV1] = []
     for revision, verdict in staleness_reader(revisions=revisions, catalogue=transactions):
@@ -521,7 +525,13 @@ def project_ledger_workspace(
     link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
     filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
 ) -> LedgerWorkspaceProjectionV1:
-    """Build one deterministic, frontend-neutral snapshot from canonical facts."""
+    """Build one deterministic, frontend-neutral snapshot from canonical facts.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+    """
     bucket_id = summary.bucket_id
     _assert_workspace_bucket_alignment(bucket_id=bucket_id, preflight=preflight, review=review)
     _validate_workspace_facts(

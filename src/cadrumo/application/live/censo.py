@@ -26,6 +26,7 @@ async def pull_censal_datos(
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
     censal_fetch_port: CensalFetchPort,
+    guarded_read_context: str | None = None,
 ) -> CensalObservation:
     """Read the authenticated taxpayer's censo state without persisting or adopting it."""
     session, settings = await active_verified_session(
@@ -33,6 +34,7 @@ async def pull_censal_datos(
         browser_session_factory=browser_session_factory,
         operation=LIVE_CENSAL_READ_OPERATION,
         operator_scope_ports=operator_scope_ports,
+        guarded_read_context=guarded_read_context,
     )
     return await censal_fetch_port(session, taxpayer_nif=session.identity_nif, settings=settings)
 

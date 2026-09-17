@@ -47,7 +47,11 @@ class CatalogueInvoiceRepositoryPort(Protocol):
         ...
 
     def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
-        """Apply ``mutation`` as one revision-guarded catalogue write."""
+        """Apply ``mutation`` as one revision-guarded catalogue write.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         ...
 
 

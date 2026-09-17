@@ -1,4 +1,8 @@
-"""Application-owned authentication output contracts."""
+"""Application-owned authentication output contracts.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

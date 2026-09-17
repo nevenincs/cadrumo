@@ -1,4 +1,8 @@
-"""Recorded supervision for the canonical filed-history pull composition."""
+"""Recorded supervision for the canonical filed-history pull composition.
+
+Core types:
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 
@@ -23,6 +27,7 @@ from ...core.operations import (
 )
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
@@ -163,18 +168,18 @@ type FiledHistoryPull = Callable[
     ],
     Awaitable[FiledHistoryOnboardingRun],
 ]
-type FiledHistoryProfileResolver = Callable[[], TaxpayerProfile | None]
+type FiledHistoryProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
 type FiledHistoryCompositionFactory = Callable[[Path], FiledHistoryComposition]
 
 
-def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
+def _resolve_active_filed_history_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
     """Load the selected profile through its canonical internal projection."""
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 
     try:
-        return load_active_taxpayer_profile(workflow_state_repository().load())
+        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
     except WizardStatusError:
         # Filed history still has a truthful AEAT register-options path when the
         # active profile has not declared sufficient taxpayer facts yet.
@@ -390,7 +395,7 @@ class FiledHistoryOperationExecutor:
         """Execute this public contract operation."""
         if require_active_bucket_id() != request.subject_ref:
             raise ValueError("filed-history operation subject must identify the active profile")
-        profile = self._profile_resolver()
+        profile = self._profile_resolver(context.authority_operation)
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
         await context.events.phase(FILED_HISTORY_PHASE_EXECUTION)
         # The delegated service contains several atomic secure writes. Until it

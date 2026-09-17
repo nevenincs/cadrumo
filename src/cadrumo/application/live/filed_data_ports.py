@@ -149,7 +149,11 @@ class FiledDataCapturePort(Protocol):
         artefact_sink: FiledArtefactSink | None = None,
         operation: str,
     ) -> tuple[FiledObservationProtocol, ...]:
-        """Capture registry-selected previous-filing and relation sources."""
+        """Capture registry-selected previous-filing and relation sources.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+        """
         ...
 
 

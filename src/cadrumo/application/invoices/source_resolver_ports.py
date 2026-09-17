@@ -4,6 +4,9 @@ The invoice source-mesh resolver needs only a read projection of the invoice
 catalogue.  The application owns that narrow capability and its translated
 persistence failure; an outer composition root binds the encrypted repository
 adapter for each bucket.
+
+Core types:
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
 """
 
 from __future__ import annotations

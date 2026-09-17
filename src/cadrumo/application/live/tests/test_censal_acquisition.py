@@ -80,6 +80,7 @@ def test_the_read_refuses_under_pytest_without_the_live_opt_in() -> None:
                 browser_session_factory=_unused_browser_session_factory,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=_unused_censal_fetch,
+                guarded_read_context="test_censal_acquisition",
             )
         )
 

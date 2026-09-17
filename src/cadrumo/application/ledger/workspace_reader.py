@@ -56,6 +56,11 @@ def read_ledger_workspace_projection(
     tax readiness is a period-bound question, and the landing view is not
     scoped to a period, so asserting readiness here would answer a question
     the operator has not yet asked.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     catalogue = transactions if transactions is not None else ports.transaction_repository.load()
     invoice_catalogue = invoices if invoices is not None else ports.invoice_repository.load()

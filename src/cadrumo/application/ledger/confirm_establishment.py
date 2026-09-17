@@ -409,7 +409,7 @@ def resolve_confirmed_establishment(
     state = workflow_state_repository().load()
     filer_scope, filer_item = _filer_scope(state.active_profile_record(), operation=operation)
     try:
-        profile = load_active_taxpayer_profile(state)
+        profile = load_active_taxpayer_profile(state, schema=operation.profile_schema())
     except WizardStatusError:
         profile = None
 
