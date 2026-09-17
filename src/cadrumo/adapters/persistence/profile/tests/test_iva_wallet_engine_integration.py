@@ -51,6 +51,7 @@ from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     resolve_iva_compensation_decision_for_calculation,
 )
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -382,7 +383,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             captured_at=decided_1t_at,
             result_disposition=ResultDisposition.INGRESO,
             taxpayer_nif=taxpayer_nif,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=observation_repository.secure_object_repository
+            ),
         )
         with calculation_ports_for_test(
             bucket_id=work_unit_2t.bucket_id,
@@ -597,7 +600,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.DEVOLUCION,
             taxpayer_nif=taxpayer_nif,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=observations.secure_object_repository
+            ),
         )
 
         work_unit_2t = _create_modelo_303_work_unit(
@@ -632,7 +637,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.INGRESO,
             taxpayer_nif=taxpayer_nif,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=observations.secure_object_repository
+            ),
         )
 
         work_unit_3t = _create_modelo_303_work_unit(
@@ -688,7 +695,9 @@ def test_compensated_filed_envelope_reports_its_validated_credit_to_wallet(
             captured_at=_DECIDED_AT,
             result_disposition=ResultDisposition.COMPENSACION,
             taxpayer_nif=taxpayer_nif,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=observations.secure_object_repository
+            ),
         )
         target = _create_modelo_303_work_unit(
             _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
@@ -737,7 +746,9 @@ def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(
                     captured_at=_DECIDED_AT,
                     result_disposition=ResultDisposition.DEVOLUCION,
                     taxpayer_nif=taxpayer_nif,
-                    iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+                    iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                        objects=observations.secure_object_repository
+                    ),
                 )
             target = _create_modelo_303_work_unit(
                 _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation
@@ -788,7 +799,7 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
         )
         with _indexed_authority_for_test().operation() as operation:
             if stamped_revision_id is None:
-                with pytest.raises(ValidationError, match="stamped_revision_id"):
+                with pytest.raises(PersistenceDegradationError) as refusal:
                     _resolve_without_caller_inputs(
                         target,
                         snapshot=_snapshot_303(period="2T"),
@@ -796,6 +807,8 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
                         repository=IvaWalletDecisionRepository(),
                         observation_repository=observations,
                     )
+                assert isinstance(refusal.value.__cause__, ValidationError)
+                assert "stamped_revision_id" in str(refusal.value.__cause__)
                 return
             decision = _resolve_without_caller_inputs(
                 target,
@@ -832,7 +845,9 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
             captured_at=_DECIDED_AT,
             result_disposition=prior_disposition,
             taxpayer_nif=taxpayer_nif,
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=observations.secure_object_repository
+            ),
         )
         target = _create_modelo_303_work_unit(
             _snapshot_303(period="2T"), work_unit_repository=work_repo, operation=operation

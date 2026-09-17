@@ -20,7 +20,7 @@ from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from ...storage.envelope.contract import Envelope
-from ...storage.errors import ClassificationError
+from ...storage.errors import ClassificationError, PathContainmentError
 from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
@@ -208,6 +208,6 @@ class TestUnsafeCsv:
         for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
             try:
                 repo.envelope_path_for(bad)
-            except ValueError:
+            except PathContainmentError:
                 continue
             pytest.fail(f"unsafe justificante CSV {bad!r} was accepted")

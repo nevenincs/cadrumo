@@ -63,10 +63,10 @@ def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = N
 
     def _resolve(suffix: str) -> Decimal:
         if ccaa_infix is not None:
-            specific_id = f"renta-{year}-minimo-descendientes-{ccaa_infix}-{suffix}-{year}"
+            specific_id = f"renta-minimo-descendientes-{ccaa_infix}-{suffix}"
             if specific_id in by_id:
                 return resolve_parameter(by_id[specific_id], date_context)
-        return resolve_parameter(by_id[f"renta-{year}-minimo-descendientes-{suffix}-{year}"], date_context)
+        return resolve_parameter(by_id[f"renta-minimo-descendientes-{suffix}"], date_context)
 
     return [_resolve(suffix) for suffix in suffixes], _resolve("menor-tres-anos")
 

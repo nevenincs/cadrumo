@@ -4,20 +4,23 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from .....application.calculations.m303_carry_ingress import m303_declaration_type_header_key
+from .....application.calculations.m303_carry_ingress import M303CarryIngressError, m303_declaration_type_header_key
 from .....application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
 from .....application.modelo.action_errors import ModeloPriorDomiciliationElectionRefusedError
 from .....application.modelo.prior_domiciliation import resolveprior_domiciliation_election
+from .....core.casilla_id import validated_casilla_id
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from .....domain.modelos.calculation_revision import (
@@ -49,6 +52,8 @@ _BUCKET_ID = "21000000-0000-4000-8000-000000000021"
 _WHEN = datetime(2026, 8, 10, 12, 0, tzinfo=UTC)
 _EVIDENCE_REFERENCE = "CSV-303-2025-1T-S21"
 _DECLARATION_TYPE_LOCATOR = "modelo-303-page-01:declaration-type:13:1"
+#: A positive result: the only sign a domiciliation (or ingreso) disposition admits.
+_POSITIVE_RESULT = Decimal("100.00")
 
 
 @pytest.fixture
@@ -81,6 +86,29 @@ def _source_header_disposition(
         disposition=disposition,
         provenance_kind="source_header",
         provenance_locator=locator,
+    )
+
+
+def _filed_observation() -> RegistryModeloObservation:
+    """The filed M303 result the declaration-type header must agree with."""
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot = published_authority_operation().snapshot(
+        "303", filing_year=period.filing_year, period=period.registry_token
+    )
+    result_casilla = validated_casilla_id("iva.resultado")
+    definition = casillas_by_id(snapshot.revision)[result_casilla]
+    return RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=(
+            CasillaObservation(
+                casilla_id=result_casilla,
+                value=_POSITIVE_RESULT,
+                legal_refs=tuple(definition.legal_refs),
+                source_refs=tuple(definition.source_refs),
+            ),
+        ),
     )
 
 
@@ -133,7 +161,15 @@ def _revision(
             amends_filing_record_id=baseline_filing_record_id,
             m303_rectificativa_motive=None,
         )
-    return CalculationRevision(
+    # A rectificativa revision validates against its whole amendment evidence
+    # chain; the election resolver reads only the amendment identity, so the
+    # rectificativa shape is constructed without that out-of-scope aggregate.
+    build = (
+        CalculationRevision.model_construct
+        if amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        else CalculationRevision
+    )
+    return build(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit.work_unit_id,
             input_values_by_casilla_id={},
@@ -269,17 +305,6 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
         ),
         pytest.param(
             ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            (_submitted_file_declaration_type("U"),),
-            ResultDispositionProjection(
-                disposition=ResultDisposition.DOMICILIACION,
-                provenance_kind="app_filing",
-                provenance_locator=_DECLARATION_TYPE_LOCATOR,
-            ),
-            _EVIDENCE_REFERENCE,
-            id="non-header-disposition",
-        ),
-        pytest.param(
-            ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             (_submitted_file_declaration_type("I"),),
             _source_header_disposition(ResultDisposition.INGRESO),
             _EVIDENCE_REFERENCE,
@@ -332,16 +357,6 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
             _EVIDENCE_REFERENCE,
             id="projection-header-disposition-disagreement",
         ),
-        pytest.param(
-            ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            (_submitted_file_declaration_type("U"),),
-            _source_header_disposition(
-                ResultDisposition.DOMICILIACION,
-                locator="modelo-303-page-01:declaration-type:forged-locator",
-            ),
-            _EVIDENCE_REFERENCE,
-            id="projection-header-locator-disagreement",
-        ),
     ],
 )
 def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
@@ -352,8 +367,15 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
     metadata_csv: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A persisted observation is insufficient unless its whole official U chain joins."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    """A persisted observation is insufficient unless its whole official U chain joins.
+
+    A broken link is refused either where the observation is admitted to storage
+    or where the election is resolved; neither boundary may accept it.
+    """
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path) as profile,
+        pytest.raises((M303CarryIngressError, ModeloPriorDomiciliationElectionRefusedError)),
+    ):
         work_unit = _work_unit()
         baseline = _baseline_filing(work_unit)
         filing_repository = ModeloRecordCatalogueRepository(objects=profile.repository)
@@ -361,23 +383,13 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2025,
-                    period="1T",
-                ),
+                _filed_observation(),
                 source_kind=source_kind,
                 captured_at=_WHEN,
                 source_metadata={"aeat_justificante_csv": metadata_csv},
                 source_headers=source_headers,
                 result_disposition=result_disposition,
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="303",
-                        filing_year=2025,
-                        period="1T",
-                    )
-                ),
+                stamped_revision_id=revision_id_for_observation(_filed_observation()),
             )
         )
         revision = _revision(
@@ -386,15 +398,63 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
             baseline_filing_record_id=baseline.filing_record_id,
         )
 
-        with pytest.raises(ModeloPriorDomiciliationElectionRefusedError):
-            resolveprior_domiciliation_election(
-                election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
-                work_unit=work_unit,
-                revision=revision,
-                filing_repository=filing_repository,
-                observation_repository=observation_repository,
-                operation=authority_operation,
+        resolveprior_domiciliation_election(
+            election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
+            work_unit=work_unit,
+            revision=revision,
+            filing_repository=filing_repository,
+            observation_repository=observation_repository,
+            operation=authority_operation,
+        )
+
+
+@pytest.mark.parametrize(
+    "supplied",
+    [
+        pytest.param(
+            ResultDispositionProjection(
+                disposition=ResultDisposition.DOMICILIACION,
+                provenance_kind="app_filing",
+                provenance_locator=_DECLARATION_TYPE_LOCATOR,
+            ),
+            id="non-header-disposition",
+        ),
+        pytest.param(
+            _source_header_disposition(
+                ResultDisposition.DOMICILIACION,
+                locator="modelo-303-page-01:declaration-type:forged-locator",
+            ),
+            id="projection-header-locator-disagreement",
+        ),
+    ],
+)
+def test_official_evidence_stores_the_header_projection_not_the_supplied_one(
+    tmp_path: Path,
+    supplied: ResultDispositionProjection,
+) -> None:
+    """A forged provenance on official evidence never reaches storage.
+
+    The observed declaration-type header is the sole authority for official
+    evidence, so what persists is the projection derived from it; the U link the
+    election later joins is therefore the header's, not the caller's.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                _filed_observation(),
+                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+                captured_at=_WHEN,
+                source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
+                source_headers=(_submitted_file_declaration_type("U"),),
+                result_disposition=supplied,
+                stamped_revision_id=revision_id_for_observation(_filed_observation()),
             )
+        )
+        loaded = observation_repository.load_observation("303", Period.from_year_and_code(2025, "1T"))
+
+    assert loaded is not None
+    assert loaded.result_disposition == _source_header_disposition(ResultDisposition.DOMICILIACION)
 
 
 def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(
@@ -410,23 +470,13 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         observation_repository.save(
             observation_repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2025,
-                    period="1T",
-                ),
+                _filed_observation(),
                 source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
                 captured_at=_WHEN,
                 source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
                 source_headers=(_submitted_file_declaration_type("U"),),
                 result_disposition=_source_header_disposition(ResultDisposition.DOMICILIACION),
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo="303",
-                        filing_year=2025,
-                        period="1T",
-                    )
-                ),
+                stamped_revision_id=revision_id_for_observation(_filed_observation()),
             )
         )
         revision = _revision(

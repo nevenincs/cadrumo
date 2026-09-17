@@ -62,10 +62,21 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "10013148-0000-4000-8000-000000001481"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _YEAR = 2024
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
@@ -127,7 +138,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime
                 UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
                 UserProfileFact(path="renta_taxpayer.sex", value="H"),
                 UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
                 UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
                 UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
                 UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -287,8 +298,8 @@ def test_objective_estimation_profile_folds_m131_rendimiento_into_m100_modulos(
     assert values[_M100_EO_TOTAL_CASILLA] == _EXPECTED_M131_RENDIMIENTO_TOTAL
     assert values[_M100_PAGOS_CASILLA] == _EXPECTED_M131_PAGOS_TOTAL
     assert Decimal(result.revision.binding_overrides[_M131_RENDIMIENTO_BINDING]) == _EXPECTED_M131_RENDIMIENTO_TOTAL
-    assert Decimal(result.revision.relation_overrides[_M131_RENDIMIENTO_RELATION]) == _EXPECTED_M131_RENDIMIENTO_TOTAL
-    assert Decimal(result.revision.relation_overrides[_M131_PAGOS_RELATION]) == _EXPECTED_M131_PAGOS_TOTAL
+    assert _M131_RENDIMIENTO_RELATION not in result.revision.relation_overrides
+    assert Decimal(result.revision.binding_overrides[_M131_PAGOS_RELATION]) == _EXPECTED_M131_PAGOS_TOTAL
     assert result.source_diagnostics == (), result.source_diagnostics
 
 
@@ -301,4 +312,4 @@ def test_direct_estimation_profile_keeps_m131_modulos_binding_at_not_applicable_
     assert result.revision.casilla_values[_M100_EO_SUM_CASILLA] == Decimal("0.00")
     assert result.revision.casilla_values[_M100_EO_TOTAL_CASILLA] == Decimal("0.00")
     assert Decimal(result.revision.binding_overrides[_M131_RENDIMIENTO_BINDING]) == Decimal("0")
-    assert Decimal(result.revision.relation_overrides[_M131_RENDIMIENTO_RELATION]) == Decimal("0")
+    assert _M131_RENDIMIENTO_RELATION not in result.revision.relation_overrides

@@ -60,7 +60,10 @@ def _import_external_filing_source(source: Any, **kwargs: Any) -> Any:
         kwargs.pop(key, None)
     kwargs.setdefault("work_lifecycle_ports", build_work_lifecycle_ports(bucket_id=_PROFILE_ID))
     kwargs.setdefault("observation_repository", CalculationObservationRepository())
-    return import_external_filing_source(source, **kwargs)
+    if "operation" in kwargs:
+        return import_external_filing_source(source, **kwargs)
+    with bundled_indexed_authority().operation() as operation:
+        return import_external_filing_source(source, operation=operation, **kwargs)
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:

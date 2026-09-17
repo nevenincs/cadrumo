@@ -25,7 +25,13 @@ from .....domain.calculations.registry.ids import BindingId
 from .....domain.calculations.registry.schema import RegistrySnapshot
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from .....domain.deadlines.models import IVARegime, TaxpayerProfile
+from .....domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from .....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -285,6 +291,14 @@ def workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.from_registry("common_regime"),
+            regime_composition=M303RegimeComposition.from_registry("general"),
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 

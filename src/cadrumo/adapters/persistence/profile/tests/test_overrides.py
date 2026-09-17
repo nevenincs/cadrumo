@@ -26,6 +26,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.application.prorrata_register.seed import cross_check_prorrata_entry_against_prior_observation
@@ -72,17 +73,22 @@ def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
 
 
 def _save_prior_prorrata_observation(repo: CalculationObservationRepository, *, percentage: Decimal) -> None:
+    casilla_values, source_headers = modelo_303_filed_disposition(
+        {_PORCENTAJE_ID: percentage},
+        source_locator="prior-settlement:declaration-type",
+    )
     observation = registry_grounded_modelo_observation(
         modelo=Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
-        casilla_values={_PORCENTAJE_ID: percentage},
+        casilla_values=casilla_values,
     )
     repo.save(
         repo.prepare_observation_envelope(
             observation,
             source_kind=_SOURCE_KIND,
             captured_at=_CLOCK,
+            source_headers=source_headers,
             stamped_revision_id=_prior_revision_id(),
         )
     )

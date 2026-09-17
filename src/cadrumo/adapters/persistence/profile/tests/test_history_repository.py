@@ -28,7 +28,7 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.identifiers import ModeloIdentifier
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 

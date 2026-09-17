@@ -10,9 +10,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -148,12 +150,17 @@ def test_create_manual_transaction_default_event_repository_fails_closed_for_ina
 ) -> None:
     transaction_repository = TransactionCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=secure_objects)
 
+    # The production default binds event history through the requested bucket's
+    # own runtime; the live session serves only the active bucket, so it refuses.
     with (
         pytest.raises(StorageValidationError),
         ledger_ports_for_test(
             bucket_id=_OTHER_BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
+            bucket_event_repository=BucketEventHistoryRepository(
+                objects=secure_object_repository_for_bucket(_OTHER_BUCKET_ID),
+            ),
         ) as ports,
     ):
         create_manual_transaction(

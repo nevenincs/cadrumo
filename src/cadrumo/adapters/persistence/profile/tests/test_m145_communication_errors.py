@@ -164,7 +164,7 @@ def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal
                 operation=operation,
             )
 
-    assert isinstance(raised.value, ValueError)
+    assert isinstance(raised.value, M145CommunicationServiceError)
     assert raised.value.context is not None
     assert raised.value.context["communication_record_id"] == record.communication_record_id
     assert raised.value.context["issue_count"] == 1
@@ -195,7 +195,7 @@ def test_m145_communication_completion_before_delivery_raises_typed_error_and_lo
                 operation=operation,
             )
 
-    assert isinstance(raised.value, ValueError)
+    assert isinstance(raised.value, M145CommunicationServiceError)
     assert raised.value.context == {"communication_record_id": record.communication_record_id, "state": "created"}
     messages = _captured_service_messages(caplog)
     assert any("completion refused" in message for message in messages)
@@ -221,7 +221,7 @@ def test_m145_communication_missing_record_raises_typed_key_error_and_logs_looku
             operation=operation,
         )
 
-    assert isinstance(raised.value, KeyError)
+    assert isinstance(raised.value, M145CommunicationServiceError)
     assert raised.value.context == {"communication_record_id": missing_id}
     messages = _captured_service_messages(caplog)
     assert any("lookup missing" in message for message in messages)

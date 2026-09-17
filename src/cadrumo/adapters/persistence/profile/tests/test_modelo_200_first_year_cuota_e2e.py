@@ -79,6 +79,7 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -89,9 +90,16 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-__all__ = ["register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue", "secure_objects"]
 
 _BUCKET_ID = "234af0d3-5002-452b-9eff-80bbc1de0c84"
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 12, 11, 0, tzinfo=UTC)
 _M200 = "200"

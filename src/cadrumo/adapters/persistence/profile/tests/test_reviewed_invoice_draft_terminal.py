@@ -28,7 +28,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts, read_extraction_draft
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.llm_review_workflow import (
@@ -53,6 +55,13 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as resolved:
         yield resolved
+
+
+@pytest.fixture
+def ports(profile: TestRuntimeProfile) -> Iterator[LedgerActionPorts]:
+    """Compose the ledger action ports the review terminal persists through."""
+    with ledger_ports_for_test(bucket_id=profile.bucket_id, objects=profile.repository) as composed:
+        yield composed
 
 
 def _subject(reference: str = "ev-draft-1") -> ReviewedInvoiceDraft:
@@ -106,7 +115,7 @@ def test_its_siblings_do_require_confidence_so_the_absence_is_a_choice() -> None
 # ── Apply delegates, reject does not write ───────────────────────────────────
 
 
-def test_apply_persists_through_the_draft_store(profile: TestRuntimeProfile) -> None:
+def test_apply_persists_through_the_draft_store(profile: TestRuntimeProfile, ports: LedgerActionPorts) -> None:
     """The applied draft is readable from the store's own reader."""
     execute_reviewed_decision(
         _subject(),
@@ -114,6 +123,7 @@ def test_apply_persists_through_the_draft_store(profile: TestRuntimeProfile) -> 
         decision=LlmReviewDecision.APPLY,
         bucket_id=profile.bucket_id,
         settings=profile.settings,
+        ports=ports,
     )
 
     stored = read_extraction_draft(
@@ -126,7 +136,7 @@ def test_apply_persists_through_the_draft_store(profile: TestRuntimeProfile) -> 
     assert stored.read_transports == (LOCAL_TRANSPORT_LABEL,)
 
 
-def test_reject_records_the_decline_and_writes_no_draft(profile: TestRuntimeProfile) -> None:
+def test_reject_records_the_decline_and_writes_no_draft(profile: TestRuntimeProfile, ports: LedgerActionPorts) -> None:
     """The decline leaves an event and no stored draft.
 
     The empty store is the load-bearing half. A decline that wrote the draft
@@ -141,6 +151,7 @@ def test_reject_records_the_decline_and_writes_no_draft(profile: TestRuntimeProf
         bucket_id=profile.bucket_id,
         reason="the supplier is wrong",
         settings=profile.settings,
+        ports=ports,
     )
 
     assert isinstance(outcome, InvoiceDraftDeclineResult)
@@ -151,6 +162,7 @@ def test_reject_records_the_decline_and_writes_no_draft(profile: TestRuntimeProf
 
 def test_a_declined_draft_is_distinguishable_from_one_never_reviewed(
     profile: TestRuntimeProfile,
+    ports: LedgerActionPorts,
 ) -> None:
     """The event is the only trace, so it has to exist and name the evidence.
 
@@ -164,6 +176,7 @@ def test_a_declined_draft_is_distinguishable_from_one_never_reviewed(
         decision=LlmReviewDecision.REJECT,
         bucket_id=profile.bucket_id,
         settings=profile.settings,
+        ports=ports,
     )
 
     assert isinstance(outcome, InvoiceDraftDeclineResult)
@@ -173,6 +186,7 @@ def test_a_declined_draft_is_distinguishable_from_one_never_reviewed(
 
 def test_a_transaction_bound_reject_still_takes_the_original_path(
     profile: TestRuntimeProfile,
+    ports: LedgerActionPorts,
 ) -> None:
     """POSITIVE CONTROL: the split did not capture every reject.
 
@@ -198,6 +212,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
             decision=LlmReviewDecision.REJECT,
             bucket_id=profile.bucket_id,
             settings=profile.settings,
+            ports=ports,
         )
 
     # The transaction does not exist in this bucket, so the ORIGINAL primitive

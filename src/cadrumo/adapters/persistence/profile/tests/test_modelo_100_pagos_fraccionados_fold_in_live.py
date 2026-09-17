@@ -70,10 +70,21 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "10006040-0000-4000-8000-000000000604"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2024
@@ -219,7 +230,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -281,7 +292,7 @@ def _calculate_m100_annual(
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -338,7 +349,7 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(
     assert casilla_0604 == _EXPECTED_M130_TOTAL, (
         f"M100 0604 must fold in the four M130 quarters (sum {_EXPECTED_M130_TOTAL}); got {casilla_0604}"
     )
-    assert Decimal(result.revision.relation_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
+    assert Decimal(result.revision.binding_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
 
     # The relation_prefill source is CLAIMED (resolver enrolled): no
     # unhandled_binding_source advisory names it, and the diagnostics carry no
@@ -371,8 +382,9 @@ def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filin
     )
 
     assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == _EXPECTED_M130_TOTAL
-    assert Decimal(result.revision.relation_overrides[_M130_PAGOS_RELATION_ID]) == _EXPECTED_M130_TOTAL
-    assert Decimal(result.revision.relation_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
+    assert Decimal(result.revision.binding_overrides[_M130_PAGOS_RELATION_ID]) == _EXPECTED_M130_TOTAL
+    assert Decimal(result.revision.binding_overrides[_M131_PAGOS_RELATION_ID]) == Decimal("0")
+    assert not set(result.revision.relation_overrides) & {_M130_PAGOS_RELATION_ID, _M131_PAGOS_RELATION_ID}
     assert not any(
         diagnostic.source_kind == _RELATION_PREFILL_SOURCE
         and diagnostic.relation_id in {_M130_PAGOS_RELATION_ID, _M131_PAGOS_RELATION_ID}

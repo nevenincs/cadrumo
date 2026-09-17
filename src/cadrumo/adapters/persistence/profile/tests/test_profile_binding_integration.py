@@ -94,7 +94,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),

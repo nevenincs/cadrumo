@@ -48,7 +48,7 @@ from cadrumo.application.inventory.ports import InventoryServicePorts
 from cadrumo.application.inventory.service import InventoryMovementCommand, InventoryService
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "f2b75bc8-7925-49a1-9744-55c86dce3064"
 _BUCKET_A_ID = "b319db66-5926-4885-80db-2d3c9137b2e6"

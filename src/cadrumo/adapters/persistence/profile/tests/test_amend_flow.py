@@ -57,6 +57,7 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
+    derive_calculation_revision_id_from_revision,
 )
 from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
@@ -965,7 +966,11 @@ def test_export_refuses_an_amendment_carrying_contributors(
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
         )
 
-    with_contributors = new_revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
+    contributed = new_revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
+    # The contributor set is part of the content-addressed identity.
+    with_contributors = contributed.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(contributed)}
+    )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), with_contributors))
 
     # Exercise the public export boundary: the persisted revision has no ledger

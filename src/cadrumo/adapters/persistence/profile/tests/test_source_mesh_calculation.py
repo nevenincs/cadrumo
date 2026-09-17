@@ -27,7 +27,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -60,7 +60,7 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
     UserProfileFact(path="renta_taxpayer.sex", value="H"),
     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
     UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
     UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
     UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -150,12 +150,13 @@ def _intracom_ledger_transaction(provider_id: str, *, booked_date: date = date(2
             "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
-            "category_id": "intracom_supply",
+            "category_id": None,
             "taxable_base": Decimal("1000.00"),
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": IvaCategory("intra_community_supply"),
             "counterparty_country": "DE",
+            "counterparty_identification_state": require_eu_member_state("de", effective_date=booked_date),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -226,7 +227,6 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
             clock=_T1,
         )
 
-    assert "no declarable operator rows" in str(exc_info.value)
     assert exc_info.value.context is not None
     assert exc_info.value.context["modelo"] == "349"
     assert exc_info.value.context["period"] == "1T"

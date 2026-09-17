@@ -30,6 +30,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -55,16 +56,21 @@ def _save_prior_prorrata_observation(
     percentage: Decimal,
     stamped_revision_id: str,
 ) -> None:
+    casilla_values, source_headers = modelo_303_filed_disposition(
+        {_PORCENTAJE_ID: percentage},
+        source_locator="prior-settlement:declaration-type",
+    )
     observation = registry_grounded_modelo_observation(
         modelo=Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
-        casilla_values={_PORCENTAJE_ID: percentage},
+        casilla_values=casilla_values,
     )
     envelope = repo.prepare_observation_envelope(
         observation,
         source_kind=_SOURCE_KIND,
         captured_at=_CLOCK,
+        source_headers=source_headers,
         stamped_revision_id=_prior_revision_id(),
     )
     # Divergence is a read-side corruption scenario: canonical writes reject it.

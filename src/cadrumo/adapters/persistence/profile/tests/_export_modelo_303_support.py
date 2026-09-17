@@ -55,6 +55,7 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .file_flow_test_support import calculation_ports_for_test
 from .justificante_metadata import persist_justificante_metadata
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -242,7 +243,7 @@ _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 def _seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
-    taxpayer_tax_id: str = "taxpayerdefault",
+    taxpayer_tax_id: str,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -269,6 +270,10 @@ def _seed_modelo_303_1t_clean_state(
     )
     assert source_casilla_ids, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
+    values, source_headers = modelo_303_filed_disposition(
+        values,
+        source_locator="modelo-303-2026-1T:declaration-type",
+    )
     source_snapshot = published_authority_operation().snapshot("303", filing_year=2026, period="1T")
     persist_justificante_metadata(
         "JUST30320261T",
@@ -400,6 +405,7 @@ def _seed_modelo_303_1t_clean_state(
             ),
             source_kind="aeat_sede_justificante",
             captured_at=datetime(2026, 5, 21, 11, 2, tzinfo=UTC),
+            source_headers=source_headers,
             stamped_revision_id=source_snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",

@@ -36,7 +36,12 @@ from pathlib import Path
 
 import pytest
 
-from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import (
@@ -154,6 +159,23 @@ def _registry_observation(
     )
 
 
+def _resolve_carry_from_local_store(
+    snapshot: RegistrySnapshot,
+    *,
+    repository: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, Decimal]:
+    """Resolve the previous-filing carry binding the way the calculate path does."""
+    prefill = resolve_bindings_from_local_store(
+        snapshot,
+        repository=repository,
+        captured_at=_CLOCK,
+        iva_history_repository=IvaCompensationHistoryRepository(objects=repository.secure_object_repository),
+        operation=operation,
+    )
+    return {str(binding_id): value for binding_id, value in prefill.binding_values.items()}
+
+
 def _run_carry_chain(
     *,
     tmp_path: Path,
@@ -185,6 +207,11 @@ def _run_carry_chain(
             obs_repo.prepare_observation_envelope(
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test-local-filing:compensacion-carry",
+                ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
                     _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
@@ -193,15 +220,12 @@ def _run_carry_chain(
         )
 
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
-        resolved: dict[RelationId, Decimal] = {
-            item.relation: item.value for item in relation_values.values if item.value is not None
-        }
+        resolved = _resolve_carry_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
         result_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
-            cuota_binding_overrides=year_n_plus_1_1t_inputs,
-            relation_values=resolved,
+            cuota_binding_overrides={**year_n_plus_1_1t_inputs, **resolved},
+            relation_values={},
         )
 
     return carried_saldo, result_n1.values[_CASILLA_110]

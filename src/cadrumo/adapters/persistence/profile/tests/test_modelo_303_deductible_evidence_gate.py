@@ -98,6 +98,7 @@ from ._operator_scope_fakes import (
 )
 from .ledger_action_create_support import ledger_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -107,6 +108,16 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "30300000-0000-4000-8000-000000000303"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _TAX_ID = "12345678Z"
 _YEAR = 2026
 _PERIOD = "1T"

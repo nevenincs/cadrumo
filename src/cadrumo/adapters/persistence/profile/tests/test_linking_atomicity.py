@@ -57,6 +57,8 @@ def test_link_invoice_transaction_repositories_binds_both_catalogues_to_requeste
             bucket_id=profile.bucket_id,
             invoice_id=invoice.invoice_id,
             transaction_id=transaction.transaction_id.upper(),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
         )
 
         reloaded_invoice = InvoiceCatalogueRepository(bucket_id=profile.bucket_id).load().get(invoice.invoice_id)
@@ -89,6 +91,8 @@ def test_link_commits_both_catalogues_in_one_write_transaction(tmp_path: Path) -
                 bucket_id=profile.bucket_id,
                 invoice_id=invoice.invoice_id,
                 transaction_id=transaction.transaction_id,
+                invoice_repository=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
+                transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
             )
 
         assert recorder.commits_between_writes() == 0
@@ -178,6 +182,8 @@ def test_link_roundtrips_every_populated_field_through_both_catalogues(tmp_path:
             bucket_id=profile.bucket_id,
             invoice_id=invoice.invoice_id,
             transaction_id=transaction.transaction_id,
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
         )
 
         invoices = InvoiceCatalogueRepository(bucket_id=profile.bucket_id).load()
@@ -200,6 +206,8 @@ def test_one_sided_link_on_disk_is_reported_as_inconsistent(tmp_path: Path) -> N
             bucket_id=profile.bucket_id,
             invoice_id=invoice.invoice_id,
             transaction_id=transaction.transaction_id,
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=profile.bucket_id),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=profile.bucket_id),
         )
 
         # Roll the transaction side back to its unlinked form, leaving the

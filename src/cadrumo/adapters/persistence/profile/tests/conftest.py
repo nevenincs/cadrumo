@@ -39,6 +39,16 @@ def _published_authority_lease() -> Iterator[None]:
     release_published_authority_operation()
 
 
+@pytest.fixture(autouse=True)
+def _governed_facts_from_the_session_lease(operation: object) -> None:
+    """Scope every profile persistence test to the published session lease.
+
+    These suites build registry-backed profiles and records throughout, so
+    the package opts in once rather than per module.
+    """
+    del operation
+
+
 @pytest.fixture
 def certificate_secret_backend_factory() -> InMemoryCertificateSecretBackendFactory:
     """Inject the application certificate-secret capability without a persistence adapter."""

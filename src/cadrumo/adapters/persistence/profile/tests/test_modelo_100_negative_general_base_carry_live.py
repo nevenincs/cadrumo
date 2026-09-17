@@ -49,10 +49,21 @@ from ..buckets import BucketEventHistoryRepository
 from ..calculation_observations import CalculationObservationRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "cd7a6304-1000-4100-8100-000000000365"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _PERIOD = "0A"
 _CLOCK = datetime(2026, 7, 1, 10, 0, tzinfo=UTC)
 _QUARTERS = ("1T", "2T", "3T", "4T")
@@ -90,7 +101,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),

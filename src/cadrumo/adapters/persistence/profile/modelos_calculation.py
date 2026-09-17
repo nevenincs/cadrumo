@@ -350,8 +350,24 @@ class CalculationRevisionCatalogueRepository:
         the revision it would write back the whole catalogue and discard a
         revision another run added in between. A dropped calculation revision
         is a dropped tax computation.
+
+        Raises:
+            :class:`~CalculationRevisionPersistenceError`: If the stored
+                payload fails the catalogue contract, exactly as :meth:`load`
+                refuses it, so no raw validation detail reaches the caller.
         """
-        catalogue, revision_id = self._storage.load_revisioned()
+        loaded: tuple[CalculationRevisionCatalogue, str] | None = None
+        try:
+            loaded = self._storage.load_revisioned()
+        except ValidationError:
+            loaded = None
+        if loaded is None:
+            raise CalculationRevisionPersistenceError(
+                "calculation-revision catalogue payload is invalid",
+                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                context={"reason": "invalid_payload"},
+            )
+        catalogue, revision_id = loaded
         self._require_parent_coordinates(catalogue)
         return catalogue, revision_id
 

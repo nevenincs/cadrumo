@@ -180,6 +180,9 @@ class CreateManualOutcome:
 def drive_create_manual_transaction(secure_objects: _SecureObjectRepository) -> CreateManualOutcome:
     """Build and execute the canonical create-action scenario."""
     transaction_repository, event_repository = _repositories(secure_objects)
+    # The runtime bucket already carries its own creation event; the outcome
+    # reports only the events this action appends.
+    prior_event_ids = {event.event_id for event in event_repository.load().for_bucket(_BUCKET_ID)}
     invoice_repository = _InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = purchase_invoice()
     invoice_repository.save(build_invoice_catalogue((purchase_evidence,)))
@@ -218,7 +221,9 @@ def drive_create_manual_transaction(secure_objects: _SecureObjectRepository) -> 
     persisted = reloaded.get(result.ref.transaction_id)
     assert persisted is not None
     assert tuple(reloaded.transactions) == (result.ref.transaction_id,)
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = [
+        event for event in event_repository.load().for_bucket(_BUCKET_ID) if event.event_id not in prior_event_ids
+    ]
     return CreateManualOutcome(
         result=result,
         persisted=persisted,

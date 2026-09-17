@@ -34,7 +34,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 _PROFILE_ID = "32323232-3232-4232-8232-323232323232"
 
 

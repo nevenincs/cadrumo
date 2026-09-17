@@ -179,7 +179,11 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         so the pair cannot half-persist.
         """
         with bundled_indexed_authority().operation() as operation:
-            law_revision_id = validate_observation_casilla_ids(observation, operation=operation)
+            law_revision_id = validate_observation_casilla_ids(
+                observation,
+                operation=operation,
+                stamped_revision_id=stamped_revision_id,
+            )
             if stamped_revision_id != law_revision_id:
                 raise RegistrySnapshotError(
                     "observation stamp differs from the law-determined registry revision: "

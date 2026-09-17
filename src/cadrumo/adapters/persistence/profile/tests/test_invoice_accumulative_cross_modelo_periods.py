@@ -52,6 +52,7 @@ from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -63,6 +64,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -92,12 +94,22 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "13049000-0000-4000-8000-000000000049"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _TAX_ID = "12345678Z"
 _YEAR = 2024
 _PRIOR_YEAR = _YEAR - 1
@@ -213,9 +225,8 @@ _M303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 def _seed_taxpayer_profile() -> None:
     """Seed the one taxpayer profile both M303 and M100/M130 bindings read."""
     seed_test_profile_record(
-        UserProfileRecord(
-            schema_id="cadrumo.user_profile",
-            schema_version=compiled_bundled_authority().profile_schema().version,
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -238,7 +249,7 @@ def _seed_taxpayer_profile() -> None:
                 UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 1)),
                 UserProfileFact(path="renta_taxpayer.sex", value="M"),
                 UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
                 UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
                 UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
                 UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -391,7 +402,7 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
 
 
 def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -453,7 +464,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
 
 
 def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -484,7 +495,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
 
 
 def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, period: str) -> CalculationRevision:
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -546,7 +557,7 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
 
 
 def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> CalculationRevision:
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)

@@ -84,10 +84,21 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39000000-0000-4000-8000-000000000390"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025

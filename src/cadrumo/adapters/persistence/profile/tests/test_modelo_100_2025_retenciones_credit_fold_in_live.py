@@ -96,10 +96,21 @@ from ..transactions import TransactionCatalogueRepository
 from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "2fa3285a-d72e-4f86-9a1c-75c98d1f2ede"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 6, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
@@ -298,7 +309,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -364,7 +375,7 @@ def _calculate_m100_annual(
     """
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -507,7 +518,7 @@ def _calculate_m111_administrador_quarter(
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = published_authority_operation().snapshot("111", filing_year=_YEAR, period=period_code)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

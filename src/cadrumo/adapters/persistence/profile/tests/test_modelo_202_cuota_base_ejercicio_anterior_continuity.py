@@ -273,7 +273,7 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(
 
     assert resolved["modelo-202-cuota-base-ejercicio-anterior"] == _M200_1P_SOURCE_TWO_BACK
     assert resolved["modelo-202-cuota-base-ejercicio-anterior"] != _M200_1P_NEAR_PRIOR
-    assert "modelo-202-cuota-base-ejercicio-anterior" not in resolved
+    assert set(resolved) == {"modelo-202-cuota-base-ejercicio-anterior"}
 
 
 def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(

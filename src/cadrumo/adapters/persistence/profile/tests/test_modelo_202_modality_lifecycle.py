@@ -36,7 +36,7 @@ __all__ = ["register_wizard_catalogue"]
 
 from .....application.modelo.action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError
 from .....application.modelo.calculation_actions import calculate_modelo_revision
-from .....application.modelo.export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
+from .....application.modelo.export import ModeloExportCommand, export_modelo_revision
 from .....application.modelo.external_import_actions import import_external_filing_evidence
 from .....application.modelo.filing_action_ports import FilingActionPorts
 from .....application.modelo.filing_actions import file_modelo_revision
@@ -44,6 +44,7 @@ from .....application.modelo.verification_actions import verify_modelo_revision
 from .....application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
@@ -199,7 +200,9 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
-    snapshot = published_authority_operation().snapshot("200", filing_year=2024, period="0A")
+    snapshot = published_authority_operation().snapshot(
+        "200", filing_year=2024, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="200",
@@ -244,6 +247,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str, operation: PinnedAuthorityOpera
                     filing_year=2024,
                     period="0A",
                     casilla_values=casilla_values,
+                    grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
             source_kind="aeat_sede_justificante",
@@ -484,7 +488,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
         assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
         with (
-            pytest.raises(ModeloExportUnsupportedError) as export_error,
+            pytest.raises(ModeloRequiredBindingsMissingError) as export_error,
             bundled_indexed_authority().operation() as operation,
         ):
             export_modelo_revision(
@@ -507,12 +511,9 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(
             )
         export_context = export_error.value.context
         assert export_context is not None
-        export_modelo = export_context["modelo"]
-        assert isinstance(export_modelo, str)
-        assert export_modelo == "202"
-        export_reason = export_context["reason"]
-        assert isinstance(export_reason, str)
-        assert "no complete export_layouts definition" in export_reason
+        export_missing_bindings = export_context["missing_bindings"]
+        assert isinstance(export_missing_bindings, tuple)
+        assert _M202_PRIOR_PAYMENTS_BINDING in export_missing_bindings
         assert export_path.exists() is False
 
 

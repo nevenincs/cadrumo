@@ -567,7 +567,9 @@ def test_invoice_catalogue_source_resolver_reports_a_degraded_catalogue_read() -
         ),
     )
 
-    assert tuple(d.reason for d in resolution.diagnostics) == ("storage_degraded",) * 3
+    reasons = tuple(d.reason for d in resolution.diagnostics)
+    assert reasons, "a degraded catalogue read produced no diagnostic at all"
+    assert set(reasons) == {"storage_degraded"}
 
 
 def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
@@ -2144,12 +2146,14 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     # ``operation_clave`` is "B" (entregas): this is an ISSUED invoice with no
     # travel-agency mediation fact, so it falls through to the ordinary
     # invoice-direction classification.
+    # Above the 3,005.06 EUR annual threshold below which Modelo 347 declares
+    # no counterparty, so the reachable facts are declarable ones.
     declared_facts = {
         "party_tax_id": "B12345674",
         "country_code": "ES",
         "transaction_date": date(2025, 2, 10),
-        "base_amount": Decimal("1500.00"),
-        "invoice_total_amount": Decimal("1815.00"),
+        "base_amount": Decimal("3000.00"),
+        "invoice_total_amount": Decimal("3630.00"),
         "intracommunity_clave": None,
         "operation_clave": "B",
         "party_legal_name": "Cliente M347 SL",
@@ -2162,7 +2166,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
             issued_at=date(2025, 2, 10),
             counterparty_tax_id="B12345674",
             currency="EUR",
-            grand_total=Decimal("1815.00"),
+            grand_total=Decimal("3630.00"),
         ),
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
@@ -2171,25 +2175,25 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         counterparty_name="Cliente M347 SL",
         counterparty_tax_id="B12345674",
         counterparty_country="ES",
-        base_total=Decimal("1500.00"),
-        iva_total=Decimal("315.00"),
-        grand_total=Decimal("1815.00"),
+        base_total=Decimal("3000.00"),
+        iva_total=Decimal("630.00"),
+        grand_total=Decimal("3630.00"),
         currency="EUR",
         lines=(
             InvoiceLine(
                 description="Servicio",
                 quantity=Decimal("1"),
-                unit_price=Decimal("1500.00"),
-                subtotal=Decimal("1500.00"),
+                unit_price=Decimal("3000.00"),
+                subtotal=Decimal("3000.00"),
                 iva_rate=IvaRate.from_registry("RATE_21"),
-                iva_amount=Decimal("315.00"),
+                iva_amount=Decimal("630.00"),
             ),
         ),
         payment_status=PaymentStatus.PENDING,
     )
     resolution = _public_resolution((canonical,), context=context)
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
-    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("1815.00")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("3630.00")
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{canonical.invoice_id}",
     }

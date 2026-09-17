@@ -30,6 +30,7 @@ from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecord,
     M145CommunicationRecordState,
+    M145CommunicationRecordTransitionError,
     M145CommunicationRecordValidationError,
     M145CommunicationServiceError,
     create_m145_communication_record,
@@ -155,7 +156,7 @@ def test_m145_transition_and_existing_create_refuse_divergent_registry_coordinat
         monkeypatch.setattr(
             m145_records_module,
             "revision_carry_outcome",
-            lambda _ref: RevisionCarryOutcome(refused=True, selected_revision_id=None, detail="diverged"),
+            lambda _ref, **_: RevisionCarryOutcome(refused=True, selected_revision_id=None, detail="diverged"),
         )
 
         with pytest.raises(M145CommunicationRecordValidationError):
@@ -185,7 +186,7 @@ def test_mark_m145_communication_record_locally_completed_requires_prior_deliver
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        with pytest.raises(ValueError, match="delivered to payer before local completion"):
+        with pytest.raises(M145CommunicationRecordTransitionError, match="delivered to payer before local completion"):
             mark_m145_communication_record_locally_completed(
                 created.communication_record_id,
                 bucket_id=runtime.bucket_id,
@@ -218,7 +219,7 @@ def test_mark_m145_communication_record_delivered_to_payer_requires_valid_record
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
         )
-        with pytest.raises(ValueError, match="validation passes"):
+        with pytest.raises(M145CommunicationRecordValidationError, match="validation passes"):
             mark_m145_communication_record_delivered_to_payer(
                 created.communication_record_id,
                 bucket_id=runtime.bucket_id,

@@ -45,13 +45,21 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-__all__ = ["register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue", "secure_objects"]
 
 _BUCKET_ID = "2035baea-4afe-4fe3-b502-ff084fe79153"
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 14, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 14, 11, 0, tzinfo=UTC)
 _M200 = "200"
@@ -205,7 +213,7 @@ def _calculate_m200(
     operation: PinnedAuthorityOperation,
 ) -> tuple[BucketAggregationCalculationResult, CalculationRevisionCatalogueRepository]:
     _seed_m200_legal_entity_profile(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -237,9 +245,9 @@ def test_m200_refuses_business_ledger_rows_without_accounting_result_input(
         _calculate_m200(secure_objects, operation=operation)
 
     error = exc_info.value
-    message = resolve_error_message(error)
-    assert "does not derive accounting profit from ledger transactions yet" in message
-    assert "3 business ledger row(s)" in message
+    # The refusal is identified by its key and structured context, not by prose.
+    assert error.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert resolve_error_message(error)
     assert error.context is not None
     assert error.context["required_casilla_id"] == _RESULTADO_CONTABLE
     assert error.context["ledger_transaction_count"] == 3

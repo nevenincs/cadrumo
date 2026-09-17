@@ -51,7 +51,7 @@ from ..inventory import InventoryLedgerRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 #: The one guarded read-modify-write every singleton write verb must go through.
 _GUARDED_SEAM = "_storage.mutate"

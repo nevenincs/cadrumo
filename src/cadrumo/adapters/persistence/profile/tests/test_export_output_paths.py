@@ -49,6 +49,7 @@ from cadrumo.domain.deadlines.models import (
     RefundAccount,
     TaxpayerProfile,
 )
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
@@ -69,6 +70,19 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _product_software_identity() -> AeatProductSoftwareIdentity:
+    return AeatProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            AeatProductSoftwareEvidence(
+                reference="aeat-software-registration:export-output-paths",
+                digest="a" * 64,
+            ),
+        ),
+    )
+
+
 def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(
     isolated_backend: None,
     tmp_path: Path,
@@ -84,6 +98,8 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
                 calculation_revision_id=verified.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
             export_ports=modelo_export_ports_for_test(
@@ -175,6 +191,8 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
                 calculation_revision_id=verified.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
                 payment_election=PaymentElection.DOMICILIACION,
             ),
             workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=charge_iban),
@@ -288,6 +306,8 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
                 calculation_revision_id=rectificativa.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=refund_account),
             export_ports=modelo_export_ports_for_test(
@@ -336,6 +356,8 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
                     calculation_revision_id=rectificativa.calculation_revision_id,
                     output_path=output_path,
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
                 export_ports=modelo_export_ports_for_test(
@@ -373,6 +395,8 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
                     calculation_revision_id=rectificativa.calculation_revision_id,
                     output_path=output_path,
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
                 workflow_profile=_nota_three_profile(taxpayer_nif=taxpayer_nif, refund_account=None),
@@ -482,6 +506,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 calculation_revision_id=rectificativa.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                product_software_identity=_product_software_identity(),
                 prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
             ),
             workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
@@ -557,6 +582,8 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                     calculation_revision_id=verified.calculation_revision_id,
                     output_path=output_path,
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
                 workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
@@ -591,6 +618,8 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                     calculation_revision_id=verified.calculation_revision_id,
                     output_path=output_path,
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                     payment_election=PaymentElection.CUENTA_CORRIENTE,
                 ),
                 workflow_profile=_typed_profile_with_charge_account(
@@ -627,6 +656,8 @@ def test_public_ingreso_export_omits_did_page(
                 calculation_revision_id=verified.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=TaxpayerProfile(
                 tax_id=taxpayer_nif,
@@ -673,6 +704,8 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                     calculation_revision_id=verified.calculation_revision_id,
                     output_path=existing_dir,
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
                 export_ports=modelo_export_ports_for_test(
@@ -708,6 +741,8 @@ def test_export_refuses_empty_output_path(
                     calculation_revision_id=verified.calculation_revision_id,
                     output_path=Path(""),
                     actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
                 export_ports=modelo_export_ports_for_test(
@@ -739,6 +774,8 @@ def test_export_success_path_is_idempotent_overwrite(
                 calculation_revision_id=verified.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=profile,
             export_ports=modelo_export_ports_for_test(
@@ -758,6 +795,8 @@ def test_export_success_path_is_idempotent_overwrite(
                 calculation_revision_id=verified.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=profile,
             export_ports=modelo_export_ports_for_test(

@@ -10,13 +10,12 @@ from pathlib import Path
 import pytest
 
 from .....application.auth.operator_scope_ports import OperatorScopePorts
-from .....application.modelo.action_errors import StoredCalculationDriftError
 from .....application.modelo.calculation_actions import calculate_modelo_revision
 from .....application.modelo.data_inventory import DataInventoryChecklist, data_inventory_checklist
 from .....application.modelo.verification_actions import verify_modelo_revision
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
-from .....core.casilla_id import CasillaId
+from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.identity.hex_ids import CalculationRevisionId
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority
@@ -26,8 +25,12 @@ from .....domain.calculations.registry.schema_verification import (
     parse_verification_predicate_expression,
 )
 from .....domain.deadlines.models import TaxpayerProfile
-from .....domain.modelos.calculation_repository import upsert_calculation_revision
-from .....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
+from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
+from .....domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    derive_calculation_revision_id,
+)
 from .....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
 from .....entrypoints.adapter_composition import build_calculation_action_ports
 from ...storage.operator_scope import build_operator_scope_ports
@@ -43,7 +46,6 @@ from .verification_repository_support import (
 )
 from .verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
-    _CASILLA_00501,
     _CASILLA_01,
     _CASILLA_02,
     _CASILLA_03,
@@ -66,6 +68,8 @@ from .verification_substance_support import (
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+# Modelo 180's perceptor base: a registry-required manual input with its own grounding.
+_M180_PERCEPTOR_BASE: CasillaId = validated_casilla_id("perc.base")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -480,14 +484,14 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 
     contract regression: the observation provenance cross-check added in contract
     must detect when observations[i].value diverges from casilla_values for
-    the same casilla. The verify path raises StoredCalculationDriftError and
-    refuses VERIFICADO_COMPLETO.
+    the same casilla. The verify path refuses the revision before it can reach
+    VERIFICADO_COMPLETO.
 
     The tamper is applied by rewriting the stored catalogue with a mutated
     observation (different value from what casilla_values holds), keeping
-    the revision id and casilla_values intact. The content-hash check passes
-    because it does not cover observations; only the new provenance
-    cross-check catches the drift.
+    the revision id and casilla_values intact. The content-hash check does not
+    cover observations; the catalogue contract's observation consistency check
+    refuses the stored payload when verify reads it.
     """
     wu_repo, cr_repo, _vr_repo, bv_repo = repos
 
@@ -539,10 +543,18 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 
     # Build a tampered revision bypassing the model validator (simulates raw storage drift).
     tampered_revision = revision.model_copy(update={"observations": tampered_observations})
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), tampered_revision))
+    # The catalogue re-validates its revisions, so the corrupted row is written
+    # through an unvalidated catalogue exactly as drifted storage would hold it.
+    stored = cr_repo.load()
+    cr_repo.save(
+        CalculationRevisionCatalogue.model_construct(
+            revisions={**stored.revisions, tampered_revision.calculation_revision_id: tampered_revision},
+        )
+    )
 
-    # The public verify action must refuse the tampered persisted revision.
-    with pytest.raises(StoredCalculationDriftError, match="provenance drift"):
+    # The public verify action must refuse the tampered persisted revision; the
+    # catalogue contract refuses it at the storage boundary, before any gate runs.
+    with pytest.raises(CalculationRevisionPersistenceError) as refusal:
         _verify_modelo_revision(
             tampered_revision.calculation_revision_id,
             actor="operator-test",
@@ -550,6 +562,8 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
+    assert refusal.value.context is not None
+    assert refusal.value.context["reason"] == "invalid_payload"
 
 
 # ---------------------------------------------------------------------------
@@ -574,13 +588,13 @@ def test_required_manual_checklist_carries_registry_provenance() -> None:
         period=Period.from_year_and_code(2024, "0A"),
         bucket_id=None,
     )
-    required = next(entry for entry in checklist.required_manual if entry.casilla_id == _CASILLA_00501)
+    required = next(entry for entry in checklist.required_manual if entry.casilla_id == _M180_PERCEPTOR_BASE)
     snapshot = published_authority_operation().snapshot("180", filing_year=2024, period="0A")
-    casilla = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_00501)
+    casilla = next(c for c in snapshot.revision.casillas if c.id == _M180_PERCEPTOR_BASE)
     expected_legal_refs = frozenset(str(r) for r in casilla.legal_refs)
     expected_source_refs = frozenset(str(r) for r in casilla.source_refs)
-    assert expected_legal_refs, "registry casilla 00501 must declare legal_refs (oracle precondition)"
-    assert expected_source_refs, "registry casilla 00501 must declare source_refs (oracle precondition)"
+    assert expected_legal_refs, "registry casilla perc.base must declare legal_refs (oracle precondition)"
+    assert expected_source_refs, "registry casilla perc.base must declare source_refs (oracle precondition)"
 
     assert required.legal_refs, "checklist.legal_refs must not be empty for a registry-backed casilla"
     assert frozenset(required.legal_refs) == expected_legal_refs, (

@@ -47,10 +47,21 @@ from ..calculation_observations import CalculationObservationRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "76634915-7e84-4db9-9c06-0c67ad5a164d"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _YEAR = 2025
 _ANNUAL_PERIOD = "0A"
 _REVISION_ID = "2025"
@@ -108,7 +119,7 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="M"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),

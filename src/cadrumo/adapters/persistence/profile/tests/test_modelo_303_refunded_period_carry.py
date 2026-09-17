@@ -33,7 +33,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -249,11 +249,14 @@ def _carry_in_for_year_n_plus_1(
 ) -> Decimal | None:
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
     snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-    relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo, operation=operation)
-    resolved: dict[RelationId, Decimal] = {
-        item.relation: item.value for item in relation_values.values if item.value is not None
-    }
-    return resolved.get(_CARRY_RELATION)
+    prefill = resolve_bindings_from_local_store(
+        snapshot_n1,
+        repository=obs_repo,
+        captured_at=_CLOCK,
+        iva_history_repository=IvaCompensationHistoryRepository(objects=obs_repo.secure_object_repository),
+        operation=operation,
+    )
+    return prefill.binding_values.get(_CARRY_RELATION)
 
 
 def test_refunded_4t_period_carries_zero_into_next_period(
@@ -285,11 +288,15 @@ def test_refunded_4t_period_carries_zero_into_next_period(
             captured_at=_CLOCK,
             result_disposition=ResultDisposition.DEVOLUCION,
             taxpayer_nif="12345678Z",
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=obs_repo.secure_object_repository
+            ),
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo, operation=operation)
-        history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
+        history_state = IvaCompensationHistoryRepository(objects=obs_repo.secure_object_repository).load_period(
+            _year_n_4t_work_unit().period
+        )
 
     assert carry_in == Decimal("0")
     assert history_state is not None
@@ -325,11 +332,15 @@ def test_carried_4t_period_carries_the_credit_forward_control(
             captured_at=_CLOCK,
             result_disposition=ResultDisposition.COMPENSACION,
             taxpayer_nif="12345678Z",
-            iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(
+                objects=obs_repo.secure_object_repository
+            ),
         )
 
         carry_in = _carry_in_for_year_n_plus_1(obs_repo, operation=operation)
-        history_state = IvaCompensationHistoryRepository().load_period(_year_n_4t_work_unit().period)
+        history_state = IvaCompensationHistoryRepository(objects=obs_repo.secure_object_repository).load_period(
+            _year_n_4t_work_unit().period
+        )
 
     assert carry_in is not None
     assert carry_in == carried_saldo

@@ -96,7 +96,7 @@ from .....entrypoints.adapter_composition import build_calculation_action_ports
 from ..buckets import BucketEventHistoryRepository
 from .published_authority_support import published_authority_operation
 
-__all__ = ["register_wizard_catalogue"]
+__all__ = ["register_wizard_catalogue", "secure_objects"]
 
 from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from .....application.modelo.action_errors import ModeloRequiredBindingsMissingError
@@ -118,11 +118,19 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "7a432b52-bcc2-4e8c-a150-93a0f33812f3"
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M202 = "202"
