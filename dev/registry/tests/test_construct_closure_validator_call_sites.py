@@ -30,6 +30,7 @@ from ._referential_integrity_support import (
     minimal_modelo,
     minimal_revision,
 )
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,6 +58,7 @@ def test_modelo_validation_rejects_construct_without_official_source_evidence() 
     ):
         RegistryValidator(
             catalogues.model_copy(update={"sources": {REFERENCE_SOURCE_ID: layout_only_source}}),
+            user_profile_schema=load_user_profile_schema(),
         ).validate_modelo(minimal_modelo(revision))
 
 
@@ -107,11 +109,11 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
 
 
 #: Identity and grounding fields on ``ConstructDefinition`` that are not
-#: member-reference sections: ``id``/``localization_key`` name the construct
+#: member-reference sections: ``id``/``localization_keys`` name the construct
 #: itself, ``legal_refs``/``source_refs`` are the construct's OWN grounding
 #: declaration (what ``validate_construct_closure`` checks member refs
 #: AGAINST), never a set of member ids to walk.
-_NON_MEMBER_CONSTRUCT_FIELDS = frozenset({"id", "localization_key", "legal_refs", "source_refs"})
+_NON_MEMBER_CONSTRUCT_FIELDS = frozenset({"id", "localization_keys", "legal_refs", "source_refs"})
 
 
 def test_construct_member_attrs_is_exactly_the_construct_definitions_member_sections() -> None:

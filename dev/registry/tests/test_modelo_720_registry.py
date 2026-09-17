@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .profile_schema_support import committed_registry_validator
+from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 _WWW1_HOST = aeat_host("www1")
@@ -140,18 +140,16 @@ def test_validator_rejects_non_dependency_previous_filing_classification() -> No
         committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
+_SUPPORT = committed_supported_filing_years()
+
+
 @pytest.mark.parametrize(
-    ("filing_year", "expected_revision"),
-    [
-        (2012, "2013-y-siguientes"),
-        (2018, "2013-y-siguientes"),
-        (2024, "2013-y-siguientes"),
-    ],
+    "filing_year",
+    sorted({_SUPPORT.floor, (_SUPPORT.floor + _SUPPORT.horizon) // 2, _SUPPORT.horizon}),
 )
-def test_committed_modelo_720_resolves_revision_by_filing_year(
-    filing_year: int,
-    expected_revision: str,
-) -> None:
+def test_committed_modelo_720_resolves_revision_by_filing_year(filing_year: int) -> None:
+    """Every supported year selects the single open-ended edition."""
+    expected_revision = "2013-y-siguientes"
     modelo, catalogues = _load_modelo_720()
     snapshot = build_snapshot(
         modelo,

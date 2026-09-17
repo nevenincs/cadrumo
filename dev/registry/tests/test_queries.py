@@ -261,11 +261,17 @@ def test_bindings_for_scope_resolves_the_law_determined_revision() -> None:
 
     authority = compiled_bundled_authority()
     service = _service()
-    horizon = authority.catalogues.require_supported_filing_years().horizon
-    scoped_year = horizon - 1
+    support = authority.catalogues.require_supported_filing_years()
+    annual_years = sorted(
+        int(revision_id)
+        for revision_id in authority.modelo("100").revisions
+        if str(revision_id).isdigit() and support.floor <= int(revision_id) <= support.horizon
+    )
+    assert len(annual_years) >= 2, "modelo 100 needs two supported renta editions to tell them apart"
+    scoped_year, latest_year = annual_years[-2], annual_years[-1]
     selected = authority.snapshot("100", filing_year=scoped_year, period="0A").revision
-    latest = authority.snapshot("100", filing_year=horizon, period="0A").revision
-    assert selected.id != latest.id, "the envelope's last two renta years share a revision, so nothing is shown"
+    latest = authority.snapshot("100", filing_year=latest_year, period="0A").revision
+    assert selected.id != latest.id
 
     report = service.bindings_for_scope("100", filing_year=scoped_year, period="0A")
 
