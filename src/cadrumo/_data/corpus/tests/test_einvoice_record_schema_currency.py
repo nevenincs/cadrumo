@@ -74,7 +74,11 @@ def _asserted_through() -> int:
 
 
 def _master_supported_filing_years() -> tuple[int, ...]:
-    """Return the years the one writable master declaration carries."""
+    """Return the authored filing years the one writable master declaration spans.
+
+    The declaration is written as bounds: ``floor`` through ``horizon`` is the
+    authored span, and a year above the horizon is only carried forward.
+    """
     path = _DATA_ROOT / "registry" / "aeat" / "legal" / "supported-filing-years.toml"
     payload = parse_toml(path.read_text(encoding="utf-8"))
     declaration = payload.get("supported_filing_years")
@@ -82,11 +86,12 @@ def _master_supported_filing_years() -> tuple[int, ...]:
         "the bundled registry declares no supported_filing_years catalogue; "
         "this gate has no master window to measure against"
     )
-    years = declaration.get("years")
-    assert isinstance(years, list) and all(isinstance(year, int) for year in years), (
-        "supported_filing_years.years must be a list of filing years"
+    floor = declaration.get("floor")
+    horizon = declaration.get("horizon")
+    assert isinstance(floor, int) and isinstance(horizon, int) and floor <= horizon, (
+        "supported_filing_years must declare integer floor <= horizon bounds"
     )
-    return tuple(cast(list[int], years))
+    return tuple(range(floor, horizon + 1))
 
 
 def test_the_snapshot_is_asserted_current_through_the_whole_filing_window() -> None:
