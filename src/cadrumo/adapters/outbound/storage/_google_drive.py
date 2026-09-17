@@ -46,6 +46,7 @@ from typing import Any
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.config import load_settings
 from ....core.config_integration_fields import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -771,7 +772,7 @@ class GoogleDriveProvider:
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean)
         if namespace_folder_id is None:
-            raise OutboundStorageValidationError(
+            raise InternalInvariantError(
                 f"Drive namespace folder {namespace_clean!r} was neither resolved nor created",
             )
         response, action = self._put_drive_file(
