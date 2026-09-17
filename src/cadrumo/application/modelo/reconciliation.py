@@ -839,6 +839,17 @@ def reconcile_receipt_totals(
     ``total`` diff carrying the reconciling expectation's ``legal_refs`` /
     ``source_refs``. Every branch that cannot perform the comparison returns a
     ``totals_not_reconciled`` advisory instead of silently passing.
+
+    Args:
+        work_unit: The filing coordinate whose snapshot is resolved.
+        justificante: The stored receipt carrying the printed total.
+        revision: The presented
+            :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+            or ``None`` when none exists.
+        operation: The generation-pinned authority the snapshot is read under.
+
+    Returns:
+        The typed diffs and advisories the comparison produced.
     """
     modelo = str(work_unit.modelo)
     try:

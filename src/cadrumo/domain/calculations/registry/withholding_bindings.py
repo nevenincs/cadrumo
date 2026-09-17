@@ -743,6 +743,11 @@ def resolve_withholding_binding_row_values(
     the row index is stable across reads. An unset field (``None`` or blank
     text) is left out of the row rather than filled, so a required value stays
     visibly absent.
+
+    Args:
+        revision: The :class:`ModeloRevision` declaring the row-producer
+            withholding bindings to resolve.
+        observations: The withholding observations one row is built from.
     """
     row_bindings = [
         (binding, selector)

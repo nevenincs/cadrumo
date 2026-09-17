@@ -361,6 +361,24 @@ applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
 review_status = "pending_review"
 
+[sources."boe-dr-345-2022"]
+# The ejercicio-2022 record design is the ANEXO of Orden HFP/823/2022 itself:
+# AEAT publishes no separate design for this ejercicio, and the four later
+# amending ordenes each apply first to a later ejercicio.
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/05-345-orden-hfp-823-2022-boe-a-2022-14168.pdf"
+sha256 = "75975d86406df229cd5eaebc7ba26dc06359f753faf4553d50ee9e7743a61825"
+bytes = 495960
+retrieved_at = 2026-09-17
+published_at = 2022-08-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2022/08/29/pdfs/BOE-A-2022-14168.pdf"
+review_status = "pending_review"
+
 [sources."aeat-dr-345-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

@@ -191,19 +191,19 @@ modelo:
                 import de la operación.'
               label: 'Part vinculada 1: Import'
             vinculada-1-ingreso-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 1: Indicador d''ingrés/pagament'
             vinculada-1-metodo-valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 1: Mètode de valoració'
             vinculada-1-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 1: NIF / NIE / CIF'
             vinculada-1-provincia-pais:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 1: Província o país'
             vinculada-1-razon-social:
@@ -227,19 +227,19 @@ modelo:
                 import de la operación.'
               label: 'Part vinculada 2: Import'
             vinculada-2-ingreso-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 2: Indicador d''ingrés/pagament'
             vinculada-2-metodo-valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 2: Mètode de valoració'
             vinculada-2-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 2: NIF / NIE / CIF'
             vinculada-2-provincia-pais:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 2: Província o país'
             vinculada-2-razon-social:
@@ -263,19 +263,19 @@ modelo:
                 import de la operación.'
               label: 'Part vinculada 3: Import'
             vinculada-3-ingreso-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 3: Indicador d''ingrés/pagament'
             vinculada-3-metodo-valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 3: Mètode de valoració'
             vinculada-3-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 3: NIF / NIE / CIF'
             vinculada-3-provincia-pais:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 3: Província o país'
             vinculada-3-razon-social:
@@ -299,19 +299,19 @@ modelo:
                 import de la operación.'
               label: 'Part vinculada 4: Import'
             vinculada-4-ingreso-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 4: Indicador d''ingrés/pagament'
             vinculada-4-metodo-valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 4: Mètode de valoració'
             vinculada-4-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 4: NIF / NIE / CIF'
             vinculada-4-provincia-pais:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 4: Província o país'
             vinculada-4-razon-social:
@@ -335,19 +335,19 @@ modelo:
                 import de la operación.'
               label: 'Part vinculada 5: Import'
             vinculada-5-ingreso-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 5: Indicador d''ingrés/pagament'
             vinculada-5-metodo-valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 5: Mètode de valoració'
             vinculada-5-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 5: NIF / NIE / CIF'
             vinculada-5-provincia-pais:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 232.
               label: 'Part vinculada 5: Província o país'
             vinculada-5-razon-social:

@@ -274,12 +274,22 @@ def compile_validated_authority(
     identity: RegistryIdentity | None = None,
     profile_schema_path: Path | None = None,
     captured_profile_schema: CapturedProfileSchema | None = None,
+    verify_evidence_bytes: bool = False,
 ) -> ValidatedRegistryAuthority:
     """Compile one mutable source candidate through the development cache.
 
-    Both registry identity and a byte-accurate source-evidence receipt are
-    observed before reuse. This cache is intentionally unavailable to product
-    runtime, which only reads a published authority artifact.
+    Both registry identity and a source-evidence receipt are observed before
+    reuse. This cache is intentionally unavailable to product runtime, which
+    only reads a published authority artifact.
+
+    ``verify_evidence_bytes`` re-stats every evidence file before consulting the
+    cache. Publication sets it, because a published generation asserts the bytes
+    it was built from. Left unset, a bundled source root is served from the
+    fingerprint cache under the same short time-to-live the bundled registry
+    window already rests on, and any other root is re-stated regardless: the
+    receipt was otherwise recomputed by a full stat walk of a read-only package
+    tree on every call, which is what made a cache HIT cost as much as a miss
+    for the corpus-wide gates that call this in a loop.
     """
     pair = authoring_root_pair(registry_root, source_root)
     if identity is None:
@@ -294,7 +304,7 @@ def compile_validated_authority(
     source_receipt = content_hash_hex(
         {
             "evidence": source_evidence_receipt(
-                collect_source_evidence_fingerprints(pair.source_root, use_cache=False)
+                collect_source_evidence_fingerprints(pair.source_root, use_cache=not verify_evidence_bytes)
             ),
             "profile_path": profile_path.resolve().as_posix(),
             "profile_sha256": sha256_hex(captured.payload),

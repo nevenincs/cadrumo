@@ -77,7 +77,7 @@ class _DocumentConstructor(Protocol):
 class _EventStream(Protocol):
     """Narrows ``yaml.parse``, unannotated in the PyYAML stubs."""
 
-    def parse(self, stream: IO[str], Loader: type[yaml.CSafeLoader] = ...) -> Iterator[yaml.Event]: ...
+    def parse(self, stream: IO[str], loader: type[yaml.CSafeLoader], /) -> Iterator[yaml.Event]: ...
 
 
 _SCAN_RESOLVER = yaml.resolver.Resolver()
@@ -117,7 +117,7 @@ def _scan_shard_for_key(handle: IO[str], key: str) -> str | None:
     # A sequence flattens to one stringified value, so nothing under it is a key.
     opaque_depth = 0
     documents = 0
-    for event in cast(_EventStream, yaml).parse(handle, Loader=yaml.CSafeLoader):
+    for event in cast(_EventStream, yaml).parse(handle, yaml.CSafeLoader):
         if isinstance(event, yaml.AliasEvent) or getattr(event, "anchor", None) is not None:
             raise _UnscannableShardError
         if isinstance(event, yaml.DocumentStartEvent):

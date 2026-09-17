@@ -2,7 +2,8 @@
 
 The transaction domain boundary used by :mod:`~application.ledger` is defined
 across the owning modules listed below. :class:`~domain.transactions.models.Transaction` wraps an upstream
-:class:`~domain.transactions.raw_transaction.RawTransaction` and its :class:`~domain.transactions.raw_transaction.RawProvenance`, while
+:class:`~domain.transactions.raw_transaction.RawTransaction` and its
+:class:`~domain.transactions.raw_transaction.RawProvenance`, while
 :class:`~domain.transactions.models.TransactionCatalogue` keeps the immutable mapping keyed by the
 content-derived transaction id. Import helpers such as
 :func:`~domain.transactions.models.derive_transaction_id`,

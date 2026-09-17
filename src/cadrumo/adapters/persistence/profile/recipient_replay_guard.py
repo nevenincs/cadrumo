@@ -3,7 +3,8 @@
 Every :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage` carries a
 fresh, unique ``envelope_nonce_hex`` minted at encryption time (see
 :mod:`~application.modelo.review_package_recipient_encryption`). This
-module lets the recipient side of :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`
+module lets the recipient side of
+:func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`
 record which nonces have already been successfully decrypted, so a captured
 ciphertext replayed a second time against the same recipient bucket is
 refused rather than silently re-accepted.

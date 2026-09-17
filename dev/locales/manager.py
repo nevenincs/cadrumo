@@ -695,7 +695,7 @@ class LocaleManager:
             _rewrite_locale_mapping(guard, target, data)
         return target
 
-    def set_locale_values(self, locale: str, values: dict[str, str | None]) -> Path:
+    def set_locale_values(self, locale: str, values: Mapping[str, str | None]) -> Path:
         """Set a validated batch of leaves with one atomic catalogue rewrite."""
         target = self._locale_path(locale)
         if target.is_dir():

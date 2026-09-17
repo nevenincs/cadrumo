@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
-from pydantic import ConfigDict, TypeAdapter, ValidationError
+from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.corpus_text import normalise_corpus_text
@@ -45,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 CORPUS_TEXT_CACHE_DIR_ENV = "CADRUMO_CORPUS_TEXT_CACHE_DIR"
 """Environment variable that relocates the corpus-text validation cache."""
 
-_CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
 
 # Shipped sidecar constants (written by the corpus extraction tooling).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
@@ -240,9 +239,9 @@ def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None =
         raise OSError(f"could not extract text from XLSX source {path}: {exc}") from exc
 
 
-_disk_cache: dict[str, str] | None = None
-_disk_cache_dirty: bool = False
-_DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
+#: Entries observed or computed in this process, pending a write. One file per
+#: entry is written on flush; nothing reads the whole cache.
+_pending_entries: dict[str, str] = {}
 
 
 def corpus_text_cache_dir() -> Path:
@@ -264,75 +263,48 @@ def corpus_text_cache_dir() -> Path:
     return dev_cache_dir("corpus-text")
 
 
-def _corpus_text_cache_path() -> Path:
-    return corpus_text_cache_dir() / _CORPUS_TEXT_CACHE_FILENAME
+def _corpus_text_entry_path(cache_key: str) -> Path:
+    """Where one normalised extraction is kept, keyed by its own cache key.
+
+    ONE FILE PER ENTRY, following the record-design extraction cache. The
+    predecessor kept every entry in a single JSON that reached tens of
+    megabytes, and reading it cost about twenty seconds -- paid by every
+    process, so once per xdist worker per batch, to answer lookups that each
+    need one value. The key already embeds the source's size and mtime, so a
+    stale entry cannot match a changed file and per-entry files need no merge.
+    """
+    return corpus_text_cache_dir() / f"corpus_text_{sha256_hex(cache_key.encode())}.txt"
 
 
 def flush_corpus_text_cache() -> None:
-    """Persist accumulated corpus-text entries in one write.
+    """Persist the entries this process computed, one file each.
 
-    Cache misses only mutate the in-process mapping and mark it dirty; the
-    validation entry points flush once when they finish. Writing per miss was
-    accidentally quadratic: every miss re-read and fully rewrote a JSON file
-    that grows to tens of megabytes, which alone cost ~13 seconds of the
-    first-touch registry validation on an end-user machine.
+    A miss only records its entry in memory; the validation entry points flush
+    once when they finish, so a run that recomputes many extractions writes
+    them together rather than during the walk that found them. A failed write
+    only costs the next process the same extraction.
     """
-    global _disk_cache_dirty
-    if not _disk_cache_dirty or _disk_cache is None:
-        return
-    _write_disk_cache(_disk_cache)
-    _disk_cache_dirty = False
+    while _pending_entries:
+        cache_key, text = _pending_entries.popitem()
+        location = _corpus_text_entry_path(cache_key)
+        try:
+            location.parent.mkdir(parents=True, exist_ok=True)
+            atomic_write_best_effort_text(location, text, encoding="utf-8")
+        except Exception:
+            _LOGGER.warning("Could not write corpus text cache entry at %s", location, exc_info=True)
 
 
-def _load_disk_cache() -> dict[str, str]:
-    global _disk_cache
-    if _disk_cache is not None:
-        return _disk_cache
-    cache_path = _corpus_text_cache_path()
-    if not cache_path.is_file():
-        _disk_cache = {}
-        return _disk_cache
+def _persisted_corpus_text(cache_key: str) -> str | None:
+    """Return the persisted extraction for ``cache_key``, or ``None`` to recompute."""
+    location = _corpus_text_entry_path(cache_key)
     try:
-        with open(cache_path, encoding="utf-8") as f:
-            loaded = _DISK_CACHE_ADAPTER.validate_python(json.load(f))
-            _disk_cache = loaded
-            return loaded
-    except Exception:
-        # Degrade to a cache miss (the entries recompute deterministically),
-        # but surface the anomaly rather than swallowing it silently.
-        _LOGGER.warning("Ignoring unreadable corpus text cache at %s; recomputing", cache_path, exc_info=True)
-        _disk_cache = {}
-        return _disk_cache
+        return location.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    except UnicodeDecodeError:
+        _LOGGER.warning("Ignoring undecodable corpus text cache entry at %s; recomputing", location, exc_info=True)
+        return None
 
-
-def _write_disk_cache(data: dict[str, str]) -> None:
-    cache_path = _corpus_text_cache_path()
-    try:
-        # Read-merge-before-write narrows the multi-process last-writer-wins
-        # window that the atomic replace alone does not close: fold in any
-        # entries a concurrent writer committed since our in-memory copy
-        # loaded, so a parallel writer's new key is not dropped. The residual
-        # race (two writers merging the same pre-image) can only cost a
-        # recompute, never a wrong value, because every key embeds the source
-        # file's size and mtime -- a stale entry cannot match a changed file.
-        merged: dict[str, str] = {}
-        if cache_path.is_file():
-            try:
-                with open(cache_path, encoding="utf-8") as f:
-                    on_disk = _DISK_CACHE_ADAPTER.validate_python(json.load(f))
-                merged.update(on_disk)
-            except Exception:
-                _LOGGER.debug("Ignoring unreadable corpus text cache while merging at %s", cache_path, exc_info=True)
-        merged.update(data)
-        # Compact separators: this is a machine cache that reaches tens of
-        # megabytes; indentation only inflates every read and write.
-        atomic_write_best_effort_text(
-            cache_path,
-            json.dumps(merged, ensure_ascii=False, separators=(",", ":")),
-            encoding="utf-8",
-        )
-    except Exception:
-        _LOGGER.warning("Could not write corpus text cache at %s", cache_path, exc_info=True)
 
 
 def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
@@ -585,20 +557,17 @@ class EvidenceValidator:
             self._source_text_cache[source.id] = global_cached
             return global_cached
 
-        # Check disk cache
+        # One persisted entry, read by key rather than by loading the whole cache.
         cache_key_str = json.dumps(source_key)
-        disk_cache = _load_disk_cache()
-        if cache_key_str in disk_cache:
-            normalised = disk_cache[cache_key_str]
-            _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
-            self._source_text_cache[source.id] = normalised
-            return normalised
+        persisted = _pending_entries.get(cache_key_str) or _persisted_corpus_text(cache_key_str)
+        if persisted is not None:
+            _NORMALISED_SOURCE_TEXT_CACHE[source_key] = persisted
+            self._source_text_cache[source.id] = persisted
+            return persisted
 
         normalised = _read_source_text(source, source_path, source_root=source_root)
 
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
-        disk_cache[cache_key_str] = normalised
-        global _disk_cache_dirty
-        _disk_cache_dirty = True
+        _pending_entries[cache_key_str] = normalised
         return normalised

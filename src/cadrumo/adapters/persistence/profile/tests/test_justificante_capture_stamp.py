@@ -30,6 +30,7 @@ from cadrumo.application.live.justificante import register_capture_as_filing_evi
 from cadrumo.application.live.justificante_ports import JustificanteRegistrationPorts
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
@@ -108,8 +109,11 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
         .load()
         .for_bucket(_active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
-    assert [(event.payload["outcome"], event.payload["notices"]) for event in events] == [
-        ("unverifiable", "receipt_totals_not_reconciled"),
+    assert [
+        (event.payload["outcome"], event.payload["notice_count"], event.payload["notice_codes_sha256"])
+        for event in events
+    ] == [
+        ("unverifiable", "1", sha256_hex(b"receipt_totals_not_reconciled")),
     ]
 
 

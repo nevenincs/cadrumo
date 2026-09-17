@@ -115,6 +115,7 @@ def _design_dir(modelo_id: str) -> Path:
     return bundled_path(*_DESIGN_ROOT_PARTS, f"modelo_{modelo_id}")
 
 
+@cache
 def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
     """``(design year, source path)`` pairs, first source per year winning."""
     seen: dict[int, Path] = {}
@@ -331,6 +332,7 @@ def _catalogue_ejercicio_span() -> dict[str, tuple[int, int]]:
     return spans
 
 
+@cache
 def _design_coverage_years(path: Path) -> tuple[int, ...]:
     """Every ejercicio a design covers, from its content and its filename TOGETHER.
 
@@ -411,6 +413,7 @@ def _coverage_start_period(name: str) -> int | None:
     return 1 if kind == "hasta" else period
 
 
+@cache
 def _design_fingerprint(path: Path) -> tuple[object, ...]:
     """Format-independent identity of a design: what it DECLARES, not how it is packaged.
 
@@ -442,6 +445,7 @@ def _design_fingerprint(path: Path) -> tuple[object, ...]:
     )
 
 
+@cache
 def _readable_designs_by_year(modelo_id: str) -> dict[int, list[Path]]:
     """Group distinct readable designs by their first covered ejercicio."""
     by_year: dict[int, list[Path]] = {}
@@ -511,6 +515,7 @@ def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
     return {year: tuple(paths) for year, paths in sorted(grouped.items())}
 
 
+@cache
 def _design_sources(modelo_id: str) -> list[Path]:
     """Every bundled design SOURCE for one modelo, deterministically ordered.
 
@@ -531,6 +536,7 @@ def _design_sources(modelo_id: str) -> list[Path]:
     )
 
 
+@cache
 def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Parse one design SOURCE, dispatching on its suffix.
 
@@ -561,9 +567,14 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
         # the sheets it did read; refusing it here would replace a comparison that
         # sees most of a boundary with one that sees none of it. The completeness
         # of each read is reported by the coverage guard rather than resolved here.
-        return parser(path).accept_partial()
+        sheets = parser(path).accept_partial()
     except Exception:
-        return ()
+        sheets = ()
+    # The parse itself is persisted across processes by the compiler's own
+    # record-design extraction cache, which keys on the source bytes, its
+    # sidecars and the extractor code. This memo only stops the same process
+    # re-entering that cache once per caller.
+    return sheets
 
 
 def _unparseable_design_sources(modelo_id: str) -> tuple[Path, ...]:
@@ -641,6 +652,7 @@ def _parse_extracted(path: Path) -> dict[str, int]:
     return table
 
 
+@cache
 def _parse_design(path: Path) -> dict[str, int]:
     """box number -> record offset for one design, source first, derivative second."""
     table: dict[str, int] = {}
@@ -668,6 +680,7 @@ def _parse_design(path: Path) -> dict[str, int]:
     return table or _parse_extracted(path)
 
 
+@cache
 def _page_lengths(path: Path) -> tuple[str, ...]:
     """The per-sheet declared record length, source first, derivative second.
 
@@ -695,6 +708,7 @@ def _page_lengths(path: Path) -> tuple[str, ...]:
     return tuple(str(total) for total in _PAGE_TOTAL.findall(derivative.read_text(encoding="utf-8", errors="replace")))
 
 
+@cache
 def _occupancy(path: Path) -> dict[tuple[str, int], bool]:
     """``(sheet, offset) -> is_reserved`` for every field in one design.
 

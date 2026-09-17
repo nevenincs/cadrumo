@@ -38,7 +38,7 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import Period, RegistryPeriodCode
+from ....core.period import Period, PeriodError, RegistryPeriodCode
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.type_guards import is_object_mapping
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
@@ -245,7 +245,7 @@ class RegistryModeloObservation(BaseModel):
             return data
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError as exc:
+        except (ValueError, PeriodError) as exc:
             # An administrative coordinate has no calendar span, so a
             # non-filing modelo simply carries no filing_period. Anything
             # else that cannot form a Period -- a combined display form such

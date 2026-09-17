@@ -180,7 +180,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
-        """Return the :class:`~adapters.persistence.storage.envelope.contract.Envelope` parameterised for ``payload_cls``.
+        """Return the :class:`Envelope` parameterised for ``payload_cls``.
 
         This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
         at call sites. The returned class is the concrete generic alias Pydantic
@@ -254,7 +254,7 @@ def load_envelope[PayloadT: BaseModel](
             :class:`~adapters.persistence.storage.errors.EnvelopeVersionError`.
 
     Returns:
-        The validated :class:`~adapters.persistence.storage.envelope.contract.Envelope` at the consumer's expected version.
+        The validated :class:`Envelope` at the consumer's expected version.
 
     Raises:
         ClassificationError: If the on-disk classification does not

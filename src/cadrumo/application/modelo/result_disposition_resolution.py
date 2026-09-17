@@ -170,7 +170,19 @@ def base_modelo_result_disposition(
     period: Period,
     operation: PinnedAuthorityOperation,
 ) -> ResultDisposition:
-    """Return the disposition the final-result casilla implies before any operator election."""
+    """Return the disposition the final-result casilla implies before any operator election.
+
+    Args:
+        work_unit: The filing coordinate naming the modelo and its revision.
+        revision: The
+            :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            whose result casilla decides the sign.
+        period: The period the disposition is resolved for.
+        operation: The generation-pinned authority the casillas are read under.
+
+    Returns:
+        The derived disposition, or the declared fallback when the modelo has none.
+    """
     base = derive_result_disposition(
         work_unit.modelo,
         _result_disposition_values_for_revision(

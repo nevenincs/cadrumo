@@ -207,17 +207,21 @@ def casilla_collapse(
 
 @app.command("casilla-author")
 def casilla_author(
-    manifest: Annotated[Path, typer.Argument(help="JSON object mapping locale codes to casilla-key values.")],
+    manifest: Annotated[
+        Path,
+        typer.Argument(help="JSON object mapping locale codes to casilla-key values; null removes a key."),
+    ],
 ) -> None:
     """Install authored casilla values after proving they are the only source of change."""
     from .modelo_casilla_catalogue import CollapseVerificationError, ModeloCasillaCatalogue
 
     payload = json.loads(manifest.read_text(encoding=UTF_8_ENCODING))
     if not isinstance(payload, dict) or not all(
-        isinstance(values, dict) and all(isinstance(key, str) and isinstance(text, str) for key, text in values.items())
+        isinstance(values, dict)
+        and all(isinstance(key, str) and (text is None or isinstance(text, str)) for key, text in values.items())
         for values in payload.values()
     ):
-        typer.echo("refused: the manifest must map locales to string key/value objects", err=True)
+        typer.echo("refused: the manifest must map locales to string keys with string or null values", err=True)
         raise typer.Exit(code=1)
     try:
         changed = ModeloCasillaCatalogue.published(LOCALES_DIR).author(payload, LOCALES_DIR)

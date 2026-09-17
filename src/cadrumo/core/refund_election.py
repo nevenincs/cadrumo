@@ -19,7 +19,8 @@ filed disposition from that choice plus the
 The enum is threaded by :class:`~application.modelo.export.ModeloExportCommand`
 and :func:`~application.modelo.filing_actions.file_modelo_revision` into the same
 disposition resolver that
-:func:`~application.modelo.result_disposition_resolution.resolve_modelo_result_disposition` applies. It is not the refund account itself: the
+:func:`~application.modelo.result_disposition_resolution.resolve_modelo_result_disposition` applies.
+It is not the refund account itself: the
 cuenta-devolución data lives in :class:`~domain.deadlines.models.RefundAccount`,
 and a refund disposition without that account is refused downstream by the
 export path.

@@ -12,7 +12,8 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ...compiler.loader import load_registry_tree, load_shared_catalogues
+from ...compiler.authority import compiled_bundled_authority
+from ...compiler.loader import load_shared_catalogues
 from .._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from .._tree_validation import GeneratedExportTreeValidationContext
 from ..candidate_staging import (
@@ -81,6 +82,7 @@ _SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
+@cache
 def supporting_modelos(tree: GeneratedExportTree) -> frozenset[str]:
     """The bundled modelos a tree's revisions fold values in from, excluding the tree's own modelo."""
     modelo_root = bundled_path("registry", "aeat", "modelos", tree.modelo)
@@ -99,8 +101,14 @@ def _bundled_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogue
     A single modelo directory cannot stand in: revision facts resolve against
     the compiled governed facts and against the other modelos a revision
     references, and only the whole-tree load hydrates both.
+
+    Taken from the validated authority, which compiles those same inputs once
+    per process: a second raw load yields an equal graph of different objects,
+    and the validator memos key on object identity, so the duplicate graph paid
+    for validation the authority had already done.
     """
-    return load_registry_tree(bundled_path("registry", "aeat"))
+    authority = compiled_bundled_authority()
+    return authority.modelos, authority.catalogues
 
 
 @cache

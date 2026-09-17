@@ -104,15 +104,22 @@ applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR165_2016.pdf"
 review_status = "pending_review"
 
+# AEAT's current index names this design «Orden HAP/2455/2013 (actualizado
+# por Orden HFP/1284/2023 de 28 de noviembre)». Article 13 of that orden adds
+# the EMPRESA EMERGENTE campo at position 184 of the tipo 1 record, and its
+# disposición final única applies it first to the declaraciones informativas of
+# ejercicio 2023. Neither Orden HAC/1504/2024 nor Orden HAC/1430/2025 amends
+# Orden HAP/2455/2013, so this design governs from ejercicio 2023; the
+# «Ejercicio 2026» page heading is AEAT's campaign label, not its start.
 [sources."aeat-dr-165-2026"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-record_design_epoch = "2026"
+record_design_epoch = "2023"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_165/files/01-165-diseno-de-registro-actualizado-en-2023.pdf"
 sha256 = "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263"
 bytes = 208095
 retrieved_at = 2026-07-21
-applies_from = 2026-01-01
+applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_165_2023.pdf"
 review_status = "pending_review"

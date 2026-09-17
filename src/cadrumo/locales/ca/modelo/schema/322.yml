@@ -2015,35 +2015,35 @@ modelo:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 322.
               label: Epígraf IAE - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 322.
               label: Epígraf IAE - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 322.
               label: Epígraf IAE - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 322.
               label: Epígraf IAE - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 5a
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              help: Informació fiscal sobre informació fiscal de la casella del Modelo
                 322.
               label: Epígraf IAE - Altres 5a
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
@@ -2058,7 +2058,7 @@ modelo:
                 acollides al criteri de caixa.'
               label: Destinatari d'operacions acollides al criteri de caixa
             x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+              help: Informació fiscal sobre exercici fiscal de la casella del Modelo
                 322.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: 'Consulteu la informació de la casella: NIF de la entitat dominant.'

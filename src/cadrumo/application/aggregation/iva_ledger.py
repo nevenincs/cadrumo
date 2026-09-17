@@ -735,7 +735,8 @@ def _apply_especial_apportionment(
     (output cuotas, bases, recargo) keep their unapportioned aggregate.
 
     The partitions are resolved through the SAME canonical registry resolver
-    the general path uses (:func:`~domain.calculations.registry.ledger_iva_bindings.resolve_ledger_iva_aggregation_binding_values`),
+    the general path uses
+    (:func:`~domain.calculations.registry.ledger_iva_bindings.resolve_ledger_iva_aggregation_binding_values`),
     so especial reuses one aggregation path rather than forking selector logic.
     An all-common (or wholly-unclassified) especial bucket therefore reduces to
     the general-percentage result exactly.

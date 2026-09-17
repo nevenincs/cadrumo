@@ -164,7 +164,7 @@ class DriveFolderListing:
 
 
 def parse_drive_file_id(reference: str) -> str | None:
-    """Extract the Drive file id consumed by :func:`~adapters.outbound.google.document_link_resolver.resolve_document_link`.
+    """Extract the Drive file id consumed by :func:`resolve_document_link`.
 
     Args:
         reference: A Drive URL, ``?id=...`` link, bare Drive file id, or

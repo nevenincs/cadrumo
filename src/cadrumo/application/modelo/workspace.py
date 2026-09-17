@@ -555,11 +555,18 @@ def fold_slots(bindings: tuple[BindingDefinition, ...]) -> tuple[tuple[BindingId
 def relation_source_endpoints_for_casilla(
     bindings: tuple[BindingDefinition, ...],
     casilla_id: str,
+    *,
+    source_modelo: str,
 ) -> tuple[ModeloWorkspaceRelationSourceEndpointReferenceV1, ...]:
-    """Return the fold-source-endpoint rows whose declared source casilla matches."""
+    """Return the fold-source-endpoint rows whose declared source casilla matches.
+
+    A source casilla id is only meaningful inside its own modelo, so a fold
+    reading another modelo never matches a same-spelled casilla of this one.
+    """
     return tuple(
         ModeloWorkspaceRelationSourceEndpointReferenceV1(relation_id=binding_id, casilla_id=source_casilla_id)
         for binding_id, provider in fold_slots(bindings)
+        if str(provider.source_modelo) == source_modelo
         for source_casilla_id in provider.declared_source_casilla_ids
         if source_casilla_id == casilla_id
     )
@@ -746,7 +753,11 @@ def static_inspection_casilla_schema_records(
                 legal_refs=None,
                 constraints=None,
                 formula_operands=formula_operand_references_for_casilla(formulas, casilla_id),
-                relation_endpoints=relation_source_endpoints_for_casilla(inspection.bindings, casilla_id),
+                relation_endpoints=relation_source_endpoints_for_casilla(
+                    inspection.bindings,
+                    casilla_id,
+                    source_modelo=str(target.modelo),
+                ),
             )
         )
     return tuple(records)

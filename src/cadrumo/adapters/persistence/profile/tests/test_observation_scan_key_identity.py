@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, observation_key
+from cadrumo.application.calculations.observations_repository import ObservationLayers, observation_key
 from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -91,11 +91,17 @@ def _write_under_key(
         ),
         stamped_revision_id=revision_id_for_observation(observation),
     )
-    envelope = Envelope[ObservationEnvelopePayload](
+    layers = ObservationLayers(
+        modelo=str(observation.modelo),
+        filing_year=observation.filing_year,
+        period=observation.period,
+        official=payload,
+    )
+    envelope = Envelope[ObservationLayers](
         schema_version=repository.schema_version,
         written_at=_CAPTURED_AT,
         classification=repository.sensitivity,
-        payload=payload,
+        payload=layers,
     )
     repository.secure_object_repository.save(
         namespace=repository.namespace,

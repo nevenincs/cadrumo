@@ -3,6 +3,9 @@
 Shared by the filing-record commands and the live filed pull, which both report
 what an AEAT register entry did to a period's chain. Every projection carries
 identifiers and stable tokens only; operator prose is rendered from locale keys.
+
+Each projection is an :class:`~cadrumo.core.json_contract.OutputSchema`, so the envelope
+refuses a malformed row rather than emitting it.
 """
 
 from __future__ import annotations

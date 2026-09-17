@@ -1,7 +1,7 @@
 [[revisions."2020".bindings]]
 id = "renta-modelo-100-estimacion-directa-es-normal"
 provider = { kind = "manual_input", casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
-value = { data_type = "boolean", channel = "boolean" }
+value = { data_type = "boolean", channel = "boolean", typed_enum = "EstimacionDirectaModalidad" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
