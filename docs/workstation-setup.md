@@ -67,12 +67,16 @@ same hint instead of failing obscurely.
 
 Two extras need a further provisioning step after the pip install:
 
-- The `browser` extra provides the `playwright` command; install the browser
-  it drives for live AEAT reads:
+- The `browser` extra drives a Chromium build for live AEAT reads. Download
+  the exact build the installed extra launches with:
 
   ```bash
-  playwright install chromium
+  aeat config provision browser
   ```
+
+  It does nothing when that build is already present. With the browser
+  channel set to `chromium`, a browser read that finds the build missing
+  refuses and names this command.
 
 - On-host invoice reading uses a local model runtime (Ollama) with a text
   model for text-layer PDFs and a vision model for scans. Run
