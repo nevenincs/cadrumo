@@ -180,18 +180,11 @@ def test_borrador_object_key_refusal_renders_as_its_key() -> None:
 
 
 def test_borrador_snapshot_not_found_renders_as_its_key() -> None:
-    """The snapshot-miss family renders its key, quoted by ``KeyError.__str__``.
-
-    ``SnapshotNotFoundError`` inherits :class:`KeyError` so a lookup miss stays a
-    mapping-style miss, and ``KeyError.__str__`` returns ``repr(args[0])`` rather
-    than the argument itself. The rendered text is therefore the quoted key, and
-    the absence check has to compare against ``repr(key)``. What matters is
-    unchanged: no locale-specific prose survives anywhere in the rendering.
-    """
+    """The snapshot-miss family renders exactly its key and no locale prose."""
     key = "application.live.borrador.errors.snapshot_not_found"
     error = BorradorSnapshotNotFoundError(translated_message=key, context={"snapshot_id": "a" * 64})
 
-    assert str(error) == repr(key)
+    assert str(error) == key
     assert error.args == (key,)
     assert error.translated_message == key
     assert error.context == {"snapshot_id": "a" * 64}
