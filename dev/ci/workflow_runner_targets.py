@@ -105,6 +105,24 @@ def is_fleet_label_set(target: object) -> bool:
     return bool(labels) and bool(labels[0] == "self-hosted")
 
 
+#: The prefix a job's ``uses:`` carries when it calls a workflow of this repository.
+_LOCAL_WORKFLOW_PREFIX: Final = "./.github/workflows/"
+
+
+def calls_local_workflow(job: Mapping[str, Any]) -> bool:
+    """Return whether ``job`` calls a reusable workflow stored in this repository.
+
+    Such a job declares no ``runs-on`` and no ``timeout-minutes`` of its own:
+    GitHub refuses both on a calling job, and its jobs run where the called
+    workflow places them. The called file sits in the same workflow directory,
+    so every census that walks that directory gates those jobs there. A call
+    to a workflow outside this repository is not covered that way and is not
+    matched here.
+    """
+    uses = job.get("uses")
+    return isinstance(uses, str) and uses.startswith(_LOCAL_WORKFLOW_PREFIX) and "@" not in uses
+
+
 def _mapping(value: Any) -> Mapping[str, Any]:
     """Return ``value`` as a mapping, or an empty one when it is not.
 

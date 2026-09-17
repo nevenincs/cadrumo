@@ -221,6 +221,12 @@ jobs:
           uv export --frozen --no-dev --no-emit-project --no-hashes > "$requirements"
           uvx pip-audit --strict -r "$requirements"
 
+      - name: Release tooling contracts
+        if: ${{ !cancelled() }}
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-release-tooling
+
       - name: Packaging performance contracts
         if: ${{ !cancelled() }}
         run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
@@ -230,7 +236,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          uv run --no-sync pytest -q --tb=short \
+          uv run --no-sync pytest -q --tb=short -n0 \
             dev/tests/test_future_directive_policy.py \
             -k future_directive
 
@@ -311,7 +317,7 @@ jobs:
 
   runner-queue-watchdog:
     name: "Check: Runner queue (Linux)"
-    needs: build-cohort
+    needs: [build-cohort, runtime-inventory]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
@@ -328,7 +334,6 @@ jobs:
       - name: Fail fast on a lane no online runner can serve
         env:
           GH_TOKEN: ${{ github.token }}
-          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
           THRESHOLD_SECONDS: "300"
           MAX_WATCH_SECONDS: "480"
         run: python3 -m dev.ci.runner_queue_watchdog
@@ -1300,6 +1305,29 @@ jobs:
             -CohortDir var/release-cohort/python `
             -BucketSource "https://github.com/$env:BUCKET_REPOSITORY" `
             -EvidenceDir var/acquisition/scoop
+
+  runner-queue-watchdog-publish:
+    name: "Check: Publication runner queue (Linux)"
+    needs: [locate-cohort, publish-homebrew, publish-scoop]
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "480"
+        run: python3 -m dev.ci.runner_queue_watchdog
 
   publish-docs:
     name: "Build: Documentation site (Linux)"

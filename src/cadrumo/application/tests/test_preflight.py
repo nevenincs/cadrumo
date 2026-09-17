@@ -19,6 +19,7 @@ from pydantic import SecretStr
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
+from ...core.resources.bundled_data import bundled_path
 from ..auth.operator_probe_ports import ClaveIdentityFailure
 from ..auth.probes import ProviderProbeResult
 from ..preflight import (
@@ -43,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: inward suite uses the smallest valid contract value to exercise application
 #: grading without importing storage layout knowledge.
 _SUFFIX_LENGTH = 1
-_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
 
 
 def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
@@ -88,6 +89,7 @@ def test_auth_provider_clave_invalid_identity_is_error() -> None:
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
         rows = probe_auth_providers(
             operator_probe_ports=fake_operator_probe_ports(
+                active_profile_session_bound=False,
                 clave_identity_results={
                     "NOT-A-VALID-ID": ClaveIdentityFailure(detail="invalid test identity"),
                 },
@@ -160,7 +162,8 @@ def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
 
 def test_corpus_row_healthy_for_bundled_normatives() -> None:
     """The bundled legal-normatives corpus ships with the package and is present."""
-    rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    with override_settings(aeat_normatives_root=bundled_path("corpus", "normatives")):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     normatives = _row(rows, "corpus:normatives")
     assert normatives.healthy is True
     assert normatives.severity is HealthSeverity.OK

@@ -23,14 +23,14 @@ is a finding, whose remedy is a lane path or deleting the directory.
 THIS MODULE'S LOCATION IS LOAD-BEARING, and the requirement is reach rather than
 a particular directory: a guard against unreachable tests must itself sit inside
 a selection the lanes actually run, or it is unreachable by exactly the defect it
-exists to catch. Its earliest home, ``dev/ci/tests``, was reached only by
-``ci.yml``, which put the strongest reachability model in the tree among the
+exists to catch. Its earliest home, ``dev/ci/tests``, was reached only by one
+per-push workflow, which put the strongest reachability model in the tree among the
 weakest-reached files in it.
 
 It now lives under ``dev/tests``, moved here with its lane and justfile consumers
 by the full-corpus collectability relocation. Measured from this location rather
-than assumed: ``dev/tests`` is named by five justfile recipes and by four
-invocations across ``ci.yml`` and ``ci-full.yml``. Before moving this module
+than assumed: ``dev/tests`` is named by justfile recipes the merge gate and
+the release proof invoke. Before moving this module
 again, count the lanes that name the destination and confirm the number does not
 fall; an earlier version of this note recorded the reach of a previous home and
 instructed the reader not to perform the move that had already happened.
@@ -319,16 +319,15 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     # therefore stays declared-but-not-CI-invoked, which is correct rather than a
     # hole -- the union of the two passes covers exactly what it selects.
     expected_invoked = {
+        "test-gate",
         "test-unit",
         "test-ci-contracts",
         "test-integration-parallel",
         "test-integration-serial",
-        "test-tooling",
         "test-pytest-harness",
-        "test-registry-conformance",
-        "test-packaging-serial",
-        "test-packaging-ci",
-        "test-packaging-portable",
+        "test-registry",
+        "test-test-policy",
+        "test-repository-contracts",
         "docs-check",
     }
     assert expected_invoked <= invoked_recipes
@@ -349,7 +348,7 @@ def test_a_recipe_no_workflow_invokes_is_declared_but_not_ci_invoked(tmp_path: P
     )
     workflows = tmp_path / ".github" / "workflows"
     workflows.mkdir(parents=True)
-    (workflows / "ci.yml").write_text(
+    (workflows / "probe.yml").write_text(
         "name: Probe\njobs:\n  build:\n    steps:\n      - run: just wired\n",
         encoding="utf-8",
     )
@@ -385,7 +384,7 @@ def test_recipe_discovery_reads_run_blocks_not_english_prose(tmp_path: Path) -> 
     (tmp_path / "justfile").write_text("uses:\n    pytest -q src -m unit\n", encoding="utf-8")
     workflows = tmp_path / ".github" / "workflows"
     workflows.mkdir(parents=True)
-    (workflows / "ci.yml").write_text(
+    (workflows / "probe.yml").write_text(
         "name: Probe\n"
         "jobs:\n"
         "  build:\n"
@@ -399,6 +398,53 @@ def test_recipe_discovery_reads_run_blocks_not_english_prose(tmp_path: Path) -> 
     # `scoop install just` ends in the bare word, and the prose names a real
     # recipe. Neither is an invocation.
     assert ci_invoked_recipes(tmp_path) == frozenset()
+
+
+def test_one_just_call_naming_two_parameterless_recipes_invokes_both(tmp_path: Path) -> None:
+    """`just a b` runs both recipes, but `just c b` passes `b` to a parameterised `c`.
+
+    Reading only the first word left every second recipe of a chained call
+    reported unreached, while reading every word would call an argument a recipe.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "first:\n    pytest -q src\n\nsecond:\n    pytest -q src\n\n"
+        "takes value:\n    pytest -q src\n\nvalue:\n    pytest -q src\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: pull_request\njobs:\n  build:\n    steps:\n"
+        "      - run: just first second\n      - run: just takes value\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"first", "second", "takes"})
+
+
+def test_a_reusable_workflow_call_carries_the_callers_events(tmp_path: Path) -> None:
+    """A workflow reached only through `uses: ./.github/workflows/...` inherits the caller's reach.
+
+    The contrast is the claim: the same called file with the calling job removed
+    keeps only its own declared event.
+    """
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "called.yml").write_text(
+        "name: Called\non: workflow_call\njobs:\n  build:\n    steps:\n      - run: just first\n",
+        encoding="utf-8",
+    )
+    caller = workflows / "caller.yml"
+    caller.write_text(
+        "name: Caller\non: push\njobs:\n  gate:\n    uses: ./.github/workflows/called.yml\n",
+        encoding="utf-8",
+    )
+
+    assert workflow_triggers(tmp_path)[".github/workflows/called.yml"] == ("push", "workflow_call")
+
+    caller.write_text("name: Caller\non: push\njobs: {}\n", encoding="utf-8")
+    assert workflow_triggers(tmp_path)[".github/workflows/called.yml"] == ("workflow_call",)
 
 
 def test_no_test_file_sits_outside_every_lane_path() -> None:
@@ -944,6 +990,10 @@ def test_every_ci_invoked_lane_carries_the_triggers_that_reach_it() -> None:
     )
 
 
+#: Floor for the workflow directory: three lanes and three dispatch-only reports.
+_MINIMUM_WORKFLOWS = 6
+
+
 def test_the_trigger_reader_finds_the_on_block_under_its_yaml_boolean_key() -> None:
     """Read against the workflows themselves, not against the lane model.
 
@@ -953,7 +1003,7 @@ def test_the_trigger_reader_finds_the_on_block_under_its_yaml_boolean_key() -> N
     """
     triggers = workflow_triggers(REPO_ROOT)
 
-    assert len(triggers) > 10, f"only {len(triggers)} workflows were read"
+    assert len(triggers) >= _MINIMUM_WORKFLOWS, f"only {len(triggers)} workflows were read"
     unread = tuple(name for name, events in triggers.items() if not events)
     assert unread == (), (
         "these workflow files yielded no event at all, which is what reading the "

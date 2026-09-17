@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -34,12 +35,15 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
-from cadrumo.domain.iva.schema import IvaCategory, require_eu_member_state
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord, require_eu_member_state
 
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
-from .....domain.iva import rates as _iva_rates_module
+from .....domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
+from .....domain.iva import lookup as _iva_lookup_module
 from .....domain.iva.components import registry_category_projection
+from .....domain.iva.errors import IvaRateNotFoundError
 from .....domain.iva.rates import load_iva_rate_table
 from .....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from .....tests.attribute_scope import scoped_attribute
@@ -66,7 +70,9 @@ from .prompt_support import build_invoice_extraction_prompt
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
+_ANNUAL_2026 = Period.from_year_and_code(_SUPPORT.horizon, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
 
 
@@ -85,16 +91,20 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             compiled = build_invoice_extraction_prompt(period=period, operation=operation)
 
-            expected = sorted(
-                {
-                    record.pct
-                    for record in load_iva_rate_table(operation=_authority_operation_for_test)[
-                        require_eu_member_state("ES")
-                    ]
-                    if record.effective_from <= period.end_date
-                    and (record.effective_until is None or record.effective_until >= period.start_date)
-                },
-            )
+            expected_rates = {
+                record.pct
+                for record in load_iva_rate_table(operation=_authority_operation_for_test)[
+                    require_eu_member_state("ES")
+                ]
+                if record.effective_from <= period.end_date
+                and (record.effective_until is None or record.effective_until >= period.start_date)
+            }
+            # The zero slot is a permanent registry declaration rather than a dated
+            # schedule row, so it is read from the slot catalogue.
+            zero = iva_rate_percentage(resolve_iva_rate_slot(Decimal("0"), period.end_date), period.end_date)
+            if zero is not None:
+                expected_rates.add(zero * Decimal("100"))
+            expected = sorted(expected_rates)
 
             assert list(compiled.iva_rate_pcts) == expected
             for pct in expected:
@@ -162,28 +172,39 @@ class TestTheAntiDriftGateBitesInBothDirections:
         holding a hardcoded rate list cannot satisfy: it would keep emitting the
         original enumeration under the mutated authority.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
-            planted = Decimal("13.5")
-            assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
+        # Resolutions are cached per operation and period, so the unpatched and
+        # patched calls use quarters of a carried-forward year nothing else resolves.
+        carried_year = _SUPPORT.horizon + 1
+        baseline = build_invoice_extraction_prompt(
+            period=Period.from_year_and_code(carried_year, "1T"), operation=operation
+        )
+        planted = Decimal("13.5")
+        assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
+        original = _iva_lookup_module.coexisting_tier_rates
 
-            real_table = load_iva_rate_table(operation=_authority_operation_for_test)
-            spain = real_table[require_eu_member_state("ES")]
-            extra = spain[0].model_copy(
-                update={
-                    "pct": planted,
-                    "effective_from": _ANNUAL_2026.start_date,
-                    "effective_until": None,
-                },
+        def with_planted_rate(
+            member_state: EUMemberState,
+            kind: IvaRateKind,
+            on_date: date,
+            *,
+            operation: PinnedAuthorityOperation,
+        ) -> tuple[IvaRateRecord, ...]:
+            rates = original(member_state, kind, on_date, operation=operation)
+            try:
+                anchor = _iva_lookup_module.lookup_rate(member_state, kind, on_date, operation=operation)
+            except IvaRateNotFoundError:
+                return rates
+            return (*rates, anchor.model_copy(update={"pct": planted}))
+
+        # Patch the lookup the authority resolver reads.
+        with scoped_attribute(_iva_lookup_module, "coexisting_tier_rates", with_planted_rate):
+            after = build_invoice_extraction_prompt(
+                period=Period.from_year_and_code(carried_year, "2T"), operation=operation
             )
-            mutated = dict(real_table) | {require_eu_member_state("ES"): (*spain, extra)}
-            # Patch the defining module used by the prompt builder.
-            with scoped_attribute(_iva_rates_module, "load_iva_rate_table", lambda **_: mutated):
-                after = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
 
-                assert planted in after.iva_rate_pcts
-                assert "13.5" in after.text
-                assert after.fingerprint != baseline.fingerprint
+        assert planted in after.iva_rate_pcts
+        assert "13.5" in after.text
+        assert after.fingerprint != baseline.fingerprint
 
 
 class TestTheNoPrintedTaxLineAsksThePaperQuestion:

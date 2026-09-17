@@ -11,6 +11,7 @@ import pytest
 from ..authority import PinnedAuthorityOperation
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..iva_schema_vocabulary import _BY_AUTHORITY, _PROJECTIONS, resolve_iva_cash_accounting_catalogue
+from ..schema import SupportedFilingYearsCatalogue
 from ..schema_base import DateAxis
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -21,11 +22,15 @@ _ON = date(2026, 3, 10)
 @dataclass
 class _FixedFact:
     resolved: ResolvedMappingFact
+    support: SupportedFilingYearsCatalogue
     queries: list[GovernedFactQuery] = field(default_factory=list)
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         self.queries.append(query)
         return self.resolved
+
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        return self.support
 
 
 def _vocabulary(operation: PinnedAuthorityOperation) -> ResolvedMappingFact:
@@ -64,7 +69,9 @@ def test_a_different_resolved_fact_is_projected_afresh(operation: PinnedAuthorit
     token = str(cached.none_token)
     changed = _with_description(resolved, token, "changed for the stale-key check")
 
-    projected = resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=_FixedFact(changed))
+    projected = resolve_iva_cash_accounting_catalogue(
+        effective_date=_ON, authority=_FixedFact(changed, operation.supported_filing_years())
+    )
 
     assert projected is not cached
     assert projected.definition(token).description == "changed for the stale-key check"
@@ -75,7 +82,9 @@ def test_a_collected_fact_releases_its_projections(operation: PinnedAuthorityOpe
     """A recycled identity cannot reach a dead fact's catalogue, because the entry leaves with it."""
     changed = _with_description(_vocabulary(operation), "none", "collected with its fact")
     key = id(changed)
-    resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=_FixedFact(changed))
+    resolve_iva_cash_accounting_catalogue(
+        effective_date=_ON, authority=_FixedFact(changed, operation.supported_filing_years())
+    )
     assert key in _PROJECTIONS
 
     del changed
@@ -86,7 +95,7 @@ def test_a_collected_fact_releases_its_projections(operation: PinnedAuthorityOpe
 
 def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAuthorityOperation) -> None:
     """STALE KEY: a cached coordinate does not answer for a different one."""
-    authority = _FixedFact(_vocabulary(operation))
+    authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
     resolve_iva_cash_accounting_catalogue(effective_date=date(2025, 6, 1), authority=authority)
@@ -95,7 +104,7 @@ def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAut
 
 
 def test_a_collected_authority_releases_its_coordinates(operation: PinnedAuthorityOperation) -> None:
-    authority = _FixedFact(_vocabulary(operation))
+    authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     key = (id(authority), _ON)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
     assert key in _BY_AUTHORITY

@@ -172,18 +172,18 @@ def test_a_local_action_that_exists_needs_no_pin(tmp_path: Path) -> None:
 def test_the_gate_refuses_a_local_reference_that_names_nothing(tmp_path: Path) -> None:
     """Teeth for the exemption's premise: unresolvable is not exempt.
 
-    This is the state the previous case asserted the exemption over. The tree
-    carries no local action at all, so a `./` reference resolving to nothing was
-    both the only shape available to it and the one the premise excludes.
+    A `./` reference resolving to nothing is exactly the shape the premise
+    excludes, so it is driven with an action directory the tree does not carry.
     """
+    assert not (REPO_ROOT / ".github" / "actions" / "absent").exists()
     workflow = tmp_path / "dangling.yml"
     workflow.write_text(
         "name: dangling\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n",
+        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/absent\n",
         encoding="utf-8",
     )
 
-    assert _unpinned(workflow) == [f"dangling.yml: ./.github/actions/setup {_UNRESOLVED}"]
+    assert _unpinned(workflow) == [f"dangling.yml: ./.github/actions/absent {_UNRESOLVED}"]
 
 
 def test_the_gate_refuses_a_local_reference_that_escapes_the_repository(tmp_path: Path) -> None:
@@ -228,7 +228,7 @@ def test_the_publish_step_uploads_distributions_only() -> None:
     and the upload is not atomic, so offering them fails the step part-way
     through rather than before it starts.
     """
-    arguments = _upload_arguments(_publish_command(_WORKFLOWS_DIR / "publish.yml"))
+    arguments = _upload_arguments(_publish_command(_WORKFLOWS_DIR / "release.yml"))
 
     assert arguments, "the publish step names no files to upload"
     assert all(argument.endswith((".whl", ".tar.gz")) for argument in arguments), (
@@ -333,7 +333,7 @@ def test_the_publish_command_reader_refuses_a_commented_out_upload(tmp_path: Pat
     command and the file arguments it gates; commented, it refuses -- while a
     raw reading of the very same block still returns every token.
     """
-    document = yaml.safe_load((_WORKFLOWS_DIR / "publish.yml").read_text(encoding="utf-8"))
+    document = yaml.safe_load((_WORKFLOWS_DIR / "release.yml").read_text(encoding="utf-8"))
     intact = tmp_path / "intact.yml"
     intact.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
 

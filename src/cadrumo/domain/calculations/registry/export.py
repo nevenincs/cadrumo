@@ -186,7 +186,10 @@ def _derive_export_record(
         if field.kind == CasillaFieldKind.BINDING
         or not any(export_fields_overlap(field, derived_field) for derived_field in derived)
     )
-    return record.model_copy(update={"fields": (*base_fields, *derived)})
+    # A fixed-width record reads in offset order; derived fields take the
+    # positions of the base fields they replace rather than trailing them.
+    fields = tuple(sorted((*base_fields, *derived), key=lambda field: (field.offset, field.id)))
+    return record.model_copy(update={"fields": fields})
 
 
 def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) -> frozenset[CasillaId]:

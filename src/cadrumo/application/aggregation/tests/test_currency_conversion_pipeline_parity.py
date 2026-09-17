@@ -99,6 +99,7 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -123,6 +124,14 @@ from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_i
 from ..renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _pinned_operation() -> PinnedAuthorityOperation:
+    """The session lease this module scopes every test to."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation)
+    return scoped
+
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 
@@ -474,6 +483,7 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
         invoice,
         devengo_date=date(2025, 2, 10),
         deduction_authority=None,
+        operation=_pinned_operation(),
     )
     assert len(observations) == 1
     observation = observations[0]

@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "iva-category-component-catalogue:2022-01-01"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-legal_refs = ["ley-35-2006:art-99", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-13", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-15", "ley-37-1992:art-154", "ley-37-1992:art-158", "ley-37-1992:art-161", "ley-37-1992:art-17", "ley-37-1992:art-20", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-69", "ley-37-1992:art-7", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-439-2007:art-76", "rd-439-2007:art-95"]
+legal_refs = ["ley-35-2006:art-99", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-13", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-15", "ley-37-1992:art-154", "ley-37-1992:art-158", "ley-37-1992:art-161", "ley-37-1992:art-163-duodecies", "ley-37-1992:art-17", "ley-37-1992:art-20", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-69", "ley-37-1992:art-7", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-439-2007:art-76", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -108,6 +108,7 @@ entries = [
   { key = "category_projection.no_printed_tax", value = "domestic_zero,domestic_exempt,domestic_not_subject,operacion_no_sujeta,intra_community_supply,intra_community_service_supply,intra_community_triangulation,regimen_simplificado,reagp_compensation,domestic_reverse_charge,intra_community_acquisition_reverse_charge,intra_community_service_acquisition_reverse_charge" },
   { key = "category_projection.self_assessed", value = "intra_community_acquisition_reverse_charge,domestic_reverse_charge,import_third_country" },
   { key = "category_projection.recipient_only_reverse_charge", value = "intra_community_acquisition_reverse_charge,intra_community_service_acquisition_reverse_charge" },
+  { key = "category_projection.cash_accounting_excluded", value = "intra_community_supply,intra_community_acquisition_reverse_charge,export_third_country_zero_rated,export_assimilated_zero_rated,import_third_country,domestic_reverse_charge,operacion_no_sujeta,domestic_not_subject" },
   { key = "category_projection.relief_on_establishment_premise", value = "intra_community_supply,export_third_country_zero_rated" },
   { key = "category_operation_type.issued.intra_community_supply", value = "E" },
   { key = "category_operation_type.issued.intra_community_service_supply", value = "S" },

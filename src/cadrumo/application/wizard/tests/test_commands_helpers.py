@@ -403,4 +403,4 @@ def test_build_wizard_command_is_discoverable_by_typer() -> None:
         result = CliRunner().invoke(app, ["--help"])
 
         assert result.exit_code == 0
-        assert "--activity" in result.stdout
+        assert "--activity" in click.unstyle(result.stdout)

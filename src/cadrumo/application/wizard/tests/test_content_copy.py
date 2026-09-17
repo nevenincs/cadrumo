@@ -10,6 +10,7 @@ from cadrumo.application.wizard.tests.registry_setup_flow_support import registr
 from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.setup_profile_bindings import wizard_page_declarations
 from ...flows.copy import assemble_page_copy
 from ...flows.definition import FlowPage
 from ...flows.engine import answer, start_flow
@@ -76,7 +77,8 @@ def test_format_hints_attach_to_exactly_the_mapped_pages(*, registry_setup_flow:
         for item in section.items:
             if isinstance(item, FlowPage) and item.format_hint is not None:
                 hinted[item.id] = item.format_hint.ref
-    assert hinted == dict(PAGE_FORMAT_HINTS)
+    declared = {page: fields["format_hint"] for page, fields in wizard_page_declarations().items() if "format_hint" in fields}
+    assert hinted == dict(PAGE_FORMAT_HINTS) | declared
 
 
 def test_widget_kinds_assigned_to_exactly_the_mapped_pages(*, registry_setup_flow: WizardFlow) -> None:
@@ -93,7 +95,12 @@ def test_widget_kinds_assigned_to_exactly_the_mapped_pages(*, registry_setup_flo
         for item in section.items:
             if isinstance(item, FlowPage) and item.widget in shape_widgets:
                 assigned[item.id] = item.widget
-    assert assigned == dict(PAGE_WIDGET_KINDS)
+    declared = {
+        page: FlowWidgetKind(fields["widget_kind"])
+        for page, fields in wizard_page_declarations().items()
+        if "widget_kind" in fields and FlowWidgetKind(fields["widget_kind"]) in shape_widgets
+    }
+    assert assigned == dict(PAGE_WIDGET_KINDS) | declared
 
 
 def test_shape_widget_pages_stay_valid_non_choice_pages(*, registry_setup_flow: WizardFlow) -> None:

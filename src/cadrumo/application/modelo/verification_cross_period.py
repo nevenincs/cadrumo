@@ -46,7 +46,8 @@ from ..calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
     CrossPeriodExpectedMemberSet,
 )
-from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
+from ..calculations.m111_no_retenciones import m111_no_retenciones_periods_from_profile_values
+from ..user_profile.projections import profile_path_values_for_bucket
 from .action_errors import ModeloCrossPeriodCleanStateError
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure
 
@@ -193,13 +194,10 @@ def cross_period_clean_state_verdict_for_work_unit(
             operation=operation,
         )
     if m111_no_retenciones_periods is None:
-        m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(
-            work_unit.bucket_id,
-            modelo=str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period_token=work_unit.period.registry_token,
-            revision=snapshot.revision,
-            operation=operation,
+        # Only the taxpayer's explicit attestation scopes a Modelo 111 period
+        # out; a missing profile attests nothing.
+        m111_no_retenciones_periods = m111_no_retenciones_periods_from_profile_values(
+            profile_path_values_for_bucket(work_unit.bucket_id),
         )
     return evaluate_cross_period_clean_state(
         snapshot,

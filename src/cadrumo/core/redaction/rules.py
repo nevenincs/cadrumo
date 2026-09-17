@@ -59,10 +59,10 @@ The redaction strategies, defined in
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Hashable, Mapping
 from functools import cache, lru_cache
 from types import MappingProxyType
-from typing import overload
+from typing import cast, overload
 from urllib.parse import urlparse
 
 from ..classification.policies import ClassificationPolicy as _ClassificationPolicy
@@ -1073,11 +1073,11 @@ _CLI_STRING_CACHE_MAX_LENGTH = 512
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
         return _redact_cli_string_uncached(text, reveal_identifiers)
-    return _redact_cli_string_cached(text, reveal_identifiers, id(tax_identity_admission()))
+    return _redact_cli_string_cached(text, reveal_identifiers, cast(Hashable, tax_identity_admission()))
 
 
 @lru_cache(maxsize=16384)
-def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission_identity: int) -> str:
+def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Hashable) -> str:
     """Return the redaction of ``text``, reusing an earlier answer for the same input.
 
     The cache holds each input string in PLAINTEXT, next to its redaction, for
@@ -1087,11 +1087,10 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission_ide
     one-shot CLI process exits moments later; the TUI and MCP hosts are
     long-lived and keep the entries for as long as they run.
 
-    ``admission_identity`` is part of the key only: an answer computed under
-    one identity gate must not be reused under another. The admission gate
-    itself is never a required-hashable value, only its object identity.
+    ``admission`` is part of the key only: an answer computed under one
+    identity gate must not be reused under another.
     """
-    del admission_identity
+    del admission
     return _redact_cli_string_uncached(text, reveal_identifiers)
 
 

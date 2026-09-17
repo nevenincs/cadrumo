@@ -46,6 +46,7 @@ def _validate_known_bad_citation(reference: LegalReference, *, filing_date: date
             reference.article,
             role_text,
             effective_date=filing_date or reference.effective_from,
+            effective_to=None if filing_date is not None else reference.effective_to,
         )
     ):
         raise RegistryValidationError(

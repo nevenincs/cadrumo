@@ -2,10 +2,30 @@
 
 Why the workflows pin explicit worker counts instead of letting tooling choose.
 
-Twelve workflow comments cite this file as the authority for their `-n 8` and
-lane-concurrency numbers. It did not exist, so every "why 8" pointed at
-nothing. This is that answer, in one place, so the next person tuning a pin
+Workflow comments across the three lanes cite this file as the authority for
+their `-n 8` and lane-concurrency numbers, so the next person tuning a pin
 reads a measurement rather than re-deriving one.
+
+## The three lanes
+
+- **Merge gate** (`merge-gate.yml`) is the only pull request workflow. It runs
+  two Linux jobs, lint then gate (security scan, registry gate, import
+  boundaries, scoped tests); the required check is
+  `Check: Merge gate (Linux)`.
+- **Release** (`release.yml`) is dispatched only by release-please, via a
+  GitHub App token (`RELEASE_APP_ID` variable, `RELEASE_APP_PRIVATE_KEY`
+  secret). `phase=prove` runs against the release pull request's head: the
+  merge gate's full scan, the full test suites, conformance checks, the
+  sealed release cohort build, and smoke tests across Linux, Windows, and
+  macOS plus Homebrew and Scoop acquisition — macOS is mandatory, not
+  optional. `phase=publish` runs against the tag: PyPI via trusted
+  publishing, then the Homebrew tap and Scoop bucket
+  (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`, `SCOOP_BUCKET_REPOSITORY`),
+  then the documentation site.
+- **Release-please** (`release-please.yml`) is the only workflow that runs on
+  a push to main (plus manual dispatch for recovery). It opens or updates the
+  release pull request and dispatches `release.yml`'s prove and publish
+  phases.
 
 ## The hardware is two machines, not a cloud
 
@@ -31,9 +51,9 @@ Python interpreters, of which only 56 belonged to cadrumo; the rest were other
 tooling, with a median age of 40 hours and one process resident for 142.
 
 **cadrumo has ONE Linux X64 runner.** `fleetctl audit` resolves that selector
-to a single runner serving 27 job declarations across 12 workflows. Anything
-that holds it blocks everything else on it, which is why job duration on that
-lane matters more than raw throughput.
+to a single runner shared by every self-hosted Linux job across the three
+lanes above. Anything that holds it blocks everything else on it, which is
+why job duration on that lane matters more than raw throughput.
 
 ## The pins
 

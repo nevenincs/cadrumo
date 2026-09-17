@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.errors.error_codes import build_error_envelope
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..diagnostics import (
@@ -62,7 +64,6 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
         "auth_attempt": {"auth_mode": "non_qr", "headless": True, "timeout_ms": 120000},
         "operator_report": {"phone_state": "app_did_not_prompt", "reported_at": "2026-05-28T11:00:00+00:00"},
         "phone_state": "",
-        "future_extension": "value",
     }
 
     payload_a = _DiagnosticPayload.model_validate(raw)
@@ -81,6 +82,12 @@ def test_diagnostic_payload_round_trips_through_json() -> None:
     assert payload_mutated != payload_a
 
 
+def test_diagnostic_payload_refuses_an_undeclared_key() -> None:
+    """An unknown key is refused rather than silently carried."""
+    with pytest.raises(ValidationError):
+        _DiagnosticPayload.model_validate({"diagnostic_id": "diag-x", "future_extension": "value"})
+
+
 def test_diagnostic_payload_rejects_non_object_json() -> None:
     """A non-object JSON root reports its typed validation rule."""
     import json as _json
@@ -91,7 +98,8 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
         diagnostic_payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
 
     error = raised.value
-    assert isinstance(error, ValueError)
+    assert isinstance(error, CoreValidationError)
+    assert not isinstance(error, ValueError)
     assert error.translated_message == "errors.refused.refused_auth_diagnostic_payload"
     assert error.context == {"validation_rule": "json_root_object", "json_root_type": "list"}
     assert get_registered_error_code(error).code == "REFUSED_AUTH_DIAGNOSTIC_PAYLOAD"

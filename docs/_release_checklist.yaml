@@ -15,19 +15,18 @@ schema_version: 1
 # Non-hotfix releases hold the release pull request open, green, and
 # re-checked before merging. There is no separate PyPI "beta" project yet
 # (Cadrumo is pre-1.0 and has not shipped its first PyPI release) — the soak
-# vehicle is the release PR itself, kept green by `packaging-smoke.yml`
-# (dispatched by hand against the release PR's branch, per RELEASING.md's
-# "Release-candidate evidence" section) and re-verified by the readiness
-# gate immediately before merge. Promote this to a real `cadrumo-beta` PyPI
-# project once the first stable release has shipped and a channel is worth
-# maintaining.
+# vehicle is the release PR itself, kept green by the automated `release.yml`
+# `phase=prove` run that release-please dispatches against its head, and
+# re-verified by the readiness gate immediately before merge. Promote this to
+# a real `cadrumo-beta` PyPI project once the first stable release has
+# shipped and a channel is worth maintaining.
 soak:
   applies_to: "non-hotfix"
   minimum_hours: 48
   maximum_hours: 72
-  vehicle: "the open release pull request, kept green by a by-hand packaging-smoke.yml run against its branch and re-verified by the readiness gate before merge"
+  vehicle: "the open release pull request, kept green by the automated release.yml phase=prove run release-please dispatches against its head (merge gate, full suites, conformance, the sealed release cohort, and macOS-mandatory Linux/Windows/macOS smoke plus Homebrew and Scoop acquisition), re-verified by the readiness gate before merge"
   exit_gates:
-    - "packaging-smoke.yml green against the release PR's branch at merge time"
+    - "release.yml phase=prove succeeds against the release PR's head"
     - "no priority:P0-blocker issue opened against the release PR during the soak window"
     - "the readiness gate re-verified clean against the release PR immediately before merge"
 
@@ -63,5 +62,5 @@ audit_state_gate:
     - "pyproject.toml, src/cadrumo/core/package_version.py, and .release-please-manifest.json report one identical version"
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"
     - "no open GitHub issue carries the priority:P0-blocker label (advisory when gh is unavailable/unauthenticated)"
-    - "the most recent packaging-smoke evidence manifest under var/packaging-smoke, if present, reports ok: true"
+    - "the release cohort proven by the release PR's automated release.yml phase=prove run, if present, reports success"
     - "the download-channel matrix is fresh and complete: `python -m dev.docs.download_matrix --check` is clean and every cohort ArtifactKind is surfaced by a documented channel (dev/docs/tests/test_download_matrix.py)"

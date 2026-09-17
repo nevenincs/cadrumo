@@ -38,13 +38,13 @@ from cadrumo.domain.calculations.registry.authority import (
 from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import (
     IvaTerritorialScope,
-    classify_iva,
     resolve_iva_classification_catalogue,
 )
 from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
+    classify_from_assembled_criteria,
 )
 from ..classifier_inputs import ClassifierInputs
 from ..counterparty_establishment import (
@@ -457,17 +457,22 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
 
         from ....domain.iva.classification import InvoiceKind
         from ....domain.iva.schema import IvaCategory
+        from ....domain.iva.supply_nature import SupplyNature
 
         filer_side = DeclaredFact[IvaTerritorialScope](
             value=IvaTerritorialScope.from_registry("es_mainland"),
             source=ClassifierInputSource.PROFILE_AUTHORITY,
         )
+        # Goods and services are placed differently from Canarias, so the
+        # supply nature is declared to leave the counterparty as the only gap.
+        services = DeclaredFact[SupplyNature](value=SupplyNature.SERVICES, source=ClassifierInputSource.OPERATOR_ASSERTION)
 
         blocked = assemble_classification_criteria(
             transaction_date=date(2026, 3, 10),
             direction=InvoiceKind.RECEIVED,
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(
+                supply_nature=services,
                 customer_scope=filer_side,
                 issuer_scope=resolve_confirmed_counterparty_facts(
                     bucket_id=_BUCKET_ID,
@@ -493,12 +498,12 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
             transaction_date=date(2026, 3, 10),
             direction=InvoiceKind.RECEIVED,
             inputs=ClassifierInputs(),
-            declared=DeclaredFacts(customer_scope=filer_side, issuer_scope=remembered),
+            declared=DeclaredFacts(supply_nature=services, customer_scope=filer_side, issuer_scope=remembered),
             operation=_authority_operation_for_test,
         )
         assert derived.assembled, [gap.field for gap in derived.missing]
         assert derived.criteria is not None
         assert derived.criteria.issuer_residency == IvaTerritorialScope.from_registry("es_canarias")
-        assert classify_iva(derived.criteria, operation=_authority_operation_for_test).category == IvaCategory(
-            "domestic_not_subject"
-        )
+        verdict = classify_from_assembled_criteria(derived, operation=_authority_operation_for_test)
+        assert verdict is not None
+        assert verdict.category == IvaCategory("domestic_not_subject")

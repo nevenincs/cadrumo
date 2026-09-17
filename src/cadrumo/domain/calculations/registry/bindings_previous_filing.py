@@ -642,7 +642,18 @@ class PreviousFilingProvider(BaseModel):
 
 
 def _previous_filing_selector(binding: BindingDefinition) -> PreviousFilingProvider:
-    return provider_member(binding, PreviousFilingProvider)
+    selector = provider_member(binding, PreviousFilingProvider)
+    missing = sorted(
+        name
+        for name, field in PreviousFilingProvider.model_fields.items()
+        if field.is_required() and name not in selector.model_fields_set
+    )
+    if missing:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} carries a malformed previous-filing selector missing {missing}",
+            context={"binding_id": str(binding.id)},
+        )
+    return selector
 
 
 _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(

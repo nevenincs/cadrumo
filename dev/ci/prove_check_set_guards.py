@@ -48,34 +48,35 @@ def _run(node: str) -> CommandResult:
 
 
 def _proofs() -> tuple[Proof, ...]:
-    workflow = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+    workflow = REPO_ROOT / ".github" / "workflows" / "merge-gate.yml"
+    push_workflow = REPO_ROOT / ".github" / "workflows" / "release-please.yml"
     source = REPO_ROOT / "src" / "cadrumo" / "core" / "file_permissions.py"
     return (
         Proof(
             "test_no_command_runs_twice_in_one_workflow_run",
             workflow,
-            "      - name: Import architecture\n        run: just check-import-boundaries\n",
-            "      - name: Import architecture\n        run: just check-import-boundaries\n"
-            "      - name: Import architecture again\n        run: just check-import-boundaries\n",
+            "        run: just check-workflows\n",
+            "        run: just check-workflows\n"
+            "      - name: Workflow definitions again\n        run: just check-workflows\n",
             "duplicate commands",
         ),
         Proof(
             "test_every_job_name_describes_coverage_with_the_shared_vocabulary",
             workflow,
-            '    name: "Check: Workflow definitions (Linux)"',
+            '    name: "Check: Lint (Linux)"',
             '    name: "actionlint"',
             "job naming contract violations",
         ),
         Proof(
             "test_every_self_hosted_job_has_a_timeout",
             workflow,
-            "    timeout-minutes: 10\n",
+            "    timeout-minutes: 30\n",
             "",
             "self-hosted jobs without timeout-minutes",
         ),
         Proof(
             "test_every_default_branch_push_reaches_a_verdict",
-            workflow,
+            push_workflow,
             "${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}",
             "",
             "main concurrency group has no SHA suffix",

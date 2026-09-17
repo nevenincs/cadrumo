@@ -520,9 +520,9 @@ def test_a_stale_pin_refuses_through_the_screens_own_predicate(
     design was replaced. Nothing is patched: the routed predicate validates the
     declaration set against the source it is handed and refuses.
 
-    The second assertion is the whole reason this refusal was invisible. A
-    ``RegistryValidationError`` IS a ``ValueError``, so a handler catching
-    ``ValueError`` to skip revisions it cannot read claims this one too.
+    The second assertion keeps the refusal visible. A handler catching
+    ``ValueError`` to skip revisions it cannot read would claim this one too
+    if a ``RegistryValidationError`` were a ``ValueError``.
     """
     from ..pipeline.render_check import revision_render_inputs
 
@@ -533,9 +533,8 @@ def test_a_stale_pin_refuses_through_the_screens_own_predicate(
     with pytest.raises(RegistryValidationError, match="not pinned to the parser intermediate") as refusal:
         field_is_render_profile_eligible(field, reissued)
 
-    assert isinstance(refusal.value, ValueError), (
-        "a refusal that is not a ValueError would never have been swallowed by the skip handler, "
-        "so this test would prove nothing about the classification below"
+    assert not isinstance(refusal.value, ValueError), (
+        "a refusal that is a ValueError would be swallowed by a handler that skips unreadable revisions"
     )
 
 

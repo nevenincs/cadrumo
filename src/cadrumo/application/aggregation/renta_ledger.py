@@ -81,6 +81,7 @@ from ._renta_business_eligibility import (
     relies_on_activity_marker,
     renta_expense_business_proportion,
 )
+from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
@@ -485,6 +486,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     # multi-year catalogue. Mirrors the same revert already applied to
     # ``_iva_ledger`` / ``_renta_income_ledger`` / ``_renta_gasto_ledger`` /
     # ``_impatriado_income_ledger`` for the identical reason.
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     transactions = ports.transaction_reader.load()
     invoices = ports.invoice_reader.load()
     residence_ccaa = _resolve_residence_ccaa(

@@ -245,7 +245,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
         IvaLedgerObservationRole.SETTLEMENT,
     }
     assert all(
-        observation.cash_accounting_treatment is IvaCashAccountingTreatment("supplier_regime")
+        observation.cash_accounting_treatment == IvaCashAccountingTreatment("supplier_regime")
         for observation in q1.observations
     )
     assert sum(
@@ -277,7 +277,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
     assert q2.issues == ()
     assert len(q2.observations) == 1
     assert q2.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
-    assert q2.observations[0].cash_accounting_treatment is IvaCashAccountingTreatment("supplier_regime")
+    assert q2.observations[0].cash_accounting_treatment == IvaCashAccountingTreatment("supplier_regime")
     assert q2.observations[0].base_amount == Decimal("150.00")
     assert resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=q2).source_ledger_ids == (
         cash_purchase.transaction_id,
@@ -401,7 +401,7 @@ def _not_subject_transaction(
             # NONE-treatment row carries none -- that pairing is the control for
             # the gate keying on the regime rather than on the category alone.
             "cash_accounting_payment_evidence": ()
-            if cash_accounting_treatment is IvaCashAccountingTreatment("none")
+            if cash_accounting_treatment == IvaCashAccountingTreatment("none")
             else (
                 IvaCashAccountingPaymentEvidence(
                     payment_date=date(2026, 2, 20),

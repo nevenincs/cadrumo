@@ -26,6 +26,10 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ..reconciliation_records import (
@@ -42,12 +46,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
 _EVENT_ID = "a" * 64
 _UTC_INSTANT = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
+_SNAPSHOT_REF = published_snapshot("303", filing_year=_SUPPORT.horizon, period="1T").snapshot_ref
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=_BUCKET_ID,
     modelo=ModeloCode("303"),
-    filing_year=2026,
-    period=Period.from_year_and_code(2026, "1T"),
-    revision_id="2025-y-siguientes",
+    filing_year=_SUPPORT.horizon,
+    period=Period.from_year_and_code(_SUPPORT.horizon, "1T"),
+    revision_id=str(_SNAPSHOT_REF.revision_id),
 )
 _GROUNDED_DIFF = ModeloReconciliationDiff(
     field_name="total_ingresar",
@@ -65,6 +72,7 @@ def _record(**overrides: object) -> ModeloReconciliationRecord:
         "bucket_event_id": _EVENT_ID,
         "bucket_id": _BUCKET_ID,
         "work_unit_id": _WORK_UNIT_ID,
+        "registry_snapshot_ref": _SNAPSHOT_REF,
         "source_kind": ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         "verdict": ModeloReconciliationVerdict.MISMATCHES,
         "diffs": (_GROUNDED_DIFF,),

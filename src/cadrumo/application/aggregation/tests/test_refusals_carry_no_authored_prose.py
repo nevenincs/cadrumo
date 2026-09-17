@@ -107,9 +107,9 @@ _MIGRATED_KEYS: tuple[str, ...] = (
 _COVERED_MODULES: tuple[str, ...] = (
     "errors.py",
     "invoice_retencion.py",
-    "_iva_ledger.py",
+    "iva_ledger.py",
     "m303_arrivals.py",
-    "_oss_ioss.py",
+    "oss_ioss.py",
     "service.py",
 )
 

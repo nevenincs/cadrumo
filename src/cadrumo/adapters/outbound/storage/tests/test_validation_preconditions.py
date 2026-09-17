@@ -45,55 +45,55 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_empty": _ValidationCarrier(
+    "factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_empty": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_unknown": _ValidationCarrier(
+    "factory:_parse_kind:adapters.outbound.storage._factory.errors.kind_unknown": _ValidationCarrier(
         "storage.factory.provider_kind.valid",
         {"field": "cadrumo_storage_provider_kind", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
+    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_client_missing": _ValidationCarrier(
         "storage.factory.google_oauth_client.present",
         {"backend": "google_drive", "field": "google_oauth_client", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
+    "factory:_build_oauth_desktop_credentials:adapters.outbound.storage._factory.errors.google_token_missing": _ValidationCarrier(
         "storage.factory.google_oauth_token.present",
         {"backend": "google_drive", "field": "google_oauth_token", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
+    "factory:get_storage_provider:adapters.outbound.storage._factory.errors.drive_root_missing": _ValidationCarrier(
         "storage.factory.google_drive_root_folder_id.present",
         {"backend": "google_drive", "field": "google_drive_root_folder_id", "valid": False},
         ActionEvidenceProvenance.APPLICATION_STATE,
         True,
     ),
-    "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled": _ValidationCarrier(
+    "factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled": _ValidationCarrier(
         None,
         None,
         None,
         False,
     ),
-    "_local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_blank": _ValidationCarrier(
+    "local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_blank": _ValidationCarrier(
         "storage.local.namespace.valid",
         {"backend": "local", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_forbidden_characters": _ValidationCarrier(
+    "local:_validate_namespace:adapters.outbound.storage.local.errors.namespace_forbidden_characters": _ValidationCarrier(
         "storage.local.namespace.valid",
         {"backend": "local", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_local:put:adapters.outbound.storage.local.errors.content_hash_blank": _ValidationCarrier(
+    "local:_validate_put_arguments:adapters.outbound.storage.local.errors.content_hash_blank": _ValidationCarrier(
         "storage.local.content_hash.present",
         {"backend": "local", "field": "content_hash", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -269,7 +269,7 @@ def test_factory_unhandled_kind_exclusion_is_closed_over_the_provider_enum() -> 
     assert set(ProviderKind.__members__) == _provider_kind_branch_members()
     assert {factory_module._parse_kind(kind.value) for kind in ProviderKind} == set(ProviderKind)
     excluded = _VALIDATION_CARRIER_TOTALITY[
-        "_factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled"
+        "factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled"
     ]
     assert not excluded.typed
 

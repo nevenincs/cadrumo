@@ -48,6 +48,7 @@ if TYPE_CHECKING:
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.config import Settings, load_settings
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from .errors import OutboundStorageError, OutboundStorageValidationError
@@ -135,7 +136,7 @@ def build_google_credentials(*, profile: str) -> Credentials:
         # `SERVICE_ACCOUNT_IMPERSONATION`.
         impersonation = selection.impersonation if selection is not None else None
         if impersonation is None:
-            raise OutboundStorageValidationError(
+            raise InternalInvariantError(
                 "the stored credential source selects service-account impersonation without its impersonation facts",
             )
         from ..google.impersonation import resolve_impersonated_credentials

@@ -7,114 +7,82 @@
 # THE GROUPS BELOW ARE THE BURNDOWN ORDER, cheapest and most duplicated first.
 
 # --- runner-plane - belongs to ci-fleet ----------------------------------------
-# `Fail fast on a lane no online runner can serve` is the one that matters:
-# it is `dev.ci.runner_queue_watchdog`, this repository's own third
-# implementation of a check ci-fleet OWNS as `runners/ci/preflight.sh`.
-# vaultspec-rag and vaultspec-dashboard carry the rendered copy with its
-# BEGIN/END markers; vaultspec-core hand-wrote a fourth. Replacing all of them
-# with the render is the single largest de-duplication left in the fleet.
-# `Verify assumed runner capabilities` is likewise a fleet fact, and
-# vaultspec-dashboard has a whole workflow (ci-runner-probe.yml) asserting the
-# same things a different way.
-packaging-homebrew.yml:Fail fast on a lane no online runner can serve
-packaging-quick.yml:Fail fast on a lane no online runner can serve
-packaging-scoop.yml:Fail fast on a lane no online runner can serve
-packaging-smoke.yml:Fail fast on a lane no online runner can serve
-publish.yml:Fail fast on a lane no online runner can serve
-runner-fleet-health.yml:Fail fast on a lane no online runner can serve
-runner-fleet-health.yml:Verify assumed runner capabilities
-runner-fleet-health.yml:Reclaim build space
+# `dev.ci.runner_queue_watchdog` is this repository's own implementation of a
+# check ci-fleet OWNS as `runners/ci/preflight.sh`; replacing it with the
+# rendered copy retires this entry.
+release.yml:Fail fast on a lane no online runner can serve
 
 # --- CI-plane bookkeeping ------------------------------------------------------
-# Reads and writes GitHub state through `gh` or the release automation, and
-# has no local meaning; `gh` is already permitted and these differ only in
-# reaching it through a shell conditional.
-docs-publish.yml:Require the deploy role before anything else
-docs-publish.yml:Alert on failure without touching the release
+# Reads and writes GitHub state through `gh`, `git` or the release automation,
+# or reports a job verdict, and has no local meaning; `gh` is already permitted
+# and these differ only in reaching it through a shell conditional.
+merge-gate.yml:Require lint success
+merge-gate.yml:Refuse fork pull requests
 release-please.yml:Regenerate and push uv.lock onto the release branch
 release-please.yml:Open a reconciling pull request when the lockfile drifted
-release-please.yml:Dispatch the publish workflow
-release-please.yml:Dispatch the documentation publish workflow
+release-please.yml:Dispatch release proof for the release pull request
+release-please.yml:Dispatch release publication
 release-please.yml:Refuse a deadlocked release state
+release.yml:Require every prove job to succeed
+release.yml:Locate the successful prove run for this version and commit
+release.yml:Require the tap token
+release.yml:Require the bucket repository and token
+release.yml:Commit the formula unless the tap already serves it
+release.yml:Commit the manifest unless the bucket already serves it
+release.yml:Require the deploy role before anything else
+release.yml:Alert on failure without touching the release
+release.yml:Report an already published version
 
 # --- pending - a gate with no recipe -------------------------------------------
 # Each is a real gate that a contributor cannot run before pushing.
-#   check-semgrep          `uvx --from semgrep==1.168.0 ...`, twice, with the
-#                          version pinned in YAML rather than in the toolchain
-#   check-vault            `vaultspec-core vault check all`, called raw; every
-#                          other repo in the fleet reaches the vault by recipe
-#   check-dependency-vulnerabilities  ci-full exports the lock and pipes it to `pip-audit`
-#                          while `just check-dependency-vulnerabilities` runs the fleet's own
-#                          dependency_audit.py - two different answers to one
-#                          question, in one repository
-#   test-roundtrip         a four-path pytest invocation with a `-k` filter
+#   check-dependency-vulnerabilities  release.yml exports the lock and pipes it
+#                          to `pip-audit` while `just check-dependency-vulnerabilities`
+#                          runs the fleet's own dependency_audit.py - two
+#                          different answers to one question, in one repository
 #   test-live-drift        the GROI live-drift suite, named by path
 aeat-drift-detector.yml:Run GROI live drift tests
 aeat-corpus-staleness.yml:Compare the captured corpus against the official pages
 aeat-corpus-staleness.yml:Fail the run only when the corpus has drifted
-agent-harness-eval.yml:Cadrumo agent-harness eval surface
-ci-full.yml:Semgrep regression rules (linkage-design type-uniformity)
-ci-full.yml:Audit dependencies for known CVEs
-ci-full.yml:Vault structural drift (informational)
-ci-full.yml:Ledger + storage roundtrip suite
-ci.yml:Semgrep regression rules (linkage-design type-uniformity)
-docs-publish.yml:Publish the documentation site
+release.yml:Audit dependencies for known CVEs
+release.yml:Packaging performance contracts
+release.yml:Future-directive policy
+release.yml:Emit the prerelease runtime row
+release.yml:Emit the stable runtime smoke matrix
+release.yml:Read the interpreter pin
 
-# --- pending - the packaging and release lanes ---------------------------------
-# ~700 lines of bash and pwsh across four workflows, none of it runnable by a
-# developer. `just test-packaging-portable`, `just build-packaging-cohort` and
-# `just test-python-compatibility` already exist and cover parts of this, which
-# is what makes the rest visible as duplication rather than as necessary
-# scaffolding: python-runtime-compatibility.yml re-implements the compatibility
-# recipe wholesale, and packaging-smoke.yml's Linux leg inlines a campaign its
-# own Windows and macOS legs invoke as `just test-packaging-portable`.
-#
-# Recipes needed: `release-publish-pypi`, `packaging-evidence`,
-# `test-channel-homebrew`, `test-channel-scoop`, plus calling the three that
-# already exist from the workflows that re-implement them.
-packaging-homebrew.yml:Initialize current-run evidence root
-packaging-homebrew.yml:Verify declared Homebrew release row
-packaging-homebrew.yml:Verify source workflow identity
-packaging-homebrew.yml:Verify and generate the cohort-bound tap snapshot
-packaging-homebrew.yml:Audit install and exercise Cadrumo through Homebrew
-packaging-homebrew.yml:Emit the sanctioned Homebrew distribution-evidence record
-packaging-homebrew.yml:Stage build-failure diagnostics
-packaging-homebrew.yml:Clean up the retained Homebrew install
-packaging-homebrew.yml:Stage the Homebrew evidence bundle
-packaging-scoop.yml:Initialize current-run evidence root
-packaging-scoop.yml:Verify declared Windows native release row
-packaging-scoop.yml:Verify source workflow identity
-packaging-scoop.yml:Generate cohort-bound Scoop source manifest
-packaging-scoop.yml:Stage token-free smoke harness
-packaging-scoop.yml:Install and exercise Cadrumo in the lane user's Scoop profile
-packaging-scoop.yml:Verify the smoke evidence binds to this run
-packaging-scoop.yml:Emit the sanctioned Scoop distribution-evidence record
-packaging-scoop.yml:Stage the Scoop acquisition bundle
-packaging-smoke.yml:Cadrumo immutable-cohort packaging campaign
-packaging-smoke.yml:Checkpoint packaging evidence
-packaging-smoke.yml:Archive the tested Cadrumo Python cohort
-packaging-smoke.yml:Stage Cadrumo packaging smoke evidence
-packaging-smoke.yml:Refuse to seal a version the world may already hold bytes under
-packaging-smoke.yml:Build the immutable full release cohort
-packaging-smoke.yml:Archive the immutable full release cohort
-packaging-smoke.yml:Extract the immutable release cohort
-packaging-smoke.yml:Install the cohort, run installed oracles, emit the row
-publish.yml:Install Python
-publish.yml:Emit stable runtime smoke matrix
-publish.yml:Build the three distributions
-publish.yml:Refuse a distribution over the index file cap
-publish.yml:Seal and verify distribution bytes
-publish.yml:Verify sealed distribution bytes
-publish.yml:Smoke test the built wheels
-publish.yml:Refuse a version any destination already owns
-publish.yml:Publish to PyPI
-python-runtime-compatibility.yml:Validate inventory and emit matrix
-python-runtime-compatibility.yml:Enforce future-directive AST policy
-python-runtime-compatibility.yml:Build the one immutable release cohort
-python-runtime-compatibility.yml:Verify the cohort and record archive digest
-python-runtime-compatibility.yml:Run source compatibility probe
-python-runtime-compatibility.yml:Hash source compatibility evidence
-python-runtime-compatibility.yml:Verify and extract the immutable compatibility cohort
-python-runtime-compatibility.yml:Run binary compatibility probe
-python-runtime-compatibility.yml:Hash binary compatibility evidence
-
+# --- pending - the release lane ------------------------------------------------
+# Cohort build, sealing, channel acquisition and publication steps, none of
+# them runnable by a developer. Recipes needed: `release-build-cohort`,
+# `release-verify-cohort`, `release-publish-pypi`, `packaging-evidence`,
+# `test-channel-homebrew`, `test-channel-scoop`, `release-reacquire`.
+release.yml:Refuse a burned or mismatched version
+release.yml:Build the immutable release cohort
+release.yml:Refuse a distribution over the index file cap
+release.yml:Seal the release cohort
+release.yml:Extract and verify the sealed release cohort
+release.yml:Extract and verify the proven release cohort
+release.yml:Extract the proven release cohort
+release.yml:Verify the seal, version and tag
+release.yml:Install the cohort, run installed oracles, emit the row
+release.yml:Packaging campaign against the sealed cohort
+release.yml:Checkpoint packaging evidence
+release.yml:Smoke test the built wheels
+release.yml:Initialize current-run evidence root
+release.yml:Verify declared Homebrew release row
+release.yml:Audit install and exercise the cohort's own formula
+release.yml:Emit the Homebrew distribution-evidence record
+release.yml:Clean up the retained Homebrew install
+release.yml:Stage the Homebrew evidence bundle
+release.yml:Verify declared Windows native release row
+release.yml:Stage token-free smoke harness
+release.yml:Install and exercise the cohort's own manifest
+release.yml:Verify the smoke evidence binds to this cohort
+release.yml:Emit the Scoop distribution-evidence record
+release.yml:Select the sealed distribution bytes
+release.yml:Compare the sealed bytes with the package index
+release.yml:Refuse a version any destination already owns
+release.yml:Publish to PyPI
+release.yml:Publish the documentation site
+release.yml:Reacquire the cohort from PyPI
+release.yml:Reacquire the cohort from the public tap
+release.yml:Reacquire the cohort from the public bucket

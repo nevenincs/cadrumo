@@ -41,6 +41,7 @@ def load_iva_rate_table(
     at an arbitrary source tree: publication is the only route to changed rates.
     """
     fact = operation.governed_fact(IVA_RATE_FACT_ID)
+    envelope = operation.supported_filing_years().date_envelope()
     table: dict[EUMemberState, list[IvaRateRecord]] = {}
     for variant in fact.variants:
         if not isinstance(variant.payload, MappingFactPayload):
@@ -50,9 +51,10 @@ def load_iva_rate_table(
             continue
         if variant.valid_from is None:
             raise IvaCatalogueError("IVA rate variant has no effective start date")
+        vocabulary_date = envelope.clamp_coordinate(variant.valid_from)
         member_state = require_eu_member_state(
             str(selectors["member_state"]),
-            effective_date=variant.valid_from,
+            effective_date=vocabulary_date,
             authority=operation,
         )
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}
@@ -61,7 +63,7 @@ def load_iva_rate_table(
                 member_state=member_state,
                 kind=require_iva_rate_kind(
                     str(selectors["kind"]),
-                    effective_date=variant.valid_from,
+                    effective_date=vocabulary_date,
                     authority=operation,
                 ),
                 pct=Decimal(str(payload["pct"])),

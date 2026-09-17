@@ -41,6 +41,11 @@ class PublishedGovernedFactSource:
         with bundled_indexed_authority().operation() as operation:
             return operation.resolve_governed_fact(query)
 
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        """Return the support envelope of the published generation."""
+        with bundled_indexed_authority().operation() as operation:
+            return operation.supported_filing_years()
+
 
 def published_snapshot(
     modelo_id: str,

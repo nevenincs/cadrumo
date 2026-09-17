@@ -48,7 +48,8 @@ from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .iva_category_catalogue import resolve_iva_category_catalogue
-from .iva_flow_catalogue import require_iva_flow_direction
+from .iva_deduction_catalogue import require_iva_deduction_fact_kind
+from .iva_flow_catalogue import require_iva_flow_direction, require_registry_declared_iva_flow_direction
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
@@ -199,6 +200,24 @@ class IvaLedgerObservation(BaseModel):
             return value
         return require_input_classification(value)
 
+    @field_validator("flow_direction", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _flow_direction_registry_declared(cls, value: object) -> object:
+        """Project raw flow tokens, such as a JSON round trip, through fact 0083."""
+        if isinstance(value, IvaFlowDirection):
+            return value
+        return require_iva_flow_direction(value, effective_date=today_madrid())
+
+    @field_validator("deduction_fact_kind", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _deduction_fact_kind_registry_declared(cls, value: object) -> object:
+        """Project raw deduction-kind tokens through fact 0085."""
+        if value is None or isinstance(value, IvaDeductionFactKind):
+            return value
+        return require_iva_deduction_fact_kind(value)
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
@@ -259,7 +278,10 @@ class LedgerIvaProvider(BaseModel):
     rate_kinds: Annotated[tuple[IvaRateKind, ...], BeforeValidator(coerce_enum_tuple(IvaRateKind))] = Field(
         min_length=1,
     )
-    flow_direction: Annotated[IvaFlowDirection, BeforeValidator(require_iva_flow_direction)]
+    flow_direction: Annotated[
+        IvaFlowDirection,
+        BeforeValidator(pydantic_validation_boundary(require_registry_declared_iva_flow_direction)),
+    ]
     observation_roles: Annotated[
         tuple[IvaLedgerObservationRole, ...],
         BeforeValidator(coerce_enum_tuple(IvaLedgerObservationRole)),
@@ -291,6 +313,7 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("categories", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _categories_registry_declared(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         """Refuse category tokens absent from the candidate's governed catalogue."""
         catalogue = resolve_iva_category_catalogue(effective_date=today_madrid())
@@ -298,6 +321,7 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("categories", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _categories_unique(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("categories entries must be unique")
@@ -305,12 +329,14 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _rate_kinds_registry_declared(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         """Refuse binding rate tiers absent from the IVA facts being validated."""
         return tuple(require_registry_declared_iva_rate_kind(kind, effective_date=today_madrid()) for kind in value)
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _rate_kinds_unique(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("rate_kinds entries must be unique")
@@ -318,6 +344,7 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("cash_accounting_treatments", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _cash_accounting_treatments_unique(
         cls,
         value: tuple[IvaCashAccountingTreatmentCode, ...],

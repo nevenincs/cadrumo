@@ -16,6 +16,7 @@ from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact,
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_references import TemporalProjectionDirection
+from ...domain.iva.errors import IvaValidationError
 from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -166,7 +167,7 @@ def _validate_rows_against_annual_orden(
                 row.iae_epigrafe for row in rows.activities if isinstance(row, ActividadNoAgricolaSimplificado)
             ),
         )
-    except ValueError as exc:
+    except (ValueError, IvaValidationError) as exc:
         raise M303RegimenSimplificadoCalculationError(str(exc)) from exc
 
 

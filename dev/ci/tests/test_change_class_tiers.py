@@ -1,12 +1,14 @@
-"""Structural gates for the change-class tier topology.
+"""Structural gates for the three CI lanes and the workflows beside them.
 
-The push and pull-request discipline is tiered by change class — T0 vault/docs churn runs
-nothing, T1 code changes run the quick profile, T2 release-artifact-shaping
-changes auto-dispatch the full campaign, T3 releases bind to the
-publish-release gate topology. Classification is structural (path filters and
-workflow topology), so these gates pin the boundaries: the T0 carve-out set,
-the T2 detector's paths, the fork pull-request guard on every fleet-facing job, the
-repo-wide zero-Actions-artifact posture, and the workflow naming convention.
+Every change reaches the default branch through the merge gate
+(`merge-gate.yml`), every release is proposed by `release-please.yml`, and
+`release.yml` proves and publishes it. The remaining workflows are
+dispatch-only reports. These gates pin that topology: which workflow may start
+on a push, that the merge gate always reaches a verdict, that the verdict
+requires lint, that the release cohort is built once and consumed by every
+verifier, and the naming convention. Each gate is paired with an inline
+defective workflow it must refuse. Workflows are enumerated from the
+filesystem.
 """
 
 from __future__ import annotations
@@ -21,297 +23,49 @@ import yaml
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 
-from ..workflow_permissions import granted_level
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
-_TRIGGER: Final = _WORKFLOWS_DIR / "packaging-campaign-trigger.yml"
-_CI: Final = _WORKFLOWS_DIR / "ci.yml"
-_QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
-_FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
-_DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
-_COMPATIBILITY: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
-_PR: Final = _WORKFLOWS_DIR / "pr.yml"
+_MERGE_GATE: Final = _WORKFLOWS_DIR / "merge-gate.yml"
+_RELEASE: Final = _WORKFLOWS_DIR / "release.yml"
+_RELEASE_PLEASE: Final = _WORKFLOWS_DIR / "release-please.yml"
 
-_COMPATIBILITY_INPUTS: Final = frozenset(
-    {
-        ".github/workflows/python-runtime-compatibility.yml",
-        ".python-version",
-        "pyproject.toml",
-        "uv.lock",
-        "dev/**",
-        "src/**",
-        "packaging/**",
-    }
-)
+#: The only workflow a push to the default branch may start.
+_PUSH_WORKFLOWS: Final = frozenset({_RELEASE_PLEASE.name})
+#: The artifact the release build job seals and every verifier downloads.
+_COHORT_ARTIFACT: Final = "cadrumo-release-cohort"
+_COHORT_BUILD_JOB: Final = "build-cohort"
+#: The command that builds the cohort; exactly one job may run it.
+_COHORT_BUILD_COMMAND: Final = "dev.packaging.release_cohort build"
+_LINT_JOB: Final = "lint"
+_GATE_JOB: Final = "gate"
 
-# The carve-out on the PYTHON code lanes: everything that never reaches the
-# Python code or artifact surface those lanes gate. Shared verbatim by every
-# per-push T1 Python workflow so a path cannot be carved out for one lane and
-# not the other.
-#
-# `docs/**` joined the set when it gained its own lane. It is not a "runs
-# nothing" path — that is the point. Before the split the carve-out was keyed on
-# file SUFFIX rather than on role, so `**.md` held `docs/index.md` out while
-# `docs/**.rst` (2,051 files) started the full Python unit suite and still
-# produced no documentation verdict. A path belongs here when the PYTHON lanes
-# cannot observe its regressions, and a path that belongs here needs a lane of
-# its own — which is what docs.yml is, and what
-# `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so the
-# set cannot become a silent dumping ground.
-_CODE_LANE_CARVE_OUT: Final = frozenset(
-    {
-        ".vault/**",
-        ".vaultspec/**",
-        ".claude/**",
-        ".codex/**",
-        ".gemini/**",
-        ".agents/**",
-        "docs/**",
-        "**.md",
-    }
-)
-
-# The T2 boundary: the files that define the shipped artifact set. A push
-# touching any of these auto-dispatches the full campaign.
-_T2_RELEASE_ARTIFACT_SURFACE: Final = frozenset(
-    {
-        "pyproject.toml",
-        "uv.lock",
-        "packaging/**",
-        "dev/packaging/**",
-        ".github/workflows/packaging-smoke.yml",
-    }
-)
-
-_SAME_REPO_GUARD: Final = (
-    "github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository"
-)
+#: Below this the walk has stopped covering the workflow directory. Live: six
+#: workflows (three lanes, three dispatch-only reports).
+_MINIMUM_WORKFLOWS: Final = 6
 
 
 def _document(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def _triggers(document: dict[str, Any]) -> Any:
-    for key, value in document.items():
-        if key is True:
-            return value
-    return document["on"]
-
-
-def _assert_compatibility_lane_contract(document: dict[str, Any]) -> None:
-    """Require compatibility to run on main and schedule, never on pull requests."""
-    triggers = _triggers(document)
-    assert set(triggers) == {"workflow_dispatch", "push", "schedule"}
-    assert triggers["schedule"] == [{"cron": "17 3 * * 1"}]
-    trigger = triggers["push"]
-    assert trigger["branches"] == ["main"]
-    assert set(trigger["paths"]) >= _COMPATIBILITY_INPUTS
-    assert "paths-ignore" not in trigger
-
-    jobs = document["jobs"]
-    assert jobs
-    for job_name, job in jobs.items():
-        assert job.get("runs-on") == ["self-hosted", "Linux", "X64"], job_name
-
-
-def test_t2_trigger_paths_pin_the_release_artifact_surface() -> None:
-    """The campaign auto-dispatch fires exactly on the release-artifact paths."""
-    document = _document(_TRIGGER)
-    triggers = _triggers(document)
-    assert set(triggers) == {"push"}
-    push = triggers["push"]
-    assert push["branches"] == ["main"]
-    assert set(push["paths"]) == set(_T2_RELEASE_ARTIFACT_SURFACE)
-
-
-def test_t2_trigger_dispatches_the_full_campaign_and_nothing_else() -> None:
-    """One tiny job that presses the packaging-smoke dispatch button on main."""
-    document = _document(_TRIGGER)
-    assert "Cadrumo" in document["name"]
-    assert document["permissions"] == {"actions": "write", "contents": "read"}
-    assert set(document["jobs"]) == {"dispatch-full-campaign"}
-    job = document["jobs"]["dispatch-full-campaign"]
-    assert job["timeout-minutes"] <= 10
-    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    # The dispatch is asserted against what the job EXECUTES: this workflow
-    # explains itself at length in comments, and a dispatch line commented out
-    # still satisfies a reading of the raw block while pressing no button.
-    dispatched = executed_text(step.get("run") for step in job["steps"])
-    assert "gh workflow run packaging-smoke.yml" in dispatched
-    assert "--ref main" in dispatched
-    # The trigger never runs the campaign inline or mints evidence itself.
-    for forbidden in ("just packaging", "campaign.py", "evidence", "gh release"):
-        assert forbidden not in commands, forbidden
-
-
-def test_compatibility_workflow_is_enrolled_in_change_class_and_fork_safety() -> None:
-    """Runtime changes trigger the dedicated lane, with every fleet job guarded."""
-    document = _document(_COMPATIBILITY)
-    _assert_compatibility_lane_contract(document)
-
-
-def test_compatibility_lane_guard_has_detector_teeth() -> None:
-    """Removing the scheduled diagnostic is refused."""
-    document = deepcopy(_document(_COMPATIBILITY))
-    del _triggers(document)["schedule"]
-    with pytest.raises(AssertionError):
-        _assert_compatibility_lane_contract(document)
-
-
-def test_primary_pr_context_is_unfiltered_while_legacy_lanes_leave_prs() -> None:
-    """Every PR emits the required context; broad legacy lanes never join it."""
-    pr_triggers = _triggers(_document(_PR))
-    assert "paths" not in pr_triggers["pull_request"]
-    assert "paths-ignore" not in pr_triggers["pull_request"]
-    assert set(_triggers(_document(_CI))) == {"workflow_dispatch"}
-    assert "pull_request" not in _triggers(_document(_QUICK))
-
-
-def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
-    """A path carved out of the Python lanes is verified elsewhere or is inert.
-
-    The carve-out set is where verification goes to die if nobody watches it:
-    adding a path is a one-line way to make a lane green. So every carved-out
-    path must be either genuinely inert (agent config, vault records, loose
-    markdown — development scaffolding that ships nothing) or covered by a lane
-    that names it. `docs/**` is a product surface, so it is held to the second
-    standard.
-    """
-    inert = {".vault/**", ".vaultspec/**", ".claude/**", ".codex/**", ".gemini/**", ".agents/**", "**.md"}
-    owned = {"docs/**": _DOCS}
-    assert inert | set(owned) == set(_CODE_LANE_CARVE_OUT), "a carve-out path is neither inert nor lane-owned"
-
-    for carved, workflow in owned.items():
-        assert workflow.exists(), f"{carved} is carved out of the Python lanes with no lane of its own"
-        triggers = _triggers(_document(workflow))
-        for event in ("push", "pull_request"):
-            assert carved in set(triggers[event]["paths"]), f"{workflow.name}:{event} does not claim {carved}"
-
-
-def test_the_docs_lane_claims_every_input_its_build_reads() -> None:
-    """The docs lane triggers on the docs tree, its generators, and its corpus.
-
-    A docs lane keyed only on `docs/**` would miss the two surfaces that
-    GENERATE the docs tree: the builders and gates under `dev/docs`, and the
-    terminology corpus the glossary and shipped search are produced from. A
-    change to either can break the build without touching `docs/` at all.
-    """
-    triggers = _triggers(_document(_DOCS))
-    for event in ("push", "pull_request"):
-        paths = set(triggers[event]["paths"])
-        assert {"docs/**", "dev/docs/**", "src/cadrumo/_data/terminology/**"} <= paths, event
-
-    commands = "\n".join(str(step.get("run", "")) for step in _document(_DOCS)["jobs"]["cadrumo-docs"]["steps"])
-    assert "just docs-check" in commands, "the docs lane runs no docs check"
-
-
-def test_the_docs_verification_lane_never_publishes() -> None:
-    """Verification and delivery stay separate lanes with separate triggers.
-
-    docs.yml proves the build on the push that changed it; docs-publish.yml
-    ships the site on `release: published`. Conflating them is how a docs
-    defect strands a half-published release, and how a routine docs push
-    acquires deploy credentials it has no use for.
-    """
-    document = _document(_DOCS)
-    assert set(_triggers(document)) == {"workflow_dispatch", "push", "pull_request"}
-    assert document["permissions"] == {"contents": "read"}
-
-    job = document["jobs"]["cadrumo-docs"]
-    assert "environment" not in job, "the verification lane must not enter the deploy environment"
-    assert granted_level(document, "cadrumo-docs", "id-token") == "none", (
-        "the verification lane needs no OIDC federation"
-    )
-    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
-    for forbidden in ("docs_static_site", "publish", "--confirm"):
-        assert forbidden not in commands, forbidden
-
-    # And the delivery lane stays free of push and pull-request triggers, so no
-    # ordinary commit can reach it.
-    delivery = _triggers(_document(_WORKFLOWS_DIR / "docs-publish.yml"))
-    assert set(delivery) == {"release", "workflow_dispatch"}
-
-
-def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
-    """Refuse external-site source or CI ownership in the product repository."""
-    # Check the tracked source marker rather than ignored build residue.
-    assert not (REPO_ROOT / "frontend" / "package.json").exists(), (
-        "external-site source does not belong in the product repository"
-    )
-    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "an external-site lane entered the product repository"
-
-
-def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
-    """Every lane installs from the committed lock, never a live resolve.
-
-    A bare `uv sync` re-resolves the whole dependency graph against the index on
-    every job. That costs real time on the lanes that run most often (measured
-    on run 30977318339: 2m03s of a 2m25s static job, 1m56s of the unit job, paid
-    independently by the two jobs on one machine against one warm cache), and it
-    costs attributability: an unfrozen resolve can pick up an index change
-    nobody pushed, so a red is not necessarily a property of the commit under
-    test.
-
-    Eleven sites across the packaging, release, and delivery lanes were already
-    frozen. The only two that were not were ci.yml and ci-full.yml — the
-    per-push lane and the full lane, i.e. exactly the ones where both costs
-    land hardest.
-    """
-    offending: list[str] = []
-    for path in sorted(_workflow_paths()):
-        document = _document(path)
-        for job_name, job in (document.get("jobs") or {}).items():
-            for step in job.get("steps") or []:
-                for line in str(step.get("run", "")).splitlines():
-                    stripped = line.strip()
-                    if stripped.startswith("uv sync") and "--frozen" not in stripped:
-                        offending.append(f"{path.name}:{job_name}: {stripped}")
-    assert offending == [], offending
-
-
-def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> None:
-    """Every pull_request workflow carries the same-repo guard on every job.
-
-    Fork pull-request head code must never execute on the self-hosted fleet.
-    """
-    for path in sorted(_workflow_paths()):
-        document = _document(path)
-        if "pull_request" not in set(_triggers(document)):
-            continue
-        for job_name, job in document["jobs"].items():
-            assert job.get("if") == _SAME_REPO_GUARD, f"{path.name}:{job_name} lacks the fork guard"
-
-
-#: Below this the workflow walk has stopped covering the lane directory. A
-#: floor, not a pinned count: sixteen workflows ship today.
-_MINIMUM_WORKFLOWS = 8
+def _triggers(document: dict[str, Any]) -> dict[str, Any]:
+    trigger = document.get("on", document.get(True))
+    if isinstance(trigger, str):
+        return {trigger: None}
+    if isinstance(trigger, list):
+        return dict.fromkeys(trigger)
+    return dict(trigger or {})
 
 
 def _workflow_paths() -> list[Path]:
-    """Every committed workflow, with the walk itself asserted.
-
-    Five gates in this module quantify over this walk -- three that NO
-    workflow does some forbidden thing, two that EVERY workflow does a
-    required one. An empty directory satisfies all five, because a claim
-    over an empty set holds whichever direction it points, so the walk is
-    guarded once here rather than trusted five times.
-    """
-    assert _WORKFLOWS_DIR.is_dir(), (
-        f"no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and "
-        "every lane gate in this module would report the workflows clean"
-    )
-
+    """Every workflow GitHub reads, with the walk itself floored."""
+    assert _WORKFLOWS_DIR.is_dir(), f"no workflow directory at {_WORKFLOWS_DIR}"
     found = sorted(
-        {
-            *scan_directory(_WORKFLOWS_DIR, pattern="*.yml"),
-            *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml"),
-        }
+        {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
     )
-
     assert len(found) >= _MINIMUM_WORKFLOWS, (
         f"only {len(found)} workflow(s) were walked; below this an empty finding list says "
         "nothing about what the lanes actually do"
@@ -319,114 +73,263 @@ def _workflow_paths() -> list[Path]:
     return found
 
 
-def test_no_workflow_downloads_an_artifact_from_another_run() -> None:
-    """Artifact storage hands files between jobs of one run, and no further.
-
-    Handing a built cohort from the job that produced it to the jobs that prove
-    it is what artifact storage is for, and several lanes rely on it. Reaching
-    into a *different* run is the case worth refusing: a run's inputs must be
-    derivable from the commit it was dispatched at, and ``download-artifact``
-    leaves that guarantee the moment it is given ``run-id``.
-    """
-    offending: list[str] = []
-    for path in _workflow_paths():
-        document = _document(path)
-        for job_name, job in (document.get("jobs") or {}).items():
-            for step in job.get("steps") or []:
-                if "download-artifact" not in str(step.get("uses", "")):
-                    continue
-                if "run-id" in (step.get("with") or {}):
-                    offending.append(f"{path.name}:{job_name}")
-    assert offending == [], offending
+def _steps_run(job: dict[str, Any]) -> str:
+    return executed_text(step.get("run") for step in job.get("steps") or [])
 
 
-def test_the_cross_run_artifact_gate_refuses_a_run_id_read(tmp_path: Path) -> None:
-    """The gate has teeth: a cross-run read in a fixture workflow is detected."""
-    workflow = tmp_path / "offender.yml"
-    workflow.write_text(
-        "name: offender\n"
-        "on: [workflow_dispatch]\n"
-        "jobs:\n"
-        "  take:\n"
-        "    runs-on: [self-hosted, Linux, X64]\n"
-        "    steps:\n"
-        "      - uses: actions/download-artifact@v8\n"
-        "        with:\n"
-        "          name: dist\n"
-        "          run-id: 1234567890\n",
-        encoding="utf-8",
+# --- naming -------------------------------------------------------------------
+
+
+def _naming_violations(path: Path, document: dict[str, Any]) -> list[str]:
+    violations: list[str] = []
+    if not str(document.get("name", "")).startswith("Cadrumo "):
+        violations.append(f"{path.name}: workflow name does not start with 'Cadrumo '")
+    if path.stem != path.stem.lower() or " " in path.stem or "_" in path.stem:
+        violations.append(f"{path.name}: filename is not kebab-case")
+    return violations
+
+
+def test_every_workflow_follows_the_naming_pattern() -> None:
+    """Kebab-case filenames, and a `name:` that leads with the product identity."""
+    violations = [entry for path in _workflow_paths() for entry in _naming_violations(path, _document(path))]
+    assert violations == []
+
+
+def test_the_naming_gate_refuses_a_misnamed_workflow() -> None:
+    """Teeth: a snake_case file with an unbranded name is refused on both counts."""
+    assert _naming_violations(Path("Nightly_Build.yml"), {"name": "Nightly"}) == [
+        "Nightly_Build.yml: workflow name does not start with 'Cadrumo '",
+        "Nightly_Build.yml: filename is not kebab-case",
+    ]
+
+
+# --- push triggers ------------------------------------------------------------
+
+
+def _push_workflows(documents: list[tuple[Path, dict[str, Any]]]) -> set[str]:
+    return {path.name for path, document in documents if "push" in _triggers(document)}
+
+
+def test_no_workflow_but_release_please_starts_on_a_push() -> None:
+    """Pushes to main start only the release proposal; verification runs on the pull request."""
+    documents = [(path, _document(path)) for path in _workflow_paths()]
+    assert _push_workflows(documents) == set(_PUSH_WORKFLOWS)
+    release_please = _triggers(_document(_RELEASE_PLEASE))["push"]
+    assert release_please["branches"] == ["main"]
+
+
+def test_the_push_gate_refuses_a_second_push_workflow() -> None:
+    """Teeth: a lane re-acquiring a push trigger is reported."""
+    rogue = yaml.safe_load("name: Cadrumo Rogue\non:\n  push:\n    branches: [main]\njobs: {}\n")
+    documents = [(_RELEASE_PLEASE, _document(_RELEASE_PLEASE)), (Path("rogue.yml"), rogue)]
+    assert _push_workflows(documents) == {_RELEASE_PLEASE.name, "rogue.yml"}
+
+
+def _no_schedule_violations(documents: list[tuple[Path, dict[str, Any]]]) -> list[str]:
+    return [path.name for path, document in documents if "schedule" in _triggers(document)]
+
+
+def test_no_workflow_carries_standing_compute() -> None:
+    """The reports beside the lanes run on dispatch only; nothing is scheduled."""
+    assert _no_schedule_violations([(path, _document(path)) for path in _workflow_paths()]) == []
+
+
+def test_the_schedule_gate_refuses_a_cron() -> None:
+    """Teeth: a scheduled workflow is reported."""
+    cron = yaml.safe_load("name: Cadrumo Cron\non:\n  schedule:\n    - cron: '0 3 * * 1'\njobs: {}\n")
+    assert _no_schedule_violations([(Path("cron.yml"), cron)]) == ["cron.yml"]
+
+
+# --- merge gate ---------------------------------------------------------------
+
+
+def _merge_gate_reach_violations(document: dict[str, Any]) -> list[str]:
+    """Why the merge gate might fail to reach a verdict on some pull request."""
+    violations: list[str] = []
+    pull_request = _triggers(document).get("pull_request") or {}
+    for key in ("paths", "paths-ignore", "branches-ignore"):
+        if key in pull_request:
+            violations.append(f"pull_request carries a {key} filter")
+    if pull_request.get("branches") not in (None, ["main"]):
+        violations.append(f"pull_request is narrowed to branches {pull_request['branches']}")
+    for job_name, job in (document.get("jobs") or {}).items():
+        condition = job.get("if")
+        if condition is not None and str(condition).strip() != "${{ !cancelled() }}":
+            violations.append(f"{job_name} is skippable by `if: {condition}`")
+    return violations
+
+
+def test_the_merge_gate_has_no_path_filter_and_no_job_level_skip() -> None:
+    """Every pull request reaches the required verdict; no job can be skipped into green."""
+    document = _document(_MERGE_GATE)
+    assert "pull_request" in _triggers(document)
+    assert _merge_gate_reach_violations(document) == []
+
+
+def test_the_merge_gate_reach_check_refuses_a_filter_and_a_skip() -> None:
+    """Teeth: a path filter and a job-level condition are both reported."""
+    document = deepcopy(_document(_MERGE_GATE))
+    # `_triggers` copies the block but not its members, so this edits the document.
+    _triggers(document)["pull_request"]["paths"] = ["src/**"]
+    document["jobs"][_GATE_JOB]["if"] = "github.actor != 'dependabot[bot]'"
+    assert _merge_gate_reach_violations(document) == [
+        "pull_request carries a paths filter",
+        f"{_GATE_JOB} is skippable by `if: github.actor != 'dependabot[bot]'`",
+    ]
+
+
+def _lint_requirement_violations(document: dict[str, Any]) -> list[str]:
+    """Why the gate job might report success while lint did not succeed."""
+    jobs = document.get("jobs") or {}
+    gate = jobs.get(_GATE_JOB) or {}
+    needs = gate.get("needs")
+    needs = [needs] if isinstance(needs, str) else list(needs or [])
+    violations: list[str] = []
+    if _LINT_JOB not in needs:
+        violations.append(f"{_GATE_JOB} does not need {_LINT_JOB}")
+    guard = next(
+        (
+            step
+            for step in gate.get("steps") or []
+            if f"needs.{_LINT_JOB}.result != 'success'" in str(step.get("if", ""))
+            and "exit 1" in executed_text(step.get("run"))
+        ),
+        None,
     )
-    document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
-    step = document["jobs"]["take"]["steps"][0]
-    assert "download-artifact" in step["uses"]
-    assert "run-id" in step["with"]
+    if guard is None:
+        violations.append(f"{_GATE_JOB} has no step failing on a non-success {_LINT_JOB} result")
+    if gate.get("continue-on-error") is True:
+        violations.append(f"{_GATE_JOB} is advisory")
+    return violations
 
 
-def test_only_runtime_compatibility_carries_the_weekly_schedule() -> None:
-    """Standing compute is limited to the audited prerelease-runtime diagnostic."""
-    scheduled = {path.name for path in _workflow_paths() if "schedule" in set(_triggers(_document(path)))}
-    assert scheduled == {_COMPATIBILITY.name}
+def test_the_gate_summary_requires_lint_success() -> None:
+    """The merge verdict is red whenever lint is anything but success."""
+    assert _lint_requirement_violations(_document(_MERGE_GATE)) == []
 
 
-def test_every_workflow_name_carries_the_product_identity() -> None:
-    """Naming convention: kebab-case filenames, `name:` contains "Cadrumo"."""
-    for path in sorted(_workflow_paths()):
-        document = _document(path)
-        assert "Cadrumo" in document["name"], path.name
-        assert path.stem == path.stem.lower(), path.name
+def test_the_lint_requirement_check_refuses_a_gate_that_ignores_lint() -> None:
+    """Teeth: dropping the dependency and commenting out the refusal are both reported."""
+    document = deepcopy(_document(_MERGE_GATE))
+    gate = document["jobs"][_GATE_JOB]
+    gate["needs"] = []
+    for step in gate["steps"]:
+        if "exit 1" in str(step.get("run", "")):
+            step["run"] = "# " + str(step["run"]).replace(chr(10), chr(10) + "# ")
+    assert _lint_requirement_violations(document) == [
+        f"{_GATE_JOB} does not need {_LINT_JOB}",
+        f"{_GATE_JOB} has no step failing on a non-success {_LINT_JOB} result",
+    ]
 
 
-def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
-    """The retired weekly workflow's two gates live on in ci-full.yml.
+# --- release cohort -----------------------------------------------------------
 
-    The vault structural-drift audit and the ledger + storage roundtrip suite
-    (aeat-quality-gates: never removed without a replacement).
-    """
-    assert not (_WORKFLOWS_DIR / "durable-maintenance-gates.yml").exists()
-    commands = executed_text(step.get("run") for step in _document(_FULL)["jobs"]["cadrumo-full-conformance"]["steps"])
-    assert "vaultspec-core vault check all" in commands
-    assert "src/cadrumo/application/ledger/tests" in commands
-    assert "src/cadrumo/adapters/persistence/storage" in commands
-    assert "src/cadrumo/adapters/persistence/profile" in commands
-    assert "-k roundtrip" in commands
+
+def _needs(job: dict[str, Any]) -> set[str]:
+    needs = job.get("needs")
+    return {needs} if isinstance(needs, str) else set(needs or [])
+
+
+def _downloads_cohort(job: dict[str, Any]) -> bool:
+    return any(
+        "download-artifact" in str(step.get("uses", "")) and (step.get("with") or {}).get("name") == _COHORT_ARTIFACT
+        for step in job.get("steps") or []
+    )
+
+
+def _cohort_violations(document: dict[str, Any]) -> list[str]:
+    """Why the release proof might not verify the one cohort it built."""
+    jobs = document.get("jobs") or {}
+    violations: list[str] = []
+    builders = sorted(name for name, job in jobs.items() if _COHORT_BUILD_COMMAND in _steps_run(job))
+    if builders != [_COHORT_BUILD_JOB]:
+        violations.append(f"the cohort is built by {builders}, not by {_COHORT_BUILD_JOB} alone")
+    uploaders = sorted(
+        name
+        for name, job in jobs.items()
+        for step in job.get("steps") or []
+        if "upload-artifact" in str(step.get("uses", "")) and (step.get("with") or {}).get("name") == _COHORT_ARTIFACT
+    )
+    if uploaders != [_COHORT_BUILD_JOB]:
+        violations.append(f"the cohort artifact is uploaded by {uploaders}")
+    consumers = [name for name, job in jobs.items() if _COHORT_BUILD_JOB in _needs(job)]
+    verifiers = [name for name in consumers if name.startswith("test-")]
+    if not verifiers:
+        violations.append(f"no verify job consumes {_COHORT_BUILD_JOB}")
+    violations.extend(
+        f"{name} needs {_COHORT_BUILD_JOB} but does not download {_COHORT_ARTIFACT}"
+        for name in verifiers
+        if not _downloads_cohort(jobs[name])
+    )
+    return violations
+
+
+def test_the_release_builds_the_cohort_once_and_every_verifier_consumes_it() -> None:
+    """One sealed cohort, built in one job, is what every verify job installs."""
+    assert _cohort_violations(_document(_RELEASE)) == []
+
+
+def test_the_cohort_check_refuses_a_verifier_that_rebuilds() -> None:
+    """Teeth: a verify job that builds its own cohort instead of downloading it is reported."""
+    document = deepcopy(_document(_RELEASE))
+    verifier = next(
+        name for name, job in document["jobs"].items() if name.startswith("test-") and _downloads_cohort(job)
+    )
+    steps = document["jobs"][verifier]["steps"]
+    document["jobs"][verifier]["steps"] = [
+        {"name": "Rebuild", "run": f"uv run --no-sync python -m {_COHORT_BUILD_COMMAND} --output dist"},
+        *(step for step in steps if "download-artifact" not in str(step.get("uses", ""))),
+    ]
+    assert _cohort_violations(document) == [
+        f"the cohort is built by {sorted([_COHORT_BUILD_JOB, verifier])}, not by {_COHORT_BUILD_JOB} alone",
+        f"{verifier} needs {_COHORT_BUILD_JOB} but does not download {_COHORT_ARTIFACT}",
+    ]
+
+
+# --- dependency installation and dispatch-only reports ------------------------
+
+
+def _unfrozen_syncs(documents: list[tuple[Path, dict[str, Any]]]) -> list[str]:
+    offending: list[str] = []
+    for path, document in documents:
+        for job_name, job in (document.get("jobs") or {}).items():
+            for line in _steps_run(job).splitlines():
+                stripped = line.strip()
+                if stripped.startswith("uv sync") and "--frozen" not in stripped and "--locked" not in stripped:
+                    offending.append(f"{path.name}:{job_name}: {stripped}")
+    return offending
+
+
+def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
+    """Every lane installs from the committed lock, never a live resolve."""
+    assert _unfrozen_syncs([(path, _document(path)) for path in _workflow_paths()]) == []
+
+
+def test_the_frozen_install_gate_refuses_a_bare_sync() -> None:
+    """Teeth: a bare `uv sync` is reported."""
+    document = yaml.safe_load(
+        "name: Cadrumo Resolve\non: workflow_dispatch\njobs:\n  setup:\n    steps:\n      - run: uv sync\n"
+    )
+    assert _unfrozen_syncs([(Path("resolve.yml"), document)]) == ["resolve.yml:setup: uv sync"]
+
+
+def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
+    """Refuse external-site source or CI ownership in the product repository."""
+    assert not (REPO_ROOT / "frontend" / "package.json").exists(), (
+        "external-site source does not belong in the product repository"
+    )
+    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "an external-site lane entered the product repository"
 
 
 def test_drift_detector_targets_exist_on_disk() -> None:
     """Every drift-detector pytest target must exist on disk.
 
-    The l1-anchor-drift failure class: a scheduled workflow whose pytest
-    targets moved leaves a red cron nobody attributes.
+    A dispatch-only workflow whose pytest targets moved leaves a red run nobody
+    attributes.
     """
-    repo_root = _WORKFLOWS_DIR.parents[1]
     document = _document(_WORKFLOWS_DIR / "aeat-drift-detector.yml")
     commands = executed_text(step.get("run") for job in document["jobs"].values() for step in job["steps"])
     targets = [token for token in commands.replace("\\", " ").split() if token.startswith("src/")]
     assert targets, "drift detector runs no src-tree pytest targets"
     for target in targets:
-        assert (repo_root / target).exists(), f"drift-detector target moved or deleted: {target}"
-
-
-def test_the_workflow_presence_gates_read_what_a_job_executes() -> None:
-    """Teeth for the positive command readings above, over the real documents.
-
-    Each of them names a command a lane must run. Commented out, that command
-    runs nothing while its text still sits in the `run:` block, so the reading
-    that mattered is the executed one -- asserted here in both directions over
-    the same input rather than trusted.
-    """
-    cases = (
-        (_TRIGGER, "dispatch-full-campaign", "gh workflow run packaging-smoke.yml"),
-        (_FULL, "cadrumo-full-conformance", "vaultspec-core vault check all"),
-    )
-    for path, job_name, command in cases:
-        steps = _document(path)["jobs"][job_name]["steps"]
-        assert command in executed_text(step.get("run") for step in steps), f"{path.name}: {command}"
-
-        newline = chr(10)
-        commented = [
-            {**step, "run": "# " + str(step["run"]).replace(newline, newline + "# ")} if "run" in step else step
-            for step in deepcopy(steps)
-        ]
-        raw = "".join(str(step.get("run", "")) for step in commented)
-        assert command in raw, f"{path.name}: the raw reading no longer finds the degraded command"
-        assert command not in executed_text(step.get("run") for step in commented), f"{path.name}: {command}"
+        assert (REPO_ROOT / target).exists(), f"drift-detector target moved or deleted: {target}"

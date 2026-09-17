@@ -174,13 +174,15 @@ _RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
 _JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
 
 #: A `gh workflow run <file>.yml` call in a workflow `run:` block. This is a
-#: real edge between workflows and the ONLY kind this repository has: no
-#: workflow here declares `workflow_call` or `uses: ./.github/workflows/...`,
-#: so a dispatch-only workflow can still be reached automatically by another
-#: workflow pressing its button. Missing the edge over-reports the target as
-#: manual-only, which is the exact error this whole trigger model exists to
-#: avoid making in the other direction.
+#: real edge between workflows: a dispatch-only workflow can still be reached
+#: automatically by another workflow pressing its button. Missing the edge
+#: over-reports the target as manual-only, which is the exact error this whole
+#: trigger model exists to avoid making in the other direction.
 _GH_WORKFLOW_RUN: Final = re.compile(r"\bgh\s+workflow\s+run\s+(?P<workflow>[\w.-]+\.ya?ml)")
+
+#: A job-level `uses: ./.github/workflows/<file>.yml`, the other edge between
+#: workflows: the called workflow runs whenever the calling job does.
+_LOCAL_WORKFLOW_CALL: Final = re.compile(r"\./\.github/workflows/(?P<workflow>[\w.-]+\.ya?ml)")
 
 #: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
 #: like `{{ if durations == "" { "" } else { ... } }}` does not match a bare
@@ -489,7 +491,7 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     return lanes
 
 
-def _recipes_invoked_by(text: str) -> set[str]:
+def _recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -> set[str]:
     """Return every recipe name an EXECUTED ``just <recipe>`` call in ``text`` names.
 
     Executed, because this reads justfile recipe BODIES as well as workflow
@@ -508,7 +510,29 @@ def _recipes_invoked_by(text: str) -> set[str]:
     step names and workflow comments never reach here -- and the justfile side
     was not.
     """
-    return {match.group("recipe") for line in executed_lines(text) for match in _JUST_CALL.finditer(line)}
+    invoked: set[str] = set()
+    for line in executed_lines(text):
+        for match in _JUST_CALL.finditer(line):
+            recipe = match.group("recipe")
+            invoked.add(recipe)
+            # `just a b` runs both when `a` takes no parameters; otherwise `b`
+            # is `a`'s argument. Only a declared parameterless recipe chains.
+            for token in line[match.end() :].split():
+                if recipe not in parameterless or token not in parameterless:
+                    break
+                recipe = token
+                invoked.add(recipe)
+    return invoked
+
+
+def _parameterless_recipes(text: str) -> frozenset[str]:
+    """Return the justfile recipes whose header declares no parameter."""
+    names: set[str] = set()
+    for raw in text.splitlines():
+        header = _RECIPE_HEADER.match(raw)
+        if header is not None and not raw[header.end("name") :].split(":", 1)[0].strip():
+            names.add(header.group("name"))
+    return frozenset(names)
 
 
 def _recipe_bodies(text: str) -> dict[str, str]:
@@ -600,6 +624,15 @@ def _dispatch_edges(text: str) -> tuple[tuple[str, str | None], ...]:
     for step in _workflow_run_steps(text, ()):
         for match in _GH_WORKFLOW_RUN.finditer(step.command):
             edges.append((match.group("workflow"), step.condition))
+    document = yaml.load(text, Loader=yaml.CSafeLoader)
+    jobs = document.get("jobs") if isinstance(document, dict) else None
+    for job in (jobs or {}).values():
+        # A job calling a reusable workflow of this repository runs it exactly
+        # when the calling job runs, under the calling job's guard.
+        uses = job.get("uses") if isinstance(job, dict) else None
+        if isinstance(uses, str) and (called := _LOCAL_WORKFLOW_CALL.fullmatch(uses)) is not None:
+            condition = job.get("if")
+            edges.append((called.group("workflow"), None if condition is None else str(condition)))
     return tuple(edges)
 
 
@@ -695,7 +728,9 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     ever run it.
     """
     justfile = root / "justfile"
-    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
+    justfile_text = justfile.read_text(encoding=_UTF_8) if justfile.exists() else ""
+    bodies = _recipe_bodies(justfile_text)
+    parameterless = _parameterless_recipes(justfile_text)
 
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
@@ -707,13 +742,13 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
         text = workflow.read_text(encoding=_UTF_8)
         events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
         for step in _workflow_run_steps(text, events):
-            reached = _recipes_invoked_by(step.command)
+            reached = _recipes_invoked_by(step.command, parameterless)
             # Close over recipe-to-recipe calls until nothing new is reached.
             frontier = set(reached)
             while frontier:
                 nxt: set[str] = set()
                 for name in frontier:
-                    for called in _recipes_invoked_by(bodies.get(name, "")):
+                    for called in _recipes_invoked_by(bodies.get(name, ""), parameterless):
                         if called not in reached:
                             reached.add(called)
                             nxt.add(called)
@@ -740,7 +775,9 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     exactly why the union has to be computed rather than read.
     """
     justfile = root / "justfile"
-    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
+    justfile_text = justfile.read_text(encoding=_UTF_8) if justfile.exists() else ""
+    bodies = _recipe_bodies(justfile_text)
+    parameterless = _parameterless_recipes(justfile_text)
 
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
@@ -750,12 +787,12 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
         text = workflow.read_text(encoding=_UTF_8)
         for step in _workflow_run_steps(text, ()):
-            reached = _recipes_invoked_by(step.command)
+            reached = _recipes_invoked_by(step.command, parameterless)
             frontier = set(reached)
             while frontier:
                 nxt: set[str] = set()
                 for name in frontier:
-                    for called in _recipes_invoked_by(bodies.get(name, "")):
+                    for called in _recipes_invoked_by(bodies.get(name, ""), parameterless):
                         if called not in reached:
                             reached.add(called)
                             nxt.add(called)

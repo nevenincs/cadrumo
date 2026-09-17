@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.config import load_settings, override_settings
+from ...core.config import Settings, load_settings, override_settings
 from ...core.hardware import AcceleratorKind, HardwareTier
 from ...core.model_catalogue import (
     DeploymentLicencePosture,
@@ -31,6 +31,7 @@ from ...core.model_catalogue import (
     candidates_for_role,
     model_candidate,
 )
+from ...tests.env_scope import settings_without_env_file
 from ..provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -347,14 +348,26 @@ def test_an_override_that_clears_the_context_floor_carries_no_capability_advisor
     assert ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR not in selection.advisories
 
 
-def test_the_shipped_settings_defaults_are_what_selection_resolves_to() -> None:
+_ROLE_MODEL_ENV_VARS = tuple(
+    f"CADRUMO_LLM_{runtime}_{role}_MODEL" for runtime in ("OLLAMA", "CLOUD") for role in ("VISION", "TEXT", "MAPPING")
+)
+
+
+def _shipped_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
+    """Return the shipped defaults, free of a developer's env file or exported overrides."""
+    for name in _ROLE_MODEL_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+    return settings_without_env_file()
+
+
+def test_the_shipped_settings_defaults_are_what_selection_resolves_to(monkeypatch: pytest.MonkeyPatch) -> None:
     """Selection and the settings defaults agree on a machine with headroom.
 
     Keeps the two surfaces from drifting: a default flipped in one place and not
     the other would leave the resolver and the configured model disagreeing
     about which model the product ships.
     """
-    settings = load_settings()
+    settings = _shipped_settings(monkeypatch)
     profile = _cuda_profile(14 * _GIB)
     vision = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile)
     text = select_model_for_role(ModelRole.TEXT_EXTRACTION, profile=profile)
@@ -365,9 +378,9 @@ def test_the_shipped_settings_defaults_are_what_selection_resolves_to() -> None:
     assert model_candidate(settings.cadrumo_llm_ollama_vision_model) is not None
 
 
-def test_the_cloud_runtime_resolves_every_role_to_the_shipped_cloud_default() -> None:
+def test_the_cloud_runtime_resolves_every_role_to_the_shipped_cloud_default(monkeypatch: pytest.MonkeyPatch) -> None:
     """A hosted route must land on a role-named model, not the global fallback."""
-    settings = load_settings()
+    settings = _shipped_settings(monkeypatch)
     profile = _cuda_profile(14 * _GIB)
     for role, configured in (
         (ModelRole.VISION_TRANSCRIPTION, settings.cadrumo_llm_cloud_vision_model),

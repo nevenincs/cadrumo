@@ -133,17 +133,16 @@ def test_an_unanswered_identification_resolves_to_nothing(
     assert resolution.identification is None
 
 
-def test_no_territory_ever_produces_an_identification(
-    repository: CounterpartyEstablishmentRepositoryProtocol,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
+def test_no_territory_ever_produces_an_identification(*, operation: PinnedAuthorityOperation) -> None:
     """Sweep every registry-projected territory, not just a convenient one.
 
     A cross-reading would most plausibly be written for one territory -- the EU
     member case -- so checking that case alone could pass while another leaked.
     """
     for scope in resolve_iva_classification_catalogue(None, operation=operation).territorial_scopes:
+        # A confirmed territory cannot be replaced in place, so each territory
+        # is confirmed against its own store.
+        repository = _InMemoryCounterpartyEstablishmentRepository()
         _confirm(repository, scope=scope)
         assert _resolve(repository).identification is None
 
@@ -182,8 +181,9 @@ def test_a_different_identification_refuses_and_names_both_values(
     with pytest.raises(CounterpartyEstablishmentConflictError) as raised:
         _confirm(repository, identification_state=EUMemberState.from_registry("fr"))
 
-    message = str(raised.value)
-    assert "de" in message and "fr" in message, message
+    context = raised.value.context or {}
+    assert context["confirmed_identification_state"] == EUMemberState.from_registry("de").value
+    assert context["asserted_identification_state"] == EUMemberState.from_registry("fr").value
     # The stored answer is untouched by the refused call.
     resolved = _resolve(repository).identification
     assert resolved is not None

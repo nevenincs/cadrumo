@@ -54,8 +54,9 @@ def _guide() -> SheetGuideContent:
 
 def _record_error_from(validation_error: ValidationError) -> CalcSheetsRecordError:
     ctx_error = validation_error.errors(include_input=False)[0].get("ctx", {}).get("error")
-    assert isinstance(ctx_error, CalcSheetsRecordError)
-    return ctx_error
+    record_error = getattr(ctx_error, "__cause__", None)
+    assert isinstance(record_error, CalcSheetsRecordError)
+    return record_error
 
 
 def test_invalid_column_letters_raise_typed_record_error_without_raw_value() -> None:

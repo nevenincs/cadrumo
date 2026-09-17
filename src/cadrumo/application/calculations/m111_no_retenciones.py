@@ -1,78 +1,82 @@
-"""Generic schedule-attestation mechanics for registry-selected declarations."""
+"""Modelo 111 no-retenciones period attestations.
+
+AEAT instructions say no Modelo 111 is presented for a period in which no
+subject rents were paid. A later fold may therefore skip such a period, but
+only when the taxpayer has attested it explicitly and only for Modelo 111
+sources; every other dependency keeps its full evidence requirement.
+"""
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
+from typing import Final
+
+from ...core.modelo import Modelo
+from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry.schema import ModeloRevision
+from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
+
+M111_NO_RETENCIONES_PROFILE_PATH: Final = "withholding.modelo_111_no_retenciones_periods"
+"""Profile fact carrying comma-separated ``YYYY:PERIOD`` no-obligation Modelo 111 periods."""
+
+_TOKEN_RE: Final = re.compile(r"^(?P<year>\d{4}):(?P<period>[A-Z0-9]+)$")
 
 
-# Registry authority: M111 schedule and applicability are consumed through the pinned operation
-def _registry_no_retenciones_periods(
-    revision: ModeloRevision | None = None,
-    *,
-    modelo: str | None = None,
-    filing_year: int | None = None,
-    period_token: str | None = None,
-    operation: PinnedAuthorityOperation,
-) -> frozenset[tuple[int, str]]:
-    """Resolve a declared filing period through selected registry declarations.
+def parse_m111_no_retenciones_periods(raw: str | None) -> frozenset[tuple[int, str]]:
+    """Parse profile ``YYYY:PERIOD`` tokens into validated period keys.
 
-    The public describe query selects the revision for the full filing scope;
-    its isolated snapshot then supplies the schedule and applicability
-    declarations. Missing, malformed, or divergent declarations return an
-    empty set, so no no-retenciones period is inferred from profile input.
+    Invalid tokens are ignored fail-closed: they never suppress a dependency, so
+    verification still asks for the missing filing or evidence instead of
+    treating an unclear declaration as no-obligation evidence.
     """
-    if modelo is None or filing_year is None or period_token is None:
+    if raw is None:
         return frozenset[tuple[int, str]]()
-    try:
-        selected_revision = operation.revision_for_context(
-            modelo,
-            filing_year=filing_year,
-            period=period_token,
-        )
-        if revision is not None and str(selected_revision.id) != str(revision.id):
-            return frozenset[tuple[int, str]]()
-        snapshot = operation.snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=period_token,
-        )
-    except (RegistrySnapshotError, RegistryValidationError):
+    periods: set[tuple[int, str]] = set()
+    for token in re.split(r"[,;\s]+", raw.strip().upper()):
+        match = _TOKEN_RE.fullmatch(token) if token else None
+        if match is None:
+            continue
+        try:
+            period = Period.from_year_and_code(int(match.group("year")), match.group("period"))
+        except (PeriodError, ValueError):
+            continue
+        periods.add((period.filing_year, period.registry_token))
+    return frozenset(periods)
+
+
+def m111_no_retenciones_periods_from_profile_values(values: Mapping[str, str] | None) -> frozenset[tuple[int, str]]:
+    """Return attested Modelo 111 no-retenciones periods from a profile projection."""
+    if values is None:
         return frozenset[tuple[int, str]]()
-    if str(snapshot.revision.id) != str(selected_revision.id):
-        return frozenset[tuple[int, str]]()
-    schedules = tuple(snapshot.filing_schedules.values())
-    if not schedules or not any(period_token in schedule.periods for schedule in schedules):
-        return frozenset[tuple[int, str]]()
-    if not snapshot.revision.applicability:
-        return frozenset[tuple[int, str]]()
-    return frozenset({(filing_year, period_token)})
+    return parse_m111_no_retenciones_periods(values.get(M111_NO_RETENCIONES_PROFILE_PATH))
 
 
 def m111_no_retenciones_periods_for_bucket(
     bucket_id: str,
     *,
-    modelo: str | None = None,
-    filing_year: int | None = None,
-    period_token: str | None = None,
-    revision: ModeloRevision | None = None,
-    operation: PinnedAuthorityOperation,
+    profile_path_values_reader: ProfilePathValuesReadPort,
 ) -> frozenset[tuple[int, str]]:
-    """Resolve a bucket's periods only when its modelo scope is explicit.
-
-    A bucket identifier is storage identity, not a modelo selector. Callers
-    that do not provide the selected modelo therefore receive no periods
-    rather than having the bucket value interpreted as a registry identity.
-    """
-    del bucket_id
-    return _registry_no_retenciones_periods(
-        revision,
-        modelo=modelo,
-        filing_year=filing_year,
-        period_token=period_token,
-        operation=operation,
+    """Load the attested periods for ``bucket_id``; a missing profile attests nothing."""
+    return m111_no_retenciones_periods_from_profile_values(
+        profile_path_values_reader.load_path_values(bucket_id=bucket_id),
     )
+
+
+def _registry_declares_period(
+    *,
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether the selected revision schedules ``period_token`` for ``modelo``."""
+    try:
+        snapshot = operation.snapshot(modelo, filing_year=filing_year, period=period_token)
+    except (RegistrySnapshotError, RegistryValidationError):
+        return False
+    return any(period_token in schedule.periods for schedule in snapshot.filing_schedules.values())
 
 
 def is_m111_no_retenciones_period(
@@ -83,10 +87,10 @@ def is_m111_no_retenciones_period(
     attested_periods: frozenset[tuple[int, str]],
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Resolve whether a source period is covered by registry schedule data."""
-    if (filing_year, period_token) not in attested_periods:
+    """Return whether a source requirement is an attested no-obligation Modelo 111 period."""
+    if source_modelo != Modelo("111").value or (filing_year, period_token) not in attested_periods:
         return False
-    return (filing_year, period_token) in _registry_no_retenciones_periods(
+    return _registry_declares_period(
         modelo=source_modelo,
         filing_year=filing_year,
         period_token=period_token,
@@ -95,6 +99,9 @@ def is_m111_no_retenciones_period(
 
 
 __all__ = [
+    "M111_NO_RETENCIONES_PROFILE_PATH",
     "is_m111_no_retenciones_period",
     "m111_no_retenciones_periods_for_bucket",
+    "m111_no_retenciones_periods_from_profile_values",
+    "parse_m111_no_retenciones_periods",
 ]

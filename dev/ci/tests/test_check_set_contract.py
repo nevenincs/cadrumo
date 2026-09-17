@@ -15,6 +15,7 @@ from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..lane_reachability import _recipe_bodies, _recipes_invoked_by
+from ..workflow_runner_targets import calls_local_workflow
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -102,7 +103,9 @@ def test_every_job_name_describes_coverage_with_the_shared_vocabulary() -> None:
             if leaked:
                 violations.append(f"{path.name}:{key}: subject names tools/markers {leaked}")
             platform = match.group(3)
-            if platform and not (platform in {"Linux", "Windows", "macOS"} or "${{ matrix." in platform):
+            platforms = {"Linux", "Windows", "macOS"}
+            qualified = platform and platform.split(", ", 1)[0] in platforms and "${{" in platform
+            if platform and not (platform in platforms or "${{ matrix." in platform or qualified):
                 violations.append(f"{path.name}:{key}: unsupported platform label {platform!r}")
             matrix = (job.get("strategy") or {}).get("matrix")
             if matrix and "${{ matrix." not in name:
@@ -116,7 +119,7 @@ def test_every_self_hosted_job_has_a_timeout() -> None:
         f"{path.name}:{key}"
         for path, document in _documents()
         for key, job in (document.get("jobs") or {}).items()
-        if "timeout-minutes" not in job
+        if "timeout-minutes" not in job and not calls_local_workflow(job)
     ]
     assert missing == [], f"self-hosted jobs without timeout-minutes: {missing}"
 
@@ -174,13 +177,62 @@ def _commands(job: dict[str, Any], recipes: dict[str, str]) -> list[str]:
     return commands
 
 
+_PLATFORM_ATTRIBUTES: Final = {"[windows]": "windows", "[unix]": "unix", "[linux]": "unix", "[macos]": "unix"}
+
+
+def _platform_recipe_bodies(text: str, platform: str) -> dict[str, str]:
+    """Return the recipe bodies one platform executes.
+
+    A recipe declared once per platform attribute is one recipe with two
+    alternative bodies; a runner executes exactly one of them, so reading both
+    would count every command of the pair twice.
+    """
+    kept: list[str] = []
+    attributes: list[str] = []
+    keep = True
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if raw.startswith("[") and stripped.endswith("]"):
+            attributes.append(stripped)
+            continue
+        if _RECIPE_HEADER_LINE.match(raw):
+            declared = {_PLATFORM_ATTRIBUTES[item] for item in attributes if item in _PLATFORM_ATTRIBUTES}
+            keep = not declared or platform in declared
+            attributes = []
+        elif raw.strip() and raw[:1] not in {" ", "\t", "@"}:
+            keep = True
+            attributes = []
+        if keep:
+            kept.append(raw)
+    return _recipe_bodies("\n".join(kept))
+
+
+_RECIPE_HEADER_LINE: Final = re.compile(r"^[a-z][\w-]*\b[^:\n]*:(?![=])")
+
+
+def _job_platform(job: dict[str, Any]) -> str:
+    return "windows" if "Windows" in str(job.get("runs-on", "")) else "unix"
+
+
+def test_platform_variant_recipes_are_read_once_per_platform() -> None:
+    """Teeth for the reader above: a pair counts once, a real repeat still counts twice."""
+    justfile = (
+        "[unix]\ngate:\n    uv run check\n\n[windows]\ngate:\n    uv run check\n\n"
+        "twice:\n    uv run check\n    uv run check\n"
+    )
+    unix = _platform_recipe_bodies(justfile, "unix")
+    assert Counter(_commands({"steps": [{"run": "just gate"}]}, unix))["uv run check"] == 1
+    assert Counter(_commands({"steps": [{"run": "just twice"}]}, unix))["uv run check"] == 2
+
+
 def test_no_command_runs_twice_in_one_workflow_run() -> None:
     """A workflow never schedules the same explicit command twice for one event."""
     duplicates: list[str] = []
-    recipes = _recipe_bodies((REPO_ROOT / "justfile").read_text(encoding="utf-8"))
+    justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
+    bodies = {platform: _platform_recipe_bodies(justfile, platform) for platform in ("unix", "windows")}
     for path, document in _documents():
         for key, job in (document.get("jobs") or {}).items():
-            counts = Counter(_commands(job, recipes))
+            counts = Counter(_commands(job, bodies[_job_platform(job)]))
             duplicates.extend(
                 f"{path.name}:{key}: {command!r} x{count}" for command, count in counts.items() if count > 1
             )

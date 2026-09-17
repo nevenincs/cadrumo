@@ -13,7 +13,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from .. import cohort_manifest, distribution_evidence_emit, evidence, proof_cache, smoke_homebrew
+from .. import cohort_manifest, distribution_evidence_emit, evidence, smoke_homebrew
 from ..command_execution import run_command
 from ..hashing import sha256_path, sha256_text
 
@@ -34,7 +34,6 @@ _REHOMED_TEXT_DIGEST_SITES: Final[tuple[str, ...]] = (
     "dev/packaging/smoke_homebrew.py",
     "dev/packaging/distribution_evidence_emit.py",
     "dev/packaging/evidence.py",
-    "dev/packaging/proof_cache.py",
     "dev/packaging/cohort_manifest.py",
     "dev/packaging/python_cohort.py",
     "dev/ci/python_runtime_compatibility.py",
@@ -225,7 +224,7 @@ def test_rehomed_text_digest_site_declares_no_private_text_helper(relative_path:
     assert [node.name for node in defined if _encodes_sha256(node)] == []
 
 
-@pytest.mark.parametrize("module", (smoke_homebrew, distribution_evidence_emit, evidence, proof_cache))
+@pytest.mark.parametrize("module", (smoke_homebrew, distribution_evidence_emit, evidence))
 def test_rehomed_text_digest_module_uses_the_canonical_helper(module: _TextDigestModule) -> None:
     """The re-homed module resolves string digests through the one owner."""
     assert module.sha256_text is sha256_text

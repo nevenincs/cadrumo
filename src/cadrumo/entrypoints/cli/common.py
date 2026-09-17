@@ -77,6 +77,11 @@ class _PublishedModeloCode(click.ParamType[str]):
 
     name = "modelo"
 
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published identifiers when a schema asks for the choice set."""
+        return tuple(_published_modelo_codes())
+
     @override
     def convert(
         self,

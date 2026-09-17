@@ -28,11 +28,8 @@ from dev.ci.workflow_permissions import jobs_granting, jobs_with_unsettled_grant
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
-_PACKAGING_WORKFLOWS: Final = (
-    "packaging-smoke.yml",
-    "packaging-scoop.yml",
-    "packaging-homebrew.yml",
-)
+#: The workflow that builds, proves and ships the packaging payloads.
+_PACKAGING_WORKFLOWS: Final = ("release.yml",)
 _TRANSPORT_WORKFLOWS: Final = _PACKAGING_WORKFLOWS
 
 
@@ -92,9 +89,9 @@ def test_packaging_payloads_ride_artifacts(workflow: str) -> None:
         assert "@" in entry and len(entry.split("@")[1]) == 40, f"{workflow} pins {entry} to a tag, not a SHA"
 
 
-#: Below this the workflow walk has stopped covering the directory. A floor,
-#: not a pinned count: sixteen workflows ship today.
-_MINIMUM_WORKFLOWS = 8
+#: Below this the workflow walk has stopped covering the directory. A floor:
+#: six workflows ship today.
+_MINIMUM_WORKFLOWS = 6
 
 
 def _workflow_files() -> tuple[Path, ...]:
@@ -102,9 +99,9 @@ def _workflow_files() -> tuple[Path, ...]:
 
     Both suffixes, because GitHub honours each and a workflow added as
     ``.yaml`` would otherwise sit outside every gate that walks the directory
-    without changing a single result. Sixteen ship today and none uses
-    ``.yaml``, so this is closing the door rather than reporting a breach. The
-    named-workflow gates above read their three subjects by name and are not
+    without changing a single result. None uses
+    ``.yaml`` today, so this is closing the door rather than reporting a breach. The
+    named-workflow gates above read their subject by name and are not
     widened by this.
 
     The guards matter more than the widening: the gates reading this walk assert

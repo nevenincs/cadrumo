@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal, NamedTuple, cast
+from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol, cast, runtime_checkable
 
 from ....core.i18n.translatable import Translatable as tr
 from ....core.text_fold import fold_diacritics
@@ -11,6 +11,26 @@ from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
+
+if TYPE_CHECKING:
+    from .schema import SupportedFilingYearsCatalogue
+
+
+@runtime_checkable
+class _FilingYearFloorSource(Protocol):
+    """A :class:`GovernedFactSource` that also publishes its filing-year floor.
+
+    The protocol is not part of ``GovernedFactSource`` itself: minimal fact
+    sources such as ``PublishedGovernedFactSource`` resolve governed facts
+    without exposing a support envelope. Narrowing to this local protocol
+    keeps that distinction typed instead of assuming every authority carries
+    the method.
+    """
+
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        """Return the generation's single filing-year support envelope."""
+        ...
+
 
 CitationSource = Literal[
     "ley",
@@ -165,6 +185,10 @@ def find_known_bad(
         raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
     if source not in _CITATION_SOURCE_VALUES:
         raise RegistryValidationError(f"known-bad citation lookup has unknown source {source!r}")
+    if not isinstance(authority, _FilingYearFloorSource):
+        raise RegistryValidationError(
+            "known-bad citation lookup requires an authority that publishes its supported filing years"
+        )
     floor = authority.supported_filing_years().date_envelope().floor
     if effective_to is not None and effective_to < floor:
         return None

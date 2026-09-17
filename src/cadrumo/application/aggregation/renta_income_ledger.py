@@ -50,6 +50,7 @@ from . import _renta_income_evidence, _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
+from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
@@ -302,6 +303,7 @@ def aggregate_renta_income_ledger_from_repositories(
 
     Returns a :class:`RentaIncomeLedgerAggregation`.
     """
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     invoices = _load_income_invoices(ports=ports)
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
@@ -418,6 +420,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested annual period.
     """
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     invoices = _load_income_invoices(ports=ports)
     # Only the in-window ejercicio subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
@@ -545,6 +548,7 @@ def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     Returns:
         The :class:`RentaIncomeLedgerAggregation` for the requested quarter.
     """
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     invoices = _load_income_invoices(ports=ports)
     return aggregate_renta_m131_agrario_income_ledger(
         ports.transaction_reader.load(),

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
@@ -34,13 +35,22 @@ from .._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_PERIODS = (
-    Period.from_year_and_code(2023, "4T"),
-    Period.from_year_and_code(2024, "2T"),
-    Period.from_year_and_code(2024, "4T"),
-    Period.from_year_and_code(2025, "4T"),
-    Period.from_year_and_code(2026, "4T"),
-)
+
+def _last_quarter_of_each_revision() -> tuple[Period, ...]:
+    """Return the last declared quarter of each Modelo 303 design, first year inside the supported span."""
+    periods: list[Period] = []
+    with bundled_indexed_authority().operation() as operation:
+        support = operation.supported_filing_years()
+        for revision in operation.modelo_directory("303").revisions:
+            year = max(revision.valid_from.year, support.floor)
+            quarters = [
+                str(code) for code in revision.period_selector.periods_for_year(year) if str(code).endswith("T")
+            ]
+            periods.append(Period.from_year_and_code(year, quarters[-1]))
+    return tuple(periods)
+
+
+_PERIODS = _last_quarter_of_each_revision()
 
 
 def _projection_refs() -> tuple[
@@ -148,7 +158,7 @@ def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_e
 
 
 def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
-    period = Period.from_year_and_code(2026, "4T")
+    period = _PERIODS[-1]
     registry_snapshot = _snapshot(period)
     reference = FilingEvidenceReference(reference="test:dp30304:wrong-source")
     evidence = _evidence(
@@ -157,7 +167,7 @@ def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
         six_rows=False,
     )
 
-    with pytest.raises(FilingExportError, match="snapshot-owned record-design source"):
+    with pytest.raises(FilingExportError) as refusal:
         project_m303_exonerado_390_value_arrival(
             registry_snapshot=registry_snapshot,
             projection_refs=_projection_refs(),
@@ -166,3 +176,6 @@ def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
                 update={"id": "aeat-dr-303-not-in-this-snapshot"},
             ),
         )
+    assert refusal.value.translated_message == (
+        "application.filing.m303_exonerado_390.errors.record_design_source_not_snapshot_owned"
+    )

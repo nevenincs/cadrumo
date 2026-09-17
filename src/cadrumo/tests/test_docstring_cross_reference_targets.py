@@ -116,6 +116,8 @@ def module_defined_names(path: Path) -> frozenset[str]:
                     names.add(target.id)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias):
+            names.add(node.name.id)
     return frozenset(names)
 
 
@@ -252,7 +254,7 @@ def test_the_detector_clears_a_private_symbol_in_its_defining_module() -> None:
     of these as defects, which is how a detector loses the room before it
     reports the six that matter.
     """
-    assert cross_reference_defect("func", "core.redaction._redact_cli_string") is None
+    assert cross_reference_defect("func", "core.redaction.rules._redact_cli_string") is None
 
 
 def test_the_detector_resolves_a_method_through_its_owning_class() -> None:

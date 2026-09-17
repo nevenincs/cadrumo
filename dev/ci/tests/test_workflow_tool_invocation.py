@@ -9,9 +9,7 @@ before the tool's first line of real work. The tool then fails identically on
 every run, for a reason that has nothing to do with what it checks.
 
 This is not hypothetical. `runner_queue_watchdog` was invoked as a script from
-FIVE workflows - packaging-quick, packaging-homebrew, packaging-scoop,
-packaging-smoke, and runner-fleet-health - and had therefore never once
-executed. Its job is to fail a lane
+five workflows, since retired, and had therefore never once executed. Its job is to fail a lane
 fast when no online runner can serve it, and its step is named "Fail fast on a
 lane no online runner can serve", so its failures read as the watchdog DOING its
 job. During a real runner outage on 2026-08-31 it produced exactly that
@@ -125,17 +123,12 @@ def _executable_run_surface(text: str) -> str:
     )
 
 
-def test_compatibility_workflow_uses_module_entry_points() -> None:
-    """Inventory, probe, and cohort tools run with package context intact."""
-    workflow = REPO_ROOT / ".github" / "workflows" / "python-runtime-compatibility.yml"
+def test_release_workflow_uses_module_entry_points() -> None:
+    """Inventory and cohort tools run with package context intact."""
+    workflow = REPO_ROOT / ".github" / "workflows" / "release.yml"
     surface = _executable_run_surface(workflow.read_text(encoding="utf-8"))
-    for module in (
-        "dev.ci.python_runtime_matrix",
-        "dev.ci.python_runtime_compatibility",
-        "dev.packaging.release_cohort",
-    ):
+    for module in ("dev.ci.python_runtime_matrix", "dev.packaging.release_cohort"):
         assert f"uv run --no-sync python -m {module}" in surface, f"{module} is not invoked by any live run step"
-    assert re.search(r"\bpython3?\s+(?:dev|packaging|src)/[\w/]+\.py", surface) is None
 
 
 def test_executable_surface_ignores_a_commented_out_invocation(tmp_path: Path) -> None:

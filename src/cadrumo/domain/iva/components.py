@@ -516,6 +516,7 @@ CategoryProjectionName = Literal[
     "m303_base_out_of_scope",
     "evidence_exempt",
     "no_printed_tax",
+    "cash_accounting_excluded",
 ]
 
 _CATEGORY_PROJECTION_NAMES = frozenset(
@@ -524,6 +525,7 @@ _CATEGORY_PROJECTION_NAMES = frozenset(
         "m303_base_out_of_scope",
         "evidence_exempt",
         "no_printed_tax",
+        "cash_accounting_excluded",
     },
 )
 

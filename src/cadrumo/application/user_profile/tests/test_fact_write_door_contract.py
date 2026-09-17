@@ -41,7 +41,6 @@ _PRODUCTION_ROOTS: tuple[Path, ...] = (
 
 _ENROLLED_DOOR_MODULES: frozenset[str] = frozenset(
     {
-        "application/wizard/persistence.py",
         "application/wizard/commands.py",
         "application/wizard/descendant_door.py",
         "application/user_profile/fact_write.py",

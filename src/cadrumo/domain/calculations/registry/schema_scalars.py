@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import re
 from collections.abc import Callable
 from decimal import Decimal
@@ -452,18 +453,21 @@ _REGISTRY_SCALAR_VALUE_TYPES: dict[str, RegistryScalarValueType] = {
     "date": "date",
 }
 
+# Called directly rather than as pydantic validators, so each entry is the
+# undecorated callable and refuses with the registry error, not its pydantic
+# ``ValueError`` translation.
 _REGISTRY_TEXT_SCALAR_VALIDATORS: dict[str, Callable[[object], object]] = {
     "text": lambda value: value,
-    "nif_iva": _validate_nif_iva_string,
-    "name": _validate_name_string,
-    "period_code": _validate_period_code,
-    "country_code": _validate_country_code,
-    "ccaa_code": _validate_ccaa_code,
-    "province_code": _validate_province_code,
-    "municipality_code": _validate_municipality_code,
-    "postal_code": _validate_postal_code,
-    "iban": _validate_iban_string,
-    "bic": _validate_bic_string,
+    "nif_iva": inspect.unwrap(_validate_nif_iva_string),
+    "name": inspect.unwrap(_validate_name_string),
+    "period_code": inspect.unwrap(_validate_period_code),
+    "country_code": inspect.unwrap(_validate_country_code),
+    "ccaa_code": inspect.unwrap(_validate_ccaa_code),
+    "province_code": inspect.unwrap(_validate_province_code),
+    "municipality_code": inspect.unwrap(_validate_municipality_code),
+    "postal_code": inspect.unwrap(_validate_postal_code),
+    "iban": inspect.unwrap(_validate_iban_string),
+    "bic": inspect.unwrap(_validate_bic_string),
 }
 
 

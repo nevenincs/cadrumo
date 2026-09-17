@@ -244,6 +244,10 @@ class ValidatedRegistryAuthority:
                 f"modelo {normalized.value!r} is not present in the calculation registry"
             ) from exc
 
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        """Return the registry's single filing-year support envelope."""
+        return self.catalogues.require_supported_filing_years()
+
     def project_filing_year(self, filing_year: int) -> int:
         """Project an admitted filing year onto the authority's authored horizon."""
         support = self.catalogues.supported_filing_years

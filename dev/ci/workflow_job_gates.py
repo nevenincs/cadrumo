@@ -6,13 +6,10 @@ declares. Reading the workflow block alone therefore attributes every trigger to
 every job, and a lane that only a gated job reaches inherits reach it does not
 have.
 
-That divergence is live. ``runner-fleet-health.yml`` fires on push and on
-dispatch, and its ``dev-image`` job is guarded by
-``github.event_name == 'workflow_dispatch' && inputs.include_dev_image``. The
-job runs on NO push, and ``just test-devcontainer`` -- the only thing that
-builds and probes the contributor image -- is reached from nowhere else. A
-workflow-level reading calls that lane push-triggered, which is the reassuring
-answer and the wrong one.
+Consider a workflow that fires on push and on dispatch, with a job guarded by
+``github.event_name == 'workflow_dispatch' && inputs.include_dev_image``. That
+job runs on NO push, yet a workflow-level reading calls whatever it runs
+push-triggered, which is the reassuring answer and the wrong one.
 
 TWO INDEPENDENT WEAKENINGS, and the second is the one a trigger model normally
 cannot see. Narrowing to ``workflow_dispatch`` is a restriction on the EVENT.

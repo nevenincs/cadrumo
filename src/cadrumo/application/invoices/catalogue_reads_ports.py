@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from ...core.errors.hierarchy import CadrumoError
 from ...domain.invoices.models import InvoiceCatalogue
@@ -40,6 +40,16 @@ class TransactionCatalogueReader(Protocol):
         ...
 
 
+@runtime_checkable
+class BucketBoundCatalogueReader(Protocol):
+    """A catalogue reader backed by one profile bucket's store."""
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the bucket the reader is bound to, or ``None`` when unbound."""
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class InvoiceCatalogueReadPorts:
     """Required catalogue capabilities for one composed ledger read path."""
@@ -49,6 +59,7 @@ class InvoiceCatalogueReadPorts:
 
 
 __all__ = [
+    "BucketBoundCatalogueReader",
     "InvoiceCatalogueReadPersistenceError",
     "InvoiceCatalogueReadPorts",
     "InvoiceCatalogueReader",

@@ -21,7 +21,7 @@ from ...calculations.registry.iva_schema_vocabulary import resolve_iva_exemption
 from ..classification import IvaClassificationResult
 from ..schema import IvaCategory, IvaExemptionArticle
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_classification_result_accepts_no_exemption_article_by_default() -> None:

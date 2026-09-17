@@ -423,6 +423,18 @@ class OrderedSupportEnvelope[CoordinateT: (int, date)]:
             return None
         return min(coordinate, self.horizon)
 
+    def clamp_coordinate(self, coordinate: CoordinateT) -> CoordinateT:
+        """Return the admitted coordinate nearest ``coordinate``.
+
+        A declaration dated outside the gates is read against the vocabulary
+        in force at the nearest supported edge, never at an unsupported date.
+        """
+        if coordinate < self.floor:
+            return self.floor
+        if self.hard_ceiling is not None and coordinate > self.hard_ceiling:
+            return self.hard_ceiling
+        return coordinate
+
 
 class DateSupportEnvelope(RegistryModel, OrderedSupportEnvelope[date]):
     """Hard gates and authored horizon on an effective-date axis."""

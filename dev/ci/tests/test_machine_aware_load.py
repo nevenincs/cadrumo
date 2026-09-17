@@ -31,7 +31,7 @@ from ..lane_reachability import (
     expression_selects,
     marker_sets_in,
 )
-from ..workflow_run_text import executed_lines
+from ..workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -167,7 +167,9 @@ def _pytest_lines(
     lines: list[str] = []
     for job in document["jobs"].values():
         for step in job.get("steps") or []:
-            step_environment = "".join(f"{name}={value} " for name, value in (step.get("env") or {}).items())
+            # Step env overrides job env, which overrides workflow env, as GitHub resolves them.
+            environment = {**(document.get("env") or {}), **(job.get("env") or {}), **(step.get("env") or {})}
+            step_environment = "".join(f"{name}={value} " for name, value in environment.items())
             for line in executed_lines(step.get("run")):
                 if re.search(r"(?:^|\s)pytest(?:\s|$)", line):
                     lines.append(line)
@@ -195,7 +197,7 @@ def _pytest_lines(
 
 @pytest.mark.parametrize(
     "workflow",
-    ("pr.yml", "ci.yml", "ci-full.yml", "agent-harness-eval.yml", "aeat-drift-detector.yml"),
+    ("merge-gate.yml", "release.yml", "aeat-drift-detector.yml"),
 )
 def test_ci_pytest_invocations_carry_explicit_worker_counts(workflow: str) -> None:
     """Every CI pytest run line declares an explicit ``-n <int>``.
@@ -216,27 +218,46 @@ def test_ci_pytest_invocations_carry_explicit_worker_counts(workflow: str) -> No
         assert _EXPLICIT_WORKERS.search(line) or re.search(r"pytest\b[^\n]*\s-n0\b", line), (workflow, line)
 
 
+def _campaign_matrix_violations(document: dict[str, Any]) -> list[str]:
+    """Why a release campaign leg might run unsized on a shared machine."""
+    job = document["jobs"]["test-installer-campaign"]
+    violations: list[str] = []
+    step = next(
+        (step for step in job["steps"] if "dev.packaging.campaign" in executed_text(step.get("run"))),
+        None,
+    )
+    if step is None:
+        return ["no step runs the packaging campaign"]
+    for name, dimension in (
+        ("CADRUMO_TEST_WORKERS", "test-workers"),
+        ("CADRUMO_PACKAGING_LANE_CONCURRENCY", "lane-concurrency"),
+    ):
+        if (step.get("env") or {}).get(name) != "${{ matrix." + dimension + " }}":
+            violations.append(f"{name} is not sized per leg")
+    rows = job["strategy"]["matrix"]["include"]
+    sizes = sorted((row.get("test-workers"), row.get("lane-concurrency")) for row in rows)
+    if sizes != [("2", "2"), ("8", "2"), ("8", "3")]:
+        violations.append(f"leg sizes are {sizes}")
+    return violations
+
+
 def test_campaign_legs_pass_machine_share_sizing() -> None:
-    """Each packaging-smoke campaign step sets the per-machine sizing env.
+    """Each release campaign leg sets the per-machine sizing env.
 
     Workstation legs (24 logical CPUs / 3 runners) get 8 test workers; the
     MacBook leg (6 CPUs / 3 runners) gets 2; lane concurrency is bounded per
     leg. The campaign driver turns CADRUMO_TEST_WORKERS into an explicit
     `-n N` on its preflight pytest pass.
     """
-    document = _document("packaging-smoke.yml")
-    campaign_steps = [
-        step
-        for job in document["jobs"].values()
-        for step in job.get("steps") or []
-        if "packaging campaign" in str(step.get("name", ""))
-    ]
-    assert len(campaign_steps) == 3, [step.get("name") for step in campaign_steps]
-    sizes = sorted(
-        (step["env"]["CADRUMO_TEST_WORKERS"], step["env"]["CADRUMO_PACKAGING_LANE_CONCURRENCY"])
-        for step in campaign_steps
-    )
-    assert sizes == [("2", "2"), ("8", "2"), ("8", "3")], sizes
+    assert _campaign_matrix_violations(_document("release.yml")) == []
+
+
+def test_the_campaign_sizing_gate_refuses_an_unsized_leg() -> None:
+    """Teeth: a leg whose worker env was dropped is reported."""
+    document = _document("release.yml")
+    for step in document["jobs"]["test-installer-campaign"]["steps"]:
+        (step.get("env") or {}).pop("CADRUMO_TEST_WORKERS", None)
+    assert _campaign_matrix_violations(document) == ["CADRUMO_TEST_WORKERS is not sized per leg"]
 
 
 def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None:
@@ -245,8 +266,9 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
     ``max-parallel: 2`` caps co-landing legs, and brew's build-from-source
     parallelism is sized per leg via ``HOMEBREW_MAKE_JOBS``.
     """
-    document = _document("packaging-homebrew.yml")
-    strategy = document["jobs"]["cadrumo-homebrew-acquisition"]["strategy"]
+    document = _document("release.yml")
+    job = document["jobs"]["test-homebrew"]
+    strategy = job["strategy"]
     assert strategy["max-parallel"] == 2
     rows = strategy["matrix"]["include"]
     jobs_by_id = {row["id"]: row["make_jobs"] for row in rows}
@@ -255,12 +277,7 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
         "linux-arm64": "2",
         "linux-x86_64": "8",
     }
-    audit = next(
-        step
-        for job in document["jobs"].values()
-        for step in job.get("steps") or []
-        if step.get("name") == "Audit install and exercise Cadrumo through Homebrew"
-    )
+    audit = next(step for step in job["steps"] if "smoke_homebrew" in executed_text(step.get("run")))
     assert audit["env"]["HOMEBREW_MAKE_JOBS"] == "${{ matrix.make_jobs }}"
 
 
