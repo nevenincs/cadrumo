@@ -19,7 +19,7 @@ from .....application.provisioning import (
     probe_hardware_profile,
 )
 from .....application.provisioning_contracts import ProvisioningPreconditionCondition
-from .....core.config import Settings, load_settings
+from .....core.config import Settings, load_settings, override_settings
 from .....core.hardware import AcceleratorKind
 from .....core.image_media_type import ImageMediaType
 from .....core.model_catalogue import model_candidate
@@ -152,8 +152,12 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     refusal that survives is about the runtime being unreachable, represented
     by the canonical provisioning verdict rather than transport-specific prose.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        settings = load_settings()
+    # Point the local runtime at a port nothing listens on, so the refusal does
+    # not depend on whether this host happens to run a model server.
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:9/api/chat") as settings,
+    ):
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             classify_with_evidence(
                 vision_transaction("ev-1"),

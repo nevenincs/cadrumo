@@ -116,18 +116,21 @@ class TestCacheRedaction:
         )
         assert entry.response.text == "non sensitive output"
 
-    def test_idempotent_re_read(self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile) -> None:
-        """A cache hit re-reads the (already-redacted) text. Re-applying
-        the redaction rules to a redacted string is a no-op."""
+    def test_a_response_redaction_would_alter_is_not_cached(
+        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
+    ) -> None:
+        """A redacted response differs from the real one, so it is never replayed.
+
+        Writing it stores nothing, a later read misses, and repeating the write
+        still leaves no plaintext NIF in the encrypted database bytes.
+        """
         cache = LLMCache(root_dir=tmp_path / "probe-cache")
         request = _make_request()
         response = _make_response(text=f"the NIF is {_NIF_CANARY}")
         cache.write(request, response)
-        first = cache.read(request, LLMProvider.ANTHROPIC, "claude-test")
-        assert first is not None
-        # Re-write the same response (simulate re-cache) — still no
-        # plaintext NIF in the encrypted database bytes.
-        cache.write(request, first.model_copy(update={"cache_hit": False}))
+        assert cache.read(request, LLMProvider.ANTHROPIC, "claude-test") is None
+        cache.write(request, response)
+        assert cache.read(request, LLMProvider.ANTHROPIC, "claude-test") is None
         assert not (tmp_path / "probe-cache").exists()
         db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)

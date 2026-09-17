@@ -45,7 +45,6 @@ def testcolumn_index_to_letters_rejects_non_positive_values() -> None:
         ("negative", -1),
     )
 
-    for case_id, column in cases:
+    for _case_id, column in cases:
         with pytest.raises(CalcSheetsRecordError, match="must be 1-based and positive"):
             column_index_to_letters(column)
-        assert case_id

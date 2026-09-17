@@ -72,7 +72,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORT = published_supported_filing_years()
 assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
-_ANNUAL_2026 = Period.from_year_and_code(_SUPPORT.horizon, "0A")
+_HORIZON = _SUPPORT.horizon
+_ANNUAL_2026 = Period.from_year_and_code(_HORIZON, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
 
 
@@ -174,7 +175,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         """
         # Resolutions are cached per operation and period, so the unpatched and
         # patched calls use quarters of a carried-forward year nothing else resolves.
-        carried_year = _SUPPORT.horizon + 1
+        carried_year = _HORIZON + 1
         baseline = build_invoice_extraction_prompt(
             period=Period.from_year_and_code(carried_year, "1T"), operation=operation
         )
