@@ -92,6 +92,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -632,14 +633,23 @@ def _calculate_m303_quarter_revision(
     BucketEventHistoryRepository(objects=secure_objects)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     typed_period = Period.from_year_and_code(filing_year, period)
+    source_revision = (
+        published_authority_operation().snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
+    ).revision
+    # Only casillas the selected revision leaves manual take the fixture zeros;
+    # a revision that binds one of them owns its value through the bucket.
+    bound_casilla_ids = {casilla.id for casilla in source_revision.casillas if casilla.input_kind == InputKind.BOUND}
+    manual_zeros = {
+        casilla_id: value
+        for casilla_id, value in _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS.items()
+        if casilla_id not in bound_casilla_ids
+    }
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=filing_year,
         period=typed_period,
-        revision_id=published_authority_operation()
-        .snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
-        .revision.id,
+        revision_id=source_revision.id,
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
@@ -658,7 +668,7 @@ def _calculate_m303_quarter_revision(
             # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
             # the fichero-BOE completeness manifest requires but the engine never
             # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
-            casilla_inputs=dict(_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS),
+            casilla_inputs=manual_zeros,
             binding_values={
                 # No prior-period compensación carry in this scenario (each quarter
                 # is net-positive); autoconsumo del promotor is nil for this filer.
