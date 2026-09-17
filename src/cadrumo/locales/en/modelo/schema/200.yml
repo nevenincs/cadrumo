@@ -2116,6 +2116,18 @@ modelo:
           '01304':
             label: Deduction for investments and expenses made by port authorities
               (art. 38 bis LIS) - Total - Pending application in future periods [01304]
+          '01305':
+            label: Joint taxation of State and provincial tax administrations - Conversion
+              of deferred tax assets into a credit claimable from the Tax Administration
+              (art. 130 LIS) - Offset for asset conversion - Araba/Alava [01305]
+          '01306':
+            label: Joint taxation of State and provincial tax administrations - Conversion
+              of deferred tax assets into a credit claimable from the Tax Administration
+              (art. 130 LIS) - Offset for asset conversion - Gipuzkoa [01306]
+          '01307':
+            label: Joint taxation of State and provincial tax administrations - Conversion
+              of deferred tax assets into a credit claimable from the Tax Administration
+              (art. 130 LIS) - Offset for asset conversion - Bizkaia [01307]
           01309:
             label: Deductions for foreign cinematographic productions in the Canary
               Islands (art. 36.2 LIS and DA 14th Law 19/1994) - 2022) - Pending/generated
@@ -10748,21 +10760,6 @@ modelo:
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Credit for asset conversion -
                 Navarra [01303]
-            '01305':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Offset for asset conversion -
-                Araba/Alava [01305]
-            '01306':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Offset for asset conversion -
-                Gipuzkoa [01306]
-            '01307':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Offset for asset conversion -
-                Bizkaia [01307]
             01308:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -12621,7 +12618,7 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - c1) Tax-period financial expenses deductible
                 after applying limit art. 16.5 and/or 83 LIS (≤ [b], [a=c1+c2], ≥
-                0) ...
+                0)
             '01244':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - d) Financial expenses pending deduction from
@@ -12656,26 +12653,11 @@ modelo:
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Payment for conversion of assets
                 - Navarra
-            '01305':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into receivable credit against the
-                tax administration (art. 130 LIS) - Compensation for asset conversion
-                - ...
-            '01306':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into receivable credit against the
-                tax administration (art. 130 LIS) - Compensation for asset conversion
-                - ...
-            '01307':
-              label: Joint taxation of State and provincial tax administrations -
-                Conversion of deferred tax assets into receivable credit against the
-                tax administration (art. 130 LIS) - Compensation for asset conversion
-                - ...
             01308:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Compensation for asset conversion
-                - ...
+                - Navarre
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -13093,7 +13075,7 @@ modelo:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Rectifying return: Refund
-                - Araba/...'
+                - Araba/Álava'
             01659:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
@@ -13220,7 +13202,7 @@ modelo:
             '01742':
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS RDL 4/2024) - Increase - Corrections
-                for the year - Temporary (originating in the year) ...
+                for the year - Temporary (originating in the year)
             '01754':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -13686,7 +13668,7 @@ modelo:
               label: Depreciation of intangible fixed assets and goodwill (art. 12.2
                 LIS) and depreciation under Transitional Provision 13.1 LIS - Decrease
                 - Adjustments for the tax year - Temporary (originating in this tax
-                year) ...
+                year)
             02588:
               label: Depreciation of intangible fixed assets and goodwill (art. 12.2
                 LIS) and depreciation under Transitional Provision 13.1 LIS - Decrease
@@ -13837,12 +13819,12 @@ modelo:
             02855:
               label: Impairment losses on securities representing holdings in capital
                 or equity (art. 15 k) LIS) - Increase - Balance carried forward at
-                year-end - Temporary (originating in prior tax years)...
+                year-end - Temporary (originating in prior tax years)
             02982:
               label: Exemption on income obtained from the transfer of securities
                 of resident entities (art. 21.3, 21.10 and Transitional Provision
                 40 LIS) - Increase - Adjustments for the tax year - Temporary (originating
-                in this tax year) ...
+                in this tax year)
             02983:
               label: Exemption on income obtained from the transfer of securities
                 of resident entities (art. 21.3, 21.10 and Transitional Provision
@@ -14086,7 +14068,7 @@ modelo:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
                 the conversion of deferred tax assets after regularisation: credit
-                - D....'
+                - Provincial Councils/Navarre (Totals)'
             '03320':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
@@ -14096,7 +14078,7 @@ modelo:
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
                 - Adjustments for the tax year - Temporary (originating in this tax
-                year) ...
+                year)
             '03363':
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Increase

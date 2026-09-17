@@ -2134,6 +2134,18 @@ modelo:
           '01304':
             label: Kikötői hatóságok által végzett beruházások és ráfordítások levonása
               (LIS 38 bis cikk) - Összesen - Jövőbeli időszakokban alkalmazandó [01304]
+          '01305':
+            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
+              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Araba/Alava [01305]
+          '01306':
+            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
+              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Gipuzkoa [01306]
+          '01307':
+            label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
+              adókövetelések átalakítása az adóhatósággal szemben érvényesíthető követeléssé
+              (LIS 130. cikk) - Eszközátalakítás miatti beszámítás - Bizkaia [01307]
           01309:
             label: Kanári-szigeteki külföldi filmgyártások levonásai (LIS 36.2 cikk
               és 19/1994. törvény DA 14.) - 2022) - Függőben lévő/keletkezett levonás
@@ -10714,21 +10726,6 @@ modelo:
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás miatti jóváírás - Navarra
                 [01303]
-            '01305':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Araba/Alava [01305]
-            '01306':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Gipuzkoa [01306]
-            '01307':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
-                követeléssé (LIS 130. cikk) - Eszközátalakítás miatti beszámítás -
-                Bizkaia [01307]
             01308:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -12584,7 +12581,7 @@ modelo:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5
                 és/vagy 83. cikk szerinti korlát - c1) A 16.5 és/vagy 83. cikk szerinti
                 korlát után levonható adóidőszaki pénzügyi ráfordítások (≤ [b], [a=c1+c2],
-                ≥ 0) ...
+                ≥ 0)
             '01244':
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.5.
                 és/vagy 83. cikke szerinti korlát - d) Korábbi időszakokból levonásra
@@ -12616,22 +12613,10 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Eszközátalakítás jóváírása - Navarra
-            '01305':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések adóhatósággal szemben követelhető hitellé alakítása
-                (LIS 130. cikk) - Eszközátalakítás kompenzációja - ...
-            '01306':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések adóhatósággal szemben követelhető hitellé alakítása
-                (LIS 130. cikk) - Eszközátalakítás kompenzációja - ...
-            '01307':
-              label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
-                adókövetelések adóhatósággal szemben követelhető hitellé alakítása
-                (LIS 130. cikk) - Eszközátalakítás kompenzációja - ...
             01308:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések adóhatósággal szemben követelhető hitellé alakítása
-                (LIS 130. cikk) - Eszközátalakítás kompenzációja - ...
+                (LIS 130. cikk) - Eszközátalakítás kompenzációja - Navarra
             01329:
               label: Nonprofit szervezeteknek adott adományok levonása - Kiemelt mecenatúra-tevékenységekre
                 és más, növelt levonásra jogosító célokra adott adományok - 2023 -
@@ -13054,7 +13039,7 @@ modelo:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
                 követeléssé (LIS 130. cikk) - Helyesbítő bevallás: Visszatérítés -
-                Araba/...'
+                Araba/Álava'
             01659:
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Halasztott
                 adókövetelések átalakítása az adóhatósággal szemben érvényesíthető
@@ -13170,7 +13155,7 @@ modelo:
             '01742':
               label: Bizonyos járművek és új töltési infrastruktúrák szabad amortizációja
                 (LIS 18. kiegészítő rendelkezés RDL 4/2024) - Növekedés - Évi korrekciók
-                - Időleges (az évben keletkezett) ...
+                - Időleges (az évben keletkezett)
             '01754':
               label: Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé - Halasztott adókövetelések (AID). LIS
@@ -13593,7 +13578,7 @@ modelo:
             02587:
               label: Immateriális javak és goodwill értékcsökkenése (LIS 12.2 cikk)
                 és DT 13.1 LIS szerinti amortizáció - Csökkenés - Évi korrekciók -
-                Időleges (az évben keletkezett) ...
+                Időleges (az évben keletkezett)
             02588:
               label: Immateriális javak és goodwill értékcsökkenése (LIS 12.2 cikk)
                 és DT 13.1 LIS szerinti amortizáció - Csökkenés - Évi korrekciók -
@@ -13738,8 +13723,8 @@ modelo:
                 függőben lévő egyenleg - Átmeneti (korábbi időszakokból eredő)
             02982:
               label: Belföldi illetőségű jogalanyok értékpapír-átruházásából származó
-                jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Növekedés
-                - Évi korrekciók - Időleges (az évben keletkezett) ...
+                jövedelem mentéssége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Növekedés
+                - Évi korrekciók - Időleges (az évben keletkezett)
             02983:
               label: Belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - Növekedés
@@ -13959,7 +13944,8 @@ modelo:
             03319:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
-                Az AID átalakításának eredménye a szabályozás után: Jóváírás - T....'
+                Az AID átalakításának eredménye a szabályozás után: Jóváírás - T.
+                tartományok/Navarra (összesen)'
             '03320':
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -13967,7 +13953,7 @@ modelo:
             '03362':
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Növekedés
-                - Évi korrekciók - Időleges (az évben keletkezett) ...
+                - Évi korrekciók - Időleges (az évben keletkezett)
             '03363':
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Növekedés

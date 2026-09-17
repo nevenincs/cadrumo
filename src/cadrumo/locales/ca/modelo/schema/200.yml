@@ -2145,6 +2145,18 @@ modelo:
             label: Deducció per inversions i despeses realitzades per les autoritats
               portuàries (art. 38 bis LIS) - Total - Pendent d'aplicació en períodes
               futurs [01304]
+          '01305':
+            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
+              impost diferit en crèdit exigible davant l'Administració tributària
+              (art. 130 LIS) - Compensació per conversió d'actius - Araba/Àlaba [01305]
+          '01306':
+            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
+              impost diferit en crèdit exigible davant l'Administració tributària
+              (art. 130 LIS) - Compensació per conversió d'actius - Gipuzkoa [01306]
+          '01307':
+            label: Tributació conjunta Estat i Adm. forals - Conversió d'actius per
+              impost diferit en crèdit exigible davant l'Administració tributària
+              (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
           01309:
             label: Deduccions per produccions cinematogràfiques estrangeres a Canàries
               (art. 36.2 LIS i DA 14a Llei 19/1994) - 2022) - Deducció pendent/generada
@@ -10639,19 +10651,6 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Abonament per conversió d'actius - Navarra [01303]
-            '01305':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
-                per impost diferit en crèdit exigible davant l'Administració tributària
-                (art. 130 LIS) - Compensació per conversió d'actius - Araba/Àlaba
-                [01305]
-            '01306':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
-                per impost diferit en crèdit exigible davant l'Administració tributària
-                (art. 130 LIS) - Compensació per conversió d'actius - Gipuzkoa [01306]
-            '01307':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
-                per impost diferit en crèdit exigible davant l'Administració tributària
-                (art. 130 LIS) - Compensació per conversió d'actius - Bizkaia [01307]
             01308:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
@@ -12428,7 +12427,7 @@ modelo:
             '01242':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - c1) Despeses financeres període impositiu deduïbles després
-                aplicació límit art. 16.5 i/o 83 LIS (≤ [b], [a=c1+c2], ≥ 0) ...
+                aplicació límit art. 16.5 i/o 83 LIS (≤ [b], [a=c1+c2], ≥ 0)
             '01244':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - d) Despeses financeres pendents de deduir en períodes
@@ -12459,22 +12458,10 @@ modelo:
               label: Tributació conjunta Estat i Adm. forals - Conversió d'actius
                 per impost diferit en crèdit exigible davant l'Administració tributària
                 (art. 130 LIS) - Abonament per conversió actius - Navarra
-            '01305':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Compensació conversió actius - ...
-            '01306':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Compensació conversió actius - ...
-            '01307':
-              label: Tributació conjunta Estat i Adm. forals - Conversió d’actius
-                per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Compensació conversió actius - ...
             01308:
               label: Tributació conjunta Estat i Adm. forals - Conversió d’actius
                 per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Compensació conversió actius - ...
+                (art. 130 LIS) - Compensació conversió actius - Navarra
             01329:
               label: Deducció donatius entitats sense fins lucratius - Donacions per
                 a activitats prioritàries de mecenatge i altres amb dret a deducció
@@ -12864,7 +12851,7 @@ modelo:
             01658:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d’actius
                 per impost diferit en crèdit exigible davant l’Administració tributària
-                (art. 130 LIS) - Rectificativa: Devolució - Araba/...'
+                (art. 130 LIS) - Rectificativa: Devolució - Araba/Álava'
             01659:
               label: 'Tributació conjunta Estat i Adm. forals - Conversió d''actius
                 per impost diferit en crèdit exigible davant l''Administració tributària
@@ -12979,7 +12966,7 @@ modelo:
             '01742':
               label: Llibertat d’amortització de determinats vehicles i de noves infraestructures
                 de recàrrega (DA 18a LIS RDL 4/2024) - Augment - Correccions de l’exercici
-                - Temporàries (amb origen en l’exercici) ...
+                - Temporàries (amb origen en l’exercici)
             '01754':
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). Art. 130 LIS - Exercici generació -
@@ -13425,7 +13412,7 @@ modelo:
             02587:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
-                de l'exercici - Temporànies (amb origen en l'exercici) ...
+                de l'exercici - Temporànies (amb origen en l'exercici)
             02588:
               label: Amortització de l'immobilitzat intangible i fons de comerç (art.
                 12.2 LIS) i amortització de la DT 13a.1 LIS - Disminució - Correccions
@@ -13571,11 +13558,11 @@ modelo:
             02855:
               label: Pèrdues per deteriorament de valors repr. de participacions en
                 el capital o fons propis (art. 15 k) LIS) - Augment - Saldo pendent
-                a fi d'exercici - Temporànies (amb origen en exercicis anteriors)...
+                a fi d'exercici - Temporànies (amb origen en exercicis anteriors)
             02982:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats residents (art. 21.3, 21.10 i DT 40a LIS) - Augment - Correccions
-                de l'exercici - Temporànies (amb origen en l'exercici) ...
+                de l'exercici - Temporànies (amb origen en l'exercici)
             02983:
               label: Exempció sobre la renda obtinguda en la transmissió de valors
                 d'entitats residents (art. 21.3, 21.10 i DT 40a LIS) - Augment - Correccions
@@ -13799,7 +13786,8 @@ modelo:
             03319:
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
-                de conversió d''AID després de regularització: Abonament - D....'
+                de conversió d''AID després de regularització: Abonament - D. Forals/Navarra
+                (Totals)'
             '03320':
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -13807,7 +13795,7 @@ modelo:
             '03362':
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Augment - Correccions
-                de l'exercici - Temporànies (amb origen en l'exercici) ...
+                de l'exercici - Temporànies (amb origen en l'exercici)
             '03363':
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Augment - Correccions

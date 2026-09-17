@@ -4104,7 +4104,8 @@ modelo:
             '0431':
               label: Átruházásokból nem eredő 2016-2019. évi vagyoni nyereségek és
                 veszteségek negatív nettó egyenlegei, amelyek 2020. január 1-jén még
-                beszámításra várnak, és az általános adóalapba beszámítandók (...
+                beszámításra várnak, és az általános adóalapba beszámítandók (töltse
+                ki a C.2. mellékletet)
             '0433':
               label: A(z) 2020. évi tőkenyereségek és -veszteségek általános adóalapba
                 beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
@@ -5825,7 +5826,8 @@ modelo:
             '0431':
               label: Átruházásokból nem eredő 2017-2020. évi vagyoni nyereségek és
                 veszteségek negatív nettó egyenlegei, amelyek 2021. január 1-jén még
-                beszámításra várnak, és az általános adóalapba beszámítandók (...
+                beszámításra várnak, és az általános adóalapba beszámítandók (töltse
+                ki a C.2. mellékletet)
             '0433':
               label: A(z) 2021. évi tőkenyereségek és -veszteségek általános adóalapba
                 beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
@@ -7082,7 +7084,8 @@ modelo:
             '0431':
               label: Átruházásokból nem eredő 2018-2021. évi vagyoni nyereségek és
                 veszteségek negatív nettó egyenlegei, amelyek 2022. január 1-jén még
-                beszámításra várnak, és az általános adóalapba beszámítandók (...
+                beszámításra várnak, és az általános adóalapba beszámítandók (töltse
+                ki a C.2. mellékletet)
             '0433':
               label: A(z) 2022. évi tőkenyereségek és -veszteségek általános adóalapba
                 beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
@@ -7461,9 +7464,10 @@ modelo:
             0814:
               label: A 2021-ben keletkezett, még alkalmazásra váró összeg
             0818:
-              label: A néptelenedés kockázatának kitett Kantábria-i területeken lévő,
+              label: A néptelenedes kockázatának kitett Kantábria-i területeken lévő,
                 a bérlő szokásos lakhelyét képező vagy azzá válandó lakások bérlete
-                után (levonás a bérlő számára)...
+                után (levonás a bérlő számára) (a B.9. melléklet [0646] rovatának
+                összege)
             0819:
               label: Az adóévben alkalmazott összeg
             0822:
@@ -8432,7 +8436,8 @@ modelo:
             '0431':
               label: Átruházásokból nem eredő 2019-2022. évi vagyoni nyereségek és
                 veszteségek negatív nettó egyenlegei, amelyek 2023. január 1-jén még
-                beszámításra várnak, és az általános adóalapba beszámítandók (...
+                beszámításra várnak, és az általános adóalapba beszámítandók (töltse
+                ki a C.3. mellékletet)
             '0433':
               label: A(z) 2023. évi tőkenyereségek és -veszteségek általános adóalapba
                 beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
@@ -10869,7 +10874,8 @@ modelo:
                 az általános adóalapba beszámítandó negatív nettó egyenlegeit.
               label: Átruházásokból nem eredő 2020-2023. évi vagyoni nyereségek és
                 veszteségek negatív nettó egyenlegei, amelyek 2024. január 1-jén még
-                beszámításra várnak, és az általános adóalapba beszámítandók (...
+                beszámításra várnak, és az általános adóalapba beszámítandók (töltse
+                ki a C.3. mellékletet)
             '0432':
               help: Ez a mező kiszámítja az általános adóalapba beszámítandó jövedelmek
                 és jövedelemimputációk nettó egyenlegét.
@@ -10896,7 +10902,7 @@ modelo:
                 „Adóinformációk a mezőben” részt.
               label: A 2024-re elszámolható ingó tőkejövedelmek negatív nettó egyenlegei,
                 a megtakarítási alapba beszámítva, a [0424] 25 százalékos korlátjával
-                (*) (vigye át a [0430] rovat összegét...
+                (*) (vigye át a [0430] rovat összegét, amennyiben szükséges).
             '0437':
               help: Tüntesse fel a 2019-2023. évekből származó, csökkentésre váró
                 többleteket.
@@ -12298,7 +12304,11 @@ modelo:
                 rovatszámítás szerint.
               label: Az ebben a bevallásban alkalmazott, vállalkozási beruházást ösztönző
                 kedvezmények és levonások teljes összege ([0706] + [0707] + [0752]-[0756]
-                + [0758] + [0759] rovatok összege ...
+                + [0758] + [0759] + [0761] + [0762] + [0764] + [0766] + [0768] + [0773]
+                + [0779] + [0781]-[0784] + [0786]-[0788] + [0791] + [0793] + [0796]
+                + [0797] + [0817] + [0836]-[0844] + [1623] + [1627] + [1629] + [1686]-[1689]
+                + [1701] + [1706] + [1708] + [1717] + [1722] + [1723] + [1727]-[1731]
+                + [1944] + [1945] + [1947] + [1948] + [1950]-[1958] rovatok összege)
             0846:
               help: Adja meg a Murcia Régió Autonóm Közösségének kulturális örökségi
                 jegyzékében szereplő javak adományozása utáni levonást.
@@ -13580,7 +13590,7 @@ modelo:
                 „Adóinformációk a mezőben” részt.
               label: A 2024-nek betudható ingó tőkejövedelmek negatív egyenlege, amelyet
                 a megtakarítási adóalapba kell beépíteni, és amely a következő 4 adóévben
-                még kiegyenlíthető (mezők [0430] - ...
+                még kiegyenlíthető (mezők [0430] - [0436])
             '1284':
               help: Adja meg a csökkentésre jogosult adózót.
             '1285':
@@ -16257,7 +16267,8 @@ modelo:
             '0431':
               label: A 2021-2024 közötti, átruházásból nem eredő vagyoni nyereségek
                 és veszteségek negatív nettó egyenlegei, amelyek 2025. január 1-jén
-                kompenzálásra várnak, az általános adóalapba beszámítva (...
+                kompenzálásra várnak, az általános adóalapba beszámítva (töltse ki
+                a C.3. mellékletet)
             '0433':
               label: A 2025. évi vagyoni nyereségek és veszteségek általános adóalapba
                 beszámítandó negatív nettó egyenlege, a [0432] rovat összegének 25
@@ -16272,7 +16283,7 @@ modelo:
             '0436':
               label: A 2025-re elszámolható ingó tőkejövedelmek negatív nettó egyenlegei,
                 a megtakarítási alapba beszámítva, a [0424] 25 százalékos korlátjával
-                (*) (vigye át a [0430] rovat összegét...
+                (*) (vigye át a [0430] rovat összegét, amennyiben szükséges).
             '0437':
               label: A 2020-2024. adóévekből származó, csökkentésre váró túllépések
             0439:
@@ -16812,8 +16823,11 @@ modelo:
             0845:
               label: A vállalati befektetési ösztönzők és serkentők utáni, ebben a
                 bevallásban alkalmazott levonások teljes összege (a [0706] + [0707]
-                + [0752]-től [0762]-ig + [0764]-től [0769]-ig terjedő rovatok összege
-                +...
+                + [0752]-től [0762]-ig + [0764]-től [0769]-ig + [0779]-től [0788]-ig
+                + [0791] + [0793] + [0795]-től [0798]-ig + [0817] + [0836]-től [0844]-ig
+                + [1623] + [1627] + [1629] + [1686]-től [1688]-ig + [1722] + [1723]
+                + [1727]-től [1731]-ig + [1944] + [1947] + [1948] + [1950]-től [1957]-ig
+                + [2060] + [2061] rovatok összege)
             0848:
               label: A 2025-ben keletkezett, alkalmazásra váró összeg
             0853:
@@ -16931,7 +16945,7 @@ modelo:
             '1016':
               label: Kereskedelmi társaságok alapítási vagy tőkeemelési megállapodásai
                 következtében történő részvény- vagy üzletrész-szerzésbe történő befektetés
-                után (az [1136] rovat összege...
+                után (az [1136] rovat összege a B.11. mellékletből)
             '1019':
               label: Szokásos lakóingatlan bérbevétele után (ez az összeg átvitelre
                 kerül a B.11 melléklet [1130] rovatába)
@@ -17145,7 +17159,7 @@ modelo:
             '1283':
               label: 'A 2025-re hozzárendelhető ingó vagyoni tőke jövedelmeinek negatív
                 egyenlege, a megtakarítási adóalapba beszámítva, a következő 4 adóévben
-                kompenzálandó (rovatok: [0430] -...'
+                kompenzálandó (rovatok: [0430] - [0436])'
             '1285':
               label: '2020-as adóév: Az időszak elején alkalmazásra váró összeg'
             '1286':

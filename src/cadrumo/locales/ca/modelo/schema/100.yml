@@ -3556,12 +3556,12 @@ modelo:
               l''article 14.2.m) de la Llei de l''impost): Valoració'
           irpf-retrib-especie-importe-no-exenta-2:
             label: 'Retribució en espècie (no exempta per superar la quantia prevista
-              en a l''article 42.3.f) i pendents d''imputació d''acord amb ho disposat
-              en l''article 14.2.m) de la Llei de l''impost): Ingr....'
+              en a l''article 42.3.f) i pendents d''imputació d''acord amb el disposat
+              en l''article 14.2.m) de la Llei de l''impost): Ingressos a compte'
           irpf-retrib-especie-importe-no-exenta-3:
             label: 'Retribució en espècie (no exempta per superar la quantia prevista
-              en a l''article 42.3.f) i pendents d''imputació d''acord amb ho disposat
-              en l''article 14.2.m) de la Llei de l''impost): Ingr....'
+              en a l''article 42.3.f) i pendents d''imputació d''acord amb el disposat
+              en l''article 14.2.m) de la Llei de l''impost): Ingressos a compte repercutits'
           irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion:
             label: 'Retribució en espècie (no exempta per superar la quantia prevista
               en l''article 42.3.f) i pendents d''imputació d''acord amb el que disposa
@@ -4057,7 +4057,8 @@ modelo:
             '0431':
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2016
                 a 2019 no derivats de transmissions, pendents de compensació a 1 de
-                gener de 2020, a integrar en la base imposable general (...
+                gener de 2020, a integrar en la base imposable general (Empleneu l'annex
+                C.2)
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2020
                 integrats a la base imposable general, amb un límit del 25 % de l'import
@@ -5748,7 +5749,8 @@ modelo:
             '0431':
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2017
                 a 2020 no derivats de transmissions, pendents de compensació a 1 de
-                gener de 2021, a integrar en la base imposable general (...
+                gener de 2021, a integrar en la base imposable general (Empleneu l'annex
+                C.2)
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2021
                 integrats a la base imposable general, amb un límit del 25 % de l'import
@@ -7002,7 +7004,8 @@ modelo:
             '0431':
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2018
                 a 2021 no derivats de transmissions, pendents de compensació a 1 de
-                gener de 2022, a integrar en la base imposable general (...
+                gener de 2022, a integrar en la base imposable general (Empleneu l'annex
+                C.2)
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2022
                 integrats a la base imposable general, amb un límit del 25 % de l'import
@@ -7379,9 +7382,10 @@ modelo:
             0814:
               label: Import generat el 2021 pendent d'aplicació
             0818:
-              label: Per arrendament d'habitatges situats en zones de Cantòbria en
+              label: Per arrendament d'habitatges situats en zones de Cantàbria en
                 risc de despoblament que constitueixin o vagin a constituir l'habitatge
-                habitual de l'arrendatari (deducció per a l'arrendatari)...
+                habitual de l'arrendatari (deducció per a l'arrendatari) (import de
+                la casella [0646] de l'annex B.9)
             0819:
               label: Import aplicat en l'exercici
             0822:
@@ -8347,7 +8351,8 @@ modelo:
             '0431':
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2019
                 a 2022 no derivats de transmissions, pendents de compensació a 1 de
-                gener de 2023, a integrar en la base imposable general (...
+                gener de 2023, a integrar en la base imposable general (Empleneu l'annex
+                C.3)
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2023
                 integrats a la base imposable general, amb un límit del 25 % de l'import
@@ -10563,7 +10568,8 @@ modelo:
                 a 1 de gener de 2024, a integrar en la base imposable general.
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2020
                 a 2023 no derivats de transmissions, pendents de compensació a 1 de
-                gener de 2024, a integrar en la base imposable general (...
+                gener de 2024, a integrar en la base imposable general (Empleneu l'annex
+                C.3)
             '0432':
               help: Aquest camp calcula el saldo net dels rendiments a integrar en
                 la base imposable general i de les imputacions de renda.
@@ -10586,7 +10592,7 @@ modelo:
             '0436':
               label: Saldos nets negatius de rendiments de capital mobiliari imputables
                 a 2024, a integrar en la base de l'estalvi, amb el límit del 25 per
-                100 de [0424](*) (traslladeu l'import de la casella [0430]...
+                100 de [0424](*) (traslladeu l'import de la casella [0430] si escau).
             '0437':
               help: Consigneu els excessos pendents de reduir procedents dels exercicis
                 2019 a 2023.
@@ -11967,7 +11973,12 @@ modelo:
                 la suma de caselles indicada en l'esquema.
               label: Import total de les deduccions per incentius i estímuls a la
                 inversió empresarial que s'apliquen en aquesta declaració (suma de
-                les caselles [0706] + [0707] + [0752] a [0756] + [0758] + [0759] ...
+                les caselles [0706] + [0707] + [0752] a [0756] + [0758] + [0759] +
+                [0761] + [0762] + [0764] + [0766] + [0768] + [0773] + [0779] + [0781]
+                a [0784] + [0786] a [0788] + [0791] + [0793] + [0796] + [0797] + [0817]
+                + [0836] a [0844] + [1623] + [1627] + [1629] + [1686] a [1689] + [1701]
+                + [1706] + [1708] + [1717] + [1722] + [1723] + [1727] a [1731] + [1944]
+                + [1945] + [1947] + [1948] + [1950] a [1958])
             0846:
               help: Introduïu la deducció per donacions de béns inscrits en l'Inventari
                 del Patrimoni Cultural de la Comunitat Autònoma de la Regió de Múrcia.
@@ -13248,7 +13259,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 al 2024, a integrar en la base imposable de l'estalvi, pendents de
-                compensació en els 4 exercicis següents (caselles [0430] - ...
+                compensació en els 4 exercicis següents (caselles [0430] - [0436])
             '1284':
               help: Introduïu el contribuent amb dret a la reducció.
             '1285':
@@ -15933,8 +15944,9 @@ modelo:
                 a 2025 a integrar en la base imposable de l'estalvi
             '0431':
               label: Saldos nets negatius de guanys i pèrdues patrimonials de 2021
-                a 2024 no derivades de transmissions, pendents de compensació a 1
-                de gener de 2025, a integrar en la base imposable general (...
+                a 2024 no derivats de transmissions, pendents de compensació a 1 de
+                gener de 2025, a integrar en la base imposable general (Empleneu l'annex
+                C.3)
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2025
                 a integrar en la base imposable general, amb el límit del 25 per 100
@@ -15949,7 +15961,7 @@ modelo:
             '0436':
               label: Saldos nets negatius de rendiments de capital mobiliari imputables
                 a 2025, a integrar en la base de l'estalvi, amb el límit del 25 per
-                100 de [0424](*) (traslladi l'import de la casella [0430]...
+                100 de [0424](*) (traslladi l'import de la casella [0430] si escau).
             '0437':
               label: Excessos pendents de reduir procedents dels exercicis 2020 a
                 2024
@@ -16474,8 +16486,11 @@ modelo:
                 Aplicat en aquesta declaració'
             0845:
               label: Import total de les deduccions per incentius i estímuls a l'inversió
-                empresarial que es aplican en aquesta declaració (suma de les caselles
-                [0706] + [0707] + [0752] a [0762] + [0764] a [0769] +...
+                empresarial que s'apliquen en aquesta declaració (suma de les caselles
+                [0706] + [0707] + [0752] a [0762] + [0764] a [0769] + [0779] a [0788]
+                + [0791] + [0793] + [0795] a [0798] + [0817] + [0836] a [0844] + [1623]
+                + [1627] + [1629] + [1686] a [1688] + [1722] + [1723] + [1727] a [1731]
+                + [1944] + [1947] + [1948] + [1950] a [1957] + [2060] + [2061])
             0848:
               label: Import generat en 2025 pendent d'aplicació
             0853:
@@ -16597,8 +16612,8 @@ modelo:
                 de la casella [1136] de l'annex B.11)
             '1016':
               label: Per inversió en l'adquisició d'accions o participacions socials
-                com conseqüència d'acords de constitució o ampliació de capital en
-                societats mercantils (import de la casella [1136] ...
+                com a conseqüència d'acords de constitució o ampliació de capital
+                en societats mercantils (import de la casella [1136] de l'annex B.11)
             '1019':
               label: Per arrendament d'habitatge habitual (es trasllada aquest import
                 a la casella [1130] de l'annex B.11)
@@ -16813,7 +16828,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments de capital mobiliari imputables
                 a 2025, a integrar en la base imposable de l'estalvi, pendents de
-                compensació en els 4 exercicis següents (caselles [0430] - ...
+                compensació en els 4 exercicis següents (caselles [0430] - [0436])
             '1285':
               label: 'Exercici 2020: Pendent d''aplicació a l''inici del període'
             '1286':

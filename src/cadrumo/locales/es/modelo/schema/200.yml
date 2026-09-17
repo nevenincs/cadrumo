@@ -2154,6 +2154,21 @@ modelo:
             label: Deducción por inversiones y gastos realizados por las autoridades
               portuarias (art. 38 bis LIS) - Total - Pendiente de aplicación en períodos
               futuros [01304]
+          '01305':
+            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+              por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS) - Compensación conversión activos - Araba/Álava
+              [01305]
+          '01306':
+            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+              por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS) - Compensación conversión activos - Gipuzkoa
+              [01306]
+          '01307':
+            label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
+              por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS) - Compensación conversión activos - Bizkaia
+              [01307]
           01309:
             label: Deducciones por producciones cinematográficas extranjeras en Canarias
               (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2022) - Deducción pendiente/generada
@@ -10762,21 +10777,6 @@ modelo:
                 por impuesto diferido en crédito exigible frente a la Administración
                 tributaria (art. 130 LIS) - Abono por conversión activos - Navarra
                 [01303]
-            '01305':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - Araba/Álava
-                [01305]
-            '01306':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - Gipuzkoa
-                [01306]
-            '01307':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - Bizkaia
-                [01307]
             01308:
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
@@ -12641,7 +12641,6 @@ modelo:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.5
                 y/o 83 LIS - c1) Gastos financieros período impositivo deducibles
                 tras aplicación límite art. 16.5 y/o 83 LIS (≤ [b], [a=c1+c2], ≥ 0)
-                ...
             '01244':
               label: Limitación deducibilidad gastos financieros - Límite art. 16.5
                 y/o 83 LIS - d) Gastos financieros pendientes de deducir en períodos
@@ -12672,22 +12671,10 @@ modelo:
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
                 tributaria (art. 130 LIS) - Abono por conversión activos - Navarra
-            '01305':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - ...
-            '01306':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - ...
-            '01307':
-              label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
-                por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - ...
             01308:
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Compensación conversión activos - ...
+                tributaria (art. 130 LIS) - Compensación conversión activos - Navarra
             01329:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -13092,7 +13079,7 @@ modelo:
             01658:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Rectificativa: Devolución - Araba/...'
+                tributaria (art. 130 LIS) - Rectificativa: Devolución - Araba/Álava'
             01659:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
@@ -13215,7 +13202,7 @@ modelo:
             '01742':
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en el ejercicio) ...
+                del ejercicio - Temporarias (con origen en el ejercicio)
             '01754':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
@@ -13648,7 +13635,6 @@ modelo:
               label: Amortización del inmovilizado intangible y fondo de comercio
                 (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución -
                 Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
-                ...
             02588:
               label: Amortización del inmovilizado intangible y fondo de comercio
                 (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución -
@@ -13794,11 +13780,11 @@ modelo:
             02855:
               label: Pérdidas por deterioro de valores repr. de partic. en el capital
                 o fondos propios (art. 15 k) LIS) - Aumento - Saldo pendiente a fin
-                de ejercicio - Temporarias (con origen en ejercicios anteriores)...
+                de ejercicio - Temporarias (con origen en ejercicios anteriores)
             02982:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en el ejercicio) ...
+                del ejercicio - Temporarias (con origen en el ejercicio)
             02983:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades residentes(art. 21.3, 21.10 y DT 40ª LIS) - Aumento - Correcciones
@@ -14026,7 +14012,8 @@ modelo:
             03319:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Abono - D....'
+                - Resultado de conversión de AID tras regularización: Abono - D. Forales/Navarra
+                (Totales)'
             '03320':
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
@@ -14035,7 +14022,7 @@ modelo:
             '03362':
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en el ejercicio) ...
+                del ejercicio - Temporarias (con origen en el ejercicio)
             '03363':
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Aumento - Correcciones

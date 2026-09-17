@@ -4050,7 +4050,7 @@ modelo:
             '0431':
               label: Negative net balances of capital gains and losses from 2016 to
                 2019 not derived from transfers, pending offset at 1 January 2020,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2020 capital gains and losses included
                 in the general taxable base, limited to 25% of the amount in box ([0432])
@@ -5692,7 +5692,7 @@ modelo:
             '0431':
               label: Negative net balances of capital gains and losses from 2017 to
                 2020 not derived from transfers, pending offset at 1 January 2021,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2021 capital gains and losses included
                 in the general taxable base, limited to 25% of the amount in box ([0432])
@@ -6913,7 +6913,7 @@ modelo:
             '0431':
               label: Negative net balances of capital gains and losses from 2018 to
                 2021 not derived from transfers, pending offset at 1 January 2022,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2022 capital gains and losses included
                 in the general taxable base, limited to 25% of the amount in box ([0432])
@@ -7268,7 +7268,8 @@ modelo:
             0818:
               label: For leasing dwellings located in areas of Cantabria at risk of
                 depopulation that constitute or are to constitute the tenant's habitual
-                residence (deduction for the tenant)...
+                residence (deduction for the tenant) (amount from box [0646] of annex
+                B.9)
             0819:
               label: Amount applied in the tax year
             0822:
@@ -8213,7 +8214,7 @@ modelo:
             '0431':
               label: Negative net balances of capital gains and losses from 2019 to
                 2022 not derived from transfers, pending offset at 1 January 2023,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.3)
             '0433':
               label: Negative net balance of 2023 capital gains and losses included
                 in the general taxable base, limited to 25% of the amount in box ([0432])
@@ -10373,7 +10374,7 @@ modelo:
                 2024, to be included in the general taxable base.
               label: Negative net balances of capital gains and losses from 2020 to
                 2023 not derived from transfers, pending offset at 1 January 2024,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.3)
             '0432':
               help: This field calculates the net balance of income to be included
                 in the general taxable base and of income imputations.
@@ -10399,7 +10400,7 @@ modelo:
                 self-assessment.
               label: Negative net balances of movable-capital income attributable
                 to 2024, to be included in the savings base, limited to 25 percent
-                of [0424](*) (transfer the amount from box [0430]...
+                of [0424](*) (transfer the amount from box [0430] if applicable).
             '0437':
               help: Report excess amounts pending reduction from tax years 2019 to
                 2023.
@@ -11747,7 +11748,12 @@ modelo:
                 sum indicated in the schema.
               label: Total amount of deductions for incentives and stimuli for business
                 investment applied in this return (sum of boxes [0706] + [0707] +
-                [0752] to [0756] + [0758] + [0759] ...
+                [0752] to [0756] + [0758] + [0759] + [0761] + [0762] + [0764] + [0766]
+                + [0768] + [0773] + [0779] + [0781] to [0784] + [0786] to [0788] +
+                [0791] + [0793] + [0796] + [0797] + [0817] + [0836] to [0844] + [1623]
+                + [1627] + [1629] + [1686] to [1689] + [1701] + [1706] + [1708] +
+                [1717] + [1722] + [1723] + [1727] to [1731] + [1944] + [1945] + [1947]
+                + [1948] + [1950] to [1958])
             0846:
               help: Enter the deduction for donations of assets recorded in the Cultural
                 Heritage Inventory of the Autonomous Community of the Region of Murcia.
@@ -12994,7 +13000,7 @@ modelo:
                 self-assessment.
               label: Negative balance of income from movable capital attributable
                 to 2024, to be included in the savings taxable base, pending offset
-                in the following 4 tax years (boxes [0430] - ...
+                in the following 4 tax years (boxes [0430] - [0436])
             '1284':
               help: Enter the taxpayer entitled to the reduction.
             '1285':
@@ -15585,7 +15591,7 @@ modelo:
             '0431':
               label: Negative net balances of capital gains and losses from 2021 to
                 2024 not arising from transfers, pending offset as of 1 January 2025,
-                to be included in the general taxable base (...
+                to be included in the general taxable base (Complete annex C.3)
             '0433':
               label: Negative net balance of capital gains and losses for 2025 to
                 be included in the general taxable base, limited to 25% of the amount
@@ -15599,7 +15605,7 @@ modelo:
             '0436':
               label: Negative net balances of movable-capital income imputable to
                 2025, to be included in the savings base, limited to 25% of [0424]
-                (*) (carry the amount from box [0430]...
+                (*) (carry the amount from box [0430] if applicable).
             '0437':
               label: Excesses pending reduction from tax years 2020 to 2024
             0439:
@@ -16125,7 +16131,10 @@ modelo:
             0845:
               label: Total amount of the business-investment incentive deductions
                 applied in this return (sum of boxes [0706] + [0707] + [0752] to [0762]
-                + [0764] to [0769] +...
+                + [0764] to [0769] + [0779] to [0788] + [0791] + [0793] + [0795] to
+                [0798] + [0817] + [0836] to [0844] + [1623] + [1627] + [1629] + [1686]
+                to [1688] + [1722] + [1723] + [1727] to [1731] + [1944] + [1947] +
+                [1948] + [1950] to [1957] + [2060] + [2061])
             0848:
               label: Amount generated in 2025 pending application
             0853:
@@ -16241,7 +16250,7 @@ modelo:
             '1016':
               label: For investment in the acquisition of shares or company units
                 arising from company-formation or capital-increase agreements in commercial
-                companies (amount from box [1136]...
+                companies (amount from box [1136] of annex B.11)
             '1019':
               label: For the lease of a primary residence (this amount is carried
                 to box [1130] of Annex B.11)
@@ -16454,7 +16463,7 @@ modelo:
             '1283':
               label: Negative balance of movable-capital income imputable to 2025,
                 to be included in the savings taxable base, pending offset over the
-                following 4 years (boxes [0430] -...
+                following 4 years (boxes [0430] - [0436])
             '1285':
               label: 'FY 2020: Pending application at the start of the period'
             '1286':
