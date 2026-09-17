@@ -37,6 +37,7 @@ it that way.
 
 from __future__ import annotations
 
+import contextvars
 import multiprocessing as mp
 import threading
 from queue import Empty
@@ -129,7 +130,9 @@ def test_the_root_lock_is_taken_before_the_profile_lock(tmp_path: Path) -> None:
         with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
             entered.set()
 
-    transaction = threading.Thread(target=_enter_transaction, daemon=True)
+    # The custody port is composed in a context variable, which a new thread
+    # does not inherit; the transaction runs in a copy of this context.
+    transaction = threading.Thread(target=contextvars.copy_context().run, args=(_enter_transaction,), daemon=True)
     try:
         _await(from_sibling, "ready")
         _await(from_sibling, "locked")

@@ -57,6 +57,7 @@ from cadrumo.application.user_profile.custody_ports import (
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
 
+from ...tests.profile_capsule_runtime import profile_authority_contexts
 from .profile_record_boundary_support import (
     CREATED_AT,
     PROFILE_ID,
@@ -223,25 +224,28 @@ def test_schema_identity_fields_are_pinned_not_merely_defaulted() -> None:
     class is therefore not catchable by callers of this boundary, so the
     message is what the assertion has to bind to.
     """
-    schema_version_default_factory = UserProfileRecord.model_fields["schema_version"].default_factory
-    assert schema_version_default_factory is not None
-    canonical_version = schema_version_default_factory()
-    assert isinstance(canonical_version, int)
+    create_context, _decode_context = profile_authority_contexts()
+    canonical = create_context.schema
+    for field in ("schema_id", "schema_version"):
+        assert UserProfileRecord.model_fields[field].is_required(), f"{field} gained a default"
     cases: tuple[tuple[dict[str, object], str], ...] = (
-        ({"schema_id": "cadrumo.user_profile.other"}, "is not the canonical profile schema"),
-        ({"schema_version": canonical_version + 1}, "is not the canonical profile schema version"),
+        ({"schema_id": f"{canonical.id}.other"}, "is not the canonical profile schema"),
+        ({"schema_version": canonical.version + 1}, "is not the canonical profile schema version"),
     )
     for overrides, fragment in cases:
         with pytest.raises(ValidationError) as refusal:
             UserProfileRecord.model_validate(
                 {
                     "profile_id": str(PROFILE_ID),
+                    "schema_id": canonical.id,
+                    "schema_version": canonical.version,
                     "facts": populated_facts(),
                     "setup_state": ProfileSetupState.INCOMPLETE,
                     "created_at": CREATED_AT,
                     "updated_at": UPDATED_AT,
                     **overrides,
                 },
+                context=create_context,
             )
         assert fragment in str(refusal.value)
 

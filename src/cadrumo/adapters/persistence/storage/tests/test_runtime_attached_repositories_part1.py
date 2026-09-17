@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 from typing import cast, override
 
@@ -31,6 +32,8 @@ from .....adapters.persistence.profile.modelos_verification_reports import Verif
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....application.auth.diagnostics import list_auth_diagnostics
+from .....application.auth.diagnostics_ports import AuthDiagnosticPersistenceError
+from .....application.calculations.observations_repository import ResultDispositionProjection
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
@@ -46,9 +49,14 @@ from .....application.workflow.persistence import WorkflowRunRepository, Workflo
 from .....core.config import load_settings, override_settings
 from .....core.config_support import LLMProvider
 from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
 from .....domain.attachments.errors import AttachmentNotFoundError
 from .....domain.buckets.event import BucketEventHistoryCatalogue
-from .....domain.calculations.registry.bindings import RegistryModeloObservation
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from .....domain.modelos.work_unit import WorkUnitCatalogue
@@ -257,12 +265,13 @@ def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
             override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
-            pytest.raises(StorageValidationError) as raised,
+            pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
             operation()
-        assert raised.value.translated_message == "errors.storage.runtime.not_ready", case_name
-        assert raised.value.context is not None, case_name
-        assert raised.value.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value, case_name
+        refusal = _storage_readiness_refusal(raised.value, case_name)
+        assert refusal.translated_message == "errors.storage.runtime.not_ready", case_name
+        assert refusal.context is not None, case_name
+        assert refusal.context["readiness_code"] == StorageRuntimeReadinessCode.NO_ACTIVE_SESSION.value, case_name
 
 
 def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) -> None:
@@ -271,13 +280,21 @@ def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) 
         with (
             override_settings(cadrumo_local_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
             activate_session(_session(_BUCKET_B_ID)),
-            pytest.raises(StorageValidationError) as raised,
+            pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
             operation()
-        assert raised.value.translated_message == "errors.storage.runtime.not_ready", case_name
-        assert raised.value.context is not None, case_name
+        refusal = _storage_readiness_refusal(raised.value, case_name)
+        assert refusal.translated_message == "errors.storage.runtime.not_ready", case_name
+        assert refusal.context is not None, case_name
         expected = StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH.value
-        assert raised.value.context["readiness_code"] == expected, case_name
+        assert refusal.context["readiness_code"] == expected, case_name
+
+
+def _storage_readiness_refusal(error: BaseException, case_name: str) -> StorageValidationError:
+    """Return the storage readiness refusal, beneath a port that translates storage errors."""
+    refusal = error.__cause__ if isinstance(error, AuthDiagnosticPersistenceError) else error
+    assert isinstance(refusal, StorageValidationError), case_name
+    return refusal
 
 
 def test_diagnostics_secure_object_total_degrades_on_missing_session(
@@ -513,9 +530,29 @@ def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None
     assert tuple(verification_loaded) == tuple(verification_a.reports)
 
 
+def _payable_m303_observation(period: str) -> RegistryModeloObservation:
+    """Return a locally filed Modelo 303 whose positive result supports an ingreso."""
+    definition = casillas_by_id(published_snapshot("303", filing_year=2026, period=period).revision)[
+        M303_COMPENSATION_RESULTADO_CASILLA
+    ]
+    return RegistryModeloObservation(
+        modelo="303",
+        filing_year=2026,
+        period=period,
+        observations=(
+            CasillaObservation(
+                casilla_id=M303_COMPENSATION_RESULTADO_CASILLA,
+                value=Decimal("20.00"),
+                legal_refs=tuple(definition.legal_refs),
+                source_refs=tuple(definition.source_refs),
+            ),
+        ),
+    )
+
+
 def test_application_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
-    observation_a = RegistryModeloObservation(modelo="303", filing_year=2026, period="1T")
-    observation_b = RegistryModeloObservation(modelo="303", filing_year=2026, period="2T")
+    observation_a = _payable_m303_observation("1T")
+    observation_b = _payable_m303_observation("2T")
     history_a = _history(_BUCKET_A_ID)
     history_b = _history(_BUCKET_B_ID)
     decision_a = _iva_wallet_decision(_BUCKET_A_ID, target_period="2T")
@@ -530,13 +567,19 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
                 bucket_id=_BUCKET_A_ID,
             ),
         ).save(history_a)
-        CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(
-            CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
-                observation_a,
-                source_kind="operator_manual",
-                stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
-            )
+        # Ingress normalizes the observation (derived carry casillas), so the
+        # prepared envelope, not the raw input, is what a reload must return.
+        envelope_a = CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
+            observation_a,
+            source_kind="app_filing",
+            stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.INGRESO,
+                provenance_kind="app_filing",
+                provenance_locator="runtime-attached-local-filing:2026:1T",
+            ),
         )
+        CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(envelope_a)
         IvaWalletDecisionRepository().save_decision(decision_a)
         IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).save_period(_iva_state(_BUCKET_A_ID))
         save_usage_ratios(usage_a, bucket_id=_BUCKET_A_ID)
@@ -579,8 +622,13 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         CalculationObservationRepository(bucket_id=_BUCKET_B_ID).save(
             CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
                 observation_b,
-                source_kind="operator_manual",
+                source_kind="app_filing",
                 stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="2T").revision.id),
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.INGRESO,
+                    provenance_kind="app_filing",
+                    provenance_locator="runtime-attached-local-filing:2026:2T",
+                ),
             )
         )
         IvaWalletDecisionRepository().save_decision(decision_b)
@@ -606,7 +654,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
     assert modelo_ids == ("303",)
     assert observed is not None
-    assert observed.observation == observation_a
+    assert observed.observation == envelope_a.observation
     assert decisions == (decision_a,)
     assert decision_history == (decision_a,)
     assert tuple(state.period for state in iva_periods) == (Period.from_year_and_code(2026, "1T"),)
