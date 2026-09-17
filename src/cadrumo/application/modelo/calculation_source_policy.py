@@ -9,7 +9,7 @@ whose values must not be caller-overridden on this path.
 carry-style sources whose absence can be supplied by explicit caller values.
 
 See Also:
-    :func:`application.modelo.assert_no_novel_source_kinds`:
+    :func:`application.modelo.calculation_actions.assert_no_novel_source_kinds`:
         Rejects a registry source kind absent from both the enrolled and
         deferred policy sets before it can calculate as a silent blank.
 """

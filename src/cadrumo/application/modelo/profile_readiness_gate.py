@@ -1,9 +1,9 @@
 """Profile readiness gate for filing-grade modelo work.
 
 Loads the active :class:`domain.user_profile.values.UserProfileRecord`, builds a
-:class:`application.user_profile.ProfilePreflightReport`, projects
-local-work applicability through :class:`domain.deadlines.TaxpayerProfile`,
-and raises :class:`application.modelo.ModeloProfileReadinessError` before
+:class:`application.user_profile.commands.ProfilePreflightReport`, projects
+local-work applicability through :class:`domain.deadlines.models.TaxpayerProfile`,
+and raises :class:`application.modelo.action_errors.ModeloProfileReadinessError` before
 filing-grade work proceeds when required profile facts are missing. The
 revision-specific preflight branch may receive a :class:`ModeloRevision` that
 has already been resolved by an operator-facing readiness surface. The same gate
@@ -16,7 +16,7 @@ See Also:
     :func:`require_profile_ready_for_work_unit`:
         Replays the same readiness checks for an existing
         :class:`~WorkUnit`.
-    :class:`application.user_profile.ProfilePreflightReport`:
+    :class:`application.user_profile.commands.ProfilePreflightReport`:
         User-profile preflight result consumed by this application gate.
 """
 
@@ -88,9 +88,9 @@ def _requirement_for_profile_path(
     """Build one requirement row for a raw (possibly row-indexed) profile path.
 
     Thin call-site wrapper over the shared
-    :func:`application.user_profile.build_profile_preflight_requirement`,
+    :func:`application.user_profile.preflight.build_profile_preflight_requirement`,
     resolving the live schema singleton - the one requirement-row builder
-    this package and :class:`application.user_profile.ProfilePreflightService`
+    this package and :class:`application.user_profile.preflight.ProfilePreflightService`
     both route through.
     """
     return build_profile_preflight_requirement(
@@ -175,7 +175,7 @@ def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) ->
             checked against the filing-grade baseline.
 
     Returns:
-        Tuple of :class:`application.user_profile.ProfileValidationIssue`
+        Tuple of :class:`application.user_profile.commands.ProfileValidationIssue`
         instances for missing filing-grade baseline facts.
     """
     return tuple(
@@ -229,7 +229,7 @@ def modelo_work_profile_preflight_report(
     This combines the filing-grade baseline that every modelo work unit needs
     with the modelo/revision-specific profile selectors. Public readiness
     surfaces consume this function so they cannot claim profile readiness before
-    :func:`application.modelo.create_work_unit` would reject the same active
+    :func:`application.modelo.work_lifecycle.create_work_unit` would reject the same active
     profile.
 
     Args:
@@ -237,7 +237,7 @@ def modelo_work_profile_preflight_report(
         modelo: Modelo code being checked.
         revision_id: Registry revision identifier for the target modelo work.
         filing_year: Filing year for the target period.
-        period: Target :class:`core.Period` used for registry revision
+        period: Target :class:`core.period.Period` used for registry revision
             resolution and profile selector evaluation.
         revision: Optional :class:`ModeloRevision` supplied when the caller has
             already resolved the target revision.
@@ -249,7 +249,7 @@ def modelo_work_profile_preflight_report(
             target revision and profile schema.
 
     Returns:
-        :class:`application.user_profile.ProfilePreflightReport` combining
+        :class:`application.user_profile.commands.ProfilePreflightReport` combining
         baseline, validation, and modelo/revision-specific missing requirements.
     """
     if revision is None and resolve_revision_when_missing:
@@ -325,7 +325,7 @@ def profile_activity_start_date(record: UserProfileRecord) -> date | None:
     """Read the effective ``censo.activity_start_date`` through the canonical projection.
 
     Which of several live facts at one path is *effective* is owned by
-    :func:`application.user_profile.record_to_path_values`, which orders them by
+    :func:`application.user_profile.projections.record_to_path_values`, which orders them by
     ``valid_from`` so the chronologically last window wins. Scanning declaration
     order answers a different question: a record whose later window was declared
     first resolves to the earlier date, and because this value decides whether a
@@ -435,7 +435,7 @@ def pre_activity_period_refusal(
             context.
         modelo: Modelo code being checked.
         filing_year: Filing year for the target period.
-        period: Target :class:`core.Period` whose date span is compared
+        period: Target :class:`core.period.Period` whose date span is compared
             against the profile activity-start date.
     """
     modelo_code = modelo.strip()
@@ -626,7 +626,7 @@ def require_profile_ready_for_modelo_work(
 
     Loads the bucket's :class:`domain.user_profile.values.UserProfileRecord`,
     evaluates modelo-specific profile requirements through
-    :class:`application.user_profile.ProfilePreflightReport`, and then
+    :class:`application.user_profile.commands.ProfilePreflightReport`, and then
     applies the pre-activity period check for lifecycle modelos whose obligation
     starts at ``censo.activity_start_date``. Unlike
     :func:`require_existing_profile_baseline_ready_for_modelo_work`, this gate
@@ -711,7 +711,7 @@ def require_existing_profile_baseline_ready_for_modelo_work(
 ) -> None:
     """Refuse plainly incomplete existing profiles before registry work.
 
-    This early gate is used by :func:`application.modelo.create_work_unit`
+    This early gate is used by :func:`application.modelo.work_lifecycle.create_work_unit`
     before the registry revision and period are validated. It catches missing
     baseline profile facts, local-work applicability refusals, and pre-activity
     lifecycle periods without requiring a resolvable :class:`ModeloRevision`.

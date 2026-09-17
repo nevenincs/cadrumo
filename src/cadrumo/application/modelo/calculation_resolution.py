@@ -7,8 +7,8 @@ selected :class:`ModeloRevision`.
 This module is the calculation-service assembly layer between source resolution
 and engine execution. It delegates source-specific work to the binding
 resolution helpers, then returns typed channel bundles that
-:func:`application.modelo.calculate_modelo_revision` can pass to
-:func:`domain.calculations.registry.calculate_registry_snapshot` and the
+:func:`application.modelo.calculation_actions.calculate_modelo_revision` can pass to
+:func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot` and the
 :class:`CalculationRevision` persistence boundary.
 
 See Also:
@@ -16,7 +16,7 @@ See Also:
         Resolves the optional borrador tier before the final precedence merge.
     :func:`application.modelo.binding_resolution.resolve_profile_source_tier`
         Resolves profile-sourced bindings as the lowest-precedence tier.
-    :func:`application.aggregation.merge_source_resolutions_by_precedence`
+    :func:`application.aggregation.source_resolution_operations.merge_source_resolutions_by_precedence`
         Applies the ordered overlay contract used by this module.
 """
 
@@ -66,7 +66,7 @@ class ResolvedCalculationChannels:
     ``boolean_bindings`` feeds the truth values of bindings whose registry value
     contract declares the boolean channel.
     The borrador fields carry the typed snapshot trace from
-    :class:`~application.aggregation.CalculationSourceResolution` through to
+    :class:`~application.aggregation.source_mesh.CalculationSourceResolution` through to
     the persisted :class:`CalculationRevision`.
     """
 
@@ -133,7 +133,7 @@ def resolve_calculation_binding_channels(
     The source-precedence ladder is profile, backend, borrador, then caller. The
     returned :class:`ResolvedCalculationChannels` contains the merged Decimal,
     enum, date, and boolean channels, plus any
-    :class:`~application.live.Borrador100SnapshotRepository` provenance,
+    :class:`~application.live.borrador_100.Borrador100SnapshotRepository` provenance,
     after
     :func:`application.modelo.binding_resolution.reject_binding_channel_mismatch`
     verifies the registry-declared channel shape and
@@ -218,7 +218,7 @@ def resolve_calculation_inputs(
     """Build the canonical casilla input maps for engine execution.
 
     The ``revision`` is the :class:`ModeloRevision` whose declaration-period and
-    bound casilla inputs are being projected. The :class:`~core.Period`
+    bound casilla inputs are being projected. The :class:`~core.period.Period`
     supplies the filing-period casilla values that the registry declares as
     inputs.
 

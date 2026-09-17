@@ -18,10 +18,10 @@ See Also:
         Persisted bucket-local communication record handled by this module.
     :class:`~cadrumo.application.modelo.m145_communication_records.M145CommunicationValidationResult`
         Validation result returned before export and on explicit validation.
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Registry revision whose casillas, legal refs, source refs, and export
         layouts ground every record and rendered payload.
-    :class:`~domain.calculations.registry.RegistrySnapshot`
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         Snapshot wrapper resolved before create, validate, and export work.
 """
 

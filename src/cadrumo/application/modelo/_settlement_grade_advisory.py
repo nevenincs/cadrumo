@@ -12,9 +12,9 @@ activity (``no-silent-under-declaration``). M100 2020-2023 are the live advisory
 case.
 
 This module surfaces that STRUCTURAL gap on the calculate path as a non-blocking
-:class:`~application.aggregation.CalculationSourceDiagnostic`, grounded in
+:class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic`, grounded in
 the loaded :class:`ModeloRevision` casilla ``input_kind`` and its
-:class:`~domain.calculations.registry.InputKind` value (format-agnostic:
+:class:`~domain.calculations.registry.schema_input_kind.InputKind` value (format-agnostic:
 inline and fragmented registry content have already
 been merged) -- never the formula output, so it is non-tautological. It is the
 structural complement to the value-level settlement-completeness ADVISORY predicate
@@ -31,10 +31,10 @@ chains are modelled. A revision with no formula chain at all yields no advisory
 See Also:
     :func:`~application.modelo.calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`:
         Wires this structural advisory into the bucket-aggregation calculate path.
-    :mod:`~application.modelo._verification_actions`:
+    :mod:`~application.modelo.verification_actions`:
         Evaluates the value-level settlement-completeness predicates that complement
         this structural guard.
-    :class:`~domain.calculations.registry.InputKind`:
+    :class:`~domain.calculations.registry.schema_input_kind.InputKind`:
         The registry enum used to distinguish manual settlement cells from computed
         ones.
 """
@@ -73,7 +73,7 @@ def collect_settlement_not_computed_diagnostics(
 
     Returns:
         Tuple of
-        :class:`~application.aggregation.CalculationSourceDiagnostic`
+        :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic`
         advisories for settlement casillas that require operator verification.
 
     See Also:

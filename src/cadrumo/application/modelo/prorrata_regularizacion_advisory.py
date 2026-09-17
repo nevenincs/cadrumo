@@ -17,11 +17,11 @@ prorrata applies but the provisional percentage ladder is unresolved. Second,
 at the settlement period, it reads the CURRENT year's own registry-computed
 prorrata figures (never a fabricated value) and can look up the PRIOR year's
 persisted ``iva.prorrata-porcentaje`` observation from the local
-:class:`~application.calculations.CalculationObservationRepositoryProtocol` — the
+:class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol` — the
 same same-modelo prior-filing lookup pattern
 :mod:`~application.modelo.prior_payment_advisory` already uses for the
 Modelo 130 casilla-05 carry. When a real prior-year percentage is found, the
-pure :func:`~application.calculations.buildprorrata_regularizacion_advisory`
+pure :func:`~application.calculations.prorrata_regularizacion.buildprorrata_regularizacion_advisory`
 projection runs against real, non-fabricated inputs and its advisory is
 surfaced verbatim (never re-implemented). When no prior-year observation
 exists (a first-filing ejercicio, or the operator has not yet filed the prior
@@ -39,7 +39,7 @@ See Also:
     :mod:`~application.modelo.calculation_diagnostics`:
         Post-calculation coordinator that calls this collector with the
         computed casilla values and the shared observation repository.
-    :mod:`~application.calculations._prorrata_regularizacion`:
+    :mod:`~application.calculations.prorrata_regularizacion`:
         Source resolver and advisory-projection functions this collector shares
         with the registry-computed annual prorrata figures.
     :mod:`~application.modelo._bienes_inversion_advisory`:
@@ -308,7 +308,7 @@ def collect_prorrata_regularizacion_diagnostics(
     ``iva.prorrata-porcentaje``, ``iva.cuota-deducible-total``) from
     ``casilla_values`` and looks up the PRIOR year's persisted definitive
     percentage from ``observation_repository``. When both are available, the
-    pure :func:`~application.calculations.buildprorrata_regularizacion_advisory`
+    pure :func:`~application.calculations.prorrata_regularizacion.buildprorrata_regularizacion_advisory`
     projection runs and its advisory (or silence, when no regularización is
     due) is returned verbatim. When the prior-year percentage cannot be found,
     a lighter pending advisory fires whenever the current year shows
@@ -333,7 +333,7 @@ def collect_prorrata_regularizacion_diagnostics(
             prorrata register. When supplied, unresolved provisional register
             state emits a per-period missing-carry advisory before settlement.
         observation_repository: The local
-            :class:`~application.calculations.CalculationObservationRepositoryProtocol`
+            :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
             scanned for the prior-year definitive-percentage carry.
 
     Returns:
@@ -397,7 +397,7 @@ def _especial_mandatory_diagnostics(
     * CHECK branch (register regime ESPECIAL — the general shadow is mechanical —
       or regime GENERAL with every deducible soportado row classified): run the
       real art. 103.Dos.2.º comparison through
-      :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
+      :func:`~application.calculations.prorrata_regularizacion.build_prorrata_especial_mandatory_advisory`
       and surface its message verbatim as a ``prorrata_especial_obligatoria``
       diagnostic. A non-breach returns nothing (no noise).
     * PROMPT branch (register regime GENERAL with unclassified deducible soportado

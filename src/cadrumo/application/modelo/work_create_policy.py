@@ -11,16 +11,16 @@ from the active workflow state, then ask the registry-owned applicability rules
 whether the requested modelo is excluded. The foral check delegates to the
 canonical tax-region parser so the CLI renders the same refusal text as profile
 setup. Once these CLI policy guards pass,
-:func:`cadrumo.application.modelo.create_work_unit` performs the application
+:func:`cadrumo.application.modelo.work_lifecycle.create_work_unit` performs the application
 readiness and registry revision checks before inserting the
 :class:`~WorkUnit`.
 
 See Also:
     :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
         Calls these guards from ``app modelo work create``.
-    :func:`cadrumo.domain.calculations.registry.derive_modelo_applicability`:
+    :func:`cadrumo.domain.calculations.registry.applicability.derive_modelo_applicability`:
         Registry-owned modelo applicability classifier used by this guard.
-    :func:`cadrumo.domain.contribuyente.parse_tax_region`:
+    :func:`cadrumo.domain.contribuyente.tax_residence.parse_tax_region`:
         Canonical CCAA parser that raises foral-regime refusals.
 """
 
@@ -109,7 +109,7 @@ def modelo_work_create_applicability_refusal(
     When ``allow_not_applicable`` is true, the guard deliberately returns
     ``None`` so the CLI can provision the work unit and record that the operator
     bypassed the applicability guard. Otherwise the caller's loaded profile record is
-    projected into :class:`cadrumo.domain.deadlines.TaxpayerProfile` facts and
+    projected into :class:`cadrumo.domain.deadlines.models.TaxpayerProfile` facts and
     checked against the registry-owned applicability rules. Only
     ``NOT_APPLICABLE`` and ``ATTRIBUTION_PASS_THROUGH`` verdicts block creation.
 
@@ -119,9 +119,9 @@ def modelo_work_create_applicability_refusal(
         rule, or deliberately bypassed.
 
     See Also:
-        :func:`cadrumo.domain.calculations.registry.derive_modelo_applicability`:
+        :func:`cadrumo.domain.calculations.registry.applicability.derive_modelo_applicability`:
             Registry-owned applicability classifier used by this guard.
-        :func:`cadrumo.application.user_profile.projection_for_taxpayer`:
+        :func:`cadrumo.application.user_profile.projections.projection_for_taxpayer`:
             Builds the taxpayer profile consumed by the classifier.
     """
     if allow_not_applicable:
@@ -148,7 +148,7 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
 
     The guard reads ``tax_residence.ccaa`` from the active profile record the
     caller already loaded and delegates
-    to :func:`cadrumo.domain.contribuyente.parse_tax_region`. Common-regime CCAA
+    to :func:`cadrumo.domain.contribuyente.tax_residence.parse_tax_region`. Common-regime CCAA
     values pass through; foral values raise the domain refusal before work-unit
     creation reaches the generic unsupported-modelo checks.
     """

@@ -1,6 +1,6 @@
 """External filing import actions for modelo baselines.
 
-:func:`~cadrumo.application.modelo.import_external_filing_evidence` turns
+:func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence` turns
 AEAT-attested external evidence into a presented
 :class:`CalculationRevision` plus current
 :class:`ModeloRecord`. Evidence-bearing imports validate the
@@ -23,7 +23,7 @@ See Also:
     :func:`~cadrumo.entrypoints.cli._modelo_records_cli.filing_record_import`:
         CLI surface that parses ``filing-record import`` options and calls this
         service.
-    :func:`~cadrumo.application.modelo.amend_modelo_revision`:
+    :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision`:
         Consumes the imported current :class:`ModeloRecord`
         as an amendment baseline.
     :mod:`~cadrumo.domain.justificante`:
@@ -820,7 +820,7 @@ def import_external_filing_evidence[CasillaKey](
     See Also:
         :func:`~cadrumo.application.modelo._calculation_helpers.external_filing_observations`:
             Builds provenance-bearing observations for imported casilla values.
-        :func:`~cadrumo.application.modelo.amend_modelo_revision`:
+        :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision`:
             Requires this external-evidence baseline before filing amendments.
         :mod:`~cadrumo.domain.justificante`:
             Stores the receipt metadata checked for receipt-bound evidence

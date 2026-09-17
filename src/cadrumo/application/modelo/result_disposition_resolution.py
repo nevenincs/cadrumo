@@ -14,8 +14,8 @@ composer and the cross-period carry persistence both read the disposition from
 submits and the cross-period carry the next period reads can never disagree (a
 period requested as devolución is excluded from compensación carry - never
 both). It reuses the per-modelo result→code derivation
-(:func:`~core.derive_result_disposition`) and the REDEME/last-period
-eligibility gate (:func:`~domain.iva.refund_disposition_available`); it does
+(:func:`~core.result_disposition.derive_result_disposition`) and the REDEME/last-period
+eligibility gate (:func:`~domain.iva.refund_eligibility.refund_disposition_available`); it does
 not duplicate either.
 
 Before resolving the result, the persisted :class:`CalculationRevision` value map
@@ -27,13 +27,13 @@ Legal basis (Modelo 303 refund election): RD 1624/1992 (RIVA) art. 30 (Registro
 de devolución mensual); Ley 37/1992 (LIVA) art. 116 (the monthly-refund right).
 
 See Also:
-    :func:`core.derive_result_disposition`
+    :func:`core.result_disposition.derive_result_disposition`
         Diseño-grounded result-to-code derivation used before Modelo 303 refund
         election handling.
-    :func:`domain.iva.refund_disposition_available`
+    :func:`domain.iva.refund_eligibility.refund_disposition_available`
         Law-determined REDEME/last-period eligibility gate layered on a carried
         Modelo 303 credit.
-    :func:`application.modelo.file_modelo_revision`
+    :func:`application.modelo.filing_actions.file_modelo_revision`
         Filing transition that reads the same refund fact before persisting
         cross-period carry-forward observations.
 """
@@ -102,23 +102,23 @@ def resolve_modelo_result_disposition(
 
     The boundary resolves a persisted :class:`CalculationRevision` through its
     parent :class:`WorkUnit` for a :class:`TaxpayerProfile`, using the supplied
-    :class:`~core.Period` to decide whether a Modelo 303 refund election is
+    :class:`~core.period.Period` to decide whether a Modelo 303 refund election is
     lawful. The work unit fixes the modelo, filing year, and registry revision
     against which the revision's ``casilla_values`` are validated.
 
     Computes the modelo's base disposition from its final-result casilla via
-    :func:`~core.derive_result_disposition`, then — for a Modelo 303
+    :func:`~core.result_disposition.derive_result_disposition`, then — for a Modelo 303
     credit (``C``) — applies the refund election: a taxpayer inscribed in the
     Registro de devolución mensual (REDEME) is treated as
     requesting devolución (``D``) for eligible negative periods under a standing
     monthly-devolución disposition policy; a non-REDEME taxpayer who explicitly
     elects ``DEVOLVER`` requests devolución for the negative *last* period of the
     year (Ley 37/1992 art. 116). The eligibility gate
-    (:func:`~domain.iva.refund_disposition_available`) confirms the refund is
+    (:func:`~domain.iva.refund_eligibility.refund_disposition_available`) confirms the refund is
     lawful for the period. Every other disposition is returned unchanged.
 
     ``refund_election`` is the operator's per-filing opt-in (default
-    :attr:`~core.RefundElection`, the non-regressive
+    :attr:`~core.refund_election.RefundElection`, the non-regressive
     carry-forward). It is orthogonal to the standing REDEME inscription: REDEME
     is treated as the standing policy that resolves eligible
     negative periods to devolución regardless of this flag, while a non-REDEME
@@ -127,7 +127,7 @@ def resolve_modelo_result_disposition(
     period is refused — never silently carried, never silently requested as
     devolución.
 
-    Returns the one :class:`~core.ResultDisposition` both the export header
+    Returns the one :class:`~core.result_disposition.ResultDisposition` both the export header
     composer and the cross-period carry persistence read, so the fichero
     disposition and the carry can never disagree.
 

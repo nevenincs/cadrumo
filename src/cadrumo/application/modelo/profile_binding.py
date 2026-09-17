@@ -262,7 +262,7 @@ def _inject_derived_family_facts(
 ) -> None:
     """Inject the two Art. 81.2 guardería terms of the 0613 cap into *fact_index*.
 
-    Both are read off :class:`~domain.contribuyente.RentaFamilyProfile` rather
+    Both are read off :class:`~domain.contribuyente.family_profile.RentaFamilyProfile` rather
     than re-derived here, and that is the point of this function's present
     shape. It used to carry its own loop summing
     ``renta_family.descendiente.{n}.gastos_guarderia`` under an inline
@@ -295,7 +295,7 @@ def _inject_derived_family_facts(
     extension exists to close.
 
     The statutory count keeps the old name, correctly, on
-    :meth:`~domain.contribuyente.RentaFamilyProfile.descendientes_menores_3_year_end`.
+    :meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.descendientes_menores_3_year_end`.
     The two are different populations and always were; only one of them was
     misnamed.
     """
@@ -405,7 +405,7 @@ class MaternidadMesesResolution:
     alta_posterior_hijos: frozenset[str] = frozenset()
     """``hijo_id`` values from :attr:`pairs` that also carry the Art. 81.1 post-birth
 
-    alta increment (:meth:`~domain.contribuyente.DescendantInfo.maternidad_alta_posterior_increment_applies`)
+    alta increment (:meth:`~domain.contribuyente.descendant_guarderia.maternidad_alta_posterior_increment_applies`)
     for the resolved filing year. A ``hijo_id`` absent from :attr:`pairs` is never a
     member here even if its record declares a completion month, because a
     withheld pair means the ordinary predicate already excludes the descendant,
@@ -789,7 +789,7 @@ def inject_derived_minimo_descendientes_facts(
     Reads the existing ``renta_family.descendiente.{n}.*`` facts, ranks every
     Art. 58.1-eligible descendant by ``birth_date``, and computes two
     aggregates via
-    :meth:`~cadrumo.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
+    :meth:`~cadrumo.domain.contribuyente.family_profile.RentaFamilyProfile.minimo_descendientes_estatal`
     (a CCAA-agnostic birth-order-tranche aggregator despite its name — it takes
     the tranche amounts as caller-supplied parameters, never a hardcoded euro
     figure per `aeat-registry-authority-flow`):

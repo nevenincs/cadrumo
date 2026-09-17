@@ -13,10 +13,10 @@ matches are handled by the captured-catalogue operation in this defining module
 rather than by CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
-to :func:`~cadrumo.application.modelo.create_work_unit`; an explicit
+to :func:`~cadrumo.application.modelo.work_lifecycle.create_work_unit`; an explicit
 ``--revision`` is an assertion of the selected legal revision, not a free
 override. Revision flows apply
-:class:`~cadrumo.application.modelo.ModeloCalculationRevisionSelector`
+:class:`~cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelector`
 defaults so verify, file, and export commands consume only the lifecycle states
 they are allowed to handle.
 
@@ -1441,7 +1441,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
 
     Returns the resolved revision in ANY lifecycle state; no draft gate is
     applied here. Verification-state policy is owned by
-    :func:`~cadrumo.application.modelo.verify_modelo_revision` under
+    :func:`~cadrumo.application.modelo.verification_actions.verify_modelo_revision` under
     ``aeat-cli-contract``: a revision already out of
     ``BORRADOR`` that carries a granting :class:`VerificationReport` collapses to
     that existing report as an idempotent no-op, and the hard refusal is reserved

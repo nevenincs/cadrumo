@@ -1,16 +1,16 @@
 """Registry lookup and casilla validation helpers for modelo actions.
 
 The helper layer resolves
-:class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` instances through
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` instances through
 :mod:`cadrumo.application.modelo._registry_resources`, validates
 operator/imported casilla maps against the selected
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision`, and refuses
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`, and refuses
 non-canonical printed-number tokens before the calculation engine or
 persistence layer sees them.
 
 It also verifies stored :class:`~CalculationRevision`
 payloads by re-deriving their content-addressed identifiers and checking
-:class:`~cadrumo.domain.calculations.registry.CasillaObservation`/value consistency
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`/value consistency
 before stored payloads are trusted by verification or filing workflows.
 
 See Also:
@@ -167,9 +167,9 @@ def reject_incomplete_amendment_casillas(
     """Mirror the verify-modelo-revision required-manual gate on amend.
 
     The supplied :class:`~cadrumo.core.Period` selects the
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` used to read
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` used to read
     required manual casillas. Missing required manual casillas raise
-    :class:`~cadrumo.application.modelo.AmendmentVerificationRefusedError` before
+    :class:`~cadrumo.application.modelo.action_errors.AmendmentVerificationRefusedError` before
     an amendment can be accepted as complete.
     """
     required_optional = required_input_casilla_ids_for_revision(modelo=modelo, filing_year=filing_year, period=period)
@@ -203,10 +203,10 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
 ) -> dict[CasillaId, Decimal]:
     """Validate operator-supplied numeric input casillas against the revision.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies the
     declared casilla ids, data types, and non-canonical reference targets used to
     reject ambiguous or malformed operator input. The returned mapping is keyed
-    by canonical :class:`~cadrumo.core.CasillaId` values and
+    by canonical :class:`~cadrumo.core.casilla_id.CasillaId` values and
     contains only ``Decimal`` numeric inputs that the registry engine may
     consume.
 
@@ -377,11 +377,11 @@ def reject_unknown_override_casillas[CasillaKey](
     """Refuse amendment override casillas outside the resolved revision.
 
     Keys are canonicalised as
-    :class:`~cadrumo.core.CasillaId` values and checked
-    against the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
+    :class:`~cadrumo.core.casilla_id.CasillaId` values and checked
+    against the :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
     selected by ``modelo``, ``filing_year``, and :class:`~cadrumo.core.Period`.
     Printed-number aliases and ambiguous reused numbers raise
-    :class:`~cadrumo.application.modelo.AmendmentOverrideCasillaError` instead of
+    :class:`~cadrumo.application.modelo.action_errors.AmendmentOverrideCasillaError` instead of
     being projected to a declared casilla.
     """
     if not overrides:
@@ -458,12 +458,12 @@ def reject_unknown_import_casillas[CasillaKey](
     """Validate imported casilla ids and return the resolved registry snapshot.
 
     The snapshot is a
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`. The returned
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`. The returned
     mapping is keyed by canonical
-    :class:`~cadrumo.core.CasillaId` values declared by the
-    selected :class:`~cadrumo.domain.calculations.registry.ModeloRevision`.
+    :class:`~cadrumo.core.casilla_id.CasillaId` values declared by the
+    selected :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     Unknown, malformed, and non-canonical printed numbers raise
-    :class:`~cadrumo.application.modelo.ExternalModeloImportError` so imported AEAT
+    :class:`~cadrumo.application.modelo.action_errors.ExternalModeloImportError` so imported AEAT
     values enter observation projection only under registry ids.
     """
     try:
@@ -535,11 +535,11 @@ def required_input_casilla_ids_for_revision(
     """Resolve required manual and replayable input casilla ids for a revision.
 
     Returns ``None`` when the registry root or
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` cannot be
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` cannot be
     loaded. The first tuple contains required manual casillas from the selected
-    :class:`~cadrumo.domain.calculations.registry.ModeloRevision`; the second
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`; the second
     contains declared manual, bound, and computed
-    :class:`~cadrumo.core.CasillaId` values that
+    :class:`~cadrumo.core.casilla_id.CasillaId` values that
     amendment/import paths may need to carry through replay.
     """
     try:
@@ -567,7 +567,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     ``casilla_values``. This is a defense-in-depth read-side check for raw
     storage corruption that bypassed normal model construction; a mismatched
     observation envelope raises
-    :exc:`~cadrumo.application.modelo.StoredCalculationDriftError` before the
+    :exc:`~cadrumo.application.modelo.action_errors.StoredCalculationDriftError` before the
     revision is treated as authoritative.
     """
     expected = derive_calculation_revision_id_from_revision(revision)

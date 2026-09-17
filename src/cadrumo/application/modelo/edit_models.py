@@ -101,7 +101,7 @@ class ModeloEditDetailRowIntentKind(StrEnum):
     ``enumerate(..., 1)`` assigns row indices, so two calls supplying the
     same rows in different orders render byte-identical ficheros (each builder's
     sort is proven in
-    :mod:`~cadrumo.domain.calculations.registry.tests.test_detail_record_row_builders`).
+    ``cadrumo.domain.calculations.registry.tests.test_detail_record_row_builders``).
     The AEAT diseno de registro for these record families identifies each
     repeated record by its declared content (member/counterparty NIF, asset
     identifier, clave/subclave) rather than by a required sequence -- there
@@ -439,7 +439,7 @@ class ModeloEditBaselineV1(EditModel):
     and lifetime -- ``issued_at``, ``expires_at`` and ``baseline_id`` -- so two
     admissions of an UNCHANGED tree are never equal, and ``==`` between two of
     these can only ever report "different". Staleness is asked of
-    :func:`~application.modelo._edit_services.reconfirm_modelo_edit_baseline`,
+    :func:`~application.modelo.edit_services.reconfirm_modelo_edit_baseline`,
     which judges the coordinate axes the guarded commit point judges.
 
     The distinction matters because

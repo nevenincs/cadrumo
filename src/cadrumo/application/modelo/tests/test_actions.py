@@ -270,6 +270,8 @@ def _source_bound_revision() -> ModeloRevision:
                         "categories": ("domestic_general",),
                         "rate_kinds": ("general",),
                         "flow_direction": "repercutido",
+                        "observation_roles": ("settlement",),
+                        "cash_accounting_treatments": ("none",),
                         "fact": "iva_amount_sum",
                     },
                 },
@@ -407,8 +409,8 @@ def test_iva_ledger_preflight_exemption_is_registry_projected() -> None:
 @pytest.mark.parametrize(
     ("regime_token", "expected_member"),
     (
-        pytest.param("simplificado", True, id="simplificado-bypasses-ledger"),
-        pytest.param("general", False, id="general-requires-ledger"),
+        pytest.param("SIMPLIFICADO", True, id="simplificado-bypasses-ledger"),
+        pytest.param("GENERAL", False, id="general-requires-ledger"),
     ),
 )
 def test_iva_ledger_exempt_regime_membership_matches_contract(regime_token: str, expected_member: bool) -> None:
@@ -993,7 +995,7 @@ class TestWorkflowInputMismatchError:
             )
 
         exc = exc_info.value
-        assert "workflow input request does not match calculation revision" in str(exc)
+        assert str(exc) == "application.modelo.errors.workflow_input_mismatch"
         assert exc.context is not None
         assert exc.context["expected_modelo"] == "100"
         assert exc.context["requested_modelo"] == "303"
@@ -1050,9 +1052,6 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     snapshot = published_snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-guarderia-gastos-reales": Decimal("0"),
@@ -1065,6 +1064,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-deduccion-maternidad": Decimal("0"),
     }
     relation_values = {
         "renta-modelo-111-retenciones-periodicas": Decimal("0"),
@@ -1148,17 +1148,25 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    from ...wizard.catalogue import build_setup_flow
-    from ...wizard.commands import IVA_REGIME_CHOICE_VALUES
+    import click
 
+    from ...wizard.catalogue import build_setup_flow
+    from ...wizard.commands import SETUP_OPTION_INFOS, build_wizard_command
+
+    flow = build_setup_flow(operation)
     wizard_values = {
         choice.value
-        for section in build_setup_flow(operation).sections
+        for section in flow.sections
         for question in section.questions
         if question.id == "iva-regime"
         for choice in question.choices
     }
-    choice_set = set(IVA_REGIME_CHOICE_VALUES)
+    build_wizard_command(flow, mode="create", operation=operation)
+    option = SETUP_OPTION_INFOS["iva-regime"]
+    assert option is not None, "the command builder materialized no --iva-regime option"
+    choice_type = option.click_type
+    assert isinstance(choice_type, click.Choice)
+    choice_set = set(choice_type.choices)
     assert choice_set == wizard_values
     assert IVARegime("NO_APLICA").value not in choice_set
 

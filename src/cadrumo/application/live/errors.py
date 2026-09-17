@@ -9,8 +9,8 @@ read observed a fact that makes retrying the same call actively unsafe rather
 than merely futile -- a captured justificante that does not belong to the
 filing it would be stamped onto, a notification document that belongs to a
 different certificado, an AEAT observation AEAT no longer reports as active.
-Those raise sites attach a :class:`~application.operator_actions.PreconditionVerdict`
-whose ``no_recovery_outcome`` is :attr:`~core.NoRecoveryOutcome.SAFETY`, so the
+Those raise sites attach a :class:`~application.operator_actions.models.PreconditionVerdict`
+whose ``no_recovery_outcome`` is :attr:`~core.operator_action_enums.NoRecoveryOutcome.SAFETY`, so the
 CLI boundary projects an explicit "there is deliberately no recovery here"
 rather than reaching for a retry the operator should not run.
 """
@@ -103,10 +103,10 @@ def live_read_no_recovery_verdict(
         condition: The live-read condition that failed.
         facts: Stable machine facts, never prose, describing the observation.
         outcome: The closed no-recovery reason. Defaults to
-            :attr:`~core.NoRecoveryOutcome.SAFETY`.
+            :attr:`~core.operator_action_enums.NoRecoveryOutcome.SAFETY`.
 
     Returns:
-        The :class:`~application.operator_actions.PreconditionVerdict` carrying
+        The :class:`~application.operator_actions.models.PreconditionVerdict` carrying
         the failed condition and its explicit no-recovery outcome.
     """
     return no_action_precondition_verdict(

@@ -22,7 +22,7 @@ calculate-path fail-closed default already guards against; this advisory is
 the surface half of that same guard).
 
 The advisory reads the casilla-1039 semantic role and the resolved input value
-off the verify-time :class:`~domain.calculations.registry.RegistrySnapshot`
+off the verify-time :class:`~domain.calculations.registry.schema.RegistrySnapshot`
 for the target modelo revision, the same authority the calculate path resolves
 its registry formula against.
 
@@ -33,7 +33,7 @@ See Also:
     :func:`~application.modelo.profile_binding.madrid_nacimiento_adopcion_candidate_weighted_count`
         Shared candidate-count primitive: evaluates only the per-descendant
         window/cohabitation condition, independent of the unit's determinability.
-    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
+    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 / Convenio LOB advisories using the same
         non-blocking mechanism.
@@ -119,7 +119,7 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     directly (the same source the calculate-path injector reads) so the verify
     path can see the ``tax_residence.ccaa`` / ``renta_taxpayer.marital_status`` /
     ``renta_filing.declaration_type`` / ``renta_family.descendiente.*`` facts
-    that :class:`~domain.deadlines.TaxpayerProfile` does not carry.
+    that :class:`~domain.deadlines.models.TaxpayerProfile` does not carry.
 
     Fires only when ALL of the following hold: the revision is the 2025 M100
     filing year the first-slice registry formula covers; the filer is a Madrid

@@ -18,10 +18,10 @@ register writeback. It never submits to AEAT and never turns the non-official
 ``app_filing`` carry projection into filing-grade external evidence.
 
 See Also:
-    :func:`~application.modelo.file_modelo_revision`:
+    :func:`~application.modelo.filing_actions.file_modelo_revision`:
         Orchestrates preconditions and result-disposition resolution before
         delegating successful mutations here.
-    :func:`~application.modelo.import_external_filing_evidence`:
+    :func:`~application.modelo.external_import_actions.import_external_filing_evidence`:
         Separate import boundary that creates current records with
         :class:`~ExternalEvidence`; this persistence helper
         deliberately creates local records without that payload.
@@ -31,7 +31,7 @@ See Also:
     :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`:
         Profile-scoped repository capability co-emitted for Modelo 303
         settlement prorrata writeback.
-    :class:`~domain.prorrata_register.ProrrataRegisterEntry`:
+    :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`:
         Typed row updated with definitive percentage and annual volume inputs.
 """
 
@@ -141,7 +141,7 @@ def emit_modelo_bucket_event(
 ) -> BucketEvent:
     """Emit one :class:`BucketEvent` under the modelo payload contract.
 
-    Modelo's narrow wrapper over :func:`~domain.buckets.emit_bucket_event`: it
+    Modelo's narrow wrapper over :func:`~domain.buckets.event_repository.emit_bucket_event`: it
     supplies :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so no modelo call site restates
     it, and adds nothing else. The shared derive-append-save sequence lives in the
     domain beside :func:`append_bucket_event`, because it composes only bucket
@@ -180,7 +180,7 @@ def build_modelo_bucket_event(
     The non-saving counterpart of :func:`emit_modelo_bucket_event`, supplying the
     same :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so a co-committed event cannot
     declare a different payload contract than an emitted one. Pair it with
-    :func:`domain.buckets.bucket_event_history_write` to commit the event in the same unit of
+    :func:`domain.buckets.event_repository.bucket_event_history_write` to commit the event in the same unit of
     work as the catalogues it records.
     """
     return _build_domain_bucket_event(
@@ -1064,7 +1064,7 @@ def persist_filed_revision(
     so later calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
     cross-period clean-state filing gate; use
-    :func:`~application.modelo.import_external_filing_evidence` when the
+    :func:`~application.modelo.external_import_actions.import_external_filing_evidence` when the
     current record must carry
     :class:`~ExternalEvidence`.
 
@@ -1075,7 +1075,7 @@ def persist_filed_revision(
 
     For Modelo 303 settlement periods, the filed definitive prorrata percentage
     and annual volume inputs are also co-emitted to the profile
-    :class:`~domain.prorrata_register.ProrrataRegister` through
+    :class:`~domain.prorrata_register.register.ProrrataRegister` through
     :class:`~domain.prorrata_register.protocols.ProrrataRegisterRepositoryProtocol`
     in the same secure-object save as the filing catalogue and filed
     calculation revision.

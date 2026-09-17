@@ -60,7 +60,7 @@ class VerifyObservation(BaseModel):
     The ``observation_id`` is content-addressed (SHA-256 of canonical
     fields) so two identical checks against the same NIF on the same
     timestamp deduplicate without separate id management. It is typed as
-    :data:`~cadrumo.core.identity.ContentDigest` so the persisted identity
+    :data:`~cadrumo.core.identity.digest.ContentDigest` so the persisted identity
     carries the canonical lowercase hex-64 digest shape rather than any
     64-character string: a malformed id would otherwise reach the
     secure-object key, the ``load`` round-trip, and the ``show``
@@ -89,7 +89,7 @@ class VerifyObservation(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _instant_is_utc(cls, value: datetime) -> datetime:
-        """Reject a naive or non-UTC instant; see :func:`~cadrumo.core.time.validate_utc_aware`."""
+        """Reject a naive or non-UTC instant; see :func:`~cadrumo.core.time.utc.validate_utc_aware`."""
         return validate_utc_aware(value)
 
 

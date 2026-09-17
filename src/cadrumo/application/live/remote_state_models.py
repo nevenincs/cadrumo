@@ -6,7 +6,7 @@ redacted diagnostic fields, and counts/ids needed by CLI and workflow surfaces
 after live capture has persisted the underlying observations.
 
 See Also:
-    :class:`cadrumo.application.live.IvaRemoteStateAcquisitionReport`
+    :class:`cadrumo.application.live.remote_state_models.IvaRemoteStateAcquisitionReport`
         Combined read-only IVA remote-state acquisition result.
 """
 
@@ -118,7 +118,7 @@ class FiledCasillaSkipRow(BaseModel):
     the capture did not happen.
 
     Carries no value, by the same rule as
-    :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`: these casillas are
+    :class:`~adapters.outbound.aeat.sede.schema.ObservedCasillaSkip`: these casillas are
     the non-numeric ones, which include a referencia catastral and the
     taxpayer's address, and this row is built to be rendered.
     """

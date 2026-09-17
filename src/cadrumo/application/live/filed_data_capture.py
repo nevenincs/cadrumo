@@ -10,7 +10,7 @@ calculation observations, and attempt to stamp matching current
 :class:`~ExternalEvidence`.
 
 Source capture resolves a law-determined
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` through a
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` through a
 generation-pinned registry operation before
 asking the Sede adapter which prior declarations a target filing needs, so
 cross-period inputs remain registry-authored rather than adapter-inferred. The
@@ -24,7 +24,7 @@ See Also:
         Persists the latest captured filed observations as calculation-history
         evidence, and is the function this module actually calls. Each
         registry-enrollment refusal becomes a typed
-        :class:`~application.live.FiledDataCaptureFailureRow`, raised under
+        :class:`~application.live.remote_state_models.FiledDataCaptureFailureRow`, raised under
         ``FAIL_FAST`` and reported under ``BEST_EFFORT``.
     :func:`cadrumo.application.live.filed_observation_persistence.enroll_filed_justificante_evidence`
         Persists matching justificante metadata and stamps current filing
@@ -1353,7 +1353,7 @@ async def discover_filed_history(
     Args:
         filed_data_port: Filed-data capability used to discover register availability.
         profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
-            :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
+            :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
             signal. ``None`` yields a register-options-only report.
         today: Reference date for applicability and the year span's upper bound.
             Defaults to the Madrid civil date the rest of the CLI resolves
@@ -1390,7 +1390,7 @@ async def discover_filed_history(
 class ExpectedFiledDeclarationGrid(BaseModel):
     """The ``(modelo, ejercicio)`` pairs the taxpayer's OWN declared facts expect.
 
-    Tagged :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. This
+    Tagged :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. This
     is the load-bearing denominator: every value in it comes from data the
     taxpayer declared during setup, walked through the same applicability
     machinery the overview calendar already reconciles obligations with, so it is
@@ -1544,9 +1544,9 @@ def expected_filed_declaration_grid(
     """Derive the taxpayer-specific candidate grid from the profile's declared facts.
 
     The modelo axis reuses
-    :func:`~application.overview.build_obligation_coverage`, which already
+    :func:`~application.overview.coverage.build_obligation_coverage`, which already
     partitions the whole AEAT obligation universe against a
-    :class:`~domain.deadlines.TaxpayerProfile` into surfaced / confidently
+    :class:`~domain.deadlines.models.TaxpayerProfile` into surfaced / confidently
     excluded / advised / out-of-scope. Nothing is re-derived here: a modelo is a
     candidate when that partition does NOT place it in a confident negative or
     out of scope.
@@ -1632,7 +1632,7 @@ def casillas_a_recapture_would_change(
         stored: The prior stamped registry observation for the same key.
         tolerance: Maximum absolute delta that does not count as a change. The
             registry owns this value through
-            :func:`~cadrumo.domain.calculations.registry.verification_tolerance_or_exact`.
+            :func:`~cadrumo.domain.calculations.registry.verification_tolerance.verification_tolerance_or_exact`.
             The default is exact equality, matching the caller's resolved
             fallback for a triple with no published contract.
 
@@ -1687,11 +1687,11 @@ def classify_register_scoping_signal(
     The result is advisory only and changes nothing about what is walked. The
     offered set is unioned in additively either way, so a reading here can
     neither widen nor narrow the grid, and it MUST NOT be rendered as a settled
-    answer -- see :class:`~core.RegisterScopingSignal`, whose members are all
+    answer -- see :class:`~core.register_scoping_signal.RegisterScopingSignal`, whose members are all
     hedges precisely so that it cannot be.
 
     The evidence is asymmetric, and so is the confidence.
-    :attr:`~core.RegisterScopingSignal.LIKELY_UNIVERSAL` is a positive
+    :attr:`~core.register_scoping_signal.RegisterScopingSignal.LIKELY_UNIVERSAL` is a positive
     observation: an excluded modelo was offered. Its counterpart is only ever the
     ABSENCE of that observation, which a universal catalogue also produces for a
     taxpayer whose profile excludes nothing the register lists -- so it stays
@@ -1704,8 +1704,8 @@ def classify_register_scoping_signal(
         today: Reference date for applicability evaluation.
 
     Returns:
-        The :class:`~core.RegisterScopingSignal` reading.
-        :attr:`~core.RegisterScopingSignal.INCONCLUSIVE` when either side of the
+        The :class:`~core.register_scoping_signal.RegisterScopingSignal` reading.
+        :attr:`~core.register_scoping_signal.RegisterScopingSignal.INCONCLUSIVE` when either side of the
         comparison is empty, because then the comparison discriminates nothing.
     """
     from ..overview.coverage import build_obligation_coverage
@@ -1871,7 +1871,7 @@ def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | No
     """Warn for every pair the profile expected that produced no declaración.
 
     Fires ONLY for pairs carrying
-    :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. A pair
+    :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. A pair
     nominated only by the register's option list is never named here however
     empty it came back, because that list's informativeness for this taxpayer is
     unconfirmed — an alert raised from it could be pure noise, and an advisory

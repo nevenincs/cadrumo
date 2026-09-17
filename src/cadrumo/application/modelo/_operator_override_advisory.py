@@ -63,7 +63,7 @@ def collect_operator_override_divergence_diagnostics(
 
     Returns:
         Tuple of non-blocking
-        :class:`~application.aggregation.CalculationSourceDiagnostic` rows, each
+        :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` rows, each
         naming the casilla and BOTH values, sorted by casilla id. Empty when no
         operator value diverges from a computed one.
     """

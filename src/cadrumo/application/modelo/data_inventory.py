@@ -10,7 +10,7 @@ actionable gap rather than a silent blank downstream).
 This module owns the read-only composition over
 (the generation-pinned indexed registry operation)
 (the registry snapshot for the casilla/binding declarations) and
-:func:`~application.modelo.profile_resolvable_binding_ids`
+:func:`~application.modelo.binding_readiness.profile_resolvable_binding_ids`
 (the profile-fact resolution already used by the ``bindings list --missing``
 surface), so the CLI ``requires`` command stays a thin projection layer. No new
 aggregation path is introduced: the same registry snapshot and profile-binding
@@ -21,7 +21,7 @@ See Also:
         Sibling helper returning only the bare required/optional id tuples
         (used by amendment completeness checks); this module composes the
         richer operator-facing checklist over the same snapshot.
-    :func:`~application.modelo.profile_resolvable_binding_ids`
+    :func:`~application.modelo.binding_readiness.profile_resolvable_binding_ids`
         Profile-fact binding resolver reused here to flag missing coefficients.
 """
 
@@ -195,7 +195,7 @@ def data_inventory_checklist(
 ) -> DataInventoryChecklist:
     """Compose the data-inventory checklist for one modelo / year / period.
 
-    Reads the resolved :class:`~domain.calculations.registry.RegistrySnapshot`
+    Reads the resolved :class:`~domain.calculations.registry.schema.RegistrySnapshot`
     for ``(modelo, filing_year, period)`` and classifies every casilla:
 
     * ``input_kind == MANUAL`` casillas split into ``required_manual`` /
@@ -212,7 +212,7 @@ def data_inventory_checklist(
 
     When ``bucket_id`` names an active profile, ``profile_derivable`` bindings
     are cross-checked against
-    :func:`~application.modelo.profile_resolvable_binding_ids`
+    :func:`~application.modelo.binding_readiness.profile_resolvable_binding_ids`
     and any binding the profile has not yet resolved is surfaced in
     ``unresolved_profile_bindings`` — the coefficient-missing warning the issue
     calls for (e.g. an unset home-office ratio). ``profile_checked`` is

@@ -1,11 +1,11 @@
 """Recipient feedback-package round trip: reviewer notes back to the originator.
 
 The recipient (accountant/gestor) who received a review package via
-:func:`~application.modelo.encrypt_review_package_for_recipient` /
-:func:`~application.modelo.decrypt_review_package_for_recipient` now has a
+:func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient` /
+:func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient` now has a
 SYMMETRIC path back to the originator (the taxpayer) -- a small structured
 ``FeedbackPackage`` (a verdict note plus an optional
-:class:`~application.modelo.CounterSignedReceipt`) sealed with the EXACT
+:class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt`) sealed with the EXACT
 SAME X25519 ECIES construction, re-encrypted FOR THE ORIGINATOR rather than for
 the accountant.
 
@@ -15,10 +15,10 @@ This module invents no new cryptography
 :func:`encrypt_feedback_package_for_originator` and
 :func:`decrypt_feedback_package_from_originator_envelope` are thin
 serialise-then-delegate / delegate-then-parse wrappers around
-:func:`~application.modelo.encrypt_review_package_for_recipient` and
-:func:`~application.modelo.decrypt_review_package_for_recipient` -- the
+:func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient` and
+:func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient` -- the
 "recipient" of a feedback package is simply the ORIGINATOR's own encryption
-keypair (the same :func:`~application.modelo.ensure_recipient_encryption_keypair`
+keypair (the same :func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`
 primitive the accountant used for the forward direction, minted for the
 taxpayer instead), and the "package bytes" being sealed are a small JSON
 document rather than a review-package ZIP. Every expiry, replay-nonce, and
@@ -28,9 +28,9 @@ for free on the return trip.
 Import composition (:func:`import_feedback_package`) ties the whole round trip
 together for the originator: decrypt the envelope, parse the
 :class:`FeedbackPackage`, and -- when the feedback carries a
-:class:`~application.modelo.CounterSignedReceipt` -- verify BOTH signature
+:class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt` -- verify BOTH signature
 layers against the local review-package archive bytes the originator already
-holds (via :func:`~application.modelo.verify_counter_signed_receipt`)
+holds (via :func:`~application.modelo.review_package_counter_sign.verify_counter_signed_receipt`)
 before accepting it. A tampered feedback package, a wrong originator key, or an
 invalid/forged countersignature refuse loudly rather than silently importing
 unverified feedback (``no-silent-under-declaration``'s spirit applied to
@@ -91,7 +91,7 @@ class FeedbackCounterSignatureInvalidError(ReviewPackageFeedbackError):
     counter-signature, an edited note, or an archive that no longer matches
     the receipt's original signature -- never distinguished further, mirroring
     the undifferentiated-failure posture of
-    :class:`~application.modelo.RecipientDecryptionError`.
+    :class:`~application.modelo.review_package_recipient_encryption.RecipientDecryptionError`.
     """
 
 
@@ -99,19 +99,19 @@ class FeedbackPackage(BaseModel):
     """A recipient's structured feedback, sealed and returned to the originator.
 
     Wraps a free-text verdict/note plus an OPTIONAL
-    :class:`~application.modelo.CounterSignedReceipt` -- a recipient may
+    :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt` -- a recipient may
     return unstructured feedback alone (``counter_signed_receipt=None``, e.g.
     "see attached corrections, no formal sign-off yet") or a fully
     counter-signed approval. The identifiers (``bucket_id``,
     ``work_unit_id``, ``calculation_revision_id``) are carried verbatim from
-    the :class:`~application.modelo.ReviewPackageManifest` the recipient
+    the :class:`~application.modelo.review_package.ReviewPackageManifest` the recipient
     reviewed, so the originator can address the feedback to the correct
     work unit / revision without re-parsing the original archive.
 
     This model is the PLAINTEXT document sealed by
     :func:`encrypt_feedback_package_for_originator` -- it is never persisted
     directly; only the resulting
-    :class:`~application.modelo.RecipientEncryptedPackage` envelope is
+    :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage` envelope is
     written to disk by the caller.
     """
 
@@ -141,14 +141,14 @@ def build_feedback_package(
 
     Args:
         bucket_id: The originator's bucket the reviewed package was built
-            from (from :class:`~application.modelo.ReviewPackageManifest`).
+            from (from :class:`~application.modelo.review_package.ReviewPackageManifest`).
         work_unit_id: The reviewed work unit's id.
         calculation_revision_id: The reviewed calculation revision's id.
         note: Free-text verdict or note (e.g. ``"reviewed, no changes"`` or
             ``"see attached corrections"``).
         counter_signed_receipt: Optional
-            :class:`~application.modelo.CounterSignedReceipt` produced by
-            :func:`~application.modelo.counter_sign_review_package`, when
+            :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt` produced by
+            :func:`~application.modelo.review_package_counter_sign.counter_sign_review_package`, when
             the recipient formally counter-signed the operator's original
             signature. ``None`` for unstructured feedback with no formal
             sign-off.
@@ -181,12 +181,12 @@ def encrypt_feedback_package_for_originator(
 
     A thin serialise-then-delegate wrapper: the recipient's feedback document
     is dumped to canonical JSON bytes and sealed via the EXACT SAME
-    :func:`~application.modelo.encrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`
     ECIES construction used for the forward (originator-to-recipient)
     direction -- no new cryptographic primitive is introduced for this
     reverse direction. The "recipient" of this call is the originator's own
     encryption public key, minted for the originator via
-    :func:`~application.modelo.ensure_recipient_encryption_keypair`,
+    :func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`,
     exactly as it is minted for an accountant in the forward direction).
 
     Args:
@@ -195,12 +195,12 @@ def encrypt_feedback_package_for_originator(
             public key, hex-encoded.
         recipient_encryption: The composed recipient-encryption capability.
         review_only: Passed straight through to
-            :func:`~application.modelo.encrypt_review_package_for_recipient`;
+            :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`;
             a review-only feedback envelope carries no filing authority
             (almost always ``False`` for feedback, but exposed for parity
             with the forward direction).
         valid_for: Optional validity window; see
-            :func:`~application.modelo.encrypt_review_package_for_recipient`.
+            :func:`~application.modelo.review_package_recipient_encryption.encrypt_review_package_for_recipient`.
         issued_at: Optional override for the envelope's ``issued_at``
             timestamp (tests only); defaults to the current UTC time.
     """
@@ -225,7 +225,7 @@ def decrypt_feedback_package_from_originator_envelope(
     """Reverse :func:`encrypt_feedback_package_for_originator` and parse the document.
 
     Delegates decryption entirely to
-    :func:`~application.modelo.decrypt_review_package_for_recipient`
+    :func:`~application.modelo.review_package_recipient_encryption.decrypt_review_package_for_recipient`
     (same AEAD authentication, same expiry check, same undifferentiated
     failure posture) and then parses the recovered bytes as a
     :class:`FeedbackPackage`. A tampered envelope, wrong private key, or
@@ -234,11 +234,11 @@ def decrypt_feedback_package_from_originator_envelope(
     :class:`ReviewPackageFeedbackError`.
 
     Args:
-        envelope: The :class:`~application.modelo.RecipientEncryptedPackage`
+        envelope: The :class:`~application.modelo.recipient_encryption.RecipientEncryptedPackage`
             produced by :func:`encrypt_feedback_package_for_originator`.
         originator_private_key_hex: The originator's own X25519 private key,
             hex-encoded, from
-            :func:`~application.modelo.ensure_recipient_encryption_keypair`.
+            :func:`~application.modelo.review_package_recipient_encryption.ensure_recipient_encryption_keypair`.
         recipient_encryption: The composed recipient-encryption capability.
         now: The instant to evaluate the envelope's expiry against; defaults
             to the current UTC time (tests inject an explicit value).
@@ -269,7 +269,7 @@ class ImportedFeedback(BaseModel):
     """Result of :func:`import_feedback_package`: the parsed feedback plus its verification outcome.
 
     ``counter_signature_verified`` is ``None`` when the feedback carried no
-    :class:`~application.modelo.CounterSignedReceipt` (unstructured
+    :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt` (unstructured
     feedback), and a real ``bool`` -- never silently omitted -- when one was
     present, so a caller can distinguish "no formal sign-off was offered"
     from "a sign-off was offered and it verified/failed".
@@ -297,11 +297,11 @@ def import_feedback_package(
     round trip together: decrypt the envelope
     (:func:`decrypt_feedback_package_from_originator_envelope`), and when the
     recovered :class:`FeedbackPackage` carries a
-    :class:`~application.modelo.CounterSignedReceipt`, re-verify BOTH
+    :class:`~application.modelo.review_package_counter_sign.CounterSignedReceipt`, re-verify BOTH
     signature layers against ``reviewed_package_path`` -- the ORIGINAL
     review-package archive the originator built and signed, still held
     locally -- via
-    :func:`~application.modelo.verify_counter_signed_receipt`. A feedback
+    :func:`~application.modelo.review_package_counter_sign.verify_counter_signed_receipt`. A feedback
     package with no counter-signed receipt is accepted as unstructured
     feedback with ``counter_signature_verified=None``; one that carries an
     invalid or forged receipt raises rather than silently importing

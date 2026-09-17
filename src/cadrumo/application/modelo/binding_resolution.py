@@ -4,14 +4,14 @@ This module prepares binding, enum, and informational inputs for one
 :class:`RegistrySnapshot` before the registry
 engine evaluates its :class:`ModeloRevision`.
 Profile, backend mesh, borrador, and caller values are normalised as
-:class:`~cadrumo.application.aggregation.CalculationSourceResolution` tiers, then
+:class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution` tiers, then
 the calculation assembly layer overlays them by precedence: profile, backend
 mesh, borrador, and finally caller overrides.
 
 Projecting resolved binding values onto bound
-:class:`~cadrumo.core.CasillaId` inputs is registry-owned rather than an
+:class:`~cadrumo.core.casilla_id.CasillaId` inputs is registry-owned rather than an
 application concern: see
-:func:`~cadrumo.domain.calculations.registry.resolve_available_bound_inputs_by_casilla_id`.
+:func:`~cadrumo.domain.calculations.registry.bindings.resolve_available_bound_inputs_by_casilla_id`.
 Completeness and unrouted-input concerns remain advisory or verify-gate
 responsibilities rather than a second projection contract.
 
@@ -75,19 +75,19 @@ def resolve_borrador_source_tier(
     The :class:`RegistrySnapshot` supplies
     the revision and modelo identity used to resolve the borrador source through
     the source mesh; the returned
-    :class:`~cadrumo.application.aggregation.CalculationSourceResolution` carries
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution` carries
     the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
 
-    Caller-supplied :class:`~cadrumo.domain.calculations.registry.BindingId` values
+    Caller-supplied :class:`~cadrumo.domain.calculations.registry.ids.BindingId` values
     remain higher precedence than the snapshot, so the resolver receives both
     decimal and enum caller channels and omits any borrador value already owned
     by the caller.
 
     See Also:
-        :class:`~cadrumo.application.aggregation.CalculationSourceResolution`:
+        :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`:
             The shared carrier used by the precedence overlay.
-        :class:`~cadrumo.application.live.Borrador100SnapshotRepository`:
+        :class:`~cadrumo.application.live.borrador_100.Borrador100SnapshotRepository`:
             Loads the optional captured snapshot when a borrador id is supplied.
     """
     return _resolve_borrador_bindings_for_calculation(
@@ -125,7 +125,7 @@ def resolve_profile_source_tier(
 
     The ``borrador_resolution`` and backend values are passed only as ownership
     exclusions. They do not change profile facts; they prevent the profile tier
-    from claiming a :class:`~cadrumo.domain.calculations.registry.BindingId` that a
+    from claiming a :class:`~cadrumo.domain.calculations.registry.ids.BindingId` that a
     higher-precedence source already supplied.
 
     See Also:
@@ -135,7 +135,7 @@ def resolve_profile_source_tier(
             Places this profile tier below backend, borrador, and caller tiers.
 
     Returns:
-        A :class:`~cadrumo.application.aggregation.CalculationSourceResolution`
+        A :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`
         carrying the profile-owned bindings not already claimed by
         higher-precedence tiers.
     """
@@ -187,7 +187,7 @@ def reject_binding_channel_mismatch(
     apparently missing binding.
 
     See Also:
-        :func:`~cadrumo.domain.calculations.registry.enum_consumed_binding_ids`:
+        :func:`~cadrumo.domain.calculations.registry.runtime_graph.enum_consumed_binding_ids`:
             Identifies bindings consumed by enum-dispatch formulas.
     """
     _reject_binding_channel_mismatch(revision, binding_values, enum_binding_values)
@@ -203,10 +203,10 @@ def lift_previous_filing_casilla_overrides_to_bindings(
 
     The :class:`ModeloRevision` supplies the
     bound casilla and binding metadata. A caller may supply a
-    :class:`~cadrumo.core.CasillaId` override for a bound
+    :class:`~cadrumo.core.casilla_id.CasillaId` override for a bound
     casilla whose binding source is ``previous_filing`` when no resolver-produced
     binding value exists. This helper mirrors that override onto the matching
-    :class:`~cadrumo.domain.calculations.registry.BindingId` so the registry
+    :class:`~cadrumo.domain.calculations.registry.ids.BindingId` so the registry
     engine's bound-input consistency guards see the same source of truth in both
     channels. Existing resolved bindings are never overwritten.
 
@@ -343,7 +343,7 @@ def _resolve_borrador_bindings_for_calculation(
     """Resolve the optional borrador snapshot, returning its resolution directly.
 
     The returned
-    :class:`~cadrumo.application.aggregation.CalculationSourceResolution` carries
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution` carries
     the typed ``borrador_provenance`` (snapshot id + sourced-binding trace) the
     persistence boundary consumes.
     """

@@ -141,7 +141,15 @@ _BASE_BINDINGS = {
     # eligible descendants exist).
     "renta-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+    # Not maritime workers: no navigation income, salary or qualifying days.
+    "renta-maritime-gross-navigation-income": Decimal("0"),
+    "renta-maritime-annual-salary": Decimal("0"),
+    "renta-maritime-qualifying-days": Decimal("0"),
 }
+
+# Art. 75 Ley 19/1994 maritime-worker exemption path: these couples are not
+# maritime workers, so the declared answer is a plain no.
+_BASE_BOOLEAN_BINDINGS = {"renta-maritime-path-rebeca": False}
 
 _BASE_ENUM_BINDINGS = {"renta-profile-tax-residence-ccaa": "madrid"}
 
@@ -172,6 +180,7 @@ def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnaps
         enum_binding_values=_BASE_ENUM_BINDINGS,
         relation_values=_ZERO_RELATIONS,
         date_binding_values=_BASE_DATE_BINDINGS,
+        boolean_binding_values=_BASE_BOOLEAN_BINDINGS,
     )
 
     assert result.recommendation == TaxationRecommendation.CONJUNTA, (
@@ -216,6 +225,7 @@ def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025:
         enum_binding_values=_BASE_ENUM_BINDINGS,
         relation_values=_ZERO_RELATIONS,
         date_binding_values=_BASE_DATE_BINDINGS,
+        boolean_binding_values=_BASE_BOOLEAN_BINDINGS,
     )
 
     assert result.recommendation == TaxationRecommendation.CONJUNTA, (
@@ -253,6 +263,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
         enum_binding_values=_BASE_ENUM_BINDINGS,
         relation_values=_ZERO_RELATIONS,
         date_binding_values=_BASE_DATE_BINDINGS,
+        boolean_binding_values=_BASE_BOOLEAN_BINDINGS,
     )
 
     assert isinstance(result, TaxationComparisonResult)
@@ -280,6 +291,7 @@ def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapsh
         enum_binding_values=_BASE_ENUM_BINDINGS,
         relation_values=_ZERO_RELATIONS,
         date_binding_values=_BASE_DATE_BINDINGS,
+        boolean_binding_values=_BASE_BOOLEAN_BINDINGS,
     )
 
     # The first slice is single-earner-faithful only; the flag must say so.
@@ -313,6 +325,7 @@ def test_individual_branch_caveat_present_when_individual_recommended(
         enum_binding_values=_BASE_ENUM_BINDINGS,
         relation_values=_ZERO_RELATIONS,
         date_binding_values=_BASE_DATE_BINDINGS,
+        boolean_binding_values=_BASE_BOOLEAN_BINDINGS,
     )
 
     assert result.individual_branch_single_earner_only is True

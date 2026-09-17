@@ -10,7 +10,7 @@ fact thresholds and emits non-blocking
 threshold.
 
 See Also:
-    :func:`~application.modelo._verification_actions._collect_revision_verification_findings`:
+    :func:`~application.modelo.verification_actions._collect_revision_verification_findings`:
         Verification collector that appends these advisories after predicate and
         reduction-advisory checks.
     :class:`TaxpayerProfile`:
@@ -83,7 +83,7 @@ def _objective_estimation_exclusion_advisory_findings(
         settled official-source threshold.
 
     See Also:
-        :mod:`~application.modelo._verification_actions`:
+        :mod:`~application.modelo.verification_actions`:
             Calls this helper while collecting revision verification findings.
         :class:`TaxpayerProfile`:
             Owns the profile fields read by the advisory.

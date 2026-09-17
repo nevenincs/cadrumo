@@ -7,16 +7,16 @@ They operate on the already resolved registry snapshot and preserve the typed
 observation contract that the calculation action persists.
 
 See Also:
-    :func:`~application.modelo.calculate_modelo_revision`
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision`
         Application calculation action that calls these adjustment helpers.
-    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+    :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
         Registry engine whose output is adjusted before persistence.
-    :class:`~domain.calculations.registry.RegistrySnapshot`
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         Law-determined snapshot used for relation and period requirements.
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Revision whose export layouts, bindings, and relations drive the
         model-specific adjustments.
-    :class:`~domain.calculations.registry.CasillaObservation`
+    :class:`~domain.calculations.registry.bindings.CasillaObservation`
         Provenance-bearing observation rows filtered with M349 template fields.
     :class:`~WorkUnit`
         Modelo, filing year, and period context selecting each adjustment.

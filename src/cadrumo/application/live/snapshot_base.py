@@ -52,7 +52,7 @@ from .errors import LiveApplicationInputError
 class SnapshotNotFoundError(CadrumoError):
     """Shared base for per-service snapshot-lookup-miss errors.
 
-    Inherits from both :class:`cadrumo.core.errors.CadrumoError` and
+    Inherits from both :class:`cadrumo.core.errors.hierarchy.CadrumoError` and
     :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
     via the ``CadrumoError.__init_subclass__`` hook while preserving the
     mapping-style lookup-miss type. ``CadrumoError`` is listed first so MRO
@@ -64,7 +64,7 @@ class SnapshotNotFoundError(CadrumoError):
     Per-service subclasses (BorradorSnapshotNotFoundError,
     ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
     and future siblings) inherit from this base alongside
-    :class:`cadrumo.core.errors.CadrumoError` so callers can either catch the
+    :class:`cadrumo.core.errors.hierarchy.CadrumoError` so callers can either catch the
     domain-specific class name or the shared parent.
     """
 
@@ -100,7 +100,7 @@ class SnapshotStateFilter(StrEnum):
     every exhaustive match over the lifecycle a branch that cannot occur and would
     let a stored record claim a state that means "no filter". The filter is its own
     closed axis that maps onto the lifecycle, mirroring
-    :class:`~application.review.ReviewState`.
+    :class:`~application.review.enums.ReviewState`.
 
     Every lifecycle state has a member here, so a filter exists for each; the
     correspondence is enforced by a gate rather than left to the next author.

@@ -6,6 +6,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_actions import assert_no_novel_source_kinds
@@ -20,7 +21,7 @@ def _declared_off_route(source: BindingSourceKind) -> bool:
     return registration is not None and registration.disposition in ("deferred", "non_runtime")
 
 
-def _derived_gaps(revision) -> tuple[str, ...]:
+def _derived_gaps(revision: ModeloRevision) -> tuple[str, ...]:
     return tuple(
         sorted(
             {

@@ -15,7 +15,7 @@ one, so the enum and decimal ids under test are the revision's own declarations.
 See Also:
     :func:`~core.decimal.try_parse_canonical_decimal`
         The grammar the decimal channel enforces.
-    :class:`~domain.calculations.registry.RegistrySnapshot`
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         The snapshot whose revision declares each binding's channel.
 """
 

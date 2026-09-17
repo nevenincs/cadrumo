@@ -10,7 +10,7 @@ Verification findings are the operator-facing gate vocabulary. BLOCKING-severity
 findings refuse the verified-complete transition; WARNING-severity ADVISORY
 findings remain visible in the report without bricking verify, file, or export.
 Calculate-path source diagnostics are separate
-:class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` advisories;
+:class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceDiagnostic` advisories;
 this module converts only verify-time registry, profile, provenance, and
 cross-period facts into :class:`ModeloVerificationFinding` records.
 
@@ -21,10 +21,10 @@ Verification emits bucket-history entries through
 
 Draft-construction structural validation is a distinct, nested stage, not a
 parallel pipeline. When verification grants, this module runs the revision
-workflow gate with :class:`~cadrumo.application.workflow.WorkflowPurpose.VERIFY`;
+workflow gate with :class:`~cadrumo.application.workflow.run_models.WorkflowPurpose.VERIFY`;
 that gate builds a filing draft, and the draft builder stamps
 :class:`ModeloValidationFinding` rows produced by
-:class:`~cadrumo.domain.filing.ModeloValidator` onto the draft, which the
+:class:`~cadrumo.domain.filing.validator.ModeloValidator` onto the draft, which the
 workflow engine re-scans for ERROR severity. Those structural findings answer
 whether the draft is well-formed against the casilla collection;
 :class:`ModeloVerificationFinding` answers operator-facing filing readiness and
@@ -32,7 +32,7 @@ carries registry ``legal_refs`` provenance the structural model does not. The
 two vocabularies are not interchangeable.
 
 See Also:
-    :class:`~cadrumo.domain.filing.ModeloValidator`:
+    :class:`~cadrumo.domain.filing.validator.ModeloValidator`:
         Draft-construction structural validator reached through the workflow
         gate's draft builder; owns :class:`ModeloValidationFinding`.
     :func:`~cadrumo.application.calculations.cross_period_clean_state.evaluate_cross_period_clean_state`:
@@ -371,7 +371,7 @@ def missing_evidence_findings(
     Loads the :class:`CalculationRevision` source transactions for the supplied
     :class:`WorkUnit` and
     projects each
-    :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`
+    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
     :class:`ModeloVerificationFinding`. A deductible input-IVA gap BLOCKS the
     verified-complete transition; an output-IVA gap stays advisory. A revision
@@ -815,7 +815,7 @@ def verify_modelo_revision_with_preconditions(
             implementations for one profile bucket.
         cross_period_expected_member_sets: Optional expected-member overrides
             for the cross-period clean-state gate.
-        workflow_engine: Optional :class:`~cadrumo.application.workflow.WorkflowEngine`
+        workflow_engine: Optional :class:`~cadrumo.application.workflow.engine.WorkflowEngine`
             override for tests and controlled workflow runs.
         workflow_runs_dir: Optional workflow-runs directory override.
         settings: Optional runtime settings for workflow-engine construction.
@@ -832,14 +832,14 @@ def verify_modelo_revision_with_preconditions(
         :class:`VerificationReport` and its ordered typed preconditions.
 
     Raises:
-        :class:`~cadrumo.application.modelo.CalculationRevisionNotFoundError`: The
+        :class:`~cadrumo.application.modelo.action_errors.CalculationRevisionNotFoundError`: The
             requested calculation revision does not exist in the active
             catalogue.
-        :class:`~cadrumo.application.modelo.CalculationRevisionStateError`: The
+        :class:`~cadrumo.application.modelo.action_errors.CalculationRevisionStateError`: The
             revision is not in ``BORRADOR`` state.
-        :class:`~cadrumo.application.modelo.WorkUnitNotFoundError`: The owning work
+        :class:`~cadrumo.application.modelo.action_errors.WorkUnitNotFoundError`: The owning work
             unit is missing.
-        :class:`~cadrumo.application.modelo.ModeloCrossPeriodCleanStateError`: A
+        :class:`~cadrumo.application.modelo.action_errors.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
     """
     repos = verification_repositories

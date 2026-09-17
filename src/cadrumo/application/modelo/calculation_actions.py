@@ -1,20 +1,20 @@
 """Calculation revision actions for modelo work units.
 
-The calculate paths resolve a law-determined :class:`~domain.calculations.registry.RegistrySnapshot` from
+The calculate paths resolve a law-determined :class:`~domain.calculations.registry.schema.RegistrySnapshot` from
 each :class:`~WorkUnit`, merge manual inputs with profile,
 borrador, IVA-wallet, and bucket aggregation channels, and execute
-:func:`~domain.calculations.registry.calculate_registry_snapshot` against
-the asserted :class:`~domain.calculations.registry.ModeloRevision`.
+:func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot` against
+the asserted :class:`~domain.calculations.registry.schema.ModeloRevision`.
 
 Persistence is centralized through :class:`~CalculationRevision` and the
 application-owned :class:`~.calculation_action_ports.CalculationActionPorts`,
 so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
 
-:func:`~application.modelo.calculate_modelo_revision` is the lower-level
+:func:`~application.modelo.calculation_actions.calculate_modelo_revision` is the lower-level
 calculation service: callers provide already-resolved manual, binding,
 enum-binding, relation, borrador, and IVA-wallet inputs.
-:func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+:func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
 first runs the application source mesh over bucket-local ledgers, invoices,
 previous filings, relation prefill, retenciones, withholding, and detail rows,
 then feeds the resolved backend channels into the same persistence path. It is
@@ -29,7 +29,7 @@ See Also:
     :mod:`~application.aggregation`:
         Public source-mesh contracts and diagnostics consumed by the bucket
         aggregation path.
-    :func:`~application.modelo._calculation_resolution.resolve_calculation_binding_channels`:
+    :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, and date binding channels for the
         registry engine.
     :func:`~application.modelo._calculation_helpers.build_typed_observations`:
@@ -37,7 +37,7 @@ See Also:
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket
         event.
-    :func:`~application.modelo._verification_actions.verify_modelo_revision`:
+    :func:`~application.modelo.verification_actions.verify_modelo_revision`:
         Lifecycle gate that promotes a calculated revision after verification.
 """
 
@@ -187,7 +187,7 @@ class BucketAggregationCalculationResult:
     ``revision`` is the persisted :class:`CalculationRevision`; ``profile`` is
     the work profile the calculation checked and read.
     ``source_diagnostics`` carries the
-    :class:`~application.aggregation.CalculationSourceDiagnostic` rows the
+    :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` rows the
     source mesh emitted during resolution, notably the unconsumed-declarable-IVA
     advisories (a declarable IVA observation no ``ledger_iva_aggregation``
     binding selects). They are NON-blocking: the revision was computed and
@@ -441,7 +441,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
        :class:`ModeloRevision`. Failure to resolve raises
        :exc:`CalculationRegistryUnavailableError` — the calculate
        path runs the engine, so a missing snapshot is a hard refusal.
-    3. Run :func:`~domain.calculations.registry.calculate_registry_snapshot`
+    3. Run :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
        over the snapshot
        with the operator-supplied manual casilla inputs, binding
        values, enum-binding values, and relation values. The
@@ -457,12 +457,12 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
        ``modelo.calculation.created``.
 
     The revision starts in ``BORRADOR`` state; callers must run
-    :func:`~application.modelo.verify_modelo_revision` and
-    :func:`~application.modelo.file_modelo_revision`
+    :func:`~application.modelo.verification_actions.verify_modelo_revision` and
+    :func:`~application.modelo.filing_actions.file_modelo_revision`
     explicitly to advance through the lifecycle.
 
     See Also:
-        :func:`~application.modelo._calculation_resolution.build_calculation_replay_payloads`:
+        :func:`~application.modelo.calculation_resolution.build_calculation_replay_payloads`:
             Canonicalizes the values that participate in the revision id.
         :func:`~application.modelo._calculation_helpers.build_typed_observations`:
             Carries registry legal/source provenance onto the persisted
@@ -667,12 +667,12 @@ def resolve_bucket_source_mesh(
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
-    Builds the :class:`~application.aggregation.CalculationSourceContext`,
+    Builds the :class:`~application.aggregation.source_mesh.CalculationSourceContext`,
     runs every enrolled ledger / invoice / carry resolver through
-    :func:`~application.aggregation.merge_source_resolutions`, and augments
+    :func:`~application.aggregation.source_resolution_operations.merge_source_resolutions`, and augments
     the result with the unhandled-binding-source advisories for any declared
     source with no enrolled resolver. Returns the merged
-    :class:`~application.aggregation.CalculationSourceResolution`.
+    :class:`~application.aggregation.source_mesh.CalculationSourceResolution`.
 
     The transaction repository from ``ports`` is wrapped in
     :class:`MemoizedTransactionCatalogueRepository` so every enrolled ledger
@@ -681,7 +681,7 @@ def resolve_bucket_source_mesh(
 
     ``profile`` is the work profile the calculation already checked; when
     omitted, this entry loads it once. Every resolver reads that one record
-    from :attr:`~application.aggregation.CalculationSourceContext.profile`.
+    from :attr:`~application.aggregation.source_mesh.CalculationSourceContext.profile`.
     """
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile
@@ -950,7 +950,7 @@ def _source_provenance_refs(
 ) -> tuple[CalculationSourceRef, ...]:
     """Project the mesh resolution's application provenance into persisted domain refs.
 
-    Maps each :class:`~application.aggregation.CalculationSourceProvenance`
+    Maps each :class:`~application.aggregation.source_mesh.CalculationSourceProvenance`
     row (the resolver→source-object→fingerprint trace) into the domain-side
     :class:`~CalculationSourceRef` that
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`
@@ -1398,7 +1398,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     Returns a
     :class:`BucketAggregationCalculationResult` carrying both the persisted
     :class:`CalculationRevision` and the NON-blocking
-    :class:`~application.aggregation.CalculationSourceDiagnostic` rows the
+    :class:`~application.aggregation.source_mesh.CalculationSourceDiagnostic` rows the
     source mesh raised while resolving the bucket ledger (the
     unconsumed-declarable-IVA advisories the operator-facing CLI surfaces so an
     unrouted observation is never silently under-declared).

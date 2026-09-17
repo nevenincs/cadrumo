@@ -6,13 +6,13 @@ Advisory helpers that already hold a revision object use the structural
 revision resolver and get the same ambiguity guard.
 
 See Also:
-    :mod:`~application.modelo._calculate_input`
+    :mod:`~application.modelo.calculate_input`
         Work-unit input shortcuts that resolve operator-facing semantic-role
         tokens through a registry snapshot.
     :mod:`~application.modelo.binding_resolution`
         Declaration-period metadata binding path that only accepts
         informational semantic-role casillas.
-    :mod:`~application.modelo._taxation_comparison`
+    :mod:`~application.modelo.taxation_comparison`
         Snapshot-backed comparison surface that uses semantic roles for the
         Modelo 100 result and quota casillas.
 """
