@@ -297,7 +297,7 @@ def _validated_utc_instant(raw: str, *, field: str) -> datetime:
 
     These instants were parsed with a bare :meth:`datetime.fromisoformat`, so a
     row written without an offset, or with a local one, was returned as a naive
-    or non-UTC value while :func:`~core.time.validate_utc_aware` — the contract
+    or non-UTC value while :func:`~core.time.utc.validate_utc_aware` — the contract
     every other persisted instant in this codebase carries — rejects both. A
     diagnostic listing sorted by capture time then ordered naive and aware rows
     against each other, which is not a comparison the two shapes support.

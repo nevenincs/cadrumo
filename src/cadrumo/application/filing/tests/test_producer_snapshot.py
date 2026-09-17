@@ -21,7 +21,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
-from ....core.period import Period
+from ....core.period import Period, PeriodError
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
@@ -832,13 +832,22 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
     assert values[FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE] == expected
 
 
+_NON_OFFICIAL_PERIOD_REFUSAL = (
+    r"official quarterly or monthly period"
+    r"|modelo 303: no revision for year=2026 period='0A'"
+    r"|has no calendar date span"
+)
+
+
 @pytest.mark.parametrize("period_code", ("0A", "1P", "EXT-1T", "AD-HOC"))
 def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_code: str) -> None:
     period = Period.from_year_and_code(2026, period_code)
-    register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
-    evidence = _m303_instance_evidence(period)
 
-    with pytest.raises(ValidationError, match="official quarterly or monthly period"):
+    # Refused wherever the period first meets a component that needs an official
+    # quarterly or monthly period: its evidence, its arrivals, or the facts.
+    with pytest.raises((ValidationError, PeriodError), match=_NON_OFFICIAL_PERIOD_REFUSAL):
+        register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+        evidence = _m303_instance_evidence(period)
         M303FilingFacts(
             joint_return_elected=False,
             annual_volume_nonzero=False,
@@ -864,12 +873,12 @@ def test_m303_filing_facts_refuse_annual_and_non_official_filing_periods(period_
 @pytest.mark.parametrize("period_code", ("0A", "EXT-1T"))
 def test_m303_filing_facts_resolver_refuses_non_official_period_before_producer_output(period_code: str) -> None:
     period = Period.from_year_and_code(2026, period_code)
-    register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
-    evidence = FilingInstanceEvidence(
-        m303=_m303_instance_evidence(period),
-    )
 
-    with pytest.raises(ValueError, match="official quarterly or monthly period"):
+    with pytest.raises((ValueError, PeriodError), match=_NON_OFFICIAL_PERIOD_REFUSAL):
+        register, bienes_register, regularisation = _empty_m303_export_arrivals(period.filing_year)
+        evidence = FilingInstanceEvidence(
+            m303=_m303_instance_evidence(period),
+        )
         resolve_m303_filing_facts(
             evidence=evidence,
             supplier_regime=M303SupplierRegimeArrival(

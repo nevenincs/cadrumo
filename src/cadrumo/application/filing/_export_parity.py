@@ -9,7 +9,7 @@ between rendering and :meth:`pathlib.Path.write_bytes`, so such a file is
 refused before it can exist rather than discovered by AEAT.
 
 Three dimensions are asserted, each a hard enumerated
-:class:`~domain.filing.FilingExportError` naming exactly what drifted:
+:class:`~domain.filing.errors.FilingExportError` naming exactly what drifted:
 
 * **Casilla presence** -- every casilla that is a calculation RESULT (declares a
   formula) or is schema-required, that the completeness manifest lists AND the
@@ -187,7 +187,7 @@ def boe_representable_casilla_ids(
 
     That out-of-scope verdict is no longer taken on trust. The fixed-width branch
     delegates to
-    :func:`~domain.calculations.registry.fixed_width_record_casilla_ids`, the same
+    :func:`~domain.calculations.registry.export.fixed_width_record_casilla_ids`, the same
     derivation the registry-build export-exemption gate runs over EVERY declared
     record; that gate refuses at build any manifest casilla this set would exempt
     from a demand unless the casilla declares WHY it files no slot. Absence here
@@ -279,8 +279,8 @@ def required_applicable_casilla_ids(
 
     Args:
         manifest: Revision's
-            :class:`~domain.calculations.registry.CalculationCompletenessManifest`.
-        collection: :class:`~domain.filing.CasillaCollection` for the modelo,
+            :class:`~domain.calculations.registry.schema_surfaces.CalculationCompletenessManifest`.
+        collection: :class:`~domain.filing.protocols.CasillaCollection` for the modelo,
             supplying ``formula`` and ``required`` for each declared casilla.
         representable: Casilla IDs the official export record files a slot for
             at this filing's disposition; see :func:`boe_representable_casilla_ids`.
@@ -452,7 +452,7 @@ def assert_rate_boxes_account_for_total(
 
     The condition is never the operator's first notice of it: the calculate path
     raises the same shortfall as a non-blocking advisory, computed by the same
-    :func:`~domain.calculations.registry.rate_box_coverage_shortfalls` over the
+    :func:`~domain.calculations.registry.rate_box_partition.rate_box_coverage_shortfalls` over the
     same partitions.
 
     Args:

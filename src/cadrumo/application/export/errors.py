@@ -1,9 +1,9 @@
-"""Errors raised by :func:`~application.export.serialize_tabular_rows` and tabular export models.
+"""Errors raised by :func:`~application.export.tabular.serialize_tabular_rows` and tabular export models.
 
 :class:`~application.export.errors.ExportFormatError` rejects unsupported
-:class:`~application.export.ExportSerializationFormat` values, while
+:class:`~application.export.tabular.ExportSerializationFormat` values, while
 :class:`~application.export.errors.ExportFieldError` carries
-:class:`~application.export.TabularExportResult` field and payload
+:class:`~application.export.tabular.TabularExportResult` field and payload
 invariant failures through the typed error registry.
 """
 

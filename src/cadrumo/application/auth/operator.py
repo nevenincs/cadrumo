@@ -1,27 +1,27 @@
 """Operator-facing auth application services for the config CLI.
 
 Auth configuration and login actions mutate
-:class:`application.workflow.WorkflowState`, validate the active bucket
-through :func:`application.workflow.assess_active_profile_health`, and
-emit durable :class:`domain.buckets.BucketEvent` records through
+:class:`application.workflow.state_models.WorkflowState`, validate the active bucket
+through :func:`application.workflow.profile_health.assess_active_profile_health`, and
+emit durable :class:`domain.buckets.event.BucketEvent` records through
 :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`.
 
 Status, test, and preflight surfaces consume the canonical
 :func:`application.state_projection.build_operator_state_projection`
 producer, then narrow its
-:class:`application.state_projection.ProjectionAuthReadiness` and
+:class:`application.state_projection_auth.ProjectionAuthReadiness` and
 :class:`application.state_projection.ProjectionActiveProfile` fields into
 operator-facing result records.
 
 See Also:
     :class:`application.auth.models.AuthState`
         Workflow-owned persisted authentication readiness.
-    :class:`application.auth.AuthStatusResult`
+    :class:`application.auth.operator_results.AuthStatusResult`
         CLI readiness result emitted by ``auth status``.
-    :class:`application.auth.AuthTestResult`
+    :class:`application.auth.operator_results.AuthTestResult`
         CLI readiness result emitted by ``auth test`` with local provider
         probes.
-    :class:`application.auth.LiveAuthPreflightReport`
+    :class:`application.auth.operator_results.LiveAuthPreflightReport`
         Redacted readiness report used before a live read can request login.
 """
 
@@ -138,13 +138,13 @@ def configure_operator_auth(
     """Configure the active auth provider in workflow state.
 
     The active profile is resolved through
-    :func:`application.workflow.assess_active_profile_health` before the
-    :class:`application.workflow.WorkflowState` mutation is written, so a
+    :func:`application.workflow.profile_health.assess_active_profile_health` before the
+    :class:`application.workflow.state_models.WorkflowState` mutation is written, so a
     dangling or unreadable active bucket cannot receive an auth selection.
     Persists the workflow-state update and a typed
     ``AUTH_PROVIDER_CONFIGURED`` event into the bucket-event-history
     catalogue in a single SQL transaction (via
-    :meth:`adapters.persistence.storage.SecureObjectRepository.save_many`),
+    :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`),
     so a crash between the two writes cannot leave the state mutated without
     the catalogue event landing. The certificate path is recorded as a payload
     value when supplied because it is a filesystem reference, not credential
@@ -171,7 +171,7 @@ def configure_operator_auth(
     See Also:
         :class:`adapters.persistence.profile.buckets.BucketEventHistoryRepository`
             Durable per-bucket event history that receives the typed auth event.
-        :class:`application.workflow.ActiveProfileHealth`
+        :class:`application.workflow.profile_health.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.
     """
     from ...domain.buckets.event import BucketEventType
@@ -268,7 +268,7 @@ def inspect_operator_auth(
     Consumes the canonical
     :func:`application.state_projection.build_operator_state_projection`.
     The ``configured`` field is the
-    :class:`application.state_projection.ProjectionAuthReadiness` single
+    :class:`application.state_projection_auth.ProjectionAuthReadiness` single
     canonical operational-readiness definition; ``auth status`` and ``auth
     test`` read the same datum and cannot disagree. The live backend is probed
     (via the projection) for the ``available`` / ``health_*`` fields, while the
@@ -488,7 +488,7 @@ def build_live_auth_preflight_report(
     to empty or false because the type exists to carry that degraded answer.
 
     See Also:
-        :class:`core.access_gate.AeatAccessGate`
+        :class:`core.access_gate.gate.AeatAccessGate`
             Live-read gate evaluated before an authenticated AEAT operation can
             proceed.
         :func:`test_operator_auth`
@@ -627,9 +627,9 @@ async def login_operator_auth(
     Round-5 B2.
 
     See Also:
-        :class:`core.access_gate.AeatAccessGate`
+        :class:`core.access_gate.gate.AeatAccessGate`
             Enforces the live-read opt-in before provider authentication.
-        :func:`application.auth.ensure_authenticated_aeat_session`
+        :func:`application.auth.sessions.ensure_authenticated_aeat_session`
             Provider-session lifecycle helper that returns the verified session
             result consumed here.
     """

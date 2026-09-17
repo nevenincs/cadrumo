@@ -1,11 +1,11 @@
 """Draft approval persistence and stale-detection helpers.
 
 Provides the :func:`approve_draft` / :func:`refresh_review_status` lifecycle on top of
-:class:`domain.filing.ModeloDraft` and
-:class:`domain.submission.ModeloDraftStatus`, plus the deterministic
-:class:`domain.filing.ModeloApprovalBasis` fingerprint pipeline that lets
+:class:`domain.filing.schema.ModeloDraft` and
+:class:`domain.submission.models.ModeloDraftStatus`, plus the deterministic
+:class:`domain.filing.schema.ModeloApprovalBasis` fingerprint pipeline that lets
 :func:`approval_stale_reasons` detect when a
-:attr:`~domain.submission.ModeloDraftStatus.APROBADO` draft has been
+:attr:`~domain.submission.models.ModeloDraftStatus.APROBADO` draft has been
 invalidated by upstream changes.
 
 The :func:`compute_current_approval_basis` helper receives the required
@@ -14,12 +14,12 @@ bundle.  The executable composition root binds its concrete repositories before
 the review lifecycle is invoked.
 
 See Also:
-    :func:`application.filing.build_runtime_schema_provider`
+    :func:`application.filing.runtime.build_runtime_schema_provider`
         Builds the registry-backed schema provider whose casilla and formula
         surface participates in the approval basis.
-    :func:`application.review.drafts_pending`
+    :func:`application.review.source_adapters.drafts_pending`
         Emits stale filing approvals as high-severity review queue items.
-    :class:`domain.filing.ModeloApprovalBasis`
+    :class:`domain.filing.schema.ModeloApprovalBasis`
         Persisted digest bundle compared during stale detection.
 """
 
@@ -94,7 +94,7 @@ class ModeloApprovalStaleReason(StrEnum):
 
     Attributes:
         APPROVAL_BASIS_VERSION_CHANGED: The
-            :class:`domain.filing.ModeloApprovalBasis` schema
+            :class:`domain.filing.schema.ModeloApprovalBasis` schema
             version has been bumped since approval.
         DRAFT_PAYLOAD_CHANGED: The draft's payload fingerprint
             (``draft_id``) no longer matches the stored basis.
@@ -181,11 +181,11 @@ def compute_current_approval_basis(
 
     The basis hashes the draft identity and validation surface, the persisted
     :class:`TransactionCatalogue`, the persisted
-    :class:`~domain.invoices.InvoiceCatalogue` (a calculation source
+    :class:`~domain.invoices.models.InvoiceCatalogue` (a calculation source
     resolved through the source mesh), the bucket's prior filed observations (the
     ``previous_filing`` carry and relation fold-in source), the bucket's taxpayer
     profile facts that scope relation resolution, the supplied or bundled
-    :class:`~domain.categories.CategoryProfile` mapping, and the active
+    :class:`~domain.categories.profile.CategoryProfile` mapping, and the active
     registry schema/formula surface exposed by ``schema_provider``.
 
     The invoice-catalogue, prior-filing-observations, and profile-activity digests
@@ -197,20 +197,20 @@ def compute_current_approval_basis(
     refresh time without running the source mesh in the review layer.
 
     Args:
-        draft: The :class:`domain.filing.ModeloDraft` whose basis
+        draft: The :class:`domain.filing.schema.ModeloDraft` whose basis
             is being computed.
         bucket_id: Stable bucket identifier used to scope the supplied ports.
         schema_provider: The active
-            :class:`domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.protocols.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities for the
             transaction, invoice, observation, and profile authorities.
         prior_filing_observations_fingerprint: Optional precomputed prior-filing
             digest. When ``None``, the digest is self-loaded from the bucket's
-            :class:`~application.calculations.CalculationObservationRepositoryProtocol`.
+            :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`.
             Explicit values let callers reuse a digest they already computed.
         profile_activity_fingerprint: Optional precomputed taxpayer-profile
             digest. When ``None``, the digest is self-loaded from the bucket's
-            :class:`~application.user_profile.CommittedProfileRepository`.
+            :class:`~application.user_profile.profile_repository.CommittedProfileRepository`.
             Explicit values let callers reuse a digest they already computed.
         operation: Caller-owned generation-pinned indexed authority operation.
         category_profiles: Optional override of the active category profile map.
@@ -313,11 +313,11 @@ def approval_stale_reasons(
     recomputed basis.
 
     Args:
-        draft: The :class:`domain.filing.ModeloDraft` to inspect.
+        draft: The :class:`domain.filing.schema.ModeloDraft` to inspect.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`compute_current_approval_basis`.
         schema_provider: The active
-            :class:`domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.protocols.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`compute_current_approval_basis`.
         operation: Caller-owned generation-pinned indexed authority operation.
@@ -379,7 +379,7 @@ def approve_draft(
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
-            :class:`domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.protocols.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`compute_current_approval_basis`.
         operation: Caller-owned generation-pinned indexed authority operation.
@@ -548,7 +548,7 @@ def refresh_review_status(
         bucket_id: Stable bucket identifier; forwarded to
             :func:`approval_stale_reasons`.
         schema_provider: The active
-            :class:`domain.filing.CasillaSchemaProvider`.
+            :class:`domain.filing.protocols.CasillaSchemaProvider`.
         ports: Required application-owned persistence capabilities forwarded to
             :func:`approval_stale_reasons`.
         operation: Caller-owned generation-pinned indexed authority operation.
@@ -767,7 +767,7 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
 def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     """Order-independent digest of the bucket's invoice catalogue.
 
-    Each :class:`~domain.invoices.Invoice` is a frozen record with no
+    Each :class:`~domain.invoices.models.Invoice` is a frozen record with no
     volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
     by ``invoice_id``) captures the full calculation-relevant content and changes
     whenever any invoice is added, removed, or edited. An empty catalogue yields a

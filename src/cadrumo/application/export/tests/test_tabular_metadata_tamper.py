@@ -46,13 +46,15 @@ def _refusal_reason(exc_info: pytest.ExceptionInfo[ValidationError]) -> str:
 
     The model validator raises the same typed, localisable
     :class:`~application.export.errors.ExportFieldError` the rest of the export
-    surface raises; pydantic wraps it when it fires inside a validator. Reading
-    the reason back proves the refusal is the intended one rather than any
-    incidental validation failure.
+    surface raises; the validation boundary carries it as the ``__cause__`` of
+    the ``ValueError`` pydantic wraps. Reading the reason back proves the
+    refusal is the intended one rather than any incidental validation failure.
     """
     context = exc_info.value.errors()[0].get("ctx")
     assert isinstance(context, dict)
-    cause = context["error"]
+    boundary_error = context["error"]
+    assert isinstance(boundary_error, ValueError)
+    cause = boundary_error.__cause__
     assert isinstance(cause, ExportFieldError)
     assert cause.context is not None
     return str(cause.context["reason"])

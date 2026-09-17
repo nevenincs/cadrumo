@@ -11,9 +11,9 @@ BOE exports and calculation workbook exports.
 
 Major declarations:
 
-* :func:`application.export.serialize_tabular_rows` — render rows into a
-  :class:`application.export.TabularExportResult`.
-* :class:`application.export.ExportSerializationFormat` — the closed set
+* :func:`application.export.tabular.serialize_tabular_rows` — render rows into a
+  :class:`application.export.tabular.TabularExportResult`.
+* :class:`application.export.tabular.ExportSerializationFormat` — the closed set
   of supported output formats.
 * :class:`application.export.errors.ExportFieldError` and
   :class:`application.export.errors.ExportFormatError` — typed
@@ -23,7 +23,7 @@ See Also:
     :func:`application.ledger.actions_export.export_ledger_transactions`
         Ledger command service that calls this serializer, then owns bucket
         events and operator output paths.
-    :func:`application.modelo.export_modelo_revision`
+    :func:`application.modelo.export.export_modelo_revision`
         Registry-driven fichero-BOE export for verified or filed modelo
         revisions.
     :mod:`application.storage.calc_sheets`

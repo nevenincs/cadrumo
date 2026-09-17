@@ -15,7 +15,7 @@ Two pages compose the flow: the represented party's tax identifier
 :func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
 authority, the same authority every identity page binds -- never a second
 identifier implementation) and the granted scope set (a CHECKBOX over the
-live :class:`~cadrumo.domain.auth.apoderamientos.ApoderamientosCatalogue`).
+live :class:`~cadrumo.domain.auth.apoderamientos.catalogue.ApoderamientosCatalogue`).
 Every copy slot is an existing locale-catalogue reference resolved at render
 time; the flow authors no literal prose.
 """
@@ -123,7 +123,7 @@ def build_apoderado_flow_definition(catalogue: ApoderamientosCatalogue) -> FlowD
     """Return the two-page apoderado representation flow for ``catalogue``.
 
     The scope CHECKBOX choices are derived live from the supplied
-    :class:`~cadrumo.domain.auth.apoderamientos.ApoderamientosCatalogue`, so
+    :class:`~cadrumo.domain.auth.apoderamientos.catalogue.ApoderamientosCatalogue`, so
     a catalogue revision that adds a scope surfaces it as a choice without a
     code change here. Every page's ``domain_key`` is ``None``: an apoderado
     answer binds to no profile schema path, because representation is not a

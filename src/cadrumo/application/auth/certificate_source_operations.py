@@ -3,12 +3,12 @@
 Wraps the pure :mod:`~application.auth.certificate_sources` state
 transformations with the same active-bucket gating, secure-object
 persistence, and typed bucket-event emission that
-:func:`~application.auth.configure_operator_auth` uses, so registering,
+:func:`~application.auth.operator.configure_operator_auth` uses, so registering,
 listing, selecting, or removing a named certificate source is exposed
 through ``aeat config auth certificate ...`` with identical safety
 guarantees.
 
-:func:`~application.auth.check_operator_certificate_sources` extends the registry with
+:func:`~application.auth.certificate_source_operations.check_operator_certificate_sources` extends the registry with
 expiry/rotation awareness: it re-runs the same local PKCS#12 health
 probe the single-certificate ``auth test`` path already performs
 (:mod:`~application.auth.operator_probes`) against every registered
@@ -18,15 +18,15 @@ each one individually.
 
 See Also:
     :mod:`~application.auth.certificate_sources`
-        Pure :class:`~application.workflow.WorkflowState` transformations
+        Pure :class:`~application.workflow.state_models.WorkflowState` transformations
         this module persists.
-    :func:`~application.auth.configure_operator_auth`
+    :func:`~application.auth.operator.configure_operator_auth`
         Sibling operator verb configuring the active auth *provider*;
         this module manages named certificate *sources* within the
         certificate provider.
-    :func:`~application.auth.probe_provider_configuration`
+    :func:`~application.auth.operator_probes.probe_provider_configuration`
         Sibling single-certificate expiry probe this module's
-        :func:`~application.auth.check_operator_certificate_sources` reuses per named
+        :func:`~application.auth.certificate_source_operations.check_operator_certificate_sources` reuses per named
         source.
 """
 
@@ -97,7 +97,7 @@ if TYPE_CHECKING:
 def _gate_active_bucket(*, operation: PinnedAuthorityOperation) -> str:
     """Resolve the active bucket id or raise the shared refusal errors.
 
-    Mirrors the gating :func:`~application.auth.configure_operator_auth`
+    Mirrors the gating :func:`~application.auth.operator.configure_operator_auth`
     performs so a certificate-source mutation cannot land against a
     missing or dangling active profile.
 
@@ -221,7 +221,7 @@ def register_operator_certificate_source(
             pointer does not resolve to a registered bucket.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceMutationResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceMutationResult`.
     """
     from ...domain.buckets.event import BucketEventType
 
@@ -245,7 +245,7 @@ def list_operator_certificate_sources() -> CertificateSourceListResult:
     """Return every registered certificate source for the active profile.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceListResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceListResult`.
     """
     from ..workflow.persistence import workflow_state_repository
 
@@ -287,7 +287,7 @@ def select_operator_certificate_source(
         CertificateSourceNotFoundError: When ``name`` is not registered.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceMutationResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceMutationResult`.
     """
     from ...domain.buckets.event import BucketEventType
 
@@ -336,7 +336,7 @@ def remove_operator_certificate_source(
             pointer does not resolve to a registered bucket.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceMutationResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceMutationResult`.
     """
     from ...domain.buckets.event import BucketEventType
     from ..workflow.persistence import workflow_state_repository
@@ -376,7 +376,7 @@ def check_operator_certificate_sources(
     be selected.
 
     Every named source's passphrase resolves only through
-    :func:`~application.auth.resolve_certificate_source_secret` (through the
+    :func:`~application.auth.credentials.resolve_certificate_source_secret` (through the
     per-source secure-storage backend). An
     absent secret or secure-storage read failure is projected explicitly
     as ``None`` so the probe fails closed; a named source never inherits
@@ -390,10 +390,10 @@ def check_operator_certificate_sources(
     session when needed, but it never mutates state or emits a bucket event.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceCheckReport` with one
-        :class:`~application.auth.CertificateSourceCheckEntry` per
+        A :class:`~application.auth.operator_results.CertificateSourceCheckReport` with one
+        :class:`~application.auth.operator_results.CertificateSourceCheckEntry` per
         registered source, sorted by name (matching
-        :func:`~application.auth.list_operator_certificate_sources`).
+        :func:`~application.auth.certificate_source_operations.list_operator_certificate_sources`).
     """
     from ..workflow.persistence import workflow_state_repository
 
@@ -459,11 +459,11 @@ def set_operator_certificate_source_secret(
     """Set (or rotate) the passphrase for a registered certificate source.
 
     The named source MUST already be registered
-    (:func:`~application.auth.register_operator_certificate_source`) — a secret is bound
+    (:func:`~application.auth.certificate_source_operations.register_operator_certificate_source`) — a secret is bound
     to an existing source, never freestanding. The secret always persists
     to the sole encrypted secure-storage backend; there is no backend
     choice. The secret itself is never persisted to
-    :class:`~application.workflow.WorkflowState` or emitted in the mutation
+    :class:`~application.workflow.state_models.WorkflowState` or emitted in the mutation
     result; only whether one is now present.
 
     Raises:
@@ -474,7 +474,7 @@ def set_operator_certificate_source_secret(
         CertificateSourceNotFoundError: When ``name`` is not registered.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceSecretMutationResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceSecretMutationResult`.
     """
     from ..workflow.persistence import workflow_state_repository
 
@@ -532,7 +532,7 @@ def remove_operator_certificate_source_secret(
             pointer does not resolve to a registered bucket.
 
     Returns:
-        A :class:`~application.auth.CertificateSourceSecretMutationResult`.
+        A :class:`~application.auth.operator_results.CertificateSourceSecretMutationResult`.
     """
     normalized_name = name.strip()
     with _certificate_mutation_span(

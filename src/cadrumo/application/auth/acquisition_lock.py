@@ -6,7 +6,7 @@ filesystem-backed so separate CLI processes share the same guard.
 The lock file stores an :class:`AuthAcquisitionLockRecord` and reports
 operator-safe state through :class:`AuthAcquisitionLockStatus`.
 
-Removal goes through :func:`~core.unlink_lockfile`: every peer that finds
+Removal goes through :func:`~core.lockfile_unlink.unlink_lockfile`: every peer that finds
 the lock taken opens the file to read the record, and on Windows that open
 refuses the owner's delete. An abandoned delete would leave a record naming a
 live process, blocking acquisition until the record's TTL expires, so the

@@ -10,7 +10,7 @@ it records local filing history rows by modelo and period, while
 superseded filing lifecycle for calculation revisions.
 
 See Also:
-    :class:`application.filing.ModeloHistoryRepository`
+    :class:`application.filing.history_repository.ModeloHistoryRepository`
         Encrypted AUDIT-class repository that stores these payloads.
     :mod:`domain.modelos`
         Work-unit filing records and supersession history for calculation

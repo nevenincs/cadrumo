@@ -289,7 +289,9 @@ def test_model_validator_raises_export_field_error_on_invalid_sha256() -> None:
         )
     error_detail = exc_info.value.errors()[0]
     assert "ctx" in error_detail and "error" in error_detail["ctx"]
-    cause = error_detail["ctx"]["error"]
+    boundary_error = error_detail["ctx"]["error"]
+    assert isinstance(boundary_error, ValueError)
+    cause = boundary_error.__cause__
     assert isinstance(cause, ExportFieldError)
     assert cause.translated_message == "errors.refused.refused_export_field"
     assert cause.context == {"reason": "sha256_invalid"}

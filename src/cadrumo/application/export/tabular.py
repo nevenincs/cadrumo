@@ -1,7 +1,7 @@
-"""Serialize tabular rows into :class:`~application.export.TabularExportResult` payloads.
+"""Serialize tabular rows into :class:`~application.export.tabular.TabularExportResult` payloads.
 
 Rows are rendered through the closed
-:class:`~application.export.ExportSerializationFormat` surface, with
+:class:`~application.export.tabular.ExportSerializationFormat` surface, with
 :class:`~application.export.errors.ExportFieldError` and
 :class:`~application.export.errors.ExportFormatError` preserving
 validation failures as structured application errors.
@@ -73,10 +73,10 @@ _JSONL_RECORD_INVALID_REASON = "jsonl_record_invalid"
 
 
 class TabularExportResult(BaseModel):
-    """Serialized tabular payload produced by :func:`~application.export.serialize_tabular_rows`.
+    """Serialized tabular payload produced by :func:`~application.export.tabular.serialize_tabular_rows`.
 
     The result carries the raw payload plus operator-facing metadata:
-    :class:`~application.export.ExportSerializationFormat`, media type,
+    :class:`~application.export.tabular.ExportSerializationFormat`, media type,
     filename extension, byte count, SHA-256 digest, row count, and normalized
     field names.
     """
@@ -153,7 +153,7 @@ def serialize_tabular_rows(
     Values are coerced to strings, missing fields become empty strings,
     and unknown fields raise
     :class:`~application.export.errors.ExportFieldError`. Returns a
-    :class:`~application.export.TabularExportResult` with encoded bytes,
+    :class:`~application.export.tabular.TabularExportResult` with encoded bytes,
     media type, filename extension, row count, field metadata, and payload
     digest.
     """
