@@ -33,11 +33,10 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
 from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._persona_scope import AgentPersona
@@ -283,19 +282,26 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
 # --- whoami identity tool --------------------------------------------------
 
 
+def _register_in_authority_scope(**kwargs: Any) -> Any:
+    """Register a profile under a published-authority lease, as the CLI registration flow does."""
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return register_profile_with_credentials(
+            **kwargs,
+            profile_create_context=operation.profile_create_context(),
+            profile_decode_context=operation.profile_decode_context(),
+        )
+
+
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:
     """The identity probe reads an explicitly authenticated current capsule."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         composed_profile_persistence_ports(),
     ):
-        outcome = register_profile_with_credentials(
+        outcome = _register_in_authority_scope(
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
@@ -365,7 +371,6 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
 
 
 def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ..server import build_server
 
     descriptors = build_tool_descriptors()
@@ -378,12 +383,10 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         composed_profile_persistence_ports(),
     ):
-        outcome = register_profile_with_credentials(
+        outcome = _register_in_authority_scope(
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
@@ -409,7 +412,6 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
 
 
 def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ..server import build_server
 
     descriptors = build_tool_descriptors()
@@ -422,12 +424,10 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         composed_profile_persistence_ports(),
     ):
-        outcome = register_profile_with_credentials(
+        outcome = _register_in_authority_scope(
             label="Erika",
             passphrase=PROFILE_PASSPHRASE,
             facts=READY_PROFILE_FACTS,
-            profile_create_context=_profile_create_context_for_test,
-            profile_decode_context=_profile_decode_context_for_test,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
