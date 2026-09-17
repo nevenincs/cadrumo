@@ -116,7 +116,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 
 from ..perf_measurement import wall_advisory_message
 
