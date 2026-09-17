@@ -15,7 +15,7 @@ and the modelo work-unit catalogue for the requested ``(modelo, filing_year,
 period)`` scope. It persists nothing and never contacts AEAT. Every counter it
 reports is already produced by an existing read model
 (:func:`~application.ledger.preflight.preflight_ledger_tax_readiness`,
-:func:`~application.modelo.list_work_units`) or a direct repository read;
+:func:`~application.modelo.work_lifecycle.list_work_units`) or a direct repository read;
 this module composes them into one ordered checklist rather than introducing a
 new aggregation.
 
@@ -128,7 +128,7 @@ class DataPrepWalkthrough(BaseModel):
             ``import_transactions``, the final step is always
             ``start_modelo_work``.
         ready_for_calculation: ``True`` only when every step is
-            :attr:`~application.overview.DataPrepStepState.DONE`.
+            :attr:`~application.overview.data_prep.DataPrepStepState.DONE`.
     """
 
     model_config = _STRICT_FROZEN
@@ -168,12 +168,12 @@ def build_data_prep_walkthrough(
         bucket_id: Active profile bucket the walkthrough is scoped to.
         modelo: Registry-validated AEAT modelo code (already resolved by the
             caller through the registry describe surface).
-        period: Typed filing :class:`~core.Period` for the requested scope.
+        period: Typed filing :class:`~core.period.Period` for the requested scope.
         transaction_repository: Bound
-            :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+            :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`
             for ``bucket_id``.
         invoice_catalogue: Loaded
-            :class:`~domain.invoices.InvoiceCatalogue` for ``bucket_id``.
+            :class:`~domain.invoices.models.InvoiceCatalogue` for ``bucket_id``.
         evidence_records: Loaded purchase-invoice evidence rows
             (``tuple[PurchaseInvoiceEvidence, ...]``) for ``bucket_id``.
         preflight_report: Loaded

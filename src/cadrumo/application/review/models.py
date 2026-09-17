@@ -16,8 +16,8 @@ Concrete models:
 
 ``InvoiceReviewRecord`` and ``LedgerReviewRecord`` are re-exported here from
 :mod:`cadrumo.application.workflow.review_models`, which owns them jointly with
-:class:`~cadrumo.application.workflow.WorkflowEvent` because
-:class:`~cadrumo.application.workflow.WorkflowState` embeds both review records
+:class:`~cadrumo.application.workflow.review_models.WorkflowEvent` because
+:class:`~cadrumo.application.workflow.state_models.WorkflowState` embeds both review records
 as field types — a genuine mutual runtime dependency between
 ``application.review`` and ``application.workflow`` that the shared leaf
 module resolves.
@@ -84,7 +84,7 @@ class TransactionReviewItem(_ReviewItemBase):
     Attributes:
         kind: Literal discriminator pinned to
             :attr:`ReviewItemKind.TRANSACTION`.
-        source: The verbatim :class:`cadrumo.domain.transactions.Transaction`.
+        source: The verbatim :class:`cadrumo.domain.transactions.models.Transaction`.
     """
 
     kind: Literal[ReviewItemKind.TRANSACTION] = ReviewItemKind.TRANSACTION
@@ -97,7 +97,7 @@ class InvoiceReviewItem(_ReviewItemBase):
     Attributes:
         kind: Literal discriminator pinned to
             :attr:`ReviewItemKind.INVOICE`.
-        source: The verbatim :class:`cadrumo.domain.invoices.Invoice`.
+        source: The verbatim :class:`cadrumo.domain.invoices.models.Invoice`.
     """
 
     kind: Literal[ReviewItemKind.INVOICE] = ReviewItemKind.INVOICE
@@ -110,7 +110,7 @@ class FindingReviewItem(_ReviewItemBase):
     ``source`` is ``None`` for the placeholder row emitted when a draft
     has no findings but is in a DRAFT or VALIDATED status. Otherwise it
     carries the verbatim
-    :class:`domain.filing.ModeloValidationFinding`.
+    :class:`domain.filing.schema.ModeloValidationFinding`.
 
     Attributes:
         kind: Literal discriminator pinned to
@@ -130,7 +130,7 @@ class FindingReviewItem(_ReviewItemBase):
     """Which axes of the approval basis moved, as stable enum tokens.
 
     Tokens rather than prose, because ``summary`` is a
-    :class:`~core.i18n.Translatable` -- an abstract catalogue key, not text --
+    :class:`~core.i18n.translatable.Translatable` -- an abstract catalogue key, not text --
     so a rendered explanation cannot be folded into it without producing a
     value no catalogue can translate. The projection that renders a row for an
     operator is where these become words.

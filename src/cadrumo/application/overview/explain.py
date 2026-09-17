@@ -3,9 +3,9 @@
 :func:`build_overview_explain` is the application service backing
 ``aeat app overview explain MODELO [--year YYYY]``. The ``applicable``
 verdict is DERIVED from the three-axis
-:class:`~domain.deadlines.TaxpayerProfile` taxpayer model through
+:class:`~domain.deadlines.models.TaxpayerProfile` taxpayer model through
 the registry-grounded
-:func:`~domain.calculations.registry.derive_modelo_applicability`
+:func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
 rule table, never assumed from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
@@ -120,7 +120,7 @@ class OverviewExplain(BaseModel):
             state and the ordinary four-year LGT prescription horizon
             without changing the applicability verdict.
         profile_facts: Subset of the operator's
-            :class:`~domain.deadlines.TaxpayerProfile` fields the answer
+            :class:`~domain.deadlines.models.TaxpayerProfile` fields the answer
             depends on. Keys are stable field names; values are
             JSON-serialisable scalars.
         generated_at: UTC timestamp of when the aggregator ran.
@@ -221,7 +221,7 @@ def build_overview_explain(
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
     three-axis taxpayer model through
-    :func:`~domain.calculations.registry.derive_modelo_applicability`
+    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
     — never from an autónomo default. An undeclared taxpayer
     model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident
@@ -236,7 +236,7 @@ def build_overview_explain(
     :class:`OverviewExplainError`.
 
     Args:
-        profile: The :class:`~domain.deadlines.TaxpayerProfile` whose
+        profile: The :class:`~domain.deadlines.models.TaxpayerProfile` whose
             attributes determine applicability.
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.
@@ -348,7 +348,7 @@ def _scheduling_rationale(
     the modelo/year (registry-track gap R1) — a data gap the CLI
     degrades gracefully around. A genuinely unknown modelo identifier
     is left for :func:`build_overview_explain` to refuse. Other
-    :class:`~domain.deadlines.DeadlineValidationError` failures remain
+    :class:`~domain.deadlines.errors.DeadlineValidationError` failures remain
     typed :class:`OverviewExplainError` refusals.
     """
     deadline_engine = engine or DeadlineEngine()

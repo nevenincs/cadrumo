@@ -3,7 +3,7 @@
 Overview services are local application projections. These exceptions
 cover failures to assemble status, calendar, agenda, backlog, or explain
 payloads from already-loaded inputs rather than transport or AEAT live
-read failures. They inherit from :class:`~core.errors.CadrumoError` so the
+read failures. They inherit from :class:`~core.errors.hierarchy.CadrumoError` so the
 central error registry can map overview failures to stable CLI envelopes.
 """
 
@@ -17,16 +17,16 @@ class OverviewError(CadrumoError):
 
 
 class OverviewCalendarError(OverviewError):
-    """Raised when :func:`application.overview.build_overview_calendar` fails."""
+    """Raised when :func:`application.overview.calendar.build_overview_calendar` fails."""
 
 
 class OverviewAgendaError(OverviewError):
-    """Raised when :func:`application.overview.build_overview_agenda` fails."""
+    """Raised when :func:`application.overview.agenda.build_overview_agenda` fails."""
 
 
 class OverviewBacklogError(OverviewError):
-    """Raised when :func:`application.overview.build_overview_backlog` fails."""
+    """Raised when :func:`application.overview.backlog.build_overview_backlog` fails."""
 
 
 class OverviewExplainError(OverviewError):
-    """Raised when :func:`application.overview.build_overview_explain` fails."""
+    """Raised when :func:`application.overview.explain.build_overview_explain` fails."""

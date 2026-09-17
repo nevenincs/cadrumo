@@ -1,7 +1,7 @@
 """Calendar aggregation and evidence merge for the overview read model.
 
-The facade composes a :class:`~cadrumo.domain.deadlines.Schedule` from
-:class:`~cadrumo.domain.deadlines.TaxpayerProfile` facts and projects
+The facade composes a :class:`~cadrumo.domain.deadlines.models.Schedule` from
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile` facts and projects
 already-loaded local state into :class:`OverviewCalendar` DTOs. Legal
 obligation rows come from the deadline engine; observed
 :class:`OverviewCalendarEvent` rows and :class:`OverviewCalendarFilingEvidence`
@@ -17,13 +17,13 @@ loaded, preserving distinct :class:`OverviewLocalFilingState` and
 See Also:
     :mod:`cadrumo.application.overview.calendar_models`
         Defines the calendar DTOs returned by these builders.
-    :class:`~cadrumo.domain.deadlines.DeadlineEngine`
+    :class:`~cadrumo.domain.deadlines.engine.DeadlineEngine`
         Deadline authority that produces the legal obligation schedule merged
         into the overview calendar.
-    :func:`~cadrumo.application.overview.calendar_filing_evidence_from_sources`
+    :func:`~cadrumo.application.overview.calendar_evidence.calendar_filing_evidence_from_sources`
         Pure evidence merge for local filing records, live captures,
         filed-declaration observations, and loaded justificante metadata.
-    :class:`~cadrumo.application.live.JustificanteCaptureSnapshot`
+    :class:`~cadrumo.application.live.justificante.JustificanteCaptureSnapshot`
         Persisted live justificante capture projected as AEAT-side evidence
         only when matching metadata is already loaded.
     :class:`~ModeloRecord`
@@ -474,7 +474,7 @@ def calendar_events_from_notification_snapshots(
     they are additive calendar observations and never imply
     :class:`OverviewAeatSubmissionState` or filing evidence for an obligation.
 
-    Each row also carries its :class:`~core.NotificacionEstadoServicio` service
+    Each row also carries its :class:`~core.notificacion_estado_servicio.NotificacionEstadoServicio` service
     state, computed against ``as_of`` so a projection over stored snapshots is
     reproducible rather than dependent on when it happened to run.
 
@@ -566,9 +566,9 @@ def calendar_events_from_justificante_capture_snapshots(
 ) -> tuple[_OverviewCalendarEvent, ...]:
     """Project verified live justificante captures into calendar filing events.
 
-    A :class:`~cadrumo.application.live.JustificanteCaptureSnapshot` becomes an
+    A :class:`~cadrumo.application.live.justificante.JustificanteCaptureSnapshot` becomes an
     :class:`OverviewCalendarEvent` only after loaded
-    :class:`~cadrumo.domain.justificante.Justificante` metadata proves the same
+    :class:`~cadrumo.domain.justificante.schema.Justificante` metadata proves the same
     CSV/model/year/period/taxpayer tuple. The event therefore carries
     :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED` without opening a
     new live read.
@@ -706,8 +706,8 @@ def actionable_post_filing_events(
     """Return the observed :class:`OverviewCalendarEvent` rows that demand operator attention.
 
     An event is actionable when its
-    :attr:`~cadrumo.application.overview.OverviewCalendarEvent.post_filing_kind`
-    is a member of :data:`~cadrumo.core.ACTIONABLE_POST_FILING_EVENT_KINDS` — a
+    :attr:`~cadrumo.application.overview.calendar_models.OverviewCalendarEvent.post_filing_kind`
+    is a member of :data:`~cadrumo.core.post_filing_event.ACTIONABLE_POST_FILING_EVENT_KINDS` — a
     requerimiento, a propuesta / acuerdo de liquidación, a procedimiento
     sancionador, or a recaudación enforcement act (providencia de apremio or
     diligencia de embargo). These are the post-filing events an operator must
@@ -715,8 +715,8 @@ def actionable_post_filing_events(
     buried in an undifferentiated message list.
 
     An event is ALSO actionable, independent of its procedural category, when
-    its :attr:`~cadrumo.application.overview.OverviewCalendarEvent.notificacion_estado_servicio`
-    is :attr:`~cadrumo.core.NotificacionEstadoServicio.RECHAZO_TACITO`. A plain
+    its :attr:`~cadrumo.application.overview.calendar_models.OverviewCalendarEvent.notificacion_estado_servicio`
+    is :attr:`~cadrumo.core.notificacion_estado_servicio.NotificacionEstadoServicio.RECHAZO_TACITO`. A plain
     ``notificacion`` whose concepto matches no sharper pattern falls outside
     every actionable category, so before this second limb a formal notification
     that lapsed into deemed service under Ley 39/2015 art. 43.2 reached the
@@ -743,7 +743,7 @@ def calendar_events_from_modelo_records(
     A :class:`~ModeloRecord` always contributes on the
     :class:`OverviewLocalFilingState` axis. It only contributes
     :class:`OverviewAeatSubmissionState` when its external evidence reference is
-    corroborated by loaded :class:`~cadrumo.domain.justificante.Justificante`
+    corroborated by loaded :class:`~cadrumo.domain.justificante.schema.Justificante`
     metadata for the same taxpayer and filing target.
 
     Args:
@@ -985,7 +985,7 @@ def build_overview_calendar(
 ) -> _OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
-    Composes the existing :class:`~cadrumo.domain.deadlines.DeadlineEngine`
+    Composes the existing :class:`~cadrumo.domain.deadlines.engine.DeadlineEngine`
     over each year the range spans, filters obligations to those whose
     filing window intersects the range, attaches the user-state
     mapping, merges already-loaded :class:`OverviewCalendarFilingEvidence`,
@@ -994,16 +994,16 @@ def build_overview_calendar(
     not contact AEAT.
 
     Args:
-        profile: The operator's :class:`~cadrumo.domain.deadlines.TaxpayerProfile`.
+        profile: The operator's :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         operation: Caller-owned generation-pinned authority operation used by
             the deadline engine, holiday projection, and warning metadata.
         today: Reference date for engine status classification.
-        engine: Optional :class:`~cadrumo.domain.deadlines.ScheduleProducer` the caller wants to
+        engine: Optional :class:`~cadrumo.domain.deadlines.engine.ScheduleProducer` the caller wants to
             share across queries — a concrete
-            :class:`~cadrumo.domain.deadlines.DeadlineEngine` or any object
+            :class:`~cadrumo.domain.deadlines.engine.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
-            a default :class:`~cadrumo.domain.deadlines.DeadlineEngine` is
+            a default :class:`~cadrumo.domain.deadlines.engine.DeadlineEngine` is
             constructed.
         raw_values: Optional mapping of casilla id to raw value, forwarded
             to the engine for user-state annotation. When ``None``, the

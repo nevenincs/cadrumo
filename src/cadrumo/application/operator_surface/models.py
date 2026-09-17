@@ -3,10 +3,10 @@
 The records describe accepted :class:`RootSurface` values, curated
 :class:`HelpDocument` / :class:`RootLandingReport` presentation documents,
 mounted :class:`MountedCommandFamily` declarations, parser-only
-:class:`~core.BindingSourceKind` aliases, backend :class:`ServiceOwner`
+:class:`~core.aggregation.BindingSourceKind` aliases, backend :class:`ServiceOwner`
 inventory, stable :class:`OperatorSurfaceLogFields`, and the aggregate
 :class:`OperatorSurfaceContract` built by
-:func:`~application.operator_surface.build_operator_surface_contract`.
+:func:`~application.operator_surface.contract.build_operator_surface_contract`.
 They are data contracts only; builders and renderers live in sibling modules.
 
 Invariant-guard classification note
@@ -14,7 +14,7 @@ Invariant-guard classification note
 All :class:`ValueError` raises in this module appear inside Pydantic v2
 ``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
 :class:`pydantic.ValidationError` automatically; raising any other exception
-type (including :class:`core.errors.CadrumoError`) would bypass that wrapping
+type (including :class:`core.errors.hierarchy.CadrumoError`) would bypass that wrapping
 and surface as an uncaught internal exception. These guards are therefore
 **developer-surface-only invariants** and must remain :class:`ValueError`. They
 are NOT operator-facing errors and do not require ``translated_message``.
@@ -113,7 +113,7 @@ class MountedCommandDomain(StrEnum):
 class RootSurface(BaseModel):
     """Backend ownership record for an accepted root surface.
 
-    Instances are declared in :data:`~application.operator_surface.ACCEPTED_ROOTS`
+    Instances are declared in :data:`~application.operator_surface.contract.ACCEPTED_ROOTS`
     and validated into the aggregate :class:`OperatorSurfaceContract`. The
     ``required_children`` field names required command-family children, not an
     exhaustive command tree.
@@ -177,7 +177,7 @@ class SourceKindAlias(BaseModel):
     """Input-only parser alias mapped to canonical :class:`BindingSourceKind`.
 
     Alias resolution is owned by
-    :func:`~application.operator_surface.resolve_source_kind_alias`; no
+    :func:`~application.operator_surface.contract.resolve_source_kind_alias`; no
     operator-only source-kind enum is introduced here.
     """
 
@@ -226,8 +226,8 @@ class ManifestActionProfile(BaseModel):
 
     A profile is keyed to one live subject leaf, failed condition, and scenario.
     It preserves the exact condition-to-recovery association by carrying either
-    one canonical :class:`~application.operator_actions.ActionReference` or one
-    explicit :class:`~core.NoRecoveryOutcome`.  The
+    one canonical :class:`~application.operator_actions.models.ActionReference` or one
+    explicit :class:`~core.operator_action_enums.NoRecoveryOutcome`.  The
     application guard remains the authority for deciding whether the condition
     applies; this record contains no predicate, runtime evidence, argument
     value, localized prose, or CLI command string.
@@ -291,7 +291,7 @@ class OperatorSurfaceLogFields(BaseModel):
 class OperatorSurfaceContract(BaseModel):
     """Complete backend-owned contract consumed by CLI adapters.
 
-    Built by :func:`~application.operator_surface.build_operator_surface_contract`,
+    Built by :func:`~application.operator_surface.contract.build_operator_surface_contract`,
     this record ties together accepted roots, modelo lifecycle vocabulary,
     canonical :class:`BindingSourceKind` subset, parser aliases, mounted command
     families, backend ownership inventory, log metadata, and registered error

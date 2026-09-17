@@ -19,7 +19,7 @@ class BucketDeletionFingerprint(BaseModel):
     tree was a hand-built fixture -- and its subject no longer exists, so it
     was removed rather than left as a field only tests could fill. The three
     surviving facts are exactly what
-    :class:`~application.user_profile.ProfileCustodyInventoryWitness` observes
+    :class:`~application.user_profile.custody_transactions.ProfileCustodyInventoryWitness` observes
     of a capsule, which is what makes this contract answerable at all now.
     """
 

@@ -20,7 +20,7 @@ prose, and the executable channel stays empty rather than shipping a
 placeholder command.
 
 See Also:
-    :class:`~application.operator_actions.DeclaredNextAction`
+    :class:`~application.operator_actions.models.DeclaredNextAction`
         The shared producer-side record every declaration here returns.
     :mod:`application.operator_surface`
         Owner of catalogue lookup and live required-input coverage.
@@ -57,7 +57,7 @@ def declare_next_action(action_id: str, /, **arguments: str | int) -> DeclaredNe
             verdict-context source for each name.
 
     Returns:
-        The producer-side :class:`~application.operator_actions.DeclaredNextAction`.
+        The producer-side :class:`~application.operator_actions.models.DeclaredNextAction`.
     """
     return DeclaredNextAction(
         action=ActionReference(action_id=action_id),
@@ -133,7 +133,7 @@ def build_overview_status_next_steps(report: OverviewStatusReport) -> tuple[Over
     bank statement - that step is done. The guidance walks the operator forward:
     import when the ledger is empty, review and start a declaration once
     transactions exist, resume the modelo flow when work units are already in
-    progress. A :class:`~core.Modelo` with no local work-unit creation path is
+    progress. A :class:`~core.modelo.Modelo` with no local work-unit creation path is
     diverted to discovery instead of a dead command.
 
     Args:

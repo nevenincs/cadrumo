@@ -216,7 +216,7 @@ def _observed_deletion_fingerprint(
     The three facts the contract carries are exactly what the custody inventory
     observes, so this reads that one inventory rather than growing a second
     content fold. The inventory spells its digest ``sha256:``-prefixed while the
-    contract's field is the bare hex-64 :data:`~core.identity.ContentDigest`;
+    contract's field is the bare hex-64 :data:`~core.identity.digest.ContentDigest`;
     the prefix is stripped rather than the field widened, because the reset
     journal's deletion marker compares against the same bare shape.
 

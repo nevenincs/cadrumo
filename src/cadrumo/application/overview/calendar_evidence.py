@@ -175,9 +175,9 @@ def no_aeat_history_notice(
     Args:
         observation_source_kinds: Every persisted calculation observation's
             source kind, across every modelo.
-        tax_route: The active profile's :func:`~domain.calculations.registry.derive_tax_route`
+        tax_route: The active profile's :func:`~domain.calculations.registry.applicability.derive_tax_route`
             branch, when known. A Sociedades filer
-            (:attr:`~domain.calculations.registry.TaxRoute.IMPUESTO_SOCIEDADES`)
+            (:attr:`~domain.calculations.registry.applicability_routes.TaxRoute.IMPUESTO_SOCIEDADES`)
             has no whole-history sweep to recommend: the bulk filed-data
             capture planner structurally diverts Modelo 200 and 202 -- the
             Sociedades filer's own direct-tax obligations -- into typed
@@ -229,9 +229,9 @@ def calendar_filing_evidence_from_sources(
     records. CLI/storage code owns I/O; this projection only reconciles
     the existing local :class:`~ModeloRecord` catalogue,
     calendar-visible AEAT register events,
-    :class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    :class:`~cadrumo.adapters.outbound.aeat.sede.schema.FiledDeclaracionObservation`
     rows, persisted calculation observations from justificante capture,
-    :class:`~cadrumo.application.live.JustificanteCaptureSnapshot` rows, and
+    :class:`~cadrumo.application.live.justificante.JustificanteCaptureSnapshot` rows, and
     already-loaded justificante metadata. The
     ``filing_records`` are filed :class:`ModeloRecord` rows whose
     external justificante references are only promoted to

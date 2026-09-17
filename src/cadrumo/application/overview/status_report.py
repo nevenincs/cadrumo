@@ -46,7 +46,7 @@ def build_filing_obligation_advisories(
     The helper feeds :class:`OverviewStatusReport` and stays on the local
     read-model path. It implements the Art. 96.2.a)/96.3 LIRPF
     multiple-pagadores rule through
-    :func:`domain.deadlines.evaluate_multiple_pagadores_obligation`:
+    :func:`domain.deadlines.models.evaluate_multiple_pagadores_obligation`:
     when the operator has declared ``irpf.pagadores_count >= 2`` and
     ``irpf.pagadores_secondary_income > 1500``, the work-income exemption
     limit drops from the general €22,000 to the per-year reduced limit, and
@@ -131,7 +131,7 @@ def build_unsupported_work_create_modelos(
     """Return modelos whose local work-create path is unsupported.
 
     The result feeds :class:`OverviewStatusReport` and uses canonical
-    :class:`core.Modelo` identifiers. Non-resident IRNR profile state
+    :class:`core.modelo.Modelo` identifiers. Non-resident IRNR profile state
     currently advertises Modelo 210 because the local work-create path is not
     available for that filing.
     """
@@ -159,7 +159,7 @@ def overview_status_report_from_projection(
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
     the one :class:`application.state_projection.OperatorStateProjection`;
     it is not a second state-assembly path. Both the declaration-draft
-    :class:`domain.filing.ModeloDraft` count and the
+    :class:`domain.filing.schema.ModeloDraft` count and the
     :class:`~WorkUnitCatalogue` count are carried
     distinctly.
 

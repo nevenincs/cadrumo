@@ -6,7 +6,7 @@ and :class:`CalendarCompleteness` payloads. They do not read remote state;
 warnings about censo provenance, missing justificante verification, and
 conflicting AEAT evidence only describe gaps in the local projection.
 
-:func:`application.overview.build_overview_calendar` appends these warnings
+:func:`application.overview.calendar.build_overview_calendar` appends these warnings
 after legal deadline rows and additive events have already been projected. Each
 warning names the catalogue action that answers it - profile edit, filed-history
 pull, or modelo description - rather than a command string; this module never

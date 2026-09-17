@@ -638,7 +638,7 @@ def reconcile_operator_surface_inventory(
     a hand-maintained hint.
 
     Every disagreement found is accumulated and reported together through one
-    :class:`~application.operator_surface.OperatorSurfaceContractError`, so the
+    :class:`~application.operator_surface.errors.OperatorSurfaceContractError`, so the
     reader of a failed reconciliation sees the whole census rather than
     whichever item the iteration order happened to reach first.
     """

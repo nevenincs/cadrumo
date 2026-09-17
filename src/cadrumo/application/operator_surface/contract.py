@@ -1,7 +1,7 @@
 """Application-owned operator-surface contract for the workflow redesign.
 
 This module declares the accepted :class:`RootSurface` records, canonical
-:class:`~cadrumo.core.BindingSourceKind` subset, parser-only
+:class:`~cadrumo.core.aggregation.BindingSourceKind` subset, parser-only
 :class:`SourceKindAlias` records, mounted :class:`MountedCommandFamily`
 records, backend :class:`ServiceOwner` inventory, log metadata, and registered
 error-code tuple that build the immutable :class:`OperatorSurfaceContract`.

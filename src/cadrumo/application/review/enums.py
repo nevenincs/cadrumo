@@ -1,7 +1,7 @@
 """Closed enumerations for the unified review queue.
 
 Defines the kind, severity, and state taxonomy used by every
-:class:`cadrumo.application.review.ReviewItem`.
+:class:`cadrumo.application.review.models.ReviewItem`.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Errors for the backend-owned operator-surface contract.
 
 :class:`OperatorSurfaceContractError` is the registered
-:class:`~core.errors.CadrumoError` raised by
+:class:`~core.errors.hierarchy.CadrumoError` raised by
 :func:`~application.operator_surface.contract.require_accepted_root` and
 :func:`~application.operator_surface.contract.resolve_source_kind_alias` when a
 caller asks for a root, source-kind token, or command-surface shape outside the

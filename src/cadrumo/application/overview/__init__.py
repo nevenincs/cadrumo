@@ -12,7 +12,7 @@ and projects the canonical
 :class:`application.state_projection.OperatorStateProjection` through
 :func:`overview_status_report_from_projection` into
 :class:`OverviewStatusReport`. ``overview calendar`` composes the existing
-:class:`domain.deadlines.DeadlineEngine` over the requested year
+:class:`domain.deadlines.engine.DeadlineEngine` over the requested year
 window, returning :class:`OverviewCalendarEntry` obligation rows, additive
 :class:`OverviewCalendarEvent` observations, and
 :class:`OverviewCalendarFilingEvidence` rows.
@@ -31,7 +31,7 @@ See Also:
         Canonical producer for the :class:`application.state_projection.OperatorStateProjection`
         consumed by ``overview status``.
     :mod:`domain.deadlines`
-        Deadline engine and :class:`domain.deadlines.Schedule` authority
+        Deadline engine and :class:`domain.deadlines.models.Schedule` authority
         used by calendar, agenda, backlog, and explain read models.
     :mod:`application.live`
         Read-only capture surface that persists the live evidence this package
