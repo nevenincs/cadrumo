@@ -8,8 +8,9 @@
 [concept]
 concept_id = "modelo-233"
 domain = "modelo"
-lifecycle = "deprecated"
+lifecycle = "retired"
 domain_refs = ["modelo:233"]
+replaced_by = "modelo"
 created_at = 2026-07-30
 updated_at = 2026-09-17
 
