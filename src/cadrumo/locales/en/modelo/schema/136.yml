@@ -67,59 +67,6 @@ modelo:
           field:
             label: Modelo 136, tax years 2022 to 2025
         '2026':
-          casilla:
-            '01':
-              help: Tax information about tax information in casilla 01 of Modelo
-                136.
-            '02':
-              help: Tax information for casilla 02 of Modelo 136.
-            '03':
-              help: 'Review the casilla information: Cuantia exempt of the gravamen
-                especial.'
-            '04':
-              help: 'Review the casilla information: Tax base.'
-            '05':
-              help: 'Review the casilla information: Amount of the gravamen especial.'
-            '06':
-              help: Tax information about tax information in casilla 06 of Modelo
-                136.
-            '07':
-              help: 'Review the casilla information: Result a ingresar.'
-            09:
-              help: 'Review the casilla information: Amount ingresado a favor of the
-                Tesoro Publico.'
-            autoliquidacion-complementaria:
-              help: 'Review the casilla information: Self-assessment supplementary.'
-            declarante-nif:
-              help: Tax information for casilla of Modelo 136.
-            declarante-nombre:
-              help: Tax information for casilla of Modelo 136.
-            ejercicio-declaracion:
-              help: Tax information for casilla of Modelo 136.
-            fecha-celebracion:
-              help: Tax information about tax information in casilla  of Modelo 136.
-            fecha-cobro-premio:
-              help: Tax information about tax information in casilla  of Modelo 136.
-            forma-pago:
-              help: Tax information about tax information in casilla  of Modelo 136.
-            iban:
-              help: Tax information for casilla of Modelo 136.
-            justificante-anterior:
-              help: Tax information for casilla of Modelo 136.
-            loteria-apuesta-denominacion:
-              help: Tax information for casilla of Modelo 136.
-            organizador-codigo-pais:
-              help: Tax information for casilla of Modelo 136.
-            organizador-denominacion:
-              help: Tax information for casilla of Modelo 136.
-            organizador-pais:
-              help: Tax information about tax information in casilla  of Modelo 136.
-            periodo-declaracion:
-              help: Tax information for casilla of Modelo 136.
-            precio-unitario:
-              help: 'Review the casilla information: Precio unitario.'
-            provincia-residencia-irpf:
-              help: Tax information for casilla of Modelo 136.
           construct:
             modelo-136-calculation-construct:
               field:

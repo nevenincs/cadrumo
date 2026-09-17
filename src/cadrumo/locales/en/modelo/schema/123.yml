@@ -4,42 +4,30 @@ modelo:
       casilla:
         continuidad:
           base-rentas-dividendos:
-            help: 'Review the casilla information: Base dividendos and units.'
             label: Base for dividends and profit-sharing
           base-rentas-resto:
-            help: Tax information about tax information in casilla 05 of Modelo 123.
             label: Base for other income
           cuota-a-ingresar:
-            help: 'Review the casilla information: Result a ingresar.'
             label: Result payable
           ingresos-ejercicios-anteriores:
-            help: Tax information about tax information in casilla 04 of Modelo 123.
             label: Income from previous tax years
           numero-rentas-dividendos:
-            help: Tax information for casilla 01 of Modelo 123.
             label: Number of dividend and profit-sharing income items
           numero-rentas-resto:
-            help: Tax information for casilla 02 of Modelo 123.
             label: Number of other income items
           numero-rentas-total:
-            help: Tax information for casilla 03 of Modelo 123.
             label: Total number of income items
           perceptor-count:
-            help: Tax information for casilla 01 of Modelo 123.
             label: Number of recipients
           regularizacion:
-            help: 'Review the casilla information: Adjustment.'
             label: Adjustment
           resultado-anteriores-autoliquidaciones:
             label: Result of previous self-assessments
           retenciones-rentas-dividendos:
-            help: 'Review the casilla information: Withholdings dividendos and units.'
             label: Withholdings on dividends and profit-sharing
           retenciones-rentas-resto:
-            help: Tax information about tax information in casilla 08 of Modelo 123.
             label: Withholdings on other income
           suma-retenciones-regularizacion:
-            help: Tax information about tax information in casilla 06 of Modelo 123.
             label: Sum of withholdings and adjustment
       field:
         official_name: Withholdings and payments on account for Personal Income Tax,
@@ -50,15 +38,9 @@ modelo:
         2019-2023:
           casilla:
             '02':
-              help: Tax information about tax information in casilla 02 of Modelo
-                123.
               label: Withholding and advance payment tax base
             '03':
-              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and advance payments
-            '07':
-              help: Tax information about tax information in casilla 07 of Modelo
-                123.
           construct:
             modelo-123-capital-withholding:
               field:
@@ -69,20 +51,9 @@ modelo:
         2024-y-siguientes:
           casilla:
             '06':
-              help: 'Review the casilla information: Base total.'
               label: Total base
             09:
-              help: 'Review the casilla information: Withholdings total.'
               label: Total withholdings
-            '10':
-              help: Tax information about tax information in casilla 10 of Modelo
-                123.
-            '12':
-              help: Tax information about tax information in casilla 12 of Modelo
-                123.
-            '13':
-              help: Tax information about tax information in casilla 13 of Modelo
-                123.
           construct:
             modelo-123-capital-withholding:
               field:

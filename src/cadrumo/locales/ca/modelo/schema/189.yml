@@ -65,64 +65,6 @@ modelo:
           field:
             label: Model 189, exercici 2024
         '2025':
-          casilla:
-            clave-identificacion:
-              help: Informació fiscal de la casella del Modelo 189.
-            clave-mercado:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            clave-representacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            clave-titularidad:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            clave-valor:
-              help: 'Consulteu la informació de la casella: Clave de valor.'
-            codigo-pais:
-              help: Informació fiscal de la casella del Modelo 189.
-            codigo-provincia:
-              help: Informació fiscal de la casella del Modelo 189.
-            declaracion-complementaria-sustitutiva:
-              help: Informació fiscal de la casella del Modelo 189.
-            declarado-nif:
-              help: 'Consulteu la informació de la casella: NIF del declarado.'
-            declarado-nombre:
-              help: Informació fiscal de la casella del Modelo 189.
-            declarante-nif:
-              help: Informació fiscal de la casella del Modelo 189.
-            declarante-razon-social:
-              help: Informació fiscal de la casella del Modelo 189.
-            ejercicio-declaracion:
-              help: 'Consulteu la informació de la casella: Exercici de declaració.'
-            identificacion-valores:
-              help: Informació fiscal de la casella del Modelo 189.
-            nominal-unitario-valores:
-              help: Informació fiscal de la casella del Modelo 189.
-            numero-identificativo-anterior:
-              help: Informació fiscal de la casella del Modelo 189.
-            numero-justificante:
-              help: Informació fiscal de la casella del Modelo 189.
-            numero-total-declarados:
-              help: Informació fiscal de la casella del Modelo 189.
-            numero-valores:
-              help: Informació fiscal de la casella del Modelo 189.
-            persona-relacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            porcentaje-participacion:
-              help: 'Consulteu la informació de la casella: Percentatge de participacion.'
-            representante-legal-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            tipo-soporte:
-              help: 'Consulteu la informació de la casella: Tipus de soporte.'
-            valoracion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
-            valoracion-total:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                189.
           field:
             label: Model 189, exercici 2025 (Ordre EHA/3481/2008; Ordres HFP/1180/2023,
               HFP/1284/2023 i HAC/132/2026)

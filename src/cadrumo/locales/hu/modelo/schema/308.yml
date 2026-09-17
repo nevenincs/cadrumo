@@ -8,7 +8,6 @@ modelo:
               véve.
             label: Esedékesség. Időszak
           filing-year:
-            help: 'A Modelo 308 . casilla adóügyi adatai: adóév.'
             label: A kérelem vonatkozási éve
       construct:
         modelo-308-iva-solicitud-devolucion:
@@ -167,7 +166,6 @@ modelo:
               help: A 308-es modelo 13. rovata, 2009. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: 'A Modelo 308 . casilla adóügyi adatai: adóügyi információ.'
               label: Kérelem típusa (egyenértékűségi felár / 30a. cikk / 21.4. cikk
                 / eseti adóalany / egyszerűsített szállítási szabályozás)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:

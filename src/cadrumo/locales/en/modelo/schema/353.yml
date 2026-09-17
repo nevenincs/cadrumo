@@ -4,55 +4,32 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: Tax information for casilla of Modelo 353.
             label: Monthly period (01..12)
           filing-year:
-            help: Tax information for casilla of Modelo 353.
             label: Tax year the self-assessment relates to
           iva-agregado-reconciliacion-deducible-322:
-            help: Tax information about tax information in casilla  of Modelo 353.
             label: Group aggregate deductible amount reconciled from members' Modelo
               322 returns
           iva-agregado-reconciliacion-devengada-322:
-            help: Tax information about tax information in casilla  of Modelo 353.
             label: Group aggregate VAT due reconciled from members' Modelo 322 returns
           iva-agregado-reconciliacion-resultado-322:
-            help: Tax information about tax information in casilla  of Modelo 353.
             label: Group aggregate result reconciled from members' Modelo 322 returns
           iva-cuota-autorepercutida-intracomunitaria:
-            help: Tax information about tax information in casilla  of Modelo 353.
             label: Self-charged VAT on intra-Community acquisitions - group aggregate
           iva-cuota-deducible-total:
-            help: 'Review the casilla information: Total amount IVA deductible (agregado
-              of the group).'
             label: Total deductible VAT (group aggregate)
           iva-cuota-devengada-total:
-            help: 'Review the casilla information: Total amount Output VAT (agregado
-              of the group).'
             label: Total VAT due (group aggregate)
           iva-cuota-repercutida-general:
-            help: 'Review the casilla information: Amount Output VAT al rate general
-              (21%) - agregado of the group.'
             label: VAT charged at the standard rate (21%) - group aggregate
           iva-cuota-repercutida-reducido:
-            help: 'Review the casilla information: Amount Output VAT al rate reduced
-              (10%) - agregado of the group.'
             label: VAT charged at the reduced rate (10%) - group aggregate
           iva-cuota-repercutida-super-reducido:
-            help: 'Review the casilla information: Amount Output VAT al rate super-reduced
-              (4%) - agregado of the group.'
             label: VAT charged at the super-reduced rate (4%) - group aggregate
           iva-cuota-soportada-interiores:
-            help: Tax information about tax information in casilla  of Modelo 353.
             label: VAT borne on ordinary domestic transactions - group aggregate
           iva-resultado-regimen-general:
-            help: 'Review the casilla information: Result of the group (amount accrued
-              agregada - amount deductible agregada).'
             label: Group result (aggregate VAT due minus aggregate deductible VAT)
-          m353-cuotas-a-compensar:
-            help: Tax information about tax information in casilla 02 of Modelo 353.
-          m353-resultado-total-entidades:
-            help: Tax information for casilla 01 of Modelo 353.
       construct:
         modelo-353-iva-grupo-agregado:
           field:
@@ -70,22 +47,15 @@ modelo:
             '02':
               label: Amounts to offset carried forward from earlier years
             '03':
-              help: 'Review the casilla information: Result ([01] - [08]).'
               label: Result ([01] - [08])
             '04':
-              help: Tax information for casilla 04 of Modelo 353.
               label: 'To deduct: result of earlier self-assessments filed for the
                 same item, year and period'
             '05':
-              help: 'Review the casilla information: Result of the self-assessment
-                ([03] - [04]).'
               label: Result of the self-assessment ([03] - [04])
             08:
-              help: Tax information for casilla 08 of Modelo 353.
               label: Amounts to offset from earlier periods applied in this period
             09:
-              help: 'Tax information about tax information in casilla 09 of Modelo
-                353 References: [02], [08].'
               label: Amounts to offset from earlier periods still pending for later
                 periods ([02] - [08])
           field:
@@ -93,38 +63,23 @@ modelo:
         2026-desde-02:
           casilla:
             '01':
-              help: 'Tax information about tax information in casilla 01 of Modelo
-                353 References: [01].'
               label: Total result (sum of the member entities' results) [01]
             '02':
-              help: 'Tax information about tax information in casilla 02 of Modelo
-                353 References: [02].'
               label: Amounts to offset outstanding from earlier years [02]
             '03':
-              help: 'Review the casilla information: Result ([01] - [08]) [03].'
               label: Result ([01] - [08]) [03]
             '04':
-              help: 'Tax information about tax information in casilla 04 of Modelo
-                353 References: [04].'
               label: 'To deduct: result of earlier self-assessments for the same item,
                 year and period [04]'
             '05':
-              help: 'Review the casilla information: Result of the self-assessment
-                ([03] - [04]) [05].'
               label: Result of the self-assessment ([03] - [04]) [05]
             08:
-              help: 'Tax information about tax information in casilla 08 of Modelo
-                353 References: [08].'
               label: Amounts to offset from earlier periods applied in this period
                 [08]
             09:
-              help: 'Tax information about tax information in casilla 09 of Modelo
-                353 References: [02], [08], [09].'
               label: Amounts to offset from earlier periods carried to later periods
                 ([02]-[08]) [09]
             '10':
-              help: 'Tax information about tax information in casilla 10 of Modelo
-                353 References: [10].'
               label: Payment on account for supplies of petrol, diesel and biofuels
                 attributable to the State Administration [10]
           field:

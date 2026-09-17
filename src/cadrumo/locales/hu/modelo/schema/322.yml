@@ -1479,8 +1479,6 @@ modelo:
               help: 'A Modelo 322 11. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [11].'
             '112':
-              help: 'A Modelo 322 112. casilla adóügyi adatai: adóügyi információ
-                Hivatkozások: [112].'
               label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
                 utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
                 követően [112]
@@ -2059,7 +2057,6 @@ modelo:
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: A Modelo 322 . casilla adóügyi adatai.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
-              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Jogosult a benzin, gázolaj és bioüzemanyag értékesítése utáni
                 előleg levonására
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:

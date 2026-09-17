@@ -8,7 +8,6 @@ modelo:
               payee records, in euros.
             label: Total base amount for withholding or payment on account
           filing-year:
-            help: Tax information for casilla of Modelo 270.
             label: Filing year to which the return relates
           m270-clave-personalidad:
             help: 'Completed only where the payee type is code 5: F if the payee is
@@ -126,7 +125,6 @@ modelo:
               records, in euros.
             label: Total amount of withholding or payment on account
           tipo-declaracion:
-            help: Tax information for casilla of Modelo 270.
             label: Return type (original / substitute / supplementary)
           total-perceptores-count:
             help: Total number of payees listed in the type 2 detail records. A payee

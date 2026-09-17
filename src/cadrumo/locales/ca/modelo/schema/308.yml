@@ -7,8 +7,6 @@ modelo:
             help: Dada declarada al model 308, presa del disseny de registre oficial.
             label: Meritació. Període
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              308.
             label: Exercici a què es refereix la sol·licitud
       construct:
         modelo-308-iva-solicitud-devolucion:
@@ -166,8 +164,6 @@ modelo:
               help: Casella 13 del model 308, exercici 2009.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                308.
               label: Tipus de sol·licitud (recàrrec d'equivalència / art. 30 bis /
                 art. 21.4 / subjecte passiu ocasional / règim simplificat de transport)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:

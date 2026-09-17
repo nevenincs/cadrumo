@@ -4,219 +4,131 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              390.
             label: Exercici fiscal de l'autoliquidació
           iva-aic-bienes-tipo-0-base:
-            help: Informació fiscal sobre informació fiscal de la casella 716 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               0% - base imposable
           iva-aic-bienes-tipo-0-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 0% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               0% - quota
           iva-aic-bienes-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 23 del Modelo
-              390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               10% - base imposable
           iva-aic-bienes-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 10% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               10% - quota
           iva-aic-bienes-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 683 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               2% - base imposable
           iva-aic-bienes-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 2% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               2% - quota
           iva-aic-bienes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
-              390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               21% - base imposable
           iva-aic-bienes-tipo-21-cuota:
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               21% - quota
           iva-aic-bienes-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 21 del Modelo
-              390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               4% - base imposable
           iva-aic-bienes-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 4% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               4% - quota
           iva-aic-bienes-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 718 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               5% - base imposable
           iva-aic-bienes-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 5% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               5% - quota
           iva-aic-bienes-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 685 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               7,5% - base imposable
           iva-aic-bienes-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de béns al tipus 7,5% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns al tipus
               7,5% - quota
           iva-aic-servicios-tipo-0-base:
-            help: Informació fiscal sobre informació fiscal de la casella 720 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               0% - base imposable
           iva-aic-servicios-tipo-0-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 0% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               0% - quota
           iva-aic-servicios-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 547 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               10% - base imposable
           iva-aic-servicios-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 10% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               10% - quota
           iva-aic-servicios-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 687 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               2% - base imposable
           iva-aic-servicios-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 2% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               2% - quota
           iva-aic-servicios-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 551 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               21% - base imposable
           iva-aic-servicios-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 21% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               21% - quota
           iva-aic-servicios-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 545 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               4% - base imposable
           iva-aic-servicios-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 4% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               4% - quota
           iva-aic-servicios-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 722 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               5% - base imposable
           iva-aic-servicios-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 5% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               5% - quota
           iva-aic-servicios-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 689 del
-              Modelo 390.
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               7,5% - base imposable
           iva-aic-servicios-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries de serveis al tipus 7,5% - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de serveis al tipus
               7,5% - quota
           iva-anual-compensacion-generada-ejercicio:
-            help: 'Consulteu la informació de la casella: Saldo a compensar generat
-              en el exercici.'
             label: Saldo a compensar generat en l'exercici
           iva-anual-compensacion-ultimo-periodo:
             label: Quotes a compensar de l'últim període de liquidació
           iva-anual-cuota-deducible-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA deduïble
-              del exercici.'
             label: Total quota d'IVA deduïble de l'exercici
           iva-anual-cuota-devengada-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA meritada
-              del exercici.'
             label: Total quota d'IVA meritada de l'exercici
           iva-anual-reconciliacion-deducible-303:
-            help: Informació fiscal de la casella del Modelo 390.
             label: Reconciliació anual - quota deduïble declarada en els models 303
           iva-anual-reconciliacion-devengada-303:
-            help: Informació fiscal de la casella del Modelo 390.
             label: Reconciliació anual - quota meritada declarada en els models 303
           iva-anual-reconciliacion-devengada-simplificado-303:
-            help: Informació fiscal de la casella 79 del Modelo 390.
             label: Reconciliació anual - quota meritada del règim simplificat declarada
               en els models 303
           iva-anual-reconciliacion-resultado-303:
-            help: 'Consulteu la informació de la casella: Reconciliación anual - resultat
-              declarado en los modelos 303.'
             label: Reconciliació anual - resultat declarat en els models 303
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
-            help: 'Consulteu la informació de la casella: IVA meritat en adquisicions
-              intracomunitàries.'
             label: IVA meritat en adquisicions intracomunitàries
           iva-anual-regimen-simplificado-cuota-resultante-agricola:
-            help: Informació fiscal sobre informació fiscal de la casella 75 del Modelo
-              390.
             label: IVA meritat - Suma de quotes d'activitats agrícoles, ramaderes
               i forestals
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
-            help: Informació fiscal sobre informació fiscal de la casella 74 del Modelo
-              390.
             label: IVA meritat - Suma de quotes d'activitats no agrícoles, ramaderes
               i forestals
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
-            help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-              de activos fixos.'
             label: IVA meritat en lliuraments de activos fixos
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
-            help: 'Consulteu la informació de la casella: IVA meritat per inversió
-              del subjecte passiu.'
             label: IVA meritat per inversió del subjecte passiu
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
-            help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-              en adquisició de activos fixos.'
             label: Deduccions - IVA suportat en adquisició de activos fixos
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
-            help: 'Consulteu la informació de la casella: Deduccions - Regularització
-              de béns de inversió.'
             label: Deduccions - Regularització de béns de inversió
           iva-anual-regimen-simplificado-resultado:
-            help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
             label: Resultat règim simplificado
           iva-anual-regimen-simplificado-suma-deducciones:
-            help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
-              390.
             label: Deduccions - Suma de deduccions
           iva-anual-regularizacion-bienes-inversion:
-            help: 'Consulteu la informació de la casella: Regularització per béns
-              de inversió (LIVA arts. 107-110).'
             label: Regularització de béns d'inversió
           iva-anual-regularizacion-prorrata-definitiva:
-            help: 'Consulteu la informació de la casella: Regularització prorrata
-              per percentatge definitivo - Quota.'
             label: Regularització de prorrata per percentatge definitiu - quota
           iva-anual-repercutido-recargo-tipo-0-26-base:
             help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
@@ -244,1627 +156,920 @@ modelo:
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 1%.
               Base imposable
           iva-anual-resultado-regimen-general:
-            help: 'Consulteu la informació de la casella: Resultat del règim general
-              (quota meritada - quota deduïble).'
             label: Resultat del règim general
           iva-anual-total-bases-cuotas-iva:
-            help: 'Consulteu la informació de la casella: Total bases i quotes de
-              IVA del exercici.'
             label: Total de bases i quotes d'IVA de l'exercici
           iva-base-imponible-aic-bienes-general:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de béns al
               tipus general (21%)
           iva-base-imponible-aic-bienes-reduced:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de béns al
               tipus reduït (10%)
           iva-base-imponible-aic-bienes-super-reduced:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de béns al
               tipus superreduït (4%)
           iva-base-imponible-aic-bienes-zero:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de béns al
               tipus zero (0%)
           iva-base-imponible-aic-servicios-general:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de serveis
               al tipus general (21%)
           iva-base-imponible-aic-servicios-reduced:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de serveis
               al tipus reduït (10%)
           iva-base-imponible-aic-servicios-super-reduced:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de serveis
               al tipus superreduït (4%)
           iva-base-imponible-aic-servicios-zero:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable total d'adquisicions intracomunitàries de serveis
               al tipus zero (0%)
           iva-base-imponible-repercutida-general:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus general (21%)
           iva-base-imponible-repercutida-reducido:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus reduït (10%)
           iva-base-imponible-repercutida-super-reducido:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus superreduït (4%)
           iva-base-imponible-repercutida-tipo-0:
-            help: Informació fiscal sobre informació fiscal de la casella 700 del
-              Modelo 390.
             label: Base imposable de l'IVA repercutit al tipus 0%
           iva-base-imponible-repercutida-tipo-10:
-            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus 10%
           iva-base-imponible-repercutida-tipo-2:
-            help: Informació fiscal sobre informació fiscal de la casella 667 del
-              Modelo 390.
             label: Base imposable de l'IVA repercutit al tipus 2%
           iva-base-imponible-repercutida-tipo-21:
-            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus 21%
           iva-base-imponible-repercutida-tipo-4:
-            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus 4%
           iva-base-imponible-repercutida-tipo-5:
-            help: Informació fiscal sobre informació fiscal de la casella 702 del
-              Modelo 390.
             label: Base imposable de l'IVA repercutit al tipus 5%
           iva-base-imponible-repercutida-tipo-7-5:
-            help: Informació fiscal sobre informació fiscal de la casella 669 del
-              Modelo 390.
             label: Base imposable de l'IVA repercutit al tipus 7,5%
           iva-base-imponible-repercutida-zero:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Base imposable de l'IVA repercutit al tipus zero (0%)
           iva-base-imponible-soportada-interiores:
-            help: Informació fiscal sobre informació fiscal de la casella 48 del Modelo
-              390.
             label: Base imposable de l'IVA suportat en operacions interiors corrents
           iva-compensacion-cuotas-ejercicio-anterior:
-            help: 'Consulteu la informació de la casella: Compensació de quotes del
-              exercici anterior.'
             label: Compensació de quotes de l'exercici anterior
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-              en adquisicions intracomunitàries (LIVA art 84.Uno.2).'
             label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
           iva-cuota-recargo-equivalencia-general:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus general (5,2%) - Quota.'
             label: Recàrrec d'equivalència al tipus general (5,2%) - quota
           iva-cuota-recargo-equivalencia-reducido:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus reduït (1,4%) - Quota.'
             label: Recàrrec d'equivalència al tipus reduït (1,4%) - quota
           iva-cuota-recargo-equivalencia-super-reducido:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus superreduït (0,5%) - Quota.'
             label: Recàrrec d'equivalència al tipus superreduït (0,5%) - quota
           iva-cuota-recargo-equivalencia-tipo-0-26:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 0,26% - Quota.'
             label: Recàrrec d'equivalència al 0,26% - quota
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 0,5% - Quota.'
             label: Recàrrec d'equivalència al 0,5% - quota
           iva-cuota-recargo-equivalencia-tipo-0-62:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 0,62% - Quota.'
             label: Recàrrec d'equivalència al 0,62% - quota
           iva-cuota-recargo-equivalencia-tipo-1:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 1% - Quota.'
             label: Recàrrec d'equivalència al 1% - quota
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 1,4% - Quota.'
             label: Recàrrec d'equivalència al 1,4% - quota
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 5,2% - Quota.'
             label: Recàrrec d'equivalència al 5,2% - quota
           iva-cuota-repercutida-general:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus general (21%).'
             label: Quota IVA repercutit al tipus general (21%)
           iva-cuota-repercutida-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus reduït (10%).'
             label: Quota d'IVA repercutit al tipus reduït (10%)
           iva-cuota-repercutida-super-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus superreduït (4%).'
             label: Quota d'IVA repercutit al tipus superreduït (4%)
           iva-cuota-repercutida-tipo-0:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 0%.'
             label: Quota d'IVA repercutit al tipus 0%
           iva-cuota-repercutida-tipo-10:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 10%.'
             label: Quota d'IVA repercutit al tipus 10%
           iva-cuota-repercutida-tipo-2:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 2%.'
             label: Quota d'IVA repercutit al tipus 2%
           iva-cuota-repercutida-tipo-21:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 21%.'
             label: Quota d'IVA repercutit al tipus 21%
           iva-cuota-repercutida-tipo-4:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 4%.'
             label: Quota d'IVA repercutit al tipus 4%
           iva-cuota-repercutida-tipo-5:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 5%.'
             label: Quota d'IVA repercutit al tipus 5%
           iva-cuota-repercutida-tipo-7-5:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus 7,5%.'
             label: Quota d'IVA repercutit al tipus 7,5%
           iva-cuota-soportada-importaciones:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              390.
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
           iva-cuota-soportada-interiores:
-            help: 'Consulteu la informació de la casella: Quota IVA suportat en operacions
-              interiors corrientes.'
             label: Quota IVA suportat en operacions interiors corrents
           iva-deducible-aic-corrientes-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 627 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 10% - base imposable
           iva-deducible-aic-corrientes-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 10% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 10% - quota deduïble
           iva-deducible-aic-corrientes-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 765 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 2% - base imposable
           iva-deducible-aic-corrientes-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 2% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 2% - quota deduïble
           iva-deducible-aic-corrientes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 629 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 21% - base imposable
           iva-deducible-aic-corrientes-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 21% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 21% - quota deduïble
           iva-deducible-aic-corrientes-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 214 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 4% - base imposable
           iva-deducible-aic-corrientes-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 4% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 4% - quota deduïble
           iva-deducible-aic-corrientes-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 736 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 5% - base imposable
           iva-deducible-aic-corrientes-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 5% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 5% - quota deduïble
           iva-deducible-aic-corrientes-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 767 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 7,5% - base imposable
           iva-deducible-aic-corrientes-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns corrientes al tipus 7,5% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               corrents al tipus 7,5% - quota deduïble
           iva-deducible-aic-corrientes-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 56 del Modelo
-              390.
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns corrents - base imposable'
           iva-deducible-aic-corrientes-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en adquisicions intracomunitàries de béns corrientes - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns corrents - quota deduïble'
           iva-deducible-aic-inversion-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 631 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 10% - base imposable
           iva-deducible-aic-inversion-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns de inversió al tipus 10% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 10% - quota deduïble
           iva-deducible-aic-inversion-tipo-2-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 769 del
-              Modelo 390 Referències: [769].'
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - Tipus 2% - Base imposable [769]
           iva-deducible-aic-inversion-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA deduïble en adquisicions
-              intracomunitàries de béns de inversió - Tipus 2% - Quota deduïble [770].'
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - Tipus 2% - Quota deduïble [770]
           iva-deducible-aic-inversion-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 633 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 21% - base imposable
           iva-deducible-aic-inversion-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns de inversió al tipus 21% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 21% - quota deduïble
           iva-deducible-aic-inversion-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 220 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 4% - base imposable
           iva-deducible-aic-inversion-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns de inversió al tipus 4% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 4% - quota deduïble
           iva-deducible-aic-inversion-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 738 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 5% - base imposable
           iva-deducible-aic-inversion-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de béns de inversió al tipus 5% - Quota
-              deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de béns
               d'inversió al tipus 5% - quota deduïble
           iva-deducible-aic-inversion-tipo-7-5-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 771 del
-              Modelo 390 Referències: [771].'
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - Tipus 7,5% - Base imposable [771]
           iva-deducible-aic-inversion-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA deduïble en adquisicions
-              intracomunitàries de béns de inversió - Tipus 7,5% - Quota deduïble
-              [772].'
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - Tipus 7,5% - Quota deduïble [772]
           iva-deducible-aic-inversion-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 58 del Modelo
-              390.
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns d''inversió - base imposable'
           iva-deducible-aic-inversion-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en adquisicions intracomunitàries de béns de inversió - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de béns d''inversió - quota deduïble'
           iva-deducible-aic-servicios-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 635 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 10% - base imposable
           iva-deducible-aic-servicios-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de serveis al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 10% - quota deduïble
           iva-deducible-aic-servicios-tipo-2-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 773 del
-              Modelo 390 Referències: [773].'
             label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
               2% - Base imposable [773]
           iva-deducible-aic-servicios-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA deduïble en adquisicions
-              intracomunitàries de serveis - Tipus 2% - Quota deduïble [774].'
             label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
               2% - Quota deduïble [774]
           iva-deducible-aic-servicios-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 637 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 21% - base imposable
           iva-deducible-aic-servicios-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de serveis al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 21% - quota deduïble
           iva-deducible-aic-servicios-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 587 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 4% - base imposable
           iva-deducible-aic-servicios-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de serveis al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 4% - quota deduïble
           iva-deducible-aic-servicios-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 740 del
-              Modelo 390.
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 5% - base imposable
           iva-deducible-aic-servicios-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              adquisicions intracomunitàries de serveis al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en adquisicions intracomunitàries de serveis
               al tipus 5% - quota deduïble
           iva-deducible-aic-servicios-tipo-7-5-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 775 del
-              Modelo 390 Referències: [775].'
             label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
               7,5% - Base imposable [775]
           iva-deducible-aic-servicios-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA deduïble en adquisicions
-              intracomunitàries de serveis - Tipus 7,5% - Quota deduïble [776].'
             label: IVA deduïble en adquisicions intracomunitàries de serveis - Tipus
               7,5% - Quota deduïble [776]
           iva-deducible-aic-servicios-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 597 del
-              Modelo 390.
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de serveis - base imposable'
           iva-deducible-aic-servicios-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en adquisicions intracomunitàries de serveis - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en adquisicions intracomunitàries
               de serveis - quota deduïble'
           iva-deducible-compensaciones-reagp-base:
-            help: Informació fiscal sobre informació fiscal de la casella 60 del Modelo
-              390.
             label: Compensacions del règim especial de l'agricultura, ramaderia i
               pesca - base imposable
           iva-deducible-compensaciones-reagp-cuota:
-            help: 'Consulteu la informació de la casella: Compensaciones del règim
-              especial de la agricultura, ganadería i pesca - Quota deduïble.'
             label: Compensacions del règim especial de l'agricultura, ramaderia i
               pesca - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 619 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               10% - base imposable
           iva-deducible-importaciones-corrientes-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               10% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 757 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               2% - base imposable
           iva-deducible-importaciones-corrientes-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               2% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 621 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               21% - base imposable
           iva-deducible-importaciones-corrientes-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               21% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 202 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               4% - base imposable
           iva-deducible-importaciones-corrientes-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               4% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 732 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               5% - base imposable
           iva-deducible-importaciones-corrientes-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               5% - quota deduïble
           iva-deducible-importaciones-corrientes-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 759 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               7,5% - base imposable
           iva-deducible-importaciones-corrientes-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns corrientes al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns corrents al tipus
               7,5% - quota deduïble
           iva-deducible-importaciones-corrientes-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 52 del Modelo
-              390.
             label: 'Total: IVA suportat deduïble en importacions de béns corrents
               - base imposable'
           iva-deducible-importaciones-inversion-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 623 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               10% - base imposable
           iva-deducible-importaciones-inversion-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               10% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 761 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               2% - base imposable
           iva-deducible-importaciones-inversion-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               2% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 625 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               21% - base imposable
           iva-deducible-importaciones-inversion-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               21% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 208 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               4% - base imposable
           iva-deducible-importaciones-inversion-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               4% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 734 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               5% - base imposable
           iva-deducible-importaciones-inversion-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               5% - quota deduïble
           iva-deducible-importaciones-inversion-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 763 del
-              Modelo 390.
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               7,5% - base imposable
           iva-deducible-importaciones-inversion-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              importacions de béns de inversió al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en importacions de béns d'inversió al tipus
               7,5% - quota deduïble
           iva-deducible-importaciones-inversion-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 54 del Modelo
-              390.
             label: 'Total: IVA suportat deduïble en importacions de béns d''inversió
               - base imposable'
           iva-deducible-importaciones-inversion-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en importacions de béns de inversió - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en importacions de béns d''inversió
               - quota deduïble'
           iva-deducible-interiores-corrientes-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 603 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               10% - base imposable
           iva-deducible-interiores-corrientes-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               10% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 695 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               2% - base imposable
           iva-deducible-interiores-corrientes-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               2% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 605 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               21% - base imposable
           iva-deducible-interiores-corrientes-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               21% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 190 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               4% - base imposable
           iva-deducible-interiores-corrientes-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               4% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 724 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               5% - base imposable
           iva-deducible-interiores-corrientes-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               5% - quota deduïble
           iva-deducible-interiores-corrientes-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 697 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               7,5% - base imposable
           iva-deducible-interiores-corrientes-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors corrientes al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors corrents al tipus
               7,5% - quota deduïble
           iva-deducible-interiores-inversion-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 611 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 10% - base imposable
           iva-deducible-interiores-inversion-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 10% - quota deduïble
           iva-deducible-interiores-inversion-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 749 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 2% - base imposable
           iva-deducible-interiores-inversion-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 2% - quota deduïble
           iva-deducible-interiores-inversion-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 613 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 21% - base imposable
           iva-deducible-interiores-inversion-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 21% - quota deduïble
           iva-deducible-interiores-inversion-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 196 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 4% - base imposable
           iva-deducible-interiores-inversion-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 4% - quota deduïble
           iva-deducible-interiores-inversion-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 728 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 5% - base imposable
           iva-deducible-interiores-inversion-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 5% - quota deduïble
           iva-deducible-interiores-inversion-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 751 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 7,5% - base imposable
           iva-deducible-interiores-inversion-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions interiors amb béns de inversió al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions interiors amb béns d'inversió
               al tipus 7,5% - quota deduïble
           iva-deducible-interiores-inversion-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 50 del Modelo
-              390.
             label: 'Total: IVA suportat deduïble en operacions interiors amb béns
               d''inversió - base imposable'
           iva-deducible-interiores-inversion-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en operacions interiors amb béns de inversió - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en operacions interiors amb béns
               d''inversió - quota deduïble'
           iva-deducible-intragrupo-corrientes-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 607 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               10% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               10% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 745 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               2% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               2% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 609 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               21% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               21% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 506 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               4% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               4% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 726 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               5% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               5% - quota deduïble
           iva-deducible-intragrupo-corrientes-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 747 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               7,5% - base imposable
           iva-deducible-intragrupo-corrientes-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo corrientes al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup corrents al tipus
               7,5% - quota deduïble
           iva-deducible-intragrupo-corrientes-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 512 del
-              Modelo 390.
             label: 'Total: IVA suportat deduïble en operacions intragrup corrents
               - base imposable'
           iva-deducible-intragrupo-corrientes-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en operacions intragrupo corrientes - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en operacions intragrup corrents
               - quota deduïble'
           iva-deducible-intragrupo-inversion-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 615 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 10% - base imposable
           iva-deducible-intragrupo-inversion-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 10% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 10% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 753 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 2% - base imposable
           iva-deducible-intragrupo-inversion-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 2% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 2% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 617 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 21% - base imposable
           iva-deducible-intragrupo-inversion-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 21% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 21% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 514 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 4% - base imposable
           iva-deducible-intragrupo-inversion-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 4% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 4% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 730 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 5% - base imposable
           iva-deducible-intragrupo-inversion-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 5% - quota deduïble
           iva-deducible-intragrupo-inversion-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 755 del
-              Modelo 390.
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 7,5% - base imposable
           iva-deducible-intragrupo-inversion-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA suportat deduïble en
-              operacions intragrupo amb béns de inversió al tipus 7,5% - Quota deduïble.'
             label: IVA suportat deduïble en operacions intragrup amb béns d'inversió
               al tipus 7,5% - quota deduïble
           iva-deducible-intragrupo-inversion-total-base:
-            help: Informació fiscal sobre informació fiscal de la casella 520 del
-              Modelo 390.
             label: 'Total: IVA suportat deduïble en operacions intragrup amb béns
               d''inversió - base imposable'
           iva-deducible-intragrupo-inversion-total-cuota:
-            help: 'Consulteu la informació de la casella: Total: IVA suportat deduïble
-              en operacions intragrupo amb béns de inversió - Quota deduïble.'
             label: 'Total: IVA suportat deduïble en operacions intragrup amb béns
               d''inversió - quota deduïble'
           iva-deducible-rectificacion-base:
-            help: Informació fiscal sobre informació fiscal de la casella 639 del
-              Modelo 390.
             label: Rectificació de deduccions - base imposable
           iva-deducible-rectificacion-cuota:
-            help: 'Consulteu la informació de la casella: Rectificació de deduccions
-              - Quota deduïble.'
             label: Rectificació de deduccions - quota deduïble
           iva-deducible-rectificacion-intragrupo-base:
-            help: Informació fiscal sobre informació fiscal de la casella 651 del
-              Modelo 390.
             label: Rectificació de deduccions d'operacions intragrup - base imposable
           iva-deducible-rectificacion-intragrupo-cuota:
-            help: 'Consulteu la informació de la casella: Rectificació de deduccions
-              de operacions intragrupo - Quota deduïble.'
             label: Rectificació de deduccions d'operacions intragrup - quota deduïble
           iva-deducible-resolucion-firme-tipos-no-vigentes-base:
-            help: Informació fiscal sobre informació fiscal de la casella 660 del
-              Modelo 390.
             label: Quotes deduïbles en virtut de resolució administrativa o sentència
               fermes amb tipus no vigents - base imposable
           iva-deducible-resolucion-firme-tipos-no-vigentes-cuota:
-            help: 'Consulteu la informació de la casella: Quotes deducibles en virtud
-              de resolución administrativa o sentencia firmes amb tipos no vigentes
-              - Quota deduïble.'
             label: Quotes deduïbles en virtut de resolució administrativa o sentència
               fermes amb tipus no vigents - quota deduïble
           iva-importacion-diferimiento:
-            help: 'Informació fiscal sobre informació fiscal de la casella 659 del
-              Modelo 390 Referències: [659].'
             label: Resultat liquidació anual - IVA a la importació liquidat per la
               Duana (només subjectes passius amb opció de diferiment) [659]
           iva-isp-interior-base:
-            help: Informació fiscal sobre informació fiscal de la casella 27 del Modelo
-              390.
             label: Base imposable de l'IVA autorepercutit en operacions interiors
               amb inversió del subjecte passiu
           iva-isp-interior-cuota:
-            help: Informació fiscal sobre informació fiscal de la casella 28 del Modelo
-              390.
             label: IVA autorepercutit meritat en operacions interiors
           iva-liquidaciones-total-a-ingresar:
-            help: Informació fiscal sobre informació fiscal de la casella 95 del Modelo
-              390.
             label: Total resultats a ingressar de les autoliquidacions d'IVA de l'exercici
           iva-liquidaciones-total-devoluciones-elementos-transporte:
-            help: 'Consulteu la informació de la casella: Total devoluciones per quotes
-              soportadas en la adquisició de elementos de transporte.'
             label: Total devolucions per quotes suportades en l'adquisició d'elements
               de transport
           iva-liquidaciones-total-devoluciones-mensuales:
-            help: Informació fiscal sobre informació fiscal de la casella 96 del Modelo
-              390.
             label: Total devolucions mensuals d'IVA de subjectes passius inscrits
               al Registre de devolució mensual
           iva-liquidaciones-total-resultados-negativos-m322:
-            help: Informació fiscal sobre informació fiscal de la casella 526 del
-              Modelo 390.
             label: Total resultats negatius de l'exercici (model 322)
           iva-liquidaciones-total-resultados-positivos-m322:
-            help: Informació fiscal sobre informació fiscal de la casella 525 del
-              Modelo 390.
             label: Total resultats positius de l'exercici (model 322)
           iva-liquidaciones-ultimo-periodo-a-devolver:
-            help: 'Consulteu la informació de la casella: Resultat de la declaració-liquidació
-              del último període - A devolver.'
             label: Resultat de la declaració-liquidació de l'últim període - a retornar
           iva-modificacion-bases-cuotas-base:
-            help: Informació fiscal sobre informació fiscal de la casella 29 del Modelo
-              390.
             label: Modificació de bases imposables i quotes - base imposable
           iva-modificacion-bases-cuotas-cuota:
-            help: 'Consulteu la informació de la casella: Modificación de bases imponibles
-              i quotes - Quota.'
             label: Modificació de bases imposables i quotes - quota
           iva-modificacion-bases-cuotas-intragrupo-base:
-            help: Informació fiscal sobre informació fiscal de la casella 649 del
-              Modelo 390.
             label: Modificació de bases imposables i quotes d'operacions intragrup
               - base imposable
           iva-modificacion-bases-cuotas-intragrupo-cuota:
-            help: 'Consulteu la informació de la casella: Modificación de bases imponibles
-              i quotes de operacions intragrupo - Quota.'
             label: Modificació de bases imposables i quotes d'operacions intragrup
               - quota
           iva-modificacion-concurso-acreedores-base:
-            help: Informació fiscal sobre informació fiscal de la casella 31 del Modelo
-              390.
             label: Modificació de bases imposables i quotes per concurs de creditors
               - base imposable
           iva-modificacion-concurso-acreedores-cuota:
-            help: 'Consulteu la informació de la casella: Modificación de bases imponibles
-              i quotes per concurso de acreedores - Quota.'
             label: Modificació de bases imposables i quotes per concurs de creditors
               - quota
           iva-modificacion-recargo-base:
-            help: Informació fiscal sobre informació fiscal de la casella 43 del Modelo
-              390.
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               - base imposable
           iva-modificacion-recargo-concurso-base:
-            help: Informació fiscal sobre informació fiscal de la casella 45 del Modelo
-              390.
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               per concurs de creditors - base imposable
           iva-modificacion-recargo-concurso-cuota:
-            help: 'Consulteu la informació de la casella: Modificación de bases imponibles
-              i quotes del recàrrec d''equivalència per concurso de acreedores - Quota.'
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               per concurs de creditors - quota
           iva-modificacion-recargo-cuota:
-            help: 'Consulteu la informació de la casella: Modificación de bases imponibles
-              i quotes del recàrrec d''equivalència - Quota.'
             label: Modificació de bases imposables i quotes del recàrrec d'equivalència
               - quota
           iva-operaciones-especificas-adquisiciones-interiores-exentas:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Adquisicions interiores exemptes [230].'
             label: Operacions específiques - Adquisicions interiors exemptes [230]
           iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Adquisicions intracomunitàries exemptes [109].'
             label: Operacions específiques - Adquisicions intracomunitàries exemptes
               [109]
           iva-operaciones-especificas-base-iva-soportado-no-deducible:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Bases imponibles del IVA suportat no deduïble [232].'
             label: Operacions específiques - Bases imposables de l'IVA suportat no
               deduïble [232]
           iva-operaciones-especificas-criterio-caja-adquisiciones-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 656 del
-              Modelo 390 Referències: [656].'
             label: Operacions específiques - Adquisicions de béns en règim especial
               del criteri de caixa - Base imposable [656]
           iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Adquisicions de béns en règim especial del criterio de caja - Quota
-              [657].'
             label: Operacions específiques - Adquisicions de béns en règim especial
               del criteri de caixa - Quota [657]
           iva-operaciones-especificas-criterio-caja-entregas-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 654 del
-              Modelo 390 Referències: [654].'
             label: Operacions específiques - Lliuraments de béns en règim especial
               del criteri de caixa - Base imposable [654]
           iva-operaciones-especificas-criterio-caja-entregas-cuota:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Lliuraments de béns en règim especial del criterio de caja - Quota [655].'
             label: Operacions específiques - Lliuraments de béns en règim especial
               del criteri de caixa - Quota [655]
           iva-operaciones-especificas-entrega-interior-inversion-triangular:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Lliuraments interiores de béns devengadas per inversió del subjecte
-              passiu en operacions triangulares [113].'
             label: Operacions específiques - Lliuraments interiors de béns meritats
               per inversió del subjecte passiu en operacions triangulars [113]
           iva-operaciones-especificas-importaciones-exentas:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Importacions exemptes [231].'
             label: Operacions específiques - Importacions exemptes [231]
           iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Operacions subjectes que originan el derecho a la devolució mensual
-              [111].'
             label: Operacions específiques - Operacions subjectes que originen el
               dret a la devolució mensual [111]
           iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
-            help: 'Consulteu la informació de la casella: Operacions específicas -
-              Serveis localizados en el territori de aplicació del impuesto per inversió
-              del subjecte passiu [523].'
             label: Operacions específiques - Serveis localitzats al territori d'aplicació
               de l'impost per inversió del subjecte passiu [523]
           iva-recargo-equivalencia-tipo-0-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 35 del Modelo
-              390.
             label: Recàrrec d'equivalència al tipus 0,5% - base imposable
           iva-recargo-equivalencia-tipo-1-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 599 del
-              Modelo 390.
             label: Recàrrec d'equivalència al tipus 1,4% - base imposable
           iva-recargo-equivalencia-tipo-1-75-base:
-            help: Informació fiscal sobre informació fiscal de la casella 41 del Modelo
-              390.
             label: Recàrrec d'equivalència al tipus 1,75% - base imposable
           iva-recargo-equivalencia-tipo-1-75-cuota:
-            help: 'Consulteu la informació de la casella: Recàrrec d''equivalència
-              al tipus 1,75% - Quota.'
             label: Recàrrec d'equivalència al tipus 1,75% - quota
           iva-recargo-equivalencia-tipo-5-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 601 del
-              Modelo 390.
             label: Recàrrec d'equivalència al tipus 5,2% - base imposable
           iva-regularizacion-cuotas-art-80-cinco-5:
-            help: 'Consulteu la informació de la casella: Regularització de quotes
-              del art. 80.Cinco.5ª LIVA.'
             label: Regularització de quotes de l'art. 80.Cinc.5a LIVA
           iva-repercutido-agencias-viajes-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 13 del Modelo
-              390.
             label: IVA meritat en el règim especial d'agències de viatges al tipus
               21% - base imposable
           iva-repercutido-agencias-viajes-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de agencias de viajes al tipus 21% - Quota.'
             label: IVA meritat en el règim especial d'agències de viatges al tipus
               21% - quota
           iva-repercutido-bienes-usados-tipo-0-base:
-            help: Informació fiscal sobre informació fiscal de la casella 712 del
-              Modelo 390.
             label: IVA meritat en el règim especial de béns usats al tipus 0% - base
               imposable
           iva-repercutido-bienes-usados-tipo-0-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 0% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 0% - quota
           iva-repercutido-bienes-usados-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 09 del Modelo
-              390.
             label: IVA meritat en el règim especial de béns usats al tipus 10% - base
               imposable
           iva-repercutido-bienes-usados-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 10% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 10% - quota
           iva-repercutido-bienes-usados-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 679 del
-              Modelo 390.
             label: IVA meritat en el règim especial de béns usats al tipus 2% - base
               imposable
           iva-repercutido-bienes-usados-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 2% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 2% - quota
           iva-repercutido-bienes-usados-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 11 del Modelo
-              390.
             label: IVA meritat en el règim especial de béns usats al tipus 21% - base
               imposable
           iva-repercutido-bienes-usados-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 21% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 21% - quota
           iva-repercutido-bienes-usados-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
-              390.
             label: IVA meritat en el règim especial de béns usats al tipus 4% - base
               imposable
           iva-repercutido-bienes-usados-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 4% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 4% - quota
           iva-repercutido-bienes-usados-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 714 del
-              Modelo 390.
             label: IVA meritat en el règim especial de béns usats al tipus 5% - base
               imposable
           iva-repercutido-bienes-usados-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 5% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 5% - quota
           iva-repercutido-bienes-usados-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 681 del
-              Modelo 390.
             label: IVA meritat en el règim especial de béns usats al tipus 7,5% -
               base imposable
           iva-repercutido-bienes-usados-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial de béns usados al tipus 7,5% - Quota.'
             label: IVA meritat en el règim especial de béns usats al tipus 7,5% -
               quota
           iva-repercutido-criterio-caja-tipo-0-base:
-            help: Informació fiscal sobre informació fiscal de la casella 708 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               0% - base imposable
           iva-repercutido-criterio-caja-tipo-0-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 0% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               0% - quota
           iva-repercutido-criterio-caja-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 645 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               10% - base imposable
           iva-repercutido-criterio-caja-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 10% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               10% - quota
           iva-repercutido-criterio-caja-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 675 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               2% - base imposable
           iva-repercutido-criterio-caja-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 2% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               2% - quota
           iva-repercutido-criterio-caja-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 647 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               21% - base imposable
           iva-repercutido-criterio-caja-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 21% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               21% - quota
           iva-repercutido-criterio-caja-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 643 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               4% - base imposable
           iva-repercutido-criterio-caja-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 4% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               4% - quota
           iva-repercutido-criterio-caja-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 710 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               5% - base imposable
           iva-repercutido-criterio-caja-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 5% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               5% - quota
           iva-repercutido-criterio-caja-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 677 del
-              Modelo 390.
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               7,5% - base imposable
           iva-repercutido-criterio-caja-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en el règim
-              especial del criterio de caja al tipus 7,5% - Quota.'
             label: IVA meritat en el règim especial del criteri de caixa al tipus
               7,5% - quota
           iva-repercutido-intragrupo-tipo-0-base:
-            help: Informació fiscal sobre informació fiscal de la casella 704 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 0% - base imposable
           iva-repercutido-intragrupo-tipo-0-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 0% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 0% - quota
           iva-repercutido-intragrupo-tipo-10-base:
-            help: Informació fiscal sobre informació fiscal de la casella 502 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 10% - base imposable
           iva-repercutido-intragrupo-tipo-10-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 10% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 10% - quota
           iva-repercutido-intragrupo-tipo-2-base:
-            help: Informació fiscal sobre informació fiscal de la casella 671 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 2% - base imposable
           iva-repercutido-intragrupo-tipo-2-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 2% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 2% - quota
           iva-repercutido-intragrupo-tipo-21-base:
-            help: Informació fiscal sobre informació fiscal de la casella 504 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 21% - base imposable
           iva-repercutido-intragrupo-tipo-21-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 21% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 21% - quota
           iva-repercutido-intragrupo-tipo-4-base:
-            help: Informació fiscal sobre informació fiscal de la casella 500 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 4% - base imposable
           iva-repercutido-intragrupo-tipo-4-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 4% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 4% - quota
           iva-repercutido-intragrupo-tipo-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 706 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 5% - base imposable
           iva-repercutido-intragrupo-tipo-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 5% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 5% - quota
           iva-repercutido-intragrupo-tipo-7-5-base:
-            help: Informació fiscal sobre informació fiscal de la casella 673 del
-              Modelo 390.
             label: IVA meritat en operacions intragrup al tipus 7,5% - base imposable
           iva-repercutido-intragrupo-tipo-7-5-cuota:
-            help: 'Consulteu la informació de la casella: IVA meritat en operacions
-              intragrupo al tipus 7,5% - Quota.'
             label: IVA meritat en operacions intragrup al tipus 7,5% - quota
           iva-resultado-liquidacion:
-            help: 'Consulteu la informació de la casella: Resultat de la liquidació.'
             label: Resultat de la liquidació
           iva-sector-diferenciado-1-aic-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 147 del
-              Modelo 390 Referències: [147].'
             label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Base imposable [147]
           iva-sector-diferenciado-1-aic-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en adquisicions intracomunitàries de béns corrientes -
-              Quota deduïble [148].'
             label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Quota deduïble [148]
           iva-sector-diferenciado-1-aic-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 149 del
-              Modelo 390 Referències: [149].'
             label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Base imposable [149]
           iva-sector-diferenciado-1-aic-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en adquisicions intracomunitàries de béns de inversió -
-              Quota deduïble [150].'
             label: Sector diferenciat 1 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Quota deduïble [150]
           iva-sector-diferenciado-1-compensaciones-reagp-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 151 del
-              Modelo 390 Referències: [151].'
             label: Sector diferenciat 1 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Base imposable [151]
           iva-sector-diferenciado-1-compensaciones-reagp-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              Compensaciones del règim especial de la agricultura, ganadería i pesca
-              - Quota deduïble [152].'
             label: Sector diferenciat 1 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Quota deduïble [152]
           iva-sector-diferenciado-1-importaciones-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 143 del
-              Modelo 390 Referències: [143].'
             label: Sector diferenciat 1 - IVA deduïble en importacions de béns corrents
               - Base imposable [143]
           iva-sector-diferenciado-1-importaciones-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en importacions de béns corrientes - Quota deduïble [144].'
             label: Sector diferenciat 1 - IVA deduïble en importacions de béns corrents
               - Quota deduïble [144]
           iva-sector-diferenciado-1-importaciones-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 145 del
-              Modelo 390 Referències: [145].'
             label: Sector diferenciat 1 - IVA deduïble en importacions de béns d'inversió
               - Base imposable [145]
           iva-sector-diferenciado-1-importaciones-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en importacions de béns de inversió - Quota deduïble [146].'
             label: Sector diferenciat 1 - IVA deduïble en importacions de béns d'inversió
               - Quota deduïble [146]
           iva-sector-diferenciado-1-interiores-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 139 del
-              Modelo 390 Referències: [139].'
             label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Base imposable [139]
           iva-sector-diferenciado-1-interiores-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en operacions interiors de béns i serveis corrientes -
-              Quota deduïble [140].'
             label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Quota deduïble [140]
           iva-sector-diferenciado-1-interiores-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 141 del
-              Modelo 390 Referències: [141].'
             label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
               béns d'inversió - Base imposable [141]
           iva-sector-diferenciado-1-interiores-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              IVA deduïble en operacions interiors de béns de inversió - Quota deduïble
-              [142].'
             label: Sector diferenciat 1 - IVA deduïble en operacions interiors de
               béns d'inversió - Quota deduïble [142]
           iva-sector-diferenciado-1-rectificacion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 640 del
-              Modelo 390 Referències: [640].'
             label: Sector diferenciat 1 - Rectificació de deduccions - Base imposable
               [640]
           iva-sector-diferenciado-1-rectificacion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              Rectificació de deduccions - Quota deduïble [153].'
             label: Sector diferenciat 1 - Rectificació de deduccions - Quota deduïble
               [153]
           iva-sector-diferenciado-1-regularizacion-inversiones:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 1 -
-              Regularització de inversiones [154].'
             label: Sector diferenciat 1 - Regularització d'inversions [154]
           iva-sector-diferenciado-1-suma-deducciones:
-            help: 'Informació fiscal sobre informació fiscal de la casella 155 del
-              Modelo 390 Referències: [155].'
             label: Sector diferenciat 1 - Suma de deduccions [155]
           iva-sector-diferenciado-2-aic-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 164 del
-              Modelo 390 Referències: [164].'
             label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Base imposable [164]
           iva-sector-diferenciado-2-aic-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en adquisicions intracomunitàries de béns corrientes -
-              Quota deduïble [165].'
             label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Quota deduïble [165]
           iva-sector-diferenciado-2-aic-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 166 del
-              Modelo 390 Referències: [166].'
             label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Base imposable [166]
           iva-sector-diferenciado-2-aic-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en adquisicions intracomunitàries de béns de inversió -
-              Quota deduïble [167].'
             label: Sector diferenciat 2 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Quota deduïble [167]
           iva-sector-diferenciado-2-compensaciones-reagp-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 168 del
-              Modelo 390 Referències: [168].'
             label: Sector diferenciat 2 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Base imposable [168]
           iva-sector-diferenciado-2-compensaciones-reagp-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              Compensaciones del règim especial de la agricultura, ganadería i pesca
-              - Quota deduïble [169].'
             label: Sector diferenciat 2 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Quota deduïble [169]
           iva-sector-diferenciado-2-importaciones-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 160 del
-              Modelo 390 Referències: [160].'
             label: Sector diferenciat 2 - IVA deduïble en importacions de béns corrents
               - Base imposable [160]
           iva-sector-diferenciado-2-importaciones-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en importacions de béns corrientes - Quota deduïble [161].'
             label: Sector diferenciat 2 - IVA deduïble en importacions de béns corrents
               - Quota deduïble [161]
           iva-sector-diferenciado-2-importaciones-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 162 del
-              Modelo 390 Referències: [162].'
             label: Sector diferenciat 2 - IVA deduïble en importacions de béns d'inversió
               - Base imposable [162]
           iva-sector-diferenciado-2-importaciones-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en importacions de béns de inversió - Quota deduïble [163].'
             label: Sector diferenciat 2 - IVA deduïble en importacions de béns d'inversió
               - Quota deduïble [163]
           iva-sector-diferenciado-2-interiores-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 156 del
-              Modelo 390 Referències: [156].'
             label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Base imposable [156]
           iva-sector-diferenciado-2-interiores-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en operacions interiors de béns i serveis corrientes -
-              Quota deduïble [157].'
             label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Quota deduïble [157]
           iva-sector-diferenciado-2-interiores-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 158 del
-              Modelo 390 Referències: [158].'
             label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
               béns d'inversió - Base imposable [158]
           iva-sector-diferenciado-2-interiores-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              IVA deduïble en operacions interiors de béns de inversió - Quota deduïble
-              [159].'
             label: Sector diferenciat 2 - IVA deduïble en operacions interiors de
               béns d'inversió - Quota deduïble [159]
           iva-sector-diferenciado-2-rectificacion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 641 del
-              Modelo 390 Referències: [641].'
             label: Sector diferenciat 2 - Rectificació de deduccions - Base imposable
               [641]
           iva-sector-diferenciado-2-rectificacion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              Rectificació de deduccions - Quota deduïble [170].'
             label: Sector diferenciat 2 - Rectificació de deduccions - Quota deduïble
               [170]
           iva-sector-diferenciado-2-regularizacion-inversiones:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 2 -
-              Regularització de inversiones [171].'
             label: Sector diferenciat 2 - Regularització d'inversions [171]
           iva-sector-diferenciado-2-suma-deducciones:
-            help: 'Informació fiscal sobre informació fiscal de la casella 172 del
-              Modelo 390 Referències: [172].'
             label: Sector diferenciat 2 - Suma de deduccions [172]
           iva-sector-diferenciado-3-aic-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 181 del
-              Modelo 390 Referències: [181].'
             label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Base imposable [181]
           iva-sector-diferenciado-3-aic-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en adquisicions intracomunitàries de béns corrientes -
-              Quota deduïble [182].'
             label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
               de béns corrents - Quota deduïble [182]
           iva-sector-diferenciado-3-aic-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 183 del
-              Modelo 390 Referències: [183].'
             label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Base imposable [183]
           iva-sector-diferenciado-3-aic-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en adquisicions intracomunitàries de béns de inversió -
-              Quota deduïble [184].'
             label: Sector diferenciat 3 - IVA deduïble en adquisicions intracomunitàries
               de béns d'inversió - Quota deduïble [184]
           iva-sector-diferenciado-3-compensaciones-reagp-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 185 del
-              Modelo 390 Referències: [185].'
             label: Sector diferenciat 3 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Base imposable [185]
           iva-sector-diferenciado-3-compensaciones-reagp-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              Compensaciones del règim especial de la agricultura, ganadería i pesca
-              - Quota deduïble [186].'
             label: Sector diferenciat 3 - Compensacions del règim especial de l'agricultura,
               ramaderia i pesca - Quota deduïble [186]
           iva-sector-diferenciado-3-importaciones-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 177 del
-              Modelo 390 Referències: [177].'
             label: Sector diferenciat 3 - IVA deduïble en importacions de béns corrents
               - Base imposable [177]
           iva-sector-diferenciado-3-importaciones-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en importacions de béns corrientes - Quota deduïble [178].'
             label: Sector diferenciat 3 - IVA deduïble en importacions de béns corrents
               - Quota deduïble [178]
           iva-sector-diferenciado-3-importaciones-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 179 del
-              Modelo 390 Referències: [179].'
             label: Sector diferenciat 3 - IVA deduïble en importacions de béns d'inversió
               - Base imposable [179]
           iva-sector-diferenciado-3-importaciones-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en importacions de béns de inversió - Quota deduïble [180].'
             label: Sector diferenciat 3 - IVA deduïble en importacions de béns d'inversió
               - Quota deduïble [180]
           iva-sector-diferenciado-3-interiores-corrientes-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 173 del
-              Modelo 390 Referències: [173].'
             label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Base imposable [173]
           iva-sector-diferenciado-3-interiores-corrientes-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en operacions interiors de béns i serveis corrientes -
-              Quota deduïble [174].'
             label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
               béns i serveis corrents - Quota deduïble [174]
           iva-sector-diferenciado-3-interiores-inversion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 175 del
-              Modelo 390 Referències: [175].'
             label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
               béns d'inversió - Base imposable [175]
           iva-sector-diferenciado-3-interiores-inversion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              IVA deduïble en operacions interiors de béns de inversió - Quota deduïble
-              [176].'
             label: Sector diferenciat 3 - IVA deduïble en operacions interiors de
               béns d'inversió - Quota deduïble [176]
           iva-sector-diferenciado-3-rectificacion-base:
-            help: 'Informació fiscal sobre informació fiscal de la casella 642 del
-              Modelo 390 Referències: [642].'
             label: Sector diferenciat 3 - Rectificació de deduccions - Base imposable
               [642]
           iva-sector-diferenciado-3-rectificacion-cuota:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              Rectificació de deduccions - Quota deduïble [187].'
             label: Sector diferenciat 3 - Rectificació de deduccions - Quota deduïble
               [187]
           iva-sector-diferenciado-3-regularizacion-inversiones:
-            help: 'Consulteu la informació de la casella: Sector diferenciado 3 -
-              Regularització de inversiones [188].'
             label: Sector diferenciat 3 - Regularització d'inversions [188]
           iva-sector-diferenciado-3-suma-deducciones:
-            help: 'Informació fiscal sobre informació fiscal de la casella 189 del
-              Modelo 390 Referències: [189].'
             label: Sector diferenciat 3 - Suma de deduccions [189]
           iva-suma-resultados:
-            help: Informació fiscal sobre informació fiscal de la casella 84 del Modelo
-              390.
             label: Suma de resultats
           iva-territorio-alava-porcentaje:
-            help: 'Informació fiscal sobre informació fiscal de la casella 88 del
-              Modelo 390 Referències: [88].'
             label: Tributació per raó de territori - Àlaba - Percentatge [88]
           iva-territorio-compensacion-atribuible-comun:
-            help: 'Informació fiscal sobre informació fiscal de la casella 93 del
-              Modelo 390 Referències: [93].'
             label: Tributació per raó de territori - Compensació de quotes de l'exercici
               anterior atribuïble a territori comú [93]
           iva-territorio-comun-porcentaje:
-            help: 'Informació fiscal sobre informació fiscal de la casella 87 del
-              Modelo 390 Referències: [87].'
             label: Tributació per raó de territori - Territori comú - Percentatge
               [87]
           iva-territorio-guipuzcoa-porcentaje:
-            help: 'Informació fiscal sobre informació fiscal de la casella 89 del
-              Modelo 390 Referències: [89].'
             label: Tributació per raó de territori - Guipúscoa - Percentatge [89]
           iva-territorio-navarra-porcentaje:
-            help: 'Informació fiscal sobre informació fiscal de la casella 91 del
-              Modelo 390 Referències: [91].'
             label: Tributació per raó de territori - Navarra - Percentatge [91]
           iva-territorio-resultado-anual-atribuible-comun:
-            help: 'Informació fiscal sobre informació fiscal de la casella 94 del
-              Modelo 390 Referències: [94].'
             label: Tributació per raó de territori - Resultat de la liquidació anual
               atribuïble a territori comú [94]
           iva-territorio-resultado-atribuible-comun:
-            help: 'Informació fiscal sobre informació fiscal de la casella 92 del
-              Modelo 390 Referències: [92].'
             label: Tributació per raó de territori - Resultat atribuïble a territori
               comú [92]
           iva-territorio-vizcaya-porcentaje:
-            help: 'Informació fiscal sobre informació fiscal de la casella 90 del
-              Modelo 390 Referències: [90].'
             label: Tributació per raó de territori - Biscaia - Percentatge [90]
           iva-total-bases-iva-base:
-            help: 'Consulteu la informació de la casella: Total bases imponibles del
-              IVA meritat.'
             label: Total bases imposables de l'IVA meritat
           iva-volumen-agencias-viajes:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              el règim especial de agencias de viajes.'
             label: Volum d'operacions en el règim especial d'agències de viatges
           iva-volumen-bienes-de-inversion:
-            help: 'Consulteu la informació de la casella: Lliuraments de béns de inversió.'
             label: Lliuraments de béns d'inversió
           iva-volumen-bienes-usados:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              el règim especial de béns usados, objetos de arte, antigüedades i objetos
-              de colección.'
             label: Volum d'operacions en el règim especial de béns usats, objectes
               d'art, antiguitats i objectes de col·lecció
           iva-volumen-criterio-caja:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              el règim especial del criterio de caja.'
             label: Volum d'operacions en el règim especial del criteri de caixa
           iva-volumen-exentas-sin-derecho-deduccion:
-            help: Informació fiscal de la casella 105 del Modelo 390.
             label: Operacions exemptes sense dret a deducció
           iva-volumen-inmuebles-financieras-no-habituales:
-            help: Informació fiscal sobre informació fiscal de la casella 106 del
-              Modelo 390.
             label: Lliuraments de béns immobles i operacions financeres no habituals
           iva-volumen-intragrupo-arts-78-79:
-            help: 'Consulteu la informació de la casella: Operacions intragrupo valoradas
-              conforme a los arts. 78 i 79 LIVA.'
             label: Operacions intragrup valorades conforme als arts. 78 i 79 LIVA
           iva-volumen-inversion-sujeto-pasivo:
-            help: 'Consulteu la informació de la casella: Operacions subjectes amb
-              inversió del subjecte passiu.'
             label: Operacions subjectes amb inversió del subjecte passiu
           iva-volumen-no-sujetas-reglas-localizacion:
-            help: Informació fiscal sobre informació fiscal de la casella 110 del
-              Modelo 390.
             label: Operacions no subjectes per regles de localització (excepte les
               incloses a la casella 126)
           iva-volumen-operaciones-entregas-intracomunitarias:
-            help: 'Consulteu la informació de la casella: Lliuraments intracomunitarias
-              de béns i serveis.'
             label: Lliuraments intracomunitaris de béns i serveis
           iva-volumen-operaciones-exportaciones-exentas:
-            help: 'Consulteu la informació de la casella: Exportacions i operacions
-              asimiladas.'
             label: Exportacions i operacions assimilades
           iva-volumen-oss-no-sujetas-localizacion:
-            help: Informació fiscal sobre informació fiscal de la casella 126 del
-              Modelo 390.
             label: 'OSS: operacions no subjectes per regles de localització acollides
               a la finestreta única'
           iva-volumen-oss-sujetas:
-            help: Informació fiscal sobre informació fiscal de la casella 127 del
-              Modelo 390.
             label: 'OSS: operacions subjectes i acollides a la finestreta única'
           iva-volumen-reagp:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              el règim especial de la agricultura, ganadería i pesca.'
             label: Volum d'operacions en el règim especial de l'agricultura, ramaderia
               i pesca
           iva-volumen-recargo-equivalencia:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              el règim especial del recàrrec d''equivalència.'
             label: Volum d'operacions en el règim especial del recàrrec d'equivalència
           iva-volumen-regimen-general:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              règim general.'
             label: Volum d'operacions en règim general
           iva-volumen-regimen-simplificado:
-            help: 'Consulteu la informació de la casella: Volumen de operacions en
-              règim simplificado.'
             label: Volum d'operacions en règim simplificat
           iva-volumen-total:
-            help: 'Consulteu la informació de la casella: Total volumen de operacions.'
             label: Total volum d'operacions
           tipo-declaracion:
-            help: 'Consulteu la informació de la casella: Tipus de declaració.'
             label: Tipus de declaració
       construct:
         modelo-390-iva-resumen-anual:
@@ -1879,9 +1084,6 @@ modelo:
           casilla:
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: Casella 26 del model 390, exercici 2021.
-            x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
-              help: 'Dada del model 390, exercici 2021: saldo a compensar generat
-                en l''exercici.'
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qtbcehkmqrpde1in4qbfchniqe9n:
               help: Casella 97 del model 390, exercici 2021.
             x-d5r62bj1dpqm2r1ecdqmut315li6ap3lcdkm4r355lq6ut31dg:

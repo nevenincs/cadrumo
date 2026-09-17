@@ -4,137 +4,73 @@ modelo:
       casilla:
         continuidad:
           irnr-base-imponible:
-            help: Informació fiscal sobre informació fiscal de la casella 8 del Modelo
-              210.
             label: Base imposable
           irnr-base-imponible-directa-g:
-            help: Informació fiscal sobre informació fiscal de la casella 18 del Modelo
-              210.
             label: Base imposable (210 G)
           irnr-base-imponible-directa-i:
-            help: Informació fiscal sobre informació fiscal de la casella 4 del Modelo
-              210.
             label: Base imposable (210 I)
           irnr-base-imponible-ganancias-h:
-            help: Informació fiscal sobre informació fiscal de la casella 17 del Modelo
-              210.
             label: Base imposable ([12]+[16]) (210 H)
           irnr-convenio-indicador:
-            help: Informació fiscal sobre informació fiscal de la casella 20 del Modelo
-              210.
             label: Conveni
           irnr-cuota-diferencial:
-            help: Informació fiscal sobre informació fiscal de la casella 31 del Modelo
-              210.
             label: Quota diferencial
           irnr-cuota-integra:
-            help: Informació fiscal sobre informació fiscal de la casella 22 del Modelo
-              210.
             label: Quota íntegra
           irnr-cuota-integra-reducida:
-            help: Informació fiscal sobre informació fiscal de la casella 28 del Modelo
-              210.
             label: Quota íntegra reduïda ([24]-[27])
           irnr-cuota-ley-irnr:
-            help: Informació fiscal sobre informació fiscal de la casella 24 del Modelo
-              210.
             label: Quota Llei IRNR ([22]-[23])
           irnr-deduccion-donativos:
-            help: Informació fiscal de la casella 23 del Modelo 210.
             label: Deducció per donatius
           irnr-exencion-dividendos:
-            help: 'Consulteu la informació d''aquesta casella: Exempció aplicada a
-              dividends (límit anual de 1.500 euros).'
             label: Exempció aplicada a dividends (límit anual de 1.500 euros)
           irnr-exenciones-ley-irnr-indicador:
-            help: Informació fiscal sobre informació fiscal de la casella 19 del Modelo
-              210.
             label: Exempcions Llei IRNR, excepte dividends (límit anual 1.500 euros)
           irnr-ganancia-diferencia:
-            help: Informació fiscal sobre informació fiscal de la casella 11 del Modelo
-              210.
             label: Adquisició. Diferència (210 H)
           irnr-ganancia-importe:
-            help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
-              210.
             label: Adquisició. Guany (210 H)
           irnr-ganancia-valor-adquisicion:
-            help: Informació fiscal sobre informació fiscal de la casella 10 del Modelo
-              210.
             label: Adquisició. Valor d'adquisició (actualitzat) (210 H)
           irnr-ganancia-valor-transmision:
-            help: Informació fiscal sobre informació fiscal de la casella 9 del Modelo
-              210.
             label: Adquisició. Valor de transmissió (210 H)
           irnr-gastos-deducibles:
-            help: Informació fiscal sobre informació fiscal de la casella 7 del Modelo
-              210.
             label: Despeses deduïbles
           irnr-imputacion-inmobiliaria-coeficiente:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              210.
             label: Coeficient d'imputació immobiliària
           irnr-imputacion-inmobiliaria-dias:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              210.
             label: Dies d'imputació
           irnr-imputacion-inmobiliaria-valor-adquisicion:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              210.
             label: Valor d'adquisició
           irnr-imputacion-inmobiliaria-valor-catastral:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              210.
             label: Valor cadastral
           irnr-imputacion-inmobiliaria-valor-comprobado-administracion:
-            help: Informació fiscal de la casella del Modelo 210.
             label: Valor comprovat per l'Administració
           irnr-ingreso-devolucion-anterior:
-            help: Informació fiscal de la casella 30 del Modelo 210.
             label: Ingrés/Devolució anterior (exclusivament autoliquidació complementària)
           irnr-limite-convenio:
-            help: 'Consulteu la informació d''aquesta casella: Límit segons conveni.'
             label: Límit segons conveni
           irnr-mejora-diferencia:
-            help: Informació fiscal sobre informació fiscal de la casella 15 del Modelo
-              210.
             label: Millora o 2a adquisició. Diferència (210 H)
           irnr-mejora-ganancia:
-            help: Informació fiscal sobre informació fiscal de la casella 16 del Modelo
-              210.
             label: Millora o 2a adquisició. Guany (210 H)
           irnr-mejora-valor-adquisicion:
-            help: Informació fiscal sobre informació fiscal de la casella 14 del Modelo
-              210.
             label: Millora o 2a adquisició. Valor d'adquisició (actualitzat) (210
               H)
           irnr-mejora-valor-transmision:
-            help: Informació fiscal sobre informació fiscal de la casella 13 del Modelo
-              210.
             label: Millora o 2a adquisició. Valor de transmissió (210 H)
           irnr-porcentaje-convenio:
-            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
-              210.
             label: Percentatge Conveni (%)
           irnr-reduccion-convenio:
-            help: 'Consulteu la informació d''aquesta casella: Reducció per aplicació
-              del conveni.'
             label: Reducció per aplicació del conveni
           irnr-rendimientos-integros:
-            help: Informació fiscal sobre informació fiscal de la casella 5 del Modelo
-              210.
             label: Rendiments íntegres
           irnr-retencion-practicada:
-            help: Informació fiscal sobre informació fiscal de la casella 29 del Modelo
-              210.
             label: Retenció practicada
           irnr-tipo-gravamen:
-            help: Informació fiscal sobre informació fiscal de la casella 21 del Modelo
-              210.
             label: Tipus de gravamen
           irnr-tipo-renta:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              210.
             label: Tipus de renda
       field:
         official_name: Modelo 210. Impost sobre la Renda de no Residents. No residents
@@ -157,72 +93,12 @@ modelo:
             label: Model 210, exercici 2024
         '2025':
           casilla:
-            base_imponible_ganancias_h:
-              help: 'Informació fiscal sobre informació fiscal de la casella 17 del
-                Modelo 210 Referències: [12], [16].'
-            coeficiente_imputacion_inmobiliaria:
-              help: 'Consulteu la informació de la casella: Coeficiente de imputació
-                immobiliària.'
-            convenio_indicador:
-              help: 'Consulteu la informació de la casella: Convenio.'
-            cuota_integra:
-              help: 'Consulteu la informació de la casella: Quota íntegra.'
-            cuota_integra_reducida:
-              help: 'Consulteu la informació de la casella: Quota íntegra reducida
-                ([24]-[27]).'
-            cuota_ley_irnr:
-              help: 'Consulteu la informació de la casella: Quota Ley IRNR ([22]-[23]).'
             exencion_dividendos:
-              help: Informació fiscal de la casella 6 del Modelo 210.
               label: Exempció aplicada dividends (límit anual 1.500 euros) (210 R)
-            exenciones_ley_irnr_indicador:
-              help: 'Consulteu la informació de la casella: Exenciones Ley IRNR, excepte
-                dividendos (límite anual 1.500 euros).'
-            ganancia_diferencia:
-              help: 'Consulteu la informació de la casella: Adquisició. Diferència
-                (210 H).'
-            ganancia_valor_adquisicion:
-              help: 'Consulteu la informació de la casella: Adquisició. Valor de adquisició
-                (actualizado) (210 H).'
-            ganancia_valor_transmision:
-              help: 'Consulteu la informació de la casella: Adquisició. Valor de transmissió
-                (210 H).'
-            ingreso_devolucion_anterior:
-              help: 'Consulteu la informació de la casella: Ingrés/Devolució anterior
-                (exclusivamente autoliquidació complementària).'
             limite_convenio:
-              help: 'Consulteu la informació de la casella: Límite Convenio.'
               label: Límit Conveni
-            mejora_diferencia:
-              help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.
-                Diferència (210 H).'
-            mejora_valor_adquisicion:
-              help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.
-                Valor de adquisició (actualizado) (210 H).'
-            mejora_valor_transmision:
-              help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.
-                Valor de transmissió (210 H).'
-            porcentaje_convenio:
-              help: 'Consulteu la informació de la casella: Percentatge Convenio (%).'
             reduccion_convenio:
-              help: 'Consulteu la informació de la casella: Reducción per Convenio
-                ([24]-[26]).'
               label: Reducció per Conveni ([24]-[26])
-            rendimientos_integros:
-              help: 'Consulteu la informació de la casella: Rendiments íntegros.'
-            retencion_practicada:
-              help: 'Consulteu la informació de la casella: Retención practicada.'
-            tipo_gravamen:
-              help: 'Consulteu la informació de la casella: Tipus de gravamen.'
-            tipo_renta:
-              help: 'Consulteu la informació de la casella: Tipus de renda.'
-            valor_adquisicion:
-              help: 'Consulteu la informació de la casella: Valor de adquisició.'
-            valor_catastral:
-              help: 'Consulteu la informació de la casella: Valor catastral.'
-            valor_comprobado_administracion:
-              help: 'Consulteu la informació de la casella: Valor comprobado per la
-                Administració.'
           construct:
             m210-irnr-calculation:
               field:
@@ -239,8 +115,6 @@ modelo:
               help: Casella 4 del model 210, exercici 2026.
             base_imponible_ganancias_h:
               help: Casella 17 del model 210, exercici 2026.
-            coeficiente_imputacion_inmobiliaria:
-              help: 'Dada del model 210, exercici 2026: Coeficient d''imputació immobiliària.'
             convenio_indicador:
               help: Casella 20 del model 210, exercici 2026.
             cuota_diferencial:
@@ -253,8 +127,6 @@ modelo:
               help: Casella 24 del model 210, exercici 2026.
             deduccion_donativos:
               help: Casella 23 del model 210, exercici 2026.
-            dias_imputacion:
-              help: 'Dada del model 210, exercici 2026: Dies d''imputació.'
             exencion_dividendos:
               help: Casella 6 del model 210, exercici 2026.
               label: Exempció aplicada dividends (límit anual 1.500 euros) (210 R)
@@ -294,14 +166,6 @@ modelo:
               help: Casella 29 del model 210, exercici 2026.
             tipo_gravamen:
               help: Casella 21 del model 210, exercici 2026.
-            tipo_renta:
-              help: 'Dada del model 210, exercici 2026: Tipus de renda.'
-            valor_adquisicion:
-              help: 'Dada del model 210, exercici 2026: Valor d''adquisició.'
-            valor_catastral:
-              help: 'Dada del model 210, exercici 2026: Valor cadastral.'
-            valor_comprobado_administracion:
-              help: 'Dada del model 210, exercici 2026: Valor comprovat per l''Administració.'
           construct:
             m210-irnr-calculation:
               field:

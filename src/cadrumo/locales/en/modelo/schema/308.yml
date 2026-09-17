@@ -7,7 +7,6 @@ modelo:
             help: Field declared on modelo 308, taken from the official record design.
             label: Accrual. Period
           filing-year:
-            help: Tax information for casilla of Modelo 308.
             label: Filing year to which the request relates
       construct:
         modelo-308-iva-solicitud-devolucion:
@@ -164,7 +163,6 @@ modelo:
               help: Box 13 of modelo 308, tax year 2009.
               label: Return type
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: Tax information about tax information in casilla  of Modelo 308.
               label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
                 occasional taxable person / simplified transport regime)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:

@@ -723,6 +723,8 @@ application:
           de presentació actual.
         filing_record_missing: No hi ha cap registre de presentació actual per a aquest
           model i període. Presenteu el període primer.
+        filing_record_unconfirmed: El justificant capturat no ha confirmat el registre
+          de presentació %{filing_record_id} (resultat %{outcome}; %{notices}).
         metadata_snapshot_not_active: Només un snapshot de captura en viu actiu pot
           registrar metadades del justificant.
         modelo_unknown: El model de la captura del justificant no és un model conegut
@@ -1001,6 +1003,9 @@ application:
       external_import_unknown_casillas: 'La importació de presentació externa conté
         ids de casella no declarats al model de registre %{modelo}, exercici %{filing_year},
         període %{period}: %{casillas}.'
+      external_import_unverifiable: La declaració importada per a la unitat de treball
+        %{work_unit_id} no s'ha pogut conciliar amb l'historial de presentacions del
+        període (%{notices}); no s'ha registrat res.
       filed_observation_split_storage_context: El magatzem de l'historial de compensació
         d'IVA és una base de dades diferent de la d'observacions de càlcul
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
@@ -1055,6 +1060,12 @@ application:
       ledger_preflight_blocked: 'la comprovació prèvia del llibre bloqueja el càlcul
         del model: transacció %{transaction_id} %{reason}: %{detail}. Executa `aeat
         app ledger preflight --period %{period}` abans de calcular.'
+      local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
+        l'operador que la registra.
+      local_observation_override_missing: El model %{modelo} %{filing_year} %{period}
+        no té cap correcció manual de l'operador per eliminar.
+      local_observation_reason_blank: Una correcció manual d'una observació n'ha d'indicar
+        el motiu.
       m036_declaration_profile_bucket_mismatch: La declaració del model 036 indica
         un perfil diferent del bucket on es registraria
       m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model

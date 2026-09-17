@@ -4,55 +4,38 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóév.'
             label: Az adóbevallás vonatkozási éve
           m165-declaracion-complementaria-sustitutiva:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: Kiegészítő vagy helyettesítő bevallás
           m165-declarante-razon-social:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: A bejelentő neve vagy cégneve
           m165-fecha-adquisicion:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A részvények vagy üzletrészek megszerzésének dátuma
           m165-fecha-constitucion:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: Az alapítás dátuma
           m165-importe-fondos-propios:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A saját tőke összege
           m165-importe-suscripcion:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A jegyzés vagy szerzés összege
           m165-importe-total-suscripciones:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A jegyzések vagy szerzések teljes összege
           m165-numero-identificativo-anterior:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: A korábbi bevallás azonosító száma
           m165-numero-identificativo-declaracion:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: A bevallás azonosító száma
           m165-numero-total-declarados:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: A bejelentett tagok száma összesen
           m165-persona-relacion:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: Kapcsolattartó személy
           m165-porcentaje-participacion:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A részesedés százaléka
           m165-representante-legal-nif:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselő adószáma
           m165-socio-nif:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A tag vagy résztulajdonos adószáma
           m165-socio-nombre:
-            help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
             label: A tag vagy résztulajdonos családi és utóneve
           tipo-declaracion:
-            help: A Modelo 165 . casilla adóügyi adatai.
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       construct:
         modelo-165-informative:
@@ -76,52 +59,36 @@ modelo:
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: A Modelo 165 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarante-razon-social:
-              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentő neve vagy cégneve
             empresa-emergente:
-              help: 'Tekintse át a casilla adatait: Empresa emergente.'
               label: Induló vállalkozás
             fecha-adquisicion:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részvények vagy üzletrészek megszerzésének dátuma
             fecha-constitucion:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Az alapítás dátuma
             importe-fondos-propios:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A saját tőke összege
             importe-suscripcion:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzés vagy szerzés összege
             importe-total-suscripciones:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A jegyzések vagy szerzések teljes összege
             numero-identificativo-anterior:
-              help: A Modelo 165 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
-              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bevallás azonosító száma
             numero-total-declarados:
-              help: A Modelo 165 . casilla adóügyi adatai.
               label: A bejelentett tagok száma összesen
             persona-relacion:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             porcentaje-participacion:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A részesedés százaléka
             representante-legal-nif:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A törvényes képviselő adószáma
             socio-nif:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos adószáma
             socio-nombre:
-              help: 'A Modelo 165 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy résztulajdonos családi és utóneve
           field:
             label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől

@@ -14,22 +14,14 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: Informació fiscal de la casella 01 del Modelo 115.
               label: Nombre de perceptors
             '02':
-              help: Informació fiscal sobre informació fiscal de la casella 02 del
-                Modelo 115.
               label: Base de retencions i ingressos a compte
             '03':
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte.'
               label: Retencions i ingressos a compte
             '04':
-              help: 'Consulteu la informació de la casella: Resultat de anteriors
-                declaracions.'
               label: Resultat de declaracions anteriors
             '05':
-              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           field:
             label: Model 115 vigent (Ordre de 20 de novembre de 2000, BOE-A-2000-21430),

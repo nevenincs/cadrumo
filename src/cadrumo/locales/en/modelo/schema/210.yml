@@ -4,113 +4,74 @@ modelo:
       casilla:
         continuidad:
           irnr-base-imponible:
-            help: 'Casilla information: Casilla 8: irnr tax base.'
             label: Taxable base
           irnr-base-imponible-directa-g:
-            help: 'Casilla information: Casilla 18: irnr tax base directa g.'
             label: Taxable base (210 G)
           irnr-base-imponible-directa-i:
-            help: 'Casilla information: Casilla 4: irnr tax base directa i.'
             label: Taxable base (210 I)
           irnr-base-imponible-ganancias-h:
-            help: 'Casilla information: Casilla 17: irnr tax base ganancias h.'
             label: Taxable base ([12]+[16]) (210 H)
           irnr-convenio-indicador:
-            help: 'Casilla information: Casilla 20: irnr convenio indicator.'
             label: Tax treaty
           irnr-cuota-diferencial:
-            help: Tax information about tax information in casilla 31 of Modelo 210.
             label: Differential tax liability
           irnr-cuota-integra:
-            help: 'Casilla information: Casilla 22: irnr amount integra.'
             label: Gross tax liability
           irnr-cuota-integra-reducida:
-            help: 'Casilla information: Casilla 28: irnr amount integra reducida.'
             label: Reduced gross tax liability ([24]-[27])
           irnr-cuota-ley-irnr:
-            help: 'Casilla information: Casilla 24: irnr amount ley irnr.'
             label: IRNR Law tax liability ([22]-[23])
           irnr-deduccion-donativos:
-            help: Tax information for casilla 23 of Modelo 210.
             label: Deduction for donations
           irnr-exencion-dividendos:
-            help: 'See the information for this box: Dividend exemption applied (annual
-              limit of 1,500 euros).'
             label: Dividend exemption applied (annual limit of 1,500 euros)
           irnr-exenciones-ley-irnr-indicador:
-            help: 'Casilla information: Casilla 19: irnr exenciones ley irnr indicator.'
             label: Exemptions under the IRNR Law, except dividends (annual limit EUR
               1,500)
           irnr-ganancia-diferencia:
-            help: Tax information about tax information in casilla 11 of Modelo 210.
             label: Acquisition. Difference (210 H)
           irnr-ganancia-importe:
-            help: Tax information about tax information in casilla 12 of Modelo 210.
             label: Acquisition. Gain (210 H)
           irnr-ganancia-valor-adquisicion:
-            help: Tax information about tax information in casilla 10 of Modelo 210.
             label: Acquisition. Acquisition value (updated) (210 H)
           irnr-ganancia-valor-transmision:
-            help: Tax information about tax information in casilla 9 of Modelo 210.
             label: Acquisition. Transfer value (210 H)
           irnr-gastos-deducibles:
-            help: Tax information about tax information in casilla 7 of Modelo 210.
             label: Deductible expenses
           irnr-imputacion-inmobiliaria-coeficiente:
-            help: 'Casilla information: Casilla coeficiente_imputacion_inmobiliaria:
-              irnr imputed property income coeficiente.'
             label: Real-estate imputed income coefficient
           irnr-imputacion-inmobiliaria-dias:
-            help: 'Casilla information: Casilla dias_imputacion: irnr imputed property
-              income dias.'
             label: Days of imputation
           irnr-imputacion-inmobiliaria-valor-adquisicion:
-            help: 'Casilla information: Casilla valor_adquisicion: irnr imputed property
-              income valor acquisition.'
             label: Acquisition value
           irnr-imputacion-inmobiliaria-valor-catastral:
-            help: 'Casilla information: Casilla valor_catastral: irnr imputed property
-              income valor catastral.'
             label: Cadastral value
           irnr-imputacion-inmobiliaria-valor-comprobado-administracion:
-            help: Tax information for casilla of Modelo 210.
             label: Value assessed by the Tax Administration
           irnr-ingreso-devolucion-anterior:
-            help: Tax information for casilla 30 of Modelo 210.
             label: Previous payment/refund (supplementary self-assessment only)
           irnr-limite-convenio:
-            help: 'See the information for this box: Limit under the tax treaty.'
             label: Limit under the tax treaty
           irnr-mejora-diferencia:
-            help: 'Casilla information: Casilla 15: irnr mejora diferencia.'
             label: Improvement or 2nd acquisition. Difference (210 H)
           irnr-mejora-ganancia:
-            help: Tax information about tax information in casilla 16 of Modelo 210.
             label: Improvement or 2nd acquisition. Gain (210 H)
           irnr-mejora-valor-adquisicion:
-            help: 'Casilla information: Casilla 14: irnr mejora valor acquisition.'
             label: Improvement or 2nd acquisition. Acquisition value (updated) (210
               H)
           irnr-mejora-valor-transmision:
-            help: 'Casilla information: Casilla 13: irnr mejora valor transfer.'
             label: Improvement or 2nd acquisition. Transfer value (210 H)
           irnr-porcentaje-convenio:
-            help: 'Casilla information: Casilla 25: irnr percentage convenio.'
             label: Tax treaty percentage (%)
           irnr-reduccion-convenio:
-            help: 'See the information for this box: Reduction under the tax treaty.'
             label: Reduction under the tax treaty
           irnr-rendimientos-integros:
-            help: 'Casilla information: Casilla 5: irnr income integros.'
             label: Gross income
           irnr-retencion-practicada:
-            help: 'Casilla information: Casilla 29: irnr retencion practicada.'
             label: Withholding applied
           irnr-tipo-gravamen:
-            help: 'Casilla information: Casilla 21: irnr rate gravamen.'
             label: Tax rate
           irnr-tipo-renta:
-            help: 'Casilla information: Casilla tipo_renta: irnr rate income.'
             label: Type of income
       field:
         official_name: Modelo 210. Non-Resident Income Tax. Non-residents without
@@ -133,71 +94,13 @@ modelo:
             label: Modelo 210, tax year 2024
         '2025':
           casilla:
-            base_imponible:
-              help: 'Review the casilla information: Tax base.'
-            base_imponible_directa_g:
-              help: 'Review the casilla information: Tax base (210 G).'
-            base_imponible_directa_i:
-              help: 'Review the casilla information: Tax base (210 I).'
-            base_imponible_ganancias_h:
-              help: 'Review the casilla information: Tax base ([12]+[16]) (210 H).'
-            coeficiente_imputacion_inmobiliaria:
-              help: Tax information about tax information in casilla  of Modelo 210.
-            convenio_indicador:
-              help: 'Review the casilla information: Convenio.'
-            cuota_integra:
-              help: 'Review the casilla information: Amount full.'
-            cuota_integra_reducida:
-              help: 'Review the casilla information: Amount full reducida ([24]-[27]).'
-            cuota_ley_irnr:
-              help: 'Review the casilla information: Amount Ley IRNR ([22]-[23]).'
-            dias_imputacion:
-              help: Tax information about tax information in casilla  of Modelo 210.
             exencion_dividendos:
-              help: Tax information for casilla 6 of Modelo 210.
               label: Exemption applied to dividends (annual limit EUR 1,500) (210
                 R)
-            exenciones_ley_irnr_indicador:
-              help: 'Review the casilla information: Exenciones Ley IRNR, except dividendos
-                (límite annual 1.500 euros).'
-            ganancia_diferencia:
-              help: 'Review the casilla information: Acquisition. Diferencia (210
-                H).'
-            ingreso_devolucion_anterior:
-              help: 'Review the casilla information: Payment/Refund previous (exclusivamente
-                self-assessment supplementary).'
             limite_convenio:
-              help: 'Review the casilla information: Límite Convenio.'
               label: Tax treaty limit
-            mejora_diferencia:
-              help: Tax information about tax information in casilla 15 of Modelo
-                210.
-            mejora_valor_adquisicion:
-              help: Tax information about tax information in casilla 14 of Modelo
-                210.
-            mejora_valor_transmision:
-              help: Tax information about tax information in casilla 13 of Modelo
-                210.
-            porcentaje_convenio:
-              help: 'Review the casilla information: Percentage Convenio (%).'
             reduccion_convenio:
-              help: 'Review the casilla information: Reducción by Convenio ([24]-[26]).'
               label: Tax treaty reduction ([24]-[26])
-            rendimientos_integros:
-              help: 'Review the casilla information: Income íntegros.'
-            retencion_practicada:
-              help: 'Review the casilla information: Retención practicada.'
-            tipo_gravamen:
-              help: Tax information about tax information in casilla 21 of Modelo
-                210.
-            tipo_renta:
-              help: Tax information about tax information in casilla  of Modelo 210.
-            valor_adquisicion:
-              help: Tax information about tax information in casilla  of Modelo 210.
-            valor_catastral:
-              help: 'Review the casilla information: Valor catastral.'
-            valor_comprobado_administracion:
-              help: Tax information about tax information in casilla  of Modelo 210.
           construct:
             m210-irnr-calculation:
               field:
@@ -214,8 +117,6 @@ modelo:
               help: Box 4 of modelo 210, tax year 2026.
             base_imponible_ganancias_h:
               help: Box 17 of modelo 210, tax year 2026.
-            coeficiente_imputacion_inmobiliaria:
-              help: 'Modelo 210 entry, tax year 2026: Real-estate imputed income coefficient.'
             convenio_indicador:
               help: Box 20 of modelo 210, tax year 2026.
             cuota_diferencial:
@@ -228,8 +129,6 @@ modelo:
               help: Box 24 of modelo 210, tax year 2026.
             deduccion_donativos:
               help: Box 23 of modelo 210, tax year 2026.
-            dias_imputacion:
-              help: 'Modelo 210 entry, tax year 2026: Days of imputation.'
             exencion_dividendos:
               help: Box 6 of modelo 210, tax year 2026.
               label: Exemption applied to dividends (annual limit EUR 1,500) (210
@@ -270,14 +169,6 @@ modelo:
               help: Box 29 of modelo 210, tax year 2026.
             tipo_gravamen:
               help: Box 21 of modelo 210, tax year 2026.
-            tipo_renta:
-              help: 'Modelo 210 entry, tax year 2026: Type of income.'
-            valor_adquisicion:
-              help: 'Modelo 210 entry, tax year 2026: Acquisition value.'
-            valor_catastral:
-              help: 'Modelo 210 entry, tax year 2026: Cadastral value.'
-            valor_comprobado_administracion:
-              help: 'Modelo 210 entry, tax year 2026: Value assessed by the Tax Administration.'
           construct:
             m210-irnr-calculation:
               field:

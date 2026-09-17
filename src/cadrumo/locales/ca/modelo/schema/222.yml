@@ -4,8 +4,6 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              222.
             label: Exercici a què es refereix el pagament fraccionat
           is-pf-grupo-info-aumento-capital-compensacion-creditos:
             help: Import declarat al bloc d'informació addicional de la liquidació
@@ -342,8 +340,6 @@ modelo:
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - TOTAL - Disminucions
           tipo-declaracion:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              222.
             label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra / art.
               40.3 base imposable)
       construct:

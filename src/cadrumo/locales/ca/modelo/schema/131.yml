@@ -4,47 +4,36 @@ modelo:
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 1 (Personal assalariat): nombre d''unitats'
           irpf-pf-modulos-1-unidades-anterior:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 1 (Personal assalariat): nombre d''unitats de l''exercici
               anterior (2023), a efectes de la minoració per incentius a l''ocupació'
           irpf-pf-modulos-2-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 2 (Personal no assalariat): nombre d''unitats'
           irpf-pf-modulos-3-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 3 (unitat específica de l''activitat: superfície, distància
               recorreguda o càrrega): nombre d''unitats'
           irpf-pf-modulos-4-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 4 (unitat específica de l''activitat: consum d''energia
               elèctrica o altra): nombre d''unitats'
           irpf-pf-modulos-5-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 5 (unitat específica de l''activitat, p. ex. resta de superfície
               del local independent o taules): nombre d''unitats'
           irpf-pf-modulos-6-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 6 (unitat específica de l''activitat, p. ex. resta de superfície
               del local no independent o màquines tipus A): nombre d''unitats'
           irpf-pf-modulos-7-unidades:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Mòdul 7 (unitat específica de l''activitat, p. ex. superfície
               del forn o màquines tipus B): nombre d''unitats'
           irpf-pf-modulos-diferencia:
-            help: 'Consulteu la informació de la casella: Diferència.'
             label: Diferència
           irpf-pf-modulos-epigrafe-iae:
-            help: Informació fiscal de la casella del Modelo 131.
             label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
               als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents sota
               un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
               segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
               per a l'assignació exacta.
           irpf-pf-modulos-indice-inicio-actividad:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
               iniciada des de l''1-1-2025 en local exclusiu). Índex declarat per l''operador
               (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HAC/1425/2025 Annex
@@ -52,108 +41,65 @@ modelo:
               la discapacitat. Incompatible amb l''índex de temporada (b.2): si tots
               dos es declaren, preval la temporada.'
           irpf-pf-modulos-indice-pequena-dimension:
-            help: Informació fiscal de la casella del Modelo 131.
             label: Índex corrector per a empreses de petita dimensió (lletra b.1 -
               municipi, local únic, sense personal o fins a 2 treballadors). Índex
               declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1425/2025 Annex
               II, instrucció 2.3.b.1); el motor no modela fets del contribuent. Mai
               s'aplica a les activitats amb índex especial (721.2, 722).
           irpf-pf-modulos-indice-temporada:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
               fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
               segons durada, Ordre HAC/1425/2025 Annex II, instrucció 2.3.b.2); el
               motor no modela la durada com a fet del contribuent. Incompatible amb
               l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
               preval aquest.'
-          irpf-pf-modulos-minoracion-inversion:
-            help: Informació fiscal de la casella del Modelo 131.
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Indicador intern (1/0): l''índex corrector per a empreses de petita
               dimensió (b.1) declarat va ser ignorat per incompatibilitat amb l''índex
               corrector especial de l''activitat (Ordre HAC/1425/2025 Annex II, instrucció
               2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
               5 per 100)'
           irpf-pf-modulos-rendimiento-neto-minorado:
-            help: 'Consulteu la informació de la casella: Rendiment net minorado (Fase
-              2ª: previo − minoración per incentivos al empleo − minoración per incentivos
-              a la inversió).'
             label: 'Rendiment net minorat (Fase 2a: previ − minoració per incentius
               a l''ocupació − minoració per incentius a l''inversió)'
-          irpf-pf-modulos-rendimiento-neto-modulos:
-            help: Informació fiscal de la casella del Modelo 131.
           irpf-pf-modulos-rendimiento-neto-previo:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              131.
             label: 'Rendiment net previ (Fase 1a: Σ unitats mòdul × rendiment anual
               per unitat)'
           irpf-pf-modulos-resultado-declaracion:
-            help: 'Consulteu la informació de la casella: Resultat de la declaració.'
             label: Resultat de la declaració
           irpf-pf-modulos-resultados-negativos-anteriores:
-            help: Informació fiscal sobre informació fiscal de la casella 11 del Modelo
-              131.
             label: Resultats negatius de trimestres anteriors
           irpf-pf-modulos-suma-rendimientos:
-            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
-              131.
             label: Suma de rendiments nets
           irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
-            help: Informació fiscal de la casella del Modelo 131.
             label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
               corrector de temporada (b.2) i l''índex corrector per inici de noves
               activitats (b.4), incompatibles entre si (Ordre HAC/1425/2025 Annex
               II, instrucció 2.3).'
-          irpf-pf-modulos-total:
-            help: 'Consulteu la informació de la casella: Total.'
           irpf-pf-modulos-volumen-agrario:
-            help: 'Consulteu la informació de la casella: Volumen de ingressos agrarios
-              del trimestre.'
             label: Volum d'ingressos agraris del trimestre
           irpf-pf-modulos-volumen-sin-datos-base:
-            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
-              131.
             label: Volum de vendes o ingressos sense dades-base
           irpf-pf-saldo-negativo-fin-periodo:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              131.
             label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
               10)
           minoracion-rendimientos-actividades-economicas:
-            help: 'Consulteu la informació de la casella: Minoracion per rendiments
-              nets de activitats economicas.'
             label: Minoració per rendiments nets d'activitats econòmiques
           pago-fraccionado-previo:
-            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
-              131.
             label: Suma de pagaments fraccionats previs
           pago-fraccionado-previo-agrario:
-            help: Informació fiscal sobre informació fiscal de la casella 06 del Modelo
-              131.
             label: Pagament fraccionat previ agrari
           pago-fraccionado-previo-datos-base:
-            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
-              131.
             label: Pagament fraccionat previ per dades-base
           pago-fraccionado-previo-sin-datos-base:
-            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
-              131.
             label: Pagament fraccionat previ sense dades-base
           prestamo-vivienda-habitual:
-            help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
-              131.
             label: Pagament de préstecs per a habitatge habitual
           resultado-anteriores-autoliquidaciones:
-            help: 'Consulteu la informació de la casella: Resultat a ingresar de autoliquidacions
-              anteriors.'
             label: Resultat a ingressar d'autoliquidacions anteriors
           retenciones-ingresos-a-cuenta:
-            help: 'Consulteu la informació de la casella: Retencions e ingressos a
-              compte.'
             label: Retencions i ingressos a compte
       field:
         official_name: Modelo 131. IRPF. Empresaris i professionals en estimació objectiva.
@@ -171,8 +117,6 @@ modelo:
         '2024':
           casilla:
             modulos-indice-inicio-actividad:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                131.
               label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
                 iniciada des de l''1-1-2023 en local exclusiu). Índex declarat per
                 l''operador (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HFP/1359/2023
@@ -180,8 +124,6 @@ modelo:
                 ni la discapacitat. Incompatible amb l''índex de temporada (b.2):
                 si tots dos es declaren, preval la temporada.'
             modulos-indice-pequena-dimension:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                131.
               label: Índex corrector per a empreses de petita dimensió (lletra b.1
                 - municipi, local únic, sense personal o fins a 2 treballadors). Índex
                 declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HFP/1359/2023
@@ -201,8 +143,6 @@ modelo:
                 registre de béns per element - consulteu l'Ordre HFP/1359/2023 Annex
                 II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                131.
               label: 'Indicador intern (1/0): l''índex corrector per a empreses de
                 petita dimensió (b.1) declarat va ser ignorat per incompatibilitat
                 amb l''índex corrector especial de l''activitat (Ordre HFP/1359/2023
@@ -213,8 +153,6 @@ modelo:
                 excés - en l''ordre i amb les incompatibilitats de l''Ordre HFP/1359/2023
                 Annex II, instrucció 2.3)'
             modulos-temporada-inicio-actividad-conflicto-flag:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                131.
               label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
                 corrector de temporada (b.2) i l''índex corrector per inici de noves
                 activitats (b.4), incompatibles entre si (Ordre HFP/1359/2023 Annex

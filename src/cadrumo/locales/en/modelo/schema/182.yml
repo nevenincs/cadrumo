@@ -37,20 +37,5 @@ modelo:
           field:
             label: Modelo 182, tax year 2024
         '2025':
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 182.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 182.
-            x-ehkn0rpi5pi6urj1dpq6abbed5j0:
-              help: Tax information for casilla of Modelo 182.
-            x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
-              help: Tax information for casilla of Modelo 182.
-            x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
-              help: Tax information for casilla of Modelo 182.
-            x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
-              help: Tax information for casilla of Modelo 182.
-            x-ehkn0rpi5pp6aorle9p6arj3d5gg:
-              help: Tax information for casilla recurrencia of Modelo 182.
           field:
             label: Modelo 182, tax year 2025 (Order HAC/1430/2025)

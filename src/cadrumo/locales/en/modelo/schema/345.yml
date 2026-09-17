@@ -92,77 +92,7 @@ modelo:
             label: Modelo 345, tax year 2024
         '2025':
           casilla:
-            anio-nacimiento:
-              help: Tax information for casilla of Modelo 345.
-            beneficiario-nif:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            clave:
-              help: 'Review the casilla information: Clave.'
-            codigo-provincia:
-              help: Tax information for casilla of Modelo 345.
-            datos-adicionales-clave-i:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            datos-adicionales-clave-m:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            datos-adicionales-claves-abc:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            datos-identificativos-empleador:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            declaracion-complementaria-sustitutiva:
-              help: Tax information for casilla of Modelo 345.
-            declarado-nif:
-              help: 'Review the casilla information: NIF of the declarado.'
-            declarado-nombre:
-              help: 'Review the casilla information: Surname and name of the declarado.'
-            declarante-nif:
-              help: Tax information for casilla of Modelo 345.
-            declarante-razon-social:
-              help: Tax information for casilla of Modelo 345.
-            devoluciones-excesos:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            ejercicio-declaracion:
-              help: Tax information for casilla of Modelo 345.
-            empleador-nif:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            empleador-nombre:
-              help: Tax information for casilla of Modelo 345.
-            entidad-aseguradora-nif:
-              help: 'Review the casilla information: NIF of the entity aseguradora.'
-            fondo-pensiones-nif:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            fondo-pensiones-numero-registro:
-              help: Tax information for casilla of Modelo 345.
-            importe:
-              help: 'Review the casilla information: Amount.'
-            importe-total-aportaciones:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            numero-identificativo-anterior:
-              help: Tax information for casilla of Modelo 345.
-            numero-identificativo-declaracion:
-              help: Tax information for casilla of Modelo 345.
-            pepp-cuenta-subcuenta:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            pepp-denominacion:
-              help: Tax information for casilla of Modelo 345.
-            pepp-numero-inscripcion:
-              help: Tax information for casilla of Modelo 345.
-            persona-relacion:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            pias-fecha-primera-prima:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            pias-importe-acumulado:
-              help: 'Review the casilla information: Amount acumulado PIAS.'
-            plan-pensiones-denominacion:
-              help: Tax information for casilla of Modelo 345.
             rendimientos-trabajo-superiores-60000:
-              help: 'Review the casilla information: Income integros of the trabajo
-                superiores a 60000 euros.'
               label: Income integros of the trabajo superiores a 60000 euros
-            representante-legal-nif:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            subclave:
-              help: Tax information about tax information in casilla  of Modelo 345.
-            total-declarados:
-              help: Tax information for casilla of Modelo 345.
           field:
             label: Modelo 345, tax year 2025 (Order HFP/823/2022 and Order HAC/1430/2025)

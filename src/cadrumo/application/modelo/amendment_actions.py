@@ -503,15 +503,17 @@ def amend_modelo_revision[CasillaKey](
         work_units=work_units,
         filing_records=filing_catalogue,
         justificantes=justificantes,
+        # The upsert revalidates every stored rectificativa, not only this
+        # period's, so each Modelo 303 work unit needs its own snapshot.
         registry_snapshots={
-            work_unit.work_unit_id: operation.snapshot(
+            unit.work_unit_id: operation.snapshot(
                 Modelo("303").value,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
             )
-        }
-        if work_unit.modelo == Modelo("303").value
-        else {},
+            for unit in work_units.values()
+            if unit.modelo == Modelo("303").value
+        },
         expected_taxpayer_tax_id=taxpayer_tax_id,
     )
 

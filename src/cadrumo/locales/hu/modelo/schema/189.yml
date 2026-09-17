@@ -66,57 +66,6 @@ modelo:
           field:
             label: 189-es modelo, 2024. adóév
         '2025':
-          casilla:
-            clave-identificacion:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            clave-mercado:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            clave-representacion:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            clave-titularidad:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            clave-valor:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            codigo-pais:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            codigo-provincia:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            declaracion-complementaria-sustitutiva:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            declarado-nif:
-              help: 'Tekintse át a casilla adatait: NIF - declarado.'
-            declarado-nombre:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            declarante-nif:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            declarante-razon-social:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            ejercicio-declaracion:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóév.'
-            identificacion-valores:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            nominal-unitario-valores:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            numero-identificativo-anterior:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            numero-justificante:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            numero-total-declarados:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            numero-valores:
-              help: A Modelo 189 . casilla adóügyi adatai.
-            persona-relacion:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            porcentaje-participacion:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            representante-legal-nif:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            tipo-soporte:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            valoracion:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
-            valoracion-total:
-              help: 'A Modelo 189 . casilla adóügyi adatai: adóügyi információ.'
           field:
             label: 189-es modelo, 2025. adóév (EHA/3481/2008 rendelet; HFP/1180/2023,
               HFP/1284/2023 és HAC/132/2026 rendeletek)

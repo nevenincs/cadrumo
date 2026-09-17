@@ -14,73 +14,50 @@ modelo:
         2003-y-siguientes:
           casilla:
             afiliado-nif:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy önsegélyezőpénztári tag adószáma
             afiliado-nombre:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: A tag vagy önsegélyezőpénztári tag családi és utóneve
             cotizacion-abril:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, április: havi állapot és az esedékes járulék összege'
             cotizacion-agosto:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, augusztus: havi állapot és az esedékes járulék összege'
             cotizacion-diciembre:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, december: havi állapot és az esedékes járulék összege'
             cotizacion-enero:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, január: havi állapot és az esedékes járulék összege'
             cotizacion-febrero:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, február: havi állapot és az esedékes járulék összege'
             cotizacion-julio:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, július: havi állapot és az esedékes járulék összege'
             cotizacion-junio:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, június: havi állapot és az esedékes járulék összege'
             cotizacion-marzo:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, március: havi állapot és az esedékes járulék összege'
             cotizacion-mayo:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, május: havi állapot és az esedékes járulék összege'
             cotizacion-noviembre:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, november: havi állapot és az esedékes járulék összege'
             cotizacion-octubre:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, október: havi állapot és az esedékes járulék összege'
             cotizacion-septiembre:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Járulék, szeptember: havi állapot és az esedékes járulék összege'
             declaracion-complementaria-sustitutiva:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarante-razon-social:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: A bejelentő cégneve
             numero-afiliacion:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: Tagsági azonosító szám
             numero-identificativo-anterior:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-justificante:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: A bevallás igazolásszáma
             numero-total-afiliados:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: A tag- és önsegélyezőpénztári rekordok száma összesen
             persona-relacion:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 156 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 156 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
             label: 156-os modelo (HAC/3580/2003 rendelet), 2003. adóévtől

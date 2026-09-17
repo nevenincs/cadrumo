@@ -4,44 +4,30 @@ modelo:
       casilla:
         continuidad:
           base-rentas-dividendos:
-            help: 'A Modelo 123 04. casilla adóügyi adatai: adóügyi információ.'
             label: Osztalékok és nyereségrészesedések alapja
           base-rentas-resto:
-            help: 'A Modelo 123 05. casilla adóügyi adatai: adóügyi információ.'
             label: Egyéb jövedelmek alapja
-          base-retenciones-ingresos-a-cuenta:
-            help: 'A Modelo 123 02. casilla adóügyi adatai: adóügyi információ.'
           cuota-a-ingresar:
-            help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
             label: Befizetendő eredmény
           ingresos-ejercicios-anteriores:
-            help: 'A Modelo 123 04. casilla adóügyi adatai: adóügyi információ.'
             label: Korábbi adóévek bevételei
           numero-rentas-dividendos:
-            help: A Modelo 123 01. casilla adóügyi adatai.
             label: Osztalékokból és nyereségrészesedésekből származó jövedelmek száma
           numero-rentas-resto:
-            help: A Modelo 123 02. casilla adóügyi adatai.
             label: Egyéb jövedelmek száma
           numero-rentas-total:
-            help: A Modelo 123 03. casilla adóügyi adatai.
             label: Jövedelmek teljes száma
           perceptor-count:
-            help: A Modelo 123 01. casilla adóügyi adatai.
             label: A kedvezményezettek száma
           regularizacion:
-            help: 'Tekintse át a casilla adatait: Korrekció.'
             label: Helyesbítés
           resultado-anteriores-autoliquidaciones:
             label: Korábbi önadózások eredménye
           retenciones-rentas-dividendos:
-            help: 'Tekintse át a casilla adatait: Adólevonások dividendos és részesedések.'
             label: Osztalékok és nyereségrészesedések forrásadója
           retenciones-rentas-resto:
-            help: 'A Modelo 123 08. casilla adóügyi adatai: adóügyi információ.'
             label: Egyéb jövedelmek forrásadója
           suma-retenciones-regularizacion:
-            help: 'A Modelo 123 06. casilla adóügyi adatai: adóügyi információ.'
             label: Forrásadó és helyesbítés összege
       field:
         official_name: Az IRPF, a társasági adó és az állandó telephellyel rendelkező
@@ -54,10 +40,7 @@ modelo:
             '02':
               label: Levonások és előlegfizetések adóalapja
             '03':
-              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések.'
               label: Levonások és előlegfizetések
-            '07':
-              help: 'A Modelo 123 07. casilla adóügyi adatai: adóügyi információ.'
           construct:
             modelo-123-capital-withholding:
               field:
@@ -68,17 +51,9 @@ modelo:
         2024-y-siguientes:
           casilla:
             '06':
-              help: 'A Modelo 123 06. casilla adóügyi adatai: adóügyi információ.'
               label: Teljes alap
             09:
-              help: 'Tekintse át a casilla adatait: Adólevonások total.'
               label: Forrásadó összesen
-            '10':
-              help: 'A Modelo 123 10. casilla adóügyi adatai: adóügyi információ.'
-            '12':
-              help: 'A Modelo 123 12. casilla adóügyi adatai: adóügyi információ.'
-            '13':
-              help: 'A Modelo 123 13. casilla adóügyi adatai: adóügyi információ.'
           construct:
             modelo-123-capital-withholding:
               field:

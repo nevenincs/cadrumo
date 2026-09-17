@@ -4,85 +4,58 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóév.'
             label: A bevallás éve
           irpf-declarante-nif:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: A bevalló adóazonosító száma (NIF)
           m280-aportaciones-ejercicio:
-            help: 'Tekintse át a casilla adatait: Hozzájárulások efectuadas -ban adóév.'
             label: Az év során teljesített befizetések
           m280-base-retencion-practicada:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A levont forrásadó alapja
           m280-base-retenciones:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A forrásadó alapja
           m280-clave-alta:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: Nyitási kulcs
           m280-declaracion-complementaria-sustitutiva:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: Kiegészítő vagy helyettesítő bevallás
           m280-declarado-nif:
-            help: 'Tekintse át a casilla adatait: NIF - declarado.'
             label: A bevallott személy adóazonosító száma (NIF)
           m280-declarado-nombre:
-            help: 'Tekintse át a casilla adatait: Vezetéknév és név - declarado.'
             label: A bevallott személy vezeték- és keresztneve
           m280-declarante-razon-social:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: A bejelentő cégneve
           m280-extincion-plan:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A hosszú távú megtakarítási terv megszűnése
           m280-fecha-apertura:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A megnyitás dátuma
           m280-fecha-extincion:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A megszűnés dátuma
           m280-identificador-producto:
-            help: 'Tekintse át a casilla adatait: Identificador - producto contratado.'
             label: A szerződött termék azonosítója
           m280-importe-total-aportaciones:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A befizetések teljes összege
           m280-numero-identificativo-anterior:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: A korábbi bevallás azonosító száma
           m280-numero-identificativo-declaracion:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: A bevallás azonosító száma
           m280-numero-total-declarados:
-            help: A Modelo 280 . casilla adóügyi adatai.
             label: A bejelentett személyek száma összesen
           m280-persona-relacion:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: Kapcsolattartó személy
           m280-rendimientos-negativos-acumulados:
-            help: 'Tekintse át a casilla adatait: Jövedelmek negativos acumulados.'
             label: Halmozott negatív hozamok
           m280-rendimientos-negativos-ejercicio:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: Az év során elért negatív hozamok
           m280-rendimientos-negativos-imputables:
-            help: 'Tekintse át a casilla adatait: Jövedelmek negativos imputables.'
             label: Betudható negatív hozamok
           m280-rendimientos-positivos-acumulados:
-            help: 'Tekintse át a casilla adatait: Jövedelmek positivos acumulados.'
             label: Halmozott pozitív hozamok
           m280-rendimientos-positivos-ejercicio:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: Az év során elért pozitív hozamok
           m280-representante-legal-nif:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselő adószáma
           m280-tipo-identificador:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: Az azonosító típusa
           m280-tipo-plan-ahorro:
-            help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
             label: A hosszú távú megtakarítási terv típusa
       field:
         official_name: Modelo 280. A hosszú távú megtakarítási programok éves adatszolgáltatási
