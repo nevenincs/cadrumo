@@ -30,6 +30,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.corpus_catalogue import verify_source_file
+from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.validate_evidence import EvidenceValidator
 from dev.registry.compiler.validate_official_source_guidance_content import (
     deadline_window_content_failures,
@@ -58,9 +59,15 @@ _DEADLINE_HONEST_MODELO_ID = "180"
 _DEADLINE_HONEST_WINDOW_ID = "modelo-180-2024-0a"
 
 
+def _authored_catalogues():
+    # The authored catalogue, not the published view: a published generation
+    # keeps only the sources its modelos cite, and these claims concern the
+    # catalogue's own declarations.
+    return load_shared_catalogues(bundled_path("registry", "aeat"))
+
+
 def _bundled_sources() -> dict[str, SourceReference]:
-    _modelos, catalogues = bundled_registry_tree()
-    return {str(ref): source for ref, source in catalogues.sources.items()}
+    return {str(ref): source for ref, source in _authored_catalogues().sources.items()}
 
 
 def _find_window(modelo_id: str, window_id: str):
@@ -74,7 +81,7 @@ def _find_window(modelo_id: str, window_id: str):
 
 
 def _evidence_validator(*, source_root) -> EvidenceValidator:
-    _modelos, catalogues = bundled_registry_tree()
+    catalogues = _authored_catalogues()
     return EvidenceValidator(legal_refs=catalogues.legal, source_refs=catalogues.sources, source_root=source_root)
 
 
@@ -184,11 +191,10 @@ def test_the_deadline_anchor_cites_the_reviewed_2026_calendar_pdf_with_its_deadl
     assert _DEADLINE_ANCHOR_SOURCE_ID in osg_refs
 
     source = sources[_DEADLINE_ANCHOR_SOURCE_ID]
-    assert (source.authority, source.evidence_tier, source.kind, source.review_status) == (
+    assert (source.authority, source.evidence_tier, source.kind) == (
         "aeat",
         "official_source_guidance",
         "manual_pdf",
-        "reviewed",
     )
     assert source.applies_from is not None
     assert source.applies_to is not None

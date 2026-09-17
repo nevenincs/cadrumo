@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 __all__ = [
+    "PRIOR_REVISION_ID",
     "REFERENCE_LEGAL_ID",
     "REFERENCE_SOURCE_ID",
     "ExportFieldDefinition",
@@ -91,6 +92,8 @@ __all__ = [
     "snapshot_for_revision",
     "supported_filing_year",
 ]
+
+PRIOR_REVISION_ID = "test-prior-revision"
 
 
 def _snapshot_for_revision(
@@ -315,7 +318,28 @@ def _minimal_revision(
     )
 
 
+def _prior_edition(revision: ModeloRevision) -> ModeloRevision:
+    """Return a closed edition before ``revision``, for fixtures that name a continuity endpoint."""
+    from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
+    return revision.model_copy(
+        update={
+            "id": PRIOR_REVISION_ID,
+            "localization_key": f"test.schema.revision.{PRIOR_REVISION_ID}.label",
+            "valid_from": date(2023, 1, 1),
+            "valid_to": date(2023, 12, 31),
+            "period_selector": PeriodSelector(year_from=2023, year_to=2023, periods=("0A",)),
+            "casilla_continuidad_evolutions": (),
+        },
+    )
+
+
 def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
+    revisions = {"test-revision": revision}
+    # An edition that records a continuity evolution names its predecessor, so
+    # the modelo declares that predecessor as well.
+    if revision.casilla_continuidad_evolutions:
+        revisions = {PRIOR_REVISION_ID: _prior_edition(revision), **revisions}
     return ModeloDefinition(
         id="130",
         title_localization_key="test.schema.modelo.130.title",
@@ -326,7 +350,7 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         output_sensitivity=SensitivityClass.FINANCIAL,
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
-        revisions={"test-revision": revision},
+        revisions=revisions,
     )
 
 

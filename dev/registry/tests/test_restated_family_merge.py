@@ -24,7 +24,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
@@ -214,7 +214,7 @@ def test_restating_a_family_the_edition_states_empty_is_refused_before_the_merge
         f'reason = "{_REASON}" }}]\n'
     )
 
-    with pytest.raises(RegistryValidationError, match="restated in full but declares no 'parameters'"):
+    with pytest.raises(RegistryLoadError, match="restated in full but declares no 'parameters'"):
         load_modelo_directory(_build_modelo(tmp_path, successor_extra=empty_family))
 
 

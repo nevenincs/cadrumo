@@ -17,8 +17,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
@@ -270,7 +271,7 @@ def test_field_delta_removes_a_nested_constraint_storage_field(tmp_path: Path) -
     ),
 )
 def test_nested_constraint_removal_contract_fails_closed(fields: object, removed: str) -> None:
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(ValidationError, match="casilla field override"):
         CasillaFieldOverride.model_validate(
             {
                 "selector": {"revision": "2024", "id": "0001"},

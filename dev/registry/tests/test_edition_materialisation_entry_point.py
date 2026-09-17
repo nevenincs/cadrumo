@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.toml import render_toml
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.edition_materialisation import materialise_edition
@@ -145,7 +145,7 @@ def test_materialisation_does_not_rewrite_the_historical_comparison(tmp_path: Pa
 def test_a_dangling_review_comparison_is_refused_specifically(tmp_path: Path) -> None:
     invalid = _REVIEWED_DELTA.replace('reviewed_against = "2024"', 'reviewed_against = "2023"')
 
-    with pytest.raises(RegistryValidationError, match=r"dangling review reference reviewed_against='2023'"):
+    with pytest.raises(RegistryLoadError, match=r"dangling review reference reviewed_against='2023'"):
         load_modelo_directory(_modelo(tmp_path, successor_extra=invalid))
 
 

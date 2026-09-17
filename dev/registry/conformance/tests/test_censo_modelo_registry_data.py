@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -37,13 +39,17 @@ def _snapshot(period: str = "alta") -> RegistrySnapshot:
     # reviewed to that rung. Ask for the rung the law-selected revision itself
     # declares rather than the FILING default, and a later promotion of 036
     # carries here without an edit.
-    revision = select_revision(modelo, filing_year=2025, period=period)
+    # 2025 is split between two editions on 3 February, so an ad-hoc event names
+    # the day it happened; this one falls in the later edition.
+    on = date(2025, 6, 1)
+    revision = select_revision(modelo, filing_year=2025, period=period, on=on)
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
         filing_year=2025,
         period=period,
+        on=on,
         grade=revision.effective_authority_grade,
     )
 

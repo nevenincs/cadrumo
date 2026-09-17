@@ -287,13 +287,14 @@ def test_every_shipped_revision_serialises_the_key_exactly_when_it_declares_one(
                 assert dumped["predecessor"] == declaration.revision_id
                 assert declaration.revision_id in modelo.revisions
             else:
-                assert dumped["predecessor"] == {
-                    "none": {
-                        "reason": declaration.reason,
-                        "legal_refs": list(declaration.legal_refs),
-                        "source_refs": list(declaration.source_refs),
-                    }
+                expected: dict[str, object] = {
+                    "reason": declaration.reason,
+                    "legal_refs": list(declaration.legal_refs),
+                    "source_refs": list(declaration.source_refs),
                 }
+                if declaration.cause is not None:
+                    expected["cause"] = declaration.cause.value
+                assert dumped["predecessor"] == {"none": expected}
 
 
 def test_the_parallel_scheme_modelo_declares_every_edition_without_a_predecessor() -> None:

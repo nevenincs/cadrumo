@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.logging import get_logger
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -152,6 +153,7 @@ class ParityResult(_ParityModel):
 
     @field_validator("fields")
     @classmethod
+    @pydantic_validation_boundary
     def _fields_unique(cls, value: tuple[ParityFieldComparison, ...]) -> tuple[ParityFieldComparison, ...]:
         seen: set[str] = set()
         for field in value:

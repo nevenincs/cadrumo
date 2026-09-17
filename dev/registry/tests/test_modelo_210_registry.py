@@ -182,11 +182,13 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
 
     expected = {
         2025: {
+            # Orden EHA/3316/2010 art 5.c).1 as worded by Orden HAC/56/2024: 2025
+            # devengos close on 20 January; the April window starts with 2026 devengos.
             "modelo-210-2025-0a-arrendamiento-ingreso": (
                 ResultDisposition.INGRESO,
                 ("01", "35"),
-                date(2026, 4, 1),
-                date(2026, 4, 20),
+                date(2026, 1, 1),
+                date(2026, 1, 20),
             ),
             "modelo-210-2025-0a-cuota-cero": (
                 ResultDisposition.NEGATIVA,
@@ -203,7 +205,7 @@ def test_modelo_210_deadlines_use_canonical_annual_identity_and_exact_revision_o
             "modelo-210-2025-0a-renta-imputada": (
                 None,
                 ("02",),
-                date(2026, 4, 1),
+                date(2026, 1, 1),
                 date(2026, 12, 31),
             ),
         },
