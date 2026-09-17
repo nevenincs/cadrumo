@@ -16,7 +16,7 @@ release.yml:Fail fast on a lane no online runner can serve
 # Reads and writes GitHub state through `gh`, `git` or the release automation,
 # or reports a job verdict, and has no local meaning; `gh` is already permitted
 # and these differ only in reaching it through a shell conditional.
-merge-gate.yml:Require lint success
+merge-gate.yml:Require every gate job to succeed
 merge-gate.yml:Refuse fork pull requests
 release-please.yml:Regenerate uv.lock on the release branch
 release-please.yml:Push the regenerated uv.lock onto the release branch
