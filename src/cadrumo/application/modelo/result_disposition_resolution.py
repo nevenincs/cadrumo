@@ -174,7 +174,9 @@ def base_modelo_result_disposition(
 
     Args:
         work_unit: The filing coordinate naming the modelo and its revision.
-        revision: The :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision` whose result casilla decides the sign.
+        revision: The
+            :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            whose result casilla decides the sign.
         period: The period the disposition is resolved for.
         operation: The generation-pinned authority the casillas are read under.
 

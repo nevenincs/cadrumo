@@ -843,7 +843,9 @@ def reconcile_receipt_totals(
     Args:
         work_unit: The filing coordinate whose snapshot is resolved.
         justificante: The stored receipt carrying the printed total.
-        revision: The presented :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`, or ``None`` when none exists.
+        revision: The presented
+            :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+            or ``None`` when none exists.
         operation: The generation-pinned authority the snapshot is read under.
 
     Returns:

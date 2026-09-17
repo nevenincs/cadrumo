@@ -656,7 +656,9 @@ def build_external_filing_observation_payload(
             carries an observation envelope.
         observation_repository: The store that prepares the envelope.
         work_unit: The filing coordinate the import targets.
-        revision: The imported :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`, whose observations the envelope carries.
+        revision: The imported
+            :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+            whose observations the envelope carries.
         occurred_at: When the import was captured.
         cleaned_reference: The canonical register reference.
         expected_tax_id: The authenticated identity, when one is asserted.
