@@ -21,11 +21,11 @@ from cadrumo.domain.calculations.registry.rental_reduction import resolve_rental
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.renta.rental_reduction import RentalReductionArt232Tier
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ..compiler.authority import compiled_bundled_authority

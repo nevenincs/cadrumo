@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 
 import pytest
+
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.inventory import REPO_ROOT
 

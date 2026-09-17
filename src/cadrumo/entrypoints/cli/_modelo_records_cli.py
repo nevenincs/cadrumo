@@ -15,10 +15,6 @@ from typing import Literal
 
 import typer
 
-from ...application.calculations.observations_repository import (
-    CalculationObservationRepositoryProtocol,
-    observation_key,
-)
 from ...application.modelo.action_errors import (
     ExternalModeloImportError,
     ModeloLocalObservationError,
@@ -29,6 +25,7 @@ from ...application.modelo.action_errors import (
 )
 from ...application.modelo.external_import_actions import (
     ExternalFilingBaselineSource,
+    ExternalFilingImportResult,
     import_external_filing_evidence,
     import_external_filing_source,
 )
@@ -38,12 +35,11 @@ from ...application.modelo.filing_actions import (
     list_filing_records,
     list_verification_reports,
 )
-from ...application.modelo.filing_chain_reconciliation import (
-    FilingReconciliationOutcome,
-    FilingReconciliationResult,
-)
+from ...application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
 from ...application.modelo.local_observation_actions import (
     OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
+    LocalObservationPorts,
+    ModeloLocalObservationClearResult,
     ModeloLocalObservationResult,
     clear_operator_local_observation,
     record_operator_local_observation,
@@ -58,7 +54,6 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.period import Period, PeriodError
-from ...core.time.clock import now as utc_now
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import ExternalEvidenceKind
@@ -164,7 +159,7 @@ def _import_record(
     evidence_reference_id: str,
     actor: str,
     file: Path | None,
-) -> FilingReconciliationResult:
+) -> ExternalFilingImportResult:
     """Load profile identity and delegate one external-evidence import path."""
     try:
         from ...application.workflow.persistence import workflow_state_repository
@@ -287,7 +282,7 @@ def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
         {**filing_record_payload(record).model_dump(mode="python"), "observation_layers": layers},
     )
     lines = [
-        "operation	modelo.filing_record.show",
+        "operation\tmodelo.filing_record.show",
         *filing_record_lines(record),
         *observation_layers_lines(layers),
     ]
@@ -315,7 +310,7 @@ def filing_record_import(
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
     casilla_values = _import_input_values(set_overrides, file)
-    reconciliation = _import_record(
+    imported = _import_record(
         ctx=ctx,
         work_unit_id=validated_work_unit_id,
         casilla_values=casilla_values,
@@ -324,8 +319,9 @@ def filing_record_import(
         actor=actor,
         file=file,
     )
+    reconciliation = imported.reconciliation
     notices = filing_reconciliation_notices((reconciliation,))
-    if reconciliation.outcome is FilingReconciliationOutcome.UNVERIFIABLE or reconciliation.filing_record_id is None:
+    if reconciliation.outcome is FilingReconciliationOutcome.UNVERIFIABLE:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.filing_record.import_unverifiable",
@@ -334,10 +330,7 @@ def filing_record_import(
                 filing_year=reconciliation.filing_year,
             ),
         )
-    record = get_filing_record(
-        reconciliation.filing_record_id,
-        ports=filing_action_ports_factory(ctx)(bucket_id=reconciliation.bucket_id),
-    )
+    record = imported.filing_record
     # The payload derives the evidence kind and reference from the record's own
     # external evidence, so the in-force AEAT-backed record is the source passed.
     result = FilingRecordImportResult.model_validate(
@@ -347,14 +340,14 @@ def filing_record_import(
         },
     )
     lines = [
-        "operation	modelo.filing_record.import",
-        f"evidence_kind	{evidence_kind.value}",
-        f"evidence_reference_id	{evidence_reference_id}",
+        "operation\tmodelo.filing_record.import",
+        f"evidence_kind\t{evidence_kind.value}",
+        f"evidence_reference_id\t{evidence_reference_id}",
         *filing_record_lines(record),
         *filing_reconciliation_lines((reconciliation,)),
         *notice_lines(notices),
     ]
-    lines.append("filing_disambiguation	(imported AEAT-attested baseline)")
+    lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines, notices=notices)
 
 
@@ -385,11 +378,15 @@ def _local_observation_values(
     return casilla_values
 
 
-def _local_observation_repository(ctx: typer.Context) -> CalculationObservationRepositoryProtocol:
-    return calculation_action_ports_factory(ctx)(
-        bucket_id=active_bucket_id_or_refuse(),
-        operation=authority_operation(ctx),
-    ).observation_repository
+def _local_observation_ports(ctx: typer.Context) -> LocalObservationPorts:
+    bucket_id = active_bucket_id_or_refuse()
+    ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id, operation=authority_operation(ctx))
+    return LocalObservationPorts(
+        bucket_id=bucket_id,
+        observation_repository=ports.observation_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        work_unit_repository=ports.work_unit_repository,
+    )
 
 
 def _record_local_observation(
@@ -403,7 +400,7 @@ def _record_local_observation(
     reason: str,
 ) -> tuple[ModeloLocalObservationResult, ObservationLayersPayload]:
     """Record the validated override and read the coordinate's layers back."""
-    repository = _local_observation_repository(ctx)
+    ports = _local_observation_ports(ctx)
     try:
         recorded = record_operator_local_observation(
             modelo=modelo,
@@ -412,12 +409,12 @@ def _record_local_observation(
             casilla_values=casilla_values,
             actor=actor,
             reason=reason,
-            repository=repository,
+            ports=ports,
             operation=authority_operation(ctx),
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
-    return recorded, observation_layers_payload(repository.load_observation_layers(modelo, period))
+    return recorded, observation_layers_payload(ports.observation_repository.load_observation_layers(modelo, period))
 
 
 def _clear_local_observation(
@@ -428,22 +425,21 @@ def _clear_local_observation(
     period: Period,
     actor: str,
     reason: str,
-) -> ObservationLayersPayload:
+) -> tuple[ModeloLocalObservationClearResult, ObservationLayersPayload]:
     """Clear the operator override and read the coordinate's layers back."""
-    repository = _local_observation_repository(ctx)
+    ports = _local_observation_ports(ctx)
     try:
-        clear_operator_local_observation(
+        cleared = clear_operator_local_observation(
             modelo,
             year,
             period,
-            member_nif=None,
             reason=reason,
             actor=actor,
-            repository=repository,
+            ports=ports,
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
-    return observation_layers_payload(repository.load_observation_layers(modelo, period))
+    return cleared, observation_layers_payload(ports.observation_repository.load_observation_layers(modelo, period))
 
 
 def _observe_local_notice(action: Literal["recorded", "cleared"]) -> Notice:
@@ -520,7 +516,7 @@ def filing_record_observe_local(
     if clear:
         if file is not None or set_overrides:
             raise typer.BadParameter(tr("cli.app.modelo.filing_record.observe_local_clear_values_error"))
-        layers = _clear_local_observation(
+        cleared, layers = _clear_local_observation(
             ctx=ctx,
             modelo=str(modelo_code),
             year=year,
@@ -530,13 +526,13 @@ def filing_record_observe_local(
         )
         result = FilingRecordLocalObservationResult(
             action="cleared",
-            modelo=str(modelo_code),
-            filing_year=year,
-            period=filing_period,
-            observation_key=observation_key(str(modelo_code), filing_period),
-            captured_at=utc_now(),
-            captured_by=resolved_actor,
-            reason=reason,
+            modelo=cleared.modelo,
+            filing_year=cleared.filing_year,
+            period=cleared.period,
+            observation_key=cleared.observation_key,
+            captured_at=cleared.cleared_at,
+            captured_by=cleared.cleared_by,
+            reason=cleared.reason,
             observation_layers=layers,
         )
         _emit_local_observation(ctx, result=result, notice=_observe_local_notice("cleared"))
@@ -563,7 +559,7 @@ def filing_record_observe_local(
         casilla_count=len(recorded.casilla_values),
         captured_at=recorded.captured_at,
         captured_by=recorded.captured_by,
-        reason=reason,
+        reason=recorded.override.reason,
         observation_layers=layers,
     )
     _emit_local_observation(ctx, result=result, notice=_observe_local_notice("recorded"))

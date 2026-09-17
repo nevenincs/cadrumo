@@ -36,6 +36,7 @@ import re
 from pathlib import Path
 
 import pytest
+
 from cadrumo.tests.inventory import REPO_ROOT, SRC_CADRUMO, production_python_files, python_files_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -330,9 +330,7 @@ def _numeric_register_casillas(
     if not observation.casillas or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas):
         return None
     registry_observation = ports.transformation.registry_observation(observation)
-    values = {
-        row.casilla_id: row.value for row in registry_observation.observations if isinstance(row.value, Decimal)
-    }
+    values = {row.casilla_id: row.value for row in registry_observation.observations if isinstance(row.value, Decimal)}
     return values or None
 
 

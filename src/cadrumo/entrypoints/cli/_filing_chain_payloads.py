@@ -299,7 +299,9 @@ def _layer_lines(name: str, layer: ObservationLayerPayload | None) -> list[str]:
         f"observation.{name}.captured_at\t{layer.captured_at.isoformat()}",
         f"observation.{name}.stamped_revision_id\t{layer.stamped_revision_id}",
     ]
-    lines.extend(f"observation.{name}.casilla\t{casilla_id}\t{value}" for casilla_id, value in layer.casilla_values.items())
+    lines.extend(
+        f"observation.{name}.casilla\t{casilla_id}\t{value}" for casilla_id, value in layer.casilla_values.items()
+    )
     return lines
 
 
@@ -323,6 +325,7 @@ def observation_layers_lines(payload: ObservationLayersPayload) -> list[str]:
             )
         )
         lines.extend(
-            f"observation.override.replaced\t{casilla_id}\t{value}" for casilla_id, value in override.replaced_values.items()
+            f"observation.override.replaced\t{casilla_id}\t{value}"
+            for casilla_id, value in override.replaced_values.items()
         )
     return lines

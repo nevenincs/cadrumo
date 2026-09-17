@@ -32,7 +32,9 @@ _REVISION_ID = "c" * 64
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _IMPORTED_AT = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _FILED_AT = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
-_AMENDS_ID = derive_filing_record_id(work_unit_id=_WORK_UNIT_ID, calculation_revision_id="d" * 64, filed_by="aeat-import")
+_AMENDS_ID = derive_filing_record_id(
+    work_unit_id=_WORK_UNIT_ID, calculation_revision_id="d" * 64, filed_by="aeat-import"
+)
 
 
 def _confirmed_complementaria(evidence_kind: ExternalEvidenceKind, reference_id: str) -> ModeloRecord:
@@ -100,7 +102,9 @@ def test_filing_record_payload_renders_chain_evidence_and_amends() -> None:
     assert import_result.evidence_kind is evidence.kind
     assert import_result.evidence_reference_id == evidence.reference_id
     assert import_result.reconciliation.outcome is FilingReconciliationOutcome.APPENDED
-    amend_result = WorkAmendResult.model_validate({"amendment_kind": "complementaria", **payload_dict})
+    amend_result = WorkAmendResult.model_validate(
+        {"amendment_kind": "complementaria", "m303_rectificativa_motive": None, **payload_dict},
+    )
     assert show_result.external_evidence is not None
     assert amend_result.external_evidence is not None
 
