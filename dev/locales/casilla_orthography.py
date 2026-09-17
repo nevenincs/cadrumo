@@ -34,7 +34,8 @@ _RESTORABLE: Final[dict[str, dict[str, str]]] = {
     "ca": {"a": "à", "e": "éè", "i": "íï", "o": "óò", "u": "úü", "c": "ç"},
     "hu": {"a": "á", "e": "é", "i": "í", "o": "óöő", "u": "úüű"},
 }
-_FOREIGN_DICTIONARIES: Final = ("en", "es")
+#: Translations quote Spanish form terms and English loanwords; the Spanish source quotes neither.
+_FOREIGN_DICTIONARIES: Final[dict[str, tuple[str, ...]]] = {"es": (), "ca": ("en", "es"), "hu": ("en", "es")}
 _DIACRITICS: Final = frozenset("".join(chars for table in _RESTORABLE.values() for chars in table.values()))
 _WORD: Final = re.compile(r"[^\W\d_]+")
 _MIN_LENGTH: Final = 4
@@ -83,7 +84,7 @@ def unaccented_words(
     dictionaries = load_dictionaries(REPO_ROOT)
     for locale, table in _RESTORABLE.items():
         dictionary = dictionaries[locale]
-        foreign = [dictionaries[code] for code in _FOREIGN_DICTIONARIES if code != locale]
+        foreign = [dictionaries[code] for code in _FOREIGN_DICTIONARIES[locale]]
         accepted = reviewed.get(locale, frozenset())
         verdicts: dict[str, tuple[str, ...]] = {}
         for key, value in sorted(values.get(locale, {}).items()):
