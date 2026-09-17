@@ -56,7 +56,8 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
         assert expression.get("op") == "copy", f"{target} formula must be op=copy"
         args = expression.get("args") or []
         assert len(args) == 1, f"{target} op=copy must take exactly one argument"
-        assert args[0].get("relation") == expected_source, (
+        # Relations were absorbed into binding providers, so the copy names the binding.
+        assert args[0].get("binding") == expected_source, (
             f"{target} op=copy must source from {expected_source}, got {args[0]!r}"
         )
 

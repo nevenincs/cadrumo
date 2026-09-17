@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from ..binding_temporal import FilingYearOffset
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PERIODS = ("0A",)
 

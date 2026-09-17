@@ -234,6 +234,11 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            # Art. 75 Ley 19/1994 / Art. 7.p) LIRPF maritime-worker exemption operands;
+            # neutral zero when the chain under test is unrelated (the path itself is false).
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and
@@ -241,6 +246,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             binding.id: Decimal("0")

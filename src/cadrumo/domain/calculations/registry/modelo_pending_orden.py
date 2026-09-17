@@ -28,7 +28,6 @@ outlive the window rather than by the cadence alone.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from typing import Annotated
 
 from pydantic import BeforeValidator, Field, model_validator
@@ -48,6 +47,8 @@ __all__ = (
 )
 
 from enum import StrEnum
+
+from ....core.time.clock import today_madrid
 
 
 class ModeloApprovalCadence(StrEnum):
@@ -100,7 +101,7 @@ def pending_orden_vocabulary(*, authority: GovernedFactSource | None = None) -> 
         MappingFactQuery(
             fact_id=_PENDING_ORDEN_VOCABULARY_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

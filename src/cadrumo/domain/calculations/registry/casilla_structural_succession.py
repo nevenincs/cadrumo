@@ -12,6 +12,7 @@ from pydantic import BeforeValidator, Field, model_validator
 
 from cadrumo.core.identity.continuidad import ContinuidadId
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .ids import RevisionId
 from .period_selector_overlap import period_selectors_overlap
@@ -53,6 +54,7 @@ class CasillaStructuralSuccession(RegistryModel):
     evidence: str = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _shape(self) -> CasillaStructuralSuccession:
         sources, targets = set(self.source_lineages), set(self.target_lineages)
         if len(sources) != len(self.source_lineages) or len(targets) != len(self.target_lineages):

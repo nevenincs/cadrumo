@@ -49,7 +49,7 @@ from ..ledger_iva_bindings import (
 from ..schema import ModeloRevision
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 # slot, a date inside the slot's statutory window, box suffix, base, cuota.
@@ -173,7 +173,7 @@ def test_the_bridge_decides_the_classification_the_selectors_match_on(
         deduction_provenance=None,
     )
     assert observation.applied_rate == expected_rate
-    assert observation.rate_kind is expected_tier
+    assert observation.rate_kind == expected_tier
     assert observation.category == expected_category
 
 

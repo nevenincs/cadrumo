@@ -8,7 +8,7 @@ from .....core.aggregation import ForeignAssetClass
 from .....core.foreign_asset_obligation import MODELO_720_FOREIGN_ASSET_CLASS_CODES
 from ..foreign_asset_obligation_catalogue import resolve_foreign_asset_obligation_catalogue
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 class TestObligationGroupMapping:

@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import EntityType, LegalEntityForm
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -165,7 +166,7 @@ def resolve_entity_vocabulary(
     authority: GovernedFactSource | None = None,
 ) -> EntityVocabulary:
     """Resolve and validate all entity types and legal forms from fact 0124."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         _bundled_mapping_entries(coordinate)

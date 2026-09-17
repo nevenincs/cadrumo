@@ -11,15 +11,12 @@ import pytest
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# No hijos means compute_deduccion_maternidad_0611([], ...) is provably 0
-# regardless of the registry's dated operands, so the binding is the literal.
-_M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-profile-deduccion-maternidad": Decimal(0),
-}
+_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 
 def _snapshot(year: int) -> RegistrySnapshot:

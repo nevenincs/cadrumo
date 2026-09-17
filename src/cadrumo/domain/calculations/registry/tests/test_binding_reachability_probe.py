@@ -40,7 +40,7 @@ from ..ledger_renta_gastos_pago_fraccionado_bindings import (
     _renta_gastos_pago_fraccionado_build_matcher,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _CATEGORY = IvaCategory("domestic_general")
 _RATE_KIND = IvaRateKind("general")

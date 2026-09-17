@@ -20,7 +20,7 @@ from ..binding_temporal import (
     TargetPeriods,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _TEMPORAL = TypeAdapter(BindingTemporalSelector)
 _APPLICABILITY = TypeAdapter(BindingApplicability)

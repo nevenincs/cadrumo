@@ -13,7 +13,7 @@ from ..legal import verify_legal_reference
 from ..schema_base import EvidenceTier
 from ..schema_references import LegalReference, SourceReference
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _legal_reference_payload() -> dict[str, object]:

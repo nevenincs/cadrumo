@@ -51,8 +51,11 @@ class TestCountryCodeRejects:
 
     def test_invalid_value_raises_registry_validation_error_at_validator(self) -> None:
         for raw in ("es", 34):
-            with pytest.raises(RegistryValidationError):
+            # The validator sits behind the pydantic boundary, which keeps the
+            # registered refusal as the cause of the builtin ValueError.
+            with pytest.raises(ValueError) as refused:
                 _validate_country_code(raw)
+            assert isinstance(refused.value.__cause__, RegistryValidationError)
 
 
 class TestCasillaDefinitionDataType:

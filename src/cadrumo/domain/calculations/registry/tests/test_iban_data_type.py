@@ -83,8 +83,11 @@ class TestIbanStringRejects:
         )
 
         for raw, message in cases:
-            with pytest.raises(RegistryValidationError, match=message):
+            # The validator sits behind the pydantic boundary, which keeps the
+            # registered refusal as the cause of the builtin ValueError.
+            with pytest.raises(ValueError, match=message) as refused:
                 _validate_iban_string(raw)
+            assert isinstance(refused.value.__cause__, RegistryValidationError)
 
 
 class TestCasillaDefinitionDataType:

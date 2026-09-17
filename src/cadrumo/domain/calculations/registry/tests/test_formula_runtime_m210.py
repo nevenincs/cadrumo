@@ -19,7 +19,7 @@ from ..schema import FormulaDefinition, RegistrySnapshot
 from ..schema_formula import FormulaExpression
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _M210_TIPO_RENTA_CASILLA = "tipo_renta"

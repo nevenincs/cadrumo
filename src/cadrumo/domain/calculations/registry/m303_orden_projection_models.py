@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from ....core.filing_year import FilingYear
 from ....core.identity.digest import ContentDigest
@@ -350,6 +350,17 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
     scope_decision: M303RegimenSimplificadoScopeDecision
     orden: M303AnnualOrdenSnapshot
     record_design: SourceReference
+
+    @field_validator("support", mode="after")
+    @classmethod
+    def _support_is_the_persisted_envelope(
+        cls, value: TemporalSupportEnvelope | None
+    ) -> TemporalSupportEnvelope | None:
+        # A richer catalogue subclass would survive in memory but reload as the
+        # declared envelope, so the stored and computed snapshots would differ.
+        if value is None or type(value) is TemporalSupportEnvelope:
+            return value
+        return TemporalSupportEnvelope(floor=value.floor, horizon=value.horizon, hard_ceiling=value.hard_ceiling)
 
     @model_validator(mode="after")
     def _coordinates_are_complete_and_source_pinned(self) -> M303RegimenSimplificadoSnapshot:

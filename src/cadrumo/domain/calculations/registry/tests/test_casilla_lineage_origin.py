@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from ..casilla_lineage import CasillaLineageOrigin
 from ..schema_surfaces import CasillaDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _BASE: dict[str, object] = {
     "id": "01",

@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
@@ -137,7 +138,7 @@ def _selected_entries(
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         return _bundled_entries(coordinate)

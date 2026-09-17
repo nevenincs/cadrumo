@@ -11,6 +11,7 @@ from types import MappingProxyType
 from typing import Final, TypeVar
 from weakref import ReferenceType, ref
 
+from ....core.time.clock import today_madrid
 from ....domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from ....domain.iva.schema import IvaArt69DosService, IvaCashAccountingTreatment, IvaExemptionArticle
@@ -255,14 +256,13 @@ class M303RegimeCompositionCatalogue:
         """Validate and return one simplified-regime scope some composition declares."""
         if not isinstance(value, str):
             raise RegistryValidationError("M303 simplified-regime scope must be a string token")
-        raw = str(value).strip()
-        if raw not in {definition.simplified_scope for definition in self.definitions}:
+        if value not in {definition.simplified_scope for definition in self.definitions}:
             raise RegistryValidationError(
-                f"M303 simplified-regime scope {raw!r} is not declared by the facts registry",
+                f"M303 simplified-regime scope {str(value)!r} is not declared by the facts registry",
             )
         if isinstance(value, M303RegimenSimplificadoScope):
             return value
-        return M303RegimenSimplificadoScope.from_registry(raw)
+        return M303RegimenSimplificadoScope.from_registry(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -477,7 +477,7 @@ def _selected_projections(
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> _EntryProjections:
-    selected_date = effective_date or date.today()
+    selected_date = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         _bundled_entries(selected_date)

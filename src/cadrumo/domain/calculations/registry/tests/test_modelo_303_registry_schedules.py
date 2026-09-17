@@ -10,7 +10,7 @@ from ._modelo_303_registry_support import (
 )
 from .snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:

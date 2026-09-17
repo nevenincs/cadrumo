@@ -26,9 +26,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ....contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -45,7 +45,7 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 
 
 def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
-    return {"renta-profile-deduccion-maternidad": Decimal(compute_deduccion_maternidad_0611([], filing_year=2024))}
+    return dict(M100_2024_EMPTY_MATERNIDAD_BINDINGS)
 
 
 # Relation values required by the 2024 snapshot (zero - not exercised).
@@ -128,10 +128,16 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            # Art. 75 Ley 19/1994 / Art. 7.p) LIRPF maritime-worker exemption operands;
+            # neutral zero when the chain under test is unrelated (the path itself is false).
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
             "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,
         date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},

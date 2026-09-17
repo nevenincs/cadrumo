@@ -27,6 +27,7 @@ from typing import Annotated, Final
 from pydantic import BeforeValidator, model_validator
 
 from ....core.aggregation import BindingTypedEnumKind, RowSetGroupingKind
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .schema_base import RegistryModel, coerce_enum_member
 
@@ -123,6 +124,7 @@ class BindingValueContract(RegistryModel):
     row_grouping: Annotated[RowSetGroupingKind | None, BeforeValidator(coerce_enum_member(RowSetGroupingKind))] = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_channel_pairing(self) -> BindingValueContract:
         # A row-set value carries one scalar element type. Its cardinality is
         # expressed by the channel, so it deliberately bypasses the scalar
@@ -144,6 +146,7 @@ class BindingValueContract(RegistryModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_row_grouping(self) -> BindingValueContract:
         is_row_set = self.channel is BindingValueChannel.ROW_SET
         if not is_row_set and self.row_grouping is not None:

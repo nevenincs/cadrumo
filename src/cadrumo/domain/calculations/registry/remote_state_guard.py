@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.remote_authority import (
     REMOTE_READ_SCHEME,
@@ -144,6 +145,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     allows_gov_idp_hosts: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_policy(self) -> RemoteStateGuardPolicy:
         # Each predicate group raises in the same order as before; the phases are
         # evidence-tier consistency, allowed-hosts presence, authentication
@@ -230,6 +232,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @field_validator("allowed_hosts")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_hosts(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for host in value:
             parsed = urlparse(f"https://{host}")
@@ -247,6 +250,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @field_validator("allowed_host_suffixes")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_host_suffixes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         # A host suffix widens the exact-host allow-list to any subdomain
         # under an AEAT-owned apex, so AEAT's ``www{n}`` load-balancer
@@ -267,6 +271,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @field_validator("allowed_read_paths", "allowed_read_post_paths")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_read_paths(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for path in value:
             if not path.startswith("/"):
@@ -282,6 +287,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
 
     @field_validator("allowed_browser_action_patterns")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_allowed_browser_action_patterns(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for pattern in value:
             if not pattern.strip():
@@ -311,6 +317,7 @@ class RemoteOperation(RemoteStateGuardModel):
     action: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_operation(self) -> RemoteOperation:
         if self.kind == "http" and (self.method is None or self.url is None):
             raise RegistryValidationError("http operation requires method and url")

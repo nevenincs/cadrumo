@@ -28,6 +28,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
@@ -116,6 +117,7 @@ class DonativoDonorObservation(BaseModel):
 
     @field_validator("amount_donated")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise RegistryValidationError("amount_donated must be non-negative")
@@ -123,6 +125,7 @@ class DonativoDonorObservation(BaseModel):
 
     @field_validator("deduction_percentage")
     @classmethod
+    @pydantic_validation_boundary
     def _percentage_within_bounds(cls, value: Decimal) -> Decimal:
         if value < Decimal("0") or value > Decimal("100"):
             raise RegistryValidationError("deduction_percentage must be within [0, 100]")

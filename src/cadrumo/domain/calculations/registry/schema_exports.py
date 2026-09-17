@@ -14,6 +14,7 @@ from pydantic import BeforeValidator, Field, NonNegativeInt, field_validator, mo
 
 from ....core.casilla_id import CasillaId
 from ....core.declaracion_idioma import DeclaracionIdioma
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import (
@@ -189,6 +190,7 @@ class FilingEnvelopeTotalDerivation(StrEnum):
     EMITTED_BYTE_TOTAL_V1 = "emitted-byte-total-v1"
 
 
+@pydantic_validation_boundary
 def _coerce_envelope_prefix_role(value: object) -> object:
     """Hydrate the authored layout token into its closed prefix role."""
     if isinstance(value, FilingEnvelopePrefixRole):
@@ -204,6 +206,7 @@ def _coerce_envelope_prefix_role(value: object) -> object:
     raise ValueError("filing-envelope prefix role must be a string")
 
 
+@pydantic_validation_boundary
 def _coerce_envelope_closer_derivation(value: object) -> object:
     if isinstance(value, FilingEnvelopeCloserDerivation):
         return value
@@ -215,6 +218,7 @@ def _coerce_envelope_closer_derivation(value: object) -> object:
     raise ValueError("filing-envelope closer derivation must be a string")
 
 
+@pydantic_validation_boundary
 def _coerce_envelope_total_derivation(value: object) -> object:
     if isinstance(value, FilingEnvelopeTotalDerivation):
         return value
@@ -277,6 +281,7 @@ class FilingEnvelopeDefinition(RegistryModel):
     total_derivation: FilingEnvelopeTotalDerivationValue
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_complete_static_grammar(self) -> FilingEnvelopeDefinition:
         roles = tuple(field.role for field in self.prefix_fields)
         if len(set(roles)) != len(roles):
@@ -331,6 +336,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
     product_identity_requirement: Literal["aeat-product-software-identity-v1"]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_complete_static_header(self) -> AuxiliaryEnvelopeHeaderDefinition:
         roles = tuple(field.role for field in self.prefix_fields)
         if len(set(roles)) != len(roles):
@@ -447,6 +453,7 @@ class ProjectionEndpointDeclaration(RegistryModel):
 
     @field_validator("projection_ref", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _compile_projection_ref_through_the_canonical_compiler(cls, value: object) -> object:
         """Compile a still-raw reference through the one canonical compiler.
 
@@ -519,11 +526,13 @@ class ExportFieldDefinition(RegistryModel):
 
     @field_validator("allowed_values")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalise_allowed_values(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         return None if value is None else tuple(sorted(value))
 
     @field_validator("projection_ref", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _compile_projection_ref_through_the_canonical_compiler(cls, value: object) -> object:
         """Compile a still-raw projection identity through the one canonical compiler.
 
@@ -542,6 +551,7 @@ class ExportFieldDefinition(RegistryModel):
             ) from error
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
         _validate_field_semantic_payload(self)
         _validate_field_render_shape(self)
@@ -848,6 +858,7 @@ class ExportRecordDefinition(RegistryModel):
 
     @field_validator("binding_record")
     @classmethod
+    @pydantic_validation_boundary
     def _binding_record_non_empty(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
             raise RegistryValidationError("export record binding_record must be non-empty")
@@ -866,6 +877,7 @@ class ExportRecordDefinition(RegistryModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _repeat_matches_field_family(self) -> ExportRecordDefinition:
         if failure := self.repeat_field_family_failure():
             raise RegistryValidationError(failure)
@@ -925,6 +937,7 @@ def _fixed_binding_failure(
     return None
 
 
+@pydantic_validation_boundary
 def _coerce_export_layout_format(value: object) -> object:
     """Coerce a TOML string literal to the canonical export-layout format member.
 
@@ -953,6 +966,7 @@ ExportLayoutFormatValue = Annotated[ExportLayoutFormat, BeforeValidator(_coerce_
 """Annotated export-layout format that hydrates TOML string literals to members."""
 
 
+@pydantic_validation_boundary
 def _coerce_declaracion_idioma(value: object) -> DeclaracionIdioma | None:
     """Hydrate an ``Aux/Idioma`` TOML token to its member.
 
@@ -1069,6 +1083,7 @@ class ExportLayoutDefinition(RegistryModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_layout_format(self) -> ExportLayoutDefinition:
         if self.format is ExportLayoutFormat.XML_DICTIONARY:
             _validate_xml_dictionary_layout(self)
@@ -1077,6 +1092,7 @@ class ExportLayoutDefinition(RegistryModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_encoding_consistency(self) -> ExportLayoutDefinition:
         """Enforce one encoding per fixed-width export layout.
 

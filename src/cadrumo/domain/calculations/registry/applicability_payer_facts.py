@@ -9,6 +9,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from ....core.time.clock import today_madrid
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -172,7 +173,7 @@ def resolve_payer_fact_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[PayerFactProjection, ...]:
     """Resolve the selected dated payer-applicability entity set."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))

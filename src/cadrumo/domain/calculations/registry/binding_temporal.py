@@ -29,6 +29,7 @@ from typing import Annotated, Literal, cast
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.period import RegistrySelectorPeriodCode
 from .errors import RegistryValidationError
@@ -62,6 +63,7 @@ __all__ = [
 ]
 
 
+@pydantic_validation_boundary
 def _coerce_period_sequence(value: object) -> object:
     """Accept the JSON array form of a period tuple.
 
@@ -122,6 +124,7 @@ class SameFilingYearPeriods(RegistryModel):
 
     @field_validator("source_periods")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_periods(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         return _reject_duplicate_periods(value)
 
@@ -141,10 +144,12 @@ class FilingYearOffset(RegistryModel):
 
     @field_validator("source_periods")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_periods(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         return _reject_duplicate_periods(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_offset(self) -> FilingYearOffset:
         if self.years == 0:
             raise RegistryValidationError(
@@ -195,10 +200,12 @@ class FilingYearOffsetByTargetPeriod(RegistryModel):
 
     @field_validator("source_periods")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_periods(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         return _reject_duplicate_periods(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_offsets(self) -> FilingYearOffsetByTargetPeriod:
         if not self.offsets:
             raise RegistryValidationError(
@@ -230,6 +237,7 @@ class TargetPeriodOffset(RegistryModel):
     within_filing_year: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_offset(self) -> TargetPeriodOffset:
         if self.periods == 0:
             raise RegistryValidationError(
@@ -372,6 +380,7 @@ class TargetPeriods(RegistryModel):
 
     @field_validator("periods")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_periods(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         return _reject_duplicate_periods(value)
 
@@ -427,6 +436,7 @@ class NonCalculation(RegistryModel):
     consumed_by: Annotated[str, Field(min_length=1, max_length=300)]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_disposition(self) -> NonCalculation:
         if not self.consumed_by.strip():
             raise RegistryValidationError(
@@ -484,6 +494,7 @@ class GeneratedBinding(RegistryModel):
     run_digest: _GeneratorToken
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_identity(self) -> GeneratedBinding:
         if not self.generator_id.strip():
             raise RegistryValidationError("generated binding generator_id must be non-blank")

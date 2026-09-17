@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from ....core.time.clock import today_madrid
 from ...bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -158,7 +159,7 @@ def _selected_mapping_entries(
     effective_date: date | None,
     authority: ValidatedRegistryAuthority | None,
 ) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         return _bundled_mapping_entries(coordinate)
@@ -255,7 +256,7 @@ def resolve_bienes_inversion_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> BienInversionCatalogue:
     """Resolve the selected transaction-date LIVA capital-goods vocabulary."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))

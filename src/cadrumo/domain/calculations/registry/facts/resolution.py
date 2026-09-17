@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, TypeAdapter, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filing_year import FilingYear
 from .....core.period import RegistrySelectorPeriodCode
 from ..errors import RegistryValidationError
@@ -75,6 +76,7 @@ class _FactQuery(RegistryModel):
     period: RegistrySelectorPeriodCode | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_selector_coordinates(self) -> _FactQuery:
         names = [selector.name for selector in self.selectors]
         if len(set(names)) != len(names):
@@ -165,6 +167,7 @@ class _ResolvedFact(RegistryModel):
     projected_from_date: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_resolution_context(self) -> _ResolvedFact:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise ValueError("resolved governed fact valid_to must be on or after valid_from")

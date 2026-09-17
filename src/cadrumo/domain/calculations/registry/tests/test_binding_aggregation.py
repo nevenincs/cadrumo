@@ -35,7 +35,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
 from ..schema import BindingDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _MINIMAL_LEGAL_REF_ID = "rd-439-2007:art-110"
 _MINIMAL_SOURCE_REF_ID = "aeat-modelo-130-instructions"

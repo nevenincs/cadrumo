@@ -31,7 +31,7 @@ from .scenarios import (
     run_registry_calculation_scenario,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture(scope="module")

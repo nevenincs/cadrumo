@@ -63,6 +63,19 @@ _SCOPED_ENTRIES = (
 )
 
 
+# The provider's categories are checked against fact 0084, so the candidate
+# declares the category vocabulary the rate tiers above point at, and no more.
+_SCOPED_CATEGORY_ENTRIES = (
+    {"key": "category.order", "value": "domestic_general,domestic_zero,domestic_exempt"},
+    {"key": "category.domestic_general.value", "value": "domestic_general"},
+    {"key": "category.domestic_general.description", "value": "entrega interior al tipo general"},
+    {"key": "category.domestic_zero.value", "value": "domestic_zero"},
+    {"key": "category.domestic_zero.description", "value": "entrega interior al tipo cero"},
+    {"key": "category.domestic_exempt.value", "value": "domestic_exempt"},
+    {"key": "category.domestic_exempt.description", "value": "operacion interior exenta"},
+)
+
+
 # The binding also names cash-accounting treatments, which is a second governed
 # vocabulary resolved the same way; the candidate declares it so the positive
 # case exercises a whole provider rather than one field in isolation.
@@ -145,6 +158,11 @@ def _scoped_facts() -> CandidateFactAuthority:
             "iva-invoice-classification-catalogue",
             date_axis="filing_period",
             entries=_SCOPED_FLOW_ENTRIES,
+        ),
+        _mapping_fact(
+            "iva-category-component-catalogue",
+            date_axis="filing_period",
+            entries=_SCOPED_CATEGORY_ENTRIES,
         ),
     )
     return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}))

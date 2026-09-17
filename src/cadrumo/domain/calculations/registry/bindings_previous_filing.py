@@ -29,7 +29,7 @@ from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
@@ -541,6 +541,7 @@ class PreviousFilingProvider(BaseModel):
 
     @field_validator("source_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _source_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("previous-filing source_casilla_ids entries must be unique")
@@ -548,6 +549,7 @@ class PreviousFilingProvider(BaseModel):
 
     @field_validator("required_source_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _required_source_casilla_ids_unique(
         cls,
         value: tuple[CasillaId, ...] | None,
@@ -601,6 +603,7 @@ class PreviousFilingProvider(BaseModel):
         return temporal_period_anchors(self.temporal, target_period=target_period)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_temporal_shape(self) -> PreviousFilingProvider:
         """Refuse a temporal member that names no source window for the declared casillas."""
         if isinstance(self.temporal, SameTargetContext) and self.grouping != "per_grupo_member":
@@ -616,6 +619,7 @@ class PreviousFilingProvider(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_source_spec(self) -> PreviousFilingProvider:
         if self.source_casilla_ids and self.source_casilla_id is not None:
             raise RegistryValidationError(

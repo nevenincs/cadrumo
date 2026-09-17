@@ -53,6 +53,7 @@ from ....period import calculation_filing_date
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
+from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
@@ -69,8 +70,9 @@ from ._cross_dependency_calculation_support import (
     _grounded_observations,
     _observations_from_requirements,
 )
+from .published_authority import published_supported_filing_years
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -337,7 +339,7 @@ def _withholding_observation(
         source_id=source_id,
         perceptor_tax_id=nif,
         transaction_date=date(2024, 6, 1),
-        clave=RetencionClave(clave),
+        clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
         incapacity_cash_perception=Decimal("0"),
@@ -357,13 +359,22 @@ def _withholding_observation(
 def test_cross_model_relations_resolve_from_observations_for_revision_edge_years(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
+    # Filing selection refuses years below the published floor, so each
+    # revision's edges are taken inside the supported envelope; a revision
+    # authored wholly below the floor has no selectable year to exercise.
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    exercised = 0
     modelos, _catalogues = registry_tree
     for modelo in modelos:
         for revision in modelo.revisions.values():
             relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
             if not relation_ids:
                 continue
-            for filing_year, period in _full_relation_filing_year_periods(revision=revision, relation_ids=relation_ids):
+            for filing_year, period in _full_relation_filing_year_periods(
+                revision=revision, relation_ids=relation_ids, floor=supported_years.floor
+            ):
+                exercised += 1
                 _assert_relations_resolve_from_observations(
                     target_modelo=modelo.id,
                     revision=revision,
@@ -372,12 +383,14 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
                     relation_ids=relation_ids,
                     scope=f"{modelo.id}/{revision.id}/{filing_year}/{period}",
                 )
+    assert exercised, "no relation-bearing revision reached a supported filing year"
 
 
 def _full_relation_filing_year_periods(
     *,
     revision: ModeloRevision,
     relation_ids: set[str],
+    floor: int,
 ) -> Iterator[tuple[int, str]]:
     """Yield ``(filing_year, period)`` pairs where every relation is active.
 
@@ -387,7 +400,7 @@ def _full_relation_filing_year_periods(
     active set equals the full relation set so partial-coverage
     periods do not pollute the resolution check.
     """
-    for filing_year in _revision_edge_years(revision):
+    for filing_year in _revision_edge_years(revision, floor=floor):
         for period in revision.period_selector.periods:
             active_relation_ids = {
                 binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)
@@ -880,9 +893,14 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # Maritime-worker exemption operands stay neutral: the path itself is false.
+            "renta-maritime-gross-navigation-income": Decimal("0"),
+            "renta-maritime-annual-salary": Decimal("0"),
+            "renta-maritime-qualifying-days": Decimal("0"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -987,8 +1005,8 @@ def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_cha
     ("filing_year", "source_year", "source_values", "expected_binding"),
     [
         (
+            2023,
             2022,
-            2021,
             _casilla_inputs(
                 {
                     "0224": Decimal("4000"),
@@ -1052,14 +1070,31 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
     assert binding_values["irpf.previous_year_economic_activity_net_income"] == expected_binding
 
 
-def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
+def test_modelo_100_source_below_the_supported_floor_cannot_be_grounded_for_carry() -> None:
+    """The floor year's prior-year M100 source has no admissible revision to stamp."""
+    support = published_supported_filing_years()
+    assert support is not None
+    with pytest.raises(NoRevisionForPeriodError):
+        _grounded_observations(
+            modelo="100",
+            filing_year=support.floor - 1,
+            period="0A",
+            casilla_values=_casilla_inputs({"0224": Decimal("4000")}),
+        )
+
+
+def _revision_edge_years(revision: ModeloRevision, *, floor: int) -> tuple[int, ...]:
+    """Return the edge filing years of the revision's span inside the supported envelope."""
     if revision.period_selector.years:
-        years = sorted(revision.period_selector.years)
-        return tuple(dict.fromkeys((years[0], years[-1])))
-    year_from = revision.period_selector.year_from
-    if year_from is None:
+        years = sorted(year for year in revision.period_selector.years if year >= floor)
+        return tuple(dict.fromkeys((years[0], years[-1]))) if years else ()
+    authored_from = revision.period_selector.year_from
+    if authored_from is None:
         raise AssertionError(f"revision {revision.id} has no filing-year selector")
+    year_from = max(authored_from, floor)
     year_to = revision.period_selector.year_to
+    if year_to is not None and year_to < floor:
+        return ()
     if year_to is not None:
         if year_to == year_from:
             return (year_from,)

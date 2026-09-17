@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 
@@ -64,6 +65,7 @@ class ProfileProvider(BaseModel):
     required_when_value: str | None = Field(default=None, min_length=1, max_length=256)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_profile_shape(self) -> ProfileProvider:
         has_scalar = self.profile_key is not None
         has_composite = bool(self.profile_keys)

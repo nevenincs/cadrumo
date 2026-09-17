@@ -12,12 +12,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal, Protocol
 
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, model_validator
 
 from .errors import (
     AmbiguousRevisionSelectionError,
     EjercicioOrdenNotYetPublishedError,
     NoRevisionForPeriodError,
+    RegistryValidationError,
 )
 from .ids import RevisionId
 from .modelo_inception import ModeloInceptionField
@@ -158,11 +159,20 @@ class ModeloRevisionDirectory(RegistryModel):
 
         The view carries only the selected payload; its revision-identity
         references still resolve against every revision this directory declares.
+
+        Raises:
+            RegistryValidationError: When the view is not a valid modelo, for
+                example when the revision references one its directory lacks.
         """
-        return ModeloDefinition.model_validate(
-            {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
-            context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
-        )
+        try:
+            return ModeloDefinition.model_validate(
+                {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
+                context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"modelo {self.modelo.id!r} view of revision {revision.id!r} is invalid: {exc}",
+            ) from exc
 
     @classmethod
     def from_modelo(

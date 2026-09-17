@@ -55,7 +55,7 @@ from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema_rounding import RegistryRoundingCode
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")

@@ -14,6 +14,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .ids import (
     ApplicabilityRuleId,
@@ -130,12 +131,14 @@ class ConstructDefinition(RegistryModel):
         "dependency_classifications",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _member_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("construct member ids must be unique")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_membership(self) -> ConstructDefinition:
         member_groups = (
             self.casilla_ids,
@@ -172,12 +175,14 @@ class DependencyClassificationDefinition(RegistryModel):
 
     @field_validator("target_constructs", "binding_refs")
     @classmethod
+    @pydantic_validation_boundary
     def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("dependency classification tuple entries must be unique")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_classification(self) -> DependencyClassificationDefinition:
         if self.treatment == "non_dependency":
             if self.target_constructs or self.binding_refs:
@@ -218,6 +223,7 @@ class ApplicabilityRuleDefinition(RegistryModel):
         "applicable_iva_regimes",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("applicability rule tuple entries must be unique")

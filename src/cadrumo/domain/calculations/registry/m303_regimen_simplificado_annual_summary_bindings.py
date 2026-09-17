@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode
 from .binding_selector_utils import provider_member
@@ -58,6 +59,7 @@ class M303RegimenSimplificadoAnnualSummaryProvider(BaseModel):
     summary_casilla_id: CasillaId
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _temporal_is_the_filed_fourth_quarter(self) -> M303RegimenSimplificadoAnnualSummaryProvider:
         """Pin the source window to the already-filed 4T of the target's own year.
 
@@ -79,6 +81,7 @@ class M303RegimenSimplificadoAnnualSummaryProvider(BaseModel):
 
     @field_validator("source_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _source_casilla_ids_are_exact_annual_summary_inputs(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if value != _SOURCE_CASILLA_IDS:
             raise RegistryValidationError(
@@ -103,6 +106,7 @@ class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
 
     @field_validator("binding_ids_by_summary_casilla_id")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_endpoint_bindings(cls, value: Mapping[CasillaId, BindingId]) -> Mapping[CasillaId, BindingId]:
         return dict(value)
 

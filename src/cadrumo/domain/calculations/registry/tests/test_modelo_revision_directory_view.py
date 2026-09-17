@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.tax_domain import TaxDomain
@@ -208,7 +209,7 @@ def test_a_complete_modelo_missing_the_reviewed_revision_is_refused() -> None:
     modelo = _modelo()
     successor = modelo.revisions[_SUCCESSOR]
 
-    with pytest.raises(RegistryValidationError, match=r"dangling review reference reviewed_against='2024-desde-06'"):
+    with pytest.raises(ValidationError, match=r"dangling review reference reviewed_against='2024-desde-06'"):
         ModeloDefinition(
             **ModeloDirectoryMetadata.from_modelo(modelo).model_dump(),
             revisions={successor.id: successor},
@@ -219,7 +220,7 @@ def test_a_complete_modelo_missing_the_named_predecessor_is_refused() -> None:
     modelo = _modelo()
     successor = modelo.revisions[_SUCCESSOR].model_copy(update={"reviewed_against": None})
 
-    with pytest.raises(RegistryValidationError, match=r"declares predecessor '2024-desde-06', which is not a revision"):
+    with pytest.raises(ValidationError, match=r"declares predecessor '2024-desde-06', which is not a revision"):
         ModeloDefinition(
             **ModeloDirectoryMetadata.from_modelo(modelo).model_dump(),
             revisions={successor.id: successor},

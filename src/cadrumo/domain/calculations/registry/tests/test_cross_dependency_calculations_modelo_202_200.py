@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
+from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
     relation_prefill_bindings_for_period,
@@ -20,8 +21,9 @@ from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _observations_from_requirements,
 )
+from .published_authority import published_authored_revision, published_supported_filing_years
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("period", ["1P", "2P", "3P"])
@@ -103,8 +105,6 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
 @pytest.mark.parametrize(
     ("filing_year", "expected_revision"),
     [
-        (2019, "2019-2022"),
-        (2020, "2019-2022"),
         (2022, "2019-2022"),
         (2023, "2023-2024"),
         (2024, "2023-2024"),
@@ -130,6 +130,18 @@ def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
         assert correcciones_block <= declared_ids
     else:
         assert correcciones_block.isdisjoint(declared_ids)
+
+
+def test_modelo_202_revision_selection_refuses_years_below_the_supported_floor(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    below_floor = supported_years.floor - 1
+    # The 2019-2022 revision still authors this year; the refusal is the floor's.
+    assert published_authored_revision("202", year=below_floor).id == "2019-2022"
+    with pytest.raises(NoRevisionForPeriodError):
+        registry_snapshot("202", below_floor, "1P")
 
 
 def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column(

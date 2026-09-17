@@ -33,14 +33,11 @@ from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# No hijos means compute_deduccion_maternidad_0611([], ...) is provably 0
-# regardless of the registry's dated operands, so the binding is the literal.
-_M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-profile-deduccion-maternidad": Decimal(0),
-}
+_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 _M100_MINIMO_PERSONAL_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_MINIMO_PERSONAL_CASILLA")
 _M100_RETENCIONES_M111_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_RETENCIONES_M111_CASILLA")

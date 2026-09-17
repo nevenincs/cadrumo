@@ -11,6 +11,7 @@ from typing import Annotated
 from pydantic import BeforeValidator, Field, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.identity.continuidad import ContinuidadId
 from ._schema_export_exemption import ExportExemptionReasonValue
@@ -96,6 +97,7 @@ class CasillaContinuidadEvolutionDefinition(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_revision_pair(self) -> CasillaContinuidadEvolutionDefinition:
         if self.from_revision == self.to_revision:
             raise RegistryValidationError(
@@ -201,6 +203,7 @@ class CasillaConstraints(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bounds(self) -> CasillaConstraints:
         _validate_constraint_numeric_bounds(self.sign, self.min_value, self.max_value)
         _validate_constraint_text_bounds(self.min_length, self.max_length)
@@ -444,6 +447,7 @@ class CasillaDefinition(RegistryModel):
         return self.get_label("es")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_input_kind(self) -> CasillaDefinition:
         # Localization is resolved by the registry authority after its shared
         # catalogue has been selected. Constructing a schema from an arbitrary
@@ -666,6 +670,7 @@ class CalculationCompletenessManifest(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_manifest(self) -> CalculationCompletenessManifest:
         _validate_manifest_population(self.casillas)
         _validate_manifest_casilla_ids(self.casillas)

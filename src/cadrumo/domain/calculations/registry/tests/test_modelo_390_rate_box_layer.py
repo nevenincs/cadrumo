@@ -421,7 +421,7 @@ def _with_applied_rates(
         # is refused by name rather than reaching `model_copy` and failing with
         # an attribute error that says nothing about why.
         assert isinstance(selector, BaseModel), f"{binding.id} carries an untyped selector; nothing to mutate"
-        return binding.model_copy(update={"selector": selector.model_copy(update={"applied_rates": applied_rates})})
+        return binding.model_copy(update={"provider": selector.model_copy(update={"applied_rates": applied_rates})})
 
     mutated = tuple(_rated(binding) if binding.id == binding_id else binding for binding in revision.bindings)
     return revision.model_copy(update={"bindings": mutated})

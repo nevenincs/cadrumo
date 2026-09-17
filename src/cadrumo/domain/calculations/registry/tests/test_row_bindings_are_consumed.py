@@ -74,7 +74,7 @@ def _unconsumed_row_bindings() -> dict[tuple[str, str], int]:
             row_bindings = [
                 binding
                 for binding in revision.bindings
-                if getattr(getattr(binding, "selector", None), "fact", None) == "row_field"
+                if getattr(binding.provider, "fact", None) == "row_field"
             ]
             if not row_bindings:
                 continue
@@ -133,7 +133,7 @@ def test_both_consumption_shapes_are_present_in_the_corpus(modelo_id: str, revis
     row_bindings = [
         binding
         for binding in revision.bindings
-        if getattr(getattr(binding, "selector", None), "fact", None) == "row_field"
+        if getattr(binding.provider, "fact", None) == "row_field"
     ]
     assert row_bindings, f"modelo {modelo_id} {revision_id} must declare row bindings for this control to mean anything"
     assert (str(modelo_id), str(revision_id)) not in _unconsumed_row_bindings()

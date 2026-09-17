@@ -12,6 +12,8 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
+
 
 class CasillaFieldKind(StrEnum):
     """Registry-authoritative classification of how an export field is populated.
@@ -43,6 +45,7 @@ class CasillaFieldKind(StrEnum):
     CHECKSUM = "checksum"
 
 
+@pydantic_validation_boundary
 def _coerce_casilla_field_kind(value: object) -> object:
     """Coerce a TOML string literal to the canonical CasillaFieldKind member.
 

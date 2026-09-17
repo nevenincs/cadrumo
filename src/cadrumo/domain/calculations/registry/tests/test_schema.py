@@ -32,7 +32,7 @@ from ..schema_verification import (
     VerificationRoundingCode,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # ---------------------------------------------------------------------------
 # Shared fixture constants — pattern mirrors test_referential_integrity

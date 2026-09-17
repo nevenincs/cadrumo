@@ -57,6 +57,7 @@ from typing import Annotated, Final
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.remote_authority import first_aeat_host
 from ....core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
@@ -311,6 +312,7 @@ class LiveCrossReferenceDecision(RegistryModel):
 
     @field_validator("oracle_id")
     @classmethod
+    @pydantic_validation_boundary
     def _oracle_id_shape(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -329,6 +331,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
         self._validate_evidence_tier_alignment()
         self._validate_allowed_hosts_declared()
@@ -456,6 +459,7 @@ class WorkbookParityReference(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_workbook_reference(self) -> WorkbookParityReference:
         if self.formula_coverage == "formula_form" and not self.runner_required:
             raise RegistryValidationError(f"workbook parity reference {self.id!r} formula coverage requires a runner")
@@ -549,6 +553,7 @@ class VerificationExpectationDefinition(RegistryModel):
 
     @field_validator("computed_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _computed_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
@@ -556,6 +561,7 @@ class VerificationExpectationDefinition(RegistryModel):
 
     @field_validator("reconcile_when_present_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _reconcile_when_present_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError(
@@ -565,6 +571,7 @@ class VerificationExpectationDefinition(RegistryModel):
 
     @field_validator("externally_grounded_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _externally_grounded_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError(
@@ -573,6 +580,7 @@ class VerificationExpectationDefinition(RegistryModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
         overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
         if overlap:
@@ -583,6 +591,7 @@ class VerificationExpectationDefinition(RegistryModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _externally_grounded_subset(self) -> VerificationExpectationDefinition:
         reconciled = set(self.computed_casilla_ids) | set(self.reconcile_when_present_casilla_ids)
         outside = set(self.externally_grounded_casilla_ids) - reconciled

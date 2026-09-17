@@ -18,6 +18,7 @@ from .....core.aggregation import BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
 from ..binding_aggregation import binding_aggregation_op
+from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
@@ -25,8 +26,9 @@ from ..relations import (
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from ..schema import RegistrySnapshot
+from ..schema import ModeloRevision, RegistrySnapshot
 from ._cross_dependency_calculation_support import _observations_from_requirements
+from .published_authority import published_authored_revision, published_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -93,37 +95,22 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     registry_authority: PinnedAuthorityOperation,
     year: int,
 ) -> None:
-    """2020-2023 declare the current M130/M131 relation contract and fold it into 0604."""
+    """2020-2023 declare the current M130/M131 relation contract and fold it into 0604.
+
+    Years below the published filing floor keep their authored contract but
+    refuse filing selection, so only in-envelope years run the fold.
+    """
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    if year < supported_years.floor:
+        revision = published_authored_revision("100", year=year)
+        _assert_relation_contract(revision, year=year)
+        with pytest.raises(NoRevisionForPeriodError):
+            registry_authority.snapshot("100", filing_year=year, period="0A")
+        return
+
     snapshot = registry_authority.snapshot("100", filing_year=year, period="0A")
-
-    casilla = next(c for c in snapshot.revision.casillas if c.id == _M100_PAGOS_CASILLA)
-    assert casilla.input_kind == "computed"
-    assert casilla.formula == "renta-pagos-fraccionados-ingresados"
-
-    relation_bindings = {
-        binding.id: (binding, provider)
-        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
-    }
-    constructs = {construct.id: construct for construct in snapshot.revision.constructs}
-    dependencies = {dep.id: dep for dep in snapshot.revision.dependency_classifications}
-
-    binding_130, provider_130 = relation_bindings["renta-modelo-130-pagos-fraccionados"]
-    binding_131, provider_131 = relation_bindings["renta-modelo-131-pagos-fraccionados"]
-    assert provider_130.source_modelo == "130"
-    assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
-    assert provider_131.source_modelo == "131"
-    assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
-    assert provider_130.required_source_periods == ("1T", "2T", "3T", "4T")
-    assert provider_131.required_source_periods == ("1T", "2T", "3T", "4T")
-    assert binding_aggregation_op(binding_130) is BindingAggregationOp.SUM
-    assert binding_aggregation_op(binding_131) is BindingAggregationOp.SUM
-
-    construct = constructs[f"renta-{year}-dependent-modelos"]
-    assert "renta-pagos-fraccionados-ingresados" in construct.formulas
-    assert binding_130.id in construct.bindings
-    assert binding_131.id in construct.bindings
-    assert dependencies[f"renta-{year}-dep-130"].binding_refs == (binding_130.id,)
-    assert dependencies[f"renta-{year}-dep-131"].binding_refs == (binding_131.id,)
+    _assert_relation_contract(snapshot.revision, year=year)
 
     result = _calculate_historical_m100(snapshot, year=year)
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -139,3 +126,34 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     assert {"orden-eha-672-2007:art-1", "orden-eha-672-2007:art-3"} <= set(pagos_entry.legal_refs)
     assert {f"aeat-renta-{year}-manual-parte1", f"boe-modelo-100-{year}-form"} <= set(pagos_entry.source_refs)
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == _EXPECTED_0604
+
+
+def _assert_relation_contract(revision: ModeloRevision, *, year: int) -> None:
+    casilla = next(c for c in revision.casillas if c.id == _M100_PAGOS_CASILLA)
+    assert casilla.input_kind == "computed"
+    assert casilla.formula == "renta-pagos-fraccionados-ingresados"
+
+    relation_bindings = {
+        binding.id: (binding, provider)
+        for binding, provider in relation_prefill_bindings_for_period(revision, period="0A")
+    }
+    constructs = {construct.id: construct for construct in revision.constructs}
+    dependencies = {dep.id: dep for dep in revision.dependency_classifications}
+
+    binding_130, provider_130 = relation_bindings["renta-modelo-130-pagos-fraccionados"]
+    binding_131, provider_131 = relation_bindings["renta-modelo-131-pagos-fraccionados"]
+    assert provider_130.source_modelo == "130"
+    assert provider_130.declared_source_casilla_ids == (_M130_SOURCE_CASILLA,)
+    assert provider_131.source_modelo == "131"
+    assert provider_131.declared_source_casilla_ids == (_M131_SOURCE_CASILLA,)
+    assert provider_130.required_source_periods == ("1T", "2T", "3T", "4T")
+    assert provider_131.required_source_periods == ("1T", "2T", "3T", "4T")
+    assert binding_aggregation_op(binding_130) is BindingAggregationOp.SUM
+    assert binding_aggregation_op(binding_131) is BindingAggregationOp.SUM
+
+    construct = constructs["renta-dependent-modelos"]
+    assert "renta-pagos-fraccionados-ingresados" in construct.formulas
+    assert binding_130.id in construct.bindings
+    assert binding_131.id in construct.bindings
+    assert dependencies["renta-dep-130"].binding_refs == (binding_130.id,)
+    assert dependencies["renta-dep-131"].binding_refs == (binding_131.id,)

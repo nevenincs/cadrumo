@@ -15,6 +15,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -76,6 +77,7 @@ class CensoModeloFoundationContract(BaseModel):
 
     @field_validator("historical_modelos")
     @classmethod
+    @pydantic_validation_boundary
     def _historical_modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
             raise RegistryValidationError("historical censo modelos must be unique")
@@ -85,6 +87,7 @@ class CensoModeloFoundationContract(BaseModel):
 
     @field_validator("event_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _event_kinds_are_exact(cls, value: tuple[CensoModeloEventKind, ...]) -> tuple[CensoModeloEventKind, ...]:
         expected = tuple(CensoModeloEventKind(kind) for kind in CENSO_MODELO_EVENT_KINDS)
         if value != expected:
@@ -93,6 +96,7 @@ class CensoModeloFoundationContract(BaseModel):
 
     @field_validator("error_codes")
     @classmethod
+    @pydantic_validation_boundary
     def _error_codes_are_exact(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != CENSO_MODELO_ERROR_CODES:
             raise RegistryValidationError("censo foundation error codes must match the declared service contract")

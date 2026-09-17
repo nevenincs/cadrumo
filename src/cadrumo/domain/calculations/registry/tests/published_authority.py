@@ -63,6 +63,25 @@ def published_snapshot(
         )
 
 
+def published_authored_revision(modelo_id: str, *, year: int) -> ModeloRevision:
+    """Load the authored revision whose validity covers ``year``.
+
+    Filing selection refuses years outside the support envelope; authored
+    historical revisions stay readable for tests that inspect their declarations.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        covering = [
+            revision
+            for revision in operation.modelo_directory(modelo_id).revisions
+            if revision.valid_from is not None
+            and revision.valid_from.year <= year
+            and (revision.valid_to is None or year <= revision.valid_to.year)
+        ]
+        if len(covering) != 1:
+            raise LookupError(f"modelo {modelo_id}: expected one authored revision covering {year}, got {len(covering)}")
+        return operation.revision(modelo_id, str(covering[0].id))
+
+
 def published_modelo_ids() -> tuple[str, ...]:
     """Return every modelo identity in the published generation."""
     with bundled_indexed_authority().operation() as operation:

@@ -11,6 +11,7 @@ from typing import Annotated, Final, Literal, override
 
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.frozen_mapping import FROZEN_MAPPING
 from .....core.type_guards import is_object_collection, is_object_mapping
 from ..errors import RegistryValidationError
@@ -97,6 +98,7 @@ def tagged_fact_atom_json(value: FactAtom | None) -> object:
     return {_DATE_TAG: value.isoformat()}
 
 
+@pydantic_validation_boundary
 def _hydrate_tagged_fact_atom(value: object, info: ValidationInfo) -> object:
     """Rebuild a tagged fact atom when the reader declares the tagged JSON form.
 
@@ -178,6 +180,7 @@ class FactSelector(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise exact authored decimal selectors without float coercion."""
         if info.data.get("value_type") != "decimal":
@@ -215,6 +218,7 @@ class ScalarFactPayload(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise an authored decimal without treating ordinary strings as numbers."""
         if info.data.get("value_type") != "decimal":
@@ -240,6 +244,7 @@ class BracketFactRow(RegistryModel):
     value: DecimalValue
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bounds(self) -> BracketFactRow:
         if self.upper_bound is not None and self.upper_bound <= self.lower_bound:
             raise RegistryValidationError("fact bracket upper_bound must be greater than lower_bound")
@@ -254,6 +259,7 @@ class BracketFactPayload(RegistryModel):
     brackets: tuple[BracketFactRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_brackets(self) -> BracketFactPayload:
         ordered = sorted(self.brackets, key=lambda row: row.lower_bound)
         if tuple(ordered) != self.brackets:
@@ -273,6 +279,7 @@ class MappingFactEntry(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise an authored mapping Decimal without coercing ordinary strings."""
         if info.data.get("value_type") != "decimal":
@@ -299,6 +306,7 @@ class MappingFactPayload(RegistryModel):
     entries: tuple[MappingFactEntry, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_keys(self) -> MappingFactPayload:
         keys = [(type(entry.key), entry.key) for entry in self.entries]
         if len(set(keys)) != len(keys):
@@ -306,6 +314,7 @@ class MappingFactPayload(RegistryModel):
         return self
 
 
+@pydantic_validation_boundary
 def _coerce_entity_set(value: object) -> object:
     """Materialise immutable entity-set data parsed from a TOML array."""
     if is_object_collection(value):
@@ -323,6 +332,7 @@ class EntitySetFactPayload(RegistryModel):
     entities: EntitySetField = frozenset()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_entities(self) -> EntitySetFactPayload:
         if any(not entity.strip() for entity in self.entities):
             raise RegistryValidationError("fact entity tokens must contain non-whitespace text")
@@ -347,6 +357,7 @@ class EventFactPayload(RegistryModel):
     outputs: tuple[NamedFactValue, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_outputs(self) -> EventFactPayload:
         names = [output.name for output in self.outputs]
         if len(set(names)) != len(names):
@@ -362,6 +373,7 @@ class MultiOutputFactRow(RegistryModel):
     outputs: tuple[NamedFactValue, ...] = Field(min_length=2)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_row(self) -> MultiOutputFactRow:
         if self.upper_bound is not None and self.upper_bound <= self.lower_bound:
             raise RegistryValidationError("multi-output upper_bound must be greater than lower_bound")
@@ -378,6 +390,7 @@ class MultiOutputFactPayload(RegistryModel):
     bands: tuple[MultiOutputFactRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bands(self) -> MultiOutputFactPayload:
         ordered = sorted(self.bands, key=lambda row: row.lower_bound)
         if tuple(ordered) != self.bands:
@@ -422,6 +435,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     precedence_over: tuple[RegistryRevisionNodeId, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_variant(self) -> GovernedFactVariant:
         selector_names = [selector.name for selector in self.selectors]
         if len(set(selector_names)) != len(selector_names):
@@ -462,6 +476,7 @@ class GovernedFact(RegistryModel):
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fact(self) -> GovernedFact:
         variant_ids = [variant.variant_id for variant in self.variants]
         if len(set(variant_ids)) != len(variant_ids):
@@ -623,6 +638,7 @@ class GovernedFactCatalogue(RegistryModel):
     facts: Annotated[Mapping[FactId, GovernedFact], FROZEN_MAPPING] = Field(default_factory=dict, validate_default=True)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fact_keys(self) -> GovernedFactCatalogue:
         for fact_id, fact in self.facts.items():
             if fact_id != fact.fact_id:

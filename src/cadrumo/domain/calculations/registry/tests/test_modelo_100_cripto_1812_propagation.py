@@ -37,14 +37,11 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..ids import BindingId, RelationId
 from ..relations import relation_prefill_bindings_for_period
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-# No hijos means compute_deduccion_maternidad_0611([], ...) is provably 0
-# regardless of the registry's dated operands, so the binding is the literal.
-_M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-profile-deduccion-maternidad": Decimal(0),
-}
+_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 _M100_CRIPTO_TRANSMISION_CASILLA: CasillaId = validated_casilla_id(
     "1804",

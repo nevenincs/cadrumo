@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
 
+from ....core.time.clock import today_madrid
 from ...deadlines.models import IrpfActivityKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -101,7 +102,7 @@ def _selected_mapping_entries(
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_mapping_entries(coordinate)

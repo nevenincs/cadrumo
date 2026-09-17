@@ -10,7 +10,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_TESTS_ROOT = Path(__file__).resolve().parent
-_BINDING_PREFIX = "renta-2024-profile-"
+_BINDING_PREFIX = "renta-profile-"
 _BINDING_SUFFIX = "deduccion-maternidad"
 _SHARED_HELPER = _REGISTRY_TESTS_ROOT / "_modelo_100_registry_support.py"
 

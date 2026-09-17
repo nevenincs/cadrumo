@@ -11,6 +11,7 @@ from typing import override as typing_override
 
 from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -57,6 +58,7 @@ __all__ = [
 ]
 
 
+@pydantic_validation_boundary
 def _validate_registry_external_link(value: str) -> str:
     """Validate one authoritative link while retaining registry string semantics."""
     parsed = ANY_HTTP_URL_ADAPTER.validate_python(value)
@@ -211,6 +213,7 @@ class PeriodOverride(RegistryModel):
 
     @field_validator("periods")
     @classmethod
+    @pydantic_validation_boundary
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("period_override periods must be unique")
@@ -254,12 +257,14 @@ class PeriodSelector(RegistryModel):
 
     @field_validator("periods")
     @classmethod
+    @pydantic_validation_boundary
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("period_selector periods must be unique")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_year_selector(self) -> PeriodSelector:
         _validate_period_selector_years(years=self.years, year_from=self.year_from, year_to=self.year_to)
         _validate_period_overrides(self)
@@ -298,6 +303,7 @@ class RegistryValidityWindow(RegistryModel):
     valid_to: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> Self:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("valid_to must be on or after valid_from")
@@ -315,6 +321,7 @@ class RegistryTemporalBounds(RegistryModel):
     valid_to: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_declared_order(self) -> Self:
         if self.valid_from is not None and self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("valid_to must be on or after valid_from")
@@ -425,6 +432,7 @@ class DateSupportEnvelope(RegistryModel, OrderedSupportEnvelope[date]):
     hard_ceiling: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _bounds_are_ordered(self) -> Self:
         _validate_support_bounds(self.floor, self.horizon, self.hard_ceiling)
         return self
@@ -445,6 +453,7 @@ class TemporalSupportEnvelope(RegistryModel, OrderedSupportEnvelope[int]):
     hard_ceiling: FilingYear | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _bounds_are_ordered(self) -> Self:
         _validate_support_bounds(self.floor, self.horizon, self.hard_ceiling)
         return self
@@ -566,6 +575,7 @@ class LegalReference(RegistryModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_legal_reference(self) -> LegalReference:
         _validate_legal_review_metadata(self.review_status, self.reviewed_by, self.reviewed_at)
         if self.effective_to is not None and self.effective_to < self.effective_from:
@@ -788,6 +798,7 @@ class SourceReference(RegistryModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_source_reference(self) -> SourceReference:
         _validate_source_window(applies_from=self.applies_from, applies_to=self.applies_to)
         _validate_source_dictionary_grammar(
@@ -817,6 +828,7 @@ class SourceReference(RegistryModel):
 
     @field_validator("sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _sha256_lower_hex(cls, value: str) -> str:
         lowered = value.lower()
         if lowered != value or any(char not in "0123456789abcdef" for char in value):

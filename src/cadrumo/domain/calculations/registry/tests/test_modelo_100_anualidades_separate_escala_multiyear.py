@@ -1,4 +1,8 @@
-"""M100 anualidades por alimentos separate-escala for 2020-2023.
+"""M100 anualidades por alimentos separate-escala for 2022-2023, and the 2020-2021 input surface.
+
+The 2020 and 2021 revisions remain authored but lie below the published
+filing-year floor, so their casilla 0527 input surface is inspected on the
+authored declarations and their filing selection must refuse.
 
 LIRPF art. 64 (estatal) / art. 75 (autonómica) grant judicial anualidades por
 alimentos a favor de los hijos a SEPARATE-escala treatment: the art. 63 escala
@@ -24,8 +28,8 @@ per-child anualidades block that only exists from 2022 onward).
 Non-tautological grounding: the expected cuota is DERIVED from the LIRPF art. 63
 escala general estatal tramos (external BOE authority, bundled ley-35-2006.html;
 verified per-year against each renta-{year}-escala-estatal-base-general registry
-parameter — 2020 carries 5 tramos with no 300.000 € split, since that split
-arrived via Ley 11/2020 effective 2021; 2021-2024 carry 6 tramos), applied
+parameter — 2021-2024 carry 6 tramos, the 300.000 € split having arrived via
+Ley 11/2020 effective 2021), applied
 through the separate-escala ASSEMBLY that art. 64 mandates (escala(0527) +
 escala(0505 - 0527) - escala(mínimo + 1.980), floored). The lookup_bracket
 primitive is separately tested; what these tests exercise is the if_then_else
@@ -46,27 +50,22 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
+from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
+from .published_authority import published_authored_revision, published_supported_filing_years
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_SEPARATE_ESCALA_YEARS = (2020, 2021, 2022, 2023)
+_SEPARATE_ESCALA_YEARS = (2022, 2023)
+_MANUAL_ANUALIDADES_YEARS = (2020, 2021)
 _TOLERANCE = Decimal("0.01")
 
-# LIRPF art. 63 escala general estatal tramos, per year (BOE consolidated Ley
-# 35/2006 art. 63; verified byte-identical against each
-# renta-{year}-escala-estatal-base-general registry parameter). 2020 carries
-# 5 tramos with no 300.000 EUR split (the 22,5% marginal top bracket has no
-# upper bound); the split into a 300.000 EUR / 24,5% top bracket arrived via
-# Ley 11/2020 effective filing year 2021, so 2021-2023 carry 6 tramos.
-_ESTATAL_TRAMOS_2020: tuple[tuple[Decimal, Decimal | None, Decimal, Decimal], ...] = (
-    (Decimal("0"), Decimal("12450"), Decimal("0"), Decimal("0.095")),
-    (Decimal("12450"), Decimal("20200"), Decimal("1182.75"), Decimal("0.12")),
-    (Decimal("20200"), Decimal("35200"), Decimal("2112.75"), Decimal("0.15")),
-    (Decimal("35200"), Decimal("60000"), Decimal("4362.75"), Decimal("0.185")),
-    (Decimal("60000"), None, Decimal("8950.75"), Decimal("0.225")),
-)
+# LIRPF art. 63 escala general estatal tramos (BOE consolidated Ley 35/2006
+# art. 63; verified byte-identical against each
+# renta-{year}-escala-estatal-base-general registry parameter). The split into
+# a 300.000 EUR / 24,5% top bracket arrived via Ley 11/2020 effective filing
+# year 2021, so 2021-2023 carry 6 tramos.
 _ESTATAL_TRAMOS_2021_2023: tuple[tuple[Decimal, Decimal | None, Decimal, Decimal], ...] = (
     (Decimal("0"), Decimal("12450"), Decimal("0"), Decimal("0.095")),
     (Decimal("12450"), Decimal("20200"), Decimal("1182.75"), Decimal("0.12")),
@@ -77,13 +76,10 @@ _ESTATAL_TRAMOS_2021_2023: tuple[tuple[Decimal, Decimal | None, Decimal, Decimal
 )
 
 
-def _tramos_for_year(year: int) -> tuple[tuple[Decimal, Decimal | None, Decimal, Decimal], ...]:
-    return _ESTATAL_TRAMOS_2020 if year == 2020 else _ESTATAL_TRAMOS_2021_2023
-
-
 def _escala(amount: Decimal, year: int) -> Decimal:
     """Cuota per the LIRPF art. 63 escala general estatal tramos for `year`."""
-    for lower, upper, fixed, rate in _tramos_for_year(year):
+    assert year in _SEPARATE_ESCALA_YEARS, f"no grounded escala tramos table for {year}"
+    for lower, upper, fixed, rate in _ESTATAL_TRAMOS_2021_2023:
         if upper is None or amount <= upper:
             return fixed + (amount - lower) * rate
     raise AssertionError(f"amount {amount!r} outside escala range for {year}")
@@ -99,12 +95,12 @@ _ANUALIDADES_ABOVE_BASE = Decimal("25000")
 
 
 def _anualidades_casilla(year: int) -> CasillaId:
-    # 2020 and 2021 carry casilla 0527 (IMPALIM) as a direct manual input — the
-    # bundled 2021 AEAT XSD declares it `maxOccurs="1"`, a plain scalar, with
-    # no per-child structure. 2022-2023 introduce the
-    # per-child "Hijo/Hija N: Importe de las anualidades..." block and compute
-    # 0527 from casilla 1741 (renta-{year}-anualidades-alimentos-hijos-suma).
-    return _c("0527") if year in (2020, 2021) else _c("1741")
+    # 2022-2023 introduce the per-child "Hijo/Hija N: Importe de las
+    # anualidades..." block and compute 0527 from casilla 1741
+    # (renta-{year}-anualidades-alimentos-hijos-suma). The 2020-2021 manual
+    # 0527 surface is covered on the authored declarations below.
+    assert year in _SEPARATE_ESCALA_YEARS
+    return _c("1741")
 
 
 def _run(
@@ -242,9 +238,25 @@ def test_regime_off_when_anualidades_reach_base(registry_authority: PinnedAuthor
     )
 
 
-def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields(
-    registry_authority: PinnedAuthorityOperation,
+@pytest.mark.parametrize("year", _MANUAL_ANUALIDADES_YEARS)
+def test_pre_floor_casilla_0527_is_authored_manual_and_filing_selection_refuses(
+    registry_authority: PinnedAuthorityOperation, year: int
 ) -> None:
+    """2020-2021 declare 0527 (IMPALIM) as a plain manual scalar; filing refuses the year."""
+    revision = published_authored_revision("100", year=year)
+    casilla = next(c for c in revision.casillas if c.id == _c("0527"))
+    assert casilla.input_kind == "manual"
+    assert casilla.formula is None
+    assert not [formula.id for formula in revision.formulas if formula.target_casilla_id == _c("0527")]
+
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    assert year < supported_years.floor
+    with pytest.raises(NoRevisionForPeriodError):
+        _snapshot(registry_authority, year)
+
+
+def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields() -> None:
     """2021 regression: 0527 must not derive from the Anexo C pension fields.
 
     In the 2021 revision, casillas 1741/1744/1749/1754/1759 are Anexo C
@@ -253,52 +265,16 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
     pending-application amounts) — NOT the per-child anualidades por alimentos
     block that only exists from 2022 onward. Casilla 0527 (IMPALIM) is a
     single scalar manual input per the bundled 2021 AEAT XSD
-    (`maxOccurs="1"`, no repeating child structure). Seeding the Anexo C
-    fields as a scalar (the pre-fix defect) must NOT populate 0527, and must
-    NOT trigger the art. 64 separate-escala régimen; only a real entry on
-    0527 itself may do so.
+    (`maxOccurs="1"`, no repeating child structure). No formula may read the
+    Anexo C fields into 0527 (the retired sum formula did). The year lies below
+    the filing floor, so the authored declarations are what is inspected.
     """
-    snapshot = _snapshot(registry_authority, 2021)
+    revision = published_authored_revision("100", year=2021)
+    anexo_c_ids = {_c(value) for value in ("1741", "1744", "1749", "1754", "1759")}
+    assert anexo_c_ids <= {casilla.id for casilla in revision.casillas}
 
-    # Seed the Anexo C pension-contribution fields the retired 2021 sum
-    # formula wrongly summed into 0527. They must have zero effect on 0527
-    # or on the separate-escala régimen gate (0527 > 0 AND 0527 < 0505).
-    stray_inputs: dict[object, Decimal] = {
-        _c("0003"): _TRABAJO_INGRESOS,
-        _c("1744"): Decimal("500"),
-        _c("1749"): Decimal("600"),
-        _c("1754"): Decimal("700"),
-        _c("1759"): Decimal("800"),
-    }
-    binding_values = {
-        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
-        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
-    }
-    relation_values = {
-        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
-        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
-    }
-    stray_result = calculate_registry_snapshot(
-        snapshot,
-        inputs=stray_inputs,
-        date_context={"filing_period": date(2021, 12, 31)},
-        enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
-        binding_values=binding_values,
-        relation_values=relation_values,
-    )
-    assert stray_result.values[_c("0527")] == Decimal("0"), (
-        f"2021: casilla 0527 = {stray_result.values[_c('0527')]!r}; expected 0 — the Anexo C "
-        "pension-contribution fields (1744/1749/1754/1759) must not populate the anualidades "
-        "casilla by being wrongly summed into it."
-    )
-
-    # A real entry directly on 0527 (the correct 2021 manual-input surface)
-    # activates the separate-escala régimen exactly as in 2020.
-    real_result = _run(snapshot, 2021, anualidades=_ANUALIDADES)
-    assert real_result[_c("0527")] == _ANUALIDADES, (
-        f"2021: real manual entry on 0527 = {real_result[_c('0527')]!r}; expected {_ANUALIDADES!r}"
-    )
+    assert "renta-anualidades-alimentos-hijos-suma" not in {formula.id for formula in revision.formulas}
+    assert not [formula.id for formula in revision.formulas if formula.target_casilla_id == _c("0527")]
+    anualidades = next(casilla for casilla in revision.casillas if casilla.id == _c("0527"))
+    assert anualidades.input_kind == "manual"
+    assert anualidades.formula is None

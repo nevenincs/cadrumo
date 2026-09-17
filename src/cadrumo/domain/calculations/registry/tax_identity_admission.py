@@ -9,10 +9,10 @@ not declare admits nothing.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.documents import IdentityError, SpanishTaxIdFormat, validate_identity
+from ....core.time.clock import today_madrid
 from .authority import bundled_indexed_authority
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .nif_iva_catalogue import NifIvaCatalogue, resolve_nif_iva_catalogue
@@ -36,11 +36,11 @@ def _with_authority[T](resolve: Callable[[GovernedFactSource], T]) -> T | None:
 
 
 def _catalogue(authority: GovernedFactSource) -> NifIvaCatalogue:
-    return resolve_nif_iva_catalogue(effective_date=date.today(), authority=authority)
+    return resolve_nif_iva_catalogue(effective_date=today_madrid(), authority=authority)
 
 
 def _spanish_format(authority: GovernedFactSource) -> SpanishTaxIdFormat:
-    return tax_id_format(authority, effective_date=date.today())
+    return tax_id_format(authority, effective_date=today_madrid())
 
 
 class RegistryTaxIdentityAdmission:

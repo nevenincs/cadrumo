@@ -9,6 +9,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.period import Period, PeriodKind, RegistrySelectorPeriodCode, registry_period_kind
 from ....core.result_disposition import ResultDisposition
@@ -98,6 +99,7 @@ class DeadlineWindowDefinition(RegistryModel):
 
     @field_validator("tipo_renta_scope")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_tipo_renta_scope(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         """Preserve official M210 codes without folding them into rate concepts."""
         if value is None:
@@ -115,6 +117,7 @@ class DeadlineWindowDefinition(RegistryModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> DeadlineWindowDefinition:
         if self.filing_year != self.period.filing_year:
             raise RegistryValidationError(
@@ -169,12 +172,14 @@ class ModeloScheduleDefinition(RegistryModel):
 
     @field_validator("periods")
     @classmethod
+    @pydantic_validation_boundary
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("filing schedule periods must be unique")
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_schedule(self) -> ModeloScheduleDefinition:
         if self.profile_condition_mode is ConditionMode.ANY and not self.profile_conditions:
             raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")

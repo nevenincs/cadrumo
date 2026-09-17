@@ -25,6 +25,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ....core.period import Period
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
@@ -47,7 +48,7 @@ def gather_observed_requirement_values(
     """
     source_casilla_id = requirement.source_casilla_ids[0]
     values: list[Decimal] = []
-    for source_period in requirement.periods:
+    for source_period in _filed_cadence_periods(requirement, observations):
         matches = tuple(
             observation
             for observation in observations
@@ -69,6 +70,43 @@ def gather_observed_requirement_values(
             )
         values.append(value)
     return tuple(values)
+
+
+def _filed_cadence_periods(
+    requirement: RegistryFoldRequirement,
+    observations: tuple[RegistryModeloObservation, ...],
+) -> tuple[str, ...]:
+    """Return the declared periods of the one cadence the source was filed under.
+
+    A source modelo may be declared over alternative cadences -- Modelo 111 is
+    filed quarterly or, by a large company, monthly (RIRPF art. 108) -- and a
+    filer files one of them for the year, never both. When the declared periods
+    span more than one cadence, exactly one cadence must be completely observed;
+    none or several leave the requirement unresolved rather than folding a mix.
+    A single-cadence declaration is returned unchanged.
+    """
+    groups: dict[str, list[str]] = {}
+    for source_period in requirement.periods:
+        kind = Period.from_year_and_code(requirement.filing_year, source_period).kind
+        groups.setdefault(str(kind), []).append(source_period)
+    if len(groups) < 2:
+        return requirement.periods
+
+    def observed(source_period: str) -> bool:
+        return any(
+            observation.modelo == requirement.source_modelo
+            and observation.filing_year == requirement.filing_year
+            and observation.period == source_period
+            for observation in observations
+        )
+
+    filed = [tuple(periods) for periods in groups.values() if all(observed(period) for period in periods)]
+    if len(filed) != 1:
+        raise RegistryValidationError(
+            f"relation requirement {_requirement_ids(requirement)!r} needs exactly one completely filed cadence of "
+            f"{requirement.source_modelo!r}/{requirement.filing_year}; found {len(filed)}",
+        )
+    return filed[0]
 
 
 def fold_sum_or_copy(

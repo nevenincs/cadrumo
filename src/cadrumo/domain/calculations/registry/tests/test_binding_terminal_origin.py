@@ -11,7 +11,7 @@ from ..schema import BindingDefinition
 from ..schema_base import CasillaDataType
 from ..withholding_bindings import WithholdingProvider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_expectation_hydrates_a_filed_casilla_primary_origin() -> None:

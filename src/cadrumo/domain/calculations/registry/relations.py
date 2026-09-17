@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RelationAggregationOp
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
@@ -140,6 +141,7 @@ class RegistryFoldRequirement(BaseModel):
 
     @field_validator("required_source_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _required_source_casillas_unique(
         cls,
         value: tuple[CasillaId, ...] | None,
@@ -149,6 +151,7 @@ class RegistryFoldRequirement(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _required_sources_are_candidates(self) -> Self:
         if self.required_source_casilla_ids is not None and not set(self.required_source_casilla_ids) <= set(
             self.source_casilla_ids

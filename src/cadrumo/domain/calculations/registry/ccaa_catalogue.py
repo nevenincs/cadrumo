@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.text_fold import fold_diacritics
+from ....core.time.clock import today_madrid
 from ...contribuyente.ccaa import CCAA
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -235,7 +236,7 @@ def resolve_ccaa_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> CcaaCatalogue:
     """Resolve the selected dated CCAA tax-residence fact."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError(

@@ -30,7 +30,7 @@ from ._modelo_349_registry_support import (
     _modelo_349_revision,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _selector(binding: BindingDefinition) -> dict[str, Any]:

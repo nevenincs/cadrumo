@@ -12,6 +12,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_v
 
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -146,6 +147,7 @@ class InvoiceObservation(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_source_kind(cls, value: object) -> object:
         if isinstance(value, str) and not isinstance(value, BindingSourceKind):
             try:
@@ -156,6 +158,7 @@ class InvoiceObservation(BaseModel):
 
     @field_validator("source_kind")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_invoice_family(cls, value: BindingSourceKind) -> BindingSourceKind:
         if value not in INVOICE_BINDING_SOURCE_KINDS:
             raise RegistryValidationError(f"invoice source_kind {value!r} is not an invoice binding source")
@@ -163,6 +166,7 @@ class InvoiceObservation(BaseModel):
 
     @field_validator("base_amount", "invoice_total_amount", "rectified_base_previous", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: object) -> object:
         if value is None:
             return None
@@ -171,6 +175,7 @@ class InvoiceObservation(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_rectification(self) -> InvoiceObservation:
         validate_rectification_fields(self)
         return self
@@ -199,6 +204,7 @@ class InvoiceProviderBase(BaseModel):
 
     @field_validator("claves")
     @classmethod
+    @pydantic_validation_boundary
     def _claves_uppercase_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("invoice selector claves entries must be unique")
@@ -208,6 +214,7 @@ class InvoiceProviderBase(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _claves_within_grouping_vocabulary(self) -> InvoiceProviderBase:
         """Check ``claves`` against the vocabulary its OWN grouping declares.
 

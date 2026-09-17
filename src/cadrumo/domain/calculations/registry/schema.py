@@ -25,6 +25,7 @@ from ....core.aggregation import BindingAggregation, BindingSourceKind
 from ....core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
 from ....core.classification.policies import SensitivityClass
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_projection_ref import FilingProjectionRef
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.modelo import Modelo
@@ -302,6 +303,7 @@ class BindingDefinition(RegistryModel):
         return BindingSourceKind(self.provider.kind)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_row_set_terminal_cardinality(self) -> BindingDefinition:
         """Refuse a row collection that claims exactly one terminal fact.
 
@@ -390,6 +392,7 @@ class CasillaFieldOverride(RegistryModel):
     restate_provenance: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_patch(self) -> CasillaFieldOverride:
         patchable = set(CasillaDefinition.model_fields) | {"additional_source_refs"}
         constraint_patchable = set(CasillaConstraints.model_fields) | {"additional_source_refs"}
@@ -465,6 +468,7 @@ class FamilyFieldOverride(RegistryModel):
     replacement_id: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_patch(self) -> FamilyFieldOverride:
         from .keyed_families import family_spec
 
@@ -772,12 +776,14 @@ class ModeloRevision(RegistryRevisionDeclaration):
 
     @field_validator("engineered_by", "reviewed_by")
     @classmethod
+    @pydantic_validation_boundary
     def _attribution_names_somebody(cls, value: str | None, info: ValidationInfo) -> str | None:
         """Refuse an attribution that is declared but names nobody."""
         return validate_attribution_names_somebody(value, field_name=info.field_name)
 
     @field_validator("reviewed_at")
     @classmethod
+    @pydantic_validation_boundary
     def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
         """Refuse a signoff date no auditor could ever check."""
         return validate_reviewed_at_within_horizon(value)
@@ -826,6 +832,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return _frozen_index(declarations_by_ref)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_family_dispositions(self) -> ModeloRevision:
         """Refuse an inapplicability claim that names no family or contradicts one.
 
@@ -849,6 +856,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_restated_families(self) -> ModeloRevision:
         """Refuse a restatement claim with nothing behind it or no edge to apply to.
 
@@ -884,6 +892,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_family_storage_delta(self) -> ModeloRevision:
         """Keep generic storage declarations on one explicit keyed-family vocabulary."""
         from .keyed_families import KEYED_FAMILY_SPECS
@@ -924,6 +933,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_identity_keyed_families(self) -> ModeloRevision:
         """Refuse a revision declaring two members of one keyed family under one id.
 
@@ -944,6 +954,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_governance_stamp(self) -> ModeloRevision:
         """Bind the reviewer identity to the claim that a review happened."""
         validate_governance_stamp_coherence(
@@ -955,6 +966,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_review_scope(self) -> ModeloRevision:
         """Keep a comparison reference paired with an actual review claim."""
         validate_review_scope(
@@ -1102,6 +1114,7 @@ class ModeloDefinition(RegistryModel):
         return name in self.capabilities
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_revisions(self, info: ValidationInfo) -> ModeloDefinition:
         if not self.revisions:
             raise RegistryValidationError(f"modelo {self.id!r} must declare at least one revision")
@@ -1203,6 +1216,7 @@ class SociedadesAnnualManualCoverageDisposition(RegistryModel):
     acquisition_condition_key: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_disposition(self) -> SociedadesAnnualManualCoverageDisposition:
         if self.status is SociedadesAnnualManualCoverageStatus.AVAILABLE:
             if self.source_ref is None:
@@ -1235,6 +1249,7 @@ class SociedadesAnnualManualCoverageCatalogue(RegistryModel):
 
     @field_validator("dispositions")
     @classmethod
+    @pydantic_validation_boundary
     def _years_are_unique_and_ordered(
         cls,
         value: tuple[SociedadesAnnualManualCoverageDisposition, ...],
@@ -1339,6 +1354,7 @@ class RegistrySnapshot(RegistryModel):
                 )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_identifier_keyed_maps(self) -> RegistrySnapshot:
         """Keep all nested lookup identities aligned with their typed payloads."""
         self._validate_identifier_keyed_map("legal", self.legal)
@@ -1355,6 +1371,7 @@ class RegistrySnapshot(RegistryModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_filing_period_consistency(self) -> RegistrySnapshot:
         """Reconcile :attr:`filing_period` against :attr:`filing_year` and :attr:`period`.
 

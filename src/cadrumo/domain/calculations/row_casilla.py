@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .registry.ids import BindingId, RevisionId
 from .row_source_identity import RowSourceIdentity
@@ -24,6 +25,7 @@ class DirectRowMaterializationProvenance(BaseModel):
     materialization_rule_version: RevisionId
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rule_is_the_source_binding(self) -> DirectRowMaterializationProvenance:
         if self.materialization_rule_id != self.source_binding_id:
             raise ValueError("direct row materialization rule must equal its source binding")

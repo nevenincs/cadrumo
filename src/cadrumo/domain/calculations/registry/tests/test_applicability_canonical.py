@@ -13,7 +13,7 @@ import importlib
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> None:

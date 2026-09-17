@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
 
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .facts.schema import FactSelector
@@ -157,7 +158,7 @@ def resolve_iva_rate_role_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaRateRoleCatalogue:
     """Resolve the IVA rate-role vocabulary through the selected facts authority."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         raise RegistryValidationError("IVA rate-role catalogue requires an explicit authority operation or scope")

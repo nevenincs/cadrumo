@@ -25,6 +25,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 
 __all__ = ["CasillaLineageOrigin", "CasillaLineageOriginField"]
@@ -64,6 +65,7 @@ class CasillaLineageOrigin(StrEnum):
         return self is not CasillaLineageOrigin.SEEDED
 
 
+@pydantic_validation_boundary
 def _coerce_casilla_lineage_origin(value: object) -> object:
     """Coerce a TOML string literal to the canonical CasillaLineageOrigin member."""
     if isinstance(value, CasillaLineageOrigin):

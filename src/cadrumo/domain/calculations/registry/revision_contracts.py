@@ -26,6 +26,7 @@ from pydantic import (
     model_validator,
 )
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.toml import freeze_toml_value
 from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
@@ -175,6 +176,7 @@ class RegistryRevisionNode(RegistryModel, ABC):
         raise NotImplementedError
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _predecessor_is_another_revision(self) -> RegistryRevisionNode:
         identity = self.revision_identity()
         if isinstance(self.predecessor, DeclaredPredecessor) and self.predecessor.revision_id == identity:

@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.aggregation import TravelAgencyMediationType
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -154,7 +155,7 @@ def resolve_travel_agency_mediation_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> TravelAgencyMediationCatalogue:
     """Resolve the dated travel-agency mediation vocabulary."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     return _selected_catalogue(effective_date=coordinate, authority=authority)
 
 

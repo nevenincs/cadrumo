@@ -7,6 +7,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 
 __all__ = ["InputKind", "InputKindValue"]
@@ -22,6 +23,7 @@ class InputKind(StrEnum):
     PROJECTION_ONLY = "projection_only"
 
 
+@pydantic_validation_boundary
 def _coerce_input_kind(value: object) -> object:
     """Coerce a TOML string literal to the canonical InputKind member."""
     if isinstance(value, InputKind):

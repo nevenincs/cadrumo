@@ -18,6 +18,7 @@ from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 from .schema_base import CasillaDataType, coerce_enum_member
@@ -165,6 +166,7 @@ class ManualInputProvider(BaseModel):
     data_type: ManualInputDataType
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_manual_input_shape(self) -> ManualInputProvider:
         has_casilla = self.casilla_id is not None
         has_record_shape = _has_record_shape(self)

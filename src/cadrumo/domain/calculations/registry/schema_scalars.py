@@ -11,6 +11,7 @@ from pydantic import BeforeValidator, Field, ValidationInfo
 
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
@@ -46,6 +47,7 @@ __all__ = [
 ]
 
 
+@pydantic_validation_boundary
 def _coerce_decimal(value: object) -> object:
     if isinstance(value, bool | float):
         raise RegistryValidationError("decimal values must not be booleans or floats")
@@ -71,6 +73,7 @@ def _validate_nif_value(value: object, tax_id_format: SpanishTaxIdFormat | None)
         raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {detail}") from exc
 
 
+@pydantic_validation_boundary
 def _validate_nif_string(value: object, info: ValidationInfo) -> object:
     """Validate a Spanish NIF / NIE / CIF identifier and return its canonical form.
 
@@ -98,6 +101,7 @@ identifier independently of a casilla declaration.
 """
 
 
+@pydantic_validation_boundary
 def _coerce_modelo_year(value: object) -> object:
     """Coerce a fiscal-year input to an int within the registry-supported window.
 
@@ -137,6 +141,7 @@ _AD_HOC_PATTERN = re.compile(r"^AD-HOC$")
 _EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
+@pydantic_validation_boundary
 def _validate_period_code(value: object) -> object:
     """Validate a filing-period code against the registry-supported set.
 
@@ -171,6 +176,7 @@ validate a period token independently of a casilla declaration.
 _COUNTRY_CODE_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
+@pydantic_validation_boundary
 def _validate_country_code(value: object) -> object:
     """Validate a two-character ISO 3166-1 alpha-2 country code.
 
@@ -210,6 +216,7 @@ alias enforces only the alpha-2 shape.
 """
 
 
+@pydantic_validation_boundary
 def _validate_iban_string(value: object) -> object:
     """Validate an IBAN: country code, check digits, BBAN, and mod-97 residue.
 
@@ -240,6 +247,7 @@ independently of a casilla declaration.
 """
 
 
+@pydantic_validation_boundary
 def _validate_name_string(value: object) -> object:
     """Validate a personal or entity name: non-empty unicode within length bounds."""
     if not isinstance(value, str):
@@ -259,6 +267,7 @@ PersonOrEntityName = Annotated[str, BeforeValidator(_validate_name_string)]
 _NIF_IVA_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,12}$")
 
 
+@pydantic_validation_boundary
 def _validate_nif_iva_string(value: object) -> object:
     """Validate an intracomunitario NIF-IVA: ISO country prefix plus identifier body."""
     if not isinstance(value, str):
@@ -313,6 +322,7 @@ _CCAA_CODES = frozenset(
 )
 
 
+@pydantic_validation_boundary
 def _validate_ccaa_code(value: object) -> object:
     """Validate that a value has the shape of a two-digit comunidad code (01-19)."""
     if not isinstance(value, str):
@@ -335,6 +345,7 @@ authority. See the note on the accepted set above.
 _PROVINCE_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}$")
 
 
+@pydantic_validation_boundary
 def _validate_province_code(value: object) -> object:
     """Validate a Spanish province code (01-52)."""
     if not isinstance(value, str):
@@ -353,6 +364,7 @@ ProvinceCode = Annotated[str, BeforeValidator(_validate_province_code)]
 _POSTAL_CODE_RE = re.compile(rf"^{SPANISH_POSTCODE_PATTERN}$")
 
 
+@pydantic_validation_boundary
 def _validate_postal_code(value: object) -> object:
     """Validate a Spanish postal code against the one shape authority.
 
@@ -374,6 +386,7 @@ PostalCode = Annotated[str, BeforeValidator(_validate_postal_code)]
 _MUNICIPALITY_CODE_RE = re.compile(rf"^{SPANISH_PROVINCE_CODE_PATTERN}[0-9]{{3}}$")
 
 
+@pydantic_validation_boundary
 def _validate_municipality_code(value: object) -> object:
     """Validate a five-digit INE municipality code.
 
@@ -398,6 +411,7 @@ MunicipalityCode = Annotated[str, BeforeValidator(_validate_municipality_code)]
 _BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
 
 
+@pydantic_validation_boundary
 def _validate_bic_string(value: object) -> object:
     """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
     if not isinstance(value, str):
@@ -494,6 +508,7 @@ _DATE_DDMMAAAA_RE = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 _DATE_ISO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 
 
+@pydantic_validation_boundary
 def _validate_calendar_date(value: object) -> object:
     """Validate a calendar date in either ISO 8601 or AEAT `ddmmaaaa` form."""
     if not isinstance(value, str):
@@ -509,6 +524,7 @@ CalendarDate = Annotated[str, BeforeValidator(_validate_calendar_date)]
 _WORKBOOK_CELL_REF_RE = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 
 
+@pydantic_validation_boundary
 def _validate_workbook_cell_ref_str(value: object) -> object:
     if isinstance(value, str) and not _WORKBOOK_CELL_REF_RE.match(value):
         raise RegistryValidationError(f"invalid workbook cell reference {value!r}")

@@ -47,7 +47,7 @@ from ..relations import relation_prefill_bindings_for_period
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # AEAT Manual práctico de Renta 2025, Parte 1, Capítulo 9, full worked example
 # (Don L.H.I., agricultura + ganadería ovina): "Rendimiento neto minorado:
@@ -108,6 +108,11 @@ def _neutral_binding_values() -> dict[str, Decimal]:
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        # Art. 75 Ley 19/1994 / Art. 7.p) LIRPF maritime-worker exemption operands;
+        # neutral zero when the chain under test is unrelated (the path itself is false).
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
@@ -133,6 +138,7 @@ def _run_calculation(
         snapshot,
         inputs=inputs,
         binding_values=_neutral_binding_values(),
+        boolean_binding_values={"renta-maritime-path-rebeca": False},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             binding.id: Decimal("0")
@@ -236,6 +242,7 @@ class TestPiensosIndiceIsTextTypedButStillApplies:
                 _CASILLA_1538_AMORTIZACION: _AMORTIZACION,
             },
             binding_values=_neutral_binding_values(),
+            boolean_binding_values={"renta-maritime-path-rebeca": False},
             enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             relation_values={
                 binding.id: Decimal("0")

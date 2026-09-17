@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationInfo, field_val
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
@@ -423,6 +424,7 @@ class WithholdingObservation(BaseModel):
 
     @field_validator("clave", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_clave(cls, value: object, info: ValidationInfo) -> object:
         """Project a raw clave token through the selected registry catalogue.
 
@@ -464,6 +466,7 @@ class WithholdingObservation(BaseModel):
         "garantias",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise RegistryValidationError("withholding amounts must be non-negative")

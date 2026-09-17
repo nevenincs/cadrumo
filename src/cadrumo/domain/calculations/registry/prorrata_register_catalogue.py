@@ -14,6 +14,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -308,7 +309,7 @@ def resolve_prorrata_register_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> ProrrataRegisterCatalogue:
     """Resolve all register vocabularies through the dated 0116 mapping fact."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         raise RegistryValidationError("prorrata register catalogue requires an explicit authority operation or scope")

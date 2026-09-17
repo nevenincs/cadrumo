@@ -20,6 +20,7 @@ from pydantic import (
 )
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._formula_operator_contracts import require_formula_operator_arity
@@ -155,11 +156,13 @@ class FormulaExpression(RegistryModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_dispatch_table_entries(cls, value: object) -> object:
         return _normalise_dispatch_table_entries(value)
 
     @field_validator("args", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _args_from_json_array(cls, value: object) -> object:
         # The model-level before-validator above hands pydantic a Python
         # mapping, so a JSON array reaches this strict tuple field as a list.
@@ -168,6 +171,7 @@ class FormulaExpression(RegistryModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expression(self) -> FormulaExpression:
         populated_leaves = [
             self.casilla_id is not None,
@@ -214,6 +218,7 @@ class DatedValue(RegistryModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> DatedValue:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("dated value valid_to must be on or after valid_from")
@@ -240,6 +245,7 @@ class BracketEntry(RegistryModel):
     valid_to: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bracket(self) -> BracketEntry:
         if self.upper_bound is not None and self.upper_bound < self.lower_bound:
             raise RegistryValidationError("bracket upper_bound must be on or after lower_bound")
@@ -273,6 +279,7 @@ class KeyedBracketEntry(RegistryModel):
     valid_to: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_keyed_bracket(self) -> KeyedBracketEntry:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("keyed_bracket valid_to must be on or after valid_from")
@@ -386,6 +393,7 @@ class ParameterDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bracket_table(self) -> ParameterDefinition:
         if self.data_type == "bracket_table":
             self._validate_bracket_table_shape()

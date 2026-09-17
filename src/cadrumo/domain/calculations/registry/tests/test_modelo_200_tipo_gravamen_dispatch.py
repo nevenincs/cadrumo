@@ -44,7 +44,7 @@ from ..schema_formula import ParameterDefinition
 from .published_authority import published_legal_evidence_text, published_snapshot
 from .registry_tree import bundled_modelo_components
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")

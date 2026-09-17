@@ -51,7 +51,7 @@ from ..schema_references import RegistrySnapshotRef
 from ..schema_verification import LiveCrossReferenceDecision
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")

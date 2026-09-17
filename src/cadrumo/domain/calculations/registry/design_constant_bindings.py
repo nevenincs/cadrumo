@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import selector_against_model
 from .errors import RegistryValidationError
@@ -79,6 +80,7 @@ class DesignConstantProvider(BaseModel):
     value: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_value_fills_the_declared_run(self) -> DesignConstantProvider:
         if len(self.value) != self.length:
             raise RegistryValidationError(

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core.identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
-from ..tax_id_format import tax_id_format_from_declarations
+from ..authority import bundled_indexed_authority
+from ..tax_id_format import tax_id_format, tax_id_format_from_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -79,3 +82,14 @@ def test_projection_refuses_structurally_malformed_operative_values(key: str, va
 
     with pytest.raises(ValueError, match=message):
         tax_id_format_from_declarations(declarations)
+
+
+def test_the_published_format_declares_the_identity_policy_tables() -> None:
+    """The kernel declares no table, so the published fact must carry every one."""
+    with bundled_indexed_authority().operation() as operation:
+        published = tax_id_format(operation, effective_date=date.today())
+
+    assert published.nif_letters == "TRWAGMYFPDXBNJZSQVHLCKE"
+    assert published.cif_letter_table == "JABCDEFGHI"
+    assert published.cif_digit_only_kinds == "ABEH"
+    assert published.cif_letter_only_kinds == "PQRSNW"

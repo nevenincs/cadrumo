@@ -11,13 +11,15 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
+from ..errors import NoRevisionForPeriodError
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import resolve_relation_values
 from ..schema import RegistrySnapshot
+from .published_authority import published_authored_revision, published_supported_filing_years
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -200,7 +202,7 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
 @pytest.mark.parametrize(
     ("filing_year", "revision_id", "filing_period", "source_ref", "legal_ref"),
     [
-        (2019, "2019-2023", date(2019, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hac-1264-2018:art-4"),
+        (2022, "2019-2023", date(2022, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hfp-1335-2021:art-4"),
         (2023, "2019-2023", date(2023, 3, 31), "aeat-dr-131-2019-2023-v101", "orden-hfp-1172-2022:art-4"),
         (2024, "2024", date(2024, 3, 31), "aeat-dr-131-2024", "orden-hfp-1359-2023:art-4"),
         (2025, "2025", date(2025, 3, 31), "aeat-dr-131-2025", "orden-hac-1347-2024:art-4"),
@@ -261,8 +263,8 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
             "modulos-rendimiento-neto-modulos",
             "modulos-rendimiento-neto-actividad",
         }
-    if revision_id in ("2024", "2025"):
-        # 2024 and 2025 additionally carry the Fase 3ª índices correctores
+    if revision_id in ("2024", "2025", "2026"):
+        # 2024, 2025, and 2026 additionally carry the Fase 3ª índices correctores
         # generales (b.1, b.2, b.4) advisory-support flags, which never fire
         # with no blank/zero declared índices (see
         # test_modelo_131_modulos_engine.TestModulosIndicesGeneralesAdvisoryFlags).
@@ -279,6 +281,18 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert entries["15"].operand_refs == ("13", "14")
     assert source_ref in snapshot.sources
     assert legal_ref in snapshot.legal
+
+
+def test_committed_modelo_131_refuses_the_year_below_the_supported_floor(
+    registry_snapshot: Callable[..., RegistrySnapshot],
+) -> None:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    # The 2019-2023 revision is authored from 2019, so this refusal comes from the
+    # support floor rather than from a missing authored edition.
+    assert published_authored_revision("131", year=supported_years.floor - 1).id == "2019-2023"
+    with pytest.raises(NoRevisionForPeriodError):
+        registry_snapshot("131", supported_years.floor - 1, "1T", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
