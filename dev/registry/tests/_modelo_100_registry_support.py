@@ -23,8 +23,8 @@ from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
 from ..compiler.authority import compiled_bundled_authority
-from ..compiler.loader import load_registry_tree
 from ..compiler.validator import RegistryValidator
+from .profile_schema_support import load_user_profile_schema
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
@@ -58,14 +58,20 @@ def _registry_root() -> Path:
 
 @cache
 def _loaded_registry() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(_registry_root())
-    return {modelo.id: modelo for modelo in modelos}, catalogues
+    # The compiled authority carries the supplementary annual-Orden legal ids
+    # that governed facts cite; the raw tree load does not.
+    authority = compiled_bundled_authority()
+    return {modelo.id: modelo for modelo in authority.modelos}, authority.catalogues
 
 
 @cache
 def _registry_validator() -> RegistryValidator:
     _modelos_by_id, catalogues = _loaded_registry()
-    return RegistryValidator(catalogues, source_root=_source_root())
+    return RegistryValidator(
+        catalogues,
+        source_root=_source_root(),
+        user_profile_schema=load_user_profile_schema(),
+    )
 
 
 @cache
