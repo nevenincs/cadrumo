@@ -188,7 +188,7 @@ def _repos(
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
         TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-        InvoiceCatalogueRepository(objects=objects),
+        InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
     )
 
 

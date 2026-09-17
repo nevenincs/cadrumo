@@ -28,6 +28,11 @@ class InvoiceCatalogueReadAdapter(InvoiceCatalogueReader):
         """Bind an already-composed invoice repository."""
         self._repository = repository
 
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the bucket the wrapped repository reads."""
+        return self._repository.bucket_id
+
     @override
     def load(self) -> InvoiceCatalogue:
         """Load the catalogue while hiding persistence implementation errors."""
@@ -43,6 +48,11 @@ class TransactionCatalogueReadAdapter(TransactionCatalogueReader):
     def __init__(self, *, repository: TransactionCatalogueRepository) -> None:
         """Bind an already-composed transaction repository."""
         self._repository = repository
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the bucket the wrapped repository reads."""
+        return self._repository.bucket_id
 
     @override
     def load(self) -> TransactionCatalogue:

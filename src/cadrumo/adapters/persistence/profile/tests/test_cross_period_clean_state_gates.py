@@ -68,6 +68,7 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_verification_reports import VerificationReportCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -265,7 +266,10 @@ def _seed_303_cross_period_sources(
             clock=_CLOCK,
             operation=operation,
         )
-        values = _source_values(period, tuple(sorted(source_casilla_ids)))
+        values, source_headers = modelo_303_filed_disposition(
+            _source_values(period, tuple(sorted(source_casilla_ids))),
+            source_locator=evidence_reference_id,
+        )
         if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
             _seed_source_filing_record_without_import_flow(
                 work_unit=work_unit,
@@ -303,6 +307,7 @@ def _seed_303_cross_period_sources(
                     ),
                 ),
                 source_kind="aeat_sede_justificante",
+                source_headers=source_headers,
                 captured_at=_CLOCK,
                 stamped_revision_id=source_snapshot.revision.id,
                 source_metadata={
