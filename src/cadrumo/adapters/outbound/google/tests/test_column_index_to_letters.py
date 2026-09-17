@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....application.storage.calc_sheets.errors import CalcSheetsRecordError
 from .....application.storage.calc_sheets.records import column_index_to_letters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -45,9 +46,6 @@ def testcolumn_index_to_letters_rejects_non_positive_values() -> None:
     )
 
     for case_id, column in cases:
-        try:
+        with pytest.raises(CalcSheetsRecordError, match="must be 1-based and positive"):
             column_index_to_letters(column)
-        except ValueError as exc:
-            assert "must be 1-based and positive" in str(exc), case_id
-        else:
-            pytest.fail(f"{case_id}: expected ValueError")
+        assert case_id
