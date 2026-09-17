@@ -1,26 +1,26 @@
 """Typed exception hierarchy for the storage provider abstraction.
 
 Provider and remote-mirror failures raised by
-:class:`adapters.outbound.storage.StorageProvider` implementations use
+:class:`adapters.outbound.storage.protocol.StorageProvider` implementations use
 subclasses of :class:`OutboundStorageError` so the application layer's sync
 coordinator can dispatch on the concrete failure mode without parsing upstream
 error strings. Each public leaf binds to a stable
-:class:`core.errors.ErrorCode` through
+:class:`core.errors.error_codes.ErrorCode` through
 :mod:`core.errors.registry` so the CLI taxonomy stays explicit.
 
 :class:`StorageCorruptionError` is the deliberate exception: it derives from
-:class:`core.errors.CoreError` because it represents structurally invalid
+:class:`core.errors.hierarchy.CoreError` because it represents structurally invalid
 sidecar metadata, not a remote-provider transport, quota, permission, or mirror
 failure.
 
 The `Outbound` prefix disambiguates this hierarchy from the persistence
-side :class:`adapters.persistence.storage.StorageError`, which
+side :class:`adapters.persistence.storage.errors.StorageError`, which
 covers at-rest persistence and has a different parent chain.
 
 See Also:
-    :class:`adapters.outbound.storage.StorageProvider`
+    :class:`adapters.outbound.storage.protocol.StorageProvider`
         Provider Protocol whose implementations raise this hierarchy.
-    :class:`adapters.outbound.storage.ProviderObjectMetadata`
+    :class:`adapters.outbound.storage.records.ProviderObjectMetadata`
         Boundary record paired with integrity and corruption checks.
 """
 
@@ -109,7 +109,7 @@ class OutboundStorageUnavailableError(OutboundStorageError):
 class StorageCorruptionError(TerminalPreconditionErrorMixin[PreconditionVerdict], CoreError):
     """Raised when a sidecar file contains structurally invalid field types.
 
-    As a :class:`core.errors.CoreError`, this indicates on-disk data
+    As a :class:`core.errors.hierarchy.CoreError`, this indicates on-disk data
     corruption: the sidecar JSON parses successfully but a required field (e.g.
     ``byte_length``) carries a type that the runtime cannot coerce to the
     expected primitive. Unlike :class:`OutboundStorageIntegrityError`, which

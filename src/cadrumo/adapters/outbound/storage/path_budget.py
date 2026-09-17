@@ -3,7 +3,7 @@
 This package owns the ``local_provider_object_sidecar`` grammar
 (``<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json``,
 declared with ``owner="cadrumo.adapters.outbound.storage"`` in
-:data:`~adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`), so the
+:data:`~adapters.persistence.storage.namespace_registry.STORAGE_NAMESPACE_REGISTRY`), so the
 deepest suffix that grammar can produce is derived here and handed to
 :func:`~core.paths.windows_storage_root_long_path_margin` rather than
 duplicated as a literal beneath it.
@@ -13,7 +13,7 @@ mis-sourced. ``LocalFileSystemProvider`` fans one directory out per namespace
 (``self._root / namespace``), and the namespaces it is handed in production
 are *registered secure-object namespaces*: the mirror push loop passes
 ``SecureObjectRawRow.namespace`` straight to
-:meth:`~adapters.outbound.storage.StorageProvider.put`, and the mirror
+:meth:`~adapters.outbound.storage.protocol.StorageProvider.put`, and the mirror
 preflight refuses any namespace absent from the registry. Those values are
 dotted and long (the longest shipped is 72 characters). The prior constant
 instead spelled a bucket-event object type into the arithmetic — a disjoint
@@ -22,7 +22,7 @@ so understated the worst case by 54 characters, which could let the preflight
 margin accept a storage root from which a real outbound write then exceeds
 ``MAX_PATH``.
 
-Deriving from :data:`~adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+Deriving from :data:`~adapters.persistence.storage.namespace_registry.STORAGE_NAMESPACE_REGISTRY`
 makes the ceiling structural over the whole shipped domain: a newly registered
 namespace longer than today's longest raises the budget automatically instead
 of silently re-opening the gap.
@@ -57,7 +57,7 @@ def windows_worst_case_object_path_suffix_length() -> int:
     Measured from the leading separator through the sidecar extension, using
     the real grammar constants: the bucket/blob directory names, a
     36-character bucket id, the longest namespace registered in
-    :data:`~adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`, the
+    :data:`~adapters.persistence.storage.namespace_registry.STORAGE_NAMESPACE_REGISTRY`, the
     HMAC prefix width, and the operator-label cap.
 
     The ``.meta.json`` sidecar is measured rather than the ``.bin`` payload

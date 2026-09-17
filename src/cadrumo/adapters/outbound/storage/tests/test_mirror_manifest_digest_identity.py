@@ -3,7 +3,7 @@
 ``object_key_hmac``, ``ciphertext_hash``, and the storage revision ids are all
 produced by ``core.hashing.sha256_hex`` -- the first via
 :func:`remote_mirror_object_key_hmac`, the rest by the secure-object row codec.
-Each is therefore a :data:`~core.identity.ContentDigest`, but the manifest
+Each is therefore a :data:`~core.identity.digest.ContentDigest`, but the manifest
 records constrained them by LENGTH only, which admits ``"z" * 64`` and
 ``"A" * 64``. A tampered or torn remote manifest carrying such a value passed
 construction and was compared against real digests, where it could only ever
