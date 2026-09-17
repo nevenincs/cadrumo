@@ -18,4 +18,3 @@ Subpackages
    cadrumo.core
    cadrumo.domain
    cadrumo.entrypoints
-   cadrumo.llm

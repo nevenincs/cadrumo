@@ -28,6 +28,7 @@ Submodules
    cadrumo.domain.modelos.filing_text
    cadrumo.domain.modelos.ledger_filing_snapshot
    cadrumo.domain.modelos.m232_row_materialisation
+   cadrumo.domain.modelos.modelo_fact_context
    cadrumo.domain.modelos.participation_index
    cadrumo.domain.modelos.protocols
    cadrumo.domain.modelos.repository

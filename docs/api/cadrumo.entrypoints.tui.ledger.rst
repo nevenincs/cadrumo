@@ -19,6 +19,7 @@ Submodules
    cadrumo.entrypoints.tui.ledger.entries
    cadrumo.entrypoints.tui.ledger.evidence
    cadrumo.entrypoints.tui.ledger.import_flow
+   cadrumo.entrypoints.tui.ledger.invoice_entry
    cadrumo.entrypoints.tui.ledger.models
    cadrumo.entrypoints.tui.ledger.overview
    cadrumo.entrypoints.tui.ledger.reconciliation

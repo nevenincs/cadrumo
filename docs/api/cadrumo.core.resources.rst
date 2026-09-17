@@ -7,20 +7,10 @@ cadrumo.core.resources package
    :ignore-module-all:
 
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   cadrumo.core.resources._repos
-
 Submodules
 ----------
 
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.core.resources._keys
    cadrumo.core.resources.bundled_data
-   cadrumo.core.resources.registry

@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.overview._calendar_evidence_sources
    cadrumo.application.overview.agenda
    cadrumo.application.overview.backlog
    cadrumo.application.overview.calendar

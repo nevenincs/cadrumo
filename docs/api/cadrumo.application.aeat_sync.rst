@@ -13,5 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.aeat_sync._workspace_projection
    cadrumo.application.aeat_sync.workspace
    cadrumo.application.aeat_sync.workspace_reader

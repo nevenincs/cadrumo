@@ -44,6 +44,7 @@ Submodules
    cadrumo.application.user_profile.keys_validation
    cadrumo.application.user_profile.language_resolver
    cadrumo.application.user_profile.lifecycle
+   cadrumo.application.user_profile.login_handover
    cadrumo.application.user_profile.login_interaction
    cadrumo.application.user_profile.login_session
    cadrumo.application.user_profile.login_session_port
@@ -52,19 +53,20 @@ Submodules
    cadrumo.application.user_profile.passphrase_rotation
    cadrumo.application.user_profile.preflight
    cadrumo.application.user_profile.presentation
+   cadrumo.application.user_profile.profile_key
+   cadrumo.application.user_profile.profile_keys
    cadrumo.application.user_profile.profile_pointer
    cadrumo.application.user_profile.profile_pointer_ports
+   cadrumo.application.user_profile.profile_read_ports
    cadrumo.application.user_profile.profile_record_repository
    cadrumo.application.user_profile.profile_repository
    cadrumo.application.user_profile.profile_summary
    cadrumo.application.user_profile.projections
    cadrumo.application.user_profile.prospective_password
-   cadrumo.application.user_profile.recovery_contracts
    cadrumo.application.user_profile.recovery_custody
    cadrumo.application.user_profile.registration
    cadrumo.application.user_profile.repository
    cadrumo.application.user_profile.section_rows
-   cadrumo.application.user_profile.status_projection
+   cadrumo.application.user_profile.session_admission
    cadrumo.application.user_profile.usage_ratio_resolution
    cadrumo.application.user_profile.validation
-   cadrumo.application.user_profile.workbench_bootstrap

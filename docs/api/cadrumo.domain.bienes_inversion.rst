@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.domain.bienes_inversion.register
    cadrumo.domain.bienes_inversion.regularizacion_parameters
+   cadrumo.domain.bienes_inversion.vocabulary

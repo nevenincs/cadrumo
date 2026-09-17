@@ -14,7 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.operator_surface.action_resolution
-   cadrumo.application.operator_surface.calculation_workflows
+   cadrumo.application.operator_surface.command_ports
    cadrumo.application.operator_surface.contract
    cadrumo.application.operator_surface.errors
    cadrumo.application.operator_surface.help

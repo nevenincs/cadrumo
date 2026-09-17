@@ -16,7 +16,6 @@ Subpackages
    cadrumo.entrypoints.tui.aeat_sync
    cadrumo.entrypoints.tui.components
    cadrumo.entrypoints.tui.declarations
-   cadrumo.entrypoints.tui.flows
    cadrumo.entrypoints.tui.ledger
    cadrumo.entrypoints.tui.modelo
    cadrumo.entrypoints.tui.operations
@@ -32,9 +31,9 @@ Submodules
    cadrumo.entrypoints.tui.__main__
    cadrumo.entrypoints.tui.account
    cadrumo.entrypoints.tui.app
-   cadrumo.entrypoints.tui.bootstrap
    cadrumo.entrypoints.tui.home
    cadrumo.entrypoints.tui.installed_session
    cadrumo.entrypoints.tui.launcher
+   cadrumo.entrypoints.tui.ledger_doors
    cadrumo.entrypoints.tui.navigation
    cadrumo.entrypoints.tui.search

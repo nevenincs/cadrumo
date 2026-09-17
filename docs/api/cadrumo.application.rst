@@ -36,7 +36,6 @@ Subpackages
    cadrumo.application.operator_surface
    cadrumo.application.overview
    cadrumo.application.prorrata_register
-   cadrumo.application.registry
    cadrumo.application.review
    cadrumo.application.search
    cadrumo.application.storage
@@ -52,28 +51,39 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.bucket_deletion_contracts
-   cadrumo.application.config_reset_repository
-   cadrumo.application.foreign_asset_thresholds
-   cadrumo.application._provisioning_contracts
-   cadrumo.application._provisioning_runtime
-   cadrumo.application.state_projection_auth
    cadrumo.application._state_projection_readiness
    cadrumo.application.auth_credentials
+   cadrumo.application.bucket_deletion_contracts
    cadrumo.application.bucket_event_repository
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset
    cadrumo.application.config_reset_models
+   cadrumo.application.config_reset_repository
    cadrumo.application.diagnostic_models
    cadrumo.application.diagnostics
+   cadrumo.application.diagnostics_ports
    cadrumo.application.diagnostics_run_health
+   cadrumo.application.diagnostics_run_health_ports
    cadrumo.application.diagnostics_telemetry
    cadrumo.application.errors
+   cadrumo.application.exchange_rate_provider
+   cadrumo.application.foreign_asset_thresholds
    cadrumo.application.journal_repository
+   cadrumo.application.local_reader
+   cadrumo.application.local_reader_operation
+   cadrumo.application.persistence_errors
    cadrumo.application.preflight
    cadrumo.application.profile_deletion_hold_contract
    cadrumo.application.profile_preconditions
    cadrumo.application.provisioning
+   cadrumo.application.provisioning_browser
+   cadrumo.application.provisioning_contracts
+   cadrumo.application.provisioning_fitness
+   cadrumo.application.provisioning_host
+   cadrumo.application.provisioning_runtime
    cadrumo.application.state_projection
+   cadrumo.application.state_projection_auth
+   cadrumo.application.state_projection_ports
    cadrumo.application.storage_write_policy
+   cadrumo.application.workbench_capture_memory
    cadrumo.application.workbench_generation

@@ -13,8 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.entrypoints.tui.profile.app
-   cadrumo.entrypoints.tui.profile.journey_status
+   cadrumo.entrypoints.tui.profile.local_reader
    cadrumo.entrypoints.tui.profile.overview
-   cadrumo.entrypoints.tui.profile.status
-   cadrumo.entrypoints.tui.profile.sync_review

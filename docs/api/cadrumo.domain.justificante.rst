@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.justificante._protocols
    cadrumo.domain.justificante.errors
+   cadrumo.domain.justificante.protocols
    cadrumo.domain.justificante.schema

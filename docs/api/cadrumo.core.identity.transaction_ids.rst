@@ -1,5 +1,5 @@
 cadrumo.core.identity.transaction_ids module
-=============================================
+============================================
 
 .. automodule:: cadrumo.core.identity.transaction_ids
    :members:

@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.redaction.rules
+   cadrumo.core.redaction.tax_identity_admission

@@ -15,30 +15,23 @@ Submodules
 
    cadrumo.application.modelo._amendment_kind_resolution
    cadrumo.application.modelo._art109_activity_income
-   cadrumo.application.modelo._art20_advisory
-   cadrumo.application.modelo._art52_advisory
    cadrumo.application.modelo._attribution_received_advisory
    cadrumo.application.modelo._autonomic_deduccion_advisory
    cadrumo.application.modelo._bienes_inversion_advisory
    cadrumo.application.modelo._calculation_aggregation_context
-   cadrumo.application.modelo.calculation_diagnostics
    cadrumo.application.modelo._calculation_helpers
    cadrumo.application.modelo._calculation_modelo_adjustments
    cadrumo.application.modelo._calculation_preparation
    cadrumo.application.modelo._calculation_source_staging
    cadrumo.application.modelo._decimal_parsing
-   cadrumo.application.modelo._dt12_advisory
-   cadrumo.application.modelo._dt12_antiquity_advisory
    cadrumo.application.modelo._edit_execution
-   cadrumo.application.modelo.export_amendment_evidence
    cadrumo.application.modelo._ledger_anchor_capture
    cadrumo.application.modelo._ledger_drift_gate
    cadrumo.application.modelo._ledger_evidence_gate
-   cadrumo.application.modelo.m145_communication
    cadrumo.application.modelo._m210_agrupacion_renta
+   cadrumo.application.modelo._m210_convenio_facts
    cadrumo.application.modelo._m210_convenio_lob_advisory
    cadrumo.application.modelo._m210_rate
-   cadrumo.application.modelo.m303_filing_evidence
    cadrumo.application.modelo._m303_m349_reconcile
    cadrumo.application.modelo._m349_ledger_guard
    cadrumo.application.modelo._m720_redeclaration_gate
@@ -47,33 +40,29 @@ Submodules
    cadrumo.application.modelo._official_box_advisory
    cadrumo.application.modelo._operator_override_advisory
    cadrumo.application.modelo._ports
-   cadrumo.application.modelo.prior_domiciliation
-   cadrumo.application.modelo.prior_payment_advisory
-   cadrumo.application.modelo._profile_export_binding
-   cadrumo.application.modelo.prorrata_regularizacion_advisory
-   cadrumo.application.modelo.pulled_filing_reconcile
    cadrumo.application.modelo._rate_box_advisory
-   cadrumo.application.modelo.reconcile_casilla
    cadrumo.application.modelo._reconcile_population
    cadrumo.application.modelo._registry_helpers
    cadrumo.application.modelo._registry_resources
    cadrumo.application.modelo._required_binding_gate
-   cadrumo.application.modelo._review_package_keypair
-   cadrumo.application.modelo._review_package_review_only_workspace
-   cadrumo.application.modelo._revision_replay_inputs
    cadrumo.application.modelo._row_source_identity_replay
    cadrumo.application.modelo._settlement_grade_advisory
    cadrumo.application.modelo._transaction_catalogue_cache
-   cadrumo.application.modelo._verification_cross_period
-   cadrumo.application.modelo._verification_predicates
+   cadrumo.application.modelo._work_review_assembly
+   cadrumo.application.modelo._workspace_model_validation
    cadrumo.application.modelo.action_errors
+   cadrumo.application.modelo.amendment_action_ports
    cadrumo.application.modelo.amendment_actions
+   cadrumo.application.modelo.art20_advisory
+   cadrumo.application.modelo.art52_advisory
    cadrumo.application.modelo.binding_readiness
    cadrumo.application.modelo.binding_resolution
    cadrumo.application.modelo.borrador_binding
    cadrumo.application.modelo.calculate_input
    cadrumo.application.modelo.calculation
+   cadrumo.application.modelo.calculation_action_ports
    cadrumo.application.modelo.calculation_actions
+   cadrumo.application.modelo.calculation_diagnostics
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_resolution
    cadrumo.application.modelo.calculation_revision_gate
@@ -82,64 +71,96 @@ Submodules
    cadrumo.application.modelo.data_inventory
    cadrumo.application.modelo.declarations_calendar
    cadrumo.application.modelo.declarations_workspace
+   cadrumo.application.modelo.dt12_advisory
+   cadrumo.application.modelo.dt12_antiquity_advisory
    cadrumo.application.modelo.edit_contract
    cadrumo.application.modelo.edit_models
+   cadrumo.application.modelo.edit_receipt_ports
    cadrumo.application.modelo.edit_services
-   cadrumo.application.modelo.edit_session
    cadrumo.application.modelo.export
+   cadrumo.application.modelo.export_amendment_evidence
+   cadrumo.application.modelo.export_ports
    cadrumo.application.modelo.external_import_actions
    cadrumo.application.modelo.filed_revision_observation
+   cadrumo.application.modelo.filing_action_ports
    cadrumo.application.modelo.filing_actions
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.history
+   cadrumo.application.modelo.history_ports
    cadrumo.application.modelo.iva_wallet_gate
    cadrumo.application.modelo.iva_wallet_seed
+   cadrumo.application.modelo.iva_wallet_seed_ports
    cadrumo.application.modelo.justificante_repository
    cadrumo.application.modelo.local_observation_actions
    cadrumo.application.modelo.local_observation_spreadsheet
    cadrumo.application.modelo.m036_lifecycle
+   cadrumo.application.modelo.m036_lifecycle_ports
+   cadrumo.application.modelo.m145_communication
    cadrumo.application.modelo.m145_communication_period
    cadrumo.application.modelo.m145_communication_records
+   cadrumo.application.modelo.m145_communication_records_ports
+   cadrumo.application.modelo.m303_filing_evidence
    cadrumo.application.modelo.m303_regimen_simplificado_scope
    cadrumo.application.modelo.maritime_preview
+   cadrumo.application.modelo.minimo_descendientes_advisory
    cadrumo.application.modelo.operation_definitions
+   cadrumo.application.modelo.operator_inputs
    cadrumo.application.modelo.participation_index_rebuild
+   cadrumo.application.modelo.participation_index_rebuild_ports
    cadrumo.application.modelo.preconditions
+   cadrumo.application.modelo.prior_domiciliation
+   cadrumo.application.modelo.prior_payment_advisory
    cadrumo.application.modelo.profile_binding
+   cadrumo.application.modelo.profile_export_binding
    cadrumo.application.modelo.profile_readiness_gate
    cadrumo.application.modelo.projection
+   cadrumo.application.modelo.prorrata_regularizacion_advisory
+   cadrumo.application.modelo.pulled_filing_reconcile
    cadrumo.application.modelo.quickfile
+   cadrumo.application.modelo.recipient_encryption
+   cadrumo.application.modelo.reconcile_casilla
    cadrumo.application.modelo.reconciliation
    cadrumo.application.modelo.reconciliation_parsing
    cadrumo.application.modelo.reconciliation_records
    cadrumo.application.modelo.registry_discovery
    cadrumo.application.modelo.result_disposition_resolution
    cadrumo.application.modelo.result_summary
+   cadrumo.application.modelo.result_summary_payload
    cadrumo.application.modelo.review_package
    cadrumo.application.modelo.review_package_collab_audit
    cadrumo.application.modelo.review_package_counter_sign
    cadrumo.application.modelo.review_package_feedback
    cadrumo.application.modelo.review_package_recipient_encryption
    cadrumo.application.modelo.review_package_recipient_registry
+   cadrumo.application.modelo.review_package_recipient_registry_ports
    cadrumo.application.modelo.review_package_signing
+   cadrumo.application.modelo.review_package_signing_ports
    cadrumo.application.modelo.review_package_text
    cadrumo.application.modelo.revision_persistence
+   cadrumo.application.modelo.revision_replay_inputs
    cadrumo.application.modelo.selectors
    cadrumo.application.modelo.semantic_role_resolution
    cadrumo.application.modelo.settlement_casilla
    cadrumo.application.modelo.taxation_comparison
+   cadrumo.application.modelo.taxation_comparison_ports
    cadrumo.application.modelo.verification_actions
+   cadrumo.application.modelo.verification_cross_period
    cadrumo.application.modelo.verification_preconditions
+   cadrumo.application.modelo.verification_predicates
+   cadrumo.application.modelo.verification_repository_ports
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
-   cadrumo.application.modelo.work_selection
    cadrumo.application.modelo.work_create_policy
    cadrumo.application.modelo.work_lifecycle
+   cadrumo.application.modelo.work_lifecycle_ports
    cadrumo.application.modelo.work_plazo
+   cadrumo.application.modelo.work_profile
    cadrumo.application.modelo.work_review
+   cadrumo.application.modelo.work_selection
    cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard
    cadrumo.application.modelo.workflow_gate
+   cadrumo.application.modelo.workflow_gate_ports
    cadrumo.application.modelo.workspace
    cadrumo.application.modelo.workspace_manifest
    cadrumo.application.modelo.workspace_models

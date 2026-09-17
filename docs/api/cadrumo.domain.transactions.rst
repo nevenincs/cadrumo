@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.domain.transactions.cash_accounting_validation
    cadrumo.domain.transactions.classification_rule
    cadrumo.domain.transactions.dates
    cadrumo.domain.transactions.enums
@@ -28,7 +29,7 @@ Submodules
    cadrumo.domain.transactions.protocols
    cadrumo.domain.transactions.raw_transaction
    cadrumo.domain.transactions.repository
-   cadrumo.domain.transactions.retencion_parameters
+   cadrumo.domain.transactions.retencion_facts
    cadrumo.domain.transactions.service
    cadrumo.domain.transactions.tipo_actividad_partitions
    cadrumo.domain.transactions.volumen_ingresos

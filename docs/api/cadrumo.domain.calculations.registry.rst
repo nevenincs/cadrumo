@@ -7,6 +7,14 @@ cadrumo.domain.calculations.registry package
    :ignore-module-all:
 
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.domain.calculations.registry.facts
+
 Submodules
 ----------
 
@@ -14,118 +22,91 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.calculations.registry._applicability_labels
-   cadrumo.domain.calculations.registry._citation_blocklist
-   cadrumo.domain.calculations.registry._compiled_cache
-   cadrumo.domain.calculations.registry._cross_revision_divergence
    cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
    cadrumo.domain.calculations.registry._invoice_row_materialization
    cadrumo.domain.calculations.registry._ledger_binding_resolution
-   cadrumo.domain.calculations.registry._loader_internals
-   cadrumo.domain.calculations.registry._m303_orden_constants
-   cadrumo.domain.calculations.registry._m303_orden_keys
-   cadrumo.domain.calculations.registry._m303_orden_legal
-   cadrumo.domain.calculations.registry._m303_orden_projection_compiler
-   cadrumo.domain.calculations.registry._m303_orden_raw_models
-   cadrumo.domain.calculations.registry._m303_orden_source
-   cadrumo.domain.calculations.registry._m347_threshold
-   cadrumo.domain.calculations.registry._relation_aggregation
    cadrumo.domain.calculations.registry._schema_export_exemption
-   cadrumo.domain.calculations.registry._schema_governance
-   cadrumo.domain.calculations.registry._snapshot_internals
-   cadrumo.domain.calculations.registry._source_evidence_fingerprint
-   cadrumo.domain.calculations.registry._source_file_text
-   cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._toml_helpers
-   cadrumo.domain.calculations.registry._validate
-   cadrumo.domain.calculations.registry._validate_applicability_section
-   cadrumo.domain.calculations.registry._validate_application_links
-   cadrumo.domain.calculations.registry._validate_authority_grade
-   cadrumo.domain.calculations.registry._validate_completeness
-   cadrumo.domain.calculations.registry._validate_constructs
-   cadrumo.domain.calculations.registry._validate_cross_revision
-   cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
-   cadrumo.domain.calculations.registry._validate_cross_revision_evolution
-   cadrumo.domain.calculations.registry._validate_dependency_sections
-   cadrumo.domain.calculations.registry._validate_evidence
-   cadrumo.domain.calculations.registry._validate_export_exemption
-   cadrumo.domain.calculations.registry._validate_export_field_widths
-   cadrumo.domain.calculations.registry._validate_export_layout_coverage
-   cadrumo.domain.calculations.registry._validate_exports
-   cadrumo.domain.calculations.registry._validate_extraction_profiles
-   cadrumo.domain.calculations.registry._validate_formulas
-   cadrumo.domain.calculations.registry._validate_helpers
-   cadrumo.domain.calculations.registry._validate_label_artifacts
-   cadrumo.domain.calculations.registry._validate_layout_authority_content
-   cadrumo.domain.calculations.registry._validate_official_source_guidance_content
-   cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
-   cadrumo.domain.calculations.registry._validate_parameter_temporal
-   cadrumo.domain.calculations.registry._validate_previous_filing_sources
-   cadrumo.domain.calculations.registry._validate_producer_inventory
-   cadrumo.domain.calculations.registry._validate_projection_endpoints
-   cadrumo.domain.calculations.registry._validate_record_design_epochs
-   cadrumo.domain.calculations.registry._validate_record_sections
-   cadrumo.domain.calculations.registry._validate_reference_checker
-   cadrumo.domain.calculations.registry._validate_reference_sections
-   cadrumo.domain.calculations.registry._validate_relation_periods
-   cadrumo.domain.calculations.registry._validate_relation_sources
-   cadrumo.domain.calculations.registry._validate_revision_closure
-   cadrumo.domain.calculations.registry._validate_revision_context
-   cadrumo.domain.calculations.registry._validate_revision_id_window_agreement
-   cadrumo.domain.calculations.registry._validate_revision_rules
-   cadrumo.domain.calculations.registry._validate_revision_sections
-   cadrumo.domain.calculations.registry._validate_semantic_role_axes
-   cadrumo.domain.calculations.registry._validate_semantic_role_required
-   cadrumo.domain.calculations.registry._validate_semantic_role_typos
-   cadrumo.domain.calculations.registry._validate_semantic_roles
-   cadrumo.domain.calculations.registry._validate_source_casilla_ids
-   cadrumo.domain.calculations.registry._validate_surfaces
-   cadrumo.domain.calculations.registry._validate_valid_from_ejercicio_convention
-   cadrumo.domain.calculations.registry._validate_verification_predicates
-   cadrumo.domain.calculations.registry._validation_memoization
-   cadrumo.domain.calculations.registry._verdict_cache
-   cadrumo.domain.calculations.registry._withholding_rows
+   cadrumo.domain.calculations.registry.activity_kind_catalogue
+   cadrumo.domain.calculations.registry.amendment_regime_policy
    cadrumo.domain.calculations.registry.applicability
    cadrumo.domain.calculations.registry.applicability_modelo202
    cadrumo.domain.calculations.registry.applicability_payer_facts
    cadrumo.domain.calculations.registry.applicability_routes
    cadrumo.domain.calculations.registry.authority
+   cadrumo.domain.calculations.registry.authority_artifact
+   cadrumo.domain.calculations.registry.authority_cache
+   cadrumo.domain.calculations.registry.authority_store
+   cadrumo.domain.calculations.registry.bienes_inversion_catalogue
+   cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings
    cadrumo.domain.calculations.registry.binding_aggregation
+   cadrumo.domain.calculations.registry.binding_provider
+   cadrumo.domain.calculations.registry.binding_provider_registration
    cadrumo.domain.calculations.registry.binding_selector_utils
    cadrumo.domain.calculations.registry.binding_targets
+   cadrumo.domain.calculations.registry.binding_temporal
+   cadrumo.domain.calculations.registry.binding_terminal_audit
+   cadrumo.domain.calculations.registry.binding_terminal_origin
+   cadrumo.domain.calculations.registry.binding_value_contract
    cadrumo.domain.calculations.registry.bindings
    cadrumo.domain.calculations.registry.bindings_previous_filing
+   cadrumo.domain.calculations.registry.calendar_ccaa_catalogue
+   cadrumo.domain.calculations.registry.casilla_lineage
+   cadrumo.domain.calculations.registry.casilla_lineage_totality
    cadrumo.domain.calculations.registry.casilla_membership
+   cadrumo.domain.calculations.registry.casilla_structural_succession
+   cadrumo.domain.calculations.registry.ccaa_catalogue
    cadrumo.domain.calculations.registry.censo_modelos
    cadrumo.domain.calculations.registry.checker_oracle_flow
+   cadrumo.domain.calculations.registry.citation_blocklist
+   cadrumo.domain.calculations.registry.concepto_ingreso
    cadrumo.domain.calculations.registry.condition_mode
    cadrumo.domain.calculations.registry.convenio
-   cadrumo.domain.calculations.registry.corpus_catalogue
    cadrumo.domain.calculations.registry.counterpart_bindings
    cadrumo.domain.calculations.registry.deadline_coordinate
+   cadrumo.domain.calculations.registry.descendant_relacion_catalogue
    cadrumo.domain.calculations.registry.design_constant_bindings
    cadrumo.domain.calculations.registry.detail_record_bindings
    cadrumo.domain.calculations.registry.donativo_bindings
+   cadrumo.domain.calculations.registry.entity_type
    cadrumo.domain.calculations.registry.errors
+   cadrumo.domain.calculations.registry.eu_member_state_catalogue
    cadrumo.domain.calculations.registry.export
+   cadrumo.domain.calculations.registry.export_field_casilla
    cadrumo.domain.calculations.registry.export_parse
    cadrumo.domain.calculations.registry.export_semantics
    cadrumo.domain.calculations.registry.export_value_policy
    cadrumo.domain.calculations.registry.fixed_width_codec
+   cadrumo.domain.calculations.registry.foreign_asset_obligation_catalogue
    cadrumo.domain.calculations.registry.formula_initial_values
    cadrumo.domain.calculations.registry.formula_runtime
    cadrumo.domain.calculations.registry.formula_runtime_m100
    cadrumo.domain.calculations.registry.formula_runtime_ops
    cadrumo.domain.calculations.registry.formula_text_inputs
    cadrumo.domain.calculations.registry.gasto193_bindings
+   cadrumo.domain.calculations.registry.governed_fact_scope
    cadrumo.domain.calculations.registry.handoffs
-   cadrumo.domain.calculations.registry.identity
+   cadrumo.domain.calculations.registry.identifier_evolutions
    cadrumo.domain.calculations.registry.ids
+   cadrumo.domain.calculations.registry.inventory_anexo_d_applicability
    cadrumo.domain.calculations.registry.inventory_bindings
    cadrumo.domain.calculations.registry.invoice_bindings
+   cadrumo.domain.calculations.registry.invoice_legal_classification
    cadrumo.domain.calculations.registry.irnr_ledger_bindings
-   cadrumo.domain.calculations.registry.iva_wallet_relation_targets
+   cadrumo.domain.calculations.registry.irnr_tipo_renta
+   cadrumo.domain.calculations.registry.irpf_income_categories
+   cadrumo.domain.calculations.registry.irpf_regimes
+   cadrumo.domain.calculations.registry.iva_category_catalogue
+   cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings
+   cadrumo.domain.calculations.registry.iva_deduction_catalogue
+   cadrumo.domain.calculations.registry.iva_flow_catalogue
+   cadrumo.domain.calculations.registry.iva_rate_kind_catalogue
+   cadrumo.domain.calculations.registry.iva_rate_role_catalogue
+   cadrumo.domain.calculations.registry.iva_schema_vocabulary
+   cadrumo.domain.calculations.registry.iva_wallet_carry_targets
+   cadrumo.domain.calculations.registry.keyed_families
    cadrumo.domain.calculations.registry.ledger_binding_selector_support
    cadrumo.domain.calculations.registry.ledger_impatriado_bindings
    cadrumo.domain.calculations.registry.ledger_iva_bindings
@@ -134,44 +115,59 @@ Submodules
    cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings
    cadrumo.domain.calculations.registry.ledger_renta_income_bindings
    cadrumo.domain.calculations.registry.legal
-   cadrumo.domain.calculations.registry.loader
-   cadrumo.domain.calculations.registry.loader_cache
-   cadrumo.domain.calculations.registry.loader_fingerprints
+   cadrumo.domain.calculations.registry.lineage_attestation
+   cadrumo.domain.calculations.registry.lorca_reduction
    cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection
    cadrumo.domain.calculations.registry.m303_exonerado_390_projection
-   cadrumo.domain.calculations.registry.m303_orden_census_artefact
-   cadrumo.domain.calculations.registry.m303_orden_manifest
+   cadrumo.domain.calculations.registry.m303_orden_constants
    cadrumo.domain.calculations.registry.m303_orden_projection_models
    cadrumo.domain.calculations.registry.m303_orden_resolution
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
+   cadrumo.domain.calculations.registry.m347_threshold
    cadrumo.domain.calculations.registry.manual_input_selector
+   cadrumo.domain.calculations.registry.modelo_inception
    cadrumo.domain.calculations.registry.modelo_localization
+   cadrumo.domain.calculations.registry.modelo_obligation_scope
+   cadrumo.domain.calculations.registry.modelo_pending_orden
+   cadrumo.domain.calculations.registry.modelo_rendering
+   cadrumo.domain.calculations.registry.nif_iva_catalogue
    cadrumo.domain.calculations.registry.observation_fold
+   cadrumo.domain.calculations.registry.orden_applicability
    cadrumo.domain.calculations.registry.period_offset_math
    cadrumo.domain.calculations.registry.period_selector_match
+   cadrumo.domain.calculations.registry.period_selector_overlap
+   cadrumo.domain.calculations.registry.profile_bindings
    cadrumo.domain.calculations.registry.profile_grounding
+   cadrumo.domain.calculations.registry.prorrata_exclusions
+   cadrumo.domain.calculations.registry.prorrata_regime
+   cadrumo.domain.calculations.registry.prorrata_register_catalogue
+   cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings
+   cadrumo.domain.calculations.registry.prorrata_vocabulary
+   cadrumo.domain.calculations.registry.provenance
    cadrumo.domain.calculations.registry.quantity_screen_enrolment
    cadrumo.domain.calculations.registry.queries
    cadrumo.domain.calculations.registry.query_reports
    cadrumo.domain.calculations.registry.rate_box_partition
-   cadrumo.domain.calculations.registry.record_design
    cadrumo.domain.calculations.registry.record_design_coverage
-   cadrumo.domain.calculations.registry.record_design_layout_markers
-   cadrumo.domain.calculations.registry.record_design_pdf_orchestration
-   cadrumo.domain.calculations.registry.record_design_pdf_repairs
-   cadrumo.domain.calculations.registry.record_design_pdf_rows
-   cadrumo.domain.calculations.registry.record_design_pdf_state
-   cadrumo.domain.calculations.registry.record_design_pdf_visual
-   cadrumo.domain.calculations.registry.record_design_sources
-   cadrumo.domain.calculations.registry.record_design_workbook
-   cadrumo.domain.calculations.registry.record_design_workbook_headers
-   cadrumo.domain.calculations.registry.record_spec
+   cadrumo.domain.calculations.registry.reference_checker
+   cadrumo.domain.calculations.registry.reference_checks
+   cadrumo.domain.calculations.registry.reference_sections
+   cadrumo.domain.calculations.registry.refund_eligibility
    cadrumo.domain.calculations.registry.relation_dependency
+   cadrumo.domain.calculations.registry.relation_prefill_bindings
    cadrumo.domain.calculations.registry.relations
    cadrumo.domain.calculations.registry.remote_state_guard
+   cadrumo.domain.calculations.registry.renta_codes_catalogue
+   cadrumo.domain.calculations.registry.renta_expense_policy
+   cadrumo.domain.calculations.registry.rental_reduction
+   cadrumo.domain.calculations.registry.restated_families
    cadrumo.domain.calculations.registry.retenciones_bindings
+   cadrumo.domain.calculations.registry.revision_context
+   cadrumo.domain.calculations.registry.revision_contracts
+   cadrumo.domain.calculations.registry.revision_order
+   cadrumo.domain.calculations.registry.runtime_catalogues
    cadrumo.domain.calculations.registry.runtime_graph
    cadrumo.domain.calculations.registry.schedules
    cadrumo.domain.calculations.registry.schema
@@ -180,6 +176,7 @@ Submodules
    cadrumo.domain.calculations.registry.schema_exports
    cadrumo.domain.calculations.registry.schema_extraction
    cadrumo.domain.calculations.registry.schema_formula
+   cadrumo.domain.calculations.registry.schema_governance
    cadrumo.domain.calculations.registry.schema_input_kind
    cadrumo.domain.calculations.registry.schema_references
    cadrumo.domain.calculations.registry.schema_revision_members
@@ -187,13 +184,20 @@ Submodules
    cadrumo.domain.calculations.registry.schema_scalars
    cadrumo.domain.calculations.registry.schema_surfaces
    cadrumo.domain.calculations.registry.schema_verification
-   cadrumo.domain.calculations.registry.snapshot_coordinate
+   cadrumo.domain.calculations.registry.setup_profile_bindings
+   cadrumo.domain.calculations.registry.situacion_familiar_catalogue
+   cadrumo.domain.calculations.registry.situacion_familiar_m145_catalogue
+   cadrumo.domain.calculations.registry.snapshot
+   cadrumo.domain.calculations.registry.source_byte_availability
    cadrumo.domain.calculations.registry.static_inspection
    cadrumo.domain.calculations.registry.support_matrix
+   cadrumo.domain.calculations.registry.tax_id_format
+   cadrumo.domain.calculations.registry.tax_id_runtime
+   cadrumo.domain.calculations.registry.tax_identity_admission
    cadrumo.domain.calculations.registry.temporal
+   cadrumo.domain.calculations.registry.third_party_declaration_roles
+   cadrumo.domain.calculations.registry.travel_agency_mediation
    cadrumo.domain.calculations.registry.validate_cross_domain_snapshot
-   cadrumo.domain.calculations.registry.validate_references
-   cadrumo.domain.calculations.registry.validate_registry_scope
    cadrumo.domain.calculations.registry.validate_revision_identity
    cadrumo.domain.calculations.registry.verification_tolerance
    cadrumo.domain.calculations.registry.withholding296_bindings

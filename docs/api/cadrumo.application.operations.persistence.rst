@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.operations.persistence._journal_snapshot_validation
    cadrumo.application.operations.persistence.events
    cadrumo.application.operations.persistence.financial_operand_custody
    cadrumo.application.operations.persistence.idempotency

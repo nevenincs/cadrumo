@@ -23,7 +23,15 @@ Submodules
 
    cadrumo.application.operations._execution_context
    cadrumo.application.operations._model_contract
+   cadrumo.application.operations._projection_authority
+   cadrumo.application.operations._projection_control
+   cadrumo.application.operations._projection_read
+   cadrumo.application.operations._registry_contracts
+   cadrumo.application.operations._supervisor_execution
+   cadrumo.application.operations._supervisor_host
    cadrumo.application.operations._supervisor_lease
+   cadrumo.application.operations._supervisor_reconciliation
+   cadrumo.application.operations._supervisor_settlement
    cadrumo.application.operations.capabilities
    cadrumo.application.operations.composition
    cadrumo.application.operations.errors
@@ -33,12 +41,15 @@ Submodules
    cadrumo.application.operations.financial_operand_custody
    cadrumo.application.operations.financial_operand_submission
    cadrumo.application.operations.frontend_contracts
+   cadrumo.application.operations.frontend_projection
+   cadrumo.application.operations.frontend_requests
    cadrumo.application.operations.interactions
    cadrumo.application.operations.models
    cadrumo.application.operations.observation
    cadrumo.application.operations.owner
    cadrumo.application.operations.projection_services
    cadrumo.application.operations.registry
+   cadrumo.application.operations.registry_schema_validation
    cadrumo.application.operations.secret_submission
    cadrumo.application.operations.supervisor
    cadrumo.application.operations.supervisor_context

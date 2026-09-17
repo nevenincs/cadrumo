@@ -27,7 +27,6 @@ Subpackages
    cadrumo.core.resources
    cadrumo.core.telemetry
    cadrumo.core.time
-   cadrumo.core.topics
 
 Submodules
 ----------
@@ -38,7 +37,6 @@ Submodules
    cadrumo.core._config_runtime
    cadrumo.core._config_validation
    cadrumo.core.action_argument_resolution
-   cadrumo.core.address_components
    cadrumo.core.aeat_csv
    cadrumo.core.aggregation
    cadrumo.core.amendment_kind_regime
@@ -49,7 +47,6 @@ Submodules
    cadrumo.core.authority_grade
    cadrumo.core.base64_codec
    cadrumo.core.bucket_pointer
-   cadrumo.core.calculation_route
    cadrumo.core.calendar_shift
    cadrumo.core.capabilities
    cadrumo.core.casilla_id
@@ -58,7 +55,6 @@ Submodules
    cadrumo.core.classifier_input_source
    cadrumo.core.cli_metadata
    cadrumo.core.click_context
-   cadrumo.core.compatibility_lifecycle
    cadrumo.core.concept_lifecycle
    cadrumo.core.concepto_ingreso
    cadrumo.core.config
@@ -87,6 +83,7 @@ Submodules
    cadrumo.core.field_grounding
    cadrumo.core.field_origin
    cadrumo.core.field_role
+   cadrumo.core.file_change_time
    cadrumo.core.file_permissions
    cadrumo.core.filed_history_discovery_signal
    cadrumo.core.filing_producer_key
@@ -95,6 +92,7 @@ Submodules
    cadrumo.core.filing_year
    cadrumo.core.flows
    cadrumo.core.foreign_asset_obligation
+   cadrumo.core.frozen_mapping
    cadrumo.core.fsync
    cadrumo.core.fts_query
    cadrumo.core.google_credential_source
@@ -130,6 +128,7 @@ Submodules
    cadrumo.core.operator_progress
    cadrumo.core.optional_extras
    cadrumo.core.output_rendering
+   cadrumo.core.package_version
    cadrumo.core.paths
    cadrumo.core.payment_election
    cadrumo.core.percentage
@@ -139,6 +138,7 @@ Submodules
    cadrumo.core.precondition_action_invariants
    cadrumo.core.presentation
    cadrumo.core.prior_domiciliation_election
+   cadrumo.core.process_binding
    cadrumo.core.product_identity
    cadrumo.core.profile_discovery
    cadrumo.core.profile_publication
@@ -150,6 +150,7 @@ Submodules
    cadrumo.core.record_design_epoch
    cadrumo.core.refund_election
    cadrumo.core.register_scoping_signal
+   cadrumo.core.registry_token
    cadrumo.core.remote_authority
    cadrumo.core.renta_declaracion_type
    cadrumo.core.requirement

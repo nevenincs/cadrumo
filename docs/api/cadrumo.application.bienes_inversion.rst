@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.bienes_inversion.declare_command
+   cadrumo.application.bienes_inversion.ports
    cadrumo.application.bienes_inversion.service

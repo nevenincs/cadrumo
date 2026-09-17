@@ -1,5 +1,5 @@
 cadrumo.application.aggregation.renta_gasto_ledger module
-==========================================================
+=========================================================
 
 .. automodule:: cadrumo.application.aggregation.renta_gasto_ledger
    :members:

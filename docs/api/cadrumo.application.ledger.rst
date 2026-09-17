@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.ledger.action_ports
    cadrumo.application.ledger.actions_classification
    cadrumo.application.ledger.actions_common
    cadrumo.application.ledger.actions_export
@@ -27,6 +28,7 @@ Submodules
    cadrumo.application.ledger.classification_assembly_rules
    cadrumo.application.ledger.classifier_inputs
    cadrumo.application.ledger.closure_findings
+   cadrumo.application.ledger.column_roles
    cadrumo.application.ledger.confirm_establishment
    cadrumo.application.ledger.confirm_party_identity
    cadrumo.application.ledger.confirmation_gate
@@ -34,6 +36,7 @@ Submodules
    cadrumo.application.ledger.confirmed_field_resolution
    cadrumo.application.ledger.consent_withdrawal
    cadrumo.application.ledger.counterparty_establishment
+   cadrumo.application.ledger.counterparty_establishment_ports
    cadrumo.application.ledger.country_vocabulary_advisory
    cadrumo.application.ledger.deterministic_findings
    cadrumo.application.ledger.document_direction
@@ -44,11 +47,14 @@ Submodules
    cadrumo.application.ledger.evidence_draft
    cadrumo.application.ledger.evidence_errors
    cadrumo.application.ledger.evidence_input
+   cadrumo.application.ledger.evidence_input_ports
+   cadrumo.application.ledger.evidence_ports
    cadrumo.application.ledger.evidence_reference
    cadrumo.application.ledger.evidence_split
    cadrumo.application.ledger.evidence_sweep
+   cadrumo.application.ledger.evidence_sweep_ports
    cadrumo.application.ledger.evidence_textlayer
-   cadrumo.application.ledger.extracted_document_cache
+   cadrumo.application.ledger.evidence_textlayer_ports
    cadrumo.application.ledger.extraction_draft_store
    cadrumo.application.ledger.filer_establishment
    cadrumo.application.ledger.grounded_reading
@@ -56,19 +62,29 @@ Submodules
    cadrumo.application.ledger.history_query
    cadrumo.application.ledger.id_resolution
    cadrumo.application.ledger.identity_roles
+   cadrumo.application.ledger.import_ports
    cadrumo.application.ledger.invoice_confirmation
+   cadrumo.application.ledger.invoice_confirmation_ports
    cadrumo.application.ledger.invoice_draft_extraction
+   cadrumo.application.ledger.invoice_draft_extraction_ports
+   cadrumo.application.ledger.invoice_draft_payloads
    cadrumo.application.ledger.invoice_draft_records
    cadrumo.application.ledger.invoice_extraction_authority
+   cadrumo.application.ledger.invoice_label_reader
    cadrumo.application.ledger.list_query
    cadrumo.application.ledger.llm_classification
+   cadrumo.application.ledger.llm_classification_ports
    cadrumo.application.ledger.llm_diagnostics
+   cadrumo.application.ledger.llm_diagnostics_ports
    cadrumo.application.ledger.llm_review_workflow
    cadrumo.application.ledger.m210_classification
    cadrumo.application.ledger.models
+   cadrumo.application.ledger.notices
+   cadrumo.application.ledger.operator_input_contracts
    cadrumo.application.ledger.participation_read
    cadrumo.application.ledger.party_attribution
    cadrumo.application.ledger.party_colocation
+   cadrumo.application.ledger.persistence_ports
    cadrumo.application.ledger.postal_shape_finding
    cadrumo.application.ledger.preconditions
    cadrumo.application.ledger.preflight
@@ -82,6 +98,7 @@ Submodules
    cadrumo.application.ledger.rule_repository
    cadrumo.application.ledger.source_jurisdiction
    cadrumo.application.ledger.stale_filing_query
+   cadrumo.application.ledger.structured_invoice_ports
    cadrumo.application.ledger.transaction_repository
    cadrumo.application.ledger.usage_ratio_repository
    cadrumo.application.ledger.workspace

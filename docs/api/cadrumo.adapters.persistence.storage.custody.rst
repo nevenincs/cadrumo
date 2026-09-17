@@ -15,15 +15,20 @@ Submodules
 
    cadrumo.adapters.persistence.storage.custody._capsule_data
    cadrumo.adapters.persistence.storage.custody._capsule_filesystem
+   cadrumo.adapters.persistence.storage.custody._filesystem_records
    cadrumo.adapters.persistence.storage.custody._inventory
    cadrumo.adapters.persistence.storage.custody._kdf_attestation
    cadrumo.adapters.persistence.storage.custody._kdf_codec
    cadrumo.adapters.persistence.storage.custody._kdf_operations
    cadrumo.adapters.persistence.storage.custody._kdf_process
+   cadrumo.adapters.persistence.storage.custody._kdf_records
+   cadrumo.adapters.persistence.storage.custody._kdf_refusals
    cadrumo.adapters.persistence.storage.custody._kdf_windows_job
    cadrumo.adapters.persistence.storage.custody._kdf_worker
    cadrumo.adapters.persistence.storage.custody._kdf_worker_identity
+   cadrumo.adapters.persistence.storage.custody._kdf_worker_limits
    cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision
+   cadrumo.adapters.persistence.storage.custody._profile_password_codec
    cadrumo.adapters.persistence.storage.custody._recovery_secret_codec
    cadrumo.adapters.persistence.storage.custody.acceleration_receipt
    cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto
@@ -41,7 +46,6 @@ Submodules
    cadrumo.adapters.persistence.storage.custody.paths
    cadrumo.adapters.persistence.storage.custody.records
    cadrumo.adapters.persistence.storage.custody.recovery
-   cadrumo.adapters.persistence.storage.custody.recovery_artifact
    cadrumo.adapters.persistence.storage.custody.sentinel
    cadrumo.adapters.persistence.storage.custody.sentinel_contract
    cadrumo.adapters.persistence.storage.custody.zeroise

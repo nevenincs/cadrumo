@@ -18,4 +18,5 @@ Submodules
    cadrumo.domain.renta.first_slice_routing_integrity
    cadrumo.domain.renta.ledger_expenses
    cadrumo.domain.renta.maritime_exemption
+   cadrumo.domain.renta.rental_reduction
    cadrumo.domain.renta.retenciones_routing_integrity

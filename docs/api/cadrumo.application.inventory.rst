@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.inventory.errors
+   cadrumo.application.inventory.ports
    cadrumo.application.inventory.service

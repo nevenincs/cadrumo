@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.calculations._per_grupo_member_keys
-   cadrumo.application.calculations._ports
    cadrumo.application.calculations.bienes_inversion_regularizacion
    cadrumo.application.calculations.binding_prefill
    cadrumo.application.calculations.cross_period_clean_state
@@ -24,6 +23,7 @@ Submodules
    cadrumo.application.calculations.foreign_asset_redeclaration
    cadrumo.application.calculations.iva_compensation_annual_partition
    cadrumo.application.calculations.iva_compensation_history
+   cadrumo.application.calculations.iva_compensation_history_ports
    cadrumo.application.calculations.iva_wallet_balance
    cadrumo.application.calculations.iva_wallet_reconciliation
    cadrumo.application.calculations.m111_no_retenciones
@@ -33,6 +33,7 @@ Submodules
    cadrumo.application.calculations.maritime_exemption_service
    cadrumo.application.calculations.multi_year
    cadrumo.application.calculations.observations_repository
+   cadrumo.application.calculations.ports
    cadrumo.application.calculations.prorrata_regularizacion
    cadrumo.application.calculations.registry_preconditions
    cadrumo.application.calculations.relation_prefill
