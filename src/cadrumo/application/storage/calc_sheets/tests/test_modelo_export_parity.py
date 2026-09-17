@@ -26,7 +26,7 @@ from .._translator import is_translatable
 from ..engine import build_export_plan
 from ..layout import plan_layout
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _untranslatable_internal_only_ids(snapshot: RegistrySnapshot) -> set[str]:

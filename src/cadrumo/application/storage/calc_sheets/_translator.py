@@ -406,6 +406,11 @@ def _casilla_cell_reference(casilla_id: CasillaId, *, layout: SheetLayout) -> Sh
 
 
 def _binding_reference(binding: BindingId, *, layout: SheetLayout) -> str:
+    # A relation-prefill slot is read through an ordinary binding leaf but
+    # holds a pre-resolved cross-filing fold, laid out on its own relation cell.
+    relation_cell = layout.relation_cells.get(binding)
+    if relation_cell is not None:
+        return relation_cell.qualified()
     try:
         address = layout.address_for_binding(binding)
     except CalcSheetsEngineError as exc:

@@ -51,6 +51,7 @@ from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hex import HEX_PATTERN_64
 from ....core.identity.bucket import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -227,6 +228,7 @@ class SyncRunRecord(BaseModel):
 
     @field_validator("completed_at")
     @classmethod
+    @pydantic_validation_boundary
     def _completed_at_is_utc(cls, value: datetime) -> datetime:
         """Hold the persisted instant to the canonical UTC-aware contract.
 

@@ -40,7 +40,7 @@ from .....domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
 from ..engine import build_export_plan, registry_sha
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # (modelo, filing_year, period, on) — export-capable modelos whose workbook plan
 # builds, spanning a small revision (M130, 20 casillas) through the largest

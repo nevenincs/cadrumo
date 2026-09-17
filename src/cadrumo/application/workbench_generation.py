@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ValidationError, model_validator
 
-from ..core.errors.hierarchy import InternalInvariantError
+from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
@@ -329,6 +329,7 @@ class WorkbenchGenerationSourceResultV1[SourceT](BaseModel):
     value: SourceT | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _state_is_truthful(self) -> Self:
         _validate_result_state(
             availability=self.availability,
@@ -381,6 +382,7 @@ class WorkbenchGenerationProjectionResultV1[ProjectionT](BaseModel):
     projection: ProjectionT | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _state_is_truthful(self) -> Self:
         _validate_result_state(
             availability=self.availability,
@@ -415,6 +417,7 @@ class WorkbenchGenerationInputsV1(BaseModel):
     aeat_sync_admission: WorkbenchDestinationAdmission
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _search_admissions_are_canonical(self) -> Self:
         expected = (
             (self.ledger, self.ledger_admission, "workbench.ledger"),
