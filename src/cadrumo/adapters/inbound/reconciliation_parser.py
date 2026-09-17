@@ -1,4 +1,8 @@
-"""Inbound PDF parser composition for modelo reconciliation."""
+"""Inbound PDF parser composition for modelo reconciliation.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
