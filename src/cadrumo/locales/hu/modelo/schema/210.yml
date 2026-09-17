@@ -24,6 +24,8 @@ modelo:
           irnr-deduccion-donativos:
             label: Adományok utáni levonás
           irnr-exencion-dividendos:
+            help: 'Lásd a mezőre vonatkozó tájékoztatást: Alkalmazott osztalékmentesség
+              (évi 1500 eurós határ).'
             label: Alkalmazott osztalékmentesség (évi 1500 eurós határ)
           irnr-exenciones-ley-irnr-indicador:
             label: Az IRNR törvény szerinti mentességek, az osztalékok kivételével
@@ -52,6 +54,7 @@ modelo:
             label: Korábbi befizetés/visszatérítés (kizárólag kiegészítő önadózás
               esetén)
           irnr-limite-convenio:
+            help: 'Lásd a mezőre vonatkozó tájékoztatást: Egyezmény szerinti korlát.'
             label: Egyezmény szerinti korlát
           irnr-mejora-diferencia:
             label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
@@ -65,6 +68,8 @@ modelo:
           irnr-porcentaje-convenio:
             label: Egyezményes százalék (%)
           irnr-reduccion-convenio:
+            help: 'Lásd a mezőre vonatkozó tájékoztatást: Egyezmény alkalmazásából
+              eredő csökkentés.'
             label: Egyezmény alkalmazásából eredő csökkentés
           irnr-rendimientos-integros:
             label: Bruttó jövedelem

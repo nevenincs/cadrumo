@@ -196,6 +196,9 @@ _TipoSolicitud = Annotated[str, StringConstraints(strip_whitespace=True, min_len
 class AeatRegisterRef(BaseModel):
     """AEAT's own identifiers for one presented declaration.
 
+    The register expediente and the receipt identifiers (CSV and número de
+    justificante) are different AEAT namespaces; each is ``None`` when the
+    source did not state it, and at least the expediente or the CSV is present.
     ``presented_at`` is optional because a printed justificante states a
     Europe/Madrid wall-clock time without an offset, and no instant may be
     invented from it.
@@ -203,11 +206,18 @@ class AeatRegisterRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    expediente_id: EvidenceReference
+    expediente_id: EvidenceReference | None = None
     csv: AeatCsv | None = None
     justificante_number: AeatPresentationId | None = None
     tipo_solicitud: _TipoSolicitud | None = None
     presented_at: UtcInstant | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_an_identifier(self) -> AeatRegisterRef:
+        if self.expediente_id is None and self.csv is None:
+            raise ModeloValidationError("an AEAT register reference needs an expediente id or a CSV")
+        return self
 
 
 def derive_filing_record_id(

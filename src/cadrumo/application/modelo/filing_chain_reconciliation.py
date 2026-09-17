@@ -337,12 +337,12 @@ def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegist
     or CSV. CSVs compare in their canonical form, so one receipt spelled two
     ways is still one receipt.
     """
-    expediente_id = register.expediente_id.strip()
+    expediente_id = register.expediente_id.strip() if register.expediente_id is not None else None
     csv = normalise_aeat_csv(register.csv) if register.csv is not None else None
     for record in history:
         stored = record.aeat_register
         if stored is not None and (
-            stored.expediente_id.strip() == expediente_id
+            (expediente_id is not None and (stored.expediente_id or "").strip() == expediente_id)
             or (csv is not None and stored.csv is not None and normalise_aeat_csv(stored.csv) == csv)
         ):
             return record
@@ -350,7 +350,7 @@ def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegist
         if evidence is None:
             continue
         reference = evidence.reference_id.strip()
-        if reference == expediente_id:
+        if expediente_id is not None and reference == expediente_id:
             return record
         if (
             csv is not None
@@ -363,18 +363,20 @@ def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegist
 
 def _evidence_reference_id(entry: AeatRegisterEntry) -> str:
     """Return the evidence reference: the receipt CSV when the kind is receipt-bound."""
+    register = entry.register
     if not is_receipt_bound_external_evidence(entry.evidence_kind):
-        return entry.register.expediente_id
-    csv = entry.register.csv or (entry.justificante.csv if entry.justificante is not None else None)
-    if csv is None:
+        reference = register.expediente_id or register.csv
+    else:
+        reference = register.csv or (entry.justificante.csv if entry.justificante is not None else None)
+    if reference is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_justificante_missing",
             context={
-                "evidence_reference_id": entry.register.expediente_id,
+                "evidence_reference_id": register.expediente_id or "",
                 "evidence_kind": entry.evidence_kind.value,
             },
         )
-    return csv
+    return reference
 
 
 def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Comparison:
@@ -830,11 +832,12 @@ def _aeat_content_writes(
 def _official_source_metadata(context: _Context, *, filing_record_id: str) -> dict[str, str]:
     register = context.entry.register
     metadata = {
-        "aeat_expediente_id": register.expediente_id,
         "authenticated_identity": context.entry.tax_id.strip(),
         "external_evidence_reference_id": context.evidence_reference_id,
         "filing_record_id": filing_record_id,
     }
+    if register.expediente_id is not None:
+        metadata["aeat_expediente_id"] = register.expediente_id
     if register.csv is not None:
         metadata["aeat_csv"] = register.csv
     return metadata
@@ -887,7 +890,7 @@ def _reconciliation_event(
             "differing_casilla_ids": ",".join(result.differing_casilla_ids),
             "evidence_basis": result.evidence_basis or "",
             "evidence_kind": entry.evidence_kind.value,
-            "aeat_expediente_id": entry.register.expediente_id,
+            "aeat_expediente_id": entry.register.expediente_id or "",
             "notices": ",".join(notice.code.value for notice in result.notices),
         },
     )

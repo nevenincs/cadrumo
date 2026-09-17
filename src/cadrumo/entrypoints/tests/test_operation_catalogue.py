@@ -178,17 +178,35 @@ def _request_builders() -> Mapping[str, frozenset[str]]:
     """
     literal_ids = set(_declared_definition_ids())
     constants = _definition_id_constants()
-    builders: dict[str, frozenset[str]] = {}
+
+    def named_by(node: ast.AST, carriers: Mapping[str, frozenset[str]]) -> set[str]:
+        named: set[str] = set()
+        for inner in ast.walk(node):
+            if isinstance(inner, ast.Constant) and isinstance(inner.value, str) and inner.value in literal_ids:
+                named.add(inner.value)
+            elif isinstance(inner, ast.Name) and inner.id in constants:
+                named.add(constants[inner.id])
+            elif isinstance(inner, ast.Name) and inner.id in carriers:
+                named |= carriers[inner.id]
+        return named
+
+    # A module-level population (``DEFINITIONS = (_definition(id=..._ID), ...)``)
+    # carries its ids to the builder that returns it, one hop like a request builder.
+    carriers: dict[str, frozenset[str]] = {}
+    for path in _production_sources():
+        for node in _parsed(path).body:
+            if not isinstance(node, ast.Assign) or isinstance(node.value, ast.Constant):
+                continue
+            named = named_by(node.value, {})
+            for target in node.targets:
+                if named and isinstance(target, ast.Name):
+                    carriers[target.id] = frozenset(named) | carriers.get(target.id, frozenset())
+    builders: dict[str, frozenset[str]] = dict(carriers)
     for path in _production_sources():
         for node in ast.walk(_parsed(path)):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
-            named: set[str] = set()
-            for inner in ast.walk(node):
-                if isinstance(inner, ast.Constant) and isinstance(inner.value, str) and inner.value in literal_ids:
-                    named.add(inner.value)
-                elif isinstance(inner, ast.Name) and inner.id in constants:
-                    named.add(constants[inner.id])
+            named = named_by(node, carriers)
             if named:
                 builders[node.name] = frozenset(named) | builders.get(node.name, frozenset())
     return builders

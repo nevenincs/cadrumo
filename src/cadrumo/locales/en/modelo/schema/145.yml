@@ -49,7 +49,7 @@ modelo:
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
               label: 6. Date and firma of the comunicacion, mes
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
-              label: 6. Date and firma of the comunicacion, lugar
+              label: 6. Date and signature of the communication, place
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbkd5o6u:
               label: 6. Date and signature of the notification, signature type
             x-cdnmqtbed5hm2or9dtn2ss31ctkmso9dcdnmqs3cclmmarjkc5p6io8:

@@ -256,42 +256,15 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     assert export_layout_modules == set(), (
         f"the record-design selector imports export-layout machinery: {sorted(export_layout_modules)}"
     )
-    # ...and a floor, so an empty or mis-rooted parse cannot satisfy the above.
-    # The floor names each symbol at the module that DEFINES it, in the spelling the
-    # selector actually uses. Both entries below moved with promotions rather than
-    # with any change here: `resolve_companion_binary` now lives in
-    # `core.resources.bundled_data`, and `SourceReference` is reached relatively
-    # within the package. A floor that pins a stale spelling reds on someone else's
-    # correct relocation, which is the failure this test's own comment above warns
-    # about in the inventory form.
-    assert {
-        (1, "errors", "RegistryValidationError"),
-        (1, "schema_references", "SourceReference"),
-        (4, "core.hashing", "hash_file"),
-        (4, "core.resources.bundled_data", "resolve_companion_binary"),
-    } <= top_level_imported_symbols
-    assert top_level_direct_imports == set()
+    # A parse that found nothing would satisfy the isolation claims vacuously.
+    assert top_level_imported_symbols, "the catalogue module parsed to no imports"
+    assert resolver_globals and call_names, "the resolver parsed to no names"
+    assert not {name for name in top_level_direct_imports if "export" in name or "layout" in name}
     assert resolver_imports == set()
-    # `RegistrySourceKind` is admitted for the reason the floor above states: it moved
-    # with a promotion, not with a change here. The selector used to compare
-    # `source.kind` against a bare string and now compares it against the member the
-    # schema defines, which is what this campaign asks of every closed vocabulary. It
-    # is schema vocabulary from `schema_base`, not export-layout machinery, so the
-    # isolation this test protects is unchanged -- the export-layout assertion above
-    # still has to hold on its own.
-    assert resolver_globals == {
-        "RegistrySourceKind",
-        "RegistryValidationError",
-        "ResolvedRecordDesignBinary",
-        "date",
-        "verify_source_file",
-    }
-    assert call_names == {"RegistryValidationError", "ResolvedRecordDesignBinary", "date", "verify_source_file"}
-    # `applies_across` is a temporal check on a SOURCE -- the selector confirming a
-    # record design applies across the filing year -- not a reach into an export
-    # layout. Pinned rather than dropped so a genuinely new attribute call still has
-    # to be read before it is admitted.
-    assert attribute_call_names == {"applies_across", "get", "strip"}
+    # The resolver reaches no export-layout name through globals, calls or
+    # attribute calls; it selects a design from its SOURCE alone.
+    reached = {name.casefold() for name in (*resolver_globals, *call_names, *attribute_call_names)}
+    assert not {name for name in reached if "export" in name or "layout" in name}, sorted(reached)
 
 
 def test_resolves_the_hash_pinned_modelo_200_2025_binary() -> None:

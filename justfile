@@ -386,6 +386,14 @@ check-api-stubs:
 check-workflows:
     @uv run --no-sync python -m dev.actionlint
 
+# Static security audit of workflows and actions: credential persistence,
+# token scope, template injection, cache poisoning. Offline, so it needs no
+# GitHub token.
+[doc('Audit workflow and action security without changing workflows.')]
+[group('check')]
+check-workflow-security:
+    @uvx --from zizmor==1.30.1 zizmor --offline --min-severity medium .github/
+
 [doc('Verify workflow-to-recipe gate contracts without changing repository files.')]
 [group('check')]
 check-gate-contracts:
@@ -1129,6 +1137,14 @@ test-smoke:
 [group('test')]
 test-workbook-parity:
     uv run --no-sync pytest -v -n0 -m external_tool dev/registry/parity/tests/test_workbook_parity.py
+
+# Run the locale orthography tests. These carry `external_tool` because they
+# read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
+# from npm, which the default unit lane cannot assume.
+[doc('Run the locale orthography tests against the pinned Hunspell dictionaries (external_tool marker).')]
+[group('test')]
+test-locale-spelling:
+    uv run --no-sync pytest -v -n0 -m external_tool dev/locales/tests
 
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths

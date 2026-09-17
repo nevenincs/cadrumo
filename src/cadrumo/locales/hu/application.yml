@@ -1012,6 +1012,8 @@ application:
         időszakában nincs törölhető kezelői felülírás.
       local_observation_reason_blank: A kézi megfigyelés-felülírásnak meg kell adnia
         az okát.
+      local_observation_spreadsheet_malformed_rows: 'A táblázatban %{malformed_row_count}
+        használhatatlan sor van: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: A 036-os modell bevallása más profilt
         nevez meg, mint az a tároló, amelybe rögzülne
       m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a

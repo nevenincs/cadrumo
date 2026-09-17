@@ -797,7 +797,7 @@ def import_external_filing_evidence[CasillaKey](
             filing_year=work_unit.filing_year,
             period=work_unit.period,
             register=AeatRegisterRef(
-                expediente_id=cleaned_reference,
+                expediente_id=None if receipt is not None else cleaned_reference,
                 csv=receipt.csv if receipt is not None else None,
                 justificante_number=receipt.presentation_id if receipt is not None else None,
             ),

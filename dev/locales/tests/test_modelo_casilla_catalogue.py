@@ -128,6 +128,28 @@ def test_a_placeholder_is_reported_and_a_clean_surface_is_pure() -> None:
     assert clean.findings().pure
 
 
+@pytest.mark.parametrize(
+    ("values", "family", "locale"),
+    [
+        (
+            {"es": {_LINEAGE: "Base imponible"}, "en": {_LINEAGE: "Base Aplicado in esta return"}},
+            "glossary_artifacts",
+            "en",
+        ),
+        ({"es": {_LINEAGE: "Base imponible de las rentas obtenidas en el ejercici..."}}, "truncated_text", "es"),
+        ({"es": {_LINEAGE: "Base  imponible"}}, "irregular_whitespace", "es"),
+        ({"es": {_LINEAGE: "Base imponible "}}, "irregular_whitespace", "es"),
+    ],
+)
+def test_content_defects_are_reported_and_make_the_surface_impure(
+    values: dict[str, dict[str, str | None]], family: str, locale: str
+) -> None:
+    findings = _catalogue(values).findings()
+
+    assert {code for code, keys in getattr(findings, family).items() if _LINEAGE in keys} == {locale}
+    assert not findings.pure
+
+
 def test_a_missing_translation_is_counted_not_invented() -> None:
     catalogue = _catalogue({"es": {_LINEAGE: "Base imponible"}})
 

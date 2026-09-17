@@ -135,6 +135,7 @@ def _collect_deadline_schedule_refs(
 _CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
     "...renta.first_slice_routing_integrity",
     "...renta.retenciones_routing_integrity",
+    "...modelos.perceptor_clave_scope",
 )
 _cross_domain_checks_installed = False
 

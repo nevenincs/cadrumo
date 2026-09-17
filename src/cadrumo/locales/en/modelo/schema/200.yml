@@ -4,24 +4,38 @@ modelo:
       casilla:
         continuidad:
           '00042':
+            help: Enter the average number of non-permanent salaried personnel for
+              the period [00042].
             label: Salaried personnel (average figure for the period) non-permanent
               staff [00042]
           '00051':
+            help: Enter the volume of transactions abroad for joint taxation between
+              the State and Foral Administrations under the Economic Agreement [00051].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - volume of transactions abroad [00051]
           '00052':
+            help: Enter the volume of transactions in Araba/Álava for joint taxation
+              under the Economic Agreement [00052].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - volume of transactions in Araba/Álava [00052]
           '00053':
+            help: Enter the volume of transactions in Gipuzkoa for joint taxation
+              under the Economic Agreement [00053].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - volume of transactions in Gipuzkoa [00053]
           '00054':
+            help: Enter the volume of transactions in Bizkaia for joint taxation under
+              the Economic Agreement [00054].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - volume of transactions in Bizkaia [00054]
           '00055':
+            help: Enter the volume of transactions in Navarre for joint taxation under
+              the Economic Agreement [00055].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - volume of transactions in Navarre [00055]
           00068:
+            help: Flag indicating entities that are not credit institutions but use
+              account statements applicable to credit institutions [00068].
             label: 'Credit institution account statements: entities that are not credit
               institutions but use the account statements applicable to them [00068]'
           00081:
@@ -6271,6 +6285,7 @@ modelo:
               and advertising and publicity expenses (art. 27 bis Law 19/1994) (TAP)
               - deduction amount [03068]
           base-imponible-negativa-is:
+            help: Negative or zero tax base before adjustments or compensations [00027].
             label: Negative or zero tax base [00027]
           canary-fixed-assets-2010-remaining:
             label: Deductions for investment in the Canary Islands - Fixed assets
@@ -6392,8 +6407,10 @@ modelo:
             label: Deductions to incentivise certain activities - total - applied
               in this settlement [00588]
           is-agrupacion-de-interes-economico-espanola:
+            help: Flag indicating a Spanish economic interest grouping [00013].
             label: Spanish economic interest grouping [00013]
           is-agrupacion-europea-de-interes-economico:
+            help: Flag indicating a European economic interest grouping [00014].
             label: European economic interest grouping [00014]
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Net finance costs not deducted by the entity - B) Datos económicos
@@ -6913,18 +6930,24 @@ modelo:
             label: Detail of offset of negative tax bases - TOTAL - Pending application
               at the beginning of the period/generated in the period [00670]
           is-bonificacion-personal-investigador-rd-475-2014:
+            help: Flag indicating the research staff rebate under Royal Decree 475/2014
+              [00065].
             label: Research staff rebate (Royal Decree 475/2014) [00065]
           is-capital-riesgo-saldo-pendiente-aumento:
             label: Venture capital companies and funds and regional industrial development
               companies (chapter IV of title VII LIS) - Increase - Balance carried
               forward at start of year [03134]
           is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis:
+            help: Flag indicating offsetting of negative tax bases for newly created
+              entities under article 26.3 of the Corporate Income Tax Law [00070].
             label: Offsetting negative tax bases for newly created entities (article
               26.3 LIS) [00070]
           is-compensacion-bases-negativas:
             label: Detail of offset of negative tax bases - 1999 - Applied in this
               settlement [00647]
           is-comunidades-titulares-de-montes-vecinales-en-mano-comun:
+            help: Flag indicating communities holding common neighborhood forests
+              [00005].
             label: Communities holding common neighborhood forests [00005]
           is-consolidacion-fiscal-eliminacion:
             label: Settlement II - Entities forming part of tax consolidation groups
@@ -6936,9 +6959,15 @@ modelo:
             label: Taxpayer financing productions entitled to the deduction under
               art. 36.1 and 36.3 LIS [00074]
           is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes:
+            help: Flag indicating a taxpayer generating deductions under articles
+              36.1 and 36.3 of the Corporate Income Tax Law with financing by other
+              taxpayers [00044].
             label: Taxpayer generating deductions under articles 36.1 and 36.3 LIS
               with financing by other taxpayers [00044]
           is-cooperativa-base-imponible:
+            help: Flag for cooperative regime taxable-base determination related to
+              the Balearic Islands investment reserve and extra-cooperative results
+              [00016].
             label: Cooperative regime - taxable base determination - 11. Balearic
               Islands investment reserve - extra-cooperative results [00016]
           is-cooperativa-compensacion-cuotas:
@@ -6948,8 +6977,10 @@ modelo:
             label: Settlement III - Tax base - Only cooperative companies - Prior
               gross tax liability after the equalization reserve [01331]
           is-cooperativa-especialmente-protegida:
+            help: Flag indicating a specially protected cooperative [00018].
             label: Specially protected cooperative [00018]
           is-cooperativa-protegida:
+            help: Flag indicating a protected cooperative [00017].
             label: Protected cooperative [00017]
           is-cooperativa-reserva-nivelacion-cuota:
             label: Settlement III - Tax base - Only cooperative companies - Equalization
@@ -8842,25 +8873,37 @@ modelo:
             label: Statement of changes in equity (I) - Transfers to the profit and
               loss account - Other income/expenses [00348]
           is-entidad-aseguradora:
+            help: Flag indicating an insurance entity [00025].
             label: Insurance entity [00025]
           is-entidad-de-credito:
+            help: Flag indicating a credit institution [00024].
             label: Credit institution [00024]
           is-entidad-de-tenencia-de-valores-extranjeros:
+            help: Flag indicating a foreign securities holding entity [00011].
             label: Foreign securities holding entity [00011]
           is-entidad-dedicada-al-arrend-viviendas:
+            help: Flag indicating an entity dedicated to leasing dwellings [00038].
             label: Entity dedicated to leasing dwellings [00038]
           is-entidad-dependiente-de-grupo-fiscal:
+            help: Flag indicating a dependent entity of a tax group [00010].
             label: Dependent entity of tax group [00010]
           is-entidad-dominante-de-grupo-fiscal:
+            help: Flag indicating the dominant entity of a tax group [00009].
             label: Dominant entity of tax group [00009]
           is-entidad-en-reg-atribuc-de-rentas-constituida-en-el-extranjero-con-presencia-en-territorio-espanol:
+            help: Flag indicating an income attribution entity established abroad
+              with presence in Spanish territory [00046].
             label: Income attribution entity established abroad with presence in Spanish
               territory [00046]
           is-entidad-en-regimen-de-atribucion-de-rentas-con-tributacion-por-el-impuesto-sobre-sociedades:
+            help: Flag indicating an income attribution entity taxed under Corporate
+              Income Tax [00056].
             label: Income attribution entity taxed under Corporate Income Tax [00056]
           is-entidad-inactiva:
+            help: Flag indicating an inactive entity [00026].
             label: Inactive entity [00026]
           is-entidad-parcialmente-exenta:
+            help: Flag indicating that the entity is partially exempt [00002].
             label: Partially exempt entity [00002]
           is-entidad-parcialmente-exenta-aumento:
             label: Regime for partially exempt entities (chapter XIV of title VII
@@ -8871,11 +8914,16 @@ modelo:
               LIS) - Decrease - Adjustments for the tax year - Temporary (originating
               in this tax year) [03237]
           is-entidad-patrimonial:
+            help: Flag indicating an asset-holding entity [00066].
             label: Asset-holding entity [00066]
           is-entidad-que-forma-parte-de-un-grupo-mercantil-art-42-del-cod-comercio:
+            help: Flag indicating an entity that forms part of a corporate group under
+              article 42 of the Commercial Code [00039].
             label: Entity forming part of a corporate group (article 42 of the Commercial
               Code) [00039]
           is-entidad-sin-animo-de-lucro-acogida-regimen-fiscal-titulo-ii-ley-49-2002:
+            help: Flag indicating if the entity is non-profit and subject to the Title
+              II regime of Law 49/2002 [00001].
             label: Non-profit entity under special tax regime Title II Law 49/2002
               [00001]
           is-entidad-sin-fines-lucrativos-correccion-ejercicio-aumento:
@@ -8890,10 +8938,13 @@ modelo:
           is-entidad-zec-en-consolidacion-fiscal:
             label: ZEC entity under tax consolidation [00079]
           is-entidad-zec-sin-consolidacion-fiscal:
+            help: Flag indicating a ZEC entity without tax consolidation [00015].
             label: ZEC entity (without tax consolidation) [00015]
           is-entidades-de-capital-riesgo:
+            help: Flag indicating venture capital entities [00031].
             label: Venture capital entities [00031]
           is-entidades-sometidas-a-normativa-foral:
+            help: Flag indicating entities subject to foral regulations [00047].
             label: Entities subject to foral regulations [00047]
           is-erd-amortizacion-acelerada-aumento:
             label: 'Small enterprises: accelerated depreciation (art. 103 LIS and
@@ -8923,6 +8974,7 @@ modelo:
             label: 'Small enterprises: free depreciation (art. 102 LIS) - Increase
               - Balance carried forward at start of year [03184]'
           is-establecimiento-permanente:
+            help: Flag indicating a permanent establishment [00021].
             label: Permanent establishment [00021]
           is-etv-ajuste-aumento:
             label: Tax regime for foreign-securities holding entities (chapter XIII
@@ -8943,9 +8995,12 @@ modelo:
           is-extincion-de-entidad:
             label: Dissolution of entity [00072]
           is-fondo-de-pensiones-real-decreto-legislativo-1-2002-de-29-de-noviembre:
+            help: Flag indicating a pension fund under Royal Legislative Decree 1/2002
+              of 29 November [00048].
             label: Pension fund under Royal Legislative Decree 1/2002 of 29 November
               [00048]
           is-fondos-o-activos-de-titulizacion:
+            help: Flag indicating securitization funds or assets [00060].
             label: Securitization funds or assets [00060]
           is-fraccionamiento-cambio-residencia-bi:
             label: Settlement IV - Instalment option in cases of changes of residence
@@ -8967,8 +9022,10 @@ modelo:
               pending deduction - Generation year 2021 - Pending application at beginning
               of period - By limit [01098]
           is-gran-empresa:
+            help: Flag indicating a large company [00023].
             label: Large company [00023]
           is-grupo-fiscal-numero:
+            help: Enter the tax group number when codes 00009 or 00010 apply [00040].
             label: Tax group - codes 00009 or 00010 - tax group number [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
             label: 'Hydrocarbons: depreciation of intangible investments and research
@@ -8983,15 +9040,24 @@ modelo:
               expenses (art. 99 LIS) - Decrease - Balance carried forward at start
               of year [03169]'
           is-identificacion-regimen-flag:
+            help: Flag indicating entities that use account statements applicable
+              to collective investment institutions, except codes 00003, 00004 and
+              00008 [00061].
             label: 'Account statements of collective investment institutions: entities
               using account statements applicable to CIIs (except codes 00003, 00004
               and 00008) [00061]'
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
+            help: Flag indicating inclusion of positive income in the tax base under
+              article 100 of the Corporate Income Tax Law [00007].
             label: Inclusion of positive income in the tax base under article 100
               LIS [00007]
           is-incentivos-entidad-de-reducida-dimension-cap-xi-tit-vii-lis:
+            help: Flag indicating application of small-sized entity incentives under
+              Chapter XI, Title VII of the Corporate Income Tax Law [00006].
             label: Small-sized entity incentives (Chapter XI, Title VII LIS) [00006]
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
+            help: Flag indicating advance investments for the Canary Islands investment
+              reserve under article 27.11 of Law 19/1994 [00045].
             label: Advance investments - Canary Islands investment reserve (article
               27.11 Law 19/1994) [00045]
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
@@ -9060,8 +9126,12 @@ modelo:
               LIS) - Decrease - Adjustments for the tax year - Temporary (originating
               in this tax year) [03157]'
           is-mutua-de-seguros-o-mutualidad-de-prevision-social:
+            help: Flag indicating an insurance mutual or social welfare mutual society
+              [00058].
             label: Insurance mutual or social welfare mutual society [00058]
           is-naviera-regimen-flag:
+            help: Flag indicating the special regime for ships and shipping companies
+              in the Canary Islands [00069].
             label: Special regime for ships and shipping companies in the Canary Islands
               [00069]
           is-naviera-tonelaje-ajuste-aumento:
@@ -9076,6 +9146,8 @@ modelo:
             label: Tonnage-based regime for shipping entities (chapter XVI of title
               VII LIS) - Decrease - Balance carried forward at start of year [03259]
           is-obligacion-informacion-dt-5a-ris:
+            help: Flag indicating the information obligation under Transitional Provision
+              5 of the Corporate Income Tax Regulations [00043].
             label: Information obligation under Transitional Provision 5 of the RIS
               [00043]
           is-obra-benefico-social-aumento:
@@ -9087,15 +9159,20 @@ modelo:
               24 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
               in this tax year) [03047]
           is-opcion-art-39-2-lis:
+            help: Flag indicating the option under article 39.2 of the Corporate Income
+              Tax Law [00059].
             label: Option under article 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Option under art. 39.3 LIS [00090]
           is-opcion-de-fraccionamiento-art-19-1-lis:
+            help: Flag indicating the installment payment option under article 19.1
+              of the Corporate Income Tax Law [00037].
             label: Installment payment option under article 19.1 LIS [00037]
           is-opcion-del-0-7-de-la-cuota-integra-para-fines-sociales:
             label: Option to allocate 0.7% of the gross tax liability to social purposes
               [00073]
           is-otros-regimenes-especiales:
+            help: Flag indicating other special regimes [00020].
             label: Other special regimes [00020]
           is-pagos-fraccionados:
             label: Joint taxation by State and Foral administrations - Instalment
@@ -9146,6 +9223,8 @@ modelo:
             label: Participant in an economic interest grouping or temporary consortium
               of companies [00089]
           is-personal-asalariado-cifra-media:
+            help: Enter the average number of permanent salaried personnel for the
+              period [00041].
             label: Salaried personnel (average figure for the period) permanent staff
               [00041]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
@@ -9445,29 +9524,40 @@ modelo:
             label: Profit and loss account (II) - Discontinued operations - PROFIT
               AND LOSS ACCOUNT RESULT [00500]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
+            help: Flag indicating the tax regime for asset contributions to companies
+              for asset management under Law 8/2012 [00062].
             label: Tax regime for asset contributions to companies for asset management
               (Law 8/2012) [00062]
           is-regimen-entidades-navieras-en-funcion-del-tonelaje:
+            help: Flag indicating the shipping entities regime based on tonnage [00022].
             label: Shipping entities regime based on tonnage [00022]
           is-regimen-especial-canarias:
+            help: Flag indicating the special Canary Islands regime [00029].
             label: Special Canary Islands regime [00029]
           is-regimen-especial-de-disolucion-y-liquidacion-de-sicav-dt-41a-lis:
             label: Special regime for dissolution and liquidation of SICAVs (DT 41
               LIS) [00084]
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
+            help: Flag indicating the special regime for mergers, spin-offs, asset
+              contributions and share exchanges under Chapter VII, Title VII [00035].
             label: Special regime for mergers, spin-offs, asset contributions and
               share exchanges (Chapter VII, Title VII) [00035]
           is-regimen-especial-hidrocarburos:
+            help: Flag indicating the special hydrocarbons regime [00034].
             label: Special hydrocarbons regime [00034]
           is-regimen-especial-illes-balears:
             label: Special regime for the Balearic Islands [00086]
           is-regimen-especial-mineria:
+            help: Flag indicating the special mining regime [00033].
             label: Special mining regime [00033]
           is-regimen-fiscal-entrada-socimi:
+            help: Flag indicating the SOCIMI entry tax regime [00064].
             label: SOCIMI entry tax regime [00064]
           is-regimen-fiscal-salida-socimi:
+            help: Flag indicating the SOCIMI exit tax regime [00057].
             label: SOCIMI exit tax regime [00057]
           is-regimenes-especiales-de-normativa-foral:
+            help: Flag indicating special regimes under foral regulations [00049].
             label: Special foral-regulation regimes [00049]
           is-reserva-capitalizacion-derecho-generado:
             label: Capitalization reserve - Total - Right to reduce tax base generated
@@ -9511,6 +9601,7 @@ modelo:
               - Tax base reduction amount for period/pending addition at start of
               period [01406]
           is-resto-cooperativas:
+            help: Flag indicating other cooperatives [00019].
             label: Other cooperatives [00019]
           is-resultado-ingresar-o-devolver:
             label: Settlement IV - Tax due for the year, payable or refundable - Tax
@@ -9522,17 +9613,28 @@ modelo:
             label: Settlement III - Taxable Base - Employee-owned companies - Special
               reserve allocation, Law 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
+            help: Flag indicating a mutual guarantee or re-guarantee company [00036].
             label: Mutual guarantee or re-guarantee company [00036]
           is-sociedad-de-inversion-de-capital-variable-o-fondo-de-inversion-de-caracter-financiero:
+            help: Flag indicating a variable-capital investment company or financial
+              investment fund [00003].
             label: Variable-capital investment company or financial investment fund
               [00003]
           is-sociedad-de-inversion-de-capital-variable-que-no-cumpla-los-requisitos-del-art-29-4-a-lis:
+            help: Flag indicating a variable-capital investment company that does
+              not meet the requirements of article 29.4 a) of the Corporate Income
+              Tax Law [00008].
             label: Variable-capital investment company not meeting article 29.4 a)
               LIS requirements [00008]
           is-sociedad-de-inversion-inmobiliaria-o-fondo-de-inversion-inmobiliaria:
+            help: Flag indicating a real estate investment company or real estate
+              investment fund [00004].
             label: Real estate investment company or real estate investment fund [00004]
           is-sociedades-desarrollo-industrial-regional:
+            help: Flag indicating regional industrial development companies [00032].
             label: Regional industrial development companies [00032]
+          is-socimi:
+            help: Flag indicating a SOCIMI entity [00012].
           is-tfi-ajuste-disminucion:
             label: International tax transparency (art. 100 LIS) - Decrease - Adjustments
               for the tax year - Temporary (originating in this tax year) [03177]
@@ -9543,6 +9645,8 @@ modelo:
             label: International tax transparency (art. 100 LIS) - Increase - Balance
               carried forward at start of year [03174]
           is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis:
+            help: Flag indicating the reduced tax rate for newly created entities
+              under Transitional Provision 22 of the Corporate Income Tax Law [00063].
             label: Reduced tax rate for newly created entities (Transitional Provision
               22 LIS) [00063]
           is-tipo-gravamen-reducido-para-empresa-emergente:
@@ -9553,6 +9657,8 @@ modelo:
           is-tipo-gravamen-reducido-para-entidades-de-nueva-creacion-art-29-1-lis:
             label: Reduced tax rate for newly created entities (art. 29.1 LIS) [00071]
           is-transmision-elementos-patrimoniales-arts-27-2-d-y-77-1-l-i-s:
+            help: Flag indicating transfer of assets under articles 27.2.d) and 77.1
+              of the Corporate Income Tax Law [00030].
             label: Transfer of assets under articles 27.2.d) and 77.1 LIS [00030]
           is-tributacion-conjunta-abono-cinematografica:
             label: Joint taxation of State and provincial tax administrations - Payment
@@ -9568,6 +9674,8 @@ modelo:
             label: Joint taxation by State and Foral administrations - Differential
               tax liability - Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
+            help: Flag indicating joint taxation between the State, Provincial Councils,
+              and Foral Communities [00028].
             label: Joint taxation State / Provincial Councils / Foral Communities
               [00028]
           is-tributacion-conjunta-fraccionamiento-importe:
@@ -9589,6 +9697,8 @@ modelo:
             label: Joint taxation, State and regional (foral) administrations - Calculation
               of taxation percentages - State Administration [00625]
           is-tributacion-conjunta-proporcion:
+            help: Enter the total volume of transactions for joint taxation between
+              the State and Foral Administrations under the Economic Agreement [00050].
             label: Joint taxation State and Foral Administrations - Economic Agreement
               - total volume of transactions [00050]
           is-tributacion-conjunta-resultado:

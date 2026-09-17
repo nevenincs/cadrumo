@@ -213,8 +213,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 1: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-1-importe:
-              help: 'Tekintse át a casilla adatait: Operación vinculada 1: összeg
-                - operación.'
+              help: 'Tekintse át a casilla adatait: 1. számú kapcsolt ügylet: az ügylet
+                összege.'
               label: 'Kapcsolt vállalkozás 1: Összeg'
             vinculada-1-ingreso-pago:
               help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
@@ -243,8 +243,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 2: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-2-importe:
-              help: 'Tekintse át a casilla adatait: Operación vinculada 2: összeg
-                - operación.'
+              help: 'Tekintse át a casilla adatait: 2. számú kapcsolt ügylet: az ügylet
+                összege.'
               label: 'Kapcsolt vállalkozás 2: Összeg'
             vinculada-2-ingreso-pago:
               help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
@@ -273,8 +273,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 3: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-3-importe:
-              help: 'Tekintse át a casilla adatait: Operación vinculada 3: összeg
-                - operación.'
+              help: 'Tekintse át a casilla adatait: 3. számú kapcsolt ügylet: az ügylet
+                összege.'
               label: 'Kapcsolt vállalkozás 3: Összeg'
             vinculada-3-ingreso-pago:
               help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
@@ -303,8 +303,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 4: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-4-importe:
-              help: 'Tekintse át a casilla adatait: Operación vinculada 4: összeg
-                - operación.'
+              help: 'Tekintse át a casilla adatait: 4. számú kapcsolt ügylet: az ügylet
+                összege.'
               label: 'Kapcsolt vállalkozás 4: Összeg'
             vinculada-4-ingreso-pago:
               help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'
@@ -333,8 +333,8 @@ modelo:
               label: 'Kapcsolt vállalkozás 5: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-5-importe:
-              help: 'Tekintse át a casilla adatait: Operación vinculada 5: összeg
-                - operación.'
+              help: 'Tekintse át a casilla adatait: 5. számú kapcsolt ügylet: az ügylet
+                összege.'
               label: 'Kapcsolt vállalkozás 5: Összeg'
             vinculada-5-ingreso-pago:
               help: 'A Modelo 232 . casilla adóügyi adatai: adóügyi információ.'

@@ -79,7 +79,7 @@ class DeadlineWindowDefinition(RegistryModel):
 
     id: DeadlineWindowId
     filing_year: FilingYear
-    period: Annotated[Period, BeforeValidator(_parse_deadline_window_period)]
+    period: Annotated[Period, BeforeValidator(pydantic_validation_boundary(_parse_deadline_window_period))]
     period_kind: FilingCadenceField
     opens_on: date
     closes_on: date

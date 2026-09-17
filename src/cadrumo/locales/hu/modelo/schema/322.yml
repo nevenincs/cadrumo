@@ -1489,8 +1489,7 @@ modelo:
               help: 'A Modelo 322 120. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [120].'
             '122':
-              help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső -val/-vel
-                fordított adózás [122].'
+              help: 122. casilla, 322. modelo, 2008. adóév.
             '123':
               help: 'A Modelo 322 123. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [123].'
@@ -1498,8 +1497,7 @@ modelo:
               help: 'A Modelo 322 124. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [124].'
             '125':
-              help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső -val/-vel
-                fordított adózás [125].'
+              help: 125. casilla, 322. modelo, 2008. adóév.
             '126':
               help: 'A Modelo 322 126. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [126].'
@@ -1507,8 +1505,8 @@ modelo:
               help: 'A Modelo 322 127. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [127].'
             '128':
-              help: 'Tekintse át a casilla adatait: Ügyletek intragrupo valoradas
-                conforme a lo dispuesto en los arts. 78 és 79 LIVA [128].'
+              help: 'Tekintse át a casilla adatait: A LIVA 78. és 79. cikkében foglaltak
+                szerint értékelt, csoporton belüli ügyletek [128].'
             '13':
               help: 'A Modelo 322 13. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [13].'
@@ -1637,10 +1635,12 @@ modelo:
                 [24].'
             '25':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
-                Modificación bases és adóösszegek en rendszer general. Adóalap [25].'
+                Adóalapok és adóösszegek módosítása az általános rendszerben. Adóalap
+                [25].'
             '26':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
-                Modificación bases és adóösszegek en rendszer general. Adóösszeg [26].'
+                Adóalapok és adóösszegek módosítása az általános rendszerben. Adóösszeg
+                [26].'
             '27':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
                 Egyenértékűségi felár. Adóalap [27].'
@@ -1683,12 +1683,12 @@ modelo:
                 [38]
             '39':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.
-                szerinti adóösszegek soportadas en ügyletek intragrupo corrientes.
-                Adóalap [39].'
+                Viselt adóösszegek a folyó csoporton belüli ügyletek után. Adóalap
+                [39].'
             '40':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.
-                szerinti adóösszegek soportadas en ügyletek intragrupo corrientes.
-                Adóösszeg [40].'
+                Viselt adóösszegek a folyó csoporton belüli ügyletek után. Adóösszeg
+                [40].'
             '41':
               help: 'A Modelo 322 41. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [41].'
@@ -1913,8 +1913,8 @@ modelo:
               help: 'A Modelo 322 719. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [719].'
             '72':
-              help: 'Tekintse át a casilla adatait: Información adicional. Exportok
-                és ügyletek asimiladas. [72].'
+              help: 'Tekintse át a casilla adatait: További információ. Exportok és
+                azokkal egyenértékű ügyletek. [72].'
             '720':
               help: 'A Modelo 322 720. casilla adóügyi adatai: adóügyi információ
                 Hivatkozások: [720].'
@@ -1975,8 +1975,8 @@ modelo:
               help: 'A Modelo 322 79. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [79].'
             '80':
-              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
-                Ügyletek en rendszer general [80].'
+              help: 'Tekintse át a casilla adatait: Az adóévben teljesített ügyletek.
+                Az általános rendszerben végzett ügyletek [80].'
             '83':
               help: 'A Modelo 322 83. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [83].'
@@ -1984,8 +1984,8 @@ modelo:
               help: 'A Modelo 322 84. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [84].'
             '86':
-              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
-                Ügyletek en rendszer simplificado [86].'
+              help: 'Tekintse át a casilla adatait: Az adóévben teljesített ügyletek.
+                Az egyszerűsített rendszerben végzett ügyletek [86].'
             '88':
               help: 'A Modelo 322 88. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [88].'
@@ -2008,8 +2008,9 @@ modelo:
               help: 'A Modelo 322 94. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [94].'
             '95':
-              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
-                Ügyletek en rendszer especial - agricultura, ganadería és pesca [95].'
+              help: 'Tekintse át a casilla adatait: Az adóévben teljesített ügyletek.
+                A mezőgazdasági, állattenyésztési és halászati különleges rendszerben
+                végzett ügyletek [95].'
             '96':
               help: 'A Modelo 322 96. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [96].'
@@ -2114,7 +2115,7 @@ modelo:
               help: 'Tekintse át a casilla adatait: Eredmény - rendszer general (adóösszeg
                 felszámított - adóösszeg levonható).'
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
-                interiores corrientes.'
+              help: 'Tekintse át a casilla adatait: Levonható áfa összege a folyó
+                belföldi ügyletek után.'
           field:
             label: 322-es modelo, 2026. adóévtől

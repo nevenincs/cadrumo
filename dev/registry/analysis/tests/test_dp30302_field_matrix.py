@@ -13,9 +13,7 @@ from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoFactProjectionRef,
     compile_filing_projection_ref,
 )
-from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev._paths import REPO_ROOT
 
 from ...compiler.authority import compiled_bundled_authority
 from ...pipeline.record_design_intermediate import RecordDesignIntermediateField
@@ -189,23 +187,17 @@ def _projection_kind(endpoint: _ProjectionEndpoint) -> str:
 
 
 def _projection_endpoints(revision_id: str) -> tuple[_ProjectionEndpoint, ...]:
-    """Return every projection endpoint a revision declares, across its fragments.
+    """Return every projection endpoint a revision resolves to, as persisted-shape mappings.
 
-    A revision declares its sections in fragmented files, and the modelo tree's
-    multi-casilla fragments were split into per-casilla ones, so this directory
-    now holds more than one part. Reading only ``0001-`` silently halved five
-    revisions to an identical count and made real per-revision differences
-    invisible -- a file-shape assumption reporting a data loss that had not
-    happened.
+    Read through the compiled authority rather than the fragment files: an
+    edition may store only its changes against a baseline, so the files on disk
+    are not the declaration a filing uses.
     """
-    directory = (
-        REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/303/revisions" / revision_id / "projection_endpoints"
+    revision = compiled_bundled_authority().modelo("303").revisions[revision_id]
+    return tuple(
+        _ProjectionEndpoint(projection_ref=endpoint.model_dump(mode="json")["projection_ref"])
+        for endpoint in revision.projection_endpoints
     )
-    endpoints: list[_ProjectionEndpoint] = []
-    for fragment in sorted(directory.glob("*.toml")):
-        payload = parse_toml(fragment.read_text(encoding="utf-8"))
-        endpoints.extend(payload["revisions"][revision_id]["projection_endpoints"])
-    return tuple(endpoints)
 
 
 def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterly_quotas() -> None:

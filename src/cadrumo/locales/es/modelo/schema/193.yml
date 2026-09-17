@@ -22,6 +22,7 @@ modelo:
           devengo-year:
             label: EJERCICIO DEVENGO
           gasto-contributor-nif:
+            help: 'Consulte la información de esta casilla: NIF del contribuyente.'
             label: NIF del contribuyente
           gasto-contributor-nombre:
             label: Apellidos y nombre del contribuyente o denominación

@@ -664,13 +664,329 @@ modelo:
             label: Modelo 303, ejercicio 2025
         2026-y-siguientes:
           casilla:
+            '01':
+              help: 'Casilla 01: base imponible del IVA devengado en el régimen general
+                al tipo superreducido del 4%.'
+            '02':
+              help: 'Casilla 02: porcentaje del tipo del IVA devengado en el régimen
+                general al tipo superreducido del 4%.'
+            '03':
+              help: 'Casilla 03: cuota de IVA devengado en el régimen general al tipo
+                superreducido del 4%.'
+            '04':
+              help: 'Casilla 04: base imponible del IVA devengado en el régimen general
+                al tipo reducido del 10%.'
+            '05':
+              help: 'Casilla 05: porcentaje del tipo del IVA devengado en el régimen
+                general al tipo reducido del 10%.'
+            '06':
+              help: 'Casilla 06: cuota de IVA devengado en el régimen general al tipo
+                reducido del 10%.'
+            '07':
+              help: 'Casilla 07: base imponible del IVA devengado en el régimen general
+                al tipo general del 21%.'
+            08:
+              help: 'Casilla 08: porcentaje del tipo del IVA devengado en el régimen
+                general al tipo general del 21%.'
+            09:
+              help: 'Casilla 09: cuota de IVA devengado en el régimen general al tipo
+                general del 21%.'
+            '10':
+              help: 'Casilla 10: base del IVA devengado por adquisiciones intracomunitarias
+                de bienes y servicios.'
+            '108':
+              help: 'Casilla 108: otros ajustes en una autoliquidación rectificativa
+                para supuestos determinados por discrepancia de criterio administrativo.'
+            '109':
+              help: 'Casilla 109: devoluciones acordadas por la AEAT en autoliquidaciones
+                anteriores del mismo ejercicio y período.'
+            '11':
+              help: 'Casilla 11: cuota de IVA devengado por adquisiciones intracomunitarias
+                de bienes y servicios.'
+            '111':
+              help: 'Casilla 111: importe de la rectificación declarado en una autoliquidación
+                rectificativa.'
+            '12':
+              help: 'Casilla 12: base del IVA devengado por otras operaciones con
+                inversión del sujeto pasivo, excluidas las intracomunitarias.'
+            '120':
+              help: 'Casilla 120: información adicional sobre operaciones no sujetas
+                por reglas de localización, excluida la casilla 123.'
+            '122':
+              help: 'Casilla 122: información adicional sobre operaciones sujetas
+                a inversión del sujeto pasivo.'
+            '123':
+              help: 'Casilla 123: información adicional sobre operaciones no sujetas
+                por reglas de localización en regímenes especiales de ventanilla única.'
+            '124':
+              help: 'Casilla 124: información adicional sobre operaciones sujetas
+                en regímenes especiales de ventanilla única.'
+            '13':
+              help: 'Casilla 13: cuota de IVA devengado por otras operaciones con
+                inversión del sujeto pasivo, excluidas las intracomunitarias.'
+            '14':
+              help: 'Casilla 14: base imponible de la modificación de bases y cuotas
+                de IVA devengado.'
+            '15':
+              help: 'Casilla 15: cuota de la modificación de bases y cuotas de IVA
+                devengado.'
+            '150':
+              help: 'Casilla 150: base imponible del IVA devengado en el régimen general
+                nuevo tipo tramo 1.'
+            '151':
+              help: 'Casilla 151: porcentaje del tipo del IVA devengado en el régimen
+                general nuevo tipo tramo 1.'
+            '152':
+              help: 'Casilla 152: cuota de IVA devengado en el régimen general nuevo
+                tipo tramo 1.'
+            '153':
+              help: 'Casilla 153: base imponible del IVA devengado en el régimen general
+                nuevo tipo tramo 2.'
+            '154':
+              help: 'Casilla 154: porcentaje del tipo del IVA devengado en el régimen
+                general nuevo tipo tramo 2.'
+            '155':
+              help: 'Casilla 155: cuota de IVA devengado en el régimen general nuevo
+                tipo tramo 2.'
+            '156':
+              help: 'Casilla 156: base imponible del recargo de equivalencia al 0,5%.'
+            '157':
+              help: 'Casilla 157: porcentaje del tipo del recargo de equivalencia
+                al 0,5%.'
+            '158':
+              help: 'Casilla 158: cuota del recargo de equivalencia al 0,5%.'
+            '16':
+              help: 'Casilla 16: base imponible del recargo de equivalencia al 1,0%.'
+            '165':
+              help: 'Casilla 165: base imponible del IVA devengado en el régimen general
+                al tipo del 2% desde 2024.'
+            '166':
+              help: 'Casilla 166: porcentaje del tipo del IVA devengado en el régimen
+                general al tipo del 2% desde 2024.'
+            '167':
+              help: 'Casilla 167: cuota de IVA devengado en el régimen general al
+                tipo del 2% desde 2024.'
+            '168':
+              help: 'Casilla 168: base imponible del nuevo tipo de recargo de equivalencia
+                desde 2024.'
+            '169':
+              help: 'Casilla 169: porcentaje del tipo del nuevo recargo de equivalencia
+                desde 2024.'
+            '17':
+              help: 'Casilla 17: porcentaje del tipo del recargo de equivalencia al
+                1,0%.'
+            '170':
+              help: 'Casilla 170: cuota del nuevo recargo de equivalencia desde 2024.'
+            '18':
+              help: 'Casilla 18: cuota del recargo de equivalencia al 1,0%.'
+            '19':
+              help: 'Casilla 19: base imponible del recargo de equivalencia al 1,4%.'
+            '20':
+              help: 'Casilla 20: porcentaje del tipo del recargo de equivalencia al
+                1,4%.'
+            '21':
+              help: 'Casilla 21: cuota del recargo de equivalencia al 1,4%.'
+            '22':
+              help: 'Casilla 22: base imponible del recargo de equivalencia al 5,2%.'
+            '23':
+              help: 'Casilla 23: porcentaje del tipo del recargo de equivalencia al
+                5,2%.'
+            '24':
+              help: 'Casilla 24: cuota del recargo de equivalencia al 5,2%.'
+            '25':
+              help: 'Casilla 25: base imponible de la modificación de bases y cuotas
+                del recargo de equivalencia.'
+            '26':
+              help: 'Casilla 26: cuota de la modificación de bases y cuotas del recargo
+                de equivalencia.'
+            '27':
+              help: 'Casilla 27: total de la cuota devengada.'
+            '28':
+              help: 'Casilla 28: base del IVA deducible en operaciones interiores
+                corrientes.'
+            '29':
+              help: 'Casilla 29: cuota de IVA deducible en operaciones interiores
+                corrientes.'
+            '30':
+              help: 'Casilla 30: base del IVA deducible en operaciones interiores
+                de bienes de inversión.'
+            '31':
+              help: 'Casilla 31: cuota de IVA deducible en operaciones interiores
+                de bienes de inversión.'
+            '32':
+              help: 'Casilla 32: base del IVA deducible en importaciones de bienes
+                corrientes.'
+            '33':
+              help: 'Casilla 33: cuota de IVA deducible en importaciones de bienes
+                corrientes.'
+            '34':
+              help: 'Casilla 34: base del IVA deducible en importaciones de bienes
+                de inversión.'
+            '35':
+              help: 'Casilla 35: cuota de IVA deducible en importaciones de bienes
+                de inversión.'
+            '36':
+              help: 'Casilla 36: base del IVA deducible en adquisiciones intracomunitarias
+                corrientes.'
+            '37':
+              help: 'Casilla 37: cuota de IVA deducible en adquisiciones intracomunitarias
+                corrientes.'
+            '38':
+              help: 'Casilla 38: base del IVA deducible en adquisiciones intracomunitarias
+                de bienes de inversión.'
+            '39':
+              help: 'Casilla 39: cuota de IVA deducible en adquisiciones intracomunitarias
+                de bienes de inversión.'
+            '40':
+              help: 'Casilla 40: base de la rectificación de deducciones.'
+            '41':
+              help: 'Casilla 41: cuota de la rectificación de deducciones.'
+            '42':
+              help: 'Casilla 42: cuota de compensaciones del régimen especial de agricultura,
+                ganadería y pesca.'
+            '43':
+              help: 'Casilla 43: cuota de regularización de bienes de inversión.'
+            '44':
+              help: 'Casilla 44: cuota de regularización de prorrata por porcentaje
+                definitivo.'
+            '45':
+              help: 'Casilla 45: total de la cuota de IVA a deducir.'
+            '47':
+              help: 'Casilla 47: suma de ingresos a cuenta del conjunto de actividades
+                en régimen simplificado en el 1T, 2T o 3T.'
+            '48':
+              help: 'Casilla 48: suma de cuotas derivadas del conjunto de actividades
+                en régimen simplificado en el 4T.'
+            '49':
+              help: 'Casilla 49: suma de ingresos a cuenta realizados durante el ejercicio
+                en régimen simplificado en el 4T.'
+            '50':
+              help: 'Casilla 50: resultado del régimen simplificado en el 4T, calculado
+                como la casilla 48 menos la casilla 49 ([48]-[49]).'
+            '51':
+              help: 'Casilla 51: cuotas de IVA devengadas por adquisiciones intracomunitarias
+                de bienes en régimen simplificado.'
+            '52':
+              help: 'Casilla 52: cuotas de IVA devengadas por entregas de activos
+                fijos en régimen simplificado.'
+            '53':
+              help: 'Casilla 53: cuotas de IVA devengadas en régimen simplificado
+                por operaciones con inversión del sujeto pasivo.'
+            '54':
+              help: 'Casilla 54: total de la cuota resultante en régimen simplificado.'
+            '55':
+              help: 'Casilla 55: IVA deducible por adquisición o importación de activos
+                fijos en régimen simplificado.'
+            '56':
+              help: 'Casilla 56: IVA deducible por regularización de bienes de inversión
+                en régimen simplificado.'
+            '57':
+              help: 'Casilla 57: total de IVA deducible en régimen simplificado, calculado
+                como la casilla 55 más la casilla 56 ([55]+[56]).'
+            '58':
+              help: 'Casilla 58: resultado del régimen simplificado, calculado como
+                la casilla 54 menos la casilla 57 ([54]-[57]).'
+            '59':
+              help: 'Casilla 59: información adicional sobre entregas intracomunitarias
+                de bienes y servicios.'
+            '60':
+              help: 'Casilla 60: información adicional sobre exportaciones y operaciones
+                asimiladas.'
+            '62':
+              help: 'Casilla 62: base imponible de entregas de criterio de caja devengadas
+                según el artículo 75 LIVA.'
+            '63':
+              help: 'Casilla 63: cuota de entregas de criterio de caja devengadas
+                según el artículo 75 LIVA.'
             '64':
               label: Resultado - Suma de resultados ([46]+[58]+[76])
+            '65':
+              help: 'Casilla 65: porcentaje del resultado atribuible a la Administración
+                del Estado.'
             '66':
               label: Resultado - Importe atribuible Administración del Estado ([64]×[65]/100)
+            '68':
+              help: 'Casilla 68: resultado de regularización anual de tributación
+                conjunta.'
+            '70':
+              help: 'Casilla 70: resultados a ingresar procedentes de autoliquidaciones
+                anteriores del mismo ejercicio y período.'
             '71':
               label: Resultado final ([69]-[70]+[109])
+            '74':
+              help: 'Casilla 74: base imponible de adquisiciones en el régimen de
+                criterio de caja.'
+            '75':
+              help: 'Casilla 75: cuota de adquisiciones en el régimen de criterio
+                de caja.'
+            '76':
+              help: 'Casilla 76: ajuste del resultado por regularización de cuotas
+                según el artículo 80.cinco.5ª LIVA.'
+            '77':
+              help: 'Casilla 77: IVA a la importación liquidado por la Aduana que
+                está pendiente de ingreso.'
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Ejercicio fiscal al que se refiere la autoliquidación.
+            x-chim6r1ee1in4qbfchng:
+              help: 'Período trimestral de la autoliquidación: 1T, 2T, 3T o 4T.'
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: IVA autorrepercutido deducible en operaciones interiores sujetas
+                a inversión del sujeto pasivo.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: IVA autorrepercutido devengado en operaciones interiores sujetas
+                a inversión del sujeto pasivo.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Cuota de IVA autorrepercutido en adquisiciones intracomunitarias
+                sujetas a inversión del sujeto pasivo.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: IVA autorrepercutido deducible en adquisiciones intracomunitarias
+                de bienes y servicios.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: IVA autorrepercutido devengado en adquisiciones intracomunitarias
+                de bienes y servicios.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: Cuotas pendientes de períodos anteriores aplicadas en este período.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: Saldo de IVA a compensar disponible para trasladar a períodos
+                posteriores.
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: Saldo de IVA a compensar generado por la autoliquidación de este
+                período.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: Cuotas de IVA a compensar que quedan pendientes de períodos anteriores.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: Compensaciones de IVA de períodos anteriores que quedan pendientes
+                para períodos posteriores.
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Importe total de la cuota de IVA deducible, incluido el IVA soportado
+                interior y el IVA autorrepercutido deducible.
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Importe total de la cuota de IVA devengada, incluido el IVA repercutido
+                y el IVA autorrepercutido aplicable.
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: Porcentaje de prorrata general calculado a partir del volumen
+                con derecho a deducción sobre el volumen total.
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: Volumen anual de operaciones que origina derecho a deducir el
+                IVA.
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: Volumen anual total de operaciones empleado para el cálculo de
+                la prorrata general.
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: Regularización del IVA correspondiente a bienes de inversión.
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Total de IVA repercutido calculado al tipo reducido del 10%.
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Total de IVA repercutido calculado al tipo superreducido del 4%.
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultado de la autoliquidación ([66]+[77]+[68]-[78])
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Resultado del régimen general calculado como IVA devengado menos
+                IVA deducible.
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: IVA soportado deducible en importaciones de bienes corrientes.
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Total de IVA soportado pagado en compras interiores de bienes
+                y servicios corrientes.
           field:
             label: Modelo 303, ejercicio 2026 y siguientes

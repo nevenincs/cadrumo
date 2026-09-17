@@ -217,10 +217,14 @@ def test_register_identifiers_are_compared_within_their_own_namespace(tmp_path: 
         assert (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers) is mismatch, case_label
 
 
-def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparable_receipt_reference(
+def test_an_expediente_is_never_compared_with_a_receipt_identifier(
     tmp_path: Path,
 ) -> None:
-    """Expediente-only filed history cannot be tied to a receipt without a register reference or CSV."""
+    """Without a register expediente on the chain entry there is nothing in its namespace to compare.
+
+    The receipt is tied to the entry by its CSV; the observation's expediente is
+    not matched against the receipt's número de justificante.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130EXPONLY"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026, presentation_id=None)
@@ -236,7 +240,7 @@ def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparab
             },
         )
 
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
 
 @pytest.mark.parametrize(

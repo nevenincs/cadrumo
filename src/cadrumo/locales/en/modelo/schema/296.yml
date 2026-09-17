@@ -12,8 +12,8 @@ modelo:
             label: Withholdings and payments on account
           irnr-resumen-retenciones-ingresadas:
             help: 'The portion of withholdings actually paid in: only recipients with
-              clave 3 to 25, and those with clave 1 or 2 where pago is 1. May be lower
-              than box 03.'
+              "clave" 3 to 25, and those with "clave" 1 or 2 where "pago" is 1. May
+              be lower than box 03.'
             label: Withholdings and payments on account actually paid in
       field:
         official_name: Modelo 296. Non-Resident Income Tax. Non-residents without

@@ -149,7 +149,6 @@ from ._revision_span_boundary_support import (
     _boundary_label,
     _compare_design_pair,
     _description_flip_evidence,
-    _designs_claimed_by,
 )
 from ._revision_span_declaration_support import (
     _NON_EJERCICIO_COVERAGE_AXIS,
@@ -262,18 +261,18 @@ def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
     """
     retired_seen: list[str] = []
     revived_seen: list[str] = []
-    for modelo, _revision_id, revision in _declared_revisions():
-        sources = dict(_sources_by_year(modelo.id))
-        for earlier, later in pairwise(sorted(_claimed_years(revision, set(sources)))):
+    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in _declared_revisions()}):
+        sources = dict(_sources_by_year(modelo_id))
+        for earlier, later in pairwise(sorted(sources)):
             before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
             shared = set(before) & set(after)
             retired_seen.extend(
-                f"modelo {modelo.id} {earlier}/{later} {slot[0]} offset {slot[1]}"
+                f"modelo {modelo_id} {earlier}/{later} {slot[0]} offset {slot[1]}"
                 for slot in shared
                 if not before[slot] and after[slot]
             )
             revived_seen.extend(
-                f"modelo {modelo.id} {earlier}/{later} {slot[0]} offset {slot[1]}"
+                f"modelo {modelo_id} {earlier}/{later} {slot[0]} offset {slot[1]}"
                 for slot in shared
                 if before[slot] and not after[slot]
             )
@@ -399,10 +398,12 @@ def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_re
     """
     positive: list[str] = []
     alone: list[tuple[str, str, tuple[int, int]]] = []
-    for modelo, revision_id, revision in _declared_revisions():
-        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
+    for modelo_id in sorted({str(modelo.id) for modelo, _revision_id, _revision in _declared_revisions()}):
+        ordered, _unorderable = _designs_in_publication_order(modelo_id)
+        for earlier, later in pairwise(ordered):
             if _description_flip_evidence(earlier, later):
-                positive.append(f"modelo {modelo.id} {_boundary_label(earlier, later)}")
+                positive.append(f"modelo {modelo_id} {_boundary_label(earlier, later)}")
+    for modelo, revision_id, revision in _declared_revisions():
         for key, evidence in _boundaries_for(modelo.id, revision).items():
             if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
                 alone.append((modelo.id, revision_id, key))

@@ -121,21 +121,31 @@ def casilla_audit(
 def casilla_orthography(
     as_json: Annotated[bool, typer.Option("--json", help="Emit every finding as JSON.")] = False,
 ) -> None:
-    """Report stored casilla words that lost their diacritics; exit 1 when any remain."""
-    from .casilla_orthography import unaccented_words
-    from .modelo_casilla_catalogue import load_casilla_values
+    """Report casilla words that lost their diacritics or were left in Spanish; exit 1 when any remain."""
+    from .casilla_orthography import spanish_leftovers, unaccented_words
+    from .modelo_casilla_catalogue import ModeloCasillaCatalogue
 
-    findings = list(unaccented_words(load_casilla_values(LOCALES_DIR)))
+    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    unaccented = list(unaccented_words(catalogue.values))
+    sources = {locale: catalogue.served_sources(locale) for locale in catalogue.locales}
+    leftovers = list(spanish_leftovers(catalogue.values, sources))
     if as_json:
-        payload = [
-            {"locale": item.locale, "key": item.key, "word": item.word, "candidates": list(item.candidates)}
-            for item in findings
-        ]
+        payload = {
+            "unaccented": [
+                {"locale": item.locale, "key": item.key, "word": item.word, "candidates": list(item.candidates)}
+                for item in unaccented
+            ],
+            "spanish_leftovers": [
+                {"locale": item.locale, "key": item.key, "words": list(item.words)} for item in leftovers
+            ],
+        }
         typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
     else:
-        for item in findings:
-            typer.echo(f"{item.locale} {item.key} {item.word} -> {'/'.join(item.candidates)}")
-    if findings:
+        for item in unaccented:
+            typer.echo(f"unaccented {item.locale} {item.key} {item.word} -> {'/'.join(item.candidates)}")
+        for leftover in leftovers:
+            typer.echo(f"spanish-leftover {leftover.locale} {leftover.key} {' '.join(leftover.words)}")
+    if unaccented or leftovers:
         raise typer.Exit(code=1)
 
 

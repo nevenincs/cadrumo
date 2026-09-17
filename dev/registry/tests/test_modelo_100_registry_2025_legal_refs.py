@@ -183,7 +183,7 @@ def test_modelo_100_2025_inmueble_continuity_uses_inmueble_refs_only() -> None:
         if str(evolution.continuidad_id) in _INMUEBLE_2025_CONTINUITY_REFS
     ]
 
-    assert len(checked) == 10
+    assert {str(evolution.continuidad_id) for evolution in checked} == set(_INMUEBLE_2025_CONTINUITY_REFS)
     offenders = {
         evolution.id: evolution.legal_refs
         for evolution in checked
@@ -292,10 +292,18 @@ def test_modelo_100_2025_non_payment_metadata_do_not_cite_fractional_payment_art
         for deadline in revision.deadline_windows
         if _FRACTIONAL_PAYMENT_ARTICLE_REF in deadline.legal_refs
     }
+    # The fractional-payment casilla itself must cite the payment articles, and
+    # its continuity evolutions carry that casilla's own grounding.
+    fractional_payment_continuidad = next(
+        casilla.continuidad_id
+        for casilla in revision.casillas
+        if casilla.id == validated_casilla_id("0604", surface="test_modelo_100_registry.casilla")
+    )
     continuity_offenders = {
         evolution.id: evolution.legal_refs
         for evolution in revision.casilla_continuidad_evolutions
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in evolution.legal_refs
+        if evolution.continuidad_id != fractional_payment_continuidad
+        and _FRACTIONAL_PAYMENT_ARTICLE_REF in evolution.legal_refs
     }
 
     assert not binding_offenders

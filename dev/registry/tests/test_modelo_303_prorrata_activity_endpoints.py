@@ -324,8 +324,12 @@ def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_so
         committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
-def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_construction() -> None:
-    """All real 2025 projection-only casillas require their revision declaration matrix."""
+def test_m303_projection_declaration_matrix_cannot_be_deleted() -> None:
+    """All real 2025 projection-only casillas require their revision declaration matrix.
+
+    Registry validation owns the refusal; a published snapshot is built only from
+    authority that already passed it.
+    """
     modelo, catalogues = _committed_modelo("303")
     revision = build_snapshot(
         modelo,
@@ -345,16 +349,6 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_co
         RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
     ):
         committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
-    with pytest.raises(
-        RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
-    ):
-        build_snapshot(
-            mutated_modelo,
-            catalogues,
-            source_root=bundled_path(),
-            filing_year=2025,
-            period="4T",
-        )
 
 
 def test_real_layoutless_revision_without_projection_only_casillas_needs_no_declarations() -> None:

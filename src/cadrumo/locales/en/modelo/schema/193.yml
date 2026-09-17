@@ -22,6 +22,7 @@ modelo:
           devengo-year:
             label: ACCRUAL YEAR
           gasto-contributor-nif:
+            help: 'See the information for this box: Taxpayer''s tax ID (NIF).'
             label: Taxpayer's tax ID (NIF)
           gasto-contributor-nombre:
             label: Taxpayer's surnames and given name, or business name

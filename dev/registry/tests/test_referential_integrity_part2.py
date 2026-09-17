@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 from ._referential_integrity_support import (
+    PRIOR_REVISION_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     build_snapshot_with_missing_legal,
@@ -578,8 +579,8 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
         continuidad_id="test-continuidad",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=PRIOR_REVISION_ID,
+        to_revision="test-revision",
         evolution_kind="label_evolved",
         legal_refs=(_MISSING_LEGAL_ID,),
         source_refs=(_MISSING_SOURCE_ID,),
@@ -606,8 +607,8 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
         continuidad_id="test-continuidad",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=PRIOR_REVISION_ID,
+        to_revision="test-revision",
         evolution_kind="label_evolved",
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(_PARITY_SOURCE_ID,),
@@ -642,8 +643,8 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
         continuidad_id="test-continuidad",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=PRIOR_REVISION_ID,
+        to_revision="test-revision",
         evolution_kind="legal_refs_evolved",
         legal_refs=(_EXTRA_LEGAL_ID,),
         source_refs=(_EXTRA_SOURCE_ID,),
@@ -652,6 +653,7 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
         update={
             "completeness_manifest": manifest,
             "casilla_continuidad_evolutions": (evolution,),
+            "source_refs": (REFERENCE_SOURCE_ID, _EXTRA_SOURCE_ID),
         },
     )
     catalogues = minimal_catalogues()
@@ -707,8 +709,8 @@ def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
         continuidad_id="test-continuidad",
-        from_revision="2024",
-        to_revision="2025",
+        from_revision=PRIOR_REVISION_ID,
+        to_revision="test-revision",
         evolution_kind="label_evolved",
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),

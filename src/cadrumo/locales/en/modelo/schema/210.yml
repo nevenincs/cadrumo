@@ -24,6 +24,8 @@ modelo:
           irnr-deduccion-donativos:
             label: Deduction for donations
           irnr-exencion-dividendos:
+            help: 'See the information for this box: Dividend exemption applied (annual
+              limit of 1,500 euros).'
             label: Dividend exemption applied (annual limit of 1,500 euros)
           irnr-exenciones-ley-irnr-indicador:
             label: Exemptions under the IRNR Law, except dividends (annual limit EUR
@@ -51,6 +53,7 @@ modelo:
           irnr-ingreso-devolucion-anterior:
             label: Previous payment/refund (supplementary self-assessment only)
           irnr-limite-convenio:
+            help: 'See the information for this box: Limit under the tax treaty.'
             label: Limit under the tax treaty
           irnr-mejora-diferencia:
             label: Improvement or 2nd acquisition. Difference (210 H)
@@ -64,6 +67,7 @@ modelo:
           irnr-porcentaje-convenio:
             label: Tax treaty percentage (%)
           irnr-reduccion-convenio:
+            help: 'See the information for this box: Reduction under the tax treaty.'
             label: Reduction under the tax treaty
           irnr-rendimientos-integros:
             label: Gross income

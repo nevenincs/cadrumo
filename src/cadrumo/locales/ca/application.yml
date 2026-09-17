@@ -1066,6 +1066,8 @@ application:
         no té cap correcció manual de l'operador per eliminar.
       local_observation_reason_blank: Una correcció manual d'una observació n'ha d'indicar
         el motiu.
+      local_observation_spreadsheet_malformed_rows: 'El full de càlcul té %{malformed_row_count}
+        files inutilitzables: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: La declaració del model 036 indica
         un perfil diferent del bucket on es registraria
       m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model

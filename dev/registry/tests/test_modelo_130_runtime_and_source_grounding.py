@@ -11,6 +11,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.binding_temporal import BindingTemporalKind
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -211,8 +212,11 @@ def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
     assert selector_as_dict(carry_binding) == {
         "source_modelo": "130",
         "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-        "source_period_offset_from_target": -1,
-        "max_year_delta": 0,
+        "temporal": {
+            "kind": BindingTemporalKind.TARGET_PERIOD_OFFSET,
+            "periods": -1,
+            "within_filing_year": True,
+        },
     }
     assert carry_binding.source_refs == ("aeat-modelo-130-instructions",)
     assert carry_binding.source_citations

@@ -104,7 +104,8 @@ _ROOT: Path = REPO_ROOT
 #: does CI never run this test".
 _CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
     {
-        # Needs LibreOffice for binary .xls conversion; not in the dependency set.
+        # Needs a tool outside the Python dependency set: LibreOffice for binary
+        # .xls conversion, or the npm-installed Hunspell dictionaries.
         "external_tool",
         # Reads a real external service; opt-in, and never enabled on CI.
         "aeat_live",
@@ -145,6 +146,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-resident-service",
         "test-registry-live",
         "test-workbook-parity",
+        "test-locale-spelling",
     },
 )
 _FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})

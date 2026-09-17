@@ -101,7 +101,7 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
     values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
     if malformed:
         raise ModeloLocalObservationError(
-            translated_message="errors.error.error_modelos",
+            translated_message="application.modelo.errors.local_observation_spreadsheet_malformed_rows",
             context={
                 "path": str(path),
                 "malformed_row_count": str(len(malformed)),

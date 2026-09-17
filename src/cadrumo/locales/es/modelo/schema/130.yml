@@ -13,44 +13,81 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
+              help: Ingresos acumulados de la actividad económica.
               label: Ingresos
             '02':
+              help: Gastos acumulados de la actividad económica.
               label: Gastos
             '03':
+              help: Rendimiento neto de las actividades económicas en estimación directa,
+                calculado como ingresos menos gastos.
               label: Rendimiento neto
             '04':
+              help: Importe del pago fraccionado por actividades en estimación directa
+                antes de pagos previos y retenciones.
               label: Importe del pago fraccionado
             '05':
+              help: Pagos fraccionados ya realizados anteriormente en el mismo ejercicio
+                por actividades en estimación directa.
               label: Pagos fraccionados anteriores
             '06':
+              help: Retenciones e ingresos a cuenta soportados durante el período
+                por actividades en estimación directa.
               label: Retenciones e ingresos a cuenta
             '07':
+              help: Resultado parcial del apartado I tras restar los pagos previos
+                y las retenciones al pago fraccionado de estimación directa.
               label: Resultado parcial apartado I
             08:
+              help: Volumen de ingresos del trimestre procedente de actividades agrícolas,
+                ganaderas, forestales o pesqueras.
               label: Volumen de ingresos del trimestre
             09:
+              help: Importe del pago fraccionado por actividades agrícolas, ganaderas,
+                forestales o pesqueras.
               label: Importe del pago fraccionado
             '10':
+              help: Retenciones e ingresos a cuenta soportados durante el período
+                por actividades agrícolas, ganaderas, forestales o pesqueras.
               label: Retenciones e ingresos a cuenta
             '11':
+              help: Resultado parcial del apartado II tras restar las retenciones
+                al pago fraccionado agrícola, ganadero, forestal o pesquero.
               label: Resultado parcial apartado II
             '12':
+              help: Suma de los resultados parciales de los apartados I y II.
               label: Suma de resultados parciales
             '13':
+              help: Minoración aplicable cuando los rendimientos netos se sitúan dentro
+                del umbral regulador del modelo 130.
               label: Minoracion por rendimientos netos
             '14':
+              help: Importe restante después de aplicar la reducción por rendimientos
+                netos.
               label: Neto tras minoracion
             '15':
+              help: Deducción por resultados negativos de trimestres anteriores del
+                mismo ejercicio.
               label: Resultados negativos de trimestres anteriores
             '16':
+              help: Deducción por inversión en la vivienda habitual cuando se aplica
+                el régimen transitorio.
               label: Deducción por inversión en vivienda habitual
             '17':
+              help: Diferencia después de aplicar los resultados negativos anteriores
+                y, en su caso, la deducción por vivienda habitual.
               label: Diferencia
             '18':
+              help: Importe a ingresar ya declarado en autoliquidaciones anteriores
+                del mismo período y ejercicio.
               label: Resultado a ingresar de autoliquidaciones anteriores
             '19':
+              help: Importe final a ingresar del modelo 130 después de todas las deducciones
+                y autoliquidaciones anteriores.
               label: Resultado final
             saldo-negativo-fin-periodo:
+              help: Importe de traspaso calculado cuando la casilla 17 es negativa,
+                utilizado como deducción en la casilla 15 de un trimestre posterior.
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 17)
           field:

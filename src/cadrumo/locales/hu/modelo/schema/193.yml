@@ -22,6 +22,8 @@ modelo:
           devengo-year:
             label: ESEDÉKESSÉG ÉVE
           gasto-contributor-nif:
+            help: 'Lásd a mezőre vonatkozó tájékoztatást: Az adózó adóazonosító száma
+              (NIF).'
             label: Az adózó adóazonosító száma (NIF)
           gasto-contributor-nombre:
             label: Az adózó vezetékneve és utóneve, vagy elnevezése

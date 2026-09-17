@@ -121,8 +121,8 @@ class _JustificanteMetadata:
     def __init__(self, repository: JustificanteRepository) -> None:
         self._repository = repository
 
-    def save(self, justificante: Justificante) -> None:
-        self._repository.save(justificante)
+    def save(self, payload: Justificante) -> None:
+        self._repository.save(payload)
 
 
 class _LiveRead:

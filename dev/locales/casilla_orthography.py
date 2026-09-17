@@ -26,7 +26,14 @@ if TYPE_CHECKING:
 
     from .modelo_casilla_catalogue import Values
 
-__all__ = ["REVIEWED_UNACCENTED_WORDS", "UnaccentedWord", "unaccented_words"]
+__all__ = [
+    "REVIEWED_SPANISH_TERMS",
+    "REVIEWED_UNACCENTED_WORDS",
+    "SpanishLeftover",
+    "UnaccentedWord",
+    "spanish_leftovers",
+    "unaccented_words",
+]
 
 #: Per locale, the diacritic each plain letter may have lost.
 _RESTORABLE: Final[dict[str, dict[str, str]]] = {
@@ -47,7 +54,11 @@ _MAX_RESTORED: Final = 3
 REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # English product text and the abbreviation "impon." of "imponible";
     # "super" only occurs bound in the official rate name "super-reducido".
-    "es": frozenset({"Coin", "Comic", "Name", "impon", "name", "super"}),
+    # "inter vivos" is Latin, and "bitcoin" is the asset name.
+    "es": frozenset({"Coin", "Comic", "Name", "bitcoin", "impon", "inter", "name", "super"}),
+    # Proper names (Sorolla, Illes Balears, Tokio) and correct inflections:
+    # "sorok" (rows), "egyenleget" (accusative), "nekik" (to them).
+    "hu": frozenset({"Illes", "Sorolla", "Tokio", "egyenleget", "nekik", "sorok"}),
 }
 
 
@@ -104,3 +115,83 @@ def unaccented_words(
                     verdicts[word] = () if plain else _restorations(word, table, dictionary.lookup)
                 if verdicts[word]:
                     yield UnaccentedWord(locale, key, word, verdicts[word])
+
+
+#: Spanish tax vocabulary every locale keeps untranslated, and registry identifier stems.
+_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "casilla", "casillas", "contraparte", "importe"})
+#: Per locale, Spanish terms a translation keeps on purpose: "pro rata" is Latin in
+#: English, and "recargo de equivalencia" names the Spanish VAT regime.
+REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
+    "en": frozenset({"equivalencia", "rata", "recargo"}),
+}
+_QUOTED: Final = re.compile(r"«[^»]*»|\"[^\"]*\"|“[^”]*”|„[^”]*”|\([^)]*\)")
+_TRANSLATED_LOCALES: Final = ("en", "ca", "hu")
+_MIN_LEFTOVERS: Final = 2
+_MIN_VERBATIM_RUN: Final = 3
+
+
+@dataclass(frozen=True)
+class SpanishLeftover:
+    """A translation still carrying untranslated Spanish words outside quotations."""
+
+    locale: str
+    key: str
+    words: tuple[str, ...]
+
+
+def _verbatim_runs(text: str, sources: frozenset[str]) -> str:
+    """Blank every capitalised or numbered run of words the translation copies verbatim from its Spanish source.
+
+    An official Spanish name (a programme, a deduction, a body) is carried
+    untranslated on purpose; a glossary pass instead interleaves single words.
+    """
+    words = text.split()
+    kept = [True] * len(words)
+    source_texts = [f" {' '.join(source.split())} " for source in sources]
+    start = 0
+    while start < len(words):
+        end = start
+        if words[start][:1].isupper() or words[start][:1].isdigit():
+            while end < len(words) and any(
+                f" {' '.join(words[start : end + 1])} " in source for source in source_texts
+            ):
+                end += 1
+        if end - start >= _MIN_VERBATIM_RUN:
+            kept[start:end] = [False] * (end - start)
+            start = end
+        else:
+            start += 1
+    return " ".join(word for word, keep in zip(words, kept, strict=True) if keep)
+
+
+def spanish_leftovers(
+    values: Values,
+    sources: Mapping[str, Mapping[str, frozenset[str]]],
+) -> Iterator[SpanishLeftover]:
+    """Yield translations with Spanish words the target dictionary rejects, in key order.
+
+    ``sources[locale][key]`` holds the Spanish texts the key renders. Only
+    lowercase words count, quoted or parenthesised text is skipped, and so is a
+    capitalised run copied verbatim from the source, because official names are
+    carried untranslated.
+    """
+    dictionaries = load_dictionaries(REPO_ROOT)
+    spanish = dictionaries["es"]
+    for locale in _TRANSLATED_LOCALES:
+        target = dictionaries[locale]
+        kept = REVIEWED_SPANISH_TERMS.get(locale, frozenset())
+        verdicts: dict[str, bool] = {}
+        for key, value in sorted(values.get(locale, {}).items()):
+            if value is None:
+                continue
+            leftovers: list[str] = []
+            prose = _verbatim_runs(_QUOTED.sub(" ", value), sources.get(locale, {}).get(key, frozenset()))
+            for word in _WORD.findall(_NOT_PROSE.sub(" ", prose)):
+                if len(word) < _MIN_LENGTH or not word.islower() or word in _KEPT_SPANISH or word in kept:
+                    continue
+                if word not in verdicts:
+                    verdicts[word] = bool(spanish.lookup(word)) and not target.lookup(word)
+                if verdicts[word]:
+                    leftovers.append(word)
+            if len(leftovers) >= _MIN_LEFTOVERS:
+                yield SpanishLeftover(locale, key, tuple(leftovers))
