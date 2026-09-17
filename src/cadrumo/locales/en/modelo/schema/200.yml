@@ -9101,10 +9101,10 @@ modelo:
             label: Joint taxation by State and Foral administrations - Instalment
               payments 2 - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
-            help: b) Reversal of impairment losses on securities (LIS transitional
-              provision 16) - B.1. Participaciones declarante en otras entidades
-            label: B.1. Participaciones declarante en otras entidades. b) Reversal
-              of impairment losses on securities (LIS transitional provision 16)
+            help: b) Reversal of impairment losses on securities (DT 16ª LIS) - B.1.
+              Reporting entity's holdings in other entities
+            label: B.1. Reporting entity's holdings in other entities. b) Reversal
+              of impairment losses on securities (DT 16ª LIS)
           is-participaciones-directas-d-a-correccion-de-valor-incluida-en-perdidas-y-ganancias-ejerc:
             help: Box 1504 of the annual corporate income tax return, modelo 200.
             label: Direct holdings in other entities. Valuation corrections. a) Value
@@ -13978,7 +13978,7 @@ modelo:
             '03406':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of special taxable base, year 2025(*) - Applied en esta liquid...'
+                of special taxable base, tax year 2025(*) - Applied in this asses...'
             '03407':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset

@@ -8998,9 +8998,9 @@ modelo:
               2 - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Reversió de pèrdues per deteriorament de valors (DT 16a LIS)
-              - B.1. Participaciones declarante en otras entidades
-            label: B.1. Participaciones declarante en otras entidades. b) Reversió
-              de pèrdues per deteriorament de valors (DT 16a LIS)
+              - B.1. Participacions declarant en altres entitats
+            label: B.1. Participacions declarant en altres entitats. b) Reversió de
+              pèrdues per deteriorament de valors (DT 16a LIS)
           is-participaciones-directas-d-a-correccion-de-valor-incluida-en-perdidas-y-ganancias-ejerc:
             help: Casella 1504 de la declaració anual de l'Impost sobre Societats,
               model 200.
@@ -13691,7 +13691,7 @@ modelo:
             '03406':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació
-                de base imposable especial any 2025(*) - Aplicat en esta liquid...'
+                de base imposable especial any 2025(*) - Aplicat en aquesta liquid...'
             '03407':
               label: 'Règim especial de vaixells i empreses navilieres a Canàries:
                 desglossament de la compensació de bases imposables negatives - Compensació

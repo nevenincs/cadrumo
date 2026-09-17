@@ -781,7 +781,9 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     # Per-row template casillas are answered by the rows their record emits, so
     # the scalar required-ness check does not demand them. Modelo 349 keeps them
     # required: the validator proves its operador and rectificacion rows exist.
-    row_owned = frozenset() if str(modelo.id) == Modelo("349").value else row_template_casilla_ids(revision)
+    row_owned: frozenset[CasillaId] = (
+        frozenset[CasillaId]() if str(modelo.id) == Modelo("349").value else row_template_casilla_ids(revision)
+    )
     casillas = tuple(
         sorted(
             (

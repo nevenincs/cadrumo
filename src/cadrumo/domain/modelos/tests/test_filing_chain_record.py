@@ -19,6 +19,7 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
+    declaration_kind_for_tipo_solicitud,
     derive_filing_record_id,
 )
 
@@ -178,3 +179,22 @@ def test_discarded_correction_keeps_its_link_while_the_baseline_moves_on() -> No
     }
     with pytest.raises(ValidationError, match="one-sided amendment link"):
         ModeloRecordCatalogue(records=still_pending)
+
+
+@pytest.mark.parametrize(
+    ("tipo_solicitud", "expected"),
+    [
+        ("Autoliquidación complementaria", FilingDeclarationKind.COMPLEMENTARIA),
+        ("DECLARACION SUSTITUTIVA", FilingDeclarationKind.SUSTITUTIVA),
+        ("Autoliquidación rectificativa", FilingDeclarationKind.RECTIFICATIVA),
+        ("Autoliquidación", None),
+        ("complementaria o sustitutiva", None),
+        ("  ", None),
+        (None, None),
+    ],
+)
+def test_register_request_type_names_a_kind_only_when_it_states_exactly_one(
+    tipo_solicitud: str | None,
+    expected: FilingDeclarationKind | None,
+) -> None:
+    assert declaration_kind_for_tipo_solicitud(tipo_solicitud) is expected

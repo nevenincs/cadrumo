@@ -13,9 +13,9 @@ from ._app_ledger_command_spec_policies import (
 )
 from ._app_ledger_command_spec_support import (
     _boolean_flag_option,
-    _irpf_category_option,
     _option_from_application_contract,
     _optional_text_option,
+    irpf_category_option,
 )
 from .command_spec import (
     ArgumentSpec,
@@ -94,7 +94,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.classify.taxable_base_help"),
             _optional_text_option("iva_rate", ("--iva-rate",), "cli.ledger.classify.iva_rate_help"),
             _optional_text_option("iva_amount", ("--iva-amount",), "cli.ledger.classify.iva_amount_help"),
-            _irpf_category_option("cli.ledger.classify.irpf_category_help"),
+            irpf_category_option("cli.ledger.classify.irpf_category_help"),
             _optional_text_option(
                 "m210_tipo_renta_code", ("--m210-tipo-renta-code",), "cli.ledger.classify.m210_tipo_renta_code_help"
             ),

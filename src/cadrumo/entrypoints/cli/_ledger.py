@@ -321,7 +321,7 @@ def _prorrata_especial_inert_notice(
         message=message,
         context={
             "ejercicio": str(ejercicio),
-            "input_classification": input_classification.value,
+            "input_classification": input_classification,
             "sector_id": sector_id or "",
         },
     )

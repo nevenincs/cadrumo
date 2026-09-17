@@ -25,6 +25,8 @@ the filing record itself never initiates a live submission.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
 from typing import Annotated, Self, override
@@ -164,6 +166,28 @@ class FilingDeclarationKind(StrEnum):
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
     RECTIFICATIVA = "rectificativa"
+
+
+_DECLARATION_KIND_BY_TIPO_SOLICITUD_WORD: Mapping[str, FilingDeclarationKind] = {
+    "complementaria": FilingDeclarationKind.COMPLEMENTARIA,
+    "sustitutiva": FilingDeclarationKind.SUSTITUTIVA,
+    "rectificativa": FilingDeclarationKind.RECTIFICATIVA,
+}
+
+
+def declaration_kind_for_tipo_solicitud(tipo_solicitud: str | None) -> FilingDeclarationKind | None:
+    """Return the correction kind an AEAT register ``tipo_solicitud`` names, or ``None``.
+
+    Only a value naming exactly one correction kind is read; any other value,
+    including one describing an original declaration, stays ``None`` so the
+    caller never assumes a kind AEAT did not state.
+    """
+    if tipo_solicitud is None:
+        return None
+    folded = unicodedata.normalize("NFKD", tipo_solicitud).encode("ascii", "ignore").decode("ascii").casefold()
+    words = set(re.findall(r"[a-z]+", folded))
+    kinds = {kind for word, kind in _DECLARATION_KIND_BY_TIPO_SOLICITUD_WORD.items() if word in words}
+    return kinds.pop() if len(kinds) == 1 else None
 
 
 _TipoSolicitud = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
@@ -627,6 +651,7 @@ __all__ = [
     "ModeloRecord",
     "ModeloRecordCatalogue",
     "ModeloRecordStatus",
+    "declaration_kind_for_tipo_solicitud",
     "derive_filing_record_id",
     "is_justificante_backed_external_evidence",
     "is_receipt_bound_external_evidence",

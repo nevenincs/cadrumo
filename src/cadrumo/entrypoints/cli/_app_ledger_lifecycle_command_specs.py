@@ -17,10 +17,10 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_YEAR_OPTION,
     _blank_default_text_option,
     _boolean_flag_option,
-    _irpf_category_option,
     _optional_text_option,
     _repeatable_text_option,
     _required_text_argument,
+    irpf_category_option,
 )
 from .command_spec import (
     CommandSpec,
@@ -263,7 +263,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.update.taxable_base_help"),
             _optional_text_option("iva_rate", ("--iva-rate",), "cli.ledger.update.iva_rate_help"),
             _optional_text_option("iva_amount", ("--iva-amount",), "cli.ledger.update.iva_amount_help"),
-            _irpf_category_option("cli.ledger.update.irpf_category_help"),
+            irpf_category_option("cli.ledger.update.irpf_category_help"),
             _optional_text_option("notes", ("--notes",), "cli.ledger.update.notes_help"),
             _optional_text_option("group", ("--group",), "cli.ledger.update.group_help"),
             _LEDGER_ACTOR_OPTION,

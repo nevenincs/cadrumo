@@ -8,6 +8,7 @@ from ...core.aeat_csv import normalise_aeat_csv
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import (
+    AeatRegisterRef,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
@@ -122,10 +123,30 @@ def _receipt_reference_blockers(
         return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
     if _resolved_filing_identity(filing, taxpayer_tax_id) is None:
         return [CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY]
-    return _justificante_observation_reference_blockers(justificante, observation_source_metadata)
+    return [
+        *_register_reference_blockers(filing.aeat_register, justificante),
+        *_justificante_observation_reference_blockers(filing.aeat_register, justificante, observation_source_metadata),
+    ]
+
+
+def _register_reference_blockers(
+    register: AeatRegisterRef | None,
+    justificante: Justificante,
+) -> list[CrossPeriodCleanStateBlocker]:
+    """Compare the chain entry's AEAT register reference with the receipt, identifier by identifier."""
+    if register is None:
+        return []
+    if register.csv is not None and normalise_aeat_csv(register.csv) != normalise_aeat_csv(justificante.csv):
+        return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
+    receipt_number = _clean_metadata_value(justificante.presentation_id)
+    register_number = _clean_metadata_value(register.justificante_number)
+    if receipt_number is not None and register_number is not None and receipt_number != register_number:
+        return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
+    return []
 
 
 def _justificante_observation_reference_blockers(
+    register: AeatRegisterRef | None,
     justificante: Justificante,
     observation_source_metadata: Mapping[str, str] | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
@@ -133,7 +154,7 @@ def _justificante_observation_reference_blockers(
         return []
     return [
         *_justificante_csv_reference_blockers(justificante, observation_source_metadata),
-        *_justificante_expediente_reference_blockers(justificante, observation_source_metadata),
+        *_expediente_reference_blockers(register, observation_source_metadata),
     ]
 
 
@@ -154,22 +175,28 @@ def _justificante_csv_reference_blockers(
     return blockers
 
 
-def _justificante_expediente_reference_blockers(
-    justificante: Justificante,
+def _expediente_reference_blockers(
+    register: AeatRegisterRef | None,
     observation_source_metadata: Mapping[str, str],
 ) -> list[CrossPeriodCleanStateBlocker]:
+    """Tie the observation's register expediente to the receipt through a same-namespace identifier.
+
+    An expediente id is a register identifier, never a receipt one, so it is
+    compared only with the chain entry's own register expediente. Without that
+    reference the observation must name the receipt CSV instead.
+    """
     metadata_expediente_id = _clean_metadata_value(observation_source_metadata.get("aeat_expediente_id"))
     if metadata_expediente_id is None:
+        return []
+    if register is not None:
+        if register.expediente_id.strip().casefold() != metadata_expediente_id.casefold():
+            return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
         return []
     metadata_csv = _clean_metadata_csv(
         observation_source_metadata.get("aeat_justificante_csv") or observation_source_metadata.get("justificante_csv"),
     )
     metadata_csvs = _clean_metadata_csvs(observation_source_metadata.get("aeat_justificante_csvs"))
-    has_csv_reference = metadata_csv is not None or bool(metadata_csvs)
-    presentation_id = _clean_metadata_value(justificante.presentation_id)
-    if (presentation_id is None and not has_csv_reference) or (
-        presentation_id is not None and metadata_expediente_id.casefold() != presentation_id.casefold()
-    ):
+    if metadata_csv is None and not metadata_csvs:
         return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
     return []
 

@@ -78,7 +78,7 @@ class JustificanteSnapshotPersistencePort(Protocol):
 class JustificanteMetadataPort(Protocol):
     """Durable metadata registration for a parsed receipt."""
 
-    def save(self, justificante: Justificante) -> None:
+    def save(self, payload: Justificante) -> None:
         """Persist parsed receipt metadata."""
         ...
 

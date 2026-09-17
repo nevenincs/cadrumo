@@ -137,7 +137,7 @@ class FilingReconciliationNotice:
     """One reported condition, keyed by a stable code with identifier-only context."""
 
     code: FilingReconciliationNoticeCode
-    context: Mapping[str, str] = field(default_factory=dict)
+    context: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass(frozen=True, slots=True)
@@ -399,7 +399,9 @@ def _compare_with_pending(context: _Context, *, pending: ModeloRecord) -> _Compa
             period=entry.period,
             casilla_values=entry.casilla_values,
         )
-        computed = revision.casilla_values if revision is not None else {}
+        computed: Mapping[CasillaId, Decimal] = (
+            revision.casilla_values if revision is not None else dict[CasillaId, Decimal]()
+        )
         divergences = detect_casilla_divergences(
             computed=computed,
             filed=filed,
@@ -758,7 +760,8 @@ def _retire_for_aeat_entry(
             filing_catalogue=catalogue,
             revisions=revisions,
             new_filing_id=new_id,
-            now=context.now,
+            # AEAT's register can predate a local entry recorded afterwards.
+            now=max(context.now, superseded.filed_at),
         )
         if superseded.confirmation is AeatConfirmationState.PENDIENTE:
             retired = catalogue.records[superseded.filing_record_id].model_copy(
@@ -844,7 +847,7 @@ def _commit(
     result: FilingReconciliationResult,
     extra_writes: tuple[SecureObjectWrite, ...],
 ) -> None:
-    event = _reconciliation_event(context, result)
+    event = _reconciliation_event(context, result, catalogue=catalogue)
     context.ports.filing_repository.save_with_secure_object_writes(
         catalogue,
         (*extra_writes, bucket_event_history_write(context.ports.work_lifecycle.bucket_event_repository, (event,))),
@@ -852,8 +855,14 @@ def _commit(
     )
 
 
-def _reconciliation_event(context: _Context, result: FilingReconciliationResult) -> BucketEvent:
+def _reconciliation_event(
+    context: _Context,
+    result: FilingReconciliationResult,
+    *,
+    catalogue: ModeloRecordCatalogue,
+) -> BucketEvent:
     entry = context.entry
+    record = catalogue.get(result.filing_record_id) if result.filing_record_id is not None else None
     if result.filing_record_id is not None:
         object_type, object_id = BucketEventObjectType.FILING_RECORD, result.filing_record_id
     else:
@@ -870,8 +879,10 @@ def _reconciliation_event(context: _Context, result: FilingReconciliationResult)
             "modelo": entry.modelo,
             "filing_year": str(entry.filing_year),
             "period": entry.period.registry_token,
-            "member_nif": entry.member_nif or "",
+            "member_scoped": "true" if entry.member_nif is not None else "false",
             "filing_record_id": result.filing_record_id or "",
+            "work_unit_id": record.work_unit_id if record is not None else "",
+            "calculation_revision_id": record.calculation_revision_id if record is not None else "",
             "affected_filing_record_ids": ",".join(result.affected_filing_record_ids),
             "differing_casilla_ids": ",".join(result.differing_casilla_ids),
             "evidence_basis": result.evidence_basis or "",

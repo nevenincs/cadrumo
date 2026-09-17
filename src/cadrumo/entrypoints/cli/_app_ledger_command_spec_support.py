@@ -33,7 +33,7 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 _NO_RESULT_SCHEMA: Final[ResultSchemaSpec] = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 
 
-def _irpf_category_option(help_key: str) -> OptionSpec:
+def irpf_category_option(help_key: str) -> OptionSpec:
     """Declare the optional ``--irpf-category`` token, resolved against the published taxonomy."""
     return OptionSpec(
         name="irpf_category",
