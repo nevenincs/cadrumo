@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.schema import BindingDefinition, Regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
 from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
@@ -83,12 +84,17 @@ def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySn
         # model. Built at the rung 036 actually declares -- its censal alta is
         # filed on AEAT's sede and it authors no export layout, so the FILING
         # rung refuses it on a capability this test never reads.
+        # Built on the day the newest declared 036 design takes effect, so the
+        # selection is exact whichever designs share that filing year.
+        modelo_036 = modelos_by_id["036"]
+        newest_start = max(revision.valid_from for revision in modelo_036.revisions.values())
         snapshot = build_snapshot(
-            modelos_by_id["036"],
+            modelo_036,
             catalogues,
             source_root=_source_root(),
-            filing_year=2025,
+            filing_year=newest_start.year,
             period="alta",
+            on=newest_start,
             grade=RegistryAuthorityGrade.APPLICABILITY,
         )
         return snapshot, snapshot.filing_schedules
@@ -559,7 +565,9 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
     assert "Consulta de declaraciones presentadas" in source_text
     assert "Datos fiscales" in source_text
 
-    for year in range(2020, 2026):
+    support = published_supported_filing_years()
+    assert support is not None
+    for year in support.years:
         snapshot = _modelo_100_snapshot(year)
         cross_reference = snapshot.live_cross_references["modelo-100-filed-declarations-read"]
         policy = remote_state_policy_from_cross_reference(cross_reference)

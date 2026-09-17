@@ -25,7 +25,7 @@ import pytest
 
 from ..spending_category import HOME_OFFICE_FAMILIES, SpendingCategoryFamily, home_office_categories
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 #: The module allowed to name both families together: the canonical declaration.
 _CANONICAL_MODULE = "spending_category.py"

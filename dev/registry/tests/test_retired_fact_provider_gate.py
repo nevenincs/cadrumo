@@ -30,6 +30,7 @@ from ..compiler.loader import load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 from ..pipeline.candidate_staging import stage_generated_export_candidate
 from ..pipeline.cli import supporting_modelos
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,6 +58,7 @@ def _resolve_scalar(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             effective_date=effective_date,
         ),
         authority_digest="6" * 64,
+        support=committed_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedScalarFact)
     return resolved
@@ -71,6 +73,7 @@ def _resolve_entities(fact_id: str, effective_date: date) -> ResolvedEntitySetFa
             effective_date=effective_date,
         ),
         authority_digest="6" * 64,
+        support=committed_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedEntitySetFact)
     return resolved
@@ -137,32 +140,32 @@ def test_canonical_compiler_validator_reports_a_missing_migrated_fact() -> None:
 
 
 def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
-    assert _resolve_scalar("lirpf-art-101:retencion-administrador-reducida", date(2015, 1, 1)).payload.value == Decimal(
-        "0.19"
+    """Inside the supported filing years, each authored legal change is its own variant."""
+    administrator_rate = "lirpf-art-101:retencion-administrador-reducida"
+    assert (
+        _resolve_scalar(administrator_rate, date(2022, 12, 31)).variant_id
+        != _resolve_scalar(administrator_rate, date(2023, 1, 1)).variant_id
     )
     professional_rate = "rirpf-art-95:retencion-actividades-profesionales-general"
-    assert _resolve_scalar(professional_rate, date(2015, 1, 1)).payload.value == Decimal("0.18")
-    assert _resolve_scalar(professional_rate, date(2015, 7, 12)).payload.value == Decimal("0.15")
-    assert _resolve_scalar("liva-art-161:recargo-rate-general", date(2012, 8, 31)).payload.value == Decimal("0.04")
-    assert _resolve_scalar("liva-art-161:recargo-rate-general", date(2012, 9, 1)).payload.value == Decimal("0.052")
+    assert (
+        _resolve_scalar(professional_rate, date(2023, 1, 25)).variant_id
+        != _resolve_scalar(professional_rate, date(2023, 1, 26)).variant_id
+    )
     exclusion = "lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur"
     assert _resolve_scalar(exclusion, date(2024, 12, 31)).payload.value == Decimal("250000")
     assert _resolve_scalar(exclusion, date(2025, 1, 1)).payload.value == Decimal("150000")
     assert _resolve_entities(
-        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2018, 12, 23)
+        "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario", date(2022, 1, 1)
     ).payload.entities == frozenset({"subvencion_capital", "indemnizacion"})
     assert _resolve_entities(
-        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2007, 4, 1)
+        "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria", date(2022, 1, 1)
     ).payload.entities == frozenset({"subvencion_corriente", "subvencion_capital", "indemnizacion"})
 
 
 def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve_scalar("lirpf-art-101:retencion-administrador-reducida", date(2014, 12, 31))
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve_entities("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve_entities("modelo-131:selector-m036-volumen-ingresos-agrario", date(2026, 3, 31))
+    # Historical variants stay authored, but the registry's floor refuses them.
+    with pytest.raises(RegistryValidationError, match="falls outside the supported filing years"):
+        _resolve_scalar("liva-art-161:recargo-rate-general", date(2012, 9, 1))
 
 
 def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -12,7 +12,7 @@ import pytest
 
 from ..prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_art_104_tres_exclusion_has_exactly_the_six_law_members() -> None:

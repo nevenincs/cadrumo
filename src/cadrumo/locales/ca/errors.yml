@@ -606,6 +606,7 @@ errors:
       no pertany al perfil des del qual s'ha llegit.
     integrity_cadrumo_core_validation: Una comprovació interna d'integritat de dades
       no s'ha superat.
+    integrity_cadrumo_toml_decode: No s'ha pogut analitzar un document TOML.
     integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
       mal configurat.
     integrity_corpus_anchor_resolution: Una àncora del corpus inclòs no es resol exactament

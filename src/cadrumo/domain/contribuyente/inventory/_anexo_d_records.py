@@ -21,6 +21,7 @@ from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents as _quantize
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.governed_fact_scope import governed_facts_in_scope
 from .closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingConflictDiagnostic,
@@ -42,6 +43,9 @@ def _resolve_anexo_d_registry_declarations(
     *, filing_year: int, authority: PinnedAuthorityOperation | None = None
 ) -> tuple[object, object]:
     """Resolve the selected M100 record and inventory-binding surfaces."""
+    if authority is None:
+        scoped = governed_facts_in_scope()
+        authority = scoped if isinstance(scoped, PinnedAuthorityOperation) else None
     if authority is None:
         raise InventoryValidationError(
             "inventory Anexo D registry resolution requires an explicit pinned authority operation",

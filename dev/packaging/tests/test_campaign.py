@@ -18,6 +18,7 @@ from ..campaign import (
     COHORT_DIR,
     PROFILES,
     PytestPass,
+    _adopt_cohort,
     _attempt_step,
     _run_step,
     _test_worker_count,
@@ -370,3 +371,23 @@ def test_a_held_out_module_stays_held_out_after_the_split() -> None:
     assert serial.ignore, "this case is vacuous unless the pass holds something out"
     for held in serial.ignore:
         assert held not in serial_pass_modules(serial, REPO_ROOT)
+
+
+def test_a_missing_prebuilt_cohort_is_refused_before_any_step(tmp_path: Path) -> None:
+    """A cohort path that does not exist refuses rather than falling back to a build."""
+    with pytest.raises(FileNotFoundError):
+        _adopt_cohort(tmp_path / "absent", tmp_path)
+    assert not (tmp_path / COHORT_DIR).exists()
+
+
+def test_an_unverifiable_prebuilt_cohort_is_refused_and_never_placed(tmp_path: Path) -> None:
+    """The prebuilt cohort must pass the real cohort verifier before any form can read it."""
+    bogus = tmp_path / "cohort"
+    bogus.mkdir()
+    (bogus / "python-cohort.json").write_text("{}", encoding="utf-8")
+    destination = REPO_ROOT / COHORT_DIR
+    before = sorted(p.name for p in destination.iterdir()) if destination.is_dir() else None
+    with pytest.raises(SystemExit, match="verify-cohort"):
+        _adopt_cohort(bogus, REPO_ROOT)
+    after = sorted(p.name for p in destination.iterdir()) if destination.is_dir() else None
+    assert after == before

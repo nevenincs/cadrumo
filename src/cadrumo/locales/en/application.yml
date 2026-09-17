@@ -1047,8 +1047,27 @@ application:
         %{total_base} EUR is not folded into casilla %{casilla_id}.
       cross_casilla_invariant_violated: The cross-casilla invariant %{predicate_id}
         declared by the registry is violated in this revision.
+      cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
+        %{target_period} needs a declared activity start date.
       cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
         %{source_period} is not clean for %{origin_ids}: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is scoped out: activity started %{activity_start_date}.'
+      cross_period_m111_no_retenciones: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}
+        %{target_period}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} source modelo(s) are not applicable to this
+          taxpayer: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: Modelo %{source_modelo} %{source_filing_year} %{source_period} rests
+          on a local chain (%{origin_code}), not official AEAT evidence.
+      cross_period_operator_declared_suppression: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is suppressed by operator declaration (%{origin_code}), with
+        declared activity start date %{activity_start_date}.
+      cross_period_zero_value_previous_filing: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}
+        %{target_period}.
       cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
         %{iva_category_code} has no declarable base.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: foreign
@@ -1086,6 +1105,16 @@ application:
         requires %{requested_grade} authority.
       registry_snapshot_unresolved: The registry snapshot for modelo %{modelo} %{filing_year}
         %{period} could not be resolved.
+      suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
+        del capital mobiliario del ahorro but credits no suffered retención (%{predicate_id}).
+        Enter the amount from the payer's certificado de retenciones e ingresos a
+        cuenta; the taxpayer never filed the Modelo 123 that declares it, so this
+        value cannot be filled in automatically.
+      suffered_retencion_trabajo_uncredited: This return declares rendimientos del
+        trabajo but credits no suffered retención (%{predicate_id}). Enter the amount
+        from the payer's certificado de retenciones e ingresos a cuenta; the taxpayer
+        never filed the Modelo 111 that declares it, so this value cannot be filled
+        in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
         evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting

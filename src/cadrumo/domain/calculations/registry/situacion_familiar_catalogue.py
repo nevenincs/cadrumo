@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ....core.time.clock import today_madrid
 from ...contribuyente.renta_codes import SituacionFamiliar
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -134,7 +135,7 @@ def _selected_mapping_entries(
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is not None:
         return _resolve_mapping_entries(effective_date=coordinate, authority=selected)

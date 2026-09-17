@@ -180,7 +180,6 @@ class ModeloWorkspaceInputsScreen(TypedAppAccess, AccountChromeScreen):
                 tr(
                     "flows.modelo_workspace_inputs.page_bounded",
                     shown=completeness.shown,
-                    page_size=completeness.page_size,
                 )
             )
             return

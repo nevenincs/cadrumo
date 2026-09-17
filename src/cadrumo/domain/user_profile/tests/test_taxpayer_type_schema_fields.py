@@ -17,7 +17,7 @@ from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema
 
 __all__ = ["legal_ids_fixture", "module_scoped_schema"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_entity_type_enum_carries_the_three_branches(

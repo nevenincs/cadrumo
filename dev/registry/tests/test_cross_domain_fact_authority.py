@@ -91,6 +91,7 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     projected_convenio = convenio_authority_from_facts(
         registry_authority.catalogues.facts,
         registry_authority.catalogues.legal,
+        support=registry_authority.catalogues.require_supported_filing_years(),
     )
     assert projected_convenio == registry_authority.catalogues.convenio
     convenio = registry_authority.resolve_governed_fact(_probe("irnr-convenio").query)

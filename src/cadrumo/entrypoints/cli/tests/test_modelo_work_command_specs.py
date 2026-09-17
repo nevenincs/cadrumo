@@ -74,9 +74,54 @@ class _StaticTarget:
             names.insert(len(self.node.args.posonlyargs) + len(self.node.args.args), self.node.args.vararg.arg)
         if self.node.args.kwarg is not None:
             names.append(self.node.args.kwarg.arg)
+        defaults = _static_defaults(self.module, self.node)
         return inspect.Signature(
-            [inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD) for name in names],
+            [
+                inspect.Parameter(
+                    name,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=defaults.get(name, inspect.Parameter.empty),
+                )
+                for name in names
+            ],
         )
+
+
+class _UnresolvedDefault:
+    """A default the static walk cannot evaluate; equal to nothing a spec declares."""
+
+
+def _static_defaults(module_name: str, node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, object]:
+    positional = (*node.args.posonlyargs, *node.args.args)
+    pairs = [
+        *zip(positional[len(positional) - len(node.args.defaults) :], node.args.defaults, strict=True),
+        *(
+            (argument, default)
+            for argument, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=True)
+            if default is not None
+        ),
+    ]
+    return {argument.arg: _static_default_value(module_name, default) for argument, default in pairs}
+
+
+def _static_default_value(module_name: str, node: ast.expr) -> object:
+    try:
+        return ast.literal_eval(node)
+    except ValueError:
+        pass
+    # ``Kind.MEMBER.value`` reads the same literal as ``Kind.MEMBER``.
+    if isinstance(node, ast.Attribute) and node.attr == "value" and isinstance(node.value, ast.Attribute):
+        node = node.value
+    # An enum member default resolves to the literal its class assigns.
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        owner = _target_node(module_name, node.value.id)
+        if isinstance(owner, ast.ClassDef):
+            for member in owner.body:
+                if isinstance(member, ast.Assign) and any(
+                    isinstance(target, ast.Name) and target.id == node.attr for target in member.targets
+                ):
+                    return ast.literal_eval(member.value)
+    return _UnresolvedDefault()
 
 
 def _source(module_name: str) -> tuple[Path, ast.Module] | None:
@@ -124,7 +169,9 @@ def _resolve(module_name: str, qualname: str) -> _StaticTarget:
     if _source(module_name) is None and module_name != "builtins":
         raise ImportError(module_name)
     node = _target_node(module_name, qualname)
-    if node is None and module_name != "builtins":
+    # Standard-library packages may re-export through star imports the static
+    # walk cannot follow; like builtins, they are identified by name alone.
+    if node is None and module_name != "builtins" and module_name.partition(".")[0] not in sys.stdlib_module_names:
         raise AttributeError(f"{module_name}.{qualname}")
     return _StaticTarget(module_name, qualname, node)
 

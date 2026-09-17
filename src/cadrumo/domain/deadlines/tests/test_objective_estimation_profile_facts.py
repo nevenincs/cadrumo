@@ -7,7 +7,7 @@ import pytest
 from ..models import IrpfEstimationRegime, IVARegime, TaxpayerProfile
 from ..profiles import taxpayer_profile_from_mapping
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> None:

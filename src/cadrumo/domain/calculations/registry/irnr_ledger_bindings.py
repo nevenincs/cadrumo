@@ -21,6 +21,7 @@ from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
@@ -55,6 +56,7 @@ class LedgerIrnrIncomeProvider(BaseModel):
 
     @field_validator("modelo")
     @classmethod
+    @pydantic_validation_boundary
     def _require_modelo_210(cls, value: Modelo) -> Modelo:
         if value != Modelo("210"):
             raise ValueError("ledger_irnr_income_aggregation modelo must be '210'")

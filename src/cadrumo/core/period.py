@@ -181,6 +181,18 @@ def is_administrative_period_token(token: str) -> bool:
     return _normalised_period_token(token) in _ADMINISTRATIVE_PERIOD_SET
 
 
+def is_symbolic_event_selector(token: str) -> bool:
+    """Return whether ``token`` is the symbolic ``EVENT-N`` registry selector.
+
+    The selector covers the concrete ``EVENT-1``/``EVENT-2`` periods without
+    being one, so a registry coordinate carrying it has no filing period.
+
+    Raises:
+        ValueError: When ``token`` is not a string.
+    """
+    return _normalised_period_token(token) == _SYMBOLIC_EVENT_SELECTOR
+
+
 def is_filing_period_token(token: str) -> bool:
     """Return whether ``token`` names exactly one period a taxpayer can file.
 
@@ -559,5 +571,6 @@ __all__ = [
     "accepted_filing_period_patterns",
     "is_administrative_period_token",
     "is_filing_period_token",
+    "is_symbolic_event_selector",
     "registry_period_kind",
 ]

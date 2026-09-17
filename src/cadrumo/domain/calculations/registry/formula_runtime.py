@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.constants import ONE, ZERO
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
@@ -194,6 +195,7 @@ class RegistryCalculationResult(BaseModel):
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_duplicate_casilla_rows(self) -> RegistryCalculationResult:
         for channel, casilla_ids in (
             ("observations", tuple(item.casilla_id for item in self.observations)),
@@ -215,6 +217,7 @@ class RegistryCalculationResult(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_resolved_and_unresolved_for_one_casilla(self) -> RegistryCalculationResult:
         """Keep the value and unresolved channels disjoint per casilla.
 
@@ -244,6 +247,7 @@ class RegistryCalculationResult(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_observation_provenance(self) -> RegistryCalculationResult:
         for observation in self.observations:
             if not observation.legal_refs or not observation.source_refs:
@@ -440,11 +444,17 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         supplied_bindings,
         target_period=snapshot.period,
     )
+    # A relation the source resolution reported unresolved has required source
+    # filings that are missing, so its slot is not structurally blank; a relation
+    # id is its binding's id, so the binding channel must not default it either.
+    for unresolved_id in unresolved_relation_ids:
+        if unresolved_id not in supplied_bindings:
+            resolved_bindings.pop(unresolved_id, None)
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}
     _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
-    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(
+    resolved_unresolved_bindings = frozenset((*unresolved_binding_ids, *resolved_unresolved_relations)).difference(
         resolved_bindings,
         boolean_binding_values or {},
     )

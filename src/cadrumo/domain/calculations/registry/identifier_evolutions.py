@@ -14,6 +14,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .ids import RevisionId
 from .schema_base import LegalRefs, RegistryModel, SourceRefs
@@ -51,6 +52,7 @@ class ReplacedIdentifierEvolution(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_distinct_identifiers(self) -> ReplacedIdentifierEvolution:
         if self.identifier == self.replaced_by:
             raise RegistryValidationError(

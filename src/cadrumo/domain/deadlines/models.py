@@ -9,6 +9,7 @@ Consumers import these models from this defining module.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -19,6 +20,7 @@ from pydantic import (
     BeforeValidator,
     Field,
     NonNegativeInt,
+    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -27,7 +29,7 @@ from pydantic_core import core_schema
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
@@ -283,6 +285,56 @@ class M303RegimeComposition(StrictRegistryToken):
     _projection_source = "registry"
 
 
+def _project_persisted_token(
+    value: object,
+    info: ValidationInfo,
+    resolvers: Mapping[str, Callable[[object], StrictRegistryToken]],
+) -> object:
+    """Project persisted text for one strict token field through its registry resolver.
+
+    Already projected tokens pass through without a catalogue lookup; text
+    (a decoded payload) is admitted only when the dated vocabulary declares it.
+    """
+    if value is None or isinstance(value, StrictRegistryToken) or info.field_name is None:
+        return value
+    resolver = resolvers[info.field_name]
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return frozenset(item if isinstance(item, StrictRegistryToken) else resolver(item) for item in value)
+    return resolver(value)
+
+
+def _iva_profile_token_resolvers() -> Mapping[str, Callable[[object], StrictRegistryToken]]:
+    from ..calculations.registry.iva_schema_vocabulary import (
+        require_m303_regime_composition,
+        require_m303_tax_territory,
+    )
+
+    return {
+        "tax_territory": require_m303_tax_territory,
+        "regime_composition": require_m303_regime_composition,
+    }
+
+
+def _taxpayer_profile_token_resolvers() -> Mapping[str, Callable[[object], StrictRegistryToken]]:
+    from ..calculations.registry.activity_kind_catalogue import require_irpf_activity_kind
+    from ..calculations.registry.entity_type import require_entity_type, require_legal_entity_form
+    from ..calculations.registry.irpf_income_categories import require_irpf_income_category
+    from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
+    from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
+    from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
+
+    return {
+        "entity_type": require_entity_type,
+        "declaration_roles": require_third_party_declaration_role,
+        "legal_entity_form": require_legal_entity_form,
+        "irpf_income_categories": require_irpf_income_category,
+        "irpf_estimation_regime": require_irpf_estimation_regime,
+        "irpf_activity_kind": require_irpf_activity_kind,
+        "irpf_special_regime": require_irpf_special_regime,
+        "fiscal_residency": require_fiscal_residency,
+    }
+
+
 class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
@@ -335,7 +387,15 @@ class ModeloIVAProfile(BaseModel):
     refund_account: RefundAccount | None = None
     charge_account: ChargeAccount | None = None
 
+    @field_validator("tax_territory", "regime_composition", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _project_registry_tokens(cls, value: object, info: ValidationInfo) -> object:
+        """Admit persisted territory and composition text only through fact 0098."""
+        return _project_persisted_token(value, info, _iva_profile_token_resolvers())
 
+
+@pydantic_validation_boundary
 def _parse_modelo_identifier(value: object) -> Modelo:
     """Coerce a canonical modelo token into the closed Modelo enum."""
     if isinstance(value, Modelo):
@@ -343,7 +403,7 @@ def _parse_modelo_identifier(value: object) -> Modelo:
     if isinstance(value, str):
         try:
             return Modelo(value)
-        except ValueError as exc:
+        except CoreValidationError as exc:
             raise DeadlineValidationError(f"modelo identifier {value!r} is not a supported AEAT modelo") from exc
     raise DeadlineValidationError(f"modelo identifier must be a string or Modelo, got {type(value).__name__}")
 
@@ -625,7 +685,25 @@ class TaxpayerProfile(BaseModel):
     multiple-pagadores condition surfaces a conservative advisory.
     """
 
+    @field_validator(
+        "entity_type",
+        "declaration_roles",
+        "legal_entity_form",
+        "irpf_income_categories",
+        "irpf_estimation_regime",
+        "irpf_activity_kind",
+        "irpf_special_regime",
+        "fiscal_residency",
+        mode="before",
+    )
+    @classmethod
+    @pydantic_validation_boundary
+    def _project_registry_tokens(cls, value: object, info: ValidationInfo) -> object:
+        """Admit persisted taxpayer-axis text only through its dated registry vocabulary."""
+        return _project_persisted_token(value, info, _taxpayer_profile_token_resolvers())
+
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_iva_regime_registry_membership(self) -> Self:
         """Reject IVA regime tokens that are absent from fact 0098."""
         from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
@@ -951,6 +1029,7 @@ class Schedule(BaseModel):
 
     @field_validator("generated_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_utc_generated_at(cls, value: datetime) -> datetime:
         """Route the stamp through the canonical UTC-aware contract."""
         return validate_utc_aware(value)

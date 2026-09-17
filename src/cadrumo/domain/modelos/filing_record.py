@@ -32,6 +32,7 @@ from typing import Annotated, Self, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -208,6 +209,7 @@ class ModeloRecord(BaseModel):
 
     @field_validator("source_transaction_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _reject_duplicate_source_transactions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Refuse a repeated transaction in the provenance footprint.
 
@@ -226,6 +228,7 @@ class ModeloRecord(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> ModeloCode:
         if isinstance(value, ModeloCode):
             return value
@@ -234,6 +237,7 @@ class ModeloRecord(BaseModel):
         raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_invariants(self) -> ModeloRecord:
         _require_filing_record_identity(self)
         _require_external_evidence_state(self)
@@ -316,6 +320,7 @@ class ModeloRecordCatalogue(BaseModel):
     records: Mapping[str, ModeloRecord] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_keys_match(self) -> ModeloRecordCatalogue:
         for key, record in self.records.items():
             if key != record.filing_record_id:
@@ -343,6 +348,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_amendment_links_resolve(self) -> ModeloRecordCatalogue:
         """Resolve every ``amends_filing_record_id`` to a real, distinct, same-coordinate record.
 

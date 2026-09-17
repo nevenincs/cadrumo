@@ -28,6 +28,7 @@ from cadrumo.domain.categories.spending_category_catalogue import spending_categ
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
 from ..compiler.loader import load_registry_tree
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,7 +49,7 @@ def _category_tokens(catalogue: GovernedFactCatalogue) -> tuple[SpendingCategory
     """Project the category vocabulary from the candidate facts under test."""
     return spending_category_tokens(
         effective_date=date(2025, 12, 31),
-        authority=CandidateFactAuthority(catalogue),
+        authority=CandidateFactAuthority(catalogue, committed_supported_filing_years()),
     )
 
 
@@ -98,6 +99,7 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
                 selectors=(FactSelector(name="category", value=category.value),),
             ),
             authority_digest="a" * 64,
+            support=committed_supported_filing_years(),
         )
         assert isinstance(resolved, ResolvedMappingFact)
         assert resolved.payload.entries
@@ -114,6 +116,7 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
                 ),
             ),
             authority_digest="a" * 64,
+            support=committed_supported_filing_years(),
         )
 
 
@@ -153,6 +156,7 @@ def test_authored_category_profile_fact_preserves_citation_identity_window_and_g
             ),
         ),
         authority_digest="a" * 64,
+        support=committed_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedMappingFact)
     values = {entry.key: entry.value for entry in resolved.payload.entries}
@@ -177,6 +181,7 @@ def test_authored_category_cap_fact_preserves_the_dated_mutualidad_amount() -> N
             ),
         ),
         authority_digest="b" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(resolved, ResolvedScalarFact)

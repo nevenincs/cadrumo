@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
-from cadrumo.adapters.persistence.storage.errors import ClassificationError
+from cadrumo.adapters.persistence.storage.errors import ClassificationError, PathContainmentError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
     isolated_runtime_profile,
@@ -109,8 +109,8 @@ def repo(_active_bucket_runtime: TestRuntimeProfile) -> ModeloDraftRepository:
     )
 
 
-def _database_bytes(storage_root: Path) -> bytes:
-    return read_db_at_rest_bytes(storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3")
+def _database_bytes(runtime: TestRuntimeProfile) -> bytes:
+    return read_db_at_rest_bytes(runtime.paths.database_file)
 
 
 class TestEmptyState:
@@ -176,7 +176,7 @@ class TestClassificationGate:
     ) -> None:
         draft = _make_draft()
         repo.save(draft)
-        raw = _database_bytes(_active_bucket_runtime.storage_root)
+        raw = _database_bytes(_active_bucket_runtime)
         assert b"secure_objects" in raw
         assert b"00000000T" not in raw
         assert b"2026Q1" not in raw
@@ -194,16 +194,18 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=draft,
         )
-        _active_bucket_runtime.repository.save(
-            namespace="cadrumo.domain.filing.drafts",
-            object_key=draft.draft_id,
-            classification=SensitivityClass.OPERATIONAL,
-            schema_version=1,
-            written_at=bad.written_at,
-            payload=bad.model_dump_json().encode("utf-8"),
-        )
+        # The namespace's registered class is enforced at write time, so the
+        # mismatched object never reaches storage for a later load to trip on.
         with pytest.raises(ClassificationError):
-            repo.load(draft.draft_id)
+            _active_bucket_runtime.repository.save(
+                namespace="cadrumo.domain.filing.drafts",
+                object_key=draft.draft_id,
+                classification=SensitivityClass.OPERATIONAL,
+                schema_version=1,
+                written_at=bad.written_at,
+                payload=bad.model_dump_json().encode("utf-8"),
+            )
+        assert repo.load(draft.draft_id) is None
 
 
 class TestUnsafeDraftIds:
@@ -219,7 +221,7 @@ class TestUnsafeDraftIds:
             "a/b",
             "a\\b",
         ):
-            with pytest.raises(ValueError):
+            with pytest.raises(PathContainmentError):
                 repo.envelope_path_for(bad)
 
 

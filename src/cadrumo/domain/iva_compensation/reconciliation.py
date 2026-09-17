@@ -24,6 +24,7 @@ from typing import Final, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -121,6 +122,7 @@ class IvaCompensationAuthoritySource(BaseModel):
     registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _source_period_years_match(self) -> IvaCompensationAuthoritySource:
         if not self.source_periods:
             _validate_empty_authority_source_periods(self)
@@ -173,11 +175,13 @@ class IvaCompensationReconciliationDecision(BaseModel):
 
     @field_validator("reason_identity", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_reason_identity(cls, value: object) -> IvaCompensationDecisionReason:
         """Parse encrypted JSON and direct construction into the closed identity."""
         return IvaCompensationDecisionReason(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_selected_amount(self) -> IvaCompensationReconciliationDecision:
         _validate_reconciliation_target_and_amount(self)
         _validate_reconciliation_blocked_authority(self)

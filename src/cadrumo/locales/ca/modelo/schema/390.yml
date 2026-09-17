@@ -1089,6 +1089,11 @@ modelo:
               - Quota deduïble.'
             label: Quotes deduïbles en virtut de resolució administrativa o sentència
               fermes amb tipus no vigents - quota deduïble
+          iva-importacion-diferimiento:
+            help: 'Informació fiscal sobre informació fiscal de la casella 659 del
+              Modelo 390 Referències: [659].'
+            label: Resultat liquidació anual - IVA a la importació liquidat per la
+              Duana (només subjectes passius amb opció de diferiment) [659]
           iva-isp-interior-base:
             help: Informació fiscal sobre informació fiscal de la casella 27 del Modelo
               390.
@@ -1098,11 +1103,6 @@ modelo:
             help: Informació fiscal sobre informació fiscal de la casella 28 del Modelo
               390.
             label: IVA autorepercutit meritat en operacions interiors
-          iva-iva-importacion-diferimiento:
-            help: 'Informació fiscal sobre informació fiscal de la casella 659 del
-              Modelo 390 Referències: [659].'
-            label: Resultat liquidació anual - IVA a la importació liquidat per la
-              Duana (només subjectes passius amb opció de diferiment) [659]
           iva-liquidaciones-total-a-ingresar:
             help: Informació fiscal sobre informació fiscal de la casella 95 del Modelo
               390.

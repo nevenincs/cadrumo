@@ -87,7 +87,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "config/provision_payloads.py",
         "_ledger_counterparty_payloads.py",
         "_payloads_modelo_reconcile.py",
-        "_registry_payloads.py",
+        "_overview_payloads.py",
         "_ledger_rule_payloads.py",
         "config/_censo_payloads.py",
         "config/collab_payloads.py",
@@ -110,11 +110,7 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
 # there is no backend model they could restate, so projecting them elsewhere
 # would invent a domain concept rather than honour one.
 EXEMPT_MODULES: dict[str, str] = {
-    "verb_input_schema.py": (
-        "the verb input schema describes the CLI's own parameter grammar; "
-        "no application or domain model declares a command's leaf key"
-    ),
-    "_common.py": (
+    "common.py": (
         "RequestedCliLeaf spells a canonical CLI path, which is a fact about "
         "the command surface and has no counterpart outside entrypoints"
     ),
@@ -125,7 +121,6 @@ EXEMPT_MODULES: dict[str, str] = {
 # something, so a reconciled module cannot be left behind here.
 OUTSTANDING_MODULES: dict[str, str] = {
     "_config_descendiente_payloads.py": "descendiente invariants belong on the contribuyente model",
-    "_overview_payloads.py": "overview payloads restate agenda and backlog invariants",
 }
 
 

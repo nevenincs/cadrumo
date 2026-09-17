@@ -45,14 +45,11 @@ from ..binding_aggregation import binding_aggregation_op
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, resolve_relation_values
 from ..schema import RegistrySnapshot
+from ._modelo_100_registry_support import M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# No hijos means compute_deduccion_maternidad_0611([], ...) is provably 0
-# regardless of the registry's dated operands, so the binding is the literal.
-_M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-profile-deduccion-maternidad": Decimal(0),
-}
+_M100_2024_MATERNIDAD_BINDINGS = M100_2024_EMPTY_MATERNIDAD_BINDINGS
 
 # ── shared date contexts ──────────────────────────────────────────────────────
 _DATE_2024 = {"filing_period": date(2024, 12, 31)}

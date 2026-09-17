@@ -8,7 +8,7 @@ from ..categories import PortalCategory
 from ..codes import Portal
 from ..registry import PORTAL_REGISTRY, portals_for_modelo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_modelo_portal_linkage_comes_from_registry() -> None:

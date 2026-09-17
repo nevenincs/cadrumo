@@ -33,6 +33,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
 from ..calculations.registry.schema import ModeloRevision
@@ -86,6 +87,7 @@ class BienesInversionParameterProvenance(BaseModel):
     resolved_on: date
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _names_the_whole_family(self) -> BienesInversionParameterProvenance:
         """Refuse provenance that does not describe the bundle it travels with.
 

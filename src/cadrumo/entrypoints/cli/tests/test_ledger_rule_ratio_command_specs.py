@@ -438,7 +438,7 @@ _EXPECTED_LEAF_CONTRACTS = {
             _OPTIONAL_YEAR,
             _argument(
                 "category",
-                "cadrumo.domain.categories.spending_category:SpendingCategory",
+                "builtins:str",
                 "cli.app.ledger.ratios.category_help",
             ),
             _argument("ratio", "builtins:str", "cli.app.ledger.ratios.ratio_help"),
@@ -460,7 +460,7 @@ _EXPECTED_LEAF_CONTRACTS = {
         (
             _argument(
                 "category",
-                "cadrumo.domain.categories.spending_category:SpendingCategory",
+                "builtins:str",
                 "cli.app.ledger.ratios.unset_category_help",
             ),
             _OPTIONAL_OUTPUT_LANGUAGE,

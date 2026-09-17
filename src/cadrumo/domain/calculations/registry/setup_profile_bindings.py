@@ -14,8 +14,7 @@ renders a setup value.
 
 from __future__ import annotations
 
-from datetime import date
-
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -42,7 +41,7 @@ def mapping_fact_entries(fact_id: str, *, authority: GovernedFactSource | None =
         MappingFactQuery(
             fact_id=fact_id,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

@@ -278,10 +278,10 @@ def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
                     f"retired-provider fact {fact.fact_id!r} track {track!r} has a gap in its "
                     "source-grounded temporal coverage",
                 )
-        if windows[ordered[-1].variant_id].valid_to is not None and fact.support is None:
+        if windows[ordered[-1].variant_id].valid_to is not None:
             failures.append(
                 f"retired-provider fact {fact.fact_id!r} track {track!r} must retain an open current "
-                "applicability window or declare bounded support",
+                "applicability window",
             )
     return tuple(failures)
 
@@ -292,6 +292,10 @@ def _source_window_covers_variant(
     variant: GovernedFactVariant,
 ) -> bool:
     window = fact.validity_window(variant)
-    if source is None or source.applies_from is None or source.applies_from > window.valid_from:
+    if source is None or source.applies_from is None:
+        return False
+    # A variant omitting valid_from reaches the registry support floor; its
+    # cited source grounds the declaration, not a lower date it never states.
+    if variant.valid_from is not None and source.applies_from > window.valid_from:
         return False
     return source.applies_to is None or (window.valid_to is not None and source.applies_to >= window.valid_to)

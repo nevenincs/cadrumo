@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 from ....core.aggregation import ForeignAssetClass
 from ....core.foreign_asset_obligation import ForeignAssetObligationGroup
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
@@ -186,7 +187,7 @@ def resolve_foreign_asset_obligation_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ForeignAssetObligationCatalogue:
     """Resolve the dated foreign-asset obligation taxonomy."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))

@@ -30,6 +30,7 @@ from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
 )
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
@@ -38,6 +39,10 @@ from ..prorrata_regularizacion import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _m303_revision(ejercicio: int) -> ModeloRevision:
+    return published_snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").revision
 
 
 def _unresolved() -> ProrrataProvisionalResolution:
@@ -54,6 +59,7 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
         applicability=applicability,
         provisional_resolution=_unresolved(),
         ejercicio=2026,
+        revision=_m303_revision(2026),
     )
 
     assert diagnostic is not None
@@ -89,6 +95,7 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
         applicability=applicability,
         provisional_resolution=_unresolved(),
         ejercicio=2026,
+        revision=_m303_revision(2026),
         first_ejercicio=True,
     )
 
@@ -114,6 +121,7 @@ def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -
         applicability=applicability,
         provisional_resolution=_unresolved(),
         ejercicio=2026,
+        revision=_m303_revision(2026),
     )
 
     assert diagnostic is None
@@ -129,6 +137,7 @@ def test_missing_provisional_advisory_is_silent_when_ladder_resolves() -> None:
         applicability=applicability,
         provisional_resolution=ProrrataProvisionalResolution(percentage=Decimal("75"), provenance=None),
         ejercicio=2026,
+        revision=_m303_revision(2026),
     )
 
     assert diagnostic is None

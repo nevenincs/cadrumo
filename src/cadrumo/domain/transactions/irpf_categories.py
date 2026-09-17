@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
 
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -32,7 +32,7 @@ def _registry_taxonomy_declarations(*, authority: GovernedFactSource | None = No
         MappingFactQuery(
             fact_id="irpf-ledger-category-taxonomy",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

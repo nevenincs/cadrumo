@@ -17,6 +17,8 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
+from .profile_schema_support import committed_supported_filing_years
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FACT_ID = "test-projection-cache"
@@ -42,7 +44,7 @@ def _candidate(value: str) -> CandidateFactAuthority:
             ),
         },
     )
-    return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact}))
+    return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact}), committed_supported_filing_years())
 
 
 @cache_governed_projection()

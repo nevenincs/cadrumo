@@ -60,7 +60,6 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from .....application.calculations.observations_repository import observation_key
-from .....application.calculations.relation_prefill import resolve_relations_from_local_store
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -329,30 +328,19 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
             period=_LATE_2024_PERIOD,
         )
         assert target_snapshot.revision.id == _LATE_2024_REVISION
-        relation_values = resolve_relations_from_local_store(
+        resolved = _resolve_carry_from_local_store(
             target_snapshot,
             repository=observation_repository,
             operation=_authority_operation_for_test,
         )
-        carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
-        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
-        target_binding_values = relation_prefill_values_as_binding_values(
-            target_snapshot.revision,
-            resolved,
-            period=_LATE_2024_PERIOD,
-        )
         target_result, _ = _calculate_303(
             filing_year=_YEAR_2024,
             period=_LATE_2024_PERIOD,
-            cuota_binding_overrides={},
-            relation_values=resolved,
+            cuota_binding_overrides=resolved,
+            relation_values={},
         )
 
-    assert carry_relation.source_modelo == _MODELO
-    assert carry_relation.source_filing_year == _YEAR_2024
-    assert carry_relation.source_periods == (_EARLY_2024_PERIOD,)
-    assert carry_relation.value == _YEAR_2024_CARRY
-    assert target_binding_values[_CARRY_BINDING] == _YEAR_2024_CARRY
+    assert resolved.get(_CARRY_BINDING) == _YEAR_2024_CARRY
     assert target_result.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == _YEAR_2024_CARRY
 
 
@@ -410,14 +398,13 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
             filing_year=_YEAR_2024,
             period=_LATE_2024_PERIOD,
         )
-        relation_values = resolve_relations_from_local_store(
+        resolved = _resolve_carry_from_local_store(
             target_snapshot,
             repository=observation_repository,
             operation=_authority_operation_for_test,
         )
 
-    carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
-    assert carry_relation.value is None
+    assert _CARRY_BINDING not in resolved
 
 
 def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:

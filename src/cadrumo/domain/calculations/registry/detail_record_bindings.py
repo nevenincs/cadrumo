@@ -11,6 +11,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.external_constants import DEFAULT_CURRENCY
 from ....core.foreign_asset_obligation import M720AssetClassCode
 from ....core.identity.tax_id import TaxIdIdentityToken
@@ -152,6 +153,7 @@ class RelatedPartyOperationObservation(BaseModel):
 
     @field_validator("amount")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         return value
 
@@ -238,6 +240,7 @@ class Modelo720RowObservation(BaseModel):
 
     @field_validator("valuation_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise RegistryValidationError("foreign asset valuation must be non-negative")
@@ -453,6 +456,7 @@ class AtributionMemberObservation(BaseModel):
 
     @field_validator("share_percentage")
     @classmethod
+    @pydantic_validation_boundary
     def _share_within_bounds(cls, value: Decimal) -> Decimal:
         if value < Decimal("0") or value > Decimal("100"):
             raise RegistryValidationError("share_percentage must be within [0, 100]")
@@ -460,6 +464,7 @@ class AtributionMemberObservation(BaseModel):
 
     @field_validator("base_imponible_assigned")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         return value
 
@@ -601,6 +606,7 @@ class RefundOperationObservation(BaseModel):
 
     @field_validator("refund_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_amount(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise RegistryValidationError("refund_amount must be non-negative")

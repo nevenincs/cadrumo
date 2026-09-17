@@ -77,6 +77,7 @@ class RawProvenance(BaseModel):
 
     @field_validator("source_path")
     @classmethod
+    @pydantic_validation_boundary
     def _basename_source_path(cls, value: Path) -> Path:
         """Reduce ``source_path`` to its basename.
 
@@ -95,6 +96,7 @@ class RawProvenance(BaseModel):
 
     @field_validator("source_sha256", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_sha256(cls, value: object) -> object:
         """Fold an uppercase digest to the canonical form BEFORE the shape check.
 
@@ -218,6 +220,7 @@ class RawTransaction(BaseModel):
 
     @field_validator("counterparty")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_counterparty(cls, value: str | None) -> str | None:
         """Trim ``counterparty`` and collapse blank strings to ``None``."""
         if value is None:
@@ -227,6 +230,7 @@ class RawTransaction(BaseModel):
 
     @field_validator("raw_fields")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_raw_fields(cls, value: Mapping[str, str]) -> Mapping[str, str]:
         """Freeze ``raw_fields`` into an immutable mapping with stringified entries."""
         return MappingProxyType({str(key): str(raw) for key, raw in value.items()})

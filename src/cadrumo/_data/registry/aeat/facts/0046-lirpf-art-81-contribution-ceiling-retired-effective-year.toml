@@ -5,7 +5,6 @@ family = "scalar"
 [[fact.variants]]
 variant_id = "lirpf-art-81-contribution-ceiling-retired-effective-year:2023-01-01"
 date_axis = "filing_period"
-valid_from = 2023-01-01
 legal_refs = ["ley-35-2006:art-81"]
 source_refs = ["boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"

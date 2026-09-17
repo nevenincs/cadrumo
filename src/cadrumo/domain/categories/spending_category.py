@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 if TYPE_CHECKING:
     from ..calculations.registry.governed_fact_scope import GovernedFactSource
@@ -66,7 +66,7 @@ class SpendingCategory(str):
     ) -> CoreSchema:
         """Register fail-closed facts-backed validation for Pydantic models."""
         return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
+            pydantic_validation_boundary(cls._require_registry_token),
             json_schema_input_schema=core_schema.str_schema(),
             serialization=core_schema.to_string_ser_schema(),
         )

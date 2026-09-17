@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from ....core.time.clock import today_madrid
 from ...invoices.enums import InvoiceClass, InvoiceOperationDateRole
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -286,7 +287,7 @@ def resolve_invoice_legal_classification_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> InvoiceLegalClassificationCatalogue:
     """Resolve the dated invoice class and operation-date vocabulary."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))

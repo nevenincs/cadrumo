@@ -16,6 +16,7 @@ from typing import override
 
 from ....core.errors.hierarchy import CoreValidationError
 from ....core.modelo import Modelo
+from ....core.time.clock import today_madrid
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
@@ -54,7 +55,7 @@ def resolve_modelo_obligation_scope(
         MappingFactQuery(
             fact_id="modelo-obligation-scope-mapping",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date or today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

@@ -16,6 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
+from cadrumo.adapters.persistence.storage.errors import ClassificationError, PathContainmentError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
     isolated_runtime_profile,
@@ -79,12 +80,12 @@ def repo(_active_bucket_runtime: TestRuntimeProfile) -> ModeloHistoryRepository:
     return _new_repository(_active_bucket_runtime)
 
 
-def _database_bytes(storage_root: Path) -> bytes:
-    return read_db_at_rest_bytes(storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3")
+def _database_bytes(runtime: TestRuntimeProfile) -> bytes:
+    return read_db_at_rest_bytes(runtime.paths.database_file)
 
 
-def _database_payloads(storage_root: Path) -> tuple[bytes, ...]:
-    db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "workflow.sqlite3"
+def _database_payloads(runtime: TestRuntimeProfile) -> tuple[bytes, ...]:
+    db_path = runtime.paths.database_file
     with sqlite3.connect(db_path) as connection:
         return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 
@@ -140,9 +141,9 @@ class TestClassificationGate:
         _active_bucket_runtime: TestRuntimeProfile,
     ) -> None:
         repo.save(_make_history(modelo="130"))
-        raw = _database_bytes(_active_bucket_runtime.storage_root)
+        raw = _database_bytes(_active_bucket_runtime)
         assert b"secure_objects" in raw
-        payloads = _database_payloads(_active_bucket_runtime.storage_root)
+        payloads = _database_payloads(_active_bucket_runtime)
         assert payloads
         for payload in payloads:
             assert b"2026Q1" not in payload
@@ -168,16 +169,17 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=history,
         )
-        _active_bucket_runtime.repository.save(
-            namespace="cadrumo.application.filing.history",
-            object_key="130",
-            classification=SensitivityClass.OPERATIONAL,
-            schema_version=1,
-            written_at=bad.written_at,
-            payload=bad.model_dump_json().encode("utf-8"),
-        )
-        with pytest.raises(FilingHistoryPersistenceError):
-            repo.load("130")
+        # The namespace's registered class is enforced at write time, so the
+        # mismatched object never reaches storage for a later load to trip on.
+        with pytest.raises(ClassificationError):
+            _active_bucket_runtime.repository.save(
+                namespace="cadrumo.application.filing.history",
+                object_key="130",
+                classification=SensitivityClass.OPERATIONAL,
+                schema_version=1,
+                written_at=bad.written_at,
+                payload=bad.model_dump_json().encode("utf-8"),
+            )
 
 
 class TestRowIdentity:
@@ -223,7 +225,7 @@ class TestRowIdentity:
 class TestUnsafeModelo:
     def test_unsafe_modelo_rejected(self, repo: ModeloHistoryRepository) -> None:
         for bad in ("", "..", ".", ".hidden", "../escape", "a/b", "a\\b"):
-            with pytest.raises(ValueError):
+            with pytest.raises(PathContainmentError):
                 repo.envelope_path_for(bad)
 
 

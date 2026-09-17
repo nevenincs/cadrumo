@@ -128,6 +128,7 @@ class BrowserFailureMode(StrEnum):
     OPTIONAL_EXTRA_UNAVAILABLE = "optional_extra_unavailable"
     PLAYWRIGHT_RUNTIME_START_FAILED = "playwright_runtime_start_failed"
     PLAYWRIGHT_RUNTIME_STOP_FAILED = "playwright_runtime_stop_failed"
+    BROWSER_NOT_PROVISIONED = "browser_not_provisioned"
     BROWSER_LAUNCH_FAILED = "browser_launch_failed"
     CONTEXT_CREATE_FAILED = "context_create_failed"
     EVASION_FAILED = "evasion_failed"

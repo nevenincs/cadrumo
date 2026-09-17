@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import Field, field_validator, model_validator
 
 from ....core.decimal.constants import ONE, ZERO
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from .errors import RegistryValidationError
@@ -95,6 +96,7 @@ class ConvenioOverrideRow(RegistryModel):
 
     @field_validator("tipo_renta", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_tipo_renta(cls, value: object) -> object:
         """Hydrate the TOML token into the opaque tipo-renta wire type."""
         if isinstance(value, str) and not isinstance(value, TipoRentaIrnr):
@@ -103,6 +105,7 @@ class ConvenioOverrideRow(RegistryModel):
 
     @field_validator("kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_kind(cls, value: object) -> object:
         """Hydrate the TOML ``kind`` string into an opaque registry token."""
         if isinstance(value, str) and not isinstance(value, ConvenioOverrideKind):
@@ -110,6 +113,7 @@ class ConvenioOverrideRow(RegistryModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_override_row(self) -> ConvenioOverrideRow:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise ValueError("convenio override valid_to must be on or after valid_from")
@@ -145,6 +149,7 @@ class ConvenioTreaty(RegistryModel):
     notes: str | None = Field(default=None, max_length=512)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_treaty(self) -> ConvenioTreaty:
         seen: set[tuple[TipoRentaIrnr, date]] = set()
         for row in self.overrides:

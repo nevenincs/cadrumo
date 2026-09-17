@@ -28,8 +28,8 @@ from ..binding_selector_utils import (
     manual_input_record_field_selector,
 )
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
+from ..bindings_previous_filing import PreviousFilingProvider
 from ..errors import RegistryValidationError
-from ..manual_input_selector import ManualInputProvider
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -173,19 +173,15 @@ def test_a_renamed_record_field_key_is_refused_not_silently_read_as_casilla_shap
         "residual risk this fix closes is drift, not malformed-data construction"
     )
 
+    # Drift now surfaces as a provider member that no longer matches the class
+    # its kind is registered for; the accessor narrows rather than revalidates.
     drifted = BindingDefinition.model_construct(
         id="modelo-131-2025.page1.109-109.discapacidad-33",
-        provider=ManualInputProvider.model_construct(
-            recrd="page_1",  # the field ManualInputProvider no longer names "record"
-            field="discapacidad-33",
-            offset=109,
-            length=1,
-            data_type="boolean",
-        ),
+        provider=PreviousFilingProvider.model_construct(kind="manual_input"),
         value=BindingValueContract(data_type=BindingDataType.BOOLEAN, channel=BindingValueChannel.BOOLEAN),
         legal_refs=("rd-439-2007:art-110",),
         source_refs=("aeat-dr-131-2025",),
     )
 
-    with pytest.raises(RegistryValidationError, match="malformed manual_input selector"):
+    with pytest.raises(RegistryValidationError, match="carries provider member PreviousFilingProvider"):
         manual_input_record_field_selector(drifted)

@@ -9,6 +9,7 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.ids import RevisionId
 from .....domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from .....tests.authority_lease_support import private_authority_lease, scoped_when_requested
+from ..governed_fact_scope import validating_governed_facts
 from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
@@ -54,13 +55,16 @@ def registry_snapshot(
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        return registry_authority.snapshot(
-            modelo_id,
-            filing_year=filing_year,
-            period=period,
-            revision_id=revision_id,
-            grade=grade,
-        )
+        # Wider-scoped consumers build outside any test's lease scope, so the
+        # builder scopes its own validation to the generation it reads.
+        with validating_governed_facts(registry_authority):
+            return registry_authority.snapshot(
+                modelo_id,
+                filing_year=filing_year,
+                period=period,
+                revision_id=revision_id,
+                grade=grade,
+            )
 
     return snapshot
 

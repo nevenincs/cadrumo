@@ -44,6 +44,7 @@ from ...application.ledger.models import (
     IsoDateText,
 )
 from ...core.decimal.grammar import is_non_negative_canonical_decimal, try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, InvoiceId, SnapshotId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
@@ -103,6 +104,7 @@ class M210IncomeClassificationPayload(OutputSchema):
 
     @field_validator("gross_income_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
         """Gross income is a magnitude, bounded ``ge=0`` on the record.
 
@@ -115,6 +117,7 @@ class M210IncomeClassificationPayload(OutputSchema):
 
     @field_validator("applicable_rate")
     @classmethod
+    @pydantic_validation_boundary
     def _is_a_share_of_one(cls, value: str) -> str:
         """The M210 rate is a share of one, not merely a non-negative number.
 
@@ -858,6 +861,7 @@ class LedgerExportRowPayload(OutputSchema):
 
     @field_validator("booked_date", "effective_date")
     @classmethod
+    @pydantic_validation_boundary
     def _require_iso_date(cls, value: str) -> str:
         """Keep exported mandatory dates parseable without changing their JSON wire form.
 
@@ -876,6 +880,7 @@ class LedgerExportRowPayload(OutputSchema):
 
     @field_validator("value_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:
         if value:
             cls._require_iso_date(value)
@@ -883,6 +888,7 @@ class LedgerExportRowPayload(OutputSchema):
 
     @field_validator("amount", "taxable_base", "iva_amount", "value_in_eur")
     @classmethod
+    @pydantic_validation_boundary
     def _require_non_negative_decimal(cls, value: str) -> str:
         """Refuse an export amount the ledger could never have stored.
 
@@ -1133,6 +1139,7 @@ class LedgerReviewResult(OutputSchema):
     verbose: bool | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _exactly_one_complete_branch(self) -> LedgerReviewResult:
         """Require the envelope to be exactly one of the three documented branches.
 

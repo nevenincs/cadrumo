@@ -10,6 +10,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
@@ -89,6 +90,7 @@ class M303Exonerado390FilingEvidence(BaseModel):
     operaciones_terceros_reference: FilingEvidenceReference | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _applicability_matches_endpoint_population(self) -> M303Exonerado390FilingEvidence:
         _validate_m303_exonerado_endpoint_ids(self.endpoints)
         if self.applicable:
@@ -165,6 +167,7 @@ class M303DANAReductionResult(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _ineligible_reduction_is_zero(self) -> M303DANAReductionResult:
         if not self.eligible and self.amount != Decimal("0"):
             raise ModeloValidationError("an ineligible DANA reduction must be zero")
@@ -192,6 +195,7 @@ class M303RegimenSimplificadoActivityCalculationResult(BaseModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _amounts_form_one_closed_activity_result(self) -> M303RegimenSimplificadoActivityCalculationResult:
         module_ids = tuple(item.module_identity for item in self.module_results)
         if len(set(module_ids)) != len(module_ids):
@@ -272,6 +276,7 @@ class M303RegimenSimplificadoCalculationResult(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _is_content_addressed_and_period_scoped(self) -> M303RegimenSimplificadoCalculationResult:
         if self.period.filing_year != self.ejercicio:
             raise ModeloValidationError("M303 simplified calculation result period must use its annual Orden year")

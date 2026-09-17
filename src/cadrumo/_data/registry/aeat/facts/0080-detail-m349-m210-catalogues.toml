@@ -7,7 +7,7 @@ variant_id = "detail-m349-m210-catalogues:2026-01-01"
 date_axis = "filing_period"
 valid_from = 2026-01-01
 legal_refs = ["orden-hac-174-2020:art-1"]
-source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure", "aeat-modelo-349-instructions"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
@@ -16,6 +16,13 @@ required_text = ["operaciones intracomunitarias"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-210-procedure"
 required_text = ["Modelo 210"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+  "sólo se admitirá el prefijo GB",
+  "no admitirán el prefijo XI",
+  "Reino Unido GB o XI 5, 9 ó 12 caracteres",
+]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -31,6 +38,9 @@ entries = [
   { key = "m349.service_keys", value = "S,I" },
   { key = "m349.transition.first_periods", value = "01,1M,1T" },
   { key = "m349.transition.year", value = "2021" },
+  { key = "m349.transition.prefix", value = "GB" },
+  { key = "m349.transition.nif_pattern", value = '^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$' },
+  { key = "m349.goods_only_prefix", value = "XI" },
   { key = "m210.annual_grouping_codes", value = "01,35" },
   { key = "m210.grouping_period", value = "0A" },
   { key = "m210.code35.payer_mode", value = "multiple_payers_code_35" },
@@ -180,10 +190,9 @@ entries = [
 [[fact.variants]]
 variant_id = "detail-m349-m210-catalogues:2025-01-01"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 valid_to = 2025-12-31
 legal_refs = ["orden-hac-174-2020:art-1"]
-source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure"]
+source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure", "aeat-modelo-349-instructions"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
@@ -192,6 +201,13 @@ required_text = ["operaciones intracomunitarias"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-210-procedure"
 required_text = ["Modelo 210"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+  "sólo se admitirá el prefijo GB",
+  "no admitirán el prefijo XI",
+  "Reino Unido GB o XI 5, 9 ó 12 caracteres",
+]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -207,6 +223,9 @@ entries = [
   { key = "m349.service_keys", value = "S,I" },
   { key = "m349.transition.first_periods", value = "01,1M,1T" },
   { key = "m349.transition.year", value = "2021" },
+  { key = "m349.transition.prefix", value = "GB" },
+  { key = "m349.transition.nif_pattern", value = '^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$' },
+  { key = "m349.goods_only_prefix", value = "XI" },
   { key = "m210.annual_grouping_codes", value = "01,35" },
   { key = "m210.grouping_period", value = "0A" },
   { key = "m210.code35.payer_mode", value = "multiple_payers_code_35" },

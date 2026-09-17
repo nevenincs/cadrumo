@@ -15,7 +15,7 @@ from ..deadline_coordinate import (
 )
 from ..schema_deadlines import DeadlineWindowDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_deadline_coordinate_uses_typed_period_and_qualifier_axes_only() -> None:

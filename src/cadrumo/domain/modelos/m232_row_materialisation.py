@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
+from ...core.time.clock import today_madrid
 from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -63,7 +64,7 @@ def m232_related_party_row_casilla_values(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return m232_related_party_row_casilla_values(rows, operation=indexed_operation)
-    _resolve_m232_registry_declarations(effective_date=date.today(), operation=operation)
+    _resolve_m232_registry_declarations(effective_date=today_madrid(), operation=operation)
     if rows:
         raise RegistryValidationError(
             "M232 row materialisation requires selected registry detail/binding declarations",

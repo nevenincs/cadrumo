@@ -14,7 +14,7 @@ from ..formula_runtime_ops import evaluate_args_op
 from ..schema_base import FormulaOperator
 from ..schema_formula import FormulaExpression
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _literal(value: str = "1") -> FormulaExpression:

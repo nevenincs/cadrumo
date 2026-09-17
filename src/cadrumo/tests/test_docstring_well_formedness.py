@@ -60,7 +60,7 @@ from sphinx.ext.napoleon.docstring import GoogleDocstring
 
 from .inventory import production_ast_items, repo_relative
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.usefixtures("operation")]
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "renta-ledger-category-variant-routing-mapping:2025"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 source_refs = ["aeat-modelo-100-procedure", "boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"

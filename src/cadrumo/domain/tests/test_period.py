@@ -15,7 +15,7 @@ from ..period import (
     period_start_date,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _CONTIGUOUS_REGISTRY_PERIODS = (
     "1T",

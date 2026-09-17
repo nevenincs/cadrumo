@@ -275,6 +275,12 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
             (),
         ),
         (
+            "source-to-dev-function-local",
+            "cadrumo.domain.tests.test_bad",
+            "def load():\n    import dev.exit_codes\n\n    return dev.exit_codes\n",
+            (),
+        ),
+        (
             "core-to-domain",
             "cadrumo.core.bad",
             "from ..domain.module import VALUE\n",
@@ -1105,3 +1111,18 @@ def test_a_ratchet_cannot_approve_a_shipped_test_module_reaching_a_repository_on
     assert "Approved debt: 1 occurrence(s)" in output
     assert "src/cadrumo/domain/tests/test_repository_reach.py:1 imports dev.exit_codes" in output
     assert "a shipped root reaching a repository-only root is not debt" in output
+
+
+def test_a_dynamic_shipped_import_of_a_repository_only_root_fails_the_verdict(tmp_path: Path) -> None:
+    root = _fixture_root(tmp_path)
+    _write_module(
+        root,
+        "cadrumo.domain.tests.test_dynamic_reach",
+        'import importlib\n\nimportlib.import_module("dev.exit_codes")\n',
+    )
+
+    exit_status, output = _health_verdict(root)
+
+    assert exit_status == 1, output
+    assert "Repository-only reach (not ratchetable): 1 occurrence(s)" in output
+    assert "src/cadrumo/domain/tests/test_dynamic_reach.py:3 imports dev.exit_codes" in output

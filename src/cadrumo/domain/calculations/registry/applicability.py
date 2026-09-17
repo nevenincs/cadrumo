@@ -482,7 +482,7 @@ def _registry_applicability_reason(key: str, *, operation: PinnedAuthorityOperat
         MappingFactQuery(
             fact_id=_APPLICABILITY_VERDICT_REASON_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -800,7 +800,6 @@ REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
         Modelo("130"),
         Modelo("131"),
         Modelo("136"),
-        Modelo("145"),
         Modelo("151"),
         Modelo("180"),
         Modelo("184"),

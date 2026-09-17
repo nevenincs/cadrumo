@@ -10,16 +10,17 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..binding_temporal import TargetPeriods
+from ..errors import NoRevisionForPeriodError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
-from .published_authority import published_legal_evidence_text
+from .published_authority import published_legal_evidence_text, published_supported_filing_years
 from .registry_tree import bundled_modelo_components
 from .snapshot_support import build_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.base-imponible",
@@ -379,17 +380,37 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
     )
 
 
-def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
+def test_modelo_714_snapshot_refuses_the_authored_2021_event_period_below_the_supported_floor() -> None:
+    # The 2021 revision stays authored (its declarations are inspected above), but
+    # filing selection must refuse a year below the published support floor.
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    assert supported_years.floor > 2021
+    modelo, catalogues = _load_modelo_714()
+    assert modelo.revisions["2021"].period_selector.years == (2021,)
+    with pytest.raises(NoRevisionForPeriodError):
+        build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2021,
+            period="0A",
+        )
+
+
+def test_modelo_714_snapshot_builds_for_the_supported_floor_event_period() -> None:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
     modelo, catalogues = _load_modelo_714()
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2021,
+        filing_year=supported_years.floor,
         period="0A",
     )
-    assert snapshot.revision.id == "2021"
-    assert _PATRIMONIO_FORM_ORDER_REF in snapshot.legal
+    assert snapshot.revision.id == str(supported_years.floor)
+    assert snapshot.revision.period_selector.years == (supported_years.floor,)
 
 
 @pytest.mark.parametrize(

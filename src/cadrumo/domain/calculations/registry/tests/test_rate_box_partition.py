@@ -43,7 +43,7 @@ from ..schema_surfaces import CasillaDefinition
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _LEGAL = ("ley-37-1992:art-91",)
 _SOURCE = ("aeat-dr-390-2025",)

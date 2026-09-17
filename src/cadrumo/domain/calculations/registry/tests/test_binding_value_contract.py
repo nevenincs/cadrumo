@@ -11,7 +11,7 @@ from ..binding_value_contract import (
     BindingValueContract,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_money_contract_hydrates_onto_the_decimal_channel() -> None:

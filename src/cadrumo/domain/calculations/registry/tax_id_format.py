@@ -8,8 +8,10 @@ from typing import Annotated, Final
 
 from pydantic import AfterValidator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, SpanishTaxIdFormat
 from ....core.identity.tax_id import validate_spanish_tax_id
+from ....core.time.clock import today_madrid
 from .facts.resolution import MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from .facts.schema import GovernedFactCatalogue, GovernedFactFamily, MappingFactPayload
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -133,7 +135,7 @@ def tax_id_format_value(
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
         raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
-    resolved = tax_id_format(selected_authority, effective_date=effective_date or date.today())
+    resolved = tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
     values = {
         "tax_id.width": str(resolved.width),
         "tax_id.country_prefix": resolved.country_prefix,
@@ -163,9 +165,10 @@ def runtime_tax_id_format(
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
         raise ValueError("Spanish tax-ID format requires an explicit authority operation or scope")
-    return tax_id_format(selected_authority, effective_date=effective_date or date.today())
+    return tax_id_format(selected_authority, effective_date=effective_date or today_madrid())
 
 
+@pydantic_validation_boundary
 def _validate_subject_tax_id(value: str) -> str:
     """Validate an ordinary runtime subject against the established artifact."""
     return validate_spanish_tax_id(value, runtime_tax_id_format())

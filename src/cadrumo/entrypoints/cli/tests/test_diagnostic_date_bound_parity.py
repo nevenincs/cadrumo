@@ -20,7 +20,7 @@ from .._diagnostics_payloads import (
 )
 from .._ledger_read_cli import _parse_iso_date as parse_ledger_date
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("parser", (parse_diagnostics_date, parse_ledger_date))

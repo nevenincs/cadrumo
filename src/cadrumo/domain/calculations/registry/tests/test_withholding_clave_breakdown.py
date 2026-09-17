@@ -42,7 +42,7 @@ def _obs(
         source_id=source_id,
         perceptor_tax_id=nif,
         transaction_date=date(2025, 6, 1),
-        clave=RetencionClave(clave),
+        clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal(percibido_dinerario),
         percibido_especie=Decimal(percibido_especie),

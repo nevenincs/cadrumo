@@ -19,7 +19,7 @@ from ..export_semantics import (
 )
 from ..schema_exports import ExportFieldDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _field_payload(kind: str, **semantic_payload: object) -> dict[str, object]:

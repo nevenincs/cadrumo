@@ -10,6 +10,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.text_fold import fold_printed_phrase
 from .errors import RegistryValidationError
@@ -28,6 +29,7 @@ class PublishedIvaCitation(RegistryModel):
     valid_to: date
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _grounding_is_complete(self) -> Self:
         if self.valid_to < self.valid_from:
             raise RegistryValidationError(f"IVA citation {self.legal_reference!r} has an inverted validity window")
@@ -51,6 +53,7 @@ class PublishedIvaRegulation(RegistryModel):
     legal_basis_exempt: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _grounding_matches_disposition(self) -> Self:
         if self.legal_basis_exempt:
             if self.citations or not self.notes.strip():
@@ -73,6 +76,7 @@ class PublishedIvaPlaceOfSupplyRule(RegistryModel):
     valid_to: date | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _grounding_matches_disposition(self) -> Self:
         if len(self.legal_references) != len(set(self.legal_references)):
             raise RegistryValidationError(f"place-of-supply rule {self.rule_id!r} repeats legal references")
@@ -100,6 +104,7 @@ class PublishedRecargoBand(RegistryModel):
     legal_ref: str = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _ordered_window(self) -> Self:
         if not self.surcharge_pct.is_finite():
             raise RegistryValidationError(f"recargo band {self.id!r} has a non-finite surcharge")
@@ -139,6 +144,7 @@ class TerritoryCarveOut(RegistryModel):
     notes: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_one_disposition(self) -> Self:
         if sum((self.assimilated_to is not None, self.scope is not None, self.establishes_nothing)) != 1:
             raise RegistryValidationError(f"territory carve-out {self.code!r} must declare one disposition")
@@ -193,6 +199,7 @@ class RuntimeRegistryCatalogues(RegistryModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _keys_match_records(self) -> Self:
         collections = (
             (self.countries, "code"),

@@ -6,7 +6,6 @@ family = "mapping"
 variant_id = "lirpf-work-income-multiple-pagadores-reduced-limit:2019-2026"
 date_axis = "filing_period"
 valid_from = 2019-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-96"]
 source_refs = ["boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"

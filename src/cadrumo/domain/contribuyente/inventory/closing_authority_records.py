@@ -12,6 +12,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.decimal.constants import MONEY_ZERO
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
@@ -48,6 +49,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
 
     @field_validator("evidence")
     @classmethod
+    @pydantic_validation_boundary
     def _evidence_is_unique(
         cls,
         value: tuple[InventoryClosingDecisionEvidence, ...],
@@ -58,6 +60,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _authority_identity_is_closed(self) -> InventoryClosingAuthorityDecision:
         if self.authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
             if self.physical_observation_id is None or self.physical_observation_fingerprint is None:
@@ -114,11 +117,13 @@ class PriorAuthoritativeClosingLink(BaseModel):
 
     @field_validator("prior_authoritative_closing_value", "current_opening_value")
     @classmethod
+    @pydantic_validation_boundary
     def _values_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
         return require_inventory_cents(value, field_name=info.field_name or "continuity value")
 
     @field_validator("evidence")
     @classmethod
+    @pydantic_validation_boundary
     def _evidence_is_unique(
         cls,
         value: tuple[PriorClosingContinuityEvidence, ...],
@@ -129,6 +134,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _continuity_is_immediate_and_value_equal(self) -> PriorAuthoritativeClosingLink:
         if self.prior_filing_year != self.current_filing_year - 1:
             raise InventoryValidationError("prior authoritative closing must be the immediate prior filing year")
@@ -175,6 +181,7 @@ class InventoryClosingConflictDiagnostic(BaseModel):
 
     @field_validator("movement_derived_value", "physical_observed_value")
     @classmethod
+    @pydantic_validation_boundary
     def _values_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
         return require_inventory_cents(value, field_name=info.field_name or "closing conflict value")
 
@@ -199,12 +206,14 @@ class InventoryClosingResolution(BaseModel):
 
     @field_validator("authoritative_value", "movement_derived_value", "physical_observed_value")
     @classmethod
+    @pydantic_validation_boundary
     def _values_are_cents(cls, value: Decimal | None, info: ValidationInfo) -> Decimal | None:
         if value is None:
             return None
         return require_inventory_cents(value, field_name=info.field_name or "closing resolution value")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _conflict_is_retained(self) -> InventoryClosingResolution:
         has_physical = _validate_resolution_physical_state(self)
         _validate_resolution_authority_value(self, has_physical)
@@ -261,6 +270,7 @@ class InventoryClosingAuthorityRecord(BaseModel):
     prior_closing_link: PriorAuthoritativeClosingLink
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coordinates_match(self) -> InventoryClosingAuthorityRecord:
         coordinate = (self.decision.actividad_id, self.decision.filing_year)
         if coordinate != (

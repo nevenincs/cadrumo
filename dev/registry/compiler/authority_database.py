@@ -194,13 +194,19 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                 ReferenceComponentQuery(str(reference_id), AuthorityComponentKind.SOURCE_REFERENCE)
                 for reference_id in sorted(source_ids)
             )
-            revision_fact_queries = _decoded_fact_dependencies(query, payload, fact_queries, fact_values)
+            revision_fact_queries = _decoded_fact_dependencies(
+                query,
+                payload,
+                fact_queries,
+                fact_values,
+                support_dependency=directory,
+            )
             components.append(
                 _compiled_component(
                     query,
                     base_revision,
                     payload=payload,
-                    dependencies=revision_fact_queries + reference_queries,
+                    dependencies=(*revision_fact_queries, directory_query, *reference_queries),
                 )
             )
             for layout in revision.export_layouts:
@@ -235,13 +241,20 @@ def _decoded_fact_dependencies(
     payload: bytes,
     fact_queries: tuple[GovernedFactComponentQuery, ...],
     fact_values: tuple[object, ...],
+    *,
+    support_dependency: ModeloRevisionDirectory | None = None,
 ) -> tuple[GovernedFactComponentQuery, ...]:
-    """Return only facts exercised while strictly decoding one typed component."""
+    """Return only facts exercised while strictly decoding one typed component.
+
+    ``support_dependency`` is the directory whose supported filing years a
+    modelo revision resolves its facts against; it is always a declared
+    dependency of that revision, not an observed one.
+    """
     observed: set[str] = set()
     decode_authority_component(
         query,
         payload,
-        dependencies=fact_values,
+        dependencies=fact_values if support_dependency is None else (*fact_values, support_dependency),
         fact_query_observer=lambda fact_query: observed.add(str(fact_query.fact_id)),
     )
     # Tax-ID format is the bootstrap decode context and is read directly from

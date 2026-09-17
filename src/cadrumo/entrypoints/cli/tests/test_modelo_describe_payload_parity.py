@@ -21,11 +21,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
 from ..modelo_aux_payloads import ModeloDescribeResult
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _LEGAL_REF = "ley-35-2006:art-27"
 _SOURCE_REF = "aeat-manual-renta-2024"
@@ -114,7 +115,8 @@ def test_emitted_json_carries_the_grounding_fields() -> None:
     ("field", "value"),
     [
         ("filing_year", -1),
-        ("filing_year", 2201),
+        ("filing_year", FILING_YEAR_MAX + 1),
+        ("filing_year", FILING_YEAR_MIN - 1),
         ("casilla_count", -2),
         ("manual_casilla_count", -1),
         ("bound_casilla_count", -1),
@@ -133,7 +135,8 @@ def test_canonical_report_refuses_out_of_range_values(field: str, value: int) ->
     ("field", "value"),
     [
         ("filing_year", -1),
-        ("filing_year", 2201),
+        ("filing_year", FILING_YEAR_MAX + 1),
+        ("filing_year", FILING_YEAR_MIN - 1),
         ("casilla_count", -2),
         ("binding_count", -1),
     ],
@@ -153,6 +156,6 @@ def test_cli_payload_refuses_out_of_range_values(field: str, value: int) -> None
 
 def test_boundary_filing_years_remain_valid() -> None:
     """The bound refuses out-of-range values only, not the legitimate edges."""
-    assert _report(filing_year=1980).filing_year == 1980
-    assert _report(filing_year=2200).filing_year == 2200
+    assert _report(filing_year=FILING_YEAR_MIN).filing_year == FILING_YEAR_MIN
+    assert _report(filing_year=FILING_YEAR_MAX).filing_year == FILING_YEAR_MAX
     assert _report(filing_year=None).filing_year is None

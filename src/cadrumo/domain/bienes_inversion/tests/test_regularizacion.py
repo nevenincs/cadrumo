@@ -28,7 +28,7 @@ from ..regularizacion_parameters import (
 )
 from ..vocabulary import BienInversionKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 #: An explicit bundle, supplied rather than resolved: these are unit tests of the
 #: art-109/110 PROCEDURE, and the procedure is what they prove. Whether the

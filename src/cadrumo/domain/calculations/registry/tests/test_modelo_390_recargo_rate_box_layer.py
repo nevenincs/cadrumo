@@ -51,7 +51,7 @@ from ..ledger_iva_bindings import (
 from ..schema import BindingDefinition, ModeloRevision
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 # Recargo box suffix, the IVA rate slot statute pairs it with, a date inside that
@@ -377,7 +377,7 @@ def _with_applied_rates(
     def _rated(binding: BindingDefinition) -> BindingDefinition:
         selector = binding.provider
         assert isinstance(selector, BaseModel), f"{binding.id} carries an untyped selector; nothing to mutate"
-        return binding.model_copy(update={"selector": selector.model_copy(update={"applied_rates": applied_rates})})
+        return binding.model_copy(update={"provider": selector.model_copy(update={"applied_rates": applied_rates})})
 
     mutated = tuple(_rated(binding) if binding.id == binding_id else binding for binding in revision.bindings)
     return revision.model_copy(update={"bindings": mutated})

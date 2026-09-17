@@ -27,7 +27,7 @@ from ..records import (
 )
 from ..valuation import compute_inventory_valuation, inventory_acquisition_fingerprint
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _DIGEST_A = "a" * 64
 _DIGEST_B = "b" * 64

@@ -24,6 +24,7 @@ from cadrumo.domain.deadlines.festivos import (
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -458,6 +459,7 @@ def test_authored_holiday_facts_match_the_complete_publication_and_event_master(
                 effective_date=date(publication.valid_from.year, 7, 1),
             ),
             authority_digest=_AUTHORITY_DIGEST,
+            support=committed_supported_filing_years(),
         )
         assert resolved.variant_id == publication.variant_id
 
@@ -473,6 +475,7 @@ def test_authored_holiday_facts_match_the_complete_publication_and_event_master(
                 selectors=event.selectors,
             ),
             authority_digest=_AUTHORITY_DIGEST,
+            support=committed_supported_filing_years(),
         )
         assert resolved.variant_id == event.variant_id
 
@@ -528,6 +531,7 @@ def test_removing_a_direct_holiday_variant_breaks_its_exact_query(tmp_path: Path
                 ),
             ),
             authority_digest=_AUTHORITY_DIGEST,
+            support=committed_supported_filing_years(),
         )
 
 

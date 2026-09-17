@@ -18,7 +18,7 @@ from ..retenciones_routing_integrity import (
     resolve_m130_retenciones_route,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_output_casilla_is_the_registry_validated_casilla_id() -> None:

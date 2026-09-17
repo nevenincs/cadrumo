@@ -76,12 +76,10 @@ def test_verb_schemas_preserve_secret_shapes_and_root_posture_without_values() -
         ).lower()
         assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
 
+    # Archive import reads one passphrase secret whatever the other options say.
     restore = schemas["config.profile.archive.import"].machine_secret_payloads
-    assert tuple(
-        (payload.condition.option_name, payload.condition.presence)
-        for payload in restore
-        if payload.condition is not None
-    ) == (("artifact", "absent"), ("artifact", "present"))
+    assert len(restore) == 1
+    assert restore[0].condition is None
 
 
 def test_machine_secret_model_targets_are_public_strict_and_shape_exact() -> None:

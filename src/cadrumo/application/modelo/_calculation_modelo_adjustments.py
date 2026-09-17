@@ -275,8 +275,16 @@ def _m131_collect_projection_inputs(
         if record == "page_1":
             _m131_update_page1_activity(inputs, field_name=field, value=value)
             continue
-        module_parts = field.split("-")
-        if record == "DPA" and len(module_parts) >= 3 and module_parts[1].isdigit():
+        # Casilla 01 sums the modules' net yields only; the DPA record carries
+        # each module's unit count beside its yield, and a count is not money.
+        module_parts = field.split("-", 2)
+        if (
+            record == "DPA"
+            and len(module_parts) == 3
+            and module_parts[0] == "modulo"
+            and module_parts[1].isdigit()
+            and module_parts[2] == "rendimiento-neto"
+        ):
             inputs.dpa_rendimientos.append(value)
 
     return inputs

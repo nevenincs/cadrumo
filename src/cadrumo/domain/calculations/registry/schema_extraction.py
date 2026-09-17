@@ -41,6 +41,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .ids import ExtractionProfileId
 from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
@@ -163,6 +164,7 @@ class BboxAnchorSpec(RegistryModel):
     column_anchor: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _anchor_x_range_is_not_inverted(self) -> BboxAnchorSpec:
         if self.anchor_x_min is not None and self.anchor_x_max is not None and self.anchor_x_min > self.anchor_x_max:
             raise RegistryValidationError("bbox anchor_x_min must not exceed anchor_x_max")
@@ -216,6 +218,7 @@ class ExtractionTargetDefinition(RegistryModel):
     bbox_anchor: BboxAnchorSpec | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _field_strategy_consistency(self) -> ExtractionTargetDefinition:
         if self.match_strategy == "named_label" and not self.label_pattern:
             raise RegistryValidationError("named_label extraction targets require label_pattern")
@@ -248,6 +251,7 @@ class ExtractionProfileDefinition(RegistryModel):
 
     @field_validator("accepted_artefact_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _accepted_artefact_kinds_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("extraction profile accepted_artefact_kinds entries must be unique")
@@ -255,6 +259,7 @@ class ExtractionProfileDefinition(RegistryModel):
 
     @field_validator("target_casillas")
     @classmethod
+    @pydantic_validation_boundary
     def _target_casillas_unique(
         cls,
         value: tuple[ExtractionTargetDefinition, ...],

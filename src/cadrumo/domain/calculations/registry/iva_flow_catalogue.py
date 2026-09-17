@@ -15,6 +15,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
+from ....core.time.clock import today_madrid
 from ....domain.iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -310,7 +311,7 @@ def resolve_iva_flow_direction_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> IvaFlowDirectionCatalogue:
     """Resolve the dated IVA flow and settlement vocabulary from fact 0083."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_selected_mapping_entries(effective_date=coordinate, authority=authority))

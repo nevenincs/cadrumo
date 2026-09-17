@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_temporal import (
     BindingTemporalSelector,
@@ -97,6 +98,7 @@ class RelationPrefillProvider(BaseModel):
         return self.source_casilla_ids
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_source_shape(self) -> RelationPrefillProvider:
         if self.source_casilla_id is not None and self.source_casilla_ids:
             raise RegistryValidationError(
@@ -111,6 +113,7 @@ class RelationPrefillProvider(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_dependency_role(self) -> RelationPrefillProvider:
         """Keep the annual-summary fold on the role that names it.
 

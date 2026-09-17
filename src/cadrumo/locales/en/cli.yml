@@ -1304,6 +1304,7 @@ cli:
           Must carry imported external evidence (justificante / CSV register / live
           capture)
         history_help: Show every lifecycle event for one work unit
+        history_next_action_summary: Review this work unit's current state.
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         id_selector_ambiguous: 'The displayed work id {selector} matches more than
           one active work unit.
@@ -1330,6 +1331,9 @@ cli:
           is a key-value entry: put the field name on the left of one equals sign
           and the value on the right. Received {spec}.'
         list_help: List registered work units, optionally filtered by profile
+        list_no_active_work_summary: No active work unit is available to continue.
+        list_selection_required_summary: Choose one work unit before continuing.
+        list_single_status_summary: One work unit is available for inspection.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the socio''s own workspace, record it as attribution_received
@@ -1539,6 +1543,8 @@ cli:
         state_label_presentado: filed
         state_label_presentado_supersedido: superseded filing
         state_label_verificado_completo: verified complete
+        status_calculate_summary: This active work unit can be calculated.
+        status_discarded_summary: This work unit is discarded, so calculation is unavailable.
         status_help: Show the metadata of one work unit
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
@@ -2133,8 +2139,12 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     provision:
-      help: 'Manage the local document reader: runtime status, install, start, model
-        pull, load, verify and remove, or set everything up in one run.'
+      browser:
+        help: Download the Chromium build that AEAT browser automation launches. Does
+          nothing when it is already installed.
+      help: 'Manage what Cadrumo runs on this computer: the browser build for AEAT
+        automation, and the local document reader''s runtime status, install, start,
+        model pull, load, verify and remove, or set everything up in one run.'
       install:
         confirm_help: Agree to download and run the package-manager install. Without
           it nothing is installed.

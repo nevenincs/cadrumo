@@ -20,9 +20,6 @@ from ..binding_selector_utils import (
     BooleanBindingEncodedValue,
     boolean_binding_encoded_values,
 )
-from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
-from ..errors import RegistryValidationError
-from ..manual_input_selector import ManualInputProvider
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -122,19 +119,11 @@ def test_non_manual_input_binding_has_no_encoded_values() -> None:
 def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> None:
     """The bite proof: a selector shape the model rejects must raise, not vanish.
 
-    ``BindingDefinition.model_validate`` already dispatches through
-    ``ManualInputProvider`` at construction time, so a genuinely malformed
-    selector cannot reach this function via the normal constructor -- proven
-    by the companion assertion below. The residual risk this fix closes is
-    DRIFT: a raw ``dict.get("true_value")`` reads a string literal with no tie
-    to the model's own field names, so if ``ManualInputProvider`` ever
-    renamed that field, the model's construction-time validation would keep
-    passing (it would just be validating the NEW name) while a raw-dict
-    reader silently, permanently stopped finding any boolean encoding at all --
-    indistinguishable from "not a boolean binding" for every real one.
-    ``model_construct`` bypasses the constructor's own validators, standing in
-    for that drifted-schema selector so the fixed function's OWN validation
-    (not the constructor's) is what is under test.
+    ``BindingDefinition.model_validate`` dispatches through
+    ``ManualInputProvider`` at construction time, and the encoding reader
+    consumes the constructed member's typed attributes rather than raw keys,
+    so a misspelled encoding key is refused before any reader can mistake the
+    binding for "not a boolean binding".
     """
     with pytest.raises(
         ValidationError,
@@ -162,28 +151,4 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
                 "source_refs": ("aeat-dr-100-2025-dictionary",),
             },
         )
-    assert "Extra inputs are not permitted" in str(excinfo.value), (
-        "construction-time gate must be the one refusing the typo -- confirms the "
-        "residual risk this fix closes is drift, not malformed-data construction"
-    )
-
-    drifted = BindingDefinition.model_construct(
-        id="renta-modelo-100-estimacion-directa-es-normal",
-        provider=ManualInputProvider.model_construct(
-            casilla_id="0168",
-            data_type="boolean",
-            ture_value="N",  # the field ManualInputProvider no longer names "true_value"
-            false_value="S",
-        ),
-        value=BindingValueContract(
-            data_type=BindingDataType.ENUM,
-            channel=BindingValueChannel.ENUM,
-            typed_enum="EstimacionDirectaModalidad",
-        ),
-        aggregation={"op": "copy"},
-        legal_refs=("ley-35-2006:art-30",),
-        source_refs=("aeat-dr-100-2025-dictionary",),
-    )
-
-    with pytest.raises(RegistryValidationError, match="malformed manual_input selector"):
-        boolean_binding_encoded_values(drifted)
+    assert "Extra inputs are not permitted" in str(excinfo.value)

@@ -18,6 +18,7 @@ from typing import Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.iva_category_catalogue import require_iva_category
@@ -112,7 +113,7 @@ _ARTICLE_REFERENCE_SEPARATOR: Final[str] = ":art-"
 
 def _require_catalogue(catalogue: CitationCatalogue | None) -> CitationCatalogue:
     if catalogue is None:
-        return registry_citation_catalogue(effective_date=date.today())
+        return registry_citation_catalogue(effective_date=today_madrid())
     return catalogue
 
 

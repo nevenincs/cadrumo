@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_repair_specs_cover_the_executable_group_and_every_leaf() -> None:
-    assert len(CONFIG_REPAIR_COMMAND_SPECS) == 9
+    assert len(CONFIG_REPAIR_COMMAND_SPECS) == 8
     assert {spec.token for spec in CONFIG_REPAIR_COMMAND_SPECS} == {
         "repair",
         "integrity",
@@ -22,7 +22,6 @@ def test_repair_specs_cover_the_executable_group_and_every_leaf() -> None:
         "quarantine",
         "reset-progress",
         "objects",
-        "registry",
         "connectivity",
         "profile",
     }

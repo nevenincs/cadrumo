@@ -28,7 +28,7 @@ from ..common import (
 from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 from .cli_runner import cadrumo_click_command
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def _resolve_real_leaf(*tokens: str) -> RequestedCliLeaf:

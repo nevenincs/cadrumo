@@ -14,6 +14,7 @@ from ....core.aggregation import (
     LedgerIncomeGrounding,
 )
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import (
@@ -91,6 +92,7 @@ class LedgerRentaIncomeProvider(BaseModel):
 
     @field_validator("modelo")
     @classmethod
+    @pydantic_validation_boundary
     def _require_supported_modelo(cls, value: Modelo) -> Modelo:
         if value not in _RENTA_INCOME_MODELOS:
             raise ValueError(f"ledger_renta_income_aggregation modelo must be one of {sorted(_RENTA_INCOME_MODELOS)!r}")
@@ -98,6 +100,7 @@ class LedgerRentaIncomeProvider(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _require_explicit_fact(cls, value: object) -> object:
         """Refuse an omitted ``fact``, naming the accepted set in the message.
 

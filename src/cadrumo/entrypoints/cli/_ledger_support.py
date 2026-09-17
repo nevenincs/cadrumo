@@ -34,6 +34,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...core.unit_proportion import is_unit_proportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
 from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
@@ -248,7 +249,7 @@ def validate_category_id(category_id: str | None) -> str | None:
         return None
     try:
         return require_spending_category(trimmed).value
-    except ValueError as exc:
+    except RegistryValidationError as exc:
         # Show one concrete valid id inline: operators repeatedly
         # guessed compound keys (`office:material_oficina`,
         # `office_material_oficina`); only the bare enum value is

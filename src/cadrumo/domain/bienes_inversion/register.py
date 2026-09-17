@@ -140,11 +140,13 @@ class BienInversionDisposal(BaseModel):
 
     @field_validator("year")
     @classmethod
+    @_pydantic_validation_boundary
     def _minimum_year_from_registry(cls, value: int) -> int:
         return _validate_acquisition_year(value, field_name="disposal year")
 
     @field_validator("regime", mode="before")
     @classmethod
+    @_pydantic_validation_boundary
     def _regime_from_registry(cls, value: object) -> _BienInversionDisposalRegime:
         return require_bien_inversion_disposal_regime(value)
 
@@ -204,11 +206,13 @@ class BienInversionIvaRecord(BaseModel):
 
     @field_validator("acquisition_year")
     @classmethod
+    @_pydantic_validation_boundary
     def _minimum_year_from_registry(cls, value: int) -> int:
         return _validate_acquisition_year(value, field_name="acquisition year")
 
     @field_validator("kind", mode="before")
     @classmethod
+    @_pydantic_validation_boundary
     def _kind_from_registry(cls, value: object) -> _BienInversionKind:
         return require_bien_inversion_kind(value)
 

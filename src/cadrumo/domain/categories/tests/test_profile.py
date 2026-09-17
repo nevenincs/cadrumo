@@ -14,7 +14,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.categories.proportionality import ProportionalityKind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from ....core.citation_grounding import CitationGrounding
@@ -27,8 +26,9 @@ from ..proportionality import (
     ProportionalityRule,
     parse_http_url,
 )
+from ..proportionality_catalogue import require_proportionality_kind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _citation() -> CategoryCitation:
@@ -111,7 +111,7 @@ def test_category_profile_rejects_blank_display_label_at_schema_boundary() -> No
 
 def _rule() -> ProportionalityRule:
     return ProportionalityRule(
-        kind=ProportionalityKind.from_registry("full_deductible"),
+        kind=require_proportionality_kind("full_deductible"),
         citations=(_citation(),),
         notes=tr("Regla de prueba."),
     )
@@ -124,7 +124,7 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
         category=SpendingCategory.from_registry("material_oficina"),
         display_label=tr("categories.test_profile.display_label_851219"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind.from_registry("fixed_percentage"),
+            kind=require_proportionality_kind("fixed_percentage"),
             fixed_pct=Decimal("1.00"),
             citations=(_citation(),),
             notes=tr("Perfil sin proyección a casillas."),
@@ -143,7 +143,7 @@ def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
                 "category": SpendingCategory.from_registry("material_oficina"),
                 "display_label": {"es": "Material"},
                 "proportionality": {
-                    "kind": ProportionalityKind.from_registry("full_deductible"),
+                    "kind": require_proportionality_kind("full_deductible"),
                     "citations": [_citation().model_dump(mode="json")],
                     "notes": "Perfil sin proyección a casillas.",
                 },

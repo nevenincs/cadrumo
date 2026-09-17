@@ -147,6 +147,7 @@ class ProfileFieldDefinition(BaseModel):
 
     @field_validator("type", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_type(cls, value: object) -> object:
         return _parse_str_enum(ProfileFieldType, value)
 
@@ -168,6 +169,7 @@ class ProfileFieldDefinition(BaseModel):
 
     @field_validator("sensitivity", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_sensitivity(cls, value: object) -> object:
         return _parse_sensitivity(value)
 
@@ -230,6 +232,7 @@ class ProfileSectionDefinition(BaseModel):
 
     @field_validator("sensitivity", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_sensitivity(cls, value: object) -> object:
         return _parse_sensitivity(value)
 
@@ -369,11 +372,13 @@ class ProfileSchemaDefinition(BaseModel):
 
     @field_validator("snapshot_policy", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_snapshot_policy(cls, value: object) -> object:
         return _parse_str_enum(ProfileSnapshotPolicy, value)
 
     @field_validator("remove_policy", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_remove_policy(cls, value: object) -> object:
         return _parse_str_enum(ProfileRemovePolicy, value)
 

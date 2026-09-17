@@ -93,7 +93,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"

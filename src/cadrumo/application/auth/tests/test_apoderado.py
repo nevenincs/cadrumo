@@ -288,9 +288,16 @@ class TestApoderadoFlowDoor:
         """
         svc = _service(isolated_settings)
         output = StringIO()
-        # Catalogue order is GENERALNT, RENT, IVA.  Move to RENT, select it,
-        # move to IVA, select it, finish the checkbox, then submit review.
-        keys = "87654321X\r\x1b[B \x1b[B \r\r"
+        # Walk the live catalogue order: move down to each wanted scope and
+        # toggle it, finish the checkbox, then submit review.
+        order = [scope.code for scope in svc.catalogue.scopes]
+        cursor = 0
+        moves = ""
+        for wanted in sorted(("RENT", "IVA"), key=order.index):
+            target = order.index(wanted)
+            moves += "\x1b[B" * (target - cursor) + " "
+            cursor = target
+        keys = f"87654321X\r{moves}\r\r"
         with create_pipe_input() as pipe:
             pipe.send_text(keys)
             result = run_apoderado_flow(

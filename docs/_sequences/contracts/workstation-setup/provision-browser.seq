@@ -1,0 +1,3 @@
+@step Download the Chromium build the installed browser extra launches with.
+@static aeat config provision browser
+@blocked external-service Downloads the Chromium build from the Playwright distribution servers, which the hermetic sandbox must not contact.

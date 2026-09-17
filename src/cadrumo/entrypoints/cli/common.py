@@ -37,7 +37,7 @@ import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.cli_metadata import is_metadata_invocation
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
@@ -192,6 +192,7 @@ class RequestedCliLeaf(BaseModel):
 
     @field_validator("canonical_cli_path")
     @classmethod
+    @pydantic_validation_boundary
     def _path_tokens_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not token or token != token.strip() or token.startswith("-") for token in value):
             raise ValueError("requested CLI leaf path requires canonical command tokens")

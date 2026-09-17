@@ -25,6 +25,7 @@ from ....core.identity.digest import ContentDigest
 from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
+from ....core.time.clock import today_madrid
 from .authority_artifact import (
     AuthorityComponentKind,
     AuthorityComponentQuery,
@@ -64,6 +65,7 @@ from .schema import (
     RegistryCatalogues,
     RegistrySnapshot,
     SnapshotGlobalCatalogues,
+    SupportedFilingYearsCatalogue,
 )
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
@@ -268,7 +270,7 @@ class ValidatedRegistryAuthority:
             MappingFactQuery(
                 fact_id="tax-domain-catalogue",
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=effective_date or date.today(),
+                effective_date=effective_date or today_madrid(),
             )
         )
         if not isinstance(resolved, ResolvedMappingFact):
@@ -291,6 +293,7 @@ class ValidatedRegistryAuthority:
                 self.catalogues.facts,
                 query,
                 authority_digest=self._identity_digest,
+                support=self.catalogues.require_supported_filing_years(),
             )
             if len(self._fact_resolutions) >= 1024:
                 self._fact_resolutions.pop(next(iter(self._fact_resolutions)))
@@ -568,6 +571,17 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("governed fact component decoded to an unexpected type")
         return value
 
+    def snapshot_globals(self) -> SnapshotGlobalCatalogues:
+        """Load the registry-wide globals published with this generation."""
+        value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
+        if not isinstance(value, SnapshotGlobalCatalogues):
+            raise RegistryValidationError("snapshot globals component decoded to an unexpected type")
+        return value
+
+    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+        """Return the generation's single filing-year support envelope."""
+        return self.snapshot_globals().supported_filing_years
+
     def profile_schema(self, schema_id: str = "cadrumo.user_profile") -> ProfileSchemaDefinition:
         """Load the profile declaration used by this exact operation generation."""
         # The profile schema model tree is only needed by profile-bound operations.
@@ -589,7 +603,15 @@ class PinnedAuthorityOperation:
     def revision(self, modelo_id: str | Modelo, revision_id: str) -> ModeloRevision:
         """Load one typed base revision without separately addressed export layouts."""
         normalized = Modelo(modelo_id).value
-        value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
+        try:
+            value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
+        except LookupError as exc:
+            if normalized not in self.modelo_ids():
+                raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=normalized) from exc
+            raise RegistrySnapshotError(
+                f"modelo {normalized!r} has no revision {revision_id!r}",
+                context={"modelo_id": normalized, "revision_id": revision_id},
+            ) from exc
         if not isinstance(value, ModeloRevision):
             raise RegistryValidationError("modelo revision component decoded to an unexpected type")
         return value
@@ -610,7 +632,10 @@ class PinnedAuthorityOperation:
     def modelo_directory(self, modelo_id: str | Modelo) -> ModeloRevisionDirectory:
         """Load the small selector-complete directory for one modelo."""
         normalized = Modelo(modelo_id).value
-        value = self.load(ModeloDirectoryComponentQuery(normalized), pin=self.generation)
+        try:
+            value = self.load(ModeloDirectoryComponentQuery(normalized), pin=self.generation)
+        except LookupError as exc:
+            raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=normalized) from exc
         if not isinstance(value, ModeloRevisionDirectory):
             raise RegistryValidationError("modelo directory component decoded to an unexpected type")
         return value
@@ -674,9 +699,7 @@ class PinnedAuthorityOperation:
         revision = self.revision_with_export_layouts(normalized, str(selected.id))
         modelo = directory.materialize(revision)
         legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
-        globals_value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
-        if not isinstance(globals_value, SnapshotGlobalCatalogues):
-            raise RegistryValidationError("snapshot globals component decoded to an unexpected type")
+        globals_value = self.snapshot_globals()
         catalogues = RegistryCatalogues(
             legal={reference_id: self.legal_reference(reference_id) for reference_id in sorted(legal_ids)},
             sources={reference_id: self.source_reference(reference_id) for reference_id in sorted(source_ids)},
@@ -706,6 +729,7 @@ class PinnedAuthorityOperation:
                 value,
                 query,
                 authority_digest=self.generation.logical_generation,
+                support=self.supported_filing_years(),
             )
             if len(self._fact_resolutions) >= 1024:
                 self._fact_resolutions.pop(next(iter(self._fact_resolutions)))

@@ -111,9 +111,12 @@ class TestPeriodCodeRejects:
                 _PERIOD_ADAPTER.validate_python(raw)
 
     def test_invalid_value_raises_registry_validation_error_at_validator(self) -> None:
+        # The validator sits behind the Pydantic translation boundary; the
+        # registered refusal is the cause of the ValueError Pydantic reads.
         for raw in ("", 1):
-            with pytest.raises(RegistryValidationError):
+            with pytest.raises(ValueError) as refusal:
                 _validate_period_code(raw)
+            assert isinstance(refusal.value.__cause__, RegistryValidationError)
 
 
 class TestCasillaDefinitionDataType:

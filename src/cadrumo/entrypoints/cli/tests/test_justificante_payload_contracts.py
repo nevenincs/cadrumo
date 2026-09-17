@@ -32,7 +32,7 @@ from .._app_live_justificante_payloads import (
     JustificanteViewResult,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "26262626-2626-4626-8626-262626262626"
 _PDF_SHA256 = "a3f1" * 16

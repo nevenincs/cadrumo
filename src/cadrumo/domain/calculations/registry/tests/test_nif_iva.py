@@ -7,7 +7,7 @@ import pytest
 from .....core.identity.nif_iva import normalise_nif_iva
 from ..nif_iva_catalogue import nif_iva_format_for_country, resolve_nif_iva_catalogue
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _VALID_AND_INVALID: list[tuple[str, str, str]] = [
     ("AT", "ATU12345678", "AT12345678"),

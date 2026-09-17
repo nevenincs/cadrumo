@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator
@@ -12,6 +11,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.iva_deduction_catalogue import (
     require_iva_deduction_evidence_authority,
@@ -48,7 +48,7 @@ class IvaDeductionClassificationProvenance(BaseModel):
 
 def _registry_iva_deduction_declarations() -> Mapping[str, str]:
     """Resolve the dated IVA deduction applicability catalogue."""
-    return resolve_iva_deduction_catalogue(effective_date=date.today()).declarations
+    return resolve_iva_deduction_catalogue(effective_date=today_madrid()).declarations
 
 
 def _required_declaration(declarations: Mapping[str, str], key: str) -> str:
@@ -77,7 +77,7 @@ def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDedu
     rejected, and a duplicate would be free to drift.
     """
     try:
-        return resolve_iva_deduction_catalogue(effective_date=date.today()).required_authority(kind)
+        return resolve_iva_deduction_catalogue(effective_date=today_madrid()).required_authority(kind)
     except RegistryValidationError as exc:
         raise IvaValidationError(str(exc)) from exc
 

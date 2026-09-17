@@ -149,7 +149,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -330,7 +329,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -515,7 +513,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -689,7 +686,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -755,7 +751,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2026-12-31
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -798,7 +793,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2026-12-31
 # Withdrawn 2026-09-13: this variant declared "boe-rirpf-category-profile-authority"
 # (RD 439/2007, the IRPF reglamento) as documentary authority for an IVA vocabulary, and
 # could not cite it because the document does not carry the claim. Measured over its
@@ -945,7 +939,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-29"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -1118,7 +1111,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -1319,7 +1311,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-29", "ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -1505,7 +1496,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -1683,7 +1673,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -1861,7 +1850,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -2039,7 +2027,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -2213,7 +2200,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -2390,7 +2376,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -2564,7 +2549,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -2737,7 +2721,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -2910,7 +2893,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -3083,7 +3065,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -3256,7 +3237,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -3429,7 +3409,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -3602,7 +3581,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -3775,7 +3753,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -3948,7 +3925,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -4121,7 +4097,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["rd-439-2007:art-22"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -4350,7 +4325,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-9"]
 source_refs = ["lirpf-cuota-chain-authority", "boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -4595,7 +4569,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30", "rd-439-2007:art-9"]
 source_refs = ["lirpf-cuota-chain-authority", "boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -4784,7 +4757,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -4957,7 +4929,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5130,7 +5101,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5303,7 +5273,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5476,7 +5445,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5649,7 +5617,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5822,7 +5789,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -5995,7 +5961,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -6188,7 +6153,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -6366,7 +6330,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -6539,7 +6502,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -6712,7 +6674,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -6885,7 +6846,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -7058,7 +7018,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -7231,7 +7190,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-29"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -7404,7 +7362,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-29"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
@@ -7470,7 +7427,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2022-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "rd-439-2007:art-9"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
@@ -7663,7 +7619,6 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["ley-35-2006:art-29"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"

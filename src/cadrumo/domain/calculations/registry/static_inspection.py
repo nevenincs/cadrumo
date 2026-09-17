@@ -19,6 +19,7 @@ from typing import Annotated, Protocol
 from pydantic import Field, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING, FrozenMapping
 from ....core.revision_review import RevisionReviewStatus
 from .casilla_membership import casillas_by_id
@@ -274,6 +275,7 @@ class RegistryRevisionInspection(RegistryModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_complete_static_admission(self) -> RegistryRevisionInspection:
         _validate_revision_source_refs(self)
         _validate_source_catalogue_keys(self)

@@ -35,6 +35,7 @@ never constructs an :class:`IvaInvoiceClassification`.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -44,6 +45,7 @@ from pydantic import BaseModel, model_validator
 from ...core.decimal.constants import ZERO
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
 # inside ``classify_invoice_line_for_iva``
@@ -73,6 +75,20 @@ def _invoice_validation_error(message: str) -> Exception:
     from ..invoices.errors import InvoiceValidationError
 
     return InvoiceValidationError(message)
+
+
+def _scoped_rate_categories(on_date: date) -> Mapping[IvaRateKind, IvaCategory]:
+    """Project the dated rate-tier to domestic-category table from the leased authority."""
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+    from .classification import resolve_iva_classification_inputs
+
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise _invoice_validation_error(
+            "invoice IVA classification requires a generation-pinned authority operation in scope",
+        )
+    return resolve_iva_classification_inputs(effective_date=on_date, operation=operation).rate_categories
 
 
 class IvaInvoiceClassification(BaseModel):
@@ -118,6 +134,7 @@ def classify_invoice_line_for_iva(
     *,
     iva_rate: IvaRate,
     invoice_kind: InvoiceKind,
+    on_date: date | None = None,
 ) -> IvaInvoiceClassification:
     """Build a classification record for the standard domestic-IVA case.
 
@@ -152,6 +169,8 @@ def classify_invoice_line_for_iva(
             rationale.
         invoice_kind: Whether the invoice was issued (sale) or
             received (purchase).
+        on_date: Date selecting the registry rate-tier table; today when
+            omitted, matching the rate-slot tier projection.
 
     Returns:
         A frozen :class:`IvaInvoiceClassification` with the derived
@@ -175,7 +194,7 @@ def classify_invoice_line_for_iva(
     # public rate-kind accessor. A local IvaRate-keyed copy used to live here
     # and was exactly this composition, so it could drift without any symbol
     # search relating the two.
-    category = domestic_categories_by_rate_kind()[rate_kind]
+    category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date or today_madrid()))[rate_kind]
     flow_direction = flow_direction_for_invoice_kind(invoice_kind)
     return IvaInvoiceClassification(
         category=category,
@@ -257,7 +276,7 @@ def invoice_line_to_iva_observation(
     from ..calculations.registry.ledger_iva_bindings import IvaLedgerObservation
     from ..invoices.enums import iva_rate_percentage
 
-    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
+    classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind, on_date=issued_at)
     if classification.rate_kind is None:
         raise _invoice_validation_error("standard IVA invoice observations require a rate_kind")
     return IvaLedgerObservation(

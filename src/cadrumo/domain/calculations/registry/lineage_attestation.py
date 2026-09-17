@@ -20,6 +20,7 @@ from typing import Annotated
 
 from pydantic import Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.continuidad import ContinuidadId
 from .casilla_lineage import CasillaLineageOriginField
 from .errors import RegistryValidationError
@@ -99,6 +100,7 @@ class LineageAttestation(RegistryModel):
     source_refs: SourceRefs
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_attestation_shape(self) -> LineageAttestation:
         """Enforce the row-local continuation and grounding contract."""
         if (self.member is None) == (self.continuidad_id is None):
@@ -148,6 +150,7 @@ class LineageAttestationSet(RegistryModel):
     attestations: tuple[LineageAttestation, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_targets(self) -> LineageAttestationSet:
         _validate_unique_targets(self.attestations)
         return self

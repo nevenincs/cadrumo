@@ -50,6 +50,7 @@ from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
 )
+from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
@@ -219,6 +220,14 @@ def _seed_verified_m303_settlement(
     return revision, work_unit
 
 
+def _settlement_revision() -> ModeloRevision:
+    return (
+        published_authority_operation()
+        .snapshot(Modelo("303").value, filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
+        .revision
+    )
+
+
 def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() -> None:
     """Positive sin-derecho volume with no provisional carry emits an in-year advisory."""
     applicability = derive_prorrata_applicability(
@@ -230,6 +239,7 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
         applicability=applicability,
         provisional_resolution=_unresolved_prorrata(),
         ejercicio=2026,
+        revision=_settlement_revision(),
     )
 
     assert applicability.applies is True
@@ -262,6 +272,7 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
         prorrata_definitiva_pct=Decimal("90"),
         operaciones_sin_derecho_deduccion=Decimal("10000"),
         regularizacion_year=2025,
+        revision=_settlement_revision(),
     )
     assert result.direccion is RegularizacionProrrataDireccion.DEDUCCION
     assert result.importe == Decimal("2000.00")
@@ -357,6 +368,7 @@ def test_advisory_is_silent_when_no_sin_derecho_operations() -> None:
         prorrata_definitiva_pct=Decimal("90"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
         regularizacion_year=2025,
+        revision=_settlement_revision(),
     )
     assert diagnostic is None
     assert result.importe == Decimal("2000.00")
@@ -370,6 +382,7 @@ def test_advisory_is_silent_when_percentages_coincide() -> None:
         prorrata_definitiva_pct=Decimal("90"),
         operaciones_sin_derecho_deduccion=Decimal("10000"),
         regularizacion_year=2025,
+        revision=_settlement_revision(),
     )
     assert diagnostic is None
 
@@ -382,6 +395,7 @@ def test_advisory_reports_ingreso_direction_when_definitiva_below_provisional() 
         prorrata_definitiva_pct=Decimal("70"),
         operaciones_sin_derecho_deduccion=Decimal("30000"),
         regularizacion_year=2025,
+        revision=_settlement_revision(),
     )
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
     assert diagnostic is not None
@@ -396,6 +410,7 @@ def test_zero_definitive_deduction_side_still_surfaces_casilla_44_advisory() -> 
         prorrata_definitiva_pct=Decimal("0"),
         operaciones_sin_derecho_deduccion=Decimal("100000"),
         regularizacion_year=2026,
+        revision=_settlement_revision(),
     )
 
     assert result.prorrata_definitiva_pct == Decimal("0")
@@ -412,6 +427,7 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
         applicability=applicability,
         provisional_resolution=_unresolved_prorrata(),
         ejercicio=2026,
+        revision=_settlement_revision(),
     )
     result, regularizacion = buildprorrata_regularizacion_advisory(
         cuotas_soportadas_deducibles=Decimal("12000.00"),
@@ -419,6 +435,7 @@ def test_fully_taxable_art94_no_volume_default_stays_quiet() -> None:
         prorrata_definitiva_pct=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
         regularizacion_year=2026,
+        revision=_settlement_revision(),
     )
 
     assert applicability.applies is False

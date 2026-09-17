@@ -68,8 +68,6 @@ def _authority_with_revision(
         authority,
         modelos=modelos,
         _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _registry_validated=False,
-        _validated_modelos=set(),
         _snapshots={},
     )
 

@@ -34,7 +34,7 @@ from ..proportionality_catalogue import require_proportionality_kind, require_st
 from ..registry import category_profile_years, load_category_profiles, resolve_category_profiles
 from ..spending_category_catalogue import require_spending_category
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 #: The amounts AEAT prints in the Manual practico Renta for each ejercicio,
 #: with 2026 derived from Orden PJC/297/2026 by AEAT's own published method.

@@ -77,7 +77,7 @@ def test_lorca_applicability_across_declared_support_and_projection_boundaries()
     _, catalogues = load_registry_tree(Path(bundled_path("registry", "aeat")))
     support = catalogues.supported_filing_years
     assert support is not None
-    authority = CandidateFactAuthority(catalogues.facts)
+    authority = CandidateFactAuthority(catalogues.facts, support)
     fact = catalogues.facts.facts["liva-orden-lorca-reduction"]
     upper = support.hard_ceiling if support.hard_ceiling is not None else support.horizon
     years = tuple(range(support.floor, upper + 1))

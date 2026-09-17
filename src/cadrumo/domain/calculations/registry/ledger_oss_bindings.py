@@ -14,6 +14,7 @@ from ....core.aggregation import (
     BindingSourceKind,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.clock import today_madrid
 from ...iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...iva.schema import EUMemberState, IvaRateKind
@@ -39,8 +40,8 @@ if TYPE_CHECKING:
 def _coerce_registry_eu_member_state(value: object) -> EUMemberState:
     """Hydrate from candidate facts during validation, or the bundle at runtime."""
     if governed_facts_in_scope() is not None:
-        return require_registry_declared_eu_member_state(value, effective_date=date.today())
-    return require_eu_member_state(value, effective_date=date.today())
+        return require_registry_declared_eu_member_state(value, effective_date=today_madrid())
+    return require_eu_member_state(value, effective_date=today_madrid())
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -137,15 +138,15 @@ class LedgerOssProvider(BaseModel):
     def _validate_registry_regime(cls, value: OssIossRegime) -> OssIossRegime:
         """Refuse a binding selector whose regime is absent from facts authority."""
         authority = governed_facts_in_scope()
-        return require_oss_ioss_regime(value, effective_date=date.today(), authority=authority)
+        return require_oss_ioss_regime(value, effective_date=today_madrid(), authority=authority)
 
     @field_validator("rate_kind", mode="after")
     @classmethod
     def _validate_registry_rate_kind(cls, value: IvaRateKind) -> IvaRateKind:
         """Refuse a binding rate tier absent from the IVA facts being validated."""
         if governed_facts_in_scope() is not None:
-            return require_registry_declared_iva_rate_kind(value, effective_date=date.today())
-        return require_iva_rate_kind(value, effective_date=date.today())
+            return require_registry_declared_iva_rate_kind(value, effective_date=today_madrid())
+        return require_iva_rate_kind(value, effective_date=today_madrid())
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
@@ -155,7 +156,9 @@ class LedgerOssProvider(BaseModel):
         if authority is None:
             raise RegistryValidationError("ledger OSS binding validation requires candidate governed facts")
         operation = cast("PinnedAuthorityOperation", authority)
-        return tuple(require_transaction_kind(kind, effective_date=date.today(), operation=operation) for kind in value)
+        return tuple(
+            require_transaction_kind(kind, effective_date=today_madrid(), operation=operation) for kind in value
+        )
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
@@ -220,7 +223,7 @@ def _oss_build_matcher(
     def matcher(observation: OssIossLedgerObservation) -> bool:
         return (
             observation.regime == regime
-            and observation.destination_member_state is destination
+            and observation.destination_member_state == destination
             and observation.rate_kind == rate_kind
             and observation.invoice_direction is direction
             and observation.transaction_kind in kinds

@@ -51,7 +51,9 @@ def test_unresolved_inspected_candidate_still_fails_publication_validation(
         source_evidence_fingerprint=inspected_live_candidate.source_evidence_fingerprint,
     )
 
-    with validating_governed_facts(CandidateFactAuthority(components.catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(components.catalogues.facts, components.catalogues.require_supported_filing_years())
+    ):
         findings = validator.registry_failures(modelos)
         with pytest.raises(RegistryValidationError, match="registry validation failed"):
             validator.validate_registry(modelos)

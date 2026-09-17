@@ -15,6 +15,7 @@ from ....core.aggregation import (
 )
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.clock import today_madrid
 from ....core.unit_proportion import UnitProportion
 from ...iva.components import registry_category_projection
 from ...iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
@@ -203,7 +204,7 @@ class IvaLedgerObservation(BaseModel):
         require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
         if self.exemption_article is not None:
             require_iva_exemption_article(self.exemption_article)
-        category_catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+        category_catalogue = resolve_iva_category_catalogue(effective_date=today_madrid())
         if self.exemption_article is not None and self.category != category_catalogue.require("domestic_exempt"):
             raise RegistryValidationError(
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
@@ -290,7 +291,7 @@ class LedgerIvaProvider(BaseModel):
     @classmethod
     def _categories_registry_declared(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         """Refuse category tokens absent from the candidate's governed catalogue."""
-        catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+        catalogue = resolve_iva_category_catalogue(effective_date=today_madrid())
         return tuple(catalogue.require(str(category)) for category in value)
 
     @field_validator("categories", mode="after")
@@ -304,7 +305,7 @@ class LedgerIvaProvider(BaseModel):
     @classmethod
     def _rate_kinds_registry_declared(cls, value: tuple[IvaRateKind, ...]) -> tuple[IvaRateKind, ...]:
         """Refuse binding rate tiers absent from the IVA facts being validated."""
-        return tuple(require_registry_declared_iva_rate_kind(kind, effective_date=date.today()) for kind in value)
+        return tuple(require_registry_declared_iva_rate_kind(kind, effective_date=today_madrid()) for kind in value)
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
@@ -320,7 +321,7 @@ class LedgerIvaProvider(BaseModel):
         value: tuple[IvaCashAccountingTreatmentCode, ...],
     ) -> tuple[IvaCashAccountingTreatmentCode, ...]:
         for token in value:
-            require_registry_declared_iva_cash_accounting_treatment(token, effective_date=date.today())
+            require_registry_declared_iva_cash_accounting_treatment(token, effective_date=today_madrid())
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
         return value
@@ -352,7 +353,7 @@ class LedgerIvaProvider(BaseModel):
     def _exemption_article_filter_requires_domestic_exempt(self) -> LedgerIvaProvider:
         if (
             self.exemption_articles is not None
-            and resolve_iva_category_catalogue(effective_date=date.today()).require("domestic_exempt")
+            and resolve_iva_category_catalogue(effective_date=today_madrid()).require("domestic_exempt")
             not in self.categories
         ):
             raise RegistryValidationError(

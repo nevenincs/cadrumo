@@ -12,11 +12,12 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ..ccaa import CCAA
 from ..errors import ForalRegimeError
 from ..tax_residence import ResidenceChange, TaxResidenceProfile, parse_tax_region
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_tax_residence_profile_is_strict_frozen() -> None:
@@ -81,7 +82,7 @@ def test_ccaa_from_iso_code_maps_all_common_regime_codes() -> None:
         "MUR": CCAA.MURCIA,
     }
     for code, expected in mapping.items():
-        assert CCAA.from_iso_code(code) is expected
+        assert CCAA.from_iso_code(code) == expected
 
 
 def test_ccaa_from_iso_code_is_case_insensitive() -> None:
@@ -110,6 +111,11 @@ def test_ccaa_from_label_normalises_hyphens() -> None:
     assert CCAA.from_label("comunidad-valenciana") == CCAA.COMUNIDAD_VALENCIANA
 
 
-def test_ccaa_from_label_raises_value_error_for_unknown_label() -> None:
-    with pytest.raises(ValueError, match="unknown CCAA label"):
+def test_ccaa_from_label_refuses_an_undeclared_label() -> None:
+    with pytest.raises(ProfileAnswerTypeError, match="is not declared"):
+        CCAA.from_label("atlantis")
+
+
+def test_ccaa_from_label_refuses_an_excluded_foral_territory() -> None:
+    with pytest.raises(ProfileAnswerTypeError, match="excluded foral territory"):
         CCAA.from_label("pais_vasco")

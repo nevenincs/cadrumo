@@ -45,11 +45,12 @@ whole of it.
 from __future__ import annotations
 
 import ast
+import dis
 import inspect
 import sys
 from collections.abc import Callable
 from datetime import date
-from types import ModuleType
+from types import CodeType, ModuleType
 from typing import Any
 
 import pytest
@@ -93,11 +94,16 @@ class _PredicateUnreadableError(AssertionError):
 
 
 def _classification_rules(operation: PinnedAuthorityOperation) -> tuple[classification.IvaClassificationRule, ...]:
-    """Project the registry-owned rules used by the classification evaluator."""
-    return classification.resolve_iva_classification_inputs(
+    """Project the registry-owned decision rows used by the classification evaluator.
+
+    The terminal ``no_match`` row decides nothing and so reads nothing; what it
+    declares is pinned by the fallthrough's own tests, not by this comparison.
+    """
+    rules = classification.resolve_iva_classification_inputs(
         effective_date=_RULES_EFFECTIVE_DATE,
         operation=operation,
     ).rules
+    return tuple(rule for rule in rules if rule.predicate is not classification.matches_nothing)
 
 
 def _criteria_attributes_read(
@@ -127,6 +133,8 @@ def _criteria_attributes_read(
             "this row declares nothing and reads nothing" and pass.
     """
     name = getattr(predicate, "__name__", repr(predicate))
+    if name == "<lambda>":
+        return _compiled_predicate_attributes_read(predicate, module=module)
     if name in seen:
         return set()
     try:
@@ -170,6 +178,44 @@ def _criteria_attributes_read(
             # passed, which is the case still followed.
             if any(_is_subject(argument) for argument in node.args):
                 found |= _criteria_attributes_read(helper, seen=seen | {name}, module=module)
+    return found
+
+
+def _compiled_predicate_attributes_read(predicate: Callable[..., Any], *, module: ModuleType) -> set[str]:
+    """Return the criteria attributes a registry-compiled predicate reads.
+
+    The registry rows compile to closures whose source is the compiler's, not
+    the row's, so their reads are taken from the bytecode actually executed:
+    an attribute loaded directly off the closure's own criteria parameter, plus
+    whatever the conditions and reader functions it closes over read. Only
+    function objects reachable from the closure are followed, so the result is
+    still derived from executable code rather than from a declaration.
+    """
+    code = predicate.__code__
+    if code.co_argcount < 1:
+        raise _PredicateUnreadableError("a compiled predicate takes no criteria parameter")
+    subject = code.co_varnames[0]
+    found: set[str] = set()
+    pending = [code]
+    while pending:
+        current = pending.pop()
+        previous: dis.Instruction | None = None
+        for instruction in dis.get_instructions(current):
+            if instruction.opname == "LOAD_ATTR" and previous is not None:
+                loaded = previous.argval
+                names = loaded if isinstance(loaded, tuple) else (loaded,)
+                if previous.opname.startswith(("LOAD_FAST", "LOAD_DEREF")) and names[-1] == subject:
+                    found.add(instruction.argval)
+            previous = instruction
+        pending.extend(const for const in current.co_consts if isinstance(const, CodeType))
+
+    reachable: list[object] = [*(predicate.__defaults__ or ()), *(predicate.__kwdefaults__ or {}).values()]
+    reachable.extend(cell.cell_contents for cell in predicate.__closure__ or ())
+    for value in reachable:
+        candidates = value if isinstance(value, list | tuple) else (value,)
+        for candidate in candidates:
+            if inspect.isfunction(candidate):
+                found |= _criteria_attributes_read(candidate, module=module)
     return found
 
 
@@ -270,11 +316,9 @@ def test_the_identification_reads_are_actually_reached(operation: PinnedAuthorit
 
     **It does NOT pin the helper-following branch, and used to say it did.**
     Measured over the live table: following changes the extracted set on 0 of 19
-    rows, and removing the branch leaves this assertion green. Every row spells
-    the attribute out in the call it makes --
-    ``_identified_in_another_member_state(criteria.issuer_identification_state)``
-    -- and the argument is an attribute OF the subject, which the plain walk
-    above already records before any helper is considered. So the branch is
+    rows, and removing the branch leaves this assertion green. Every compiled
+    row reads identification through a reader function it closes over, which
+    the compiled-predicate walk follows directly. So the branch is
     inert here, and a failure of this assertion can only mean the rows stopped
     reading identification. Naming a second cause it cannot observe made the
     name convince a reader of a coverage the body never had; the branch's own

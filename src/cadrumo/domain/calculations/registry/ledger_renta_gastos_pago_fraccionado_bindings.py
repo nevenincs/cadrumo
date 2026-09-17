@@ -13,6 +13,7 @@ from ....core.aggregation import (
     BindingSourceKind,
 )
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import (
@@ -73,6 +74,7 @@ class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
 
     @field_validator("modelo")
     @classmethod
+    @pydantic_validation_boundary
     def _require_modelo_130(cls, value: Modelo) -> Modelo:
         if value != Modelo("130"):
             raise ValueError("ledger_renta_gastos_pago_fraccionado_aggregation modelo must be '130'")

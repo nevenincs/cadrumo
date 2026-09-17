@@ -32,7 +32,7 @@ from ..carry_forward import (
     IvaCompensationPeriodState,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _VALID_NIF = "12345678Z"
 #: Same eight digits as ``_VALID_NIF`` with the wrong control letter, so only a

@@ -88,6 +88,7 @@ _NAMING_EXEMPT_STORED_PATHS = frozenset(
         "modelo_145/files/dr145v20.pdf",
         "modelo_210/dr210_2011.pdf",
         "modelo_280/files/DR_280_2022.pdf",
+        "modelo_714/files/DR714_2021.xls",
         "modelo_714/files/DR714_2025.xls",
     },
 )

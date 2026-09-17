@@ -45,6 +45,10 @@ adapters:
           Móvil no coincideix; les dades de sessió poden estar corrompudes.
         verify_requires_active_context: Cl@ve Móvil verify() requereix un context
           de navegador actiu; crideu authenticate() primer.
+  browser:
+    errors:
+      not_provisioned: El navegador Chromium que obre l'automatització de l'AEAT no
+        està instal·lat en aquest ordinador. Aprovisiona'l i torna-ho a provar.
   google:
     calc_sheets:
       errors:

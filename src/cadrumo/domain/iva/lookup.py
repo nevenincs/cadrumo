@@ -29,7 +29,7 @@ from ..calculations.registry.iva_rate_role_catalogue import (
 )
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaRateNotFoundError
-from .rates import IVA_RATE_FACT_ID, iva_rate_record_from_fact
+from .rates import IVA_RATE_FACT_ID, rate_record_from_fact
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 if TYPE_CHECKING:
@@ -81,7 +81,7 @@ def _member_state_is_registered(
     )
 
 
-def _iva_rate_candidate_exists(
+def _rate_candidate_exists(
     member_state: EUMemberState,
     kind: IvaRateKind,
     on_date: date,
@@ -177,7 +177,7 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    if not _iva_rate_candidate_exists(member_state, kind, on_date, operation=operation):
+    if not _rate_candidate_exists(member_state, kind, on_date, operation=operation):
         raise IvaRateNotFoundError(
             translated_message="errors.error.error_financial_iva_rate_not_found",
             context={
@@ -187,7 +187,7 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    return iva_rate_record_from_fact(
+    return rate_record_from_fact(
         resolve_iva_rate(
             member_state,
             kind,
@@ -253,7 +253,7 @@ def rate_table_covers(
     if kind is not None:
         kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
     rates = tuple(
-        iva_rate_record_from_fact(item, authority=operation)
+        rate_record_from_fact(item, authority=operation)
         for item in _in_force_rate_facts(member_state, on_date, operation=operation)
     )
     return any(
@@ -336,7 +336,7 @@ def coexisting_tier_rates(
     """
     kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
     records = tuple(
-        iva_rate_record_from_fact(rate, authority=operation)
+        rate_record_from_fact(rate, authority=operation)
         for rate in _in_force_rate_facts(member_state, on_date, operation=operation)
     )
     return tuple(rate for rate in records if rate.kind == kind and rate.supersedes_tier_default)
@@ -406,7 +406,7 @@ def rate_kinds_for_declared_rate(
             resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token,
         )
     for rate in (
-        iva_rate_record_from_fact(item, authority=operation)
+        rate_record_from_fact(item, authority=operation)
         for item in _in_force_rate_facts(member_state, on_date, operation=operation)
     ):
         if rate.pct / Decimal("100") != declared_rate:

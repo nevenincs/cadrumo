@@ -61,6 +61,7 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
+from ...core.time.clock import today_madrid
 from ..calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_default_token,
     descendant_relacion_tokens,
@@ -151,7 +152,7 @@ def _disability_band_declarations(*, authority: GovernedFactSource | None = None
         MappingFactQuery(
             fact_id=_DISABILITY_BAND_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

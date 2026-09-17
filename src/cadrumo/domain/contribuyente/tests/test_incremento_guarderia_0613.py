@@ -24,6 +24,7 @@ from datetime import date
 
 import pytest
 
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -31,7 +32,7 @@ from ..descendant_facts import (
     parse_descendiente_flag,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -145,5 +146,5 @@ class TestParseDescendienteFlagGastosGuarderia:
         assert d.gastos_guarderia_euros == 0
 
     def test_gastos_negative_raises(self) -> None:
-        with pytest.raises(ValueError, match="GASTOS_GUARDERIA"):
+        with pytest.raises(ProfileAnswerTypeError, match="GASTOS_GUARDERIA"):
             parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=-1")

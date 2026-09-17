@@ -9,7 +9,6 @@ not file, submit, or refresh live AEAT data.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal, TypedDict
@@ -22,6 +21,7 @@ from ...application.live.snapshot_base import (
     SnapshotLifecycleStateValue,
     SnapshotStateFilter,
 )
+from ...core.time.clock import now as _utc_now
 from ._app_live_borrador_payloads import (
     Borrador100ImportResult,
     Borrador100LatestResult,
@@ -111,7 +111,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
     record = _borrador_service(ctx, bucket_id).capture(
         filing_year=filing_year,
         period=resolved_period,
-        captured_at=datetime.now(UTC),
+        captured_at=_utc_now(),
         source_url=f"file-import:sha256:{observation.source_pdf_sha256}",
         binding_values=binding_values,
     )

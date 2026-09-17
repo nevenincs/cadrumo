@@ -19,7 +19,7 @@ from ..convenio import resolve_convenio_override
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ..schema import SnapshotGlobalCatalogues
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _EFFECTIVE_DATE = date(2025, 1, 1)
 

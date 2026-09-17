@@ -11,6 +11,7 @@ from typing import Annotated, Final, Literal, override
 
 from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.frozen_mapping import FROZEN_MAPPING
 from .....core.type_guards import is_object_collection, is_object_mapping
 from ..errors import RegistryValidationError
@@ -31,7 +32,6 @@ from ..schema_base import (
 from ..schema_references import (
     DateSupportEnvelope,
     RegistryValidityWindow,
-    materialize_date_window_series,
 )
 from ..schema_scalars import DecimalValue
 
@@ -97,6 +97,7 @@ def tagged_fact_atom_json(value: FactAtom | None) -> object:
     return {_DATE_TAG: value.isoformat()}
 
 
+@pydantic_validation_boundary
 def _hydrate_tagged_fact_atom(value: object, info: ValidationInfo) -> object:
     """Rebuild a tagged fact atom when the reader declares the tagged JSON form.
 
@@ -178,6 +179,7 @@ class FactSelector(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise exact authored decimal selectors without float coercion."""
         if info.data.get("value_type") != "decimal":
@@ -215,6 +217,7 @@ class ScalarFactPayload(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise an authored decimal without treating ordinary strings as numbers."""
         if info.data.get("value_type") != "decimal":
@@ -240,6 +243,7 @@ class BracketFactRow(RegistryModel):
     value: DecimalValue
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bounds(self) -> BracketFactRow:
         if self.upper_bound is not None and self.upper_bound <= self.lower_bound:
             raise RegistryValidationError("fact bracket upper_bound must be greater than lower_bound")
@@ -254,6 +258,7 @@ class BracketFactPayload(RegistryModel):
     brackets: tuple[BracketFactRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_brackets(self) -> BracketFactPayload:
         ordered = sorted(self.brackets, key=lambda row: row.lower_bound)
         if tuple(ordered) != self.brackets:
@@ -273,6 +278,7 @@ class MappingFactEntry(RegistryModel):
 
     @field_validator("value", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _materialise_declared_decimal(cls, value: FactAtom, info: ValidationInfo) -> FactAtom:
         """Materialise an authored mapping Decimal without coercing ordinary strings."""
         if info.data.get("value_type") != "decimal":
@@ -299,6 +305,7 @@ class MappingFactPayload(RegistryModel):
     entries: tuple[MappingFactEntry, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_keys(self) -> MappingFactPayload:
         keys = [(type(entry.key), entry.key) for entry in self.entries]
         if len(set(keys)) != len(keys):
@@ -306,6 +313,7 @@ class MappingFactPayload(RegistryModel):
         return self
 
 
+@pydantic_validation_boundary
 def _coerce_entity_set(value: object) -> object:
     """Materialise immutable entity-set data parsed from a TOML array."""
     if is_object_collection(value):
@@ -323,6 +331,7 @@ class EntitySetFactPayload(RegistryModel):
     entities: EntitySetField = frozenset()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_entities(self) -> EntitySetFactPayload:
         if any(not entity.strip() for entity in self.entities):
             raise RegistryValidationError("fact entity tokens must contain non-whitespace text")
@@ -347,6 +356,7 @@ class EventFactPayload(RegistryModel):
     outputs: tuple[NamedFactValue, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_outputs(self) -> EventFactPayload:
         names = [output.name for output in self.outputs]
         if len(set(names)) != len(names):
@@ -362,6 +372,7 @@ class MultiOutputFactRow(RegistryModel):
     outputs: tuple[NamedFactValue, ...] = Field(min_length=2)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_row(self) -> MultiOutputFactRow:
         if self.upper_bound is not None and self.upper_bound <= self.lower_bound:
             raise RegistryValidationError("multi-output upper_bound must be greater than lower_bound")
@@ -378,6 +389,7 @@ class MultiOutputFactPayload(RegistryModel):
     bands: tuple[MultiOutputFactRow, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_bands(self) -> MultiOutputFactPayload:
         ordered = sorted(self.bands, key=lambda row: row.lower_bound)
         if tuple(ordered) != self.bands:
@@ -403,10 +415,11 @@ FactPayload = Annotated[
 class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     """One evidence-bearing fact revision on an exact semantic track.
 
-    ``variant_id`` is the stable revision identity. Bounds are delta-authored:
-    explicit dates remain authoritative, an omitted lower endpoint requires a
-    support floor, and an omitted upper endpoint is open unless a successor or
-    support ceiling closes it.
+    ``variant_id`` is the stable revision identity. Bounds are delta-authored
+    against the registry's single filing-year support envelope: an explicit date
+    is a legal endpoint and nothing projects past it, the first variant of a
+    track may omit its lower endpoint to reach the envelope floor, and an omitted
+    upper endpoint stays open up to the envelope ceiling.
     """
 
     variant_id: RegistryRevisionNodeId
@@ -422,6 +435,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     precedence_over: tuple[RegistryRevisionNodeId, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_variant(self) -> GovernedFactVariant:
         selector_names = [selector.name for selector in self.selectors]
         if len(set(selector_names)) != len(selector_names):
@@ -458,10 +472,10 @@ class GovernedFact(RegistryModel):
     fact_id: FactId
     family: GovernedFactFamilyField
     provider_id: FactProviderId | None = Field(default=None, exclude_if=lambda value: value is None)
-    support: DateSupportEnvelope | None = Field(default=None, exclude_if=lambda value: value is None)
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fact(self) -> GovernedFact:
         variant_ids = [variant.variant_id for variant in self.variants]
         if len(set(variant_ids)) != len(variant_ids):
@@ -483,29 +497,22 @@ class GovernedFact(RegistryModel):
                     raise RegistryValidationError(
                         f"governed fact {self.fact_id!r} precedence cannot cross temporal tracks"
                     )
-            if variant.valid_from is None and self.support is None:
-                raise RegistryValidationError(
-                    f"governed fact {self.fact_id!r} variant {variant.variant_id!r} omits valid_from "
-                    "without declaring a fact support envelope"
-                )
-            if self.support is not None:
-                for bound_name, bound in (("valid_from", variant.valid_from), ("valid_to", variant.valid_to)):
-                    if bound is not None and not self.support.admits_coordinate(bound):
-                        raise RegistryValidationError(
-                            f"governed fact {self.fact_id!r} variant {variant.variant_id!r} {bound_name} "
-                            "falls outside the fact support envelope"
-                        )
-                    if bound is not None and bound > self.support.horizon:
-                        raise RegistryValidationError(
-                            f"governed fact {self.fact_id!r} variant {variant.variant_id!r} {bound_name} "
-                            "extends beyond the explicitly authored support horizon"
-                        )
         precedence = {variant.variant_id: variant.precedence_over for variant in self.variants}
         for variant_id in variant_ids:
             if _graph_reaches(variant_id, variant_id, precedence):
                 raise RegistryValidationError(
                     f"governed fact {self.fact_id!r} precedence graph contains a cycle at {variant_id!r}"
                 )
+        floor_reaching: dict[tuple[object, ...], int] = {}
+        for variant in self.variants:
+            if variant.valid_from is None:
+                track = self.track_key(variant)
+                floor_reaching[track] = floor_reaching.get(track, 0) + 1
+                if floor_reaching[track] > 1:
+                    raise RegistryValidationError(
+                        f"governed fact {self.fact_id!r} track {track!r} has more than one variant omitting "
+                        "valid_from; only the first declaration can reach the support floor"
+                    )
         materialized = self.materialized_windows()
         for index, left in enumerate(self.variants):
             for right in self.variants[index + 1 :]:
@@ -550,25 +557,15 @@ class GovernedFact(RegistryModel):
                 subject_kind="governed fact track",
                 overlap_allows_parallel=False,
             )
-            if self.support is not None:
-                ordered = sorted(variants, key=lambda item: materialized[item.variant_id].valid_from)
-                for current, successor in pairwise(ordered):
-                    current_window = materialized[current.variant_id]
-                    successor_window = materialized[successor.variant_id]
-                    expected_end = successor_window.valid_from - date.resolution
-                    if current.valid_to is not None and current_window.valid_to != expected_end:
-                        raise RegistryValidationError(
-                            f"governed fact {self.fact_id!r} track {track!r} has an explicit internal gap"
-                        )
-                if not materialized[ordered[-1].variant_id].contains_date(self.support.horizon):
-                    raise RegistryValidationError(
-                        f"governed fact {self.fact_id!r} track {track!r} does not reach its authored horizon"
-                    )
         return self
 
-    def validity_window(self, variant: GovernedFactVariant) -> RegistryValidityWindow:
-        """Materialise one variant's authored or support-propagated endpoints."""
-        return self.materialized_windows()[variant.variant_id]
+    def validity_window(
+        self,
+        variant: GovernedFactVariant,
+        support: DateSupportEnvelope | None = None,
+    ) -> RegistryValidityWindow:
+        """Materialise one variant's authored or floor-propagated endpoints."""
+        return self.materialized_windows(support)[variant.variant_id]
 
     @staticmethod
     def track_key(variant: GovernedFactVariant) -> tuple[object, ...]:
@@ -590,31 +587,25 @@ class GovernedFact(RegistryModel):
         )
         return variant.date_axis, selectors, period_key
 
-    def materialized_windows(self) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
-        """Resolve delta-authored bounds independently per exact temporal track."""
-        support = self.support
-        if support is None:
-            return {
-                variant.variant_id: RegistryValidityWindow(valid_from=variant.valid_from, valid_to=variant.valid_to)
-                for variant in self.variants
-                if variant.valid_from is not None
-            }
-        materialized: dict[RegistryRevisionNodeId, RegistryValidityWindow] = {}
-        tracks: dict[tuple[object, ...], list[GovernedFactVariant]] = {}
-        for variant in self.variants:
-            tracks.setdefault(self.track_key(variant), []).append(variant)
-        for variants in tracks.values():
-            ordered = sorted(
-                variants,
-                key=lambda item: (item.valid_from is not None, item.valid_from or support.floor, item.variant_id),
+    def materialized_windows(
+        self,
+        support: DateSupportEnvelope | None = None,
+    ) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
+        """Resolve delta-authored bounds against the registry support envelope.
+
+        Explicit endpoints are retained verbatim. The one variant per track that
+        omits ``valid_from`` reaches the envelope floor; without an envelope (the
+        structural validation of a single component) it reaches the earliest
+        representable date, which orders it first without inventing a floor.
+        """
+        floor = date.min if support is None else support.floor
+        return {
+            variant.variant_id: RegistryValidityWindow(
+                valid_from=floor if variant.valid_from is None else variant.valid_from,
+                valid_to=variant.valid_to,
             )
-            materialized.update(
-                materialize_date_window_series(
-                    tuple((variant.variant_id, variant) for variant in ordered),
-                    support=support,
-                )
-            )
-        return materialized
+            for variant in self.variants
+        }
 
 
 class GovernedFactCatalogue(RegistryModel):
@@ -623,6 +614,7 @@ class GovernedFactCatalogue(RegistryModel):
     facts: Annotated[Mapping[FactId, GovernedFact], FROZEN_MAPPING] = Field(default_factory=dict, validate_default=True)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fact_keys(self) -> GovernedFactCatalogue:
         for fact_id, fact in self.facts.items():
             if fact_id != fact.fact_id:

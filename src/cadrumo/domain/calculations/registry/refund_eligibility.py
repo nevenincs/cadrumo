@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ....core.period import Period, accepted_filing_period_codes, registry_period_kind
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
@@ -153,7 +154,7 @@ def resolve_refund_eligibility_policy(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> RefundEligibilityPolicy:
     """Resolve the dated refund-period policy, failing closed if absent."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     if authority is None and governed_facts_in_scope() is None:
         return _bundled_policy(coordinate)
     return _policy(_selected_mapping_entries(effective_date=coordinate, authority=authority))

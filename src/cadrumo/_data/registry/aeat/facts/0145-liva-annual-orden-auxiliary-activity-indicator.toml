@@ -103,7 +103,6 @@ entries = [
 variant_id = "liva-orden-auxiliary-activity-indicator:2026-01-01"
 date_axis = "filing_period"
 valid_from = 2026-01-01
-valid_to = 2026-12-31
 legal_refs = ["orden-hac-1425-2025:art-4"]
 source_refs = ["boe-orden-hac-1425-2025-iva-authority"]
 review_status = "agent_reviewed"

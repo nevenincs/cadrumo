@@ -10,6 +10,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -176,7 +177,7 @@ def resolve_nif_iva_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> NifIvaCatalogue:
     """Resolve the selected NIF-IVA country/format fact."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise RegistryValidationError(

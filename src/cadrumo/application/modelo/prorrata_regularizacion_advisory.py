@@ -282,6 +282,7 @@ def _settlement_prorrata_diagnostics(
         prorrata_definitiva_pct=prorrata_definitiva_pct,
         operaciones_sin_derecho_deduccion=operaciones_sin_derecho_deduccion,
         regularizacion_year=filing_year,
+        revision=revision,
     )
     if diagnostic is None:
         return (*missing_carry_diagnostics, *especial_diagnostics)
@@ -540,5 +541,6 @@ def _missing_carry_diagnostics(
         applicability=applicability,
         provisional_resolution=register.resolve_provisional(filing_year),
         ejercicio=filing_year,
+        revision=revision,
     )
     return () if diagnostic is None else (diagnostic,)

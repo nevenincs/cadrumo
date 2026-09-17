@@ -247,11 +247,13 @@ class UserProfileFact(BaseModel):
 
     @field_validator("value", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _restore_typed_value(cls, value: object) -> object:
         return _coerce_profile_fact_value(value)
 
     @field_validator("source")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_declared_source(cls, value: str) -> str:
         """Keep standalone fact construction free of authority I/O.
 

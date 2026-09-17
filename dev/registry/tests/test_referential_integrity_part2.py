@@ -37,7 +37,7 @@ from ._referential_integrity_support import (
     single_segment_casilla,
     snapshot_for_revision,
 )
-from .profile_schema_support import load_user_profile_schema
+from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
 
 pytestmark = [
     pytest.mark.unit,
@@ -293,7 +293,7 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
     )
 
     with (
-        validating_governed_facts(CandidateFactAuthority(catalogues.facts)),
+        validating_governed_facts(CandidateFactAuthority(catalogues.facts, committed_supported_filing_years())),
         pytest.raises(RegistryValidationError) as caught,
     ):
         RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema()).validate_modelo(
@@ -338,7 +338,7 @@ def test_modelo_100_temporary_reductions_are_in_each_edition_closure_and_remain_
 
     malformed_modelo = modelo.model_copy(update={"revisions": malformed_revisions})
     with (
-        validating_governed_facts(CandidateFactAuthority(catalogues.facts)),
+        validating_governed_facts(CandidateFactAuthority(catalogues.facts, committed_supported_filing_years())),
         pytest.raises(RegistryValidationError) as caught,
     ):
         RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema()).validate_modelo(

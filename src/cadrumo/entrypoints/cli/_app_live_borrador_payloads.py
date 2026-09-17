@@ -12,6 +12,7 @@ from pydantic import (
 
 from ...application.live.borrador_100 import BorradorSourceUrl
 from ...application.live.snapshot_base import SnapshotLifecycleStateValue
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
@@ -39,11 +40,13 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
 
     @field_validator("period")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_period(cls, value: str) -> str:
         return canonical_borrador_period(value)
 
     @field_validator("captured_at")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_captured_at(cls, value: str) -> str:
         return canonical_borrador_utc_timestamp(value)
 
@@ -61,6 +64,7 @@ class Borrador100ListResult(OutputSchema):
     rows: list[Borrador100SnapshotSummaryPayload]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_count_to_match_rows(self) -> Borrador100ListResult:
         if self.count != len(self.rows):
             raise ValueError("count must equal the number of Borrador snapshot rows")
@@ -127,15 +131,18 @@ class Borrador100LatestResult(OutputSchema):
 
     @field_validator("period")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_optional_period(cls, value: str | None) -> str | None:
         return canonical_borrador_period(value) if value is not None else None
 
     @field_validator("captured_at")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_optional_captured_at(cls, value: str | None) -> str | None:
         return canonical_borrador_utc_timestamp(value) if value is not None else None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_latest_empty_or_active_shape(self) -> Borrador100LatestResult:
         snapshot_fields = (self.captured_at, self.period, self.source_url, self.binding_count, self.state)
         if self.snapshot_id is None:

@@ -57,7 +57,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileFact,
     create_user_profile_record,
 )
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

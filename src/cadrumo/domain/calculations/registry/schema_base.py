@@ -20,8 +20,9 @@ from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_valid
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.classification.policies import SensitivityClass
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import Period, is_administrative_period_token
+from ....core.period import Period, is_administrative_period_token, is_symbolic_event_selector
 from ....core.revision_review import RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
@@ -71,6 +72,7 @@ __all__ = [
 ]
 
 
+@pydantic_validation_boundary
 def _coerce_sensitivity_class(value: object) -> object:
     if isinstance(value, SensitivityClass):
         return value
@@ -82,6 +84,7 @@ def _coerce_sensitivity_class(value: object) -> object:
 SensitivityClassField = Annotated[SensitivityClass, BeforeValidator(_coerce_sensitivity_class)]
 
 
+@pydantic_validation_boundary
 def _coerce_revision_review_status(value: object) -> object:
     if isinstance(value, RevisionReviewStatus):
         return value
@@ -102,6 +105,7 @@ Shared with the legal catalogue rows, which reach the same vocabulary.
 """
 
 
+@pydantic_validation_boundary
 def _coerce_registry_authority_grade(value: object) -> object:
     if isinstance(value, RegistryAuthorityGrade):
         return value
@@ -414,6 +418,7 @@ def _is_object_iterable(value: object) -> TypeGuard[Iterable[object]]:
     return isinstance(value, Iterable)
 
 
+@pydantic_validation_boundary
 def sorted_unique_capabilities(value: object) -> object:
     """Order declared modelo capabilities and refuse a repeated declaration.
 
@@ -719,7 +724,7 @@ class CasillaDataType(StrEnum):
     """A party name."""
 
     NIF_IVA = "nif_iva"
-    """An intra-community VAT identifier."""
+    """An intra-community NIF-IVA identifier."""
 
     CCAA_CODE = "ccaa_code"
     """An autonomous-community code."""
@@ -869,6 +874,7 @@ class SourceCitation(RegistryModel):
 
     @field_validator("required_text")
     @classmethod
+    @pydantic_validation_boundary
     def _required_text_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not item.strip() for item in value):
             raise RegistryValidationError("source citation required_text entries must be non-empty")
@@ -881,13 +887,14 @@ def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
     """Return a core :class:`Period` when the registry token is a real filing-period code.
 
     An administrative registry token (Modelo 036 ``ALTA``, Modelo 145
-    ``comunicacion``) addresses a revision rather than naming a period, so it has
-    no filing period and yields ``None``. Every other token must build a
+    ``comunicacion``) addresses a revision rather than naming a period, and the
+    symbolic ``EVENT-N`` selector (Modelo 210) covers a set of event periods
+    without being one, so neither has a filing period and both yield ``None``. Every other token must build a
     :class:`Period`; a malformed token or out-of-range year still raises.
 
     Raises:
         PeriodError: When a non-administrative token cannot build a period.
     """
-    if is_administrative_period_token(period):
+    if is_administrative_period_token(period) or is_symbolic_event_selector(period):
         return None
     return Period.from_year_and_code(filing_year, period)

@@ -21,7 +21,7 @@ from ...application.search.workbench import (
     WorkbenchDestinationAdmissionState,
     WorkbenchSearchResult,
 )
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -96,6 +96,7 @@ class TuiDestinationAdmissionV1(BaseModel):
     reason_code: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reason_matches_state(self) -> Self:
         if self.state is WorkbenchDestinationAdmissionState.AVAILABLE:
             if self.reason_code is not None:
@@ -134,6 +135,7 @@ class TuiNavigationTargetV1(BaseModel):
     action_candidate_id: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _focus_belongs_to_destination(self) -> Self:
         if self.focus.destination != self.destination:
             raise ValueError("navigation target focus must belong to its destination")
@@ -150,6 +152,7 @@ class TuiScreenContextV1(BaseModel):
     action_candidate_id: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _focus_belongs_to_destination(self) -> Self:
         if self.focus is not None and self.focus.destination != self.destination:
             raise ValueError("screen context focus must belong to its destination")

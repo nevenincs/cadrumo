@@ -74,10 +74,10 @@ def _reachable_names(package_init: Path) -> set[str]:
     return names
 
 
-def _unreachable_attribute_reads() -> dict[str, list[str]]:
+def _unreachable_attribute_reads(root: Path = _SRC) -> dict[str, list[str]]:
     findings: dict[str, list[str]] = {}
-    for path in sorted(_SRC.rglob("*.py")):
-        relative = path.relative_to(_SRC).as_posix()
+    for path in sorted(root.rglob("*.py")):
+        relative = path.relative_to(root).as_posix()
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:
@@ -104,7 +104,7 @@ def _unreachable_attribute_reads() -> dict[str, list[str]]:
                 attribute for attribute in attributes if attribute not in reachable and not attribute.startswith("__")
             )
             if missing:
-                package_name = package.relative_to(_SRC).as_posix()
+                package_name = package.relative_to(root).as_posix()
                 findings.setdefault(relative, []).extend(f"{package_name}.{attribute}" for attribute in missing)
     return findings
 
@@ -177,25 +177,21 @@ def test_no_attribute_is_read_off_a_dynamically_imported_module_that_lacks_it() 
     )
 
 
-def test_the_detector_sees_a_package_binding_at_all() -> None:
-    """A detector that resolves no bindings would pass by finding nothing.
+def test_the_resolver_reports_a_read_through_a_namespace_that_lacks_it(tmp_path: Path) -> None:
+    """The negative assertion above holds trivially if resolution stops working.
 
-    The check above is a negative assertion, so it holds trivially if the
-    import resolution silently stops working -- a moved tree root or a changed
-    relative-import shape would make it vacuous rather than red. This anchors
-    it: the repository does bind package names relatively, and the resolver
-    must still see them.
+    The source tree no longer binds packages relatively, so a real binding is
+    no longer available to anchor it. A minimal tree with one broken reach
+    proves the resolver still sees a relative package binding and reports the
+    attribute its namespace does not carry.
     """
-    seen = 0
-    for path in sorted(_SRC.rglob("*.py")):
-        if "tests" in path.relative_to(_SRC).parts or path.name.startswith("test_"):
-            continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
-            continue
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.level:
-                target = _resolve_relative(path, node.level, node.module)
-                seen += sum(1 for alias in node.names if _is_package(target / alias.name))
-    assert seen, "the package-binding resolver found nothing, so the reachability check is vacuous"
+    package = tmp_path / "pkg"
+    (package / "sub").mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "sub" / "__init__.py").write_text("PRESENT = 1\n", encoding="utf-8")
+    (package / "reader.py").write_text(
+        "from . import sub\n\nvalue = sub.PRESENT\nmissing = sub.ABSENT\n",
+        encoding="utf-8",
+    )
+
+    assert _unreachable_attribute_reads(tmp_path) == {"pkg/reader.py": ["pkg/sub.ABSENT"]}

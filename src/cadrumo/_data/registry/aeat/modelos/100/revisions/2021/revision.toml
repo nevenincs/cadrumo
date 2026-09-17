@@ -5790,7 +5790,7 @@ fields = { source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input
 
 [[revisions."2021".casilla_overrides]]
 selector = { revision = "2020", id = "1577" }
-fields = { continuidad_id = "irpf-rendimiento-act-eco-atribuido-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
+fields = { continuidad_id = "irpf-rendimiento-act-eco-atribuido-rdto-neto", section = ["rendimientos_actividades_economicas"], semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto", input_kind = "informational", legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-86", "ley-35-2006:art-89"], source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd"] }
 removed_fields = ["data_type"]
 
 [[revisions."2021".casilla_overrides]]

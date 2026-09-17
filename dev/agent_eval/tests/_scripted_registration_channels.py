@@ -7,7 +7,8 @@ needs a second one to unlock the profile the creation minted.
 
 Creation never asks a machine caller about recovery. The optional
 ``config profile recovery enable`` verb needs a descriptor pair rather than a
-payload; that channel lives in ``dev.scripted_registration_channels``.
+payload; that channel lives in
+``cadrumo.entrypoints.cli.tests.scripted_registration_channels``.
 """
 
 from __future__ import annotations

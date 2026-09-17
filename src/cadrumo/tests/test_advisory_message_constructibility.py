@@ -125,7 +125,7 @@ def _max_length(node: ast.AST, constants: Mapping[str, int]) -> int | None:
                 value = _literal_int(keyword.value, constants)
                 if value is not None:
                     return value
-        if target == "elided_prose" and node.args:
+        if target in {"elided_prose", "ElidedProse"} and node.args:
             return _literal_int(node.args[0], constants)
     for child in ast.iter_child_nodes(node):
         value = _max_length(child, constants)
@@ -142,6 +142,8 @@ def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mappin
         if not isinstance(tree, ast.Module):
             raise TypeError(f"expected an AST module for {path}")
         constants: dict[str, int] = {}
+        #: Module-level annotated aliases such as ``_Message = Annotated[str, ElidedProse(CAP)]``.
+        alias_caps: dict[str, int] = {}
         for statement in tree.body:
             if (
                 isinstance(statement, ast.Assign)
@@ -151,6 +153,10 @@ def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mappin
                 value = _literal_int(statement.value, constants)
                 if value is not None:
                     constants[statement.targets[0].id] = value
+                else:
+                    alias_cap = _max_length(statement.value, constants)
+                    if alias_cap is not None:
+                        alias_caps[statement.targets[0].id] = alias_cap
             elif (
                 isinstance(statement, ast.AnnAssign)
                 and isinstance(statement.target, ast.Name)
@@ -168,6 +174,8 @@ def _prose_caps(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> Mappin
                 if field.target.id not in _PROSE_FIELDS:
                     continue
                 cap = _max_length(field.annotation, constants)
+                if cap is None and isinstance(field.annotation, ast.Name):
+                    cap = alias_caps.get(field.annotation.id)
                 if cap is None and field.value is not None:
                     cap = _max_length(field.value, constants)
                 if cap is not None:
@@ -327,11 +335,11 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: and a gate held back until someone does that protects nothing in the
 #: meantime.
 #:
-#: Both remaining entries build ``CalculationSourceDiagnostic``, which elides on
-#: overflow, so neither can crash a filing; they truncate silently instead,
+#: The remaining entry builds ``CalculationSourceDiagnostic``, which elides on
+#: overflow, so it cannot crash a filing; it truncates silently instead,
 #: losing whichever interpolated term falls off the end. That is a
 #: message-quality defect rather than a safety one -- shorten the prose to
-#: retire them.
+#: retire it.
 #:
 #: The two ``ModeloVerificationFinding`` entries this list used to carry were
 #: the sharp case: that model had no eliding validator, so its cramped builders
@@ -342,10 +350,10 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: now elides as well, so the shape cannot return silently.
 _KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset(
     {
-        "cadrumo/application/modelo/prior_payment_advisory.py:184",
-        "cadrumo/application/modelo/prorrata_regularizacion_advisory.py:444",
+        "cadrumo/application/modelo/prorrata_regularizacion_advisory.py:473",
     },
 )
+
 
 #: Characters an interpolated term is assumed to need. Deliberately low: it
 #: passes anything with genuine room and fails only builders with effectively

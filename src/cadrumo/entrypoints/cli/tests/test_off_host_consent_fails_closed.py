@@ -28,16 +28,21 @@ import typer
 import yaml
 
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
+from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
 from ...adapter_composition import build_ledger_evidence_ports
 from .._ledger_evidence_cli import _OFF_HOST_REFUSAL_LOCALE_KEYS, _mint_extract_consent
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
-_BUCKET = "bucket-under-test"
+_BUCKET = "0ff40570-0000-4000-8000-0ff405700000"
+
+# Evidence ports open the bucket's secure-object repository, so an isolated
+# runtime backs them; the store stays empty.
+_runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET)
 
 #: The two outcomes this command answers with something other than a refusal.
 _NON_REFUSING = frozenset(
@@ -49,11 +54,11 @@ _NON_REFUSING = frozenset(
 
 
 def _mint(*, provider: LLMProvider | None, acknowledged: bool, evidence_id: str | None = None) -> object:
-    """Drive the real minting entry point with no repository behind it.
+    """Drive the real minting entry point against an empty evidence store.
 
     Every outcome except the consented one settles before any record is read,
     and the consented one settles at the missing-evidence check just after, so
-    the consent decision is observable without a profile.
+    the consent decision is observable without any stored evidence.
     """
     return _mint_extract_consent(
         bucket_id=_BUCKET,

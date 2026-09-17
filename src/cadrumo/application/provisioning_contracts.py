@@ -75,6 +75,8 @@ class ProvisioningPreconditionCondition(StrEnum):
 
     OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
     PLAYWRIGHT_BROWSER_INSTALLED = "provisioning.playwright_browser.installed"
+    PLAYWRIGHT_BROWSER_MANIFEST_READABLE = "provisioning.playwright_browser.manifest_readable"
+    PLAYWRIGHT_BROWSER_INSTALL_SUCCEEDED = "provisioning.playwright_browser.install_succeeded"
     RUNTIME_REACHABLE = "provisioning.runtime.reachable"
     RUNTIME_INSTALLED = "provisioning.runtime.installed"
     RUNTIME_ENDPOINT_LOCAL = "provisioning.runtime.endpoint_local"

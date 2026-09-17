@@ -246,7 +246,9 @@ def _validated_target_snapshot(
     # Binding validators and snapshot selection resolve governed vocabulary. They
     # must read the candidate's own compiled facts, exactly as the full authority
     # compile does, never whatever authority happens to be ambient.
-    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
         continuity_failures = validate_registry_scope(scoped_modelos)
         if continuity_failures:
             raise RegistryValidationError(

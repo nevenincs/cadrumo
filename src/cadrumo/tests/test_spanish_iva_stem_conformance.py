@@ -29,10 +29,26 @@ _EXTERNAL_IVA_LOCATOR = re.compile(
 _IDENTITY_TOKEN = re.compile(r"^[A-Za-z0-9_.:/-]+$")
 _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat", "vatid"}),
+    # A word printed on a foreign-language invoice, not a Cadrumo identifier.
+    "application/ledger/invoice_label_reader.py": frozenset({"vat"}),
     "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
 _EXTERNAL_VAT_PROSE_VALUES = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"vat"}),
+    # Label alternations matched against text printed on foreign-language invoices.
+    "application/ledger/invoice_label_reader.py": frozenset(
+        {
+            r"n\.?\s?i\.?\s?f\.?[- ]iva|nif[- ]iva|vat (?:reg(?:istration)?\.? )?(?:no\.?|number|id)|vat|"
+            r"tax id|c\.?\s?i\.?\s?f\.?|n\.?\s?i\.?\s?f\.?|n\.?\s?i\.?\s?e\.?|d\.?\s?n\.?\s?i\.?",
+            r"(?:iva|vat|impuestos?) incl(?:uidos?|\.)?|incl\.? (?:iva|vat)",
+            r"total (?:cuotas? )?(?:iva|vat)|total cuotas?|total quotes?|(?:iva|vat|cuota) ?\(total\)",
+            r"tipo (?:de )?iva|tipus (?:d'?)?iva|tipo impositivo|vat rate|% ?iva|tipo|tipus",
+            r"cuota (?:de )?iva|quota (?:d'?)?iva|importe iva|import iva|vat amount|cuota|quota|i\.v\.a\.?|iva|vat",
+            r"% ?iva|iva ?%|vat ?%|tipo(?: iva)?|tipus(?: iva)?|rate|%",
+            r"cuota(?: iva)?|quota(?: iva)?|import iva|importe iva|vat amount|iva|vat",
+            "vat",
+        },
+    ),
     "domain/calculations/registry/tests/test_registry_locales_parity.py": frozenset(
         {
             "Output VAT amount at the standard rate (21%)",
@@ -46,7 +62,6 @@ _EXTERNAL_VAT_PROSE_VALUES = {
             "reduced vat rate 13,5%",
         },
     ),
-    "domain/iva/tests/test_saturation.py": frozenset({"verify the customer VAT ID"}),
     "entrypoints/cli/config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
     "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
         {
@@ -57,7 +72,8 @@ _EXTERNAL_VAT_PROSE_VALUES = {
 }
 _EXTERNAL_VAT_PROSE_FRAGMENTS = {
     "adapters/inbound/einvoice/parsers.py": frozenset({"``VAT``"}),
-    "application/command_search/tests/test_command_ranking_golden.py": frozenset({"file my quarterly VAT"}),
+    # Labels printed on the foreign-language invoice fixtures the reader must parse.
+    "application/ledger/tests/test_invoice_label_reader.py": frozenset({"VAT ID", "VAT 0%"}),
     "entrypoints/cli/tests/test_ledger_evidence_confirm_resolution_cli.py": frozenset(
         {"<cbc:ID>VAT</cbc:ID>"},
     ),

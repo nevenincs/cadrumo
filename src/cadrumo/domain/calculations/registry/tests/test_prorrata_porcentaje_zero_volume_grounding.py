@@ -53,7 +53,7 @@ from ..formula_runtime import calculate_registry_snapshot
 from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from .published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")

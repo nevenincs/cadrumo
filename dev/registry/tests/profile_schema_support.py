@@ -3,15 +3,49 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from functools import cache
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreateContext
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    SupportedFilingYearsCatalogue,
+)
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
+from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.profile_schema import capture_profile_schema
 from dev.registry.compiler.validator import RegistryValidator
+
+
+@cache
+def committed_supported_filing_years() -> SupportedFilingYearsCatalogue:
+    """Return the committed registry's single filing-year support envelope."""
+    return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+
+
+AUTHORED_HISTORY_FLOOR = 1972
+"""The earliest year any stored governed-fact variant is authored for."""
+
+
+@cache
+def authored_history_supported_filing_years() -> SupportedFilingYearsCatalogue:
+    """Return the committed envelope with its floor moved back to the stored history.
+
+    The committed floor gates what the product resolves. Tests that prove the
+    authored source itself -- every historical redaction and its exact window --
+    resolve the stored variants below that floor, so they use the same horizon
+    and ceiling with a floor reaching the oldest stored variant. The floor
+    precedes the runtime filing-year type's lower bound, so it is assembled
+    without that bound.
+    """
+    committed = committed_supported_filing_years()
+    return SupportedFilingYearsCatalogue.model_construct(
+        floor=AUTHORED_HISTORY_FLOOR,
+        horizon=committed.horizon,
+        hard_ceiling=committed.hard_ceiling,
+    )
 
 
 def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinition:
@@ -24,17 +58,6 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
     source = path or bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
     _payload, schema = capture_profile_schema(source)
     return schema
-
-
-def profile_creation_context_for_test() -> ProfileCreateContext:
-    """Pin the committed schema in the same explicit test authority used by capsule fixtures."""
-    from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-    from cadrumo.domain.calculations.registry.authority_artifact import ProfileSchemaComponentQuery
-    from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
-
-    reader = FakeAuthorityComponentReader({ProfileSchemaComponentQuery(): load_user_profile_schema()})
-    operation = PinnedAuthorityOperation(reader, reader.pin())
-    return operation.profile_create_context()
 
 
 class CommittedRegistryValidator:
@@ -70,7 +93,7 @@ class CommittedRegistryValidator:
             source_root=bundled_path(),
             user_profile_schema=load_user_profile_schema(),
         )
-        self._facts = CandidateFactAuthority(facts)
+        self._facts = CandidateFactAuthority(facts, compiled.require_supported_filing_years())
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
         """Validate one modelo inside the candidate-fact scope."""

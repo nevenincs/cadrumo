@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from ....core.concepto_ingreso import ConceptoIngreso
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from .facts.schema import FactSelector
@@ -90,7 +91,7 @@ def resolve_concepto_ingreso_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> ConceptoIngresoCatalogue:
     """Resolve the selected dated income-concept vocabulary."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         return _bundled_catalogue(coordinate)

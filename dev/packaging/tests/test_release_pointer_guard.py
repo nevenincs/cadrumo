@@ -282,3 +282,42 @@ def test_cli_exits_non_zero_on_an_unreadable_committed_pointer(tmp_path: Path) -
     pointer.write_text("{ not json", encoding="utf-8")
     argv = ["--existing", str(pointer), "--version", "0.2.1", "--format", "scoop"]
     assert main(argv) == 1
+
+
+def _index_formula(version: str) -> str:
+    """Return a formula addressing the product sdist on the package index."""
+    return (
+        "class Cadrumo < Formula\n"
+        f'  url "https://files.pythonhosted.org/packages/source/c/cadrumo/cadrumo-{version}.tar.gz"\n'
+        f'  sha256 "{"0" * 64}"\n'
+        '  resource "cadrumo-data-manuals" do\n'
+        '    url "https://files.pythonhosted.org/packages/source/c/cadrumo-data-manuals/'
+        'cadrumo_data_manuals-9.9.9.tar.gz"\n'
+        "  end\n"
+        "end\n"
+    )
+
+
+def test_homebrew_version_is_read_from_the_package_index_url() -> None:
+    """The generator addresses the product sdist on the index; a resource is never read as the version."""
+    assert extract_pointer_version(_index_formula("0.4.2"), PointerFormat.HOMEBREW) == "0.4.2"
+
+
+def test_cli_refuses_a_same_version_pointer_with_different_content(tmp_path: Path) -> None:
+    """A published version cannot be repointed at other bytes."""
+    existing = tmp_path / "existing.rb"
+    incoming = tmp_path / "incoming.rb"
+    existing.write_text(_index_formula("0.4.2"), encoding="utf-8")
+    incoming.write_text(_index_formula("0.4.2").replace("0" * 64, "1" * 64), encoding="utf-8")
+    argv = ["--existing", str(existing), "--incoming", str(incoming), "--version", "0.4.2", "--format", "homebrew"]
+    assert main(argv) == 1
+
+
+def test_cli_accepts_a_same_version_pointer_with_identical_content(tmp_path: Path) -> None:
+    """Re-publishing identical bytes converges instead of failing."""
+    existing = tmp_path / "existing.rb"
+    incoming = tmp_path / "incoming.rb"
+    existing.write_text(_index_formula("0.4.2"), encoding="utf-8")
+    incoming.write_text(_index_formula("0.4.2"), encoding="utf-8")
+    argv = ["--existing", str(existing), "--incoming", str(incoming), "--version", "0.4.2", "--format", "homebrew"]
+    assert main(argv) == 0

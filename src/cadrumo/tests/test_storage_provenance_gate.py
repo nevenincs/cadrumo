@@ -81,7 +81,7 @@ import pytest
 from ..core.storage_taxonomy import STORAGE_ROOT_SETTINGS_FIELD
 from .inventory import aeat_relative, ast_for_path, package_python_files
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

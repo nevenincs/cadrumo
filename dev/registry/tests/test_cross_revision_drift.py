@@ -44,7 +44,7 @@ from ._synthetic_locale_fixtures import (
     _write_test_label,
     synthetic_locale_state,
 )
-from .profile_schema_support import load_user_profile_schema
+from .profile_schema_support import committed_supported_filing_years, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -239,7 +239,7 @@ def _evolutions(*payloads: dict[str, object]) -> dict[str, tuple[dict[str, objec
 @pytest.fixture(scope="module")
 def committed_registry() -> Iterator[tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]]:
     corpus = _committed_registry_tree()
-    with validating_governed_facts(CandidateFactAuthority(corpus[1].facts)):
+    with validating_governed_facts(CandidateFactAuthority(corpus[1].facts, committed_supported_filing_years())):
         yield corpus
 
 

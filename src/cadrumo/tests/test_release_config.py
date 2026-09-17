@@ -43,7 +43,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..core.toml import parse_toml
 from .inventory import repo_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 CONFIG_PATH = repo_path("release-please-config.json")
 MANIFEST_PATH = repo_path(".release-please-manifest.json")

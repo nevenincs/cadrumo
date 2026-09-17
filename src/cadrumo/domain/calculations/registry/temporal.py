@@ -12,12 +12,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal, Protocol
 
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, model_validator
 
 from .errors import (
     AmbiguousRevisionSelectionError,
     EjercicioOrdenNotYetPublishedError,
     NoRevisionForPeriodError,
+    RegistryValidationError,
 )
 from .ids import RevisionId
 from .modelo_inception import ModeloInceptionField
@@ -158,11 +159,20 @@ class ModeloRevisionDirectory(RegistryModel):
 
         The view carries only the selected payload; its revision-identity
         references still resolve against every revision this directory declares.
+
+        Raises:
+            RegistryValidationError: When the view is not a valid modelo, for
+                example when the revision references one its directory lacks.
         """
-        return ModeloDefinition.model_validate(
-            {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
-            context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
-        )
+        try:
+            return ModeloDefinition.model_validate(
+                {**self.modelo.model_dump(), "revisions": {revision.id: revision}},
+                context={MODELO_REVISION_IDS_CONTEXT: frozenset(str(metadata.id) for metadata in self.revisions)},
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"modelo {self.modelo.id!r} view of revision {revision.id!r} is invalid: {exc}",
+            ) from exc
 
     @classmethod
     def from_modelo(
@@ -652,6 +662,39 @@ def select_revision_metadata(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
+    )
+
+
+def select_authored_revision_metadata(
+    directory: ModeloRevisionDirectory,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+) -> RevisionSelectionMetadata:
+    """Select the revision the law applies to a coordinate, outside the support envelope.
+
+    The support envelope gates what the product will FILE, not which design the
+    law applied to a past period. Reading a carried prior filing needs the latter,
+    so this selects only among revisions whose own period selector covers the
+    exact coordinate and never projects a year onto another authored edition.
+    """
+    matching, _authored_year = _nearest_authored_candidates(
+        directory.revisions,
+        filing_year=filing_year,
+        period=period,
+        revision_id=None,
+        support=None,
+    )
+    candidates = _effective_candidates(matching, on=on, filing_year=filing_year, period=period)
+    return _select_single_revision(
+        directory.modelo_id,
+        directory.revisions,
+        directory.pending_ejercicio_ordenes,
+        candidates,
+        filing_year=filing_year,
+        period=period,
+        revision_id=None,
     )
 
 

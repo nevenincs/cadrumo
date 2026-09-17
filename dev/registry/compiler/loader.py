@@ -97,7 +97,11 @@ def _authored_fact_authority(
     fingerprint: tuple[tuple[str, int, int], ...],
 ) -> CandidateFactAuthority:
     del fingerprint
-    return CandidateFactAuthority(compile_authored_fact_catalogue(Path(registry_root)))
+    root = Path(registry_root)
+    return CandidateFactAuthority(
+        compile_authored_fact_catalogue(root),
+        load_shared_catalogues(root).require_supported_filing_years(),
+    )
 
 
 @contextmanager
@@ -121,7 +125,8 @@ def _modelo_facts_in_scope(modelo_directory: Path) -> Iterator[None]:
         return
     authority = _authored_fact_authority(
         str(modelo_directory.parent.parent),
-        _authored_facts_fingerprint(facts_directory),
+        _authored_facts_fingerprint(facts_directory)
+        + _authored_facts_fingerprint(modelo_directory.parent.parent / "legal"),
     )
     with validating_governed_facts(authority):
         yield

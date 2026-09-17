@@ -12,7 +12,7 @@ from ..errors import RegistryValidationError
 from ..irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..schema_deadlines import DeadlineWindowDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _window(**updates: object) -> DeadlineWindowDefinition:

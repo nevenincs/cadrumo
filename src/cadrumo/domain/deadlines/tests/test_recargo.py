@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ..errors import DeadlineValidationError
 from ..models import Recovery
 from ..recargo import (
     build_recovery_for_overdue,
@@ -108,7 +109,7 @@ def test_after_12_completed_months_adds_interest(operation: PinnedAuthorityOpera
 
 def test_resolve_recargo_band_rejects_negative_completed_months(operation: PinnedAuthorityOperation) -> None:
     bands = load_recargo_bands(operation=operation)
-    with pytest.raises(ValueError, match="completed_months must be >= 0"):
+    with pytest.raises(DeadlineValidationError, match="completed_months must be >= 0"):
         resolve_recargo_band(-1, bands)
 
 

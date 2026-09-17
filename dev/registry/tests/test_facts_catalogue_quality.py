@@ -28,6 +28,8 @@ from ..analysis.facts_catalogue_quality import (
     resolved_fact_provenance_findings,
 )
 from ..compiler.fact_providers import FactProviderRegistration
+from ..conformance.loader_directory_mode_support import write_minimal_shared_catalogues
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -218,6 +220,7 @@ def test_applicable_resolved_fact_without_provenance_is_rejected() -> None:
         GovernedFactCatalogue(facts={fact.fact_id: fact}),
         ScalarFactQuery(fact_id=fact.fact_id, date_axis="transaction_date", effective_date=date(2025, 1, 1)),
         authority_digest="a" * 64,
+        support=committed_supported_filing_years(),
     ).model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()})
 
     findings = resolved_fact_provenance_findings((resolved,))
@@ -287,6 +290,13 @@ def test_closed_s80_s85_holds_must_be_removed_but_need_not_remain_in_the_ledger(
     )
 
 
+def _declare_supported_years(registry_root: Path) -> None:
+    """Give a temporary registry the shared catalogues every live gate resolves against."""
+    legal = registry_root / "legal"
+    legal.mkdir(parents=True, exist_ok=True)
+    write_minimal_shared_catalogues(legal, floor=2025, horizon=2025)
+
+
 def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -314,6 +324,7 @@ def test_live_gate_resolves_registered_modelo_projections_with_actual_modelos(
         ),
     )
 
+    _declare_supported_years(tmp_path)
     assert live_facts_catalogue_findings(tmp_path, (provider,)) == ()
     assert calls == [(tmp_path, (marker,))]
 
@@ -345,6 +356,7 @@ def test_live_gate_compiles_every_registered_provider_and_uses_its_directory_den
         reset=lambda: None,
     )
 
+    _declare_supported_years(tmp_path)
     assert live_facts_catalogue_findings(tmp_path, (provider,)) == ()
     assert calls == [tmp_path]
 
@@ -363,6 +375,7 @@ def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
         collect_fingerprints=lambda _root: (),
         reset=lambda: None,
     )
+    _declare_supported_years(tmp_path)
     findings = live_facts_catalogue_findings(tmp_path, (provider,))
     assert {finding.kind for finding in findings} == {FactQualityKind.INVALID_PROVIDER}
 

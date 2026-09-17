@@ -22,7 +22,7 @@ from ..models import (
     physical_candidate_mismatches,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _ROOT = Path(__file__).resolve().parents[1]
 _EXPECTED_IDENTITIES = frozenset(

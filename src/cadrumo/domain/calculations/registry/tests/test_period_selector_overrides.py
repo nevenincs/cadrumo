@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _MONTHS = ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
 _QUARTERS = ("1T", "2T", "3T", "4T")

@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.aggregation import ThirdPartyDeclarationRole
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -171,7 +172,7 @@ def resolve_third_party_declaration_role_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> ThirdPartyDeclarationRoleCatalogue:
     """Resolve the dated third-party declaration-role vocabulary."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     return _selected_catalogue(effective_date=coordinate, authority=authority)
 
 

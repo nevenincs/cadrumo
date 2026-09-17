@@ -26,6 +26,7 @@ from typing import Annotated, Final
 
 from pydantic import BeforeValidator, Field, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .errors import RegistryValidationError
 from .keyed_families import (
     CASILLAS_FAMILY,
@@ -94,6 +95,7 @@ class RestatedFamilyDeclaration(RegistryModel):
 
     @field_validator("family")
     @classmethod
+    @pydantic_validation_boundary
     def _family_is_inherited(cls, value: str) -> str:
         """Refuse a family the merge never inherits, typo or otherwise.
 

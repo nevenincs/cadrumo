@@ -94,7 +94,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "going through the renderer, so it does not consult the "
         "reveal-identifiers opt-in the way the funnel does."
     ),
-    ("entrypoints/cli/__init__.py", "_emit_operator_progress", "typer.echo"): (
+    ("entrypoints/cli/main.py", "_emit_operator_progress", "typer.echo"): (
         "Operator progress banner on stderr, deliberately keeping stdout pure. "
         "Tolerated rather than clean: its content today is a closed set (Cl@ve "
         "Movil auth banners and a translated TUI action label) that "
@@ -346,7 +346,7 @@ def test_plan_owned_direct_outputs_still_exist() -> None:
 def test_emit_boundaries_are_present_for_success_output() -> None:
     """The success-output choke points must remain in the CLI common module."""
 
-    common = (_CLI_ROOT / "_common.py").read_text(encoding="utf-8")
+    common = (_CLI_ROOT / "common.py").read_text(encoding="utf-8")
 
     assert "def _emit(" not in common
     assert "def emit_envelope(" in common

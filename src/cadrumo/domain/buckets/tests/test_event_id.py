@@ -25,7 +25,8 @@ _CANONICAL_DIGEST = hashlib.sha256(b"payload").hexdigest()
 
 
 def test_bucket_event_id_is_the_canonical_hex64_primitive() -> None:
-    assert BucketEventId is Hex64Str
+    # A ``type`` statement names the primitive rather than re-declaring its constraints.
+    assert BucketEventId.__value__ is Hex64Str
 
 
 def test_bucket_event_id_accepts_canonical_digest() -> None:

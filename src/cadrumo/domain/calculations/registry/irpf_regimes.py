@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ....core.time.clock import today_madrid
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -196,7 +197,7 @@ def resolve_irpf_regime_vocabulary(
     authority: GovernedFactSource | None = None,
 ) -> IrpfRegimeVocabulary:
     """Resolve and validate all five IRPF regime tokens from fact 0125."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         _bundled_mapping_entries(coordinate)

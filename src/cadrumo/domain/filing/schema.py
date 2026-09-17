@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex16Str
@@ -88,6 +89,7 @@ class ModeloValue(BaseModel):
     formula_trace_casilla_ids: tuple[CasillaId, ...] | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_provenance_matrix(self) -> ModeloValue:
         """Confirm ``value`` and ``formula_trace_casilla_ids`` agree with ``kind``.
 
@@ -151,6 +153,7 @@ class ModeloBindingValue(BaseModel):
     row_source_identity: RowSourceIdentity | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _row_source_identity_matches_the_binding_coordinate(self) -> ModeloBindingValue:
         identity = self.row_source_identity
         if identity is None:
@@ -264,6 +267,7 @@ class ModeloApprovalBasis(BaseModel):
 
     @field_validator("version")
     @classmethod
+    @pydantic_validation_boundary
     def _version_is_the_current_basis_layout(cls, value: str) -> str:
         """Refuse a version this code cannot have computed.
 
@@ -358,6 +362,7 @@ class ModeloDraft(BaseModel):
     approval_basis: ModeloApprovalBasis | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_draft_invariants(self) -> ModeloDraft:
         """Confirm the draft's cross-field identity invariants hold.
 

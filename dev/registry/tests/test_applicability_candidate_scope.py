@@ -14,7 +14,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _candidate_with_mapping_value(fact_id: str, key: str, value: str) -> CandidateFactAuthority:
-    catalogue = compiled_bundled_authority().catalogues.facts
+    catalogues = compiled_bundled_authority().catalogues
+    catalogue = catalogues.facts
     fact = catalogue.facts[fact_id]
     variant = fact.variants[0]
     payload = variant.payload
@@ -28,7 +29,7 @@ def _candidate_with_mapping_value(fact_id: str, key: str, value: str) -> Candida
     )
     facts = dict(catalogue.facts)
     facts[fact_id] = changed_fact
-    return CandidateFactAuthority(GovernedFactCatalogue(facts=facts))
+    return CandidateFactAuthority(GovernedFactCatalogue(facts=facts), catalogues.require_supported_filing_years())
 
 
 def test_iva_seed_rules_do_not_capture_the_first_candidate_vocabulary() -> None:

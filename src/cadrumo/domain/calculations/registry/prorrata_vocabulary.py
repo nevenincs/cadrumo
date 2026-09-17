@@ -15,6 +15,7 @@ from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
 from typing import Final, overload
 
+from ....core.time.clock import today_madrid
 from ....domain.iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -198,7 +199,7 @@ def _selected_entries(
     effective_date: date | None,
     authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         return _bundled_entries(coordinate)

@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "m036-activity-selector-catalogue:2026-03-26"
 date_axis = "filing_period"
-valid_from = 2026-03-26
 legal_refs = ["rd-439-2007:art-95", "rd-439-2007:art-109", "rd-439-2007:art-110"]
 source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-2023-01-26", "boe-rirpf-art-109-2007-04-01", "boe-rirpf-art-110-2018-12-23"]
 review_status = "agent_reviewed"

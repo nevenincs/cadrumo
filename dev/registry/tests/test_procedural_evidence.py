@@ -8,6 +8,7 @@ from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 
 from ..compiler.authority import compile_structural_authority
 from ..compiler.validate_evidence import EvidenceValidator
@@ -162,3 +163,33 @@ def test_deadline_section_rejects_matching_boe_clause_without_deadline_text() ->
         evidence=evidence,
     )
     assert any("BOE clauses without filing deadline text" in failure for failure in failures)
+
+
+def test_deadline_section_rejects_an_unknown_official_modelo_210_code() -> None:
+    """A tipo_renta scope naming no declared official code is refused, not silently accepted."""
+    authority = _authority()
+    catalogues = authority.catalogues
+    modelo = next(item for item in authority.modelos if item.id == "210")
+    revision = next(
+        candidate
+        for candidate in modelo.revisions.values()
+        if any(window.tipo_renta_scope for window in candidate.deadline_windows)
+    )
+    windows = tuple(
+        window.model_copy(update={"tipo_renta_scope": ("99",)}) if window.tipo_renta_scope else window
+        for window in revision.deadline_windows
+    )
+    drifted = revision.model_copy(update={"deadline_windows": windows})
+
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
+        failures = validate_deadline_window_section(
+            prefix=f"modelo 210 revision {revision.id}",
+            revision=drifted,
+            legal_refs=catalogues.legal,
+            source_refs=catalogues.sources,
+            evidence=_validator(),
+        )
+
+    assert any("unknown official Modelo 210 codes ('99',)" in failure for failure in failures)

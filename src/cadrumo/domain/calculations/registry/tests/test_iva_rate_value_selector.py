@@ -40,7 +40,7 @@ from ..schema_references import PeriodSelector
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:

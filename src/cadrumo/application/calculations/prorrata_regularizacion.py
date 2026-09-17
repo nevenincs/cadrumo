@@ -52,6 +52,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -65,6 +66,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
     regime_apportions_deduction,
 )
 from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionOutput,
     ProrrataRegularizacionProvider,
     prorrata_source_casilla_ids,
 )
@@ -298,6 +300,7 @@ def build_prorrata_missing_provisional_advisory(
     applicability: ProrrataApplicabilityProjection,
     provisional_resolution: ProrrataProvisionalResolution,
     ejercicio: int,
+    revision: ModeloRevision,
     first_ejercicio: bool = False,
 ) -> CalculationSourceDiagnostic | None:
     """Build the visible advisory for an applicable prorrata with no provisional percentage.
@@ -316,15 +319,37 @@ def build_prorrata_missing_provisional_advisory(
         else "siembre o registre la prorrata definitiva del ejercicio anterior"
     )
     evidence = ", ".join(applicability.evidence_kinds) or "prorrata_applicability"
+    target = _modelo_303_regularizacion_target(revision)
     message = (
         f"Prorrata aplicable en {ejercicio} sin porcentaje provisional resuelto "
-        f"({evidence}). {operator_action}; no se aplica un porcentaje por defecto."
+        f"({evidence}); {_regularizacion_target_label(revision, target)} no puede regularizarse. "
+        f"{operator_action}; no se aplica un porcentaje por defecto."
     )
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
+        casilla_id=target,
     )
+
+
+def _modelo_303_regularizacion_target(revision: ModeloRevision) -> CasillaId | None:
+    """Return the casilla the revision declares for the Modelo 303 prorrata regularisation."""
+    targets = casillas_by_binding(revision)
+    candidates = {
+        casilla_id
+        for binding in revision.bindings
+        if isinstance(binding.provider, ProrrataRegularizacionProvider)
+        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+        for casilla_id in targets.get(binding.id, ())
+    }
+    return next(iter(candidates)) if len(candidates) == 1 else None
+
+
+def _regularizacion_target_label(revision: ModeloRevision, casilla_id: CasillaId | None) -> str:
+    """Name the registry-declared target casilla by its printed number for operator messages."""
+    number = next((casilla.number for casilla in revision.casillas if casilla.id == casilla_id), None)
+    return f"casilla {number}" if number else "la casilla de regularización declarada"
 
 
 def project_prorrata_regularizacion_feed(
@@ -408,6 +433,18 @@ def _prorrata_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
             if period not in periods:
                 periods.append(period)
     return tuple(periods)
+
+
+def _prorrata_source_modelo(revision: ModeloRevision) -> str:
+    """Return the one modelo the revision's prorrata bindings declare as their source."""
+    modelos = {
+        str(binding.provider.source_modelo)
+        for binding in revision.bindings
+        if isinstance(binding.provider, ProrrataRegularizacionProvider)
+    }
+    if len(modelos) != 1:
+        raise ValueError("selected prorrata bindings must declare exactly one source modelo")
+    return next(iter(modelos))
 
 
 def _missing_current_year_casillas(
@@ -815,7 +852,7 @@ def _resolve_prorrata_provisional_source(
                 _prior_definitiva_provenance(
                     carry=prior_definitiva,
                     revision=revision,
-                    source_modelo=context.modelo,
+                    source_modelo=_prorrata_source_modelo(revision),
                 ),
             ),
         )
@@ -960,7 +997,7 @@ class ProrrataRegularizacionSourceResolver:
             source_period_feed = _source_period_feed_from_observations(
                 self._observation_repository,
                 operation=self._operation,
-                modelo=context.modelo,
+                modelo=_prorrata_source_modelo(revision),
                 revision=revision,
                 filing_year=context.filing_year,
             )
@@ -996,7 +1033,7 @@ class ProrrataRegularizacionSourceResolver:
                 self._observation_repository,
                 operation=self._operation,
                 filing_year=context.filing_year,
-                modelo=context.modelo,
+                modelo=_prorrata_source_modelo(revision),
                 revision=revision,
             )
         except (PersistenceDegradationError, ProrrataRegisterError) as exc:
@@ -1062,6 +1099,7 @@ def buildprorrata_regularizacion_advisory(
     prorrata_definitiva_pct: Decimal,
     operaciones_sin_derecho_deduccion: Decimal,
     regularizacion_year: int,
+    revision: ModeloRevision,
 ) -> tuple[RegularizacionProrrataResult, CalculationSourceDiagnostic | None]:
     """Compute the annual regularización and build the fallback advisory.
 
@@ -1090,6 +1128,8 @@ def buildprorrata_regularizacion_advisory(
             operation volume. When zero, prorrata does not apply and no
             regularización is proposed.
         regularizacion_year: The year being calculated (for the message).
+        revision: The selected Modelo 303 revision whose bindings declare the
+            regularisation target casilla.
 
     Returns:
         ``(result, diagnostic)`` where ``result`` is the
@@ -1107,17 +1147,19 @@ def buildprorrata_regularizacion_advisory(
         return result, None
 
     sentido = "deducción complementaria" if result.direccion is RegularizacionProrrataDireccion.DEDUCCION else "ingreso"
+    target = _modelo_303_regularizacion_target(revision)
     message = (
         f"Regularización de prorrata por porcentaje definitivo (LIVA arts. 104-105) "
         f"para {regularizacion_year}: prorrata provisional {prorrata_provisional_pct}% "
         f"→ definitiva {prorrata_definitiva_pct}% ({sentido}). "
-        "Regularización propuesta para el destino declarado por registry: "
+        f"Regularización propuesta para {_regularizacion_target_label(revision, target)}: "
         f"{projection.proposed_value}. Confirme el valor antes de presentar."
     )
     diagnostic = CalculationSourceDiagnostic(
         reason="official_box_unpopulated",
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
+        casilla_id=target,
     )
     return result, diagnostic
 

@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ....core.time.clock import today_madrid
 from ...iva.schema import EUMemberState
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, unique_mapping_tokens
@@ -157,7 +158,7 @@ def resolve_eu_member_state_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> EuMemberStateCatalogue:
     """Resolve the complete EU member-state vocabulary through fact 0131."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         raise RegistryValidationError("EU member-state catalogue requires an explicit authority operation or scope")

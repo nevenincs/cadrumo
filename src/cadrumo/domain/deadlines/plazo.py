@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.result_disposition import ResultDisposition
+from ..calculations.registry.errors import RegistrySnapshotError
 from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from .errors import DeadlineValidationError
 
@@ -178,6 +179,8 @@ def _resolve_filing_window_with_operation(
     tipo_renta_code: str | None,
 ) -> DeadlineWindowDefinition | None:
     """Resolve one filing window from a single generation-pinned operation."""
+    if modelo not in operation.modelo_ids():
+        raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=modelo)
     if tipo_renta_code is not None and (
         modelo != Modelo("210")
         or tipo_renta_code

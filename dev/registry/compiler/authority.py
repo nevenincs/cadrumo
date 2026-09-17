@@ -45,7 +45,7 @@ from .fact_providers import (
     validate_fact_provider_directory_ownership,
 )
 from .identity import RegistryIdentity, resolve_registry_identity
-from .loader import load_registry_tree
+from .loader import load_registry_tree, load_shared_catalogues
 from .loader_cache import is_bundled_registry_root
 from .loader_fingerprints import collect_registry_tree_fingerprints
 from .profile_schema import (
@@ -128,7 +128,12 @@ def inspect_authoring_candidate(
         profile_schema_path=profile_schema_path,
     )
     evidence_fingerprint = collect_source_evidence_fingerprints(sources_root, use_cache=False)
-    with validating_governed_facts(CandidateFactAuthority(components.catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(
+            components.catalogues.facts,
+            components.catalogues.require_supported_filing_years(),
+        )
+    ):
         from .validator import RegistryValidator
 
         findings = RegistryValidator(
@@ -236,7 +241,9 @@ def _validated_structural_authority(
     # candidate facts in scope. Without them every ledger-IVA binding refuses
     # rather than resolving a rate kind through the artifact this compile
     # replaces.
-    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
         # Import only after candidate facts are scoped. The validator imports
         # applicability projections whose typed module constants resolve
         # governed vocabulary; importing it at module load would bootstrap a
@@ -341,12 +348,13 @@ def compile_registry_tree(
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     authored_facts = compile_authored_fact_catalogue(root)
+    authored_support = load_shared_catalogues(root).require_supported_filing_years()
     candidate_tax_id_format = tax_id_format_from_catalogue(authored_facts)
     # A modelo's bindings declare governed vocabulary, so validating them reads
     # facts. They must be the candidate's own facts: the published artifact is
     # what this compile replaces, and reading it here would make the fix for a
     # broken artifact depend on that artifact.
-    with validating_governed_facts(CandidateFactAuthority(authored_facts)):
+    with validating_governed_facts(CandidateFactAuthority(authored_facts, authored_support)):
         modelos, catalogues = load_registry_tree(
             root,
             identity=identity,
@@ -365,14 +373,14 @@ def compile_registry_tree(
     # contract. They cannot project a treaty override, but remain useful for
     # exercising compiler and publication mechanics without unrelated facts.
     convenio = (
-        convenio_authority_from_facts(facts, catalogues.legal)
+        convenio_authority_from_facts(facts, catalogues.legal, support=catalogues.require_supported_filing_years())
         if fact_providers.FACT_PROVIDER_REGISTRATIONS
         else ConvenioAuthority(treaties={})
     )
     supported_filing_years = catalogues.supported_filing_years
     if supported_filing_years is None:
         raise RegistryValidationError("registry has no supported_filing_years catalogue")
-    with validating_governed_facts(CandidateFactAuthority(facts)):
+    with validating_governed_facts(CandidateFactAuthority(facts, supported_filing_years)):
         supplementary_ordenes = compile_supplementary_ordenes(
             root,
             source_root=sources_root,

@@ -8,8 +8,10 @@ application-link, and deadline-window sections declared on a
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from datetime import date
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -380,6 +382,16 @@ def validate_deadline_window_section(
                 ),
             ),
         )
+        if window.tipo_renta_scope is not None:
+            official_codes = resolve_tipo_renta_irnr_catalogue(
+                effective_date=date(window.filing_year, 12, 31),
+            ).official_codes
+            unknown_codes = tuple(code for code in window.tipo_renta_scope if code not in official_codes)
+            if unknown_codes:
+                failures.append(
+                    f"{prefix} {owner} tipo_renta_scope contains unknown official Modelo 210 codes "
+                    f"{unknown_codes!r}; accepted codes: {', '.join(official_codes)}",
+                )
         for condition in window.applicability_conditions:
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))

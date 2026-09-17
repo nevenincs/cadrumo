@@ -42,6 +42,10 @@ adapters:
           data may be corrupt.
         verify_requires_active_context: Cl@ve Móvil verify() requires an active browser
           context; call authenticate() first.
+  browser:
+    errors:
+      not_provisioned: The Chromium browser that AEAT automation launches is not installed
+        on this computer. Provision it, then try again.
   google:
     calc_sheets:
       errors:

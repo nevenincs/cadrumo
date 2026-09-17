@@ -379,3 +379,52 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}
     assert "maternidad_cotizaciones_ceiling_inexpressible" in source_kinds
     assert "maternidad_ambiguous_relacion" not in source_kinds
+
+
+_M130_PREVIOUS_YEAR_BINDING = "irpf.previous_year_economic_activity_net_income"
+_M130_OVERRIDE_PROFILE_ID = "20000000-0000-4000-8000-000000000130"
+
+
+def test_previous_year_binding_accepts_a_manual_override(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A prior-year modelo 100 value with no filed source is entered by the operator.
+
+    When the previous year's modelo 100 was never filed through the product --
+    including every year below the supported filing floor -- the ``--binding``
+    override is the channel that carries the operator's value into modelo 130.
+    """
+    support = operation.modelo_directory("130").supported_filing_years
+    assert support is not None
+    filing_year = support.horizon
+    period = Period.from_year_and_code(filing_year, "1T")
+    snapshot = operation.snapshot("130", filing_year=filing_year, period=period.registry_token)
+    assert _M130_PREVIOUS_YEAR_BINDING in {binding.id for binding in snapshot.revision.bindings}
+
+    bucket_id = _M130_OVERRIDE_PROFILE_ID
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
+        register_minimal_profile(profile_id=bucket_id)
+        with bundled_indexed_authority().operation() as bundle_operation:
+            calculation_ports = build_calculation_action_ports(bucket_id=bucket_id, operation=bundle_operation)
+            work_unit = create_work_unit(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=filing_year,
+                period=period,
+                revision_id=snapshot.revision.id,
+                ports=calculation_ports.work_lifecycle_ports,
+                clock=datetime(filing_year, 4, 10, 12, 0, tzinfo=UTC),
+                operation=bundle_operation,
+            )
+            bundle = build_work_calculate_input_bundle(
+                work_unit_id=work_unit.work_unit_id,
+                ports=calculation_ports,
+                casilla_overrides={},
+                binding_overrides={_M130_PREVIOUS_YEAR_BINDING: "8500.00"},
+                relation_overrides={},
+                detail_rows=(),
+                borrador_snapshot_id=None,
+                operation=bundle_operation,
+            )
+
+    assert bundle.binding_values[_M130_PREVIOUS_YEAR_BINDING] == Decimal("8500.00")

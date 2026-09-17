@@ -66,11 +66,11 @@ _BYPASSING_WRITE_PATHS = (
     "to_secure_object_write(",
 )
 
-#: The guarded seam an APPLICATION service reaches, one layer above the
-#: repository's own. The invoice-catalogue services own their read-modify-write
-#: rather than delegating to a repository verb, and all three share one helper
-#: so they cannot drift into three different answers.
-_GUARDED_SERVICE_SEAM = "mutate_catalogue("
+#: The guarded seam an APPLICATION service reaches. The invoice-catalogue
+#: services pass their change to the repository's revision-guarded ``mutate``
+#: verb, itself pinned in ``_GUARDED_VERBS`` below, rather than loading and
+#: saving the catalogue themselves.
+_GUARDED_SERVICE_SEAM = "invoice_repository.mutate("
 
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (

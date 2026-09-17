@@ -24,6 +24,7 @@ from collections.abc import Mapping
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -32,7 +33,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
-from ..errors import IvaCatalogueError
 from ..place_of_supply import (
     IvaPlaceOfSupplyRule,
     load_place_of_supply_table,
@@ -211,7 +211,7 @@ def test_row_validator_rejects_incomplete_kind_shapes(overrides: dict[str, objec
     fields = _grounded_row_fields()
     fields.update(overrides)
 
-    with pytest.raises(IvaCatalogueError, match=message):
+    with pytest.raises(ValidationError, match=message):
         IvaPlaceOfSupplyRule.model_validate(fields)
 
 

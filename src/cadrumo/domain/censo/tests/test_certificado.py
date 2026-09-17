@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ..certificado import ActividadLocalCertificada, CertificadoSituacionCensal, censo_facts_from_certificado
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 class _CertificadoFields(TypedDict):

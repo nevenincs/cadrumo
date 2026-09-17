@@ -52,6 +52,18 @@ def _observation(*, clave: RetencionClave | str, subclave: str = "") -> Withhold
             "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
             "subclave": subclave,
             "percibido_dinerario": Decimal("1000"),
+            # The model has no defaults for these: each is a stated zero here.
+            "incapacity_cash_perception": Decimal("0"),
+            "incapacity_cash_withholding": Decimal("0"),
+            "incapacity_kind_value": Decimal("0"),
+            "incapacity_kind_ingreso_a_cuenta": Decimal("0"),
+            "incapacity_kind_repercutido": Decimal("0"),
+            "foral_retention_estatal": Decimal("0"),
+            "foral_retention_navarra": Decimal("0"),
+            "foral_retention_araba": Decimal("0"),
+            "foral_retention_gipuzkoa": Decimal("0"),
+            "foral_retention_bizkaia": Decimal("0"),
+            "base_retenciones": Decimal("0"),
         }
     )
 

@@ -50,6 +50,11 @@ source_refs = [
 ]
 
 
+[revisions."2012-01-31-y-siguientes".family_dispositions.applicability]
+reason = "Modelo 145 is the perceptor's communication to the pagador under RIRPF art. 88.1, never an AEAT filing or calendar obligation, so the product treats it as out of scope for obligation coverage. An applicability rule would make it a positively decidable obligation and contradict that scope, so none is authored."
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-procedure", "aeat-modelo-145-obligaciones-retenedor"]
+
 [revisions."2012-01-31-y-siguientes".family_dispositions.formulas]
 reason = "This modelo is not filed with AEAT at all: it is the comunicacion the perceptor hands to the PAGADOR, declaring the personal and family circumstances that let the retenedor set the withholding rate. The taxpayer reports their OWN circumstances, the arithmetic belongs to the payer's retencion calculation rather than to this form, and no liability of the declarant is computed here, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [

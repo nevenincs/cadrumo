@@ -30,6 +30,7 @@ from __future__ import annotations
 from pydantic import NonNegativeInt, field_validator
 
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import OutputSchema
@@ -64,6 +65,7 @@ class IvaWalletBalanceResult(OutputSchema):
 
     @field_validator("total_balance", "active_balance", "expired_balance", "unallocated_applied_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
         """Refuse an amount the canonical balance report could never have produced.
 

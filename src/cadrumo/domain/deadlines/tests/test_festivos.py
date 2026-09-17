@@ -177,14 +177,12 @@ def test_load_calendar_missing_year_raises_validation_error() -> None:
         load_holiday_calendar(1999, operation=operation)
 
 
-def test_load_calendar_caches_repeat_calls() -> None:
-    """The ``lru_cache`` wrapper returns identical instances for the
-    same year, so callers may rely on identity for cache-hit
-    detection."""
+def test_load_calendar_is_stable_across_repeat_calls() -> None:
+    """Repeat loads through one pinned operation describe the same calendar."""
     with bundled_indexed_authority().operation() as operation:
         first = load_holiday_calendar(2025, operation=operation)
         second = load_holiday_calendar(2025, operation=operation)
-        assert first is second
+        assert first == second
 
 
 # ---------------------------------------------------------------------------

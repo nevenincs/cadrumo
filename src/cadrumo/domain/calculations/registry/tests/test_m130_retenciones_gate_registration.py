@@ -96,27 +96,28 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         )
         check = registered[key]
 
-        from cadrumo.domain.renta.retenciones_routing_integrity import (
-            RENTA_130_RETENCIONES_BINDING_ID,
-            RENTA_130_RETENCIONES_OUTPUT_CASILLA,
-        )
+        from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+        from cadrumo.domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 
         casilla_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
         binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
-        assert RENTA_130_RETENCIONES_BINDING_ID in binding_ids, (
-            "the committed M130 revision must declare the retenciones binding, or "
-            "the failure case below asserts nothing"
-        )
-        assert RENTA_130_RETENCIONES_OUTPUT_CASILLA in casilla_ids
+        with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+            # The route is registry data; read it from the same published authority.
+            route = resolve_m130_retenciones_route()
+            assert route.binding_id in binding_ids, (
+                "the committed M130 revision must declare the retenciones binding, or "
+                "the failure case below asserts nothing"
+            )
+            assert route.output_casilla in casilla_ids
 
-        assert check("130", casilla_ids, frozenset(), binding_ids) == [], (
-            "the registered check must pass against the revision it just validated"
-        )
-        stripped = casilla_ids - {{RENTA_130_RETENCIONES_OUTPUT_CASILLA}}
-        assert check("130", stripped, frozenset(), binding_ids), (
-            "the registered check must report a failure when the casilla its "
-            "binding redirects onto is absent from the revision"
-        )
+            assert check("130", casilla_ids, frozenset(), binding_ids) == [], (
+                "the registered check must pass against the revision it just validated"
+            )
+            stripped = casilla_ids - {{route.output_casilla}}
+            assert check("130", stripped, frozenset(), binding_ids), (
+                "the registered check must report a failure when the casilla its "
+                "binding redirects onto is absent from the revision"
+            )
 
         print("M130_RETENCIONES_GATE_LIVE")
         """,

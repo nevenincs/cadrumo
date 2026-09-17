@@ -35,6 +35,7 @@ from pydantic import (
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistryPeriodCode
@@ -161,6 +162,7 @@ class CasillaObservation(BaseModel):
 
     @field_validator("value", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _value_from_json_string(cls, value: object, info: ValidationInfo) -> object:
         if info.data.get("value_kind", "decimal") == "decimal":
             return _decimal_from_json_string(value)
@@ -168,10 +170,12 @@ class CasillaObservation(BaseModel):
 
     @field_validator("value")
     @classmethod
+    @pydantic_validation_boundary
     def _scalar_value(cls, value: Decimal | str) -> Decimal | str:
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _value_matches_kind(self) -> CasillaObservation:
         if self.value_kind == "decimal" and not isinstance(self.value, Decimal):
             raise RegistryValidationError("decimal casilla observation must carry a Decimal value")
@@ -181,15 +185,18 @@ class CasillaObservation(BaseModel):
 
     @field_validator("operand_refs", "operand_casilla_refs", "legal_refs", "source_refs", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _tuple_fields_from_json_arrays(cls, value: object) -> object:
         return _tuple_from_json_array(value)
 
     @field_validator("operand_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _decimal_tuple_field_from_json_array(cls, value: object) -> object:
         return _decimal_tuple_from_json_array(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _operand_casilla_refs_are_traced(self) -> CasillaObservation:
         missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
         if missing:
@@ -223,6 +230,7 @@ class RegistryModeloObservation(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _hydrate_filing_period(cls, data: object) -> object:
         if not is_object_mapping(data) or "filing_period" in data:
             return data
@@ -253,10 +261,12 @@ class RegistryModeloObservation(BaseModel):
 
     @field_validator("observations", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _observations_from_json_array(cls, value: object) -> object:
         return _tuple_from_json_array(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_filing_period_consistency(self) -> RegistryModeloObservation:
         if self.filing_period is None:
             return self

@@ -1052,7 +1052,7 @@ def compose_installed_workbench_root(
         capture rather than three instants.
         """
         if refresh_destinations is None:
-            raise RuntimeError("destination refresh requested without a refresh provider")
+            raise InternalInvariantError("destination refresh requested without a refresh provider")
         refreshed_admissions, refreshed_factories = refresh_destinations()
         admissions = {"workbench.home": _available_admission("workbench.home"), **refreshed_admissions}
         return build_destination_catalogue(

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 
@@ -48,6 +49,7 @@ class AeatProductSoftwareIdentity(BaseModel):
     evidence: tuple[AeatProductSoftwareEvidence, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_wire_widths(self) -> AeatProductSoftwareIdentity:
         if len(self.program_identifier.encode("ascii")) != 4:
             raise ValueError("AEAT program identifier must encode to exactly four ASCII bytes")

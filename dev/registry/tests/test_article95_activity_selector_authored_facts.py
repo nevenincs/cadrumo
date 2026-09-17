@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
+from .profile_schema_support import authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -44,6 +45,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedEntitySetFact:
         _catalogue(),
         EntitySetFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
         authority_digest="4" * 64,
+        support=authored_history_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedEntitySetFact)
     return resolved
@@ -68,11 +70,12 @@ def test_article_95_activity_selectors_resolve_only_from_the_grounded_m036_table
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
 
 
-def test_article_95_activity_selectors_back_project_before_the_first_citable_m036_table() -> None:
+def test_article_95_activity_selectors_reach_the_support_floor_before_the_first_citable_m036_table() -> None:
+    """The first citable table's date is a coverage marker, so the selector reaches the registry floor."""
     resolved = _resolve("rirpf-art-95:selector-m036-actividades-profesionales", date(2026, 3, 25))
 
-    assert resolved.projection_direction == "backward"
-    assert resolved.projected_from_date == _FIRST_GROUNDED_DATE
+    assert resolved.projection_direction == "authored"
+    assert resolved.authored_valid_from is None
     assert resolved.variant_id.endswith(_FIRST_GROUNDED_DATE.isoformat())
     assert resolved.payload.entities == frozenset({"A04", "A05"})
     assert resolved.source_refs == (_M036_TABLE_SOURCE, _ARTICLE_95_SOURCE)
@@ -89,9 +92,7 @@ def test_article_95_activity_selectors_cite_the_hash_pinned_table_and_boe_redact
     assert table.published_at is None
     assert table.applies_from == _FIRST_GROUNDED_DATE
     assert shared.sources[_ARTICLE_95_SOURCE].applies_from == date(2023, 1, 26)
-    assert all(
-        variant.valid_from == _FIRST_GROUNDED_DATE for fact in catalogue.facts.values() for variant in fact.variants
-    )
+    assert all(variant.valid_from is None for fact in catalogue.facts.values() for variant in fact.variants)
     assert (
         governed_fact_catalogue_failures(
             catalogue,

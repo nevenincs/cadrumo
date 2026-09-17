@@ -10,6 +10,7 @@ from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 
@@ -78,6 +79,7 @@ class ProrrataRegularizacionProvider(BaseModel):
 
     @field_validator("source_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _source_casilla_ids_match_prorrata_inputs(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if value != _PRORRATA_REGULARIZACION_SOURCE_IDS:
             raise RegistryValidationError(
@@ -88,6 +90,7 @@ class ProrrataRegularizacionProvider(BaseModel):
 
     @field_validator("source_periods")
     @classmethod
+    @pydantic_validation_boundary
     def _source_periods_are_full_year(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != _PRORRATA_REGULARIZACION_SOURCE_PERIODS:
             raise RegistryValidationError(

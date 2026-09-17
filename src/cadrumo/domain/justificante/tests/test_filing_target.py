@@ -12,7 +12,7 @@ from ....core.period import Period
 from ....tests.aeat_literal_fixtures import JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE
 from ..schema import Justificante
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _PRESENTED_AT = datetime(2025, 4, 15, 12, 0, tzinfo=UTC)

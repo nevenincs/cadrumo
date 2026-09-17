@@ -84,7 +84,7 @@ async def test_operation_scope_exposes_same_graph_contracts_and_settles_once(
     services = _Services()
     monkeypatch.setattr(
         "cadrumo.entrypoints.operation_composition.compose_operation_dependencies",
-        lambda: cast(OperationComposedServices, services),
+        lambda **_: cast(OperationComposedServices, services),
     )
 
     async with operation_services_scope() as composition:

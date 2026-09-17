@@ -10,6 +10,7 @@ from __future__ import annotations
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from .errors import ModeloValidationError
 
 
@@ -35,4 +36,4 @@ class ModeloCode(str):
     ) -> core_schema.CoreSchema:
         """Teach pydantic to run the three-digit check on validation."""
         del source_type, handler
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+        return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())

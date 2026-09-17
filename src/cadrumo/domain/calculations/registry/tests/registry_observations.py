@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from datetime import date
 from decimal import Decimal
 from functools import cache
 
@@ -15,16 +16,17 @@ from .registry_tree import bundled_registry_tree
 
 
 @cache
-def revision_id_for_coordinates(*, modelo: str, filing_year: int, period: str) -> str:
+def revision_id_for_coordinates(*, modelo: str, filing_year: int, period: str, on: date | None = None) -> str:
     """Resolve the law-selected revision used by a persisted test observation."""
     modelos, _catalogues = bundled_registry_tree()
     modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    return str(select_revision(modelo_definition, filing_year=filing_year, period=period).id)
+    return str(select_revision(modelo_definition, filing_year=filing_year, period=period, on=on).id)
 
 
-def revision_id_for_observation(observation: RegistryModeloObservation) -> str:
+def revision_id_for_observation(observation: RegistryModeloObservation, *, on: date | None = None) -> str:
     """Return the canonical revision stamp for an observation's coordinates."""
     return revision_id_for_coordinates(
+        on=on,
         modelo=observation.modelo,
         filing_year=observation.filing_year,
         period=observation.period,
@@ -38,14 +40,20 @@ def registry_grounded_observations(
     period: str,
     casilla_values: Mapping[CasillaId, Decimal],
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    on: date | None = None,
 ) -> tuple[CasillaObservation, ...]:
-    """Return observations grounded in the selected published snapshot."""
+    """Return observations grounded in the selected published snapshot.
+
+    ``on`` selects between editions that split one filing year at a dated
+    boundary; the registry refuses such a year as ambiguous without it.
+    """
     return registry_grounded_observation_rows(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
         casilla_values=casilla_values.items(),
         grade=grade,
+        on=on,
     )
 
 
@@ -56,6 +64,7 @@ def registry_grounded_observation_rows(
     period: str,
     casilla_values: Iterable[tuple[CasillaId, Decimal]],
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    on: date | None = None,
 ) -> tuple[CasillaObservation, ...]:
     """Return ordered observations carrying legal and source provenance."""
     with bundled_indexed_authority().operation() as authority:
@@ -63,6 +72,7 @@ def registry_grounded_observation_rows(
             modelo,
             filing_year=filing_year,
             period=period,
+            on=on,
             grade=grade,
         )
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}

@@ -23,6 +23,7 @@ from datetime import date
 from functools import cache
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
@@ -39,7 +40,6 @@ from ..descendant_facts import (
     parse_descendiente_flag,
 )
 from ..descendant_maternity import art_81_1_maternity_relations
-from ..errors import ProfileValidationError
 from ..family_fact_context import FamilyFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -223,7 +223,7 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
     re-checking the relación would grant the increase.
     """
     anchor = date(2020, 1, 1)
-    with pytest.raises(ProfileValidationError):
+    with pytest.raises(ValidationError):
         if field == "inscripcion_registro_civil_date":
             DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, inscripcion_registro_civil_date=anchor)
         else:
@@ -395,7 +395,7 @@ def test_a_stored_entry_date_under_an_excluded_relacion_refuses_on_reload() -> N
     facts = dict(descendant_facts_from_list((child,)))
     facts["renta_family.descendiente.0.acogimiento_resolucion"] = "2020-01-01"
 
-    with pytest.raises(ProfileValidationError):
+    with pytest.raises(ValidationError):
         descendant_list_from_facts(facts)
 
 
@@ -452,7 +452,7 @@ class TestGuardaYCustodiaJudicial:
         this is the behavioural half of the assertion above rather than a
         restatement of it.
         """
-        with pytest.raises(ProfileValidationError):
+        with pytest.raises(ValidationError):
             self._child(acogimiento_resolucion_date=date(2020, 1, 1))
 
     def test_it_is_excluded_from_the_art_81_1_maternidad_population(self) -> None:

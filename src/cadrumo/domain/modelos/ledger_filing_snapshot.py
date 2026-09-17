@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.transaction_ids import TransactionId
@@ -247,6 +248,7 @@ class LedgerEvidenceRow(BaseModel):
 
     @field_validator("amount", "value_in_eur")
     @classmethod
+    @pydantic_validation_boundary
     def _reject_negative_magnitude(cls, value: Decimal | None) -> Decimal | None:
         """Reject a negative ``amount`` / ``value_in_eur``; both are magnitudes.
 

@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity.digest import ContentDigest
@@ -172,6 +173,7 @@ class InventoryAttributableCostComponent(BaseModel):
 
     @field_validator("component_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_component_id(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -180,11 +182,13 @@ class InventoryAttributableCostComponent(BaseModel):
 
     @field_validator("taxable_base", "iva_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
         return _require_cents(value, field_name=info.field_name or "amount")
 
     @field_validator("evidence_references")
     @classmethod
+    @pydantic_validation_boundary
     def _evidence_references_are_distinct(
         cls,
         value: tuple[FilingEvidenceReference, ...],
@@ -235,10 +239,12 @@ class InventoryAcquisitionCost(BaseModel):
         "total_acquisition_cost",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _monetary_fields_are_cents(cls, value: Decimal, info: ValidationInfo) -> Decimal:
         return _require_cents(value, field_name=info.field_name or "amount")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_complete_decomposition(self) -> InventoryAcquisitionCost:
         evidence_ids = tuple(item.reference.reference for item in self.evidence)
         evidence_by_reference = _validate_acquisition_evidence_links(self, evidence_ids)
@@ -424,11 +430,13 @@ class PhysicalClosingObservation(BaseModel):
 
     @field_validator("closing_value")
     @classmethod
+    @pydantic_validation_boundary
     def _closing_value_is_cents(cls, value: Decimal) -> Decimal:
         return _require_cents(value, field_name="physical closing_value")
 
     @field_validator("evidence")
     @classmethod
+    @pydantic_validation_boundary
     def _evidence_is_unique(
         cls,
         value: tuple[PhysicalClosingEvidence, ...],
@@ -448,6 +456,7 @@ class PhysicalClosingObservation(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _observation_dates_match_year_end(self) -> PhysicalClosingObservation:
         expected_as_of = date(self.filing_year, 12, 31)
         if self.as_of_date != expected_as_of:
@@ -545,12 +554,17 @@ class MovementRecord(BaseModel):
 
     @field_validator("iva_rate", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _default_iva_rate_from_movement_devengo(
         cls,
         value: object,
         info: ValidationInfo,
     ) -> object:
         """Resolve an omitted rate through the dated Spanish IVA facade."""
+        if isinstance(value, str) and info.mode == "json":
+            # A before-validator hands JSON text through unparsed, and the strict
+            # Decimal schema behind it accepts only an instance.
+            return Decimal(value)
         if value is not None:
             return value
         movement_date = info.data.get("movement_date")
@@ -644,6 +658,7 @@ class MovementRecord(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
@@ -651,6 +666,7 @@ class MovementRecord(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_movement_amounts(self) -> MovementRecord:
         """Enforce that opening / purchase movements carry a cost and IVA decomposes consistently."""
         _require_movement_cost(self)
@@ -760,6 +776,7 @@ class InventoryLedger(BaseModel):
 
     @field_validator("actividad_id")
     @classmethod
+    @pydantic_validation_boundary
     def _actividad_id_is_canonical(cls, value: str) -> str:
         if value != value.strip() or any(ord(character) < 32 for character in value):
             raise InventoryValidationError("inventory actividad_id is not canonical")
@@ -767,6 +784,7 @@ class InventoryLedger(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
@@ -774,6 +792,7 @@ class InventoryLedger(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
         from .valuation import layers_value
@@ -821,6 +840,7 @@ class InventoryLedgerDocument(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
@@ -828,6 +848,7 @@ class InventoryLedgerDocument(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_duplicate_actividad_year(self) -> InventoryLedgerDocument:
         """Refuse a document carrying two ledgers for one activity and year.
 

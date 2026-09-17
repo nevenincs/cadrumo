@@ -33,8 +33,9 @@ from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, require_eu_mem
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS
+from .profile_schema_support import committed_supported_filing_years
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def iva_rate_fact_query(
@@ -151,6 +152,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
         _catalogue(),
         iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2025, 6, 1)),
         authority_digest="a" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(resolved, ResolvedMappingFact)
@@ -163,6 +165,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
             _catalogue(),
             iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2012, 8, 31)),
             authority_digest="a" * 64,
+            support=committed_supported_filing_years(),
         )
 
 
@@ -173,6 +176,7 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
         catalogue,
         iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("super_reduced"), date(2024, 11, 1)),
         authority_digest="b" * 64,
+        support=committed_supported_filing_years(),
     )
     coexisting = resolve_governed_fact(
         catalogue,
@@ -183,6 +187,7 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
             superseding_percentage=Decimal("2"),
         ),
         authority_digest="b" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(ordinary, ResolvedMappingFact)

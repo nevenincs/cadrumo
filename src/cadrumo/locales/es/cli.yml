@@ -1409,6 +1409,7 @@ cli:
           vivo)
         history_help: Muestra todos los eventos del ciclo de vida de una unidad de
           trabajo
+        history_next_action_summary: Revisa el estado actual de esta unidad de trabajo.
         history_work_unit_id_help: Id de unidad de trabajo cuyo ciclo de vida quieres
           ver
         id_selector_ambiguous: 'El id de trabajo mostrado {selector} coincide con
@@ -1437,6 +1438,11 @@ cli:
           signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
+        list_no_active_work_summary: No hay ninguna unidad de trabajo activa disponible
+          para continuar.
+        list_selection_required_summary: Seleccione una unidad de trabajo antes de
+          continuar.
+        list_single_status_summary: Hay una unidad de trabajo disponible para inspeccionar.
         m184_socio_handoff_message: 'Régimen de atribución de rentas: el socio %{nif}
           (%{nombre}) recibe una base atribuida de %{importe} EUR (participación del
           %{porcentaje}%). En su propio espacio de trabajo, el socio debe registrarla
@@ -1655,6 +1661,9 @@ cli:
         state_label_presentado: Presentado
         state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
+        status_calculate_summary: Esta unidad de trabajo activa se puede calcular.
+        status_discarded_summary: Esta unidad de trabajo está descartada, por lo que
+          el cálculo no está disponible.
         status_help: Mostrar los metadatos de una unidad de trabajo
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
@@ -2314,9 +2323,13 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
-      help: 'Gestiona el lector local de documentos: estado del runtime, instalación,
+      browser:
+        help: Descarga la versión de Chromium que abre la automatización del navegador
+          de la AEAT. No hace nada si ya está instalada.
+      help: 'Gestiona lo que Cadrumo ejecuta en este equipo: el navegador de la automatización
+        de la AEAT y el lector local de documentos (estado del runtime, instalación,
         arranque, descarga, carga, verificación y eliminación de modelos, o prepáralo
-        todo de una vez.'
+        todo de una vez).'
       install:
         confirm_help: Acepta descargar y ejecutar la instalación del gestor de paquetes.
           Sin esta opción no se instala nada.

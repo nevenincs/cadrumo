@@ -226,6 +226,7 @@ class DescendantRecordBase(DescendantRecordFields):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _parse_date(cls, value: object) -> object:
         return coerce_iso_date_field(value)
 
@@ -270,6 +271,7 @@ class DescendantRecordBase(DescendantRecordFields):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _infer_relacion_from_inscripcion(cls, data: object) -> object:
         """Read an unstated relación off an inscription date rather than guessing.
 
@@ -340,6 +342,7 @@ class DescendantRecordBase(DescendantRecordFields):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_entry_event_dates(self) -> DescendantRecordBase:
         """Enforce the entry-event dates' ordering and their relación coherence.
 

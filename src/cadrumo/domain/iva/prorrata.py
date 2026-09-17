@@ -119,7 +119,9 @@ class ProrrataRegime(str):
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
         """Expose the opaque token as a non-empty string to Pydantic."""
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls), core_schema.str_schema(min_length=1)
+        )
 
     @property
     def value(self) -> str:
@@ -274,6 +276,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
 
     @field_validator("reference_id")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_reference_id(cls, value: str) -> str:
         return value.strip()
 

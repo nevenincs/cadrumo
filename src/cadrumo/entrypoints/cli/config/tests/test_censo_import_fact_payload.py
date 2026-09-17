@@ -25,11 +25,14 @@ def test_censo_fact_payload_round_trips_a_valid_row() -> None:
         {"path": "", "value": "x", "source": "censo_artefact_g313"},
         {"path": "contact.postcode", "value": "x", "source": ""},
         {"path": "contact.postcode", "value": "x", "source": "a" * 81},
-        {"path": "contact.postcode", "value": "x", "source": "undeclared_source_token"},
     ),
 )
 def test_censo_fact_payload_refuses_malformed_row(kwargs: dict[str, str]) -> None:
-    """A malformed path, a blank/oversized source, or an undeclared source is refused."""
+    """A malformed path or a blank/oversized source is refused.
+
+    Whether a source token is declared by the profile schema is checked when a
+    whole record is validated against its pinned schema, not on this wire row.
+    """
     with pytest.raises(ValidationError):
         CensoFactPayload(**kwargs)
 

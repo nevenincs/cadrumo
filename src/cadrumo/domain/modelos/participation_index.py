@@ -34,6 +34,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, TypeAdapter, ValidationError, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
@@ -93,6 +94,7 @@ class TransactionRevisionParticipation(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_modelo(cls, data: object) -> object:
         try:
             mapping = _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
@@ -106,6 +108,7 @@ class TransactionRevisionParticipation(BaseModel):
         return data
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_period_year(self) -> TransactionRevisionParticipation:
         if self.period.filing_year != self.filing_year:
             raise ModeloValidationError(
@@ -130,6 +133,7 @@ class TransactionRevisionParticipationIndex(BaseModel):
     participations: tuple[TransactionRevisionParticipation, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_duplicate_revisions(self) -> TransactionRevisionParticipationIndex:
         seen = [item.calculation_revision_id for item in self.participations]
         if len(seen) != len(set(seen)):

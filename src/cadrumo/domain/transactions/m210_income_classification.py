@@ -13,11 +13,12 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from .errors import TransactionValidationError
 
@@ -57,7 +58,7 @@ def _registry_m210_payer_mode_declarations(
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[frozenset[str], str, Mapping[str, str]]:
     """Resolve payer-mode membership, default, and model applicability."""
-    as_of = effective_date or date.today()
+    as_of = effective_date or today_madrid()
     declarations = _resolved_m210_detail_declarations(as_of, operation=operation)
     order_text = declarations.get("m210.payer_mode_order")
     default_mode = declarations.get("m210.payer_mode.default")
@@ -125,7 +126,7 @@ def _registry_m210_declarations(
     from ..calculations.registry.authority import bundled_indexed_authority
     from ..calculations.registry.temporal import select_revision_metadata_for_year
 
-    effective_date = date.today()
+    effective_date = today_madrid()
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _registry_m210_declarations(operation=indexed_operation)
@@ -160,6 +161,11 @@ def _registry_m210_declarations(
     )
 
 
+def _default_m210_payer_mode() -> M210PayerMode:
+    """Return the registry-declared payer mode for a classification that names none."""
+    return resolve_m210_payer_mode()
+
+
 class M210IncomeClassification(BaseModel):
     """One operator-supplied M210 income classification."""
 
@@ -168,19 +174,12 @@ class M210IncomeClassification(BaseModel):
     official_tipo_renta_code: str = Field(min_length=2, max_length=2)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))
     applicable_rate: UnitProportion
-    payer_mode: M210PayerMode
+    # A registry-derived default rather than a model-level before-validator: a
+    # validator returning a rebuilt mapping hands the fields Python input, and
+    # the strict config then refuses the JSON-decoded amounts of a stored row.
+    payer_mode: M210PayerMode = Field(default_factory=_default_m210_payer_mode)
     payer_id: str | None = Field(default=None, min_length=1, max_length=128)
     asset_or_right_id: str | None = Field(default=None, min_length=1, max_length=128)
-
-    @model_validator(mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _project_payer_mode(cls, data: object) -> object:
-        if not isinstance(data, Mapping):
-            return data
-        payload = TypeAdapter(dict[str, object]).validate_python(data)
-        payload["payer_mode"] = resolve_m210_payer_mode(payload.get("payer_mode"))
-        return payload
 
     @field_validator("official_tipo_renta_code")
     @classmethod

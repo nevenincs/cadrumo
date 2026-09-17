@@ -13,6 +13,7 @@ from pydantic import BaseModel, field_serializer, field_validator, model_validat
 from ...core.aggregation import BindingSourceKind
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_projection_ref import M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
@@ -255,6 +256,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
 
     @field_validator("values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         values = dict(value)
         if not values:
@@ -267,6 +269,7 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
         return dict(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_immutable_coordinate_and_digest(self) -> M303RegimenSimplificadoAnnualSummaryHandoff:
         if self.source_bucket_id != self.target_bucket_id:
             raise ModeloValidationError("M303 simplified annual-summary handoff source and target bucket must agree")
@@ -335,6 +338,7 @@ class M303RegimenSimplificadoFilingEvidence(BaseModel):
     calculation_result: M303RegimenSimplificadoCalculationResult
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
         if self.scope_decision != self.regimen_snapshot.scope_decision:
             raise ModeloValidationError(
@@ -430,6 +434,7 @@ def _m303_regimen_simplificado_activity_evidence_references(
         row.evidence_reference,
         *(item.evidence_reference for item in row.modulos),
         *(item.evidence_reference for item in row.facts),
+        *((row.lorca_eligibility.evidence_reference,) if row.lorca_eligibility is not None else ()),
     )
 
 
@@ -446,6 +451,7 @@ class M303FilingInstanceEvidence(BaseModel):
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _all_evidence_uses_the_filing_year(self) -> M303FilingInstanceEvidence:
         if self.regimen_simplificado.rows.ejercicio != self.period.filing_year:
             raise ModeloValidationError("M303 filing evidence must use the work-period filing year")

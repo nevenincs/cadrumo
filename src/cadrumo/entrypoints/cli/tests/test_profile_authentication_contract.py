@@ -28,7 +28,7 @@ from ..config.secure_input import MACHINE_SECRET_MAX_BYTES, ProfileSecretChannel
 from ..errors import CliRefusedBoundaryError
 from .cli_runner import cadrumo_click_command, invoke_cached_cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def test_root_owns_exactly_one_distinct_profile_secret_channel_pair() -> None:

@@ -27,6 +27,7 @@ from cadrumo.domain.iva.recargo_equivalencia import (
 )
 
 from ..compiler.fact_loader import load_governed_facts
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,6 +74,7 @@ def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> Non
             catalogue,
             iva_recargo_fact_query(Decimal("0.02"), boundary),
             authority_digest="c" * 64,
+            support=committed_supported_filing_years(),
         )
         assert isinstance(resolved, ResolvedMappingFact)
         projected = recargo_rate_record_from_fact(resolved)
@@ -85,6 +87,7 @@ def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> Non
             catalogue,
             iva_recargo_fact_query(Decimal("0.02"), date(2025, 1, 1)),
             authority_digest="c" * 64,
+            support=committed_supported_filing_years(),
         )
 
 
@@ -94,11 +97,13 @@ def test_recargo_query_distinguishes_coexisting_applied_rates() -> None:
         catalogue,
         iva_recargo_fact_query(Decimal("0.10"), date(2024, 6, 1)),
         authority_digest="d" * 64,
+        support=committed_supported_filing_years(),
     )
     transitional = resolve_governed_fact(
         catalogue,
         iva_recargo_fact_query(Decimal("0.05"), date(2024, 6, 1)),
         authority_digest="d" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(ordinary, ResolvedMappingFact)

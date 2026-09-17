@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-obligation-scope-mapping:2025-01-01"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-modelo-100-procedure"]
 review_status = "agent_reviewed"
@@ -20,7 +19,7 @@ kind = "mapping"
 entries = [
   { key = "catalogue.codes", value = "030,035,036,037,038,043,100,111,115,117,121,122,123,126,128,130,131,136,140,143,145,149,150,151,156,159,165,170,171,172,173,179,180,181,182,184,185,186,187,188,189,190,192,193,194,196,198,200,202,210,216,218,221,235,236,240,241,242,220,222,231,232,233,234,238,270,280,289,290,291,294,295,296,303,308,309,322,341,345,347,349,353,360,361,362,363,368,369,379,380,390,430,480,490,510,511,517,518,519,520,521,522,524,548,553,554,555,556,557,558,559,560,561,562,563,566,568,570,573,576,580,581,582,583,584,585,586,587,588,589,590,591,592,593,595,596,604,714,718,720,721,795,796,797,798,763,840,848,993" },
   { key = "scope.suppressed.codes", value = "037,179" },
-  { key = "scope.registry_out_of_scope.codes", value = "036,145,151,714,840" },
+  { key = "scope.registry_out_of_scope.codes", value = "036,145" },
   { key = "scope.group.special_excise.codes", value = "510,511,517,518,519,520,521,522,524,548,553,554,555,556,557,558,559,561,562,563,566,570,573,580,581,582,590" },
   { key = "scope.group.special_excise.reason", value = "impuesto especial de fabricacion; lo declaran fabricantes, depositos u operadores del sector" },
   { key = "scope.group.environmental_sector.codes", value = "560,583,584,585,586,587,588,589,591,593,595,596" },
@@ -36,7 +35,6 @@ entries = [
   { key = "scope.code.145.reason", value = "local IRPF payer communication, not an AEAT filing/calendar obligation" },
   { key = "scope.code.149.reason", value = "regimen especial de impatriados (vinculado al Modelo 151); fuera del nucleo autonomo/PYME" },
   { key = "scope.code.150.reason", value = "regimen especial de impatriados, declaracion residual; fuera del nucleo autonomo/PYME" },
-  { key = "scope.code.151.reason", value = "IRPF impatriado special regime, outside the autonomo/PYME core" },
   { key = "scope.code.159.reason", value = "consumo de energia electrica (lo declaran las comercializadoras)" },
   { key = "scope.code.170.reason", value = "operaciones con tarjetas (lo declaran las entidades de gestion de cobros)" },
   { key = "scope.code.171.reason", value = "imposiciones, disposiciones y cobros (lo declaran las entidades de credito)" },
@@ -73,13 +71,11 @@ entries = [
   { key = "scope.code.480.reason", value = "impuesto sobre primas de seguros, resumen anual; lo declaran las aseguradoras" },
   { key = "scope.code.568.reason", value = "IEDMT solicitud de devolucion; tramite puntual del sector de matriculacion" },
   { key = "scope.code.592.reason", value = "envases de plastico no reutilizables; lo declaran fabricantes e importadores del sector" },
-  { key = "scope.code.714.reason", value = "Impuesto sobre el Patrimonio, outside the IRPF/IVA/IS core" },
   { key = "scope.code.718.reason", value = "Impuesto Temporal de Solidaridad de las Grandes Fortunas; solo patrimonios netos elevados" },
   { key = "scope.code.795.reason", value = "gravamen temporal energetico; solo grandes operadores del sector" },
   { key = "scope.code.796.reason", value = "gravamen temporal energetico, pago anticipado; solo grandes operadores del sector" },
   { key = "scope.code.797.reason", value = "gravamen temporal de entidades de credito; solo grandes entidades del sector" },
   { key = "scope.code.798.reason", value = "gravamen temporal de entidades de credito, pago anticipado; solo grandes entidades" },
-  { key = "scope.code.840.reason", value = "Impuesto sobre Actividades Economicas, most taxpayers exempt (INCN < 1M)" },
   { key = "scope.code.848.reason", value = "comunicacion del INCN en el IAE; solo sujetos pasivos no exentos, si no consta ya en IS" },
   { key = "scope.code.993.reason", value = "procedimiento interno AEAT de control de deducciones autonomicas; sin orden de aprobacion" },
 ]

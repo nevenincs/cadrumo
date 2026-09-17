@@ -57,6 +57,7 @@ __all__ = [
 ]
 
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from .ledger_binding_selector_support import casilla_id_set
 
 if TYPE_CHECKING:
@@ -116,6 +117,7 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
 
     @field_validator("modelo")
     @classmethod
+    @pydantic_validation_boundary
     def _require_modelo_151(cls, value: Modelo) -> Modelo:
         if value != Modelo("151"):
             raise ValueError("ledger_impatriado_income_aggregation modelo must be '151'")
@@ -123,6 +125,7 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _require_explicit_fact(cls, value: object) -> object:
         """Refuse an omitted ``fact``, naming the accepted set in the message.
 

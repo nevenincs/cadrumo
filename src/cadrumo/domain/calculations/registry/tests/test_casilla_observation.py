@@ -16,7 +16,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..bindings import CasillaObservation
 from ..ids import LegalRefId, SourceRefId
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _MINIMAL_CASILLA: CasillaId = validated_casilla_id("0511")

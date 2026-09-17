@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -83,7 +84,7 @@ def resolve_iva_deductibility_hint_catalogue(
         MappingFactQuery(
             fact_id=_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date or today_madrid(),
             selectors=(_SCOPE_SELECTOR,),
         ),
     )

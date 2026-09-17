@@ -20,10 +20,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ..binding_temporal import BindingTemporalKind, FilingYearOffset
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
-from ..bindings_previous_filing import PreviousFilingProvider, previous_filing_binding_source_casilla_ids
+from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ..errors import RegistryValidationError
+from ..manual_input_selector import ManualInputProvider
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -180,24 +180,16 @@ def test_a_renamed_source_casilla_id_key_is_refused_not_silently_read_as_empty()
         "residual risk this fix closes is drift, not malformed-data construction"
     )
 
+    # Drift now surfaces as a provider member that no longer matches the class
+    # its kind is registered for; the accessor narrows rather than revalidates.
     drifted = BindingDefinition.model_construct(
         id="modelo-720-prior-year-cuentas-valoracion",
-        provider=PreviousFilingProvider.model_construct(
-            source_modelo="720",
-            temporal=FilingYearOffset(
-                kind=BindingTemporalKind.FILING_YEAR_OFFSET,
-                years=-1,
-                source_periods=("0A",),
-            ),
-            # A value PreviousFilingProvider's own model refuses, standing in
-            # for a member that no longer round-trips into its declaring model.
-            source_casilla_id=123,
-        ),
+        provider=ManualInputProvider.model_construct(kind="previous_filing"),
         value=BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL),
         aggregation={"op": "copy"},
         legal_refs=("ley-58-2003:disposicion-adicional-decimoctava",),
         source_refs=("aeat-dr-720-2013",),
     )
 
-    with pytest.raises(RegistryValidationError, match="malformed previous-filing selector"):
+    with pytest.raises(RegistryValidationError, match="carries provider member ManualInputProvider"):
         previous_filing_binding_source_casilla_ids(drifted)

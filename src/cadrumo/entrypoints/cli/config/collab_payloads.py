@@ -29,6 +29,7 @@ from datetime import datetime
 from pydantic import model_validator
 
 from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRecord
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.json_contract import OutputSchema
 
 
@@ -42,6 +43,7 @@ class RecipientFingerprintRowPayload(OutputSchema):
     added_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_recipient_record(self) -> RecipientFingerprintRowPayload:
         """Derive the displayed fingerprint from the same trusted key contract."""
         record = RecipientFingerprintRecord(

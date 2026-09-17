@@ -15,7 +15,7 @@ from ..command_spec import OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from ..verb_input_schema import build_verb_input_schemas, is_exposable_command
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("order", [("en", "es", "ca", "hu"), ("hu", "ca", "es", "en")])

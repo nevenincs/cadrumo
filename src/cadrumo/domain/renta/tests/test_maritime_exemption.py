@@ -17,10 +17,10 @@ from decimal import Decimal
 
 import pytest
 
+from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.bindings import CasillaObservation
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
-from ...calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -594,8 +594,6 @@ def test_art7p_resolution_fails_closed_outside_fact_temporal_coverage() -> None:
 
 def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     """Runtime maritime provenance must resolve through typed registry catalogues."""
-    _modelos, catalogues = bundled_registry_tree()
-
     art7p_obs = calculate_art_7p_exemption(
         annual_salary=Decimal("36500"),
         qualifying_days=100,
@@ -632,5 +630,8 @@ def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     assert retm_error.value.context is not None
     legal_refs.add(str(retm_error.value.context["legal_ref"]))
 
-    assert sorted(ref for ref in legal_refs if ref not in catalogues.legal) == []
-    assert sorted(ref for ref in source_refs if ref not in catalogues.sources) == []
+    with bundled_indexed_authority().operation() as operation:
+        published_legal = set(operation.legal_reference_ids())
+        assert sorted(ref for ref in legal_refs if ref not in published_legal) == []
+        for ref in sorted(source_refs):
+            assert operation.source_reference(ref) is not None

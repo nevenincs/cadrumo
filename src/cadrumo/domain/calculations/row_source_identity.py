@@ -7,6 +7,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .registry.ids import BindingId
@@ -32,6 +33,7 @@ class RowSourceIdentity(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_known_source_kind(cls, value: object) -> object:
         if isinstance(value, str):
             try:
@@ -42,6 +44,7 @@ class RowSourceIdentity(BaseModel):
 
     @field_validator("source_row_identity")
     @classmethod
+    @pydantic_validation_boundary
     def _identity_is_canonical(cls, value: str) -> str:
         if value != value.strip() or any(ord(character) < 32 for character in value):
             raise ValueError("row source identity is not canonical")
@@ -49,6 +52,7 @@ class RowSourceIdentity(BaseModel):
 
     @field_validator("row_set_grouping")
     @classmethod
+    @pydantic_validation_boundary
     def _row_set_grouping_is_canonical(cls, value: str | None) -> str | None:
         if value is None:
             return None

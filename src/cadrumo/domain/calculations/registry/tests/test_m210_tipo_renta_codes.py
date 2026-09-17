@@ -14,7 +14,7 @@ from ..irnr_tipo_renta import (
     resolve_tipo_renta_irnr_catalogue,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 # The rate-concept-grounded codes declared here, keyed to the TRLIRNR

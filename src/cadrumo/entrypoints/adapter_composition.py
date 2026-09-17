@@ -1094,6 +1094,7 @@ def build_filing_action_ports(*, bucket_id: str) -> FilingActionPorts:
         IvaWalletDecisionRepository,
     )
     from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+    from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -1124,6 +1125,7 @@ def build_filing_action_ports(*, bucket_id: str) -> FilingActionPorts:
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
+        justificante_repository=JustificanteRepository(objects=objects),
         observation_repository=CalculationObservationRepository(objects=objects),
         participation_index_repository=TransactionParticipationIndexRepository(
             bucket_id=normalized_bucket_id,
@@ -1287,6 +1289,7 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         CalculationObservationRepository,
         IvaWalletDecisionRepository,
     )
+    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -1309,6 +1312,7 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         verification=VerificationReportCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
         participation_index=TransactionParticipationIndexRepository(bucket_id=normalized_bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),

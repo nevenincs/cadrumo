@@ -42,6 +42,7 @@ from ...application.modelo.work_review import (
 )
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
@@ -190,6 +191,7 @@ class WorkDeadlinePosturePayload(OutputSchema):
     conditional_recargo_preview: WorkConditionalRecargoPreviewPayload | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_deadline_posture(self) -> WorkDeadlinePosturePayload:
         """Reuse the application deadline state invariant at the JSON boundary."""
         validate_modelo_work_deadline_posture(
@@ -424,6 +426,7 @@ class ModeloRecordPayload(OutputSchema):
     live_submission: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_filing_record_grounding(self) -> ModeloRecordPayload:
         """Keep the JSON projection aligned with the filing-record invariant."""
         if self.aeat_accepted != (self.external_evidence is not None):
@@ -795,6 +798,7 @@ class WorkAmendResult(ModeloRecordPayload):
     m303_rectificativa_motive: M303RectificativaMotive | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _amendment_names_the_record_it_supersedes(self) -> WorkAmendResult:
         """Refuse an amendment result that does not name the record it amends.
 
@@ -915,6 +919,7 @@ class FilingRecordImportResult(ModeloRecordPayload):
         return self.external_evidence.reference_id
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_external_evidence(self) -> FilingRecordImportResult:
         """An imported filing record carries the evidence it was imported from.
 
@@ -1407,6 +1412,7 @@ class ModeloAggregateResult(OutputSchema):
 
     @field_validator("provider", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_provider(cls, value: object) -> object:
         """Hydrate a raw provider token to its closed-enum member.
 
@@ -1420,6 +1426,7 @@ class ModeloAggregateResult(OutputSchema):
 
     @field_validator("source_kinds", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_source_kinds(cls, value: object) -> object:
         """Hydrate raw source-kind tokens to their closed-enum members."""
         if is_object_list(value):
@@ -1431,6 +1438,7 @@ class ModeloAggregateResult(OutputSchema):
 
     @field_validator("source_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kinds_are_unique(cls, value: list[BindingSourceKind]) -> list[BindingSourceKind]:
         """Mirror the canonical result's uniqueness invariant."""
         if len(value) != len(set(value)):

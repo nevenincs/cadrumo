@@ -30,7 +30,7 @@ from ._modelo_349_registry_support import (
     _modelo_349_revision,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _selector(binding: BindingDefinition) -> dict[str, Any]:
@@ -284,8 +284,12 @@ def test_committed_modelo_349_row_resolver_appends_payable_acquisitions_to_publi
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
     revision = _modelo_349_revision()
     construct = revision.constructs[0]
+    # The construct gathers every invoice-sourced binding plus the ledger guard
+    # that checks intra-community IVA volume against the declared operators.
     assert set(construct.bindings) == {
-        b.id for b in revision.bindings if b.source in {"collectible_invoice", "payable_invoice"}
+        b.id
+        for b in revision.bindings
+        if b.source in {"collectible_invoice", "payable_invoice", "ledger_iva_aggregation"}
     }
 
 

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Literal, Protocol, cast
 from pydantic import BaseModel, Field, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .binding_aggregation import binding_aggregation_op
@@ -80,6 +81,7 @@ class BindingFixedExportSelector(BaseModel):
     signed: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_declared_scale(self) -> BindingFixedExportSelector:
         if self.data_type == "decimal" and self.decimals is None:
             raise RegistryValidationError(

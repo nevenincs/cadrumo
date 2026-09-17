@@ -28,6 +28,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
+from ....core.errors.hierarchy import ProfileAnswerTypeError
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -38,7 +39,7 @@ from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import MinimoDescendientesThresholds
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _YEAR = 2024
 _FACT_CONTEXT = FamilyFactResolutionContext(
@@ -255,7 +256,7 @@ def test_an_unreadable_dependency_answer_refuses_rather_than_defaulting() -> Non
     the default would silently withdraw an allowance, while resolving it onto
     ``True`` would grant one nobody asserted.
     """
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises((ProfileAnswerTypeError, ValidationError)):
         parse_descendiente_flag("NACIMIENTO=2012-01-01,DEPENDENCIA=perhaps")
 
 
@@ -312,10 +313,10 @@ def test_a_corrupted_stored_dependency_fact_refuses_rather_than_coercing() -> No
     facts = dict(descendant_facts_from_list((supporter,)))
     facts["renta_family.descendiente.0.dependencia_economica"] = "maybe"
 
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises((ProfileAnswerTypeError, ValidationError)):
         descendant_list_from_facts(facts)
 
 
 def test_a_negative_anualidades_figure_is_refused() -> None:
-    with pytest.raises((ValueError, ValidationError)):
+    with pytest.raises((ProfileAnswerTypeError, ValidationError)):
         RentaFamilyProfile(anualidades_alimentos_euros=Decimal("-1"))

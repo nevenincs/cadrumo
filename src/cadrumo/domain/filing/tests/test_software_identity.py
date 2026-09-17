@@ -7,7 +7,7 @@ import pytest
 from .. import software_identity as identity_module
 from ..software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> None:

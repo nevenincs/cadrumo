@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "lirpf-art-52-reduction-verification-mapping:2025"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"

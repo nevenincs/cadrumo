@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ....core.time.clock import today_madrid
 from ....domain.iva.prorrata import ProrrataRegime
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
@@ -86,7 +87,7 @@ def resolve_prorrata_regime_catalogue(
         MappingFactQuery(
             fact_id=_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date or today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

@@ -46,7 +46,7 @@ from ..relations import source_presence_gaps
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _REFERENCE_LEGAL_ID = "rd-439-2007:art-110"
 _REFERENCE_SOURCE_ID = "aeat-modelo-130-instructions"

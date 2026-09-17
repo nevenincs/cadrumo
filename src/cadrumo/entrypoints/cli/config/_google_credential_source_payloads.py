@@ -15,6 +15,7 @@ from __future__ import annotations
 from pydantic import model_validator
 
 from ....adapters.outbound.google.impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.json_contract import OutputSchema
 
@@ -31,6 +32,7 @@ class GoogleCredentialSourcePayload(OutputSchema):
     lifetime_s: int | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_canonical_selection(self) -> GoogleCredentialSourcePayload:
         """Rebuild the canonical selection so flattened fields cannot drift."""
         impersonation = None

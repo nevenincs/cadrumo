@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -116,7 +117,7 @@ def resolve_spending_category_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> SpendingCategoryCatalogue:
     """Resolve and validate the dated spending-category catalogue."""
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     selected = authority or governed_facts_in_scope()
     if selected is None:
         raise RegistryValidationError("spending category catalogue requires an explicit authority operation or scope")

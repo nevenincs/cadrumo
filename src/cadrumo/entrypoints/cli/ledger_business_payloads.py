@@ -36,6 +36,7 @@ from ...application.ledger.invoice_draft_payloads import (
 )
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
@@ -209,6 +210,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
 
     @field_validator("derived_closing_value", "cogs")
     @classmethod
+    @pydantic_validation_boundary
     def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
         """A closing inventory value and a cost of goods sold are magnitudes.
 

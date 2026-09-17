@@ -1393,6 +1393,7 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
+        history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_selector_ambiguous: 'L''id de treball mostrat {selector} coincideix amb
@@ -1421,6 +1422,11 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
+        list_no_active_work_summary: No hi ha cap unitat de treball activa disponible
+          per continuar.
+        list_selection_required_summary: Seleccioneu una unitat de treball abans de
+          continuar.
+        list_single_status_summary: Hi ha una unitat de treball disponible per inspeccionar.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -1641,6 +1647,9 @@ cli:
         state_label_presentado: Presentat
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
+        status_calculate_summary: Aquesta unitat de treball activa es pot calcular.
+        status_discarded_summary: Aquesta unitat de treball està descartada, de manera
+          que el càlcul no està disponible.
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
@@ -2287,9 +2296,13 @@ cli:
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provision:
-      help: 'Gestiona el lector local de documents: estat del runtime, instal·lació,
-        arrencada, descàrrega, càrrega, verificació i eliminació de models, o prepara-ho
-        tot d''una vegada.'
+      browser:
+        help: Descarrega la versió de Chromium que obre l'automatització del navegador
+          de l'AEAT. No fa res si ja està instal·lada.
+      help: 'Gestiona el que Cadrumo executa en aquest ordinador: el navegador de
+        l''automatització de l''AEAT i el lector local de documents (estat del runtime,
+        instal·lació, arrencada, descàrrega, càrrega, verificació i eliminació de
+        models, o prepara-ho tot d''una vegada).'
       install:
         confirm_help: Accepta descarregar i executar la instal·lació del gestor de
           paquets. Sense aquesta opció no s'instal·la res.

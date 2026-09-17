@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ....core.prorrata_exclusions import Art104TresExclusion
+from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -97,7 +98,7 @@ def resolve_art104_tres_exclusion_catalogue(
         MappingFactQuery(
             fact_id=_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date or today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

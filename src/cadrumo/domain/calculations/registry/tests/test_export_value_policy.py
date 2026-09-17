@@ -16,7 +16,7 @@ from ..export_parse import parse_export_payload
 from ..export_value_policy import ExportValuePolicy, ParsedExportPolicyWireValue, project_export_value
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _GROUNDING = {
     "legal_refs": ("ley-27-2014:art-40",),

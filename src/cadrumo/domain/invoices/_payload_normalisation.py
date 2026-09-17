@@ -24,6 +24,7 @@ from datetime import date
 from typing import Final, NamedTuple
 
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
@@ -144,7 +145,7 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
         return
     effective_date = payload.get("issued_at")
     if not isinstance(effective_date, date):
-        effective_date = date.today()
+        effective_date = today_madrid()
     try:
         payload[rule.field] = (
             require_oss_ioss_regime(text)

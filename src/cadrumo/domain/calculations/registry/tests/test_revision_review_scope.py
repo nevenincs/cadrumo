@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.revision_review import RevisionReviewStatus
 from ..errors import RegistryValidationError
@@ -68,10 +69,11 @@ def test_a_comparison_may_name_a_revision_other_than_the_storage_predecessor() -
 
 
 def test_a_scope_on_an_unreviewed_delta_edition_is_refused() -> None:
-    with pytest.raises(RegistryValidationError, match="a review scope belongs to a review"):
+    with pytest.raises(ValidationError, match="a review scope belongs to a review") as refusal:
         _revision(
             predecessor=_PREDECESSOR, review_status=RevisionReviewStatus.PENDING_REVIEW, reviewed_against=_PREDECESSOR
         )
+    assert isinstance(refusal.value.errors()[0]["ctx"]["error"].__cause__, RegistryValidationError)
 
 
 def test_a_comparison_reference_does_not_require_a_storage_predecessor() -> None:

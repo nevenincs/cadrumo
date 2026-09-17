@@ -54,7 +54,7 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.credentials import PROFILE_PASSWORD_MIN_SCALARS
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from ....core.i18n.render import output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -557,7 +557,9 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         if attempt is not None and attempt.expected_refusal is not None:
             self.refuse(attempt.expected_refusal.render(locale=self._active_language))
         elif event.state is WorkerState.ERROR:
-            self.refuse(self._resolved_worker_failure(worker.error or RuntimeError(_RECOVERY_ENROLLMENT_WORKER)))
+            self.refuse(
+                self._resolved_worker_failure(worker.error or InternalInvariantError(_RECOVERY_ENROLLMENT_WORKER))
+            )
         self._finish_registration()
 
     def _finish_registration(self) -> None:

@@ -822,12 +822,18 @@ def _fact_projection(value: object) -> object:
 
 def _fact_queries(authority: ValidatedRegistryAuthority) -> tuple[GovernedFactQuery, ...]:
     catalogue = authority.catalogues.facts
+    envelope = authority.catalogues.require_supported_filing_years().date_envelope()
     queries: dict[str, GovernedFactQuery] = {}
     for fact in catalogue.facts.values():
-        windows = fact.materialized_windows()
+        windows = fact.materialized_windows(envelope)
         query_type = _FACT_QUERY_TYPES[fact.family]
         for variant in fact.variants:
             window = windows[variant.variant_id]
+            effective_date = max(window.valid_from, envelope.floor)
+            if (window.valid_to is not None and window.valid_to < effective_date) or not envelope.admits_coordinate(
+                effective_date
+            ):
+                continue
             filing_year = period = None
             selector = variant.period_selector
             if selector is not None:
@@ -838,7 +844,7 @@ def _fact_queries(authority: ValidatedRegistryAuthority) -> tuple[GovernedFactQu
             query = query_type(
                 fact_id=fact.fact_id,
                 date_axis=variant.date_axis,
-                effective_date=window.valid_from,
+                effective_date=effective_date,
                 selectors=variant.selectors,
                 filing_year=filing_year,
                 period=period,

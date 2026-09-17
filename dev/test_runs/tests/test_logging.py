@@ -9,25 +9,46 @@ import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
-from types import SimpleNamespace
+from typing import IO
 
 import pytest
 
 from dev._paths import REPO_ROOT
-from dev.test_runs.logging import _redirect_collection_output
+from dev.test_runs.logging import RunLog, _redirect_collection_output
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.serial]
+
+
+class _FakeTerminalWriter:
+    """A stand-in for the terminal reporter's underlying writer."""
+
+    def __init__(self, file: StringIO) -> None:
+        self._file: StringIO = file
+
+
+class _FakeTerminalReporter:
+    """A stand-in for the ``terminalreporter`` plugin, exposing only ``_tw``."""
+
+    def __init__(self, file: StringIO) -> None:
+        self._tw = _FakeTerminalWriter(file)
+
+
+class _FakeRunLog(RunLog):
+    """A run-log stand-in carrying only the stream ``_redirect_collection_output`` writes to."""
+
+    def __init__(self, stream: IO[str]) -> None:
+        self.stream = stream
 
 
 def test_collect_only_terminal_output_is_redirected_to_the_run_log(tmp_path: Path) -> None:
     transcript = (tmp_path / "run.log").open("w", encoding="utf-8")
     console = StringIO()
-    terminal = SimpleNamespace(_tw=SimpleNamespace(_file=console))
-    config = SimpleNamespace(
-        option=SimpleNamespace(collectonly=True),
-        pluginmanager=SimpleNamespace(getplugin=lambda name: terminal if name == "terminalreporter" else None),
-    )
-    run_log = SimpleNamespace(stream=transcript)
+    terminal = _FakeTerminalReporter(console)
+    pluginmanager = pytest.PytestPluginManager()
+    pluginmanager.register(terminal, name="terminalreporter")
+    config = pytest.Config(pluginmanager)
+    config.option.collectonly = True
+    run_log = _FakeRunLog(transcript)
 
     assert _redirect_collection_output(config, run_log)
     terminal._tw._file.write("<Module noisy_collection.py>\n")

@@ -1077,7 +1077,7 @@ def _rate_tier_contradiction(
     """
     projected = resolve_iva_classification_inputs(effective_date=effective_date, operation=operation)
     expected_tier = rate_kind_for_domestic_category(declared, mapping=projected.rate_categories)
-    if expected_tier is None or rate_tier is None or expected_tier is rate_tier:
+    if expected_tier is None or rate_tier is None or expected_tier == rate_tier:
         return ""
     return (
         f"the document's record declares the IVA treatment {declared.value!r}, which is charged at the "
@@ -1322,7 +1322,7 @@ def resolve_ingestion_iva_category(
         )
     if classified is None:
         return IvaCategoryResolution(outcome=IvaCategoryOutcome.DECLARED, category=stated, declared=stated_fact)
-    if classified is stated:
+    if classified == stated:
         return IvaCategoryResolution(
             outcome=IvaCategoryOutcome.CORROBORATED,
             category=stated,

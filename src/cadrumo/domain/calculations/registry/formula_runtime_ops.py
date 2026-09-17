@@ -541,7 +541,11 @@ def read_parameter(
     try:
         revision = operation.revision(modelo_id, str(revision_id))
     except RegistrySnapshotError as exc:
-        raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the indexed authority") from exc
+        if modelo_id not in operation.modelo_ids():
+            raise RegistryValidationError(f"modelo {modelo_id!r} is not registered in the indexed authority") from exc
+        raise RegistryValidationError(
+            f"modelo {modelo_id!r} has no revision {str(revision_id)!r} in the indexed authority"
+        ) from exc
     parameter = next((p for p in revision.parameters if p.id == parameter_id), None)
     if parameter is None:
         raise RegistryValidationError(

@@ -25,6 +25,7 @@ from pydantic import Field, NonNegativeInt, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
@@ -86,6 +87,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     grand_total_eur: NonNegativeDecimal | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_counterparty_identity(self) -> Self:
         """Reuse the rich invoice identity validators for the wire projection.
 

@@ -20,7 +20,7 @@ from ..schema_exports import (
     FilingEnvelopeTotalDerivation,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 #: Every refusal below arrives as a pydantic ``ValidationError``: the model's own
 #: ``model_validator`` raises :class:`RegistryValidationError`, which is a

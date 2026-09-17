@@ -29,7 +29,7 @@ from ..command_spec import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def test_participation_verb_declares_subject_argument() -> None:

@@ -936,6 +936,11 @@ modelo:
             help: 'A Modelo 390 661. casilla adóügyi adatai: adóügyi információ.'
             label: Jogerős közigazgatási határozat vagy bírósági ítélet alapján, már
               nem hatályos kulcsokkal levonható ÁFA - levonható adóösszeg
+          iva-importacion-diferimiento:
+            help: 'A Modelo 390 659. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+              [659].'
+            label: Éves elszámolás eredménye - A vámhatóság által kivetett import-áfa
+              (csak halasztott fizetést választó adóalanyoknál) [659]
           iva-isp-interior-base:
             help: 'Tekintse át a casilla adatait: Adóalap IVA autorepercutido en ügyletek
               interiores -val/-vel fordított adózás.'
@@ -943,11 +948,6 @@ modelo:
           iva-isp-interior-cuota:
             help: 'A Modelo 390 28. casilla adóügyi adatai: adóügyi információ.'
             label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
-          iva-iva-importacion-diferimiento:
-            help: 'A Modelo 390 659. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [659].'
-            label: Éves elszámolás eredménye - A vámhatóság által kivetett import-áfa
-              (csak halasztott fizetést választó adóalanyoknál) [659]
           iva-liquidaciones-total-a-ingresar:
             help: 'A Modelo 390 95. casilla adóügyi adatai: adóügyi információ.'
             label: Az évi ÁFA-önadózások alapján fizetendő összegek összesen

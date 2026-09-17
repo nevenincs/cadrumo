@@ -61,7 +61,10 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
 
 
 def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
-    """The product distribution ships exactly its canonical human CLI."""
+    """The distribution ships exactly its human CLI and the bundled MCP harness server."""
     pyproject = parse_toml((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints.cli.bootstrap:main"}
+    assert pyproject["project"]["scripts"] == {
+        "aeat": "cadrumo.entrypoints.cli.bootstrap:main",
+        "cadrumo-mcp": "cadrumo_harness.mcp.main:main",
+    }

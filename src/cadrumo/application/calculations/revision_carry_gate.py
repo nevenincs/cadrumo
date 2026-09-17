@@ -34,6 +34,7 @@ from dataclasses import dataclass
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.temporal import select_authored_revision_metadata
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,9 +75,11 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
+        # A carried prior filing may predate the supported filing floor; the law
+        # still selected a design for it, so the envelope is not applied here.
         selected_revision_id = str(
-            operation.revision_for_context(
-                str(snapshot_ref.modelo),
+            select_authored_revision_metadata(
+                operation.modelo_directory(str(snapshot_ref.modelo)),
                 filing_year=int(snapshot_ref.modelo_year),
                 period=str(snapshot_ref.period),
             ).id

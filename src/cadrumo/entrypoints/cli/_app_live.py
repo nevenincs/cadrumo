@@ -59,7 +59,7 @@ from ...application.live.remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from ...application.operator_actions.models import ActionReference
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
@@ -833,7 +833,7 @@ async def _run_process_inventory_command(
         ) from None
     returncode = process.returncode
     if returncode is None:
-        raise RuntimeError("the process inventory command did not finish after communicate()")
+        raise InternalInvariantError("the process inventory command did not finish after communicate()")
     if text:
         output = _decode_process_output(stdout, text=True)
         error = _decode_process_output(stderr, text=True)

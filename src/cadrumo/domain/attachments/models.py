@@ -151,12 +151,14 @@ class Attachment(BaseModel):
 
     @field_validator("attachment_id")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_attachment_id(cls, value: str) -> str:
         """Enforce the 64-char lowercase hex shape for catalogue keys."""
         return _normalize_hex_digest(value, field_name="attachment_id")
 
     @field_validator("sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_sha256(cls, value: str) -> str:
         """Enforce the 64-char lowercase hex shape for the byte digest."""
         return _normalize_hex_digest(value, field_name="sha256")
@@ -193,6 +195,7 @@ class Attachment(BaseModel):
 
     @field_validator("notes")
     @classmethod
+    @pydantic_validation_boundary
     def _normalize_notes(cls, value: str) -> str:
         """Trim stored notes while allowing the empty string."""
         return value.strip()
