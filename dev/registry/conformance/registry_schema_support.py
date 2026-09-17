@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..compiler.authority import compile_registry_tree, compiled_bundled_authority
+from ..compiler.authority import compiled_bundled_authority
 
 __all__ = [
     "NUMERIC_CASILLA_01",
@@ -48,10 +48,16 @@ NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="NUMERIC_CASI
 
 @cache
 def committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    """Return the compiled bundled registry tree and its catalogues."""
-    # The compiled tree, so validation sees the governed facts and supplements
-    # the authority itself validates against, not the raw loader's catalogues.
-    return compile_registry_tree(_REGISTRY_ROOT, bundled_path())
+    """Return the compiled bundled registry tree and its catalogues.
+
+    Taken FROM the validated authority rather than compiled a second time. The
+    inputs are identical, so a separate compile produced an equal graph of
+    different objects, and the validator's per-modelo and catalogue memos key on
+    object identity: every consumer of this doorway then re-validated what the
+    authority had already validated in the same process.
+    """
+    authority = compiled_bundled_authority()
+    return authority.modelos, authority.catalogues
 
 
 @cache

@@ -197,6 +197,7 @@ def validate_authority_candidate(
         identity=identity,
         profile_schema_path=resolved_profile_schema,
         captured_profile_schema=captured_profile,
+        verify_evidence_bytes=True,
     )
     receipt_after = _capture_receipt(
         resolved_registry_root,

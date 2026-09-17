@@ -15,6 +15,7 @@ import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from enum import StrEnum
+from functools import cache
 from pathlib import Path
 from typing import Annotated, Literal, cast
 
@@ -252,6 +253,7 @@ def prepare_generated_tree_invocation(
     )
 
 
+@cache
 def supporting_modelos(modelo: str) -> frozenset[str]:
     """Return declared cross-modelo dependencies that isolated validation needs."""
     modelos_root = bundled_path("registry", "aeat", "modelos")
