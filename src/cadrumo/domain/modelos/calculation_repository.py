@@ -42,13 +42,19 @@ def upsert_calculation_revision(
     Args:
         catalogue: Source catalogue to update.
         revision: The :class:`CalculationRevision` to insert or replace.
-        aggregate_context: Joined authorities required when the catalogue contains
-            a context-bound rectificativa revision.
+        aggregate_context: Joined authorities required when ``revision`` is a
+            context-bound rectificativa revision.
     """
     mapping = dict(catalogue.revisions)
     mapping[revision.calculation_revision_id] = revision
     if aggregate_context is None:
-        return CalculationRevisionCatalogue(revisions=mapping)
+        if revision.amendment_identity is not None:
+            # An amendment is validated with the catalogue; refused here unless it needs no joined authority.
+            return CalculationRevisionCatalogue(revisions=mapping)
+        # The carried revisions were validated, with their joined authorities,
+        # when the catalogue was loaded; rebuilding it would re-run that
+        # validation without them. Each stays keyed by its own id.
+        return catalogue.model_copy(update={"revisions": mapping})
     from .calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY
 
     return CalculationRevisionCatalogue.model_validate(
