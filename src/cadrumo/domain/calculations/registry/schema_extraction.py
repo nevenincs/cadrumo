@@ -13,14 +13,15 @@ reference closure and evidence sufficiency before
 :class:`~domain.calculations.registry.schema.RegistrySnapshot` exposes the profiles to
 application and adapter consumers.
 
+Registry-build validation checks casilla, export-field, legal, and source
+closure for each profile, together with artefact kind, dotted parser, bbox
+anchor, specimen, and round-trip conformance for these contracts.
+
 See Also:
     :class:`~domain.calculations.registry.schema.ModeloRevision`
         Revision record that owns committed extraction-profile rows.
     :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         Validated filing-context view that exposes extraction profiles by id.
-    Registry-build validation checks casilla, export-field, legal, and source
-    closure for each profile, together with artefact kind, dotted parser, bbox
-    anchor, specimen, and round-trip conformance for these contracts.
     :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`
         Target casilla metadata each extraction target must reference.
     :class:`~domain.calculations.registry.schema_references.LegalReference`

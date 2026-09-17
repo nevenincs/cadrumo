@@ -133,6 +133,8 @@ class BucketEventType(StrEnum):
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
     MODELO_FILING_RECONCILED = "modelo.filing.reconciled"
+    MODELO_OBSERVATION_OVERRIDDEN = "modelo.observation.overridden"
+    MODELO_OBSERVATION_OVERRIDE_CLEARED = "modelo.observation.override_cleared"
     MODELO_LIVE_EVIDENCE_STAMPED = "modelo.live_evidence.stamped"
     MODELO_LEDGER_EVIDENCE_RECAPTURED = "modelo.ledger_evidence.recaptured"
     MODELO_RECONCILED = "modelo.reconciled"
