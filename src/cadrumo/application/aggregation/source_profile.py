@@ -1,9 +1,9 @@
 """Source-mesh resolver for user-profile backed registry bindings.
 
-Owns :attr:`~core.BindingSourceKind.PROFILE` and returns the
+Owns :attr:`~core.aggregation.BindingSourceKind.PROFILE` and returns the
 profile-sourced values as a :class:`~.source_mesh.CalculationSourceResolution`.
 Accepts an optional
-:class:`~domain.calculations.registry.RegistrySnapshot` at construction;
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` at construction;
 when none is supplied the resolver fetches the matching snapshot lazily from the
 resident registry authority at resolution time.
 """

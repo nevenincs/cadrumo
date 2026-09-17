@@ -9,13 +9,13 @@ See Also:
     :mod:`~application.foreign_asset_thresholds`
         Resolves the per-bloque declaration floors and re-declaration deltas
         from the effective registry revision.
-    :class:`~domain.calculations.registry.RegistryModeloObservation`
+    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation`
         Registry-grounded observation envelope accepted as prior, current, and
         current-declaration evidence.
-    :mod:`~application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity`
+    ``application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity``
         Exercises the Modelo 720 prior-year baseline advisory path with real
         observations across two filing years.
-    :mod:`~application.calculations.tests.test_modelo_721_cripto_extranjero_fidelity`
+    ``application.calculations.tests.test_modelo_721_cripto_extranjero_fidelity``
         Exercises the Modelo 721 token baseline sibling through the same
         advisory mechanism.
 """

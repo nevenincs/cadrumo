@@ -263,8 +263,8 @@ def test_dana_fact_is_authored_inside_and_at_the_edges_of_its_legal_window(
 
 
 @pytest.mark.parametrize("effective_date", [date(2024, 11, 12), date(2025, 1, 1), date(2025, 12, 31)])
-def test_dana_fact_outside_its_declared_hard_bounds_refuses(authority_operation, effective_date: date) -> None:
-    with pytest.raises(RegistryValidationError, match="outside its hard support boundaries"):
+def test_dana_fact_outside_its_explicit_legal_window_refuses(authority_operation, effective_date: date) -> None:
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         _resolve_dana_fact(authority_operation, effective_date)
 
 

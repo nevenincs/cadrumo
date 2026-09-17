@@ -19,14 +19,14 @@ so the domain never imports the Sede adapter. This module orchestrates
 source-mesh resolution around that pure decision.
 
 Binding resolution reads its active revision through a
-:class:`~domain.calculations.registry.RegistrySnapshot` supplied via the
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` supplied via the
 source mesh context.
 
 See Also:
     :func:`~._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`
         Reconstructs the local Modelo 303 recurrence compared with wallet
         evidence.
-    :class:`~application.aggregation.CalculationSourceResolution`
+    :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
         The source-mesh envelope produced by
         :class:`~application.calculations.iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 """
@@ -96,7 +96,7 @@ class IvaWalletDecisionSourceResolver:
     Owns ``iva_wallet_decision`` and materialises the
     ``modelo-303-compensacion-pendiente-anteriores`` binding from a persisted
     :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
-    The returned :class:`~application.aggregation.CalculationSourceResolution`
+    The returned :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
     carries the selected amount plus provenance for every authority source that
     participated in the wallet/filed-history/local-recurrence decision.
     """
@@ -115,7 +115,7 @@ class IvaWalletDecisionSourceResolver:
         Returns:
             An empty resolution when the modelo is not Modelo 303 or no
             decision was supplied, otherwise the resolved
-            :class:`~application.aggregation.CalculationSourceResolution`
+            :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
             carrying the selected amount and its provenance.
 
         Raises:
@@ -262,7 +262,7 @@ def reconcile_modelo_303_iva_compensation(
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
 
     The function validates wallet evidence against the target
-    :class:`~domain.calculations.registry.RegistrySnapshot`, reconstructs local recurrence through
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`, reconstructs local recurrence through
     :func:`~._binding_prefill.extract_modelo_303_local_iva_compensation_recurrence`,
     delegates authority selection to
     :func:`~domain.iva_compensation.reconciliation.reconcile_iva_compensation_wallet`,
@@ -272,7 +272,7 @@ def reconcile_modelo_303_iva_compensation(
     ``persist`` is true.
 
     Args:
-        snapshot: The :class:`~domain.calculations.registry.RegistrySnapshot`
+        snapshot: The :class:`~domain.calculations.registry.schema.RegistrySnapshot`
             identifying the Modelo 303 target revision.
         taxpayer_nif: Taxpayer identifier expected to match live wallet evidence.
         wallet: Live AEAT wallet observation to reconcile, when available.

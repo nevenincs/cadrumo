@@ -609,6 +609,7 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
 
     # The ledger carries none of the invoice's cuota, so withholding it silently
     # would under-declare; the filing is refused and names the invoice.
+    assert refusal.value.context is not None
     assert refusal.value.context["reason"] == "invoice_deduction_authority_missing_from_transaction_ledger"
     assert refusal.value.context["invoice_ids"] == (invoice.invoice_id,)
     assert refusal.value.context["invoice_cuota_exceeding_ledger"] == "21.00"

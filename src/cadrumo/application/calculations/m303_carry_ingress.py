@@ -254,7 +254,7 @@ class M303CarryIngressError(_M303CarryIngressErrorMixin, CoreValidationError):
     """Modelo 303 carry evidence was insufficient or internally contradictory.
 
     A refusal reporting two sources of the same declared amount that disagree
-    attaches a SAFETY :class:`~application.operator_actions.PreconditionVerdict`,
+    attaches a SAFETY :class:`~application.operator_actions.models.PreconditionVerdict`,
     because choosing either side silently changes the compensación the taxpayer
     carries forward. An evidence-incomplete refusal carries no verdict: the
     operator fixes it by supplying the missing evidence.

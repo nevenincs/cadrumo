@@ -9,7 +9,7 @@ prior filed under the wrong revision injects that revision's norms into every
 later filing that folds it in. The carry read therefore re-confirms each
 carried observation's ``stamped_revision_id`` against the law-determined
 revision for its source context
-(:meth:`~domain.calculations.registry.ValidatedRegistryAuthority.inspect_revision`,
+(:meth:`~domain.calculations.registry.authority.ValidatedRegistryAuthority.inspect_revision`,
 which resolves the same law-determined revision selection without demanding
 filing-grade admission -- this gate answers "which revision does the law
 select", never "may this be filed") before trusting the value.
@@ -19,7 +19,7 @@ re-confirmation, not three parallel copies that can drift across the carry
 sites that use it.
 
 See Also:
-    :func:`~application.calculations._binding_prefill.resolve_bindings_from_local_store`
+    :func:`~application.calculations.binding_prefill.resolve_bindings_from_local_store`
         Previous-filing binding reader that drops unreconfirmable carries.
     :func:`~application.calculations.relation_prefill.resolve_relations_from_local_store`
         Relation-prefill reader that applies the same revision-stamp gate.

@@ -63,7 +63,7 @@ def test_published_reduction_is_refused_after_2024(
     authority_operation: PinnedAuthorityOperation,
     effective_date: date,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match="outside its hard support boundaries"):
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
         authority_operation.resolve_governed_fact(_dana_query(effective_date))
 
 

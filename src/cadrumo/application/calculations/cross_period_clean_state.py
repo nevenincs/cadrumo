@@ -82,9 +82,9 @@ def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[Cr
     Derives
     :class:`~application.calculations.cross_period_models.CrossPeriodDependencyRequirement`
     records from :class:`RegistrySnapshot` through
-    :func:`~domain.calculations.registry.previous_filing_observation_requirements`
+    :func:`~domain.calculations.registry.bindings_previous_filing.previous_filing_observation_requirements`
     and
-    :func:`~domain.calculations.registry.relation_source_requirements`.
+    :func:`~domain.calculations.registry.relations.relation_source_requirements`.
     """
     requirements: dict[
         tuple[str, int, str, CrossPeriodDependencyOrigin, tuple[str, ...]],
@@ -673,7 +673,7 @@ def evaluate_cross_period_clean_state(
     caller decides whether a missing declared date should fail closed.
 
     ``modelo_202_modality`` is the derived Modelo 202 pago-fraccionado modality
-    (:func:`~domain.calculations.registry.derive_modelo_202_modality`). When it
+    (:func:`~domain.calculations.registry.applicability_modelo202.derive_modelo_202_modality`). When it
     is ``ART_40_2_OPTIONAL`` (modalidad cuota) AND the recorded
     ``activity_start_date`` places the taxpayer's first IS year at or after the
     target filing year, the Modelo 202 cross-period dependency is scoped out as a

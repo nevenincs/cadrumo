@@ -83,7 +83,7 @@ class SourceMeshError(CoreValidationError):
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so
     callers receive a typed, registry-bound, localized error. Its canonical
-    registered ancestry is :class:`~core.errors.CoreValidationError`; pydantic
+    registered ancestry is :class:`~core.errors.hierarchy.CoreValidationError`; pydantic
     field validators translate it to ``ValueError`` at their narrow boundary.
     """
 
@@ -417,7 +417,7 @@ class CompositeSourceResolverId(StrEnum):
 class CalculationSourceContext(BaseModel):
     """Context supplied to a calculation source resolver.
 
-    The ``period`` field is the typed :class:`~core.Period` value
+    The ``period`` field is the typed :class:`~core.period.Period` value
     carrying both the filing year and the bare registry period code.  Consumers
     that need the raw token for a downstream ``str``-typed API should use
     ``context.period.registry_token``; those that need only the year can use
@@ -559,7 +559,7 @@ class CalculationSourceDiagnostic(BaseModel):
     refs are frequently coarser than it.
 
     Every id here is validated at registry build to resolve to a
-    :class:`~domain.calculations.registry.LegalReference` catalogue entry --
+    :class:`~domain.calculations.registry.schema_references.LegalReference` catalogue entry --
     the check a prose-only message could never carry. Declaring an id here is a
     TAX REVIEW against the provision the message states, never a mechanical
     derivation from a casilla or binding already in hand: copying the
@@ -782,7 +782,7 @@ class CalculationSourceResolution(BaseModel):
     descendientes" and "this taxpayer's figure is zero euros" arrive
     indistinguishable, and the second is a filing-grade amount the first never
     asserted. A binding whose contract declares
-    :attr:`~domain.calculations.registry.BindingValueChannel.BOOLEAN` travels
+    :attr:`~domain.calculations.registry.binding_value_contract.BindingValueChannel.BOOLEAN` travels
     here or it does not travel; a Decimal arriving for that contract, or a truth
     value arriving on the Decimal channel, is refused rather than coerced.
     """
@@ -823,7 +823,7 @@ class CalculationSourceResolution(BaseModel):
     def _coerce_owned_sources(cls, value: object) -> object:
         """Hydrate known bare source-token strings to their :class:`BindingSourceKind` member.
 
-        The model carries :data:`~core.STRICT_FROZEN_CONFIG` (``strict=True``),
+        The model carries :data:`~core.models.STRICT_FROZEN_CONFIG` (``strict=True``),
         which disables string→enum coercion. Resolvers declare their owned source as a
         canonical token and may pass either the member or its bare string value; this
         before-validator maps each KNOWN bare string to its member (the

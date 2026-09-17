@@ -2,7 +2,7 @@
 
 Used by: :mod:`application.modelo._ledger_drift_gate` for the calculate-time
 staleness refusal, :mod:`entrypoints.cli._ledger_read_cli` for the stale-revision
-listing, and :mod:`application.modelo._verification_actions` for the Modelo 303
+listing, and :mod:`application.modelo.verification_actions` for the Modelo 303
 deductible-evidence verify gate.
 
 That list names the callers as they stand and is not a guarantee that no other
@@ -14,7 +14,7 @@ and had every reason to conclude the enforcement did not exist.
 The pure records live in :mod:`domain.modelos.ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
 computing a contributor's content fingerprint from the live
-:class:`~domain.transactions.TransactionCatalogue`, building a
+:class:`~domain.transactions.models.TransactionCatalogue`, building a
 :class:`~domain.modelos.ledger_filing_snapshot.LedgerFilingSnapshot` for a
 :class:`~domain.modelos.calculation_revision.CalculationRevision`'s ``source_transaction_ids``,
 and evaluating drift between a filed snapshot and the current ledger state.

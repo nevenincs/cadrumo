@@ -2,11 +2,11 @@
 
 Bridges the domain maritime exemption engine with the application observation
 pipeline. The service accepts resolved
-:class:`~domain.renta._maritime_exemption.MaritimeWorkerFacts` and income
+:class:`~domain.renta.maritime_exemption.MaritimeWorkerFacts` and income
 inputs, evaluates the Art. 7.p) and REBECA selectors, delegates calculation to
-:func:`~domain.renta._maritime_exemption.calculate_art_7p_exemption` and
-:func:`~domain.renta._maritime_exemption.calculate_rebeca_exemption`, and
-returns typed :class:`~domain.calculations.registry.CasillaObservation`
+:func:`~domain.renta.maritime_exemption.calculate_art_7p_exemption` and
+:func:`~domain.renta.maritime_exemption.calculate_rebeca_exemption`, and
+returns typed :class:`~domain.calculations.registry.bindings.CasillaObservation`
 rows alongside a derived flat ``casilla_values`` mapping.
 
 The flat mapping is for human readability; the typed observation tuple is the
@@ -34,7 +34,7 @@ Error handling::
   RentaValidationError            - input validation failed
 
 Callers are responsible for catching
-:class:`~domain.renta._maritime_exemption.ProfileCompletenessError`,
+:class:`~domain.renta.maritime_exemption.ProfileCompletenessError`,
 surfacing its message to the operator, and continuing processing. It is not a
 blocking calculation error.
 """
@@ -68,7 +68,7 @@ class MaritimeExemptionResult(BaseModel):
     """Typed result for a maritime worker exemption resolution.
 
     Carries the ordered tuple of
-    :class:`~domain.calculations.registry.CasillaObservation` rows with
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` rows with
     full legal/source provenance and a derived flat mapping for human
     readability. The ``observations`` field is the canonical contract; callers
     must not persist or transmit only the flat ``casilla_values`` view.
@@ -86,7 +86,7 @@ class MaritimeExemptionResult(BaseModel):
         Returns a ``Mapping[CasillaId, Decimal]`` for display and operator
         preview paths. The canonical storage is ``observations``; this view
         must not be used for persistence or wire payloads because it omits
-        :class:`~domain.calculations.registry.CasillaObservation`
+        :class:`~domain.calculations.registry.bindings.CasillaObservation`
         provenance.
         """
         return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
@@ -105,23 +105,23 @@ def resolve_maritime_exemption(
     """Resolve the applicable maritime exemption pathway and produce typed observations.
 
     Evaluates
-    :func:`~domain.renta._maritime_exemption.art_7p_eligible` and
-    :func:`~domain.renta._maritime_exemption.rebeca_eligible` in order.
+    :func:`~domain.renta.maritime_exemption.art_7p_eligible` and
+    :func:`~domain.renta.maritime_exemption.rebeca_eligible` in order.
     For each eligible pathway the corresponding domain calculation function is
     called and its
-    :class:`~domain.calculations.registry.CasillaObservation` is appended
+    :class:`~domain.calculations.registry.bindings.CasillaObservation` is appended
     to the result.
 
     The DA 41 inactive guard runs before any calculation: if the DA 41 selector
     resolves true (currently when ``tuna_fleet`` and ``pending_eu_clearance``
     are both set on a trabajador del mar profile),
-    :class:`~domain.renta._maritime_exemption.MaritimeExemptionInactiveError`
+    :class:`~domain.renta.maritime_exemption.MaritimeExemptionInactiveError`
     is raised and no observations are produced.
 
     The RETMAR mandatory-filing gate is checked independently through
-    :func:`~domain.renta._maritime_exemption.check_retmar_mandatory_filing`.
+    :func:`~domain.renta.maritime_exemption.check_retmar_mandatory_filing`.
     When ``retmar_registered`` is true,
-    :class:`~domain.renta._maritime_exemption.ProfileCompletenessError` is
+    :class:`~domain.renta.maritime_exemption.ProfileCompletenessError` is
     raised. Callers should catch it, surface the message to the operator, and
     continue processing. The gate does not suppress exemption calculations.
 

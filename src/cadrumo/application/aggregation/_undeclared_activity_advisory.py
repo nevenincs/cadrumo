@@ -24,7 +24,7 @@ is declared for any of it.
 Grounded from the registry rather than from prose. The casilla's own
 ``legal_refs`` / ``source_refs`` and those of the binding that feeds it ride the
 diagnostic as typed data, read off the
-:class:`~domain.calculations.registry.ModeloRevision` the resolver already holds.
+:class:`~domain.calculations.registry.schema.ModeloRevision` the resolver already holds.
 Restating an article here would mint a second, unversioned copy of grounding the
 registry owns, and would silently stop matching the moment a revision re-grounds
 the box.
@@ -111,7 +111,7 @@ def undeclared_activity_income_advisory_observations(
             :attr:`~.renta_income_ledger.RentaIncomeLedgerAggregation.unadmitted_activity_income`
             census measures what the narrowing kept out. ``None`` there means no
             narrowing ran and the advisory is silent.
-        revision: The :class:`~domain.calculations.registry.ModeloRevision` being
+        revision: The :class:`~domain.calculations.registry.schema.ModeloRevision` being
             calculated, read for the casilla and binding grounding the advisory
             carries. Never for a legal figure — the refs are identifiers, and the
             provisions behind them stay in the legal catalogue.

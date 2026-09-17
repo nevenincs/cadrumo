@@ -3,7 +3,7 @@
 One of three distinct prefill tiers, NOT to be merged: this is the
 RELATION tier (cross-revision aggregations declared as
 ``relation_prefill`` providers). The other two are the previous-filing
-direct-carry tier (:mod:`application.calculations._binding_prefill`)
+direct-carry tier (:mod:`application.calculations.binding_prefill`)
 and the AEAT borrador pre-fill tier (the registry ``aeat_prefilled`` flag,
 an AEAT-live source). Each names a different mechanism and source; they
 share only the word "prefill".
@@ -19,36 +19,36 @@ bindings declared on one :class:`ModeloRevision` directly:
    ``source_revision_selector``, ``source_periods``, ``source_casilla_id``,
    and ``aggregation.op``.
 2. Scanning the local
-   :class:`~application.calculations.CalculationObservationRepositoryProtocol`
+   :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
    for prior :class:`RegistryModeloObservation` filings matching the source
    quadruple.
 3. Folding the source filings' casilla values through the declared
    aggregation op (``sum``, ``copy``).
 4. Returning a
-   :class:`~application.storage.calc_sheets.RelationValues`
+   :class:`~application.storage.calc_sheets.records.RelationValues`
    record stamped with provenance the apply adapter writes onto the workbook
    so the pull adapter can detect stale prefills.
 
 When no prior filings exist for a relation, the resolver returns a
-:class:`~application.storage.calc_sheets.RelationValue` with
+:class:`~application.storage.calc_sheets.records.RelationValue` with
 ``value=None`` and ``provenance="operator_manual"`` so the engine emits a
 blank cell the operator must fill by hand.
 
 This is the local-tier prefill. The AEAT-live tier (parsing
 justificantes from Sede) lives in a separate adapter that produces
 the same
-:class:`~application.storage.calc_sheets.RelationValues`
+:class:`~application.storage.calc_sheets.records.RelationValues`
 shape; callers route between tiers based
 on the operator's preferences and the local store's coverage.
 
 See Also:
-    :class:`~application.calculations.RelationPrefillSourceResolver`
+    :class:`~application.calculations.relation_prefill.RelationPrefillSourceResolver`
         Source-mesh adapter that exposes resolved relations as
-        :class:`~application.aggregation.CalculationSourceResolution`.
-    :func:`domain.calculations.registry.relation_source_requirements`
+        :class:`~application.aggregation.source_mesh.CalculationSourceResolution`.
+    :func:`domain.calculations.registry.relations.relation_source_requirements`
         Registry authority that derives the source filings required by a
         relation.
-    :func:`domain.calculations.registry.relation_prefill_bindings_for_period`
+    :func:`domain.calculations.registry.relations.relation_prefill_bindings_for_period`
         Bridge from resolved relation values to declared ``relation_prefill``
         binding slots.
 """
@@ -139,7 +139,7 @@ def _gather_observations_for_snapshot(
     Uses the registry relation requirement resolver to compute the set of
     ``(source_modelo, filing_year, period)`` requirements, and pulls matching
     :class:`RegistryModeloObservation` rows from
-    :class:`~application.calculations.CalculationObservationRepositoryProtocol`.
+    :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`.
     Returns the union (deduplicated) so the runtime resolver can fold them
     through the declared aggregation in one pass. ``activity_start_date`` scopes
     out source periods strictly before the operator's activity start (a
@@ -327,7 +327,7 @@ def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
     """Parse a canonical decimal projection value, or ``None`` when absent / malformed.
 
     "Canonical" is now enforced rather than asserted: the projection value is
-    judged by :func:`~core.decimal.try_parse_canonical_decimal`, so a stored
+    judged by :func:`~core.decimal.grammar.try_parse_canonical_decimal`, so a stored
     token carrying scientific notation, a leading ``+``, a comma decimal, or
     ``NaN``/``Infinity`` resolves to ``None`` (absent) instead of a value whose
     numeric meaning is not what it appears. Fractional digits stay uncapped: a
@@ -714,9 +714,9 @@ def resolve_relations_from_local_store(
             leg to explicit zero instead of requiring fake zero filings.
 
     Returns a
-    :class:`~application.storage.calc_sheets.RelationValues`
+    :class:`~application.storage.calc_sheets.records.RelationValues`
     whose ``values`` tuple has one
-    :class:`~application.storage.calc_sheets.RelationValue` per
+    :class:`~application.storage.calc_sheets.records.RelationValue` per
     relation declared in the snapshot's revision, with provenance stamped per
     entry. Relations the local store cannot resolve get ``value=None`` and
     ``provenance="operator_manual"`` so the engine emits a blank cell the
@@ -1315,7 +1315,7 @@ class RelationPrefillSourceResolver:
 
     Resolves registry relations through :func:`resolve_relations_from_local_store`,
     materialises resolved relation values into declared target-binding slots, and
-    returns a :class:`~application.aggregation.CalculationSourceResolution`
+    returns a :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
     carrying relation values, binding values, diagnostics for unresolved formula
     relations, and provenance for local
     :class:`RegistryModeloObservation` filings.
@@ -1344,7 +1344,7 @@ class RelationPrefillSourceResolver:
         """Resolve ``relation_prefill`` values from the local store for ``context``.
 
         Returns:
-            The resolved :class:`~application.aggregation.CalculationSourceResolution`
+            The resolved :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
             carrying relation values, binding values, diagnostics for
             unresolved formula relations, and provenance for local filings.
         """

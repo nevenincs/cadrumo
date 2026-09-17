@@ -27,6 +27,8 @@ def calculation_registry_failure_verdict(
     failure: RegistryFailureClassification,
 ) -> PreconditionVerdict:
     """Resolve one domain calculation-registry fact record into typed policy."""
+    if not isinstance(failure.condition, RegistryFailureCondition):
+        raise ValueError(f"unclassified calculation-registry failure condition: {failure.condition}")
     condition_id = failure.condition.value
     facts = failure.facts
     if failure.condition in {

@@ -2,10 +2,10 @@
 
 This module is the calculation-facing bridge from bucket-local stores to
 :class:`~.source_mesh.CalculationSourceResolution`. Each resolver owns one
-:class:`~core.BindingSourceKind`, reads the active
+:class:`~core.aggregation.BindingSourceKind`, reads the active
 :class:`~.source_mesh.CalculationSourceContext`, and materialises binding
 values declared on the snapshot's
-:class:`~domain.calculations.registry.ModeloRevision`.
+:class:`~domain.calculations.registry.schema.ModeloRevision`.
 
 The IVA, Renta income, Renta expense, and M130 gasto resolvers delegate their
 ledger projection to :mod:`~.iva_ledger`, :mod:`~.renta_income_ledger`,

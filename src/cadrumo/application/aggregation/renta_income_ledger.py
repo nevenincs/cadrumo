@@ -6,7 +6,7 @@ applicability are supplied by the registry boundary by callers; no filing
 declaration is embedded here.
 
 The quarterly entry point :func:`aggregate_renta_income_ledger_from_repositories`
-loads a :class:`~domain.transactions.TransactionCatalogue` and its linked invoice
+loads a :class:`~domain.transactions.models.TransactionCatalogue` and its linked invoice
 catalogue through the application-owned catalogue read capabilities, then
 delegates to :func:`aggregate_renta_income_ledger` for period-scoped aggregation.
 
@@ -91,6 +91,16 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: Shortening the sentence is strictly the lesser loss.
 
 
+_DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset(
+    {
+        LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
+        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
+        LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
+    },
+)
+"""The markers that assert a real derived figure, so a zero beside one is a defect."""
+
+
 class RentaIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating income ledger rows."""
 
@@ -164,6 +174,31 @@ class RentaIncomeObservation(BaseModel):
             raise ValueError(
                 f"grounding {self.grounding.value!r} contradicts taxable_base_amount="
                 f"{self.taxable_base_amount!r}; expected {expected.value!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _withheld_derivation_matches_the_figure(self) -> Self:
+        """Refuse a marker that contradicts the figure beside it.
+
+        The marker exists so a zero can be read: a refused inference and a
+        genuine nothing-withheld are both ``Decimal("0")`` and mean opposite
+        things. An inference marker sitting on no figure, and a refusal
+        carrying the very figure it refused, would destroy that, so both are
+        refused here rather than trusted at each consumer.
+        """
+        if self.withheld_derivation in _DERIVED_WITHHOLDING_MARKERS and self.withheld_amount <= Decimal("0"):
+            raise ValueError(
+                f"withheld_derivation {self.withheld_derivation.value!r} claims a derived figure "
+                f"but withheld_amount is {self.withheld_amount}",
+            )
+        if (
+            self.withheld_derivation is LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE
+            and self.withheld_amount != Decimal("0")
+        ):
+            raise ValueError(
+                "a refused withholding inference must not carry the figure it refused; "
+                f"withheld_amount is {self.withheld_amount}",
             )
         return self
 
@@ -306,7 +341,7 @@ def aggregate_renta_income_ledger(
 
     Args:
         transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
-        invoices: The bucket's :class:`~domain.invoices.InvoiceCatalogue`, whose
+        invoices: The bucket's :class:`~domain.invoices.models.InvoiceCatalogue`, whose
             linked sales invoices supply the base, cuota and retención for rows
             that reference one. Optional so an in-process caller holding no
             invoices need not construct an empty catalogue; the production entry
@@ -541,7 +576,7 @@ def aggregate_renta_m131_agrario_income_ledger(
     Two filters separate this narrowed projection from an un-narrowed path, and
     both are supplied by the selected registry scope:
 
-    * **Activity.** Only rows whose declared :class:`~core.TipoActividad` are in
+    * **Activity.** Only rows whose declared :class:`~core.tipos_actividad.TipoActividad` are in
       the supplied activity-code set contribute. A row with no declared activity
       contributes NOTHING here — the opposite of the concept default below, and
       deliberately so. Silence about activity cannot mean "agrarian": routing an
@@ -549,7 +584,7 @@ def aggregate_renta_m131_agrario_income_ledger(
       filer's income, and the same row may be claimed by another projection.
       Under-filling a box the operator can still complete by hand
       is recoverable; mis-routing income between two boxes of one return is not.
-    * **Concept.** Rows whose :class:`~core.ConceptoIngreso` art. 110.1.c) excludes —
+    * **Concept.** Rows whose :class:`~core.concepto_ingreso.ConceptoIngreso` art. 110.1.c) excludes —
       subvenciones de capital and indemnizaciones — are dropped. An undeclared
       concept IS included, because an unmarked receipt is far more likely to be
       ordinary income than an exceptional one.

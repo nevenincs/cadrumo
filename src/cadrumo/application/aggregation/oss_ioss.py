@@ -5,8 +5,8 @@ through the required application-owned catalogue-read capability and projects
 them into substrate-classified :class:`OssIossLedgerCandidate`
 rows. Pre-classified callers can also pass candidates directly. Each candidate
 is validated against the destination Member State's published IVA rate through
-:func:`domain.iva.lookup_rate` and becomes a registry-ready
-:class:`~domain.calculations.registry.OssIossLedgerObservation`.
+:func:`domain.iva.lookup.lookup_rate` and becomes a registry-ready
+:class:`~domain.calculations.registry.ledger_oss_bindings.OssIossLedgerObservation`.
 
 Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen
@@ -103,7 +103,7 @@ class OssIossLedgerCandidate(BaseModel):
         invoice_direction: Whether the autónomo issued or received the
             invoice.
         transaction_kind: Substrate
-            :class:`domain.iva.TransactionKind` the line resolves
+            :class:`domain.iva.classification.TransactionKind` the line resolves
             to.
         base_amount: Taxable base in EUR. Must be non-negative.
         iva_amount: IVA amount in EUR persisted on the ledger. Must
@@ -573,7 +573,7 @@ def project_oss_ioss_invoices_from_repositories(
     """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
 
     Attribution is by the LIVA art. 75 devengo date through the shared
-    :func:`~application.aggregation.invoice_devengo_in_period` predicate, so an
+    :func:`~application.aggregation.invoice_devengo.invoice_devengo_in_period` predicate, so an
     operation performed in one quarter and invoiced in the next is declared in
     the quarter it was performed, and every path that folds invoices into a
     period answers that question the same way.
@@ -582,10 +582,6 @@ def project_oss_ioss_invoices_from_repositories(
         period: Filing period whose date span filters issued invoices.
         ports: Required application-owned catalogue read capabilities for the
             composed profile bucket.
-        operation: Existing generation-pinned authority operation. When omitted,
-            one indexed operation is opened at this composition boundary.
-        operation: Existing generation-pinned authority operation. When omitted,
-            one indexed operation is opened at this composition boundary.
 
     Returns:
         The candidates for the period beside the invoices they were projected
