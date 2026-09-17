@@ -35,11 +35,11 @@ _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 0, 0, tzinfo=UTC)
 def _make_filing(
     *,
     draft_id: str = "draft-abc123",
+    submission_id: str = "0123456789abcdef",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
-    submission_id = "0123456789abcdef"
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.{attempt_ordinal}",
         started_at=submitted_at,
@@ -60,7 +60,7 @@ def _make_filing(
 
 def _save_two_filings(repo: SubmissionRepository) -> tuple[ModeloPresentado, ModeloPresentado]:
     f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
-    f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
+    f2 = _make_filing(draft_id="d-2", submission_id="fedcba9876543210", attempt_ordinal=1)
     repo.save(f1)
     repo.save(f2)
     return f1, f2
