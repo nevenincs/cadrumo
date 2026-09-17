@@ -36,7 +36,7 @@ from ....domain.iva.classification import InvoiceKind
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateProviderPort
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "39393939-3939-4939-8939-393939393939"
 

@@ -30,6 +30,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .issuer_establishment import simplificada_requires_tax_id_for_domestic_issuer
 
@@ -86,8 +87,6 @@ def resolve_simplificada_tax_id_legal_refs(
         RegistryValidationError: If the fact does not resolve as a mapping or
             carries no provenance.
     """
-    from datetime import date
-
     from ...domain.calculations.registry.errors import RegistryValidationError
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
@@ -100,7 +99,7 @@ def resolve_simplificada_tax_id_legal_refs(
         MappingFactQuery(
             fact_id="invoice-simplificada-counterparty-tax-id-applicability",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

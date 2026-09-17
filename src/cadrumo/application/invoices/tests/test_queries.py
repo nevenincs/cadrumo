@@ -30,7 +30,7 @@ from ..catalogue_reads import verify_invoice_repository_links
 from ..catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..transaction_linking import link_invoice_transaction_catalogues
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_consistency_query_reports_one_sided_transaction_link() -> None:
@@ -135,7 +135,7 @@ def _invoice(
                         "quantity": Decimal("1"),
                         "unit_price": Decimal("100.00"),
                         "subtotal": Decimal("100.00"),
-                        "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
+                        "iva_rate": resolve_iva_rate_token("RATE_21", date.today()),
                         "iva_amount": Decimal("21.00"),
                     },
                 ),

@@ -22,7 +22,7 @@ import pytest
 
 from ..creation_wizard import _validate_iva_rate, _validate_taxable_base, _WizardFieldError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # Forms the bare constructor really does accept, asserted constructible in each
 # test so the coverage proves a tightening rather than restating the constructor.

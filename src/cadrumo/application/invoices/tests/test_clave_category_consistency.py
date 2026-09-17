@@ -21,7 +21,7 @@ from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_
 from ....domain.iva.schema import IvaCategory
 from ..source_resolver import iva_category_for_operation_type
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_every_publicly_declared_invoice_clave_round_trips_to_its_category() -> None:
