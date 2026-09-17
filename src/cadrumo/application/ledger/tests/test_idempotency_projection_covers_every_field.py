@@ -37,7 +37,7 @@ from ..actions_common import _command_idempotency_fields, _transaction_idempoten
 from ..actions_manual import _transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # The four command fields the projection deliberately omits, each with the reason
 # the projection's own docstring states. Transcribed here so a future author must

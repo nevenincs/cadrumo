@@ -38,7 +38,7 @@ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProt
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..m210_classification import resolve_m210_income_classification
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "13131313-1313-4313-8313-131313131313"
 _CODE = "01"

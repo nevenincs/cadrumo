@@ -37,7 +37,7 @@ from ..counterparty_establishment import (
 )
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)

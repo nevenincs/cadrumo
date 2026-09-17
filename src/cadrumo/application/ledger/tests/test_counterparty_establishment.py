@@ -391,9 +391,9 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
     with pytest.raises(CounterpartyEstablishmentConflictError) as raised:
         _confirm(repository, scope=IvaTerritorialScope.from_registry("es_mainland"))
 
-    message = str(raised.value)
-    assert IvaTerritorialScope.from_registry("es_canarias").value in message
-    assert IvaTerritorialScope.from_registry("es_mainland").value in message
+    context = raised.value.context
+    assert context["confirmed_scope"] == IvaTerritorialScope.from_registry("es_canarias").value
+    assert context["asserted_scope"] == IvaTerritorialScope.from_registry("es_mainland").value
 
     resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,

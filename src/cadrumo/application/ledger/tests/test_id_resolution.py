@@ -22,7 +22,7 @@ from ..id_resolution import (
     resolve_transaction_id,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _ID_A = "a" * 64

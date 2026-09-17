@@ -27,7 +27,7 @@ from ..source_jurisdiction import (
     resolve_source_jurisdiction,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_a_declared_resident_defaults_to_spain() -> None:

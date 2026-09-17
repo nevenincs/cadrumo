@@ -32,7 +32,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from .. import actions_common
 from ..actions_common import mutation_signature
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: The one field the signature may omit. ``classified_by`` is provenance a write
 #: stamps rather than a value the operator set, so comparing it would make every

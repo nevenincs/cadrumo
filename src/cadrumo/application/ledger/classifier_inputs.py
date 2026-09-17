@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.iva_schema_vocabulary import require_iva_regime
 
@@ -81,6 +82,7 @@ class ClassifierInputFact(BaseModel):
     authority: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _each_source_carries_only_its_own_backing(self) -> Self:
         """Refuse a fact backed the wrong way for its source.
 
@@ -134,6 +136,7 @@ class ClassifierInputs(BaseModel):
     facts: tuple[ClassifierInputFact, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_filer_regime_registry_membership(self) -> ClassifierInputs:
         if self.filer_iva_regime is not None:
             require_iva_regime(self.filer_iva_regime)

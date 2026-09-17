@@ -42,7 +42,7 @@ from ....domain.iva.prorrata import InputClassification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..models import ManualLedgerTransactionCommand
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _populated_command() -> ManualLedgerTransactionCommand:

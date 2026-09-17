@@ -10,6 +10,7 @@ from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -73,6 +74,7 @@ class OperatorIvaDerivationResult(BaseModel):
     result: ManualLedgerTransactionResult | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _substrate_matches_derivability(self) -> Self:
         substrate = (self.iva_rate, self.taxable_base, self.iva_amount, self.result)
         if self.derivable and any(value is None for value in substrate):

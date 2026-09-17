@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.classification import (
@@ -221,7 +222,7 @@ def domestic_rate_tier_is_reachable(
     """
     if issuer_scope is None or customer_scope is None:
         return False
-    coordinate = effective_date or date.today()
+    coordinate = effective_date or today_madrid()
     kinds = (
         (transaction_kind_for_nature(supply_nature, effective_date=coordinate, operation=operation),)
         if supply_nature is not None

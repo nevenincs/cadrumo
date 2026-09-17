@@ -40,6 +40,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
 from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
@@ -111,6 +112,7 @@ class SourceJurisdictionResolution(BaseModel):
     jurisdiction: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_jurisdiction_exists_exactly_when_the_outcome_produces_one(self) -> Self:
         """Refuse a resolution whose value disagrees with its own outcome.
 

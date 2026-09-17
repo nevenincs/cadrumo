@@ -7,8 +7,8 @@ like a photograph of a receipt. The most exactly readable document in the corpus
 took the least exact path, decided by a label.
 
 ``DocumentShape`` is probed from the bytes themselves. These assertions pin the
-division: every READ-time decision consults the shape, and the two-member media
-kind survives only where it belongs, on the storage manifest.
+division: every READ-time decision consults the shape, and no read path
+branches on the two-member media kind.
 
 Structural rather than behavioural, because a caller that re-derives the routing
 from ``media_kind`` still produces correct output for the two easy cases and
@@ -28,11 +28,6 @@ from ....core.document_shape import PDF_CONTAINER_SHAPES, DocumentShape
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LEDGER = Path("src/cadrumo/application/ledger")
-
-#: The one module where a ``MediaKind`` comparison is still correct: it maps the
-#: kind onto the attachment manifest's own taxonomy at WRITE time, which is a
-#: storage classification rather than a reading decision.
-_STORAGE_SIDE_MODULES = {"evidence.py"}
 
 
 def _media_kind_comparisons(tree: ast.AST) -> list[int]:
@@ -77,7 +72,7 @@ def test_no_read_path_branches_on_the_two_member_media_kind() -> None:
     offences: list[str] = []
     scanned = 0
     for path in scan_directory(_LEDGER, pattern="*.py", recursive=True):
-        if path.name.startswith("test_") or path.name in _STORAGE_SIDE_MODULES:
+        if path.name.startswith("test_"):
             continue
         scanned += 1
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -87,24 +82,6 @@ def test_no_read_path_branches_on_the_two_member_media_kind() -> None:
     assert offences == [], (
         "read-time routing must consult DocumentShape, which is probed from the document's own "
         f"bytes, rather than the MIME-derived media kind. Offending comparisons: {offences}"
-    )
-
-
-def test_the_storage_side_comparison_is_still_present_and_deliberate() -> None:
-    """Bound the rule above, so it is not read as banning MediaKind outright.
-
-    The attachment manifest genuinely classifies by media kind at write time.
-    Asserting the surviving comparison exists means the exemption is a stated
-    carve-out rather than an unexamined gap -- and if that mapping is ever
-    removed, this test fails and the carve-out gets deleted with it instead of
-    lingering as dead permission.
-    """
-    storage = _LEDGER / "evidence.py"
-    tree = ast.parse(storage.read_text(encoding="utf-8"), filename=str(storage))
-
-    assert _media_kind_comparisons(tree), (
-        "the storage-side media-kind mapping has gone; drop it from the exemption set "
-        "rather than leaving an unused carve-out that silently readmits read-path uses"
     )
 
 

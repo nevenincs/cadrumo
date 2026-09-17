@@ -19,6 +19,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
@@ -358,6 +359,7 @@ class BusinessSharePctResolution(BaseModel):
     business_pct: Decimal | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_share_exists_exactly_when_the_outcome_produces_one(self) -> Self:
         """Refuse a resolution whose share disagrees with its own outcome.
 

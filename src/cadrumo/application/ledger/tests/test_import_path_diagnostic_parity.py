@@ -30,7 +30,7 @@ from ...transactions.import_diagnostics import import_ledger_with_diagnostics
 from ..actions_import import evaluate_import_rows
 from ..protocols import ParsedLedgerRowProtocol
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SOURCE_PATH = Path("project/data/example.csv")
 
