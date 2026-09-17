@@ -83,7 +83,7 @@ def _install_cited_catalogue_entries(root: Path) -> None:
     )
     legal = {key: entry for key, entry in catalogues.legal.items() if f'"{key}"' in installed_text}
     sources = {key: entry for key, entry in catalogues.sources.items() if f'"{key}"' in installed_text}
-    document = {
+    document: dict[str, object] = {
         "legal": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in legal.items()},
         "sources": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in sources.items()},
     }
