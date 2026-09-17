@@ -11,7 +11,9 @@ from sqlalchemy import select
 from .....application.aggregation.inventory import InventorySourceResolver
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.tests.test_inventory_source import inventory_ledger
+from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
@@ -78,8 +80,12 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
 
     assert absent.row_binding_values == {}
     assert absent.diagnostics[0].reason == "source_domain_not_ready"
-    assert complete.row_binding_values[("inventory-0181", 1)] == Decimal("100.00")
-    assert complete.row_source_identities[("inventory-0181", 1)].source_row_identity == "alpha"
+    # Casilla 0181 names the binding it is fed through; the test reads that
+    # declaration rather than restating the binding's identifier.
+    acquisition_binding = casillas_by_id(revision)[validated_casilla_id("0181")].binding
+    assert acquisition_binding is not None
+    assert complete.row_binding_values[(acquisition_binding, 1)] == Decimal("100.00")
+    assert complete.row_source_identities[(acquisition_binding, 1)].source_row_identity == "alpha"
     assert complete.diagnostics[0].reason == "source_issue"
     assert corrupted.row_binding_values == {}
     assert corrupted.diagnostics[0].reason == "storage_degraded"

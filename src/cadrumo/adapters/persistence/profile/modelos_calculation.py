@@ -341,7 +341,11 @@ class CalculationRevisionCatalogueRepository:
         self._require_parent_coordinates(catalogue)
         self._storage.save(catalogue)
 
-    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+    def load_revisioned(
+        self,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> tuple[CalculationRevisionCatalogue, str]:
         """Return the catalogue and the revision id it was read at.
 
         The read a guarded co-commit needs. A calculate run composes this
@@ -356,9 +360,20 @@ class CalculationRevisionCatalogueRepository:
                 payload fails the catalogue contract, exactly as :meth:`load`
                 refuses it, so no raw validation detail reaches the caller.
         """
+        if operation is None:
+            with bundled_indexed_authority().operation() as indexed_operation:
+                return self.load_revisioned(operation=indexed_operation)
+        # A stored rectificativa revalidates against its evidence chain, so the
+        # guarded read carries the same aggregate context as :meth:`load`.
+        aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         loaded: tuple[CalculationRevisionCatalogue, str] | None = None
         try:
-            loaded = self._storage.load_revisioned()
+            loaded = self._storage.load_revisioned(
+                validation_context={
+                    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
+                    "secure_calculation_revision": True,
+                },
+            )
         except ValidationError:
             loaded = None
         if loaded is None:

@@ -10,9 +10,9 @@ contract: acceptance gate for Layer-1 verification strategy (contract):
 
 contract: tamper-detection regression:
 
-4. Mutating a persisted casilla value after calculate raises
-   StoredCalculationDriftError on verify — the content-address mismatch
-   is caught before VERIFICADO_COMPLETO is granted.
+4. Mutating a persisted casilla value after calculate refuses verify — the
+   content-address mismatch fails the stored catalogue's decode before
+   VERIFICADO_COMPLETO is granted.
 
 The tests exercise the real registry, real encrypted SQLite storage, and
 real formula engine — no mocks, no stubs, no tautological assertions.
@@ -35,7 +35,6 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 
 from .....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
-from .....application.modelo.action_errors import StoredCalculationDriftError
 from .....application.modelo.calculation_actions import calculate_modelo_revision
 from .....application.modelo.external_import_actions import import_external_filing_evidence
 from .....application.modelo.verification_actions import verify_modelo_revision
@@ -55,7 +54,7 @@ from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.deadlines.models import IVARegime, TaxpayerProfile
 from .....domain.justificante.schema import Justificante
-from .....domain.modelos.calculation_repository import upsert_calculation_revision
+from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from .....domain.modelos.filing_record import ExternalEvidenceKind
 from .....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
 from .....domain.modelos.work_unit import WorkUnit
@@ -74,6 +73,7 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_verification_reports import VerificationReportCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .calculation_catalogue_tamper_support import plant_calculation_revision_unchecked
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
 from .verification_repository_support import (
@@ -477,7 +477,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
 
 
 def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    """The public verify action raises StoredCalculationDriftError on drift.
+    """The public verify action is refused on a content-address drift.
 
     contract regression: verify_modelo_revision calls the content-integrity gate
     before granting VERIFICADO_COMPLETO.  The check is exercised by constructing a
@@ -552,10 +552,12 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
             },
         )
 
-        cr_repo.save(upsert_calculation_revision(cr_repo.load(), tampered))
+        plant_calculation_revision_unchecked(cr_repo.load(), tampered)
 
-        # The public verify action must detect the hash mismatch before any grant.
-        with pytest.raises(StoredCalculationDriftError):
+        # The public verify action is refused before any grant: the stored
+        # catalogue no longer decodes, because its content address is checked
+        # on every load.
+        with pytest.raises(CalculationRevisionPersistenceError) as refusal:
             verify_modelo_revision(
                 tampered.calculation_revision_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -567,3 +569,5 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
             )
+        assert refusal.value.context is not None
+        assert refusal.value.context["reason"] == "invalid_payload"

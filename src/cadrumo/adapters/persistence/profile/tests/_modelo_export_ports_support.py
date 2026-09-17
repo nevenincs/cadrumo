@@ -92,7 +92,11 @@ def _compose_modelo_export_ports(
         ),
         work_unit=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects),
         filing=ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects),
-        verification=VerificationReportCatalogueRepository(bucket_id=bucket_id, objects=objects),
+        verification=VerificationReportCatalogueRepository(
+            bucket_id=bucket_id,
+            objects=objects,
+            m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
+        ),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),

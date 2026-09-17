@@ -220,6 +220,8 @@ def test_record_refuses_a_command_profile_that_does_not_own_the_bucket(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        # Provisioning the runtime profile records its own bucket event.
+        before = BucketEventHistoryRepository().load()
         with pytest.raises(LiveApplicationInputError) as exc_info:
             _record(command, bucket_id=runtime.bucket_id)
 
@@ -229,7 +231,7 @@ def test_record_refuses_a_command_profile_that_does_not_own_the_bucket(
         assert _list(bucket_id=runtime.bucket_id) == ()
         catalogue = BucketEventHistoryRepository().load()
 
-    assert catalogue.events == {}
+    assert catalogue.events == before.events
 
 
 def test_record_refuses_before_deriving_the_declaration_id(tmp_path: Path) -> None:

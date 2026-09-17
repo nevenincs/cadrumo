@@ -65,7 +65,7 @@ def test_declare_especial_transition_persists_typed_option(
                 kind=ProrrataEspecialTransitionKind.from_registry("opcion"),
                 evidence_reference="modelo-303-2026-prorrata-opcion",
             ),
-            source_registry_snapshot_refs=(),
+            source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
         )
 
         updated = service.declare_especial_transition(entry)

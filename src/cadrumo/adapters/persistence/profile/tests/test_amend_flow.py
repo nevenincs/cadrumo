@@ -10,6 +10,7 @@ bucket event.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -18,12 +19,16 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import AnyHttpUrl, SecretStr, TypeAdapter
 from sqlalchemy.engine import Engine
 
+from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
+from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.action_errors import (
@@ -323,7 +328,7 @@ def _seed_external_baseline(
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST-2024-303-1T-ABC123",
+            reference_id="JUST2024303ABC123",
             imported_at=_T1,
         ),
     )
@@ -949,6 +954,32 @@ def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos, *, operati
     assert new_revision.ledger_filing_evidence is None
 
 
+def _persist_baseline_justificante(baseline: ModeloRecord, *, tax_id: str) -> None:
+    evidence = baseline.external_evidence
+    assert evidence is not None
+    pdf_sha256 = hashlib.sha256(f"justificante {evidence.reference_id}".encode()).hexdigest()
+    with bundled_indexed_authority().operation():
+        JustificanteRepository().save(
+            Justificante(
+                csv=evidence.reference_id,
+                modelo=str(baseline.modelo),
+                period=baseline.period,
+                ejercicio=str(baseline.filing_year),
+                presentation_id="1300000000001",
+                presented_at=baseline.filed_at,
+                tax_id=tax_id,
+                total_a_ingresar=None,
+                total_a_devolver=None,
+                verification_url=TypeAdapter(AnyHttpUrl).validate_python(
+                    justificante_cotejo_url(evidence.reference_id)
+                ),
+                source_pdf_path=source_pdf_reference_path(pdf_sha256),
+                source_pdf_sha256=pdf_sha256,
+                parsed_at=baseline.filed_at,
+            ),
+        )
+
+
 def test_export_refuses_an_amendment_carrying_contributors(
     repos: _Repos, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -961,6 +992,9 @@ def test_export_refuses_an_amendment_carrying_contributors(
     """
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    # The amended baseline is AEAT-accepted, so its receipt is on file: the
+    # export reaches the contributor check rather than stopping at the receipt.
+    _persist_baseline_justificante(outcome.baseline, tax_id=workflow_profile().tax_id)
     with bundled_indexed_authority().operation() as operation:
         new_revision = get_calculation_revision(
             outcome.new_filing.calculation_revision_id,

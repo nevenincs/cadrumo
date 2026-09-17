@@ -120,7 +120,12 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         document, _revision_id = self.load_revisioned()
         return document
 
-    def _decode_record(self, payload: bytes) -> DocumentT:
+    def _decode_record(
+        self,
+        payload: bytes,
+        *,
+        validation_context: Mapping[str, object] | None = None,
+    ) -> DocumentT:
         """Validate one loaded encrypted payload against the Envelope contract."""
         from ..storage.envelope.contract import Envelope
         from ..storage.schema_lineage import (
@@ -129,7 +134,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         )
 
         envelope_cls: type[Envelope[DocumentT]] = Envelope[DocumentT].for_payload_type(self._model_type)
-        envelope = envelope_cls.model_validate_json(payload)
+        envelope = envelope_cls.model_validate_json(payload, context=validation_context)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage.errors import ClassificationError
 
@@ -159,7 +164,11 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")
         return decoded
 
-    def load_revisioned(self) -> tuple[DocumentT, str]:
+    def load_revisioned(
+        self,
+        *,
+        validation_context: Mapping[str, object] | None = None,
+    ) -> tuple[DocumentT, str]:
         """Return the stored document and the revision id it was read at.
 
         The public read for a caller composing a GUARDED co-commit: it cannot
@@ -176,7 +185,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         )
         if record is None:
             return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
-        return self._decode_record(record.payload), record.revision_id
+        return self._decode_record(record.payload, validation_context=validation_context), record.revision_id
 
     def to_secure_object_write(
         self,

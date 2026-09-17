@@ -96,7 +96,13 @@ from ....domain.transactions.models import (
     TransactionCatalogue,
 )
 from ....domain.transactions.repository import transaction_index_object_key, transaction_object_key
-from ..storage.errors import SecureObjectRowIdentityError, StorageError
+from ..storage.errors import (
+    BlobIntegrityError,
+    ClassificationError,
+    EnvelopeVersionError,
+    SecureObjectRowIdentityError,
+    StorageError,
+)
 from ..storage.secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
@@ -319,6 +325,14 @@ def _migrated_iva_rate_kind(
     return rate_kinds[0]
 
 
+_INTEGRITY_REFUSALS = (
+    BlobIntegrityError,
+    ClassificationError,
+    EnvelopeVersionError,
+    SecureObjectRowIdentityError,
+)
+
+
 def _translating_storage_failures[**P, R](method: Callable[P, R]) -> Callable[P, R]:
     """Report an unreadable store as a ledger storage failure at the port boundary.
 
@@ -330,6 +344,10 @@ def _translating_storage_failures[**P, R](method: Callable[P, R]) -> Callable[P,
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return method(*args, **kwargs)
+        except _INTEGRITY_REFUSALS:
+            # Tampered or foreign stored bytes are an integrity refusal, never a
+            # degradable read failure.
+            raise
         except StorageError as exc:
             raise LedgerStorageError(
                 "transaction catalogue storage could not be read",

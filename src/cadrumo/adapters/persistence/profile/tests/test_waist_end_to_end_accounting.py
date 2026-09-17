@@ -129,7 +129,8 @@ def _structured_draft() -> InvoiceDraft:
     values across the storage boundary.
     """
     return InvoiceDraft(
-        supplier_tax_id=_STORED_TAX_ID,
+        # The document states the IVA form; confirmation stores the bare NIF.
+        supplier_tax_id="ES" + _STORED_TAX_ID,
         invoice_number="FAC-2024-0007",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21.00"),

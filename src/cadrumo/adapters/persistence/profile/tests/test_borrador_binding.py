@@ -245,7 +245,9 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
 
     assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
-    assert set(revision.relation_overrides) == set(relation_values)
+    # A relation shares its binding's identity, so each id is persisted on one
+    # channel only; the relation channel keeps the ids no binding supplied.
+    assert set(revision.relation_overrides) == set(relation_values) - set(revision.binding_overrides)
     assert all(Decimal(value) == Decimal("0") for value in revision.relation_overrides.values())
     assert set(revision.binding_overrides).isdisjoint(revision.relation_overrides)
     assert revision.borrador_snapshot_id == snapshot_id

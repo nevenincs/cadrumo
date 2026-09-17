@@ -2,20 +2,28 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.domain.calculations.registry.tests.registry_observations import (
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 
 __all__ = ["isolated_backend"]
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -30,6 +38,7 @@ from cadrumo.application.modelo.action_errors import (
 )
 from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportOutputPathError, export_modelo_revision
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import (
     iter_directory,
 )
@@ -50,13 +59,16 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
+from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
+from cadrumo.domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
 from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
+    M303RectificativaMotive,
 )
 from cadrumo.domain.modelos.filing_record import (
     ExternalEvidence,
@@ -66,6 +78,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
+from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -247,18 +260,93 @@ def _with_rederived_id(revision):
     )
 
 
-def _rectificativa_with_nota_three(verified):
+def _baseline_justificante(csv: str, *, work_unit, taxpayer_nif: str, presented_at: datetime) -> Justificante:
+    """The persisted receipt an AEAT-accepted baseline filing resolves to."""
+    pdf_sha256 = hashlib.sha256(f"justificante {csv}".encode()).hexdigest()
+    return Justificante(
+        csv=csv,
+        modelo="303",
+        period=work_unit.period,
+        ejercicio=str(work_unit.filing_year),
+        presentation_id="3030000000001",
+        presented_at=presented_at,
+        tax_id=taxpayer_nif,
+        total_a_ingresar=None,
+        total_a_devolver=None,
+        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+        source_pdf_path=source_pdf_reference_path(pdf_sha256),
+        source_pdf_sha256=pdf_sha256,
+        parsed_at=presented_at,
+    )
+
+
+def _persist_rectificativa_with_nota_three(
+    verified,
+    *,
+    taxpayer_nif: str,
+    work_repo,
+    calc_repo,
+    operation,
+):
+    """Persist a C rectificativa over a real AEAT-accepted original.
+
+    A rectificativa validates against its whole evidence chain: the filed
+    original it amends, that filing's justificante carrying the original
+    receipt number, a persisted motive, and the selected registry snapshot.
+    """
+    csv = "CSV3032026N3ORIGINAL"
+    filed_at = datetime(2026, 5, 20, 9, 0, tzinfo=UTC)
+    work_unit = work_repo.load().get(verified.work_unit_id)
+    original = ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=verified.work_unit_id,
+            calculation_revision_id=verified.calculation_revision_id,
+            filed_by="aeat-import",
+        ),
+        work_unit_id=verified.work_unit_id,
+        calculation_revision_id=verified.calculation_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=filed_at,
+        filed_by="aeat-import",
+        aeat_accepted=True,
+        status=ModeloRecordStatus.VIGENTE,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id=csv,
+            imported_at=filed_at,
+        ),
+    )
+    filing_repo = ModeloRecordCatalogueRepository()
+    filing_repo.save(upsert_filing_record(filing_repo.load(), original))
+    justificante = _baseline_justificante(csv, work_unit=work_unit, taxpayer_nif=taxpayer_nif, presented_at=filed_at)
+    JustificanteRepository().save(justificante)
     amended = verified.model_copy(
         update={
             "amendment_identity": CalculationRevisionAmendmentIdentity(
                 kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
-                amends_filing_record_id="a" * 64,
-                m303_rectificativa_motive=None,
+                amends_filing_record_id=original.filing_record_id,
+                m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             ),
             "amendment_reason": "correct bank-transfer credit declared in casilla 111",
         }
     )
-    return _with_rederived_id(amended)
+    rectificativa = _with_rederived_id(amended)
+    context = CalculationRevisionAggregateContext(
+        work_units=work_repo.load(),
+        filing_records=filing_repo.load(),
+        justificantes=(justificante,),
+        registry_snapshots={
+            work_unit.work_unit_id: operation.snapshot(
+                "303", filing_year=work_unit.filing_year, period=work_unit.period.registry_token
+            )
+        },
+        expected_taxpayer_tax_id=taxpayer_nif,
+    )
+    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa, aggregate_context=context))
+    return rectificativa
 
 
 def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | None) -> TaxpayerProfile:
@@ -290,8 +378,13 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
             operation=_authority_operation_for_test,
         )
         assert verified.casilla_values["111"] == Decimal("0")
-        rectificativa = _rectificativa_with_nota_three(verified)
-        calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+        rectificativa = _persist_rectificativa_with_nota_three(
+            verified,
+            taxpayer_nif=taxpayer_nif,
+            work_repo=work_repo,
+            calc_repo=calc_repo,
+            operation=_authority_operation_for_test,
+        )
         refund_account = RefundAccount(
             swift_bic="CHASUS33XXX",
             bank_name="Nota Three Refund Bank",
@@ -313,7 +406,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
             export_ports=modelo_export_ports_for_test(
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
-                calculation=calc_repo,
+                calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                 bucket_event=event_repo,
             ),
             clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
@@ -346,8 +439,13 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
-        rectificativa = _rectificativa_with_nota_three(verified)
-        calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+        rectificativa = _persist_rectificativa_with_nota_three(
+            verified,
+            taxpayer_nif=taxpayer_nif,
+            work_repo=work_repo,
+            calc_repo=calc_repo,
+            operation=_authority_operation_for_test,
+        )
         output_path = tmp_path / "modelo-303-n3-missing-refund.txt"
 
         with pytest.raises(ModeloRefundAccountMissingError):
@@ -363,7 +461,7 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
                 export_ports=modelo_export_ports_for_test(
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
-                    calculation=calc_repo,
+                    calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
                 clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
@@ -385,8 +483,13 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
-        rectificativa = _rectificativa_with_nota_three(verified)
-        calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+        rectificativa = _persist_rectificativa_with_nota_three(
+            verified,
+            taxpayer_nif=taxpayer_nif,
+            work_repo=work_repo,
+            calc_repo=calc_repo,
+            operation=_authority_operation_for_test,
+        )
         output_path = tmp_path / "modelo-303-n3-current-u.txt"
 
         with pytest.raises(ModeloPaymentElectionIncompatibleError):
@@ -403,7 +506,7 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
                 export_ports=modelo_export_ports_for_test(
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
-                    calculation=calc_repo,
+                    calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
                     bucket_event=event_repo,
                 ),
                 clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
@@ -427,7 +530,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     work_unit = work_repo.load().get(verified.work_unit_id)
     assert work_unit is not None
     filing_repository = ModeloRecordCatalogueRepository()
-    baseline_evidence_reference = "CSV-303-2026-2T-S21"
+    baseline_evidence_reference = "CSV3032026ST2S21"
     baseline_filing_record_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id="a" * 64,
@@ -460,6 +563,14 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 modelo="303",
                 filing_year=work_unit.filing_year,
                 period=work_unit.period.registry_token,
+                # A domiciliation settles a positive result; the carry ingress
+                # proves the disposition against this sign.
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                    casilla_values={validated_casilla_id("iva.resultado", surface="test"): Decimal("125.00")},
+                ),
             ),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=datetime(2026, 5, 21, 11, 59, tzinfo=UTC),
@@ -491,13 +602,38 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             "amendment_identity": CalculationRevisionAmendmentIdentity(
                 kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
                 amends_filing_record_id=baseline.filing_record_id,
-                m303_rectificativa_motive=None,
+                m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             ),
             "amendment_reason": "correct prior direct-debit election",
         },
     )
     rectificativa = _with_rederived_id(_amended)
-    calc_repo.save(upsert_calculation_revision(calc_repo.load(), rectificativa))
+    baseline_justificante = _baseline_justificante(
+        baseline_evidence_reference,
+        work_unit=work_unit,
+        taxpayer_nif=taxpayer_nif,
+        presented_at=baseline.filed_at,
+    )
+    JustificanteRepository().save(baseline_justificante)
+    calc_repo = CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calc_repo.save(
+            upsert_calculation_revision(
+                calc_repo.load(),
+                rectificativa,
+                aggregate_context=CalculationRevisionAggregateContext(
+                    work_units=work_repo.load(),
+                    filing_records=filing_repository.load(),
+                    justificantes=(baseline_justificante,),
+                    registry_snapshots={
+                        work_unit.work_unit_id: _authority_operation_for_test.snapshot(
+                            "303", filing_year=work_unit.filing_year, period=work_unit.period.registry_token
+                        )
+                    },
+                    expected_taxpayer_tax_id=taxpayer_nif,
+                ),
+            )
+        )
 
     output_path = tmp_path / "modelo-303-prior-domiciliation.txt"
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
@@ -552,6 +688,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
             participation_index_repository=TransactionParticipationIndexRepository(bucket_id=bucket_id),
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
+            justificante_repository=JustificanteRepository(),
             operation=_authority_operation_for_test,
         )
     filed_event = event_repo.load().for_bucket(
