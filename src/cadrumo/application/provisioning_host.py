@@ -26,6 +26,7 @@ import time
 from collections.abc import Callable, Mapping
 from enum import StrEnum
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -185,7 +186,7 @@ def read_runtime_version(settings: Settings | None = None) -> str | None:
             payload = response.json()
     except (httpx.HTTPError, ValueError):
         return None
-    version = payload.get("version") if isinstance(payload, dict) else None
+    version = cast(dict[str, object], payload).get("version") if isinstance(payload, dict) else None
     return version if isinstance(version, str) and version else "unknown"
 
 

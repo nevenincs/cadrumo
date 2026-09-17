@@ -22,6 +22,7 @@ import sys
 from collections.abc import Callable, Mapping
 from importlib.util import find_spec
 from pathlib import Path
+from typing import cast
 
 from pydantic import BaseModel, model_validator
 
@@ -129,19 +130,25 @@ def required_browser_builds(manifest_path: Path | None = None) -> tuple[BrowserB
     if path is None:
         return None
     try:
-        document = json.loads(path.read_text(encoding="utf-8"))
+        document: object = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    entries = document.get("browsers") if isinstance(document, dict) else None
+    if not isinstance(document, dict):
+        return None
+    entries = cast(dict[object, object], document).get("browsers")
     if not isinstance(entries, list):
         return None
-    by_name = {entry.get("name"): entry for entry in entries if isinstance(entry, dict)}
+    by_name: dict[object, dict[object, object]] = {}
+    for entry in cast(list[object], entries):
+        if isinstance(entry, dict):
+            typed_entry = cast(dict[object, object], entry)
+            by_name[typed_entry.get("name")] = typed_entry
     builds: list[BrowserBuild] = []
     for name in _REQUIRED_MANIFEST_NAMES:
-        entry = by_name.get(name)
-        if entry is None or entry.get("revisionOverrides"):
+        found = by_name.get(name)
+        if found is None or found.get("revisionOverrides"):
             return None
-        revision = entry.get("revision")
+        revision = found.get("revision")
         if not isinstance(revision, str) or not revision:
             return None
         builds.append(BrowserBuild(name=name, revision=revision))
