@@ -10,11 +10,13 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from pydantic import ValidationError
 
 from dev._paths import REPO_ROOT
 from dev.source_tree import content_digest, repository_files
 
 from .. import release_cohort as release_cohort_module
+from ..cohort_manifest import SourceIdentity
 from ..release_cohort import (
     REQUIRED_PYTHON_VERSION,
     build_from_clean_source,
@@ -97,6 +99,65 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
             env=env,
             expected_source_digest=expected_source_digest,
         )
+
+
+_COMMIT: Final[str] = "0123456789abcdef0123456789abcdef01234567"
+
+
+def test_clean_builder_subprocess_carries_the_requested_source_commit(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The caller's commit reaches the clean child that stamps the manifest."""
+    repo_root = tmp_path / "repo"
+    (repo_root / "var").mkdir(parents=True)
+    captured: list[list[str]] = []
+
+    def fake_run(
+        argv: list[str],
+        *,
+        cwd: Path,
+        env: dict[str, str] | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        del cwd, env
+        captured.append(argv)
+        raise _CleanBuilderInvocationObservedError
+
+    monkeypatch.setattr(release_cohort_module, "_run", fake_run)
+
+    with pytest.raises(_CleanBuilderInvocationObservedError):
+        build_release_cohort(repo_root=repo_root, output_dir=repo_root / "var" / "cohort", source_commit=_COMMIT)
+
+    assert len(captured) == 1
+    argv = captured[0]
+    assert argv[argv.index("--source-commit") + 1] == _COMMIT
+
+
+@pytest.mark.parametrize(
+    "commit",
+    ["abc123", _COMMIT.upper(), f"{_COMMIT}0", "refs/heads/main"],
+    ids=("short", "uppercase", "too-long", "ref-name"),
+)
+def test_release_cohort_refuses_a_malformed_source_commit(tmp_path: Path, commit: str) -> None:
+    """Only a full commit identifier is stamped; anything else fails before building."""
+    repo_root = tmp_path / "repo"
+    (repo_root / "var").mkdir(parents=True)
+    output = repo_root / "var" / "cohort"
+
+    with pytest.raises(SystemExit, match="not a full lowercase commit identifier"):
+        build_release_cohort(repo_root=repo_root, output_dir=output, source_commit=commit)
+
+    assert not output.exists()
+
+
+def test_source_identity_records_the_commit_and_refuses_a_malformed_one() -> None:
+    """The manifest carries the source commit as a validated coordinate."""
+    identity = SourceIdentity(source_digest="a" * 64, tag="v0.2.1", commit=_COMMIT)
+
+    assert identity.commit == _COMMIT
+    assert SourceIdentity(source_digest="a" * 64).commit is None
+    with pytest.raises(ValidationError):
+        SourceIdentity(source_digest="a" * 64, commit="abc123")
 
 
 def test_deterministic_zip_preserves_real_tree_bytes(tmp_path: Path) -> None:

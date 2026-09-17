@@ -286,7 +286,8 @@ check-registry-gate base="origin/main":
     set -euo pipefail
     uv run --no-sync python -m dev.registry.conformance valid
     uv run --no-sync python -m dev.registry.conformance runtime-load
-    if git diff --name-only {{base}}...HEAD | grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)'; then
+    changed=$(git diff --name-only {{base}}...HEAD)
+    if grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)' <<< "$changed"; then
         echo "check-registry-gate: registry sources changed since {{base}} -- running integrity"
         uv run --no-sync python -m dev.registry.conformance integrity
     else
@@ -1003,7 +1004,13 @@ test-gate base="origin/main":
         echo "# reason: $reason"
         echo "############################################################"
     fi
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} "${targets[@]}"
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' "${targets[@]}"
+    serial_status=0
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' "${targets[@]}" || serial_status=$?
+    # Exit 5 means the scoped targets hold no serial tests.
+    if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
+        exit "$serial_status"
+    fi
     if [ "$ci_contracts" = "true" ]; then
         just test-ci-contracts
     fi
@@ -1025,8 +1032,11 @@ test-gate base="origin/main":
         Write-Host "############################################################"
     }
     $targets = @($scope.targets)
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} @targets
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' @targets
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' @targets
+    # Exit 5 means the scoped targets hold no serial tests.
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
     if ($scope.ci_contracts) {
         just test-ci-contracts
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
