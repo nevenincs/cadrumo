@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ba92004815dd6f405a3ee0cad683f8d4ca2f09bc4c9992855325a93e2f52940'
+body_hash: 'sha256:840dfc69821239fc2fcd8f94da8569b2c246db76aaf049eddf15fdba388e36b2'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -101,6 +101,9 @@ related:
 - `S12` `M` `dev/locales/casilla_orthography.py`
 - `S12` `verify:` `pytest test_localization_continuity_tier_is_reached` -> `pass`
 - `S12` `M` `dev/locales/tests/test_casilla_orthography.py`
+- `S12` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S12` `M` `src/cadrumo/_data/registry/authority`
+- `S12` `verify:` `python -m dev.registry.pipeline publish-authority` -> `pass`
 
 ## Notes
 
@@ -109,4 +112,5 @@ related:
 - `S04` first real apply was interrupted by a Windows file lock and re-planned from a partial state, losing 24,861 resolved translations; restored from the verified rehearsal copy, and apply now stages, verifies and installs from a persistent pending directory
 - `S07` identical cognates are classified in the honesty allowlist rather than stored as copies
 - `S12` Serving no translation where Spanish resolves nowhere removed ~2300 genuine en help texts (ca/hu likewise) that lacked a Spanish source; Spanish help is being authored and the translations restored from 1b7a46e4cb^
+- `S12` Edition-specific Spanish restored from official designs for Modelo 100 casillas 0002/0758/0854/1016 broke registry strict continuity; reverted to shared text, casilla-author now refuses such splits until the registry declares a continuity evolution
 
