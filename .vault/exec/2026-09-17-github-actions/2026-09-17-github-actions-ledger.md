@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:f999a0f7da13e18f0a99c37ce9c44509aa451d53c5b80d12108e474436fc69b9'
+body_hash: 'sha256:42af561d5c5f924e9effd55f80f188ef20af4f7fb0ae9df57d7f3de755fc6881'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
@@ -50,4 +50,7 @@ related:
 - `S02` `M` `justfile`
 - `S02` `verify:` `just --list` -> `pass`
 - `S02` `by:` `ci-setup`
+- `S03` `A` `.github/workflows/merge-gate.yml`
+- `S03` `verify:` `just check-workflows` -> `pass`
+- `S03` `by:` `ci-gate`
 

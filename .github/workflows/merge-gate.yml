@@ -1,0 +1,121 @@
+name: Cadrumo Merge Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize]
+  workflow_call:
+    inputs:
+      full:
+        description: Run the full semgrep scan instead of the diff scan
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: merge-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: "Check: Lint (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Style
+        if: ${{ !cancelled() }}
+        run: just check-style
+
+      - name: Formatting
+        if: ${{ !cancelled() }}
+        run: just check-format
+
+      - name: Type checks
+        if: ${{ !cancelled() }}
+        run: just check-types
+
+      - name: Workflow definitions
+        if: ${{ !cancelled() }}
+        run: just check-workflows
+
+  gate:
+    name: "Check: Merge gate (Linux)"
+    needs: lint
+    if: ${{ !cancelled() }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    env:
+      GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
+    steps:
+      - name: Require lint success
+        id: lint-result
+        if: ${{ needs.lint.result != 'success' }}
+        shell: bash
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+        run: |
+          echo "Lint job result was '$LINT_RESULT'; the merge gate requires success."
+          exit 1
+
+      - name: Refuse fork pull requests
+        id: fork-guard
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        shell: bash
+        run: |
+          echo "Pull requests from forks are not run on self-hosted runners."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          enable-cache: false
+
+      - name: Semgrep diff scan
+        if: ${{ !inputs.full }}
+        shell: bash
+        run: just check-security-diff base="$GATE_BASE"
+
+      - name: Semgrep full scan
+        if: ${{ inputs.full }}
+        shell: bash
+        run: just check-security-full
+
+      - name: Set up toolchain
+        id: setup
+        if: ${{ !cancelled() && steps.lint-result.outcome != 'failure' && steps.fork-guard.outcome != 'failure' }}
+        uses: ./.github/actions/setup
+
+      - name: Registry gate
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just check-registry-gate base="$GATE_BASE"
+
+      - name: Import boundaries
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just check-import-boundaries
+
+      - name: Scoped tests
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        shell: bash
+        run: just test-gate base="$GATE_BASE"

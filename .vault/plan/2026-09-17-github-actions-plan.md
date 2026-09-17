@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-github-actions-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:d5821eb01002d24f909b13735d0e7a47edae3578a31341162b8db01cb9bf0213'
+body_hash: 'sha256:3bc3911a03b05b433ea9af13cbc5fb62793652a3805fcd38b196681b859325ca'
 ---
 
 # `github-actions` plan
@@ -72,7 +72,7 @@ Deliver the single PR-triggered workflow with a lint job and a fail-closed merge
 
 - [x] `P02.S01` - Create the shared setup composite action for uv, just and just setup; `.github/actions/setup/action.yml`.
 - [x] `P02.S02` - Add gate recipes for diff-scoped semgrep, registry valid plus runtime-load plus path-conditional integrity, and the scoped test run; `justfile`.
-- [ ] `P02.S03` - Create the merge-gate workflow with the lint job, the fail-closed merge-gate job and the full input for workflow_call; `.github/workflows/merge-gate.yml`.
+- [x] `P02.S03` - Create the merge-gate workflow with the lint job, the fail-closed merge-gate job and the full input for workflow_call; `.github/workflows/merge-gate.yml`.
 - [ ] `P02.S04` - Prove the gate on a throwaway PR on the Linux runner, confirming the rendered required-context name and the 10-minute budget; `.github/workflows/merge-gate.yml`.
 
 ### Phase `P03` - Release lane
