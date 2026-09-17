@@ -75,7 +75,7 @@ def load_iva_rate_table(
     return MappingProxyType({state: tuple(records) for state, records in table.items()})
 
 
-def iva_rate_record_from_fact(
+def rate_record_from_fact(
     resolved: ResolvedMappingFact,
     *,
     authority: GovernedFactSource,
@@ -105,6 +105,6 @@ def iva_rate_record_from_fact(
 
 __all__ = [
     "IVA_RATE_FACT_ID",
-    "iva_rate_record_from_fact",
     "load_iva_rate_table",
+    "rate_record_from_fact",
 ]

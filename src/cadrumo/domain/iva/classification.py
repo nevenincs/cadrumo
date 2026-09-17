@@ -21,14 +21,14 @@ Examples:
     ...     IvaRateKind,
     ...     IvaInvoiceClassificationCriteria,
     ...     customer_tax_status_alias,
-    ...     iva_territorial_scope_alias,
+    ...     territorial_scope_alias,
     ...     require_eu_member_state,
     ...     classify_iva,
     ... )
     >>> criteria = IvaInvoiceClassificationCriteria(
     ...     transaction_date=date(2025, 6, 15),
-    ...     issuer_residency=iva_territorial_scope_alias("mainland"),
-    ...     customer_residency=iva_territorial_scope_alias("eu_member"),
+    ...     issuer_residency=territorial_scope_alias("mainland"),
+    ...     customer_residency=territorial_scope_alias("eu_member"),
     ...     customer_identification_state=require_eu_member_state("DE"),
     ...     customer_tax_status=customer_tax_status_alias("b2b_registered"),
     ...     kind=registry_transaction_kind,
@@ -52,6 +52,7 @@ from pydantic_core import core_schema
 
 from ...core.logging import get_logger
 from ...core.registry_token import StrictRegistryToken
+from ...core.time.clock import today_madrid
 from ..calculations.registry.iva_category_catalogue import (
     IvaCategoryCatalogue,
     resolve_iva_category_catalogue,
@@ -383,7 +384,7 @@ def resolve_iva_classification_catalogue(
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
-    resolved = _registry_iva_classification_catalogue(effective_date or date.today(), operation=operation)
+    resolved = _registry_iva_classification_catalogue(effective_date or today_madrid(), operation=operation)
     entries = _classification_mapping_entries(resolved)
     territorial_scopes, territorial_aliases = _classification_vocabulary_group(
         entries,
@@ -427,7 +428,7 @@ def require_customer_tax_status(
     return resolve_iva_classification_catalogue(effective_date, operation=operation).require_customer_tax_status(value)
 
 
-def iva_territorial_scope_alias(
+def territorial_scope_alias(
     alias: str,
     *,
     effective_date: date | None = None,
@@ -517,7 +518,7 @@ def domestic_rate_tier_is_required(
     if issuer_residency == mainland and customer_residency == mainland:
         return True
     services_kind = resolve_transaction_kind_catalogue(
-        transaction_date or date.today(),
+        transaction_date or today_madrid(),
         operation=operation,
     ).for_supply_nature("services")
     return (
@@ -1179,7 +1180,7 @@ __all__ = [
     "classify_iva",
     "customer_tax_status_alias",
     "domestic_categories_by_rate_kind",
-    "iva_territorial_scope_alias",
+    "territorial_scope_alias",
     "rate_kind_for_domestic_category",
     "require_customer_tax_status",
     "require_iva_territorial_scope",

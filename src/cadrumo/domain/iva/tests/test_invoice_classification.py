@@ -184,7 +184,7 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
 
     assert two_percent.applied_rate == Decimal("0.02")
     assert four_percent.applied_rate == Decimal("0.04")
-    assert two_percent.rate_kind is four_percent.rate_kind == IvaRateKind("super_reduced")
+    assert two_percent.rate_kind == four_percent.rate_kind == IvaRateKind("super_reduced")
     assert two_percent.applied_rate != four_percent.applied_rate, (
         "both slots share the super-reducido tier, so a tier-resolved applied_rate would collapse them "
         "and the 2 % line would be indistinguishable from a 4 % one at the annual return"

@@ -19,6 +19,7 @@ from typing import Literal, Self, override
 from pydantic import Field, ValidationInfo, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.time.clock import today_madrid
 from ...core.type_guards import is_object_list, is_object_mapping, is_str_keyed_dict
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import (
@@ -621,7 +622,7 @@ def registry_cuota_settlement_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> IvaCuotaSettlementCatalogue:
     """Resolve the explicit cuota-settlement vocabulary from published 0084."""
-    selected_date = date.today() if effective_date is None else effective_date
+    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
@@ -736,7 +737,7 @@ def registry_component_vocabulary(
     authority: GovernedFactSource | None = None,
 ) -> IvaComponentVocabulary:
     """Resolve the four typed component-axis memberships from fact 0084."""
-    selected_date = date.today() if effective_date is None else effective_date
+    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
@@ -839,7 +840,7 @@ def registry_category_projection(
     malformed, duplicate, or stale projection entries fail through
     :class:`IvaValidationError`.
     """
-    selected_date = date.today() if effective_date is None else effective_date
+    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(
@@ -944,7 +945,7 @@ def registry_component_catalogue(
     tests and review tooling can pass an isolated generation to inspect another
     governed projection without introducing a second source of row data.
     """
-    selected_date = date.today() if effective_date is None else effective_date
+    selected_date = today_madrid() if effective_date is None else effective_date
     authority = authority or governed_facts_in_scope()
     if authority is None:
         raise IvaValidationError(

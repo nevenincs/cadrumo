@@ -52,6 +52,7 @@ from typing import TYPE_CHECKING, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.validity_window import ValidityWindow, years_covered_by_every_group
 from .errors import IvaCatalogueError
@@ -125,6 +126,7 @@ class IvaPlaceOfSupplyRule(BaseModel):
         return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _each_row_carries_exactly_what_its_kind_claims(self) -> IvaPlaceOfSupplyRule:
         """Refuse a row whose citations do not match the kind of rule it grounds.
 

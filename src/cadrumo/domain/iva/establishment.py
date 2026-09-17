@@ -88,7 +88,7 @@ from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
 from . import country_vocabulary as _country_vocabulary
 from .classification import (
     IvaTerritorialScope,
-    iva_territorial_scope_alias,
+    territorial_scope_alias,
     require_iva_territorial_scope,
 )
 
@@ -406,8 +406,8 @@ def _scope_for_catalogued_country(
     if country_code == SPAIN_COUNTRY_CODE:
         return None
     if country_code in _eu_member_codes(operation=operation):
-        return iva_territorial_scope_alias("eu_member", operation=operation)
-    return iva_territorial_scope_alias("third_country", operation=operation)
+        return territorial_scope_alias("eu_member", operation=operation)
+    return territorial_scope_alias("third_country", operation=operation)
 
 
 def territorial_scope_for_country(
@@ -632,7 +632,7 @@ def territorial_scope_for_spanish_postal_code(
     excluded = _excluded_territories_by_prefix(operation=operation)
     return excluded.get(
         candidate[:_POSTAL_PREFIX_LENGTH],
-        iva_territorial_scope_alias("mainland", operation=operation),
+        territorial_scope_alias("mainland", operation=operation),
     )
 
 

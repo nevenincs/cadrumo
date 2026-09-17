@@ -284,7 +284,7 @@ def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> Non
     revision = published_revision("303", "2025")
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
-    assert "predates the only redaction" in str(excinfo.value)
+    assert "does not resolve for ejercicio 2014" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------

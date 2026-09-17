@@ -67,7 +67,9 @@ class IvaCategory(str):
         """Expose the opaque token as a non-empty string to Pydantic."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls), core_schema.str_schema(min_length=1)
+        )
 
     @property
     def value(self) -> str:
@@ -89,7 +91,9 @@ class IvaCashAccountingTreatment(str):
         """Expose the opaque token as a non-empty string to Pydantic."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls), core_schema.str_schema(min_length=1)
+        )
 
     @property
     def value(self) -> str:
@@ -134,6 +138,7 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
 
     @field_validator("payment_date", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_payment_date(cls, value: object) -> object:
         if isinstance(value, str):
             return parse_iso8601_date(value)
@@ -141,6 +146,7 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
 
     @field_validator("taxable_base", "iva_amount", "recargo_amount", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_decimal_field(cls, value: object) -> object:
         """Accept a JSON-decoded ``Decimal`` string alongside a real ``Decimal``.
 
@@ -182,7 +188,9 @@ class _OpaqueRegistryToken(str):
         """Expose the opaque token as a non-empty string to Pydantic."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls), core_schema.str_schema(min_length=1)
+        )
 
     @property
     def value(self) -> str:
@@ -226,7 +234,7 @@ class EUMemberState(str):
         from pydantic_core import core_schema
 
         return core_schema.no_info_after_validator_function(
-            cls._project_pydantic,
+            pydantic_validation_boundary(cls._project_pydantic),
             core_schema.str_schema(min_length=2, max_length=2),
         )
 
@@ -286,7 +294,9 @@ class IvaRateKind(str):
         """Expose the opaque token as a non-empty string to Pydantic."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls), core_schema.str_schema(min_length=1)
+        )
 
     @property
     def value(self) -> str:

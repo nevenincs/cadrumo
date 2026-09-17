@@ -8,6 +8,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import Final
 
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -135,7 +136,7 @@ def resolve_oss_ioss_regime_catalogue(
         MappingFactQuery(
             fact_id=_FACT_ID,
             date_axis=DateAxis.TRANSACTION_DATE,
-            effective_date=effective_date or date.today(),
+            effective_date=effective_date or today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

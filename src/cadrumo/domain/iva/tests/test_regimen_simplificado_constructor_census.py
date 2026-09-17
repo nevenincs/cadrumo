@@ -37,9 +37,16 @@ def _package_root() -> Path:
 
 
 def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
-    """Return every direct régimen-simplificado row constructor call in shipped code and its tests."""
+    """Return every direct régimen-simplificado row constructor call in shipped code, its tests and the compiler."""
     root = _package_root()
-    scanned = scan_directory(root, pattern="*.py", recursive=True, require_root=True)
+    repo_root = root.parents[1]
+    # The annual-Orden rows are projected by the development compiler, so the
+    # census walks it beside the shipped package.
+    compiler_root = repo_root / "dev" / "registry" / "compiler"
+    scanned = [
+        *scan_directory(root, pattern="*.py", recursive=True, require_root=True),
+        *scan_directory(compiler_root, pattern="*.py", recursive=True, require_root=True),
+    ]
     # Measured: with the root pointed at a directory that does not exist this
     # funnel returned 0 sites silently, against 11 in the healthy tree, so the
     # census asserted its omissions over nothing.
@@ -51,7 +58,7 @@ def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
     for path in scanned:
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
-        relative = path.relative_to(root).as_posix()
+        relative = path.relative_to(root if path.is_relative_to(root) else repo_root).as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -75,7 +82,7 @@ def test_s59_constructor_scan_reaches_the_canonical_compiler() -> None:
     found = {(relative, name) for relative, _, name, _ in _constructor_sites()}
 
     assert (
-        "domain/calculations/registry/_m303_orden_projection_compiler.py",
+        "dev/registry/compiler/_m303_orden_projection_compiler.py",
         "ActividadOrdenAnual",
     ) in found
 

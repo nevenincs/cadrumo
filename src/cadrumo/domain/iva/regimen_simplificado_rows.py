@@ -279,6 +279,8 @@ class M303RegimenSimplificadoScopeDecision(BaseModel):
     @pydantic_validation_boundary
     def _scope_is_registry_declared(cls, value: object) -> M303RegimenSimplificadoScope:
         """Translate the persisted scope through the dated composition catalogue."""
+        if isinstance(value, M303RegimenSimplificadoScope):
+            return value
         from ..calculations.registry.iva_schema_vocabulary import require_m303_regimen_simplificado_scope
 
         return require_m303_regimen_simplificado_scope(value)

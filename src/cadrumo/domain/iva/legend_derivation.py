@@ -57,6 +57,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_printed_phrase
 from .regime_legend import RegimeLegend
@@ -126,6 +127,7 @@ class LegendDerivation(BaseModel):
     note: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _each_outcome_carries_exactly_what_it_claims(self) -> Self:
         """Refuse a record whose payload does not match the state it reports.
 
