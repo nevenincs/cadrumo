@@ -180,7 +180,7 @@ def test_an_inheriting_predecessor_stages_as_the_complete_edition_it_stands_for(
     metadata_root = stage_continuity_metadata(source, tmp_path / "stage", revision="2025")
 
     assert metadata_root is not None
-    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == ["2023.toml", "2024.toml"]
+    assert sorted(path.name for path in (metadata_root / "revisions").iterdir()) == ["2023", "2024"]
     witness = _load_continuity_metadata_modelo(metadata_root, modelo_id="999", revision_id="2025")
     staged = witness.revisions["2024"]
     assert staged.predecessor is None
