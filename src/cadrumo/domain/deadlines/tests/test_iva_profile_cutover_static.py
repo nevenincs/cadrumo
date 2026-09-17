@@ -85,7 +85,18 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
     _ProfileShapeExclusion(
         "src/cadrumo/application/user_profile/tests/test_filing_baseline_flag_spelling.py",
         None,
-        "owed-axis metadata proves the filing baseline names the missing IVA flags",
+        "a deliberately owed IVA block and the path-to-flag metadata that names what it owes",
+        expected_count=2,
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/modelo/tests/test_simplificado_ledger_bypass.py",
+        "test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassified",
+        "profile_values fragment carries only the regime selector the ledger-preflight bypass reads",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/modelo/tests/test_simplificado_ledger_bypass.py",
+        "test_general_profile_raises_preflight_error_when_transactions_are_unclassified",
+        "profile_values fragment carries only the regime selector the ledger-preflight bypass reads",
     ),
     _ProfileShapeExclusion(
         "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
@@ -112,9 +123,19 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
 
 _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
     _ProfileShapeExclusion(
-        "src/cadrumo/application/modelo/tests/test_m303_regimen_simplificado_scope.py",
+        "src/cadrumo/adapters/persistence/profile/tests/test_m303_regimen_simplificado_scope_persistence.py",
         None,
         "schema-minimum fragment composed with the IVA block by each complete-profile fixture",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/tests/test_workbench_generation.py",
+        "test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing",
+        "deliberately incomplete profile proves the workbench reasons about the gap instead of failing",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_overview_lists_conditional_requirements.py",
+        "test_a_claimed_iva_block_lists_every_path_it_owes",
+        "deliberately incomplete IVA claim proves the overview lists every path the block owes",
     ),
 )
 

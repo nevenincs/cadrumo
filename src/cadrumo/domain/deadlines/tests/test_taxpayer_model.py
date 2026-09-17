@@ -626,7 +626,7 @@ class TestMultiplePagadoresReducedLimitSchedule:
 
     @pytest.mark.parametrize("filing_year", (2015, 2027))
     def test_reduced_limit_fails_closed_outside_the_published_mapping(self, filing_year: int) -> None:
-        with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
+        with pytest.raises(RegistryValidationError, match=f"has no entry for {filing_year}"):
             resolve_multiple_pagadores_reduced_limit(filing_year, facts=_deadline_facts(filing_year))
 
     def test_reduced_limit_resolution_retains_mapping_provenance(self) -> None:

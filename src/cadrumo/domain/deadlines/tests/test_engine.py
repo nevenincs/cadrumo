@@ -13,7 +13,7 @@ from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordin
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..engine import DeadlineEngine, applies_to, explain, next_deadline
-from ..errors import NoDeadlineWindowsError, ScheduleComputationError
+from ..errors import DeadlineValidationError, NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
     IrpfEstimationRegime,
     IVARegime,
@@ -341,7 +341,7 @@ class TestCompute:
 
     def test_q1_2026_window_comesfrom_registry_data(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
-        q1 = next(o for o in schedule.obligations if o.period == _period(2026, "1T"))
+        q1 = next(o for o in schedule.obligations if o.modelo == "130" and o.period == _period(2026, "1T"))
 
         assert q1.opens_on == date(2026, 4, 1)
         assert q1.closes_on == date(2026, 4, 20)
@@ -541,8 +541,8 @@ class TestAnnualFilingWindows:
     @pytest.mark.parametrize(
         ("filing_year", "opens_on", "closes_on", "payment_cutoff_on"),
         (
-            (2020, date(2021, 4, 7), date(2021, 6, 30), date(2021, 6, 25)),
-            (2021, date(2022, 4, 6), date(2022, 6, 30), date(2022, 6, 27)),
+            (2023, date(2024, 4, 3), date(2024, 7, 1), date(2024, 6, 26)),
+            (2025, date(2026, 4, 8), date(2026, 6, 30), date(2026, 6, 25)),
         ),
     )
     def test_modelo_100_tax_year_schedule_carries_its_following_campaign_window(
@@ -662,7 +662,7 @@ class TestComputeFailures:
         assert excinfo.value.context == {"filing_year": 1999}
 
     def test_negative_due_soon_days_rejected(self) -> None:
-        with pytest.raises(ValueError, match=r"due_soon_days must be >= 0"):
+        with pytest.raises(DeadlineValidationError, match=r"due_soon_days must be >= 0"):
             DeadlineEngine(due_soon_days=-1)
 
 

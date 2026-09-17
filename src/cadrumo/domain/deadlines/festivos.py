@@ -50,6 +50,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
 from ..calculations.registry.schema_base import DateAxis
+from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
 
 HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
@@ -255,6 +256,10 @@ def holiday_calendar_from_authority(
         raise DeadlineValidationError(f"holiday calendar publication for {year} could not be resolved") from exc
     if not isinstance(publication, ResolvedEventFact):
         raise DeadlineValidationError("holiday calendar publication must resolve to an event fact")
+    # A publication carried over from another year proves nothing about this
+    # one: only an authored publication makes absent holiday events business days.
+    if publication.projection_direction is not TemporalProjectionDirection.AUTHORED:
+        raise DeadlineValidationError(f"holiday calendar for {year} has no governed publication")
     publication_outputs = {output.name: output.value for output in publication.payload.outputs}
     boe_ref = publication_outputs.get("boe_ref")
     boe_url = publication_outputs.get("boe_url")

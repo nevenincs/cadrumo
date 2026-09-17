@@ -20,9 +20,11 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.errors import RegistrySnapshotError
-from ..plazo import resolve_filing_closes_on
+from ...calculations.registry.errors import NoRevisionForPeriodError, RegistrySnapshotError
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
+from ..plazo import resolve_filing_closes_on, resolve_filing_window
 from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -157,7 +159,7 @@ def test_resolve_filing_closes_on_annual_period() -> None:
 
 @pytest.mark.parametrize(
     ("modelo", "filing_year"),
-    (("180", 2023), ("100", 2019)),
+    (("180", 2023),),
 )
 def test_resolve_filing_closes_on_annual_period_does_not_borrow_a_future_window(
     modelo: str,
@@ -165,65 +167,58 @@ def test_resolve_filing_closes_on_annual_period_does_not_borrow_a_future_window(
 ) -> None:
     """An unauthored annual tax year must not resolve its successor's deadline.
 
-    The bundled registry starts Modelo 180 annual windows at tax year 2024 and
-    Modelo 100 annual windows at tax year 2020.  A work unit for the preceding
-    tax year has no exact registry deadline, even though the next year's
-    campaign closes in the following calendar year.
+    The bundled registry starts Modelo 180 annual windows at tax year 2024.  A
+    work unit for the preceding tax year has no exact registry deadline, even
+    though the next year's campaign closes in the following calendar year.
     """
     assert resolve_filing_closes_on(modelo, filing_year, Period.from_year_and_code(filing_year, "0A")) is None
 
 
-# ---------------------------------------------------------------------------
-# Modelo 210 IRNR trimestral a-ingresar windows (Orden EHA/3316/2010 art 5,
-# consolidated in vigor 24/06/2026; Orden HAC/56/2024 + HAC/623/2026). Art 5.c.1º
-# resto de rentas con resultado a ingresar (general): "los veinte primeros días
-# naturales de los meses de abril, julio, octubre y enero ... del trimestre natural
-# anterior." Each period token is the devengo quarter; the window closes on the 20th
-# natural day of the month after the quarter, so 4T closes the following January.
-# ---------------------------------------------------------------------------
+def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_refused() -> None:
+    """A tax year below the supported floor is refused, never answered with a later window.
 
-
-def test_resolve_filing_closes_on_m210_2025_q1_a_ingresar() -> None:
-    """M210 1T 2025 general a-ingresar closes on 2025-04-20 (Orden EHA/3316/2010 art 5)."""
-    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "1T"))
-    assert closes_on == date(2025, 4, 20)
-
-
-def test_resolve_filing_closes_on_m210_2025_q3_a_ingresar() -> None:
-    """M210 3T 2025 general a-ingresar closes on 2025-10-20 (Orden EHA/3316/2010 art 5)."""
-    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "3T"))
-    assert closes_on == date(2025, 10, 20)
-
-
-def test_resolve_filing_closes_on_m210_2025_q4_closes_following_january() -> None:
-    """M210 4T 2025 general a-ingresar closes on 2026-01-20 (20 primeros días de enero del año siguiente)."""
-    closes_on = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "4T"))
-    assert closes_on == date(2026, 1, 20)
-
-
-def test_resolve_filing_closes_on_m210_quarters_are_continuous_and_non_overlapping() -> None:
-    """Adjacent M210 quarterly windows are gap-free and non-overlapping.
-
-    Each window closes on the 20th of the month after its devengo quarter, and the
-    next window opens on the 1st of that same month — the 20-natural-day plazo is a
-    closed interval that never overlaps the following quarter's plazo.
+    Modelo 100 annual windows begin before the floor, so the preceding-year case
+    for it is a refusal: the caller learns the deadline is unknown rather than
+    absent or borrowed.
     """
-    q1 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "1T"))
-    q2 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "2T"))
-    q3 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "3T"))
-    q4 = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "4T"))
-    assert q1 is not None and q2 is not None and q3 is not None and q4 is not None
-    # Strictly increasing close dates, each three months after the prior.
-    assert q1 < q2 < q3 < q4
-    assert (q1, q2, q3, q4) == (date(2025, 4, 20), date(2025, 7, 20), date(2025, 10, 20), date(2026, 1, 20))
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    filing_year = supported_years.floor - 1
+    with pytest.raises(NoRevisionForPeriodError):
+        resolve_filing_closes_on("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
 
 
-def test_resolve_filing_closes_on_m210_annual_0a_deferred_returns_none() -> None:
-    """M210 annual '0A' has no authored window yet — the resultado/tipo-dependent annual
-    plazos (arrendamiento a-ingresar abril, cuota cero 1-20 enero, a devolver desde 1 feb,
-    imputadas 1 enero-31 diciembre) are not expressible as a single period token and are
-    deferred to a resultado/tipo-keyed deadline-modelling decision. The resolver must
-    return None rather than silently reusing a wrong window.
+# ---------------------------------------------------------------------------
+# Modelo 210 IRNR presentation windows (Orden EHA/3316/2010 art 5). Since the
+# per-devengo regime the registry keys fixed annual plazos on canonical 0A and
+# scopes each one by resultado and tipo de renta; no quarter token exists.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("quarter", ("1T", "2T", "3T", "4T"))
+def test_resolve_filing_closes_on_m210_declares_no_quarter_window(quarter: str) -> None:
+    """M210 quarter tokens have no window: none is fabricated from the old trimestral plazo."""
+    assert resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, quarter)) is None
+
+
+def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_april() -> None:
+    """Arrendamiento a ingresar for 2025 devengos closes 2026-04-20 (Orden EHA/3316/2010 art 5)."""
+    window = resolve_filing_window(
+        "210",
+        2025,
+        Period.from_year_and_code(2025, "0A"),
+        resultado=ResultDisposition.INGRESO,
+        tipo_renta_code="01",
+    )
+    assert window is not None
+    assert (window.opens_on, window.closes_on) == (date(2026, 4, 1), date(2026, 4, 20))
+
+
+def test_resolve_filing_closes_on_m210_annual_0a_without_resultado_returns_none() -> None:
+    """M210 annual '0A' plazos depend on resultado and tipo de renta.
+
+    Without that context no single window applies, so the unqualified resolver
+    returns None rather than silently picking one of the scoped windows.
     """
     result = resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, "0A"))
     assert result is None

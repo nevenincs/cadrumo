@@ -41,7 +41,7 @@ def test_profile_hydration_preserves_explicit_tax_territory(
 ) -> None:
     iva = _profile(scope).iva
     assert iva is not None
-    assert iva.tax_territory is expected
+    assert iva.tax_territory == expected
 
 
 def test_wholly_absent_iva_block_stays_none() -> None:

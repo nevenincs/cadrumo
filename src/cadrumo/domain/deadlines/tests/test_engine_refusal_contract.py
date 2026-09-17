@@ -48,7 +48,7 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
         "DeadlineEngine.explain",
         "DeadlineEngine._deadline_windows",
         "DeadlineEngine._evaluate_conditions",
-        "indexed_deadline_windows",
+        "_project_deadline_windows",
     },
 )
 

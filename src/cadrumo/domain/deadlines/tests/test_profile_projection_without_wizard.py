@@ -25,25 +25,27 @@ import pytest
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _CHILD_SCRIPT = r"""
 import sys
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.deadlines.profiles import taxpayer_profile_from_mapping
 
-profile = taxpayer_profile_from_mapping(
-    {
-        "identity.tax_id": "12345678Z",
-        "activities.description": "asesoria fiscal",
-        "taxpayer_type.entity_type": "natural_person",
-        "taxpayer_type.irpf_income_categories": "actividad_economica",
-        "withholding.has_employees": "true",
-        "irpf.professional_income_withholding_ge_70pct": "true",
-    },
-    tax_id_default="00000000T",
-)
+with bundled_indexed_authority().operation():
+    profile = taxpayer_profile_from_mapping(
+        {
+            "identity.tax_id": "12345678Z",
+            "activities.description": "asesoria fiscal",
+            "taxpayer_type.entity_type": "natural_person",
+            "taxpayer_type.irpf_income_categories": "actividad_economica",
+            "withholding.has_employees": "true",
+            "irpf.professional_income_withholding_ge_70pct": "true",
+        },
+        tax_id_default="00000000T",
+    )
 print("TAX_ID:" + profile.tax_id)
 print("ENTITY:" + str(profile.entity_type))
 print("EMPLOYEES:" + str(profile.has_employees))

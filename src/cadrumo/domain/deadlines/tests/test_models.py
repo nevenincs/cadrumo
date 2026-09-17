@@ -57,7 +57,7 @@ class TestTaxpayerProfile:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             TaxpayerProfile.model_validate(
                 {
-                    "tax_id": "X",
+                    "tax_id": "12345678Z",
                     "iva_regime": "GENERAL",
                     "has_employees": True,
                     "pays_professionals_with_retencion": False,
@@ -80,7 +80,7 @@ class TestTaxpayerProfile:
         with pytest.raises(ValidationError, match=r"valid boolean"):
             TaxpayerProfile.model_validate(
                 {
-                    "tax_id": "X",
+                    "tax_id": "12345678Z",
                     "iva_regime": "GENERAL",
                     "has_employees": 1,
                     "pays_professionals_with_retencion": False,
@@ -94,10 +94,10 @@ class TestTaxpayerProfile:
             )
 
     def test_iva_regime_must_be_known(self) -> None:
-        with pytest.raises(ValidationError, match=r"IVARegime"):
+        with pytest.raises(ValidationError, match=r"IVA regime 'WHATEVER' is not declared"):
             TaxpayerProfile.model_validate(
                 {
-                    "tax_id": "X",
+                    "tax_id": "12345678Z",
                     "iva_regime": "WHATEVER",
                     "has_employees": False,
                     "pays_professionals_with_retencion": False,

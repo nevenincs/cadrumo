@@ -80,7 +80,7 @@ def test_a_declared_activity_kind_survives_the_projection(operation: PinnedAutho
             tax_id_default="12345678Z",
         )
 
-        assert profile.irpf_activity_kind is declared
+        assert profile.irpf_activity_kind == declared
 
 
 def test_the_activity_axis_is_independent_of_the_estimation_regime() -> None:
