@@ -214,7 +214,9 @@ def test_resolve_modelo_result_disposition_rejects_printed_number_metadata_token
             period=work_unit.period,
         )
 
-    assert f"{_M200_PRINTED_RESULT_NUMBER!r} -> {_M200_REFUND_RESULT_CASILLA}" in str(exc_info.value)
+    assert f"{_M200_PRINTED_RESULT_NUMBER!r} -> {_M200_REFUND_RESULT_CASILLA}" in str(
+        (exc_info.value.context or {})["casilla_refs"]
+    )
 
 
 def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_metadata_token() -> None:
@@ -236,4 +238,4 @@ def test_resolve_modelo_result_disposition_rejects_ambiguous_printed_number_meta
     assert (
         f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
         f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
-    ) in str(exc_info.value)
+    ) in str((exc_info.value.context or {})["casilla_refs"])
