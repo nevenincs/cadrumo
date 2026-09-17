@@ -1130,6 +1130,14 @@ test-smoke:
 test-workbook-parity:
     uv run --no-sync pytest -v -n0 -m external_tool dev/registry/parity/tests/test_workbook_parity.py
 
+# Run the locale orthography tests. These carry `external_tool` because they
+# read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
+# from npm, which the default unit lane cannot assume.
+[doc('Run the locale orthography tests against the pinned Hunspell dictionaries (external_tool marker).')]
+[group('test')]
+test-locale-spelling:
+    uv run --no-sync pytest -v -n0 -m external_tool dev/locales/tests
+
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
 # and -n0, never marker selection alone: a marker-filtered xdist run holds
