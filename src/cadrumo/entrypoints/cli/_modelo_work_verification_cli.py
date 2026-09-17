@@ -69,6 +69,7 @@ from .state_projection_support import (
     certificate_secret_backend_factory,
     filing_action_ports_factory,
     operator_scope_ports,
+    profile_read_ports_factory,
     verification_repository_bundle_factory,
 )
 
@@ -344,7 +345,7 @@ def work_dependencies(
                     taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
                     m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
                         active_bucket_id,
-                        operation=operation,
+                        profile_path_values_reader=profile_read_ports_factory(ctx)(active_bucket_id).path_values,
                     ),
                     operation=operation,
                 )

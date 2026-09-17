@@ -316,9 +316,6 @@ def _emit_wizard_result(
         "cli.app.modelo.work.wizard_saved",
         revision_id=calculation_revision.calculation_revision_id,
         state=calculation_revision.state.value,
-        modelo=calculation_result.work_unit.modelo,
-        year=calculation_result.work_unit.filing_year,
-        period=calculation_result.work_unit.period,
     )
     prompted_payload = tuple(
         (

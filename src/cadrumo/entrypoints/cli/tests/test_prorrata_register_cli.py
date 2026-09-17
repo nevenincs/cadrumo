@@ -288,22 +288,11 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
 
 
 def test_elect_especial_requires_nonblank_evidence_reference() -> None:
-    missing = _invoke(
-        [
-            "app",
-            "ledger",
-            "prorrata",
-            "elect-especial",
-            "--ejercicio",
-            "2025",
-            "--percentage",
-            "60",
-            *_AUTHORISED_PROVENANCE,
-        ],
-    )
-    assert missing.exit_code != 0
-    assert "evidence-reference" in missing.output
+    """A supplied option reference must say something.
 
+    Omitting it is not refused: LIVA art. 103.Dos.2.º makes the special rule
+    mandatory without any option, so an especial year needs no option evidence.
+    """
     blank = _invoke(
         [
             "app",
@@ -320,7 +309,7 @@ def test_elect_especial_requires_nonblank_evidence_reference() -> None:
         ],
     )
     assert blank.exit_code != 0
-    assert "evidence_reference" in blank.output
+    assert _prorrata_entries() == []
 
 
 def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
@@ -497,7 +486,8 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
                 regime=ProrrataRegisterRegime.from_registry("especial"),
                 especial_transition=None,
                 provisional_percentage=Decimal("60"),
-                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
+                authorisation_reference="AEAT-PRORRATA-2025-0001",
                 source_registry_snapshot_refs=(),
             )
         )
@@ -563,7 +553,8 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
             regime=ProrrataRegisterRegime.from_registry("especial"),
             especial_transition=None,
             provisional_percentage=Decimal("60"),
-            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("aeat_autorizada"),
+            authorisation_reference="AEAT-PRORRATA-2025-0001",
             source_registry_snapshot_refs=(),
         )
         repository.save(ProrrataRegister(entries=(entry,)))
@@ -726,6 +717,6 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
     payload = _entry_payload(entry)
 
     assert payload.especial_transition is not None
-    assert payload.especial_transition.kind is kind
+    assert payload.especial_transition.kind == kind
     emitted = payload.model_dump(mode="json")["especial_transition"]
     assert emitted == {"kind": expected_token, "evidence_reference": "acta-2024-001"}

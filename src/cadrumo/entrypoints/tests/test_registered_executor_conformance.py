@@ -46,7 +46,6 @@ from ...adapters.persistence.profile.tests.verification_repository_support impor
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.export.google_operation import build_google_sheets_export_operation_definition
 from ...application.local_reader_operation import LOCAL_READER_OPERATION_SUBJECT, LocalReaderProvisionAction
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.external_import_actions import import_external_filing_evidence
@@ -124,7 +123,7 @@ from ..adapter_composition import (
     build_work_lifecycle_ports,
 )
 from ..censal_review import _run as run_censal_review_through_services
-from ..operation_composition import build_production_operation_registry
+from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -237,7 +236,9 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             "auth.session.acquire",
             OperationTerminalCondition.REFUSED,
             OperationEffect.UNKNOWN,
-            expected_refusal_ref="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
+            # No certificate is configured in the isolated root, so the
+            # provider's local readiness refuses before any session attempt.
+            expected_refusal_ref="REFUSED_AUTH_LOGIN_PRECONDITION",
         ),
         _RegisteredExecutorConformanceCase(
             "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
@@ -258,10 +259,11 @@ _EXPECTATIONS: Mapping[str, _RegisteredExecutorConformanceCase] = {
             "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         _RegisteredExecutorConformanceCase(
+            # Discovery needs an authenticated session and the isolated root
+            # holds no certificate, so the pull fails before any remote read.
             "live.filed-history.pull",
-            OperationTerminalCondition.REFUSED,
+            OperationTerminalCondition.FAILED,
             OperationEffect.NONE,
-            expected_refusal_ref="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
         ),
         _RegisteredExecutorConformanceCase(
             "export.google-sheets",
@@ -896,7 +898,9 @@ def _runtime(
             profile_decode_context=_profile_decode_context_for_test,
         )
         registry = build_production_operation_registry(
-            auth_definitions=build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login),
+            auth_definitions=build_auth_operation_definitions(
+                ports=build_auth_operation_ports(), profile_login=lambda **_kwargs: initial_login
+            ),
             censal_definition=build_censal_operation_definition(
                 certificate_secret_backend_factory=build_certificate_secret_backend,
                 browser_session_factory=default_browser_session_factory,
@@ -905,7 +909,6 @@ def _runtime(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=build_censal_fetch_port(),
             ),
-            google_export_definition=build_google_sheets_export_operation_definition(),
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
@@ -936,6 +939,7 @@ def _runtime(
                 authority_scope.__exit__(None, None, None)
 
 
+@pytest.mark.usefixtures("operation")
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])
 def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection(
     tmp_path: Path,
@@ -976,6 +980,7 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
             assert after == before
 
 
+@pytest.mark.usefixtures("operation")
 def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_path: Path) -> None:
     """An accepted response followed by a failed continuation stays a failure."""
     cleanup = _CloseWitness()

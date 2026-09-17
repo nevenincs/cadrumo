@@ -22,11 +22,16 @@ fleet:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
@@ -48,6 +53,9 @@ _OPERATOR_FACTS = {
     "identity.surnames": "Operator",
     "activities.description": "design",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
+    "tax_residence.ccaa": "madrid",
+    # Modelo 111 readiness requires the colegio concertado answer.
+    "withholding.colegio_concertado": "false",
 }
 
 _LEGAL_ENTITY_FACTS = {
@@ -63,12 +71,26 @@ _LEGAL_ENTITY_FACTS = {
 }
 
 
+def _m303_filing_evidence(directory: Path, *, operation: PinnedAuthorityOperation) -> Path:
+    """Write the complete filing evidence M303 calculation requires, so the casilla gate is reached."""
+    path = directory / "m303-filing-evidence.json"
+    evidence = general_m303_filing_evidence(
+        Period.from_year_and_code(2025, "1T"),
+        reference="test:discovery-defects:m303",
+        operation=operation,
+    )
+    path.write_text(evidence.model_dump_json(), encoding="utf-8")
+    return path
+
+
 # ---------------------------------------------------------------------------
 # D1 - printed-number metadata tokens refused by work calculate
 # ---------------------------------------------------------------------------
 
 
-def test_work_calculate_rejects_registry_number_as_casilla_reference(seed_profile: ProfileSeeder) -> None:
+def test_work_calculate_rejects_registry_number_as_casilla_reference(
+    seed_profile: ProfileSeeder, tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
@@ -77,6 +99,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(seed_profil
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
+            "--m303-filing-evidence", str(_m303_filing_evidence(tmp_path, operation=operation)),
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -86,7 +109,9 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference(seed_profil
     assert "iva.regularizacion-inversiones" in output
 
 
-def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate(seed_profile: ProfileSeeder) -> None:
+def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate(
+    seed_profile: ProfileSeeder, tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     """A numeric token that resolves to no canonical casilla.id still refuses.
 
     The canonical-id gate must not turn a typo into a silent no-op.
@@ -98,6 +123,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
         [
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "9999=10.00",
+            "--m303-filing-evidence", str(_m303_filing_evidence(tmp_path, operation=operation)),
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -115,7 +141,7 @@ def test_bindings_list_missing_drops_profile_resolved_bindings(seed_profile: Pro
     already resolves, so it is a usable "what do I still owe" guide.
 
     Modelo 100 declares a ``source = "profile"`` binding for the
-    tax-residence CCAA. The created profile carries a default CCAA, so
+    tax-residence CCAA. The seeded profile declares its CCAA, so
     that binding is resolved and must not appear in the missing set,
     while the unsatisfied previous-filing bindings still do.
     """
@@ -191,12 +217,11 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
 
 
 def test_bindings_list_year_resolves_the_year_covering_revision(seed_profile: ProfileSeeder) -> None:
-    """``bindings list --modelo 100 --year 2024`` reports binding ids
-    for the 2024 revision, not the latest (2025) revision.
+    """``bindings list --modelo 100 --year 2024`` reports the revision a
+    2024 snapshot selects, not the latest (2025) revision.
 
-    Modelo 100 carries one revision per renta year; resolving the
-    latest revision would emit ``renta-2025-*`` ids that a work unit
-    created with ``--year 2024`` then rejects.
+    Modelo 100 carries one revision per renta year; resolving the latest
+    would list bindings a work unit created with ``--year 2024`` does not use.
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
@@ -206,7 +231,9 @@ def test_bindings_list_year_resolves_the_year_covering_revision(seed_profile: Pr
     assert result.exit_code == 0, result.output
     binding_ids = [line.split("\t")[3] for line in result.output.splitlines() if line.startswith("100\t")]
     assert binding_ids, result.output
-    assert all(bid.startswith("renta-2024-") for bid in binding_ids), binding_ids
+    # Binding ids are year-free; the revision column names the covering revision.
+    revisions = {line.split("\t")[1] for line in result.output.splitlines() if line.startswith("100\t")}
+    assert revisions == {published_snapshot("100", filing_year=2024, period="0A").revision.id}, revisions
 
 
 # ---------------------------------------------------------------------------
@@ -286,10 +313,10 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
 
 
 def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: ProfileSeeder) -> None:
-    """The Modelo 100 estimación-directa binding carries ``typed_enum``
+    """The Modelo 100 estimación-directa binding offers encoded choices
     yet is consumed as a Decimal operand. ``bindings list`` must report
-    its ``input_channel`` as ``decimal`` so the operator is not misled
-    into supplying an enum value through the binding channel.
+    its ``input_channel`` as ``decimal`` and name the encoded values, so the
+    operator is not misled into supplying a label through the binding channel.
     """
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
@@ -297,11 +324,13 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: P
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
-    row = next(line for line in result.output.splitlines() if "estimacion-directa-es-normal" in line)
+    lines = result.output.splitlines()
+    row = next(line for line in lines if line.startswith("100\t") and "estimacion-directa-es-normal" in line)
     columns = row.split("\t")
-    # typed_enum column still names the enum; input_channel says decimal.
-    assert "EstimacionDirectaModalidad" in columns
     assert columns[-2] == "decimal", row
+    assert any(line.startswith("encoded_option\t") and "estimacion-directa-es-normal" in line for line in lines), (
+        result.output
+    )
 
 
 def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> None:
@@ -325,8 +354,9 @@ def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> 
             "1T",
         ],
     )
-    assert result.exit_code == 0, result.output
     assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
+    # A not-ready scope is reported, and says so through its exit status.
+    assert (result.exit_code == 0) == ("ready\tTrue" in result.output.splitlines()), result.output
 
 
 def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder) -> None:
@@ -348,13 +378,12 @@ def test_modelo_readiness_refuses_revision_mismatch(seed_profile: ProfileSeeder)
             "1T",
         ],
     )
-    assert result.exit_code == 0, result.output
-    flat = result.output.replace("\n", " ")
-    assert "ready\tFalse" in result.output
-    assert "registry_ready\tFalse" in result.output
-    assert "registry_refusal\tregistry snapshot unresolved" in result.output
+    # Refused outright, naming both the requested and the law-determined revision.
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = " ".join(result.output.split())
     assert "2023-y-siguientes" in flat
-    assert "aeat app modelo describe 130" in flat
+    assert "2019-y-siguientes" in flat
 
 
 def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile: ProfileSeeder) -> None:
@@ -376,13 +405,12 @@ def test_modelo_readiness_refuses_period_without_registry_coverage(seed_profile:
             "AD-HOC",
         ],
     )
-    assert result.exit_code == 0, result.output
-    flat = result.output.replace("\n", " ")
-    assert "ready\tFalse" in result.output
-    assert "registry_ready\tFalse" in result.output
-    assert "registry_refusal\tregistry snapshot unresolved" in result.output
+    # Refused outright, naming the uncovered period and the revisions that exist.
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = " ".join(result.output.split())
     assert "AD-HOC" in flat
-    assert "aeat app modelo describe 210" in flat
+    assert "2026-y-siguientes" in flat
 
 
 def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
@@ -404,7 +432,8 @@ def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
     assert result.exit_code == 0, result.output
     assert "Invalid value" not in result.output
     assert "Modelo\t210" in result.output
-    assert "Revision\t2025" in result.output
+    expected_revision = published_snapshot("210", filing_year=2026, period="EVENT-1").revision.id
+    assert f"Revision\t{expected_revision}" in result.output
     assert "Periods\tEVENT-N" in result.output
 
 
@@ -502,16 +531,17 @@ def test_modelo_readiness_reports_missing_calculation_bindings(seed_profile: Pro
             "--modelo",
             "200",
             "--revision-id",
-            "2024",
+            str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--year",
             "2026",
             "--period",
             "0A",
         ],
     )
-    assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     assert payload["ready"] is False
+    # A not-ready scope still reports its payload and says so through its exit status.
+    assert result.exit_code != 0, result.output
     assert payload["registry_ready"] is True
     assert payload["binding_ready"] is False
     missing_binding_ids = {row["binding_id"] for row in payload["missing_bindings"]}
@@ -541,7 +571,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
             "--modelo",
             "200",
             "--revision-id",
-            "2024",
+            str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--year",
             "2026",
             "--period",
@@ -549,7 +579,7 @@ def test_modelo_200_legal_entity_readiness_does_not_request_retired_objective_bo
         ],
     )
 
-    assert result.exit_code == 0, result.output
+    # Overall readiness also waits on calculation bindings; the profile half is the subject here.
     payload = _payload(result.output)
     assert payload["profile_ready"] is True
     assert "irpf.uses_objective_estimation" not in result.output
@@ -659,9 +689,9 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str,
             "calculate",
             work_unit_id,
             "--binding",
-            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "modelo-202-pagos-fraccionados-anteriores=0",
             "--binding",
-            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
+            "modelo-202-cuota-base-ejercicio-anterior=0",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -703,9 +733,9 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens(seed_profil
                 "calculate",
                 work_unit_id,
                 "--binding",
-                "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+                "modelo-202-pagos-fraccionados-anteriores=0",
                 "--binding",
-                "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
+                "modelo-202-cuota-base-ejercicio-anterior=0",
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)

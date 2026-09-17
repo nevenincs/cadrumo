@@ -111,7 +111,7 @@ if TYPE_CHECKING:
     from ..application.storage.calc_sheets.parity_harness import CalcSheetsParityApplyPort
     from ..application.storage.calc_sheets.records import SheetExportPlan
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort, ProfileCustodyPort
-    from ..application.user_profile.profile_read_ports import ProfileReadPorts
+    from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
     from ..core.tabular import NormalizedTable
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -160,16 +160,7 @@ class ProfileAdapterComposition:
     @cached_property
     def operator_probe_ports(self) -> OperatorProbePorts:
         """Resolve the operator probe ports on first read."""
-        from ..adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
-        from ..adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
-        from ..adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
-        from ..application.auth.operator_probe_ports import OperatorProbePorts
-
-        return OperatorProbePorts(
-            active_profile_session=ActiveProfileSessionPresenceAdapter(),
-            certificate_health=CertificateHealthProbeAdapter(),
-            clave_identity=ClaveIdentityProbeAdapter(),
-        )
+        return build_operator_probe_ports()
 
     @cached_property
     def operator_scope_ports(self) -> OperatorScopePorts:
@@ -187,6 +178,11 @@ class ProfileAdapterComposition:
     def verification_repository_bundle_factory(self) -> VerificationRepositoryBundleFactory:
         """Resolve the verification repository bundle factory on first read."""
         return build_verification_repository_bundle
+
+    @property
+    def profile_read_ports_factory(self) -> ProfileReadPortsFactory:
+        """Resolve the per-bucket profile read ports factory."""
+        return _profile_read_ports_for_bucket
 
     @property
     def calculation_action_ports_factory(self) -> CalculationActionPortsFactory:
@@ -364,6 +360,20 @@ class ProfileAdapterComposition:
         return build_apoderado_config_repository
 
 
+def build_operator_probe_ports() -> OperatorProbePorts:
+    """Compose the session, certificate and Cl@ve probes the auth flows consult."""
+    from ..adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
+    from ..adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
+    from ..adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+    from ..application.auth.operator_probe_ports import OperatorProbePorts
+
+    return OperatorProbePorts(
+        active_profile_session=ActiveProfileSessionPresenceAdapter(),
+        certificate_health=CertificateHealthProbeAdapter(),
+        clave_identity=ClaveIdentityProbeAdapter(),
+    )
+
+
 def build_censal_fetch_port() -> CensalFetchPort:
     """Bind the concrete Sede censo reader to the application fetch port."""
     from ..adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
@@ -472,6 +482,7 @@ def build_modelo_export_ports(
         verification=VerificationReportCatalogueRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
+            m303_rectificativa_taxpayer_tax_id=m303_rectificativa_taxpayer_tax_id,
         ),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
@@ -491,6 +502,10 @@ def build_modelo_export_ports(
         ),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
     )
+
+
+def _profile_read_ports_for_bucket(bucket_id: str) -> ProfileReadPorts:
+    return build_profile_read_ports(bucket_id=bucket_id)
 
 
 def build_profile_read_ports(*, bucket_id: str) -> ProfileReadPorts:

@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFactory
     from ...application.state_projection_ports import StateProjectionReadPorts
     from ...application.user_profile.custody_ports import ProfileBucketStoragePort
+    from ...application.user_profile.profile_read_ports import ProfileReadPortsFactory
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ADAPTER_COMPOSITION_KEY = "adapter_composition"
@@ -107,6 +108,11 @@ def bucket_storage(ctx: typer.Context) -> ProfileBucketStoragePort:
 def verification_repository_bundle_factory(ctx: typer.Context) -> VerificationRepositoryBundleFactory:
     """Return the required verification bundle factory from the CLI root."""
     return _adapter_composition(ctx).verification_repository_bundle_factory
+
+
+def profile_read_ports_factory(ctx: typer.Context) -> ProfileReadPortsFactory:
+    """Return the per-bucket profile read ports factory from the CLI root."""
+    return _adapter_composition(ctx).profile_read_ports_factory
 
 
 def calculation_action_ports_factory(ctx: typer.Context) -> CalculationActionPortsFactory:

@@ -116,6 +116,10 @@ def _login(name: str) -> Result:
     )
 
 
+def _logout() -> Result:
+    return invoke_cached_cli(("config", "logout"))
+
+
 def _invoke_profile(args: Sequence[str]) -> Result:
     return _invoke_config(("profile", *args))
 
@@ -182,7 +186,11 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
     assert " 	alpha" in listing.output
     assert "*	beta" in listing.output
 
+    # One process holds one bound session, so each profile is unlocked
+    # before its own facts are read.
+    assert _login("alpha").exit_code == 0
     alpha_show = invoke_cached_cli(("--profile", "alpha", "config", "profile", "view"))
+    assert _login("beta").exit_code == 0
     beta_show = invoke_cached_cli(("--profile", "beta", "config", "profile", "view"))
     assert alpha_show.exit_code == 0, alpha_show.output
     assert beta_show.exit_code == 0, beta_show.output
@@ -280,7 +288,9 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -
     )
 
     assert result.exit_code != 0
-    assert "does not exist" in result.output
+    # With no profile registered at all, the refusal is the stable
+    # no-active-profile condition rather than localised prose.
+    assert 'failed_condition_id: "profile.active"' in result.output
     assert read_profile_bucket("ghost") is None
 
 
@@ -314,7 +324,6 @@ def test_config_login_emits_profile_activated_event() -> None:
         if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == pointer.bucket_id
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
-    assert matching[-1].payload["profile_id"] == pointer.bucket_id
     assert matching[-1].payload["active_profile"] == pointer.bucket_id
 
 
@@ -339,7 +348,10 @@ def test_config_profile_view_named_profile_includes_canonical_facts() -> None:
     # context, leaving the verb with no active profile.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
     assert _login("operator").exit_code == 0
-    seed("spouse", tax_id="00000000T")
+    register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
+    # One process holds one bound session: the named profile is unlocked
+    # before its facts are read.
+    assert _login("spouse").exit_code == 0
     result = _invoke_profile(("view", "spouse"))
     assert result.exit_code == 0, result.output
     assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
@@ -360,12 +372,13 @@ def test_config_profile_delete_requires_yes() -> None:
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
-    # refused, so a login here would block the verb under test.
+    # Registration activates the profile, and deleting the ACTIVE profile is
+    # refused, so the session is closed before the verb under test.
     register_cli_profile(log_in=False, label="operator")
+    assert _logout().exit_code == 0
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
-    assert "status\ttombstoned" in result.output
+    assert "deleted\ttrue" in result.output
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
@@ -378,9 +391,10 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
-    # refused, so a login here would block the verb under test.
+    # Registration activates the profile, and deleting the ACTIVE profile is
+    # refused, so the session is closed before the verb under test.
     register_cli_profile(log_in=False, label="operator")
+    assert _logout().exit_code == 0
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _invoke_profile(("list",))
     assert result.exit_code == 0, result.output
@@ -401,6 +415,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     # session key, not a passphrase-backed custody envelope, so ``config login``
     # has no operator passphrase to accept.
     register_cli_profile(log_in=False, label="operator")
+    assert _logout().exit_code == 0
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     result = _login("operator")
     assert result.exit_code != 0, result.output
@@ -408,44 +423,26 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     assert resolve_active_bucket_id() is None
 
 
-def test_config_profile_view_reports_a_tombstoned_profile_as_tombstoned() -> None:
-    """``show`` of a tombstoned profile renders ``record_validity tombstoned``.
-
-    Closes the self-contradiction where ``show`` reported
-    ``record_validity valid issues=0`` directly above ``status tombstoned``.
-    """
-
-    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
-    # refused, so a login here would block the verb under test.
-    register_cli_profile(log_in=False, label="operator")
-    assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
-    result = _invoke_profile(("view", "operator"))
-    assert result.exit_code == 0, result.output
-    assert "status\ttombstoned" in result.output
-    assert "record_validity\ttombstoned" in result.output
-    assert "record_validity\tvalid" not in result.output
-
-
-def test_config_profile_view_inspects_a_tombstoned_profile_by_label_and_uuid() -> None:
-    """``show`` preserves tombstoned inspect behavior for label and UUID targets."""
+def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> None:
+    """Deletion destroys the capsule, so neither its label nor its UUID still resolves."""
 
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
-    # Registered but deliberately NOT activated: deleting the ACTIVE profile is
-    # refused, so a login here would block the verb under test.
+    # Registration activates the profile, and deleting the ACTIVE profile is
+    # refused, so the session is closed before the verb under test.
     register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
-    tombstoned_uuid = pointer.bucket_id
+    deleted_uuid = pointer.bucket_id
+    assert _logout().exit_code == 0
 
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
     by_label = _invoke_profile(("view", "operator"))
-    by_uuid = _invoke_profile(("view", tombstoned_uuid))
+    by_uuid = _invoke_profile(("view", deleted_uuid))
 
     for result in (by_label, by_uuid):
-        assert result.exit_code == 0, result.output
-        assert "status\ttombstoned" in result.output
-        assert "record_validity\ttombstoned" in result.output
+        assert result.exit_code != 0, result.output
+        assert 'failed_condition_id: "profile.selection.known"' in result.output
 
 
 def test_config_profile_view_runs_validation_inline() -> None:
@@ -528,10 +525,16 @@ def test_config_profile_view_refuses_when_no_active_profile(_isolated_backend: P
 def test_config_profile_edit_quiet_emits_updated_confirmation() -> None:
     """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
-    seed("editme")
+    register_cli_profile(log_in=False, label="editme")
+    assert _login("editme").exit_code == 0
 
-    result = _invoke_profile_app(
+    # The labels are asserted in English, so the invocation asks for English.
+    result = invoke_cached_cli(
         (
+            "--language",
+            "en",
+            "config",
+            "profile",
             "edit",
             "editme",
             "--quiet",
@@ -561,7 +564,8 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
     overwritten.
     """
 
-    seed("editme")
+    register_cli_profile(log_in=False, label="editme")
+    assert _login("editme").exit_code == 0
 
     result = _invoke_profile_app(("edit", "editme"))
 

@@ -33,7 +33,8 @@ from __future__ import annotations
 
 import re
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, NoReturn, cast
 
@@ -42,6 +43,8 @@ import click
 if TYPE_CHECKING:
     from typer._click.exceptions import ClickException
 
+    from ...core.errors.error_codes import ErrorCode
+    from ...core.errors.hierarchy import CadrumoError
     from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
@@ -148,6 +151,30 @@ def _parse_time_output_language() -> str:
     if explicit is not None:
         return explicit
     return output_language()
+
+
+@contextmanager
+def _requested_output_language() -> Generator[None]:
+    """Render inside the language the invocation explicitly requested.
+
+    A subcommand's ``--output-language`` override is bound to its command
+    context, which has already closed when a refusal escapes to this boundary,
+    so the argv token is re-applied for the render.
+    """
+    from ...core.config import override_settings
+    from ...core.i18n.render import clear_output_language_cache
+    from .language_argv import language_from_argv
+
+    explicit = language_from_argv(_invocation_argv())
+    if explicit is None:
+        yield
+        return
+    with override_settings(cadrumo_output_language=explicit):
+        clear_output_language_cache()
+        try:
+            yield
+        finally:
+            clear_output_language_cache()
 
 
 def _has_base(exc: BaseException, name: str) -> bool:
@@ -427,16 +454,9 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from .common import (
-        cli_policy_refusal_projection,
-        current_requested_cli_leaf,
-        project_cli_policy_refusal,
-    )
     from .errors import (
         CliUnexpectedBoundaryError,
-        boundary_no_recovery_verdict,
         project_cli_boundary_error,
-        render_error_payload,
         write_stderr,
     )
 
@@ -461,6 +481,21 @@ def _emit_crash(exc: Exception) -> NoReturn:
             exc_info=exc,
             extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
         )
+    with _requested_output_language():
+        payload, code = _render_crash_payload(exc, boundary)
+    write_stderr(payload)
+    sys.exit(get_error_exit_code(code.category))
+
+
+def _render_crash_payload(exc: Exception, boundary: CadrumoError) -> tuple[str, ErrorCode]:
+    """Render the terminal document for one escaped failure."""
+    from .common import (
+        cli_policy_refusal_projection,
+        current_requested_cli_leaf,
+        project_cli_policy_refusal,
+    )
+    from .errors import boundary_no_recovery_verdict, render_error_payload
+
     projection = cli_policy_refusal_projection(boundary)
     if projection is None:
         verdict = boundary_no_recovery_verdict(boundary)
@@ -500,8 +535,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
         ),
         action=None if projection is None else projection.precondition_action,
     )
-    write_stderr(payload)
-    sys.exit(get_error_exit_code(code.category))
+    return payload, code
 
 
 def _emit_abort() -> NoReturn:

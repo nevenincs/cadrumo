@@ -163,7 +163,9 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="input_classification",
                 declarations=("--input-classification",),
-                value=ValueContract(DeferredTarget("...domain.iva.prorrata", "InputClassification", __package__)),
+                # Raw text: the handler projects it through the registry on the
+                # transaction's own date, which a boundary type cannot know.
+                value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.add.input_classification_help"),
                 metavar=None,

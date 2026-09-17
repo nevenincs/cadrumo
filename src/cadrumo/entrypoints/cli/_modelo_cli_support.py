@@ -98,6 +98,18 @@ def validate_work_unit_id(value: str) -> str:
     return stripped
 
 
+_DISPLAYED_WORK_UNIT_ID_PATTERN = r"^[0-9a-f]{12}$"
+"""The short work-unit handle ``work list`` and ``work status`` display."""
+
+
+def validate_work_unit_selector(value: str) -> str:
+    """Validate an exact work-unit id or the short handle the work views display."""
+    stripped = value.strip()
+    if re.fullmatch(_DISPLAYED_WORK_UNIT_ID_PATTERN, stripped):
+        return stripped
+    return validate_work_unit_id(stripped)
+
+
 def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
     """Validate that *value* is a 64-character lowercase hex string."""
     stripped = value.strip()
