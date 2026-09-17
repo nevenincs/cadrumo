@@ -9,15 +9,15 @@ deterministic order and returns the first non-``None``
 The parsers are deliberately synchronous, side-effect free, and free of any
 Playwright dependency. :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`
 is the adapter boundary used by
-:meth:`adapters.outbound.aeat.browser.BrowserSession.navigate`; it turns
+:meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate`; it turns
 navigation responses into :class:`SiteHealthStatus` records that can be carried
-by :class:`core.errors.SiteHealthError`. The marker corpora reflect the
+by :class:`core.errors.hierarchy.SiteHealthError`. The marker corpora reflect the
 observed mantenimiento, WAF, and rate-limit responses on AEAT Sede Electrónica.
 
 See Also:
     :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`
         Frozen record returned by every positive parser classification.
-    :class:`core.errors.SiteHealthState`
+    :class:`core.errors.hierarchy.SiteHealthState`
         Closed state catalogue emitted by this parser suite.
 """
 
@@ -431,8 +431,8 @@ def evaluate_response(
 
     This is the public parser entry point consumed by
     :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`.
-    :class:`~adapters.outbound.aeat.browser.BrowserSession` then raises
-    :class:`core.errors.SiteHealthError` for any returned status.
+    :class:`~adapters.outbound.aeat.browser.session.BrowserSession` then raises
+    :class:`core.errors.hierarchy.SiteHealthError` for any returned status.
 
     Parsers are evaluated in cost-then-specificity order:
 

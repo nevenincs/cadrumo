@@ -6,7 +6,7 @@ Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
 decrypted in-memory storage state, and an optional
 :class:`application.auth.protocols.BrowserContextProvisioner`.
 Certificate auth passes a
-:class:`adapters.outbound.aeat.auth.CertificateContextProvisioner` so
+:class:`adapters.outbound.aeat.auth.providers.CertificateContextProvisioner` so
 the AEAT origin receives the configured PKCS#12 certificate at context
 construction time.
 
@@ -109,7 +109,7 @@ class BrowserSession:
         When ``provisioner`` is supplied, it injects auth-provider-specific
         ``browser.new_context(...)`` kwargs. Certificate auth uses this hook
         through
-        :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
+        :class:`adapters.outbound.aeat.auth.providers.CertificateContextProvisioner`;
         Cl@ve Móvil usually passes only persisted in-memory storage state.
 
         Args:

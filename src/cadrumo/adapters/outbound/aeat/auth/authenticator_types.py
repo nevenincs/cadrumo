@@ -1,7 +1,7 @@
 """Browser protocols for concrete live AEAT authentication adapters.
 
 The protocols mirror the subset of
-:class:`adapters.outbound.aeat.browser.BrowserSession` that auth providers
+:class:`adapters.outbound.aeat.browser.session.BrowserSession` that auth providers
 need, so tests and adapter callers can satisfy the same structural contract
 without importing Playwright directly.
 """

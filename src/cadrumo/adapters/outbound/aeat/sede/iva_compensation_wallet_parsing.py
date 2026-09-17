@@ -48,7 +48,7 @@ _SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3
 
 The anchored counterpart -- mandating the printed figure IS the two-decimal
 comma-tailed AEAT money shape end to end rather than merely containing one --
-is :func:`~cadrumo.core.decimal.is_aeat_printed_money`, enforced by
+is :func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`, enforced by
 :func:`_parse_spanish_decimal` on every caller.
 
 The separator class is built from
@@ -62,7 +62,7 @@ it a thousandfold low over-pays.
 
 This is the THIRD grammar over that one separator taxonomy, and the three are
 deliberately not interchangeable.
-:data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP` cannot stand in for it: that
+:data:`~adapters.inbound.pdf.label_regex.SPANISH_AMOUNT_GROUP` cannot stand in for it: that
 group has no ungrouped-integer alternative, so applied unanchored to ``1234,56``
 it captures ``234,56`` -- the very failure above, from a different direction.
 What the three must never differ on is which code points AEAT prints between
@@ -611,10 +611,10 @@ def _parse_year(value: str) -> int:
 def _parse_spanish_decimal(value: str) -> Decimal:
     """Parse an AEAT wallet money cell, unconditionally reading a dot as a thousands separator.
 
-    Unlike :func:`~adapters.inbound.pdf.parse_spanish_decimal` (PDF receipts,
+    Unlike :func:`~adapters.inbound.pdf.label_regex.parse_spanish_decimal` (PDF receipts,
     which explicitly tolerate an English-rendered receipt per
     :mod:`adapters.inbound.justificante._extract`) and
-    :func:`~adapters.inbound.financial.providers._base.parse_amount_value`
+    :func:`~adapters.inbound.financial.providers.base.parse_amount_value`
     (arbitrary-locale bank exports), the thousands-vs-decimal reading is
     never genuinely ambiguous here: this module reads exactly one
     Spanish-locale-only authenticated AEAT internal sede surface (the own-name
@@ -627,10 +627,10 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     mandatory two-decimal comma tail. The aggregate "pendientes de períodos
     anteriores" total is read through :data:`_SPANISH_AMOUNT_RE`, which
     already mandates that shape; this shared parser applies the same
-    anchored check (:func:`~cadrumo.core.decimal.is_aeat_printed_money`) to
+    anchored check (:func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`) to
     every caller, closing
     the asymmetry the per-row wallet cell previously had -- it reached
-    :func:`~cadrumo.core.decimal.normalize_decimal_separators` with no shape
+    :func:`~cadrumo.core.decimal.coercion.normalize_decimal_separators` with no shape
     check at all, so a future AEAT template rendering that column without
     decimals would have been silently reinterpreted as a thousands-grouped
     integer instead of surfacing as the shape change it would actually be.

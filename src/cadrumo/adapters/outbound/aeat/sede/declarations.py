@@ -329,7 +329,7 @@ async def discover_filed_declaration_availability(
     this is a read of the form's own controls.
 
     The result is tagged
-    :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and MUST be
+    :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and MUST be
     consumed as AEAT's *offered* option set. Whether those option lists are
     scoped to the authenticated NIF or are a static universal catalogue is
     unconfirmed, and settling it needs a live authenticated probe against an

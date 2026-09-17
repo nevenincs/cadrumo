@@ -55,7 +55,7 @@ def extract_csv_from_url(url: str) -> AeatCsv:
 
     The return names :data:`~cadrumo.core.identity.aeat_csv.AeatCsv` to document an
     invariant this function already enforces rather than to add one: the
-    :func:`~cadrumo.core.is_aeat_csv` guard below is the same 8-32 uppercase
+    :func:`~cadrumo.core.aeat_csv.is_aeat_csv` guard below is the same 8-32 uppercase
     alphanumeric shape the alias constrains toward, so every value returned
     here is already in the alias's canonical form. A plain function's
     annotation runs no validator; the guard is what refuses, and the alias is

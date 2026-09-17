@@ -173,14 +173,14 @@ class SedeCapture(BaseModel):
 
     Bundles the expediente listing metadata, the CSV handle, the raw
     PDF bytes, and the captured-at timestamp. Produced by
-    :func:`adapters.outbound.aeat.sede.capture_justificante`; consumed by the reconciler.
+    :func:`adapters.outbound.aeat.sede.walker.capture_justificante`; consumed by the reconciler.
 
     Attributes:
         expediente: The expediente the capture originated from.
         ref: The CSV handle the capture used.
         pdf_bytes: Raw PDF body as served by AEAT.
         pdf_sha256: SHA-256 of ``pdf_bytes``, typed as the canonical
-            :data:`~core.identity.ContentDigest` rather than a locally
+            :data:`~core.identity.digest.ContentDigest` rather than a locally
             re-declared hex-64 pattern. The three digest fields in this module
             each carried their own copy of that regex and so each rejected a
             whitespace-wrapped digest the canonical alias trims — one shape,
@@ -249,7 +249,7 @@ class ObservedCasillaValue(BaseModel):
         """Return the observed amount, refusing any casilla that is not numeric.
 
         The kind check comes BEFORE the conversion, and that order is the whole
-        point. :func:`~core.decimal.coerce_decimal_strict` is the canonical strict
+        point. :func:`~core.decimal.coercion.coerce_decimal_strict` is the canonical strict
         coercion and this method delegates to it rather than adding a third
         implementation, but it is strict about parse FAILURE and knows nothing
         about the declaration -- ``coerce_decimal_strict("15")`` returns
@@ -266,7 +266,7 @@ class ObservedCasillaValue(BaseModel):
 
         Raises:
             SedeValidationError: When the casilla is not
-                :attr:`~core.CasillaValueKind.NUMERIC`.
+                :attr:`~core.casilla_value_kind.CasillaValueKind.NUMERIC`.
             decimal.InvalidOperation: When a numeric casilla carries an
                 unparseable token.
         """
@@ -282,7 +282,7 @@ class ObservedCasillaSkip(BaseModel):
     """One casilla the Decimal-only registry channel cannot carry.
 
     Enumerated by
-    :func:`~adapters.outbound.aeat.sede.non_numeric_observed_casillas` so a
+    :func:`~adapters.outbound.aeat.sede.declarations_observations.non_numeric_observed_casillas` so a
     caller can refuse, log, or surface a diagnostic, rather than being folded
     into the enrolment result. The check is caller-opt-in: a caller with no
     operator surface to report on has nothing to do with these rows.
@@ -396,10 +396,10 @@ class FiledDeclarationAvailabilityReport(BaseModel):
     """What the declaraciones register offered across every modelo it listed.
 
     The report is tagged
-    :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and the tag
+    :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and the tag
     is a pinned :class:`~typing.Literal`, not a caller-supplied field, so this
     record can never be passed off as the taxpayer-specific
-    :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY` signal. It
+    :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY` signal. It
     is read-only evidence of an offered option set and persists nothing.
 
     Attributes:
@@ -407,7 +407,7 @@ class FiledDeclarationAvailabilityReport(BaseModel):
             register listed, in the order the combobox rendered them.
         discovered_at: When the option sets were read.
         signal: Pinned provenance. Always
-            :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS`.
+            :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS`.
     """
 
     model_config = _STRICT_FROZEN
@@ -435,7 +435,7 @@ class FiledDeclaracionObservation(BaseModel):
 
     ``headers`` carries the diseño header facts AEAT states in the submitted
     fichero -- the tipo de declaración, the sin-actividad and REDEME markers --
-    as typed :class:`~core.ObservedHeaderFact` rows rather than in the flat
+    as typed :class:`~core.observed_header_fact.ObservedHeaderFact` rows rather than in the flat
     ``metadata`` map. A header is not a casilla, so it does not belong in
     ``casillas``; and it is not free-form provenance text, so a flat map loses
     the record-design position that makes it auditable. ``metadata`` remains the

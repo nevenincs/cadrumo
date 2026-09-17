@@ -1,6 +1,6 @@
 """Anti-bot evasion strategies for Playwright contexts.
 
-:class:`adapters.outbound.aeat.browser.BrowserSession` applies an
+:class:`adapters.outbound.aeat.browser.session.BrowserSession` applies an
 :class:`EvasionStrategy` after creating each Playwright ``BrowserContext`` and
 before returning it to auth providers or Sede readers. The default
 :class:`PlaywrightStealthEvasion` delegates to the optional
@@ -8,9 +8,9 @@ before returning it to auth providers or Sede readers. The default
 typed terminal outcome when that package is unavailable.
 
 See Also:
-    :meth:`adapters.outbound.aeat.browser.BrowserSession.create_context`
+    :meth:`adapters.outbound.aeat.browser.session.BrowserSession.create_context`
         Applies the configured evasion strategy during context preparation.
-    :class:`adapters.outbound.aeat.browser.BrowserFailureMode`
+    :class:`adapters.outbound.aeat.browser.errors.BrowserFailureMode`
         Carries ``EVASION_FAILED`` when strategy application fails inside the
         central session wrapper.
 """

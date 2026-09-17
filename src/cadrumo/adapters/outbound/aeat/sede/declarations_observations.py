@@ -604,7 +604,7 @@ def non_numeric_observed_casillas(
     and unchanged.
 
     Rows carry no value, deliberately -- see
-    :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`.
+    :class:`~adapters.outbound.aeat.sede.schema.ObservedCasillaSkip`.
     """
     period_token = observation.period.registry_token
     snapshot = operation.snapshot(
@@ -735,13 +735,13 @@ def registry_observation_from_filed_declaration(
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry observation rows.
 
-    The :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    The :class:`~adapters.outbound.aeat.sede.schema.FiledDeclaracionObservation`
     is checked against the selected
     :class:`RegistrySnapshot`; each accepted
-    :class:`~adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
+    :class:`~adapters.outbound.aeat.sede.schema.ObservedCasillaValue` becomes a
     provenance-bearing :class:`CasillaObservation`
     inside the returned
-    :class:`~domain.calculations.registry.RegistryModeloObservation`.
+    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation`.
     """
     period_token = observation.period.registry_token
     snapshot = operation.snapshot(

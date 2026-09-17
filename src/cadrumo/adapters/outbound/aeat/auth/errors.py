@@ -1,7 +1,7 @@
 """Shared exception taxonomy for outbound AEAT authentication.
 
-Every class here inherits from :class:`~core.errors.CadrumoError`, so the
-core error registry binds a stable :class:`~core.errors.ErrorCode` and
+Every class here inherits from :class:`~core.errors.hierarchy.CadrumoError`, so the
+core error registry binds a stable :class:`~core.errors.error_codes.ErrorCode` and
 locale message key to the public auth failure surface. Certificate and Cl@ve
 Móvil providers raise these errors with ``translated_message`` keys when a
 provider precondition, verification probe, persisted-session check, or
@@ -9,8 +9,8 @@ configuration guard refuses to continue.
 
 See Also:
     :mod:`adapters.outbound.aeat.auth` for the public auth surface,
-    :class:`adapters.outbound.aeat.auth.AeatSession` for successful live
-    sessions, and :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`
+    :class:`~application.auth.session_types.AeatSession` for successful live
+    sessions, and :class:`~application.auth.session_types.AeatLoginAssertion`
     for verification outcomes that can be returned without raising.
 """
 
@@ -24,7 +24,7 @@ class AuthConfigurationError(AuthError):
 
     This covers provider selection and configuration refusals before browser or
     certificate work begins. Provider-specific subclasses such as
-    :class:`adapters.outbound.aeat.auth.ClaveMovilConfigurationError` keep
+    :class:`adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilConfigurationError` keep
     their own public identity while remaining catchable through this shared
     configuration arm.
     """
@@ -47,7 +47,7 @@ class AeatSessionExpiredError(AuthError):
     """Raised when an authenticated AEAT session is no longer usable.
 
     Conditions feeding this error include an
-    :class:`adapters.outbound.aeat.auth.AeatSession` idle deadline that
+    :class:`~application.auth.session_types.AeatSession` idle deadline that
     has elapsed, a failed single-shot reauthentication attempt, or an HTTP
     401/403 surfaced by a downstream live-read call site. The registered error
     code is retryable so operator flows can prompt for a fresh authentication

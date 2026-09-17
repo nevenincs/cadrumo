@@ -14,11 +14,11 @@ See Also:
     :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
         Pure parser entry point that creates :class:`SiteHealthStatus` records
         from HTTP status, headers, and body text.
-    :meth:`adapters.outbound.aeat.browser.BrowserSession.navigate`
+    :meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate`
         Browser navigation hook that raises
-        :class:`core.errors.SiteHealthError` when a non-OK status is
+        :class:`core.errors.hierarchy.SiteHealthError` when a non-OK status is
         classified.
-    :class:`core.errors.SiteHealthStatusLike`
+    :class:`core.errors.hierarchy.SiteHealthStatusLike`
         Core-layer structural view that lets application workflow and
         diagnostics consume these adapter records without importing them.
 """
@@ -110,9 +110,9 @@ class SiteHealthStatus(_SiteHealthRecord):
     """Full classification record for a single probe.
 
     Produced by the parser suite and by
-    :meth:`adapters.outbound.aeat.browser.BrowserSession.navigate` for
+    :meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate` for
     transport failures. Non-OK records are carried by
-    :class:`core.errors.SiteHealthError`; diagnostics and workflow code
+    :class:`core.errors.hierarchy.SiteHealthError`; diagnostics and workflow code
     then inspect this record instead of re-parsing response bodies.
 
     Attributes:

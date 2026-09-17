@@ -1,8 +1,8 @@
 """Read-only CSV verification against AEAT's Sede electrónica.
 
 The :func:`verify_csv` helper is opt-in: it only runs when the caller supplies
-or constructs a :class:`adapters.outbound.aeat.browser.DefaultBrowserSession`.
-It is guarded by :class:`domain.calculations.registry.RemoteStateGuardPolicy`
+or constructs a :class:`adapters.outbound.aeat.browser.factory.DefaultBrowserSession`.
+It is guarded by :class:`domain.calculations.registry.remote_state_guard.RemoteStateGuardPolicy`
 and never mutates AEAT-side state. The contract is:
 
 * open the CSV-keyed Sede viewer,
@@ -11,7 +11,7 @@ and never mutates AEAT-side state. The contract is:
 
 The function degrades gracefully when a browser cannot be
 constructed and surfaces the underlying error to the caller via
-:class:`domain.justificante.JustificanteVerificationError`.
+:class:`domain.justificante.errors.JustificanteVerificationError`.
 
 The defining :mod:`contract` module owns :func:`verify_csv` and the Playwright protocol types
 (:class:`VerifyBrowserPageLike`, :class:`VerifyBrowserContextLike`,
@@ -20,12 +20,12 @@ shared by the concrete browser adapters.
 The package initializer is inert and exports none of these symbols.
 
 See Also:
-    :func:`adapters.outbound.aeat.browser.default_browser_session_factory`
+    :func:`adapters.outbound.aeat.browser.factory.default_browser_session_factory`
         Production factory used by :data:`DEFAULT_BROWSER_SESSION_FACTORY`.
-    :class:`adapters.outbound.aeat.browser.BrowserSession`
+    :class:`adapters.outbound.aeat.browser.session.BrowserSession`
         Concrete browser session whose context/page surface these protocols
         mirror.
-    :func:`domain.calculations.registry.assert_remote_operation_allowed`
+    :func:`domain.calculations.registry.remote_state_guard.assert_remote_operation_allowed`
         Guard used to allow only the reviewed read-only CSV verification URL.
 """
 

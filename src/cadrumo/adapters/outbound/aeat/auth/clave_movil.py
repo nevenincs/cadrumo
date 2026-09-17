@@ -164,7 +164,7 @@ def _profile_identity_alignment(provider_identity: str, profile_identity: str) -
 class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvageMixin):
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
-    Constructed by :func:`adapters.outbound.aeat.auth.select_provider` when
+    Constructed by :func:`adapters.outbound.aeat.auth.provider_selection.select_provider` when
     ``kind == AuthProviderKind.CLAVE_MOVIL``. Fresh login can run the
     configured non-QR confirmation flow or the alternate QR flow;
     resume runs headlessly because the stored cookies are sufficient.

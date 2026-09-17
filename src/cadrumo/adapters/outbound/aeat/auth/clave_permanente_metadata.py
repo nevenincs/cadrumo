@@ -1,6 +1,6 @@
 """Cl@ve Permanente persisted-session metadata records.
 
-:class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider` stores
+:class:`~adapters.outbound.aeat.auth.clave_permanente.ClavePermanenteAuthProvider` stores
 :class:`~adapters.outbound.aeat.auth.clave_permanente_metadata.ClavePermanenteSessionMetadata`
 inside the encrypted
 :class:`~adapters.outbound.aeat.auth.session_store.PersistedBrowserSession`
@@ -9,17 +9,17 @@ identity, post-auth landing URL, and resume deadline observed during the
 headless DNI/NIE + password login flow.
 
 Application callers later narrow this provider-owned shape to the common
-:class:`~application.auth.PersistedAuthSession` reuse contract.
+:class:`~application.auth.sessions.PersistedAuthSession` reuse contract.
 
 See Also:
-    :class:`~adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
+    :class:`~adapters.outbound.aeat.auth.clave_permanente.ClavePermanenteAuthProvider`
         Provider that writes and reloads this metadata beside browser state.
-    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail`
+    :class:`~application.auth.session_types.ClavePermanenteSessionDetail`
         Public session detail projected from this encrypted metadata record.
     :class:`~adapters.outbound.aeat.auth.session_store.PersistedBrowserSession`
         Encrypted browser-session envelope whose metadata mapping stores this
         provider-owned record.
-    :class:`~application.auth.PersistedAuthSession`
+    :class:`~application.auth.sessions.PersistedAuthSession`
         Application reuse contract that receives the narrowed provider detail.
 """
 
@@ -46,7 +46,7 @@ class ClavePermanenteSessionMetadata(BaseModel):
     paths reject stale or mismatched browser state, while ``landing_url`` lets
     live probes verify an already-authenticated page without re-entering
     AEAT's Cl@ve selector. The same operational fields are projected into
-    :class:`~adapters.outbound.aeat.auth.ClavePermanenteSessionDetail` when
+    :class:`~application.auth.session_types.ClavePermanenteSessionDetail` when
     a session is rebuilt. Unlike Cl@ve Móvil, no verification code or
     non-QR-fallback flag applies — the login form carries no phone-approval
     state.

@@ -1,7 +1,7 @@
-"""Private health-probe helper for :class:`adapters.outbound.aeat.browser.BrowserSession`.
+"""Private health-probe helper for :class:`adapters.outbound.aeat.browser.session.BrowserSession`.
 
 The session navigation hook calls this helper after every ``page.goto`` and
-before raising :class:`core.errors.SiteHealthError` for non-OK
+before raising :class:`core.errors.hierarchy.SiteHealthError` for non-OK
 classifications. Keeping the helper isolated makes the forbidden-import guard
 trivial: this module MUST NOT import anything from
 :mod:`adapters.outbound.aeat.auth`, :mod:`application.filing`, or
@@ -34,7 +34,7 @@ def probe_response(
     """Classify a response via the parser suite.
 
     This is the narrow boundary between Playwright navigation and the pure
-    parser code. It keeps :class:`~adapters.outbound.aeat.browser.BrowserSession`
+    parser code. It keeps :class:`~adapters.outbound.aeat.browser.session.BrowserSession`
     dependent on one function while preserving the parser module's lack of
     browser, auth, filing, or transaction imports.
 

@@ -5,7 +5,7 @@ Three records in the sede schema carry a SHA-256 of some captured payload —
 :class:`IvaCompensationWalletObservation.raw_sha256`. Each declared its own
 copy of the hex-64 pattern, so the shape had three spellings and, at the
 whitespace-wrapped input, three of them answered differently from the one
-canonical :data:`~core.identity.ContentDigest` alias every other
+canonical :data:`~core.identity.digest.ContentDigest` alias every other
 digest-bearing record in the tree uses.
 
 What these tests defend is that parity, not the regex: they compare each field

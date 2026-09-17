@@ -2,7 +2,7 @@
 
 Defines the base :exc:`SedeError` plus the narrowly-scoped subclasses
 raised by the sede navigation, parsing, and fetch helpers. Every
-subclass extends :exc:`core.errors.CadrumoError` so callers can
+subclass extends :exc:`core.errors.hierarchy.CadrumoError` so callers can
 trap the whole AEAT integration surface with a single
 ``except CadrumoError``.
 """
@@ -19,7 +19,7 @@ from .....core.errors.hierarchy import CadrumoError, CoreError
 class SedeError(CadrumoError):
     """Base class for post-auth AEAT sede errors.
 
-    Extends :exc:`core.errors.CadrumoError` so callers tracking
+    Extends :exc:`core.errors.hierarchy.CadrumoError` so callers tracking
     cross-package errors can catch the whole AEAT surface uniformly.
     """
 

@@ -5,7 +5,7 @@ Auth providers accept a
 callable that returns a
 :class:`application.auth.protocols.BrowserSessionPort`. The default
 factory supplies that protocol with a Playwright-backed :class:`BrowserSession`,
-while :func:`adapters.outbound.aeat.auth.select_provider` still accepts
+while :func:`adapters.outbound.aeat.auth.provider_selection.select_provider` still accepts
 ``browser_session_factory=None`` so tests and callers can inject their own
 in-process implementations.
 
