@@ -279,13 +279,9 @@ def filing_record_import(
         actor=actor,
         file=file,
     )
-    result = FilingRecordImportResult.model_validate(
-        {
-            "evidence_kind": evidence_kind,
-            "evidence_reference_id": evidence_reference_id,
-            **filing_record_payload(record).model_dump(mode="python"),
-        }
-    )
+    # The payload derives the evidence kind and reference from the record's own
+    # external evidence, so the record is the only source passed.
+    result = FilingRecordImportResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = [
         "operation\tmodelo.filing_record.import",
         f"evidence_kind\t{evidence_kind.value}",

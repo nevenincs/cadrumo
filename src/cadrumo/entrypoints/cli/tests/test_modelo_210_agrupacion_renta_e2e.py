@@ -10,7 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts,
+    seed_test_profile_record,
+)
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -21,24 +24,71 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_p
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
+from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.row_models import Modelo210AgrupacionRentaRow
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_envelope_notices
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "0f629c46-1dc8-4cb1-8d02-aa0ee4f45a42"
-_CLOCK = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
-_FILING_YEAR = 2025
+
+
+def _authored_m210_annual_filing_year() -> int:
+    """Return the newest supported year whose annual Modelo 210 revision covers that year."""
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no supported filing years"
+    for year in sorted(support.years, reverse=True):
+        valid_to = published_snapshot("210", filing_year=year, period="0A").revision.valid_to
+        if valid_to is None or valid_to.year >= year:
+            return year
+    raise AssertionError("no supported filing year has an authored annual Modelo 210 revision")
+
+
+_FILING_YEAR = _authored_m210_annual_filing_year()
+# Records are stamped inside the income year the declaration covers.
+_CLOCK = datetime(_FILING_YEAR, 7, 10, 9, 0, 0, tzinfo=UTC)
+
+
+def _declared_window_context(kind: str) -> dict[str, str]:
+    """Return the notice fields of the annual window the registry declares for the filing year.
+
+    The dates and their grounding change with the governing order, so the
+    expectation is the declaration itself: the notice must carry exactly the
+    window that applies to the keyed filing year.
+    """
+    window_id = f"modelo-210-{_FILING_YEAR}-0a-{kind}"
+    window = published_snapshot("210", filing_year=_FILING_YEAR, period="0A").deadline_windows[window_id]
+    return {
+        "deadline_window_id": window_id,
+        "opens_on": window.opens_on.isoformat(),
+        "closes_on": window.closes_on.isoformat(),
+        "legal_refs": ", ".join(window.legal_refs),
+        "source_refs": ", ".join(window.source_refs),
+    }
+
+
+# Modelo 210 is the IRNR self-assessment of a taxpayer without a permanent
+# establishment, so only a non-resident profile may open its work.
+_NON_RESIDENT_FACTS = {
+    "taxpayer_type.fiscal_residency": "non_resident_irnr",
+    "taxpayer_type.country_of_fiscal_residence": "GB",
+    "taxpayer_type.representante_fiscal_nif": "12345678Z",
+    "taxpayer_type.representante_fiscal_nombre": "Test Representative",
+}
 
 
 __all__ = ["register_wizard_catalogue"]
@@ -61,7 +111,21 @@ def _seed_minimal_profile(objects: SecureObjectRepository) -> None:
     copy was another place for that answer to drift.
     """
     del objects
-    seed_modelo_ready_profile_record(str(_BUCKET_ID), clock=_CLOCK)
+    create_context, _decode_context = profile_authority_contexts()
+    facts = (
+        *(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in _NON_RESIDENT_FACTS),
+        *(UserProfileFact(path=path, value=value) for path, value in _NON_RESIDENT_FACTS.items()),
+    )
+    seed_test_profile_record(
+        create_user_profile_record(
+            context=create_context,
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(_BUCKET_ID),
+            facts=facts,
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        )
+    )
 
 
 def _verify_plazo_notices(calculation_revision_id: str) -> tuple[dict[str, object], ...]:
@@ -171,15 +235,11 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
     assert plazo_resolution.closes_on
     assert plazo_resolution.context == {
         "modelo": "210",
-        "filing_year": "2025",
+        "filing_year": str(_FILING_YEAR),
         "period": "0A",
         "resultado": "I",
         "tipo_renta_code": "01",
-        "deadline_window_id": "modelo-210-2025-0a-arrendamiento-ingreso",
-        "opens_on": "2026-04-01",
-        "closes_on": "2026-04-20",
-        "legal_refs": "orden-eha-3316-2010:art-5",
-        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
+        **_declared_window_context("arrendamiento-ingreso"),
     }
 
 
@@ -191,7 +251,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             {"rendimientos_integros": Decimal("900.00")},
             "general",
             "I",
-            ("modelo-210-2025-0a-arrendamiento-ingreso", "2026-04-01", "2026-04-20"),
+            "arrendamiento-ingreso",
             id="arrendamiento-01-ingreso",
         ),
         pytest.param(
@@ -199,7 +259,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             {"rendimientos_integros": Decimal("900.00")},
             "general",
             "I",
-            ("modelo-210-2025-0a-arrendamiento-ingreso", "2026-04-01", "2026-04-20"),
+            "arrendamiento-ingreso",
             id="arrendamiento-35-ingreso",
         ),
         pytest.param(
@@ -207,7 +267,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             {"rendimientos_integros": Decimal("0.00")},
             "general",
             "N",
-            ("modelo-210-2025-0a-cuota-cero", "2026-01-01", "2026-01-20"),
+            "cuota-cero",
             id="cuota-cero",
         ),
         pytest.param(
@@ -218,7 +278,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             },
             "general",
             "D",
-            ("modelo-210-2025-0a-devolucion", "2026-02-01", "2030-02-01"),
+            "devolucion",
             id="devolver",
         ),
     ],
@@ -229,7 +289,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
     casilla_inputs: dict[str, Decimal],
     text_tipo_renta: str,
     expected_resultado: str,
-    expected_window: tuple[str, str, str],
+    expected_window: str,
 ) -> None:
     """Real calculation and verification retain one identical grounded notice."""
     with _secure_backend(tmp_path):
@@ -284,18 +344,13 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
     assert len(calculate_notices) == len(verify_notices) == 1
     context = calculate_notices[0].context
     assert context is not None
-    window_id, opens_on, closes_on = expected_window
     assert context == {
         "modelo": "210",
-        "filing_year": "2025",
+        "filing_year": str(_FILING_YEAR),
         "period": "0A",
         "resultado": expected_resultado,
         "tipo_renta_code": tipo_renta_code,
-        "deadline_window_id": window_id,
-        "opens_on": opens_on,
-        "closes_on": closes_on,
-        "legal_refs": "orden-eha-3316-2010:art-5",
-        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
+        **_declared_window_context(expected_window),
     }
     assert verify_notices[0]["context"] == dict(context)
 
@@ -341,10 +396,16 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
     assert verify_notices == ()
 
 
-def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculate_and_verify(
+def test_imputadas_02_event_work_with_an_unresolved_treaty_rate_projects_no_plazo_notice(
     tmp_path: Path,
 ) -> None:
-    """The real EVENT-N work model reuses the qualified annual plazo authority."""
+    """An imputed-income quota that rests on an unresolved treaty rate is not a zero quota.
+
+    The registry bundles no treaty override for imputed income, so a declared
+    residence state leaves the rate unresolved. The result-qualified plazo is
+    then unknown, and neither lifecycle boundary may project the zero-quota
+    window in its place.
+    """
     with _secure_backend(tmp_path):
         snapshot = published_snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
@@ -382,19 +443,9 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
                 ports=_calculation_ports_02,
             )
             calculate_notices = tuple(resolution for resolution in calculation_result.plazo_resolutions)
+            unresolved_outcomes = calculation_result.revision.unresolved_outcomes
             verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
-    assert len(calculate_notices) == len(verify_notices) == 1
-    assert calculate_notices[0].context == {
-        "modelo": "210",
-        "filing_year": "2025",
-        "period": "EVENT-1",
-        "resultado": "I",
-        "tipo_renta_code": "02",
-        "deadline_window_id": "modelo-210-2025-0a-renta-imputada",
-        "opens_on": "2026-01-01",
-        "closes_on": "2026-12-31",
-        "legal_refs": "orden-eha-3316-2010:art-5",
-        "source_refs": "aeat-modelo-210-procedure, boe-modelo-210-base-order",
-    }
-    assert verify_notices[0]["context"] == dict(calculate_notices[0].context or {})
+    assert tuple(outcome.casilla_id for outcome in unresolved_outcomes) == ("tipo_gravamen",)
+    assert calculate_notices == ()
+    assert verify_notices == ()

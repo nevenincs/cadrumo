@@ -32,6 +32,9 @@ all three outcomes, adopted, unchanged and diverging: a path the profile
 already holds at the authority's value is a no-op to write but not a
 no-op to report, and hiding it would leave an operator unable to tell a
 corroborated field from one the read never covered.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

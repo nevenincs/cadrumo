@@ -83,6 +83,9 @@ def emit_update_result(
     :func:`emit_envelope` directly, which is how two verbs ended up
     hand-maintaining a copy of the shape this function owns. The same idiom as
     ``_emit_llm_single_classify``'s ``extra_lines``.
+
+    Core types:
+    :class:`~cadrumo.core.json_contract.OutputSchema`.
     """
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
@@ -153,6 +156,9 @@ def resolve_id(
 
     ``catalogue`` is a snapshot the verb already loaded and will hand to the
     same action, so resolving the id does not decrypt the catalogue again.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository, catalogue))

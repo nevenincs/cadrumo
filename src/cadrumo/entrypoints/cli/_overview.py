@@ -20,6 +20,9 @@ emits a typed payload such as :class:`OverviewStatusResult`,
 :func:`emit_envelope`. The ``pipeline`` verb resolves each period work
 unit's current :class:`~CalculationRevision` to derive its
 readiness row.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

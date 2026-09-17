@@ -1,4 +1,8 @@
-"""Public behavior support shared by deferred Modelo command handlers."""
+"""Public behavior support shared by deferred Modelo command handlers.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+"""
 
 from __future__ import annotations
 

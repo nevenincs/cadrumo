@@ -16,7 +16,7 @@ from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_
 from ....application.user_profile.registration import register_profile_with_credentials
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def _env(tmp_path: Path) -> dict[str, str]:

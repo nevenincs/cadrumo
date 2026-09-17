@@ -40,16 +40,21 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo.action_errors import amendment_evidence_missing_precondition
 from ....application.modelo.calculation_actions import get_calculation_revision
+from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_actions import get_filing_record
+from ....application.modelo.work_lifecycle import get_work_unit
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....core.casilla_id import validated_casilla_id
 from ....core.flows import FlowMode
 from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
@@ -57,6 +62,7 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.justificante.schema import Justificante
+from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -79,7 +85,7 @@ from .modelo_cli import create_modelo_work_unit_via_cli
 
 __all__ = ["_isolated_cli_backend"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 def test_amend_wizard_missing_evidence_has_no_invented_recovery_action() -> None:
@@ -221,19 +227,35 @@ def _import_external_m303_baseline(
     csv: str = "JUST20253031TAMENDWIZARD",
     period: str = "1T",
 ) -> str:
-    """Import an AEAT-attested M303 baseline filing and return its filing_record_id."""
+    """Import an AEAT-attested M303 baseline filing and return its filing_record_id.
+
+    A Modelo 303 import must carry typed filing-instance evidence and the
+    declaration-type header, which the ``filing-record import`` verb has no
+    input for, so the baseline is imported through the application service the
+    verb delegates to.
+    """
     _seed_justificante(csv=csv, period=period, modelo="303")
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "filing-record", "import", work_unit_id,
-            "--evidence-kind", "aeat_justificante_pdf",
-            "--evidence-id", csv,
-            "--set", f"07={_M303_BASELINE_BASE_GENERAL}",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload_string(result.output, "filing_record_id")
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    casilla_values, source_headers = modelo_303_filed_disposition(
+        {validated_casilla_id("07", surface="amend wizard m303 baseline"): _M303_BASELINE_BASE_GENERAL},
+        source_locator=csv,
+    )
+    with open_test_profile_session(bucket_id), bundled_indexed_authority().operation() as operation:
+        ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
+        work_unit = get_work_unit(work_unit_id, ports=ports.work_lifecycle_ports)
+        record = import_external_filing_evidence(
+            work_unit_id=work_unit_id,
+            casilla_values=casilla_values,
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id=csv,
+            filing_instance_evidence=general_m303_filing_evidence(work_unit.period, reference=csv, operation=operation),
+            actor="aeat-import",
+            expected_tax_id=_TAX_ID,
+            observation_repository=ports.observation_repository,
+            source_headers=source_headers,
+        )
+    return record.filing_record_id
 
 
 def _scripted_amend(

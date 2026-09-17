@@ -2,6 +2,9 @@
 
 Bulk classification writes through the composed ledger ports supplied by the
 caller, preserving the active ledger catalogue path.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

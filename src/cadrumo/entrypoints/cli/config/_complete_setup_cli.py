@@ -17,6 +17,9 @@ nothing required is missing. Only the operator can make that claim, so the CLI
 asks for it explicitly and the promotion still refuses if the claim is untrue:
 ``complete_setup`` re-judges the record at the strictest setting the profile
 authority offers before writing anything.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

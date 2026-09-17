@@ -115,6 +115,9 @@ def export_modelo_revision_for_cli(
 
     Both the standalone export and review-package builder create a fichero-BOE
     draft through this boundary. Their output contracts remain separate.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     try:
         return export_modelo_revision(

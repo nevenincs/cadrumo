@@ -1,4 +1,8 @@
-"""Typed JSON transport schemas for the live verify service."""
+"""Typed JSON transport schemas for the live verify service.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

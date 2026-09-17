@@ -7,6 +7,9 @@ The payload reports the promotion, never the facts: what an operator needs from
 this verb is whether the profile now carries the readiness CLAIM, and which
 record revision carries it, so a later reader can tell a fresh promotion from an
 idempotent no-op.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

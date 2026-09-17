@@ -89,6 +89,9 @@ class M210LedgerClassifyOptions:
         Raises:
             typer.BadParameter: If options are incomplete or invalid, or the
                 selected transaction is absent or not incoming.
+
+        Core types:
+        :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
         """
         from ...application.ledger.m210_classification import resolve_m210_income_classification
 

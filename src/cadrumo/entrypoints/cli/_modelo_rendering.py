@@ -525,7 +525,11 @@ def work_unit_deadline_output(unit: WorkUnit) -> tuple[WorkDeadlinePosturePayloa
 
 
 def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...]:
-    """Return materialised :class:`DetailRowPayload` rows for the JSON calculation payload."""
+    """Return materialised :class:`DetailRowPayload` rows for the JSON calculation payload.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     rows: list[DetailRowPayload] = []
     for index, detail_row in enumerate(rev.detail_rows, start=1):
         dumped = detail_row.model_dump(mode="json", exclude={"row_type"})
@@ -557,6 +561,9 @@ def calculation_revision_payload(
     headline rows, and
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.SourceProvenancePayload`
     resolver-trace rows for envelope-aware commands.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     if include_result_summary and work_unit is None:
         raise TypeError("calculation revision payload requires its selected work unit for result summary")
@@ -626,7 +633,11 @@ def result_summary_lines(
     operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
 ) -> list[str]:
-    """Return the headline-result summary block for a calculation revision."""
+    """Return the headline-result summary block for a calculation revision.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
     if summary is None or not summary.rows:
         return []
@@ -653,6 +664,9 @@ def result_summary_payload(
 
     Each row is a
     :class:`~cadrumo.application.modelo.result_summary_payload.ResultSummaryRowPayload`.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     summary = calculation_result_summary(rev, operation=operation, work_unit=work_unit)
     if summary is None:
@@ -860,7 +874,11 @@ def calculation_revision_lines(
 
 
 def calculation_observation_lines(rev: CalculationRevision, *, operation: PinnedAuthorityOperation) -> list[str]:
-    """Return a stable text view of a revision's typed casilla observations."""
+    """Return a stable text view of a revision's typed casilla observations.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     payload = calculation_revision_payload(rev, operation=operation, include_result_summary=False)
     observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
     lines = [

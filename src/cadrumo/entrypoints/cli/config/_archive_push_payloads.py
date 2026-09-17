@@ -9,6 +9,9 @@ what ``push`` wrote, and the schemas are kept separate so that stays visible.
 There is no ``archive pull``. The counterpart does not exist, and its absence
 sits beside a working local ``export``/``import`` pair precisely so an operator
 can see it is missing.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

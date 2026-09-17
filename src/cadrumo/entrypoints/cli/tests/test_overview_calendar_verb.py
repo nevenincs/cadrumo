@@ -12,7 +12,6 @@ from click.testing import Result
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
-from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -20,6 +19,7 @@ from ....application.live.expedientes import (
     ExpedientesCapture,
     ExpedientesService,
 )
+from ....application.live.expedientes_ports import ExpedientesDeclaration
 from ....application.live.notification_ports import NotificationsSnapshot, RemoteNotification
 from ....application.live.notifications import NotificationsService
 from ....application.overview.calendar import build_overview_calendar
@@ -230,7 +230,8 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
         current = current_workflow_state()
         profile = profile_to_taxpayer(current)
         record = current.active_profile_record()
-        raw_values = record_to_values(record) if record is not None else None
+        with bundled_indexed_authority().operation() as operation:
+            raw_values = record_to_values(record, schema=operation.profile_schema()) if record is not None else None
         supported_years = published_supported_filing_years()
         assert supported_years is not None
 
@@ -288,52 +289,37 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
 
 
 def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
-    text_result = _invoke(
-        [
-            "app",
-            "overview",
-            "calendar",
-            "--output-language",
-            "en",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-03-31",
-            "--allow-incomplete",
-        ],
-    )
-
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    window = [
+        "--output-language",
+        "en",
+        "--from",
+        date(min(supported_years.years), 1, 1).isoformat(),
+        "--to",
+        date(max(supported_years.years), 12, 31).isoformat(),
+        "--allow-incomplete",
+    ]
+    text_result = _invoke(["app", "overview", "calendar", *window])
     assert text_result.exit_code == 0, text_result.output
-    row = next(line for line in text_result.output.splitlines() if line.startswith("303\t2025 4T\t"))
-    assert "\tshift=Business day" in row
-    assert "\tshift=business_day" not in row
+    rows = [line for line in text_result.output.splitlines() if line.startswith("303\t")]
+    assert rows
+    assert not any("\tshift=business_day" in line for line in rows)
+    # Any Modelo 303 row whose close falls on a business day of a published
+    # holiday calendar renders the localized label.
+    row = next(line for line in rows if "\tshift=Business day" in line)
+    period = row.split("\t")[1]
 
-    json_result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "overview",
-            "calendar",
-            "--output-language",
-            "en",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-03-31",
-            "--allow-incomplete",
-        ],
-    )
-
+    json_result = _invoke(["--format", "json", "app", "overview", "calendar", *window])
     assert json_result.exit_code == 0, json_result.output
     entries = json.loads(json_result.output)["result"]["entries"]
-    modelo_303 = next(entry for entry in entries if entry["modelo"] == "303" and entry["period"] == "2025 4T")
-    detail = modelo_303["detail_action"]
+    entry = next(entry for entry in entries if entry["modelo"] == "303" and entry["period"] == period)
+    detail = entry["detail_action"]
     assert detail["action"]["action_id"] == "operator.overview.explain"
     assert detail["action"]["cli_path"] == ["app", "overview", "explain"]
     assert {binding["argument_name"]: binding["value"] for binding in detail["argument_bindings"]} == {
         "modelo": "303",
-        "year": 2025,
+        "year": int(period.split()[0]),
     }
 
 
@@ -455,7 +441,7 @@ def test_calendar_json_includes_local_live_snapshot_events() -> None:
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
-                Declaracion(
+                ExpedientesDeclaration(
                     modelo="303",
                     ejercicio=2025,
                     period=Period.from_year_and_code(2025, "1T"),
@@ -539,7 +525,7 @@ def test_calendar_strict_mode_refuses_unverified_aeat_filing() -> None:
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
-                Declaracion(
+                ExpedientesDeclaration(
                     modelo="303",
                     ejercicio=2025,
                     period=Period.from_year_and_code(2025, "1T"),
@@ -612,7 +598,7 @@ def test_calendar_strict_mode_refuses_conflicting_aeat_evidence_references() -> 
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
-                Declaracion(
+                ExpedientesDeclaration(
                     modelo="303",
                     ejercicio=2025,
                     period=Period.from_year_and_code(2025, "1T"),
@@ -703,7 +689,7 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         bucket_id=PRIMARY_PROFILE_ID,
         capture=ExpedientesCapture(
             declarations=(
-                Declaracion(
+                ExpedientesDeclaration(
                     modelo="303",
                     ejercicio=2025,
                     period=Period.from_year_and_code(2025, "1T"),

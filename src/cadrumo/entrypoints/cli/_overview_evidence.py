@@ -259,7 +259,11 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
 
 
 def live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:
-    """Return profile paths whose current value was stamped from live censo sync."""
+    """Return profile paths whose current value was stamped from live censo sync.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     if record is None:
         return ()
     from ...application.user_profile.censo_sync import CENSO_SOURCE_TAG

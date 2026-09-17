@@ -1,4 +1,8 @@
-"""The independently loadable ``config profile status`` leaf."""
+"""The independently loadable ``config profile status`` leaf.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+"""
 
 from __future__ import annotations
 

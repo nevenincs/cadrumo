@@ -11,6 +11,7 @@ from typing import cast
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.core.i18n.render import tr
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -95,11 +96,9 @@ def test_metadata_surfaces_preserve_contract_without_forbidden_imports(
         assert document["active_profile"] is None
 
 
-@pytest.mark.parametrize(
-    ("locale", "expected_help"),
-    (("es", "Gestionar configuración local"), ("en", "Manage local configuration")),
-)
-def test_root_shell_completion_reads_registration_metadata_only(locale: str, expected_help: str) -> None:
+@pytest.mark.parametrize("locale", ("es", "en"))
+def test_root_shell_completion_reads_registration_metadata_only(locale: str) -> None:
+    expected_help = " ".join(tr("cli.config.app_help", locale=locale).split())
     script = textwrap.dedent(
         f"""
         import json
@@ -138,7 +137,10 @@ def test_root_shell_completion_reads_registration_metadata_only(locale: str, exp
 
     items = cast(list[list[str]], observation["items"])
     assert [item[0] for item in items] == ["config"]
-    assert expected_help in items[0][1]
+    # Completion shortens the help to its first words, so the shown text is a prefix.
+    shown = " ".join(items[0][1].removesuffix("...").split())
+    assert shown
+    assert expected_help.startswith(shown)
     assert observation["forbidden"] == []
 
 

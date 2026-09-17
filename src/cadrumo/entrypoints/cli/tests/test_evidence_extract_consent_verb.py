@@ -35,12 +35,12 @@ from typing import override
 import pytest
 from pydantic import SecretStr
 
-from ....adapters.outbound.llm.cache import LLMCache
 from ....adapters.outbound.llm.client import LLMClient
 from ....adapters.outbound.llm.consent import mint_evidence_consent_token
 from ....adapters.outbound.llm.errors import LLMConsentError
 from ....adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
-from ....adapters.outbound.llm.usage import UsageRecorder
+from ....adapters.persistence.llm.cache import LLMCache
+from ....adapters.persistence.llm.usage import UsageRecorder
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....core.config import override_settings

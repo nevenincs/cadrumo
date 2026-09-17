@@ -39,7 +39,10 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="scope",
                 declarations=("--scope",),
-                value=ValueContract(DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__)),
+                value=ValueContract(
+                    DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__),
+                    click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.scope_help"),
                 metavar=None,
@@ -55,7 +58,10 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="identification_state",
                 declarations=("--identification-state",),
-                value=ValueContract(DeferredTarget("...domain.iva.schema", "EUMemberState", __package__)),
+                value=ValueContract(
+                    DeferredTarget("...domain.iva.schema", "EUMemberState", __package__),
+                    click_type=DeferredTarget(".common", "EU_MEMBER_STATE_CHOICE", __package__),
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.identification_state_help"),
                 metavar=None,
@@ -94,7 +100,10 @@ LEDGER_COUNTERPARTY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="evidenced_scope",
                 declarations=("--evidenced-scope",),
-                value=ValueContract(DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__)),
+                value=ValueContract(
+                    DeferredTarget("...domain.iva.classification", "IvaTerritorialScope", __package__),
+                    click_type=DeferredTarget(".common", "IVA_TERRITORIAL_SCOPE_CHOICE", __package__),
+                ),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.app.ledger.counterparty.evidenced_scope_help"),
                 metavar=None,

@@ -1,4 +1,8 @@
-"""Operator projections of the sole immutable :class:`CommandSpecGraph`."""
+"""Operator projections of the sole immutable :class:`CommandSpecGraph`.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

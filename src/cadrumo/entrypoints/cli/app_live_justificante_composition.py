@@ -1,4 +1,8 @@
-"""Concrete adapter assembly for the live justificante CLI commands."""
+"""Concrete adapter assembly for the live justificante CLI commands.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`.
+"""
 
 from __future__ import annotations
 

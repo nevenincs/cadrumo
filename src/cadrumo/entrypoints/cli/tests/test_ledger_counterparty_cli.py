@@ -73,6 +73,11 @@ def _confirm(*args: str):
     return _invoke(["app", "ledger", "counterparty", "confirm", *args])
 
 
+def _confirm_in_english(*args: str):
+    """Confirm with English output, for assertions that read the refusal's copy."""
+    return _invoke(["--language", "en", "app", "ledger", "counterparty", "confirm", *args])
+
+
 def _confirm_json(*args: str):
     return _invoke(["--format", "json", "app", "ledger", "counterparty", "confirm", *args])
 
@@ -175,7 +180,7 @@ def test_a_conflicting_answer_refuses_and_names_the_route_out() -> None:
     """
     assert _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.from_registry("es_canarias").value).exit_code == 0
 
-    conflicted = _confirm(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.from_registry("third_country").value)
+    conflicted = _confirm_in_english(_SUPPLIER_CIF, "--scope", IvaTerritorialScope.from_registry("third_country").value)
 
     assert conflicted.exit_code != 0
     assert "withdraw" in conflicted.output
@@ -229,7 +234,7 @@ def test_an_identification_only_conflict_refuses_instead_of_raising() -> None:
     """
     assert _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.from_registry("de").value).exit_code == 0
 
-    conflicted = _confirm(_SUPPLIER_CIF, "--identification-state", EUMemberState.from_registry("fr").value)
+    conflicted = _confirm_in_english(_SUPPLIER_CIF, "--identification-state", EUMemberState.from_registry("fr").value)
 
     assert conflicted.exit_code != 0
     # The route out, not merely a non-zero status: a refusal naming no

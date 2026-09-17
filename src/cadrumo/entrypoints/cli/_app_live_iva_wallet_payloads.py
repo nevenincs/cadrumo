@@ -1,4 +1,8 @@
-"""Typed JSON transport schemas for the live iva wallet service."""
+"""Typed JSON transport schemas for the live iva wallet service.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

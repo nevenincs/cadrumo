@@ -22,7 +22,7 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.llm.models import LLMResponse
-from ....adapters.outbound.llm.usage import UsageRecorder
+from ....adapters.persistence.llm.usage import UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,

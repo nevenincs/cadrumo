@@ -30,6 +30,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import (
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 
 
@@ -65,7 +66,8 @@ def distinct_nif(name: str) -> str:
     """
 
     number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
-    return f"{number:08d}{runtime_nif_check_letter(number)}"
+    with bundled_indexed_authority().operation():
+        return f"{number:08d}{runtime_nif_check_letter(number)}"
 
 
 def create_profile_via_cli(
