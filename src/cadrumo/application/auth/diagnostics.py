@@ -23,7 +23,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -103,6 +103,7 @@ class AuthDiagnosticSummary(BaseModel):
     phone_state_reported_at: datetime | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _instants_are_utc(self) -> AuthDiagnosticSummary:
         """Hold every projected instant to the canonical UTC contract."""
         validate_utc_aware(self.captured_at)

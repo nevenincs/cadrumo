@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config_support import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as clock_now
 from ...core.time.utc import coerce_utc_aware
@@ -27,6 +28,7 @@ class CertificateSessionDetail(BaseModel):
 
     @field_validator("protected_resource_url")
     @classmethod
+    @pydantic_validation_boundary
     def _protected_resource_is_canonical(cls, value: str) -> str:
         return assert_canonical_protected_resource(value, subject="certificate session proof")
 

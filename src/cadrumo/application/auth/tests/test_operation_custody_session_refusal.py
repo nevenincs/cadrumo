@@ -33,7 +33,7 @@ from .operator_projection_test_support import (
     test_operator_auth as run_operator_auth_test,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_A = "6a6a6a6a-6a6a-4a6a-8a6a-6a6a6a6a6a6a"
 _BUCKET_B = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"

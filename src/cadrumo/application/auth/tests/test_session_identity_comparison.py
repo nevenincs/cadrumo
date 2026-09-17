@@ -50,7 +50,7 @@ from ..sessions import (
     resolve_clave_credentials,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"

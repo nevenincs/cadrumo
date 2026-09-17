@@ -328,7 +328,7 @@ def test_notification_selection_identity_is_stable_opaque_and_order_independent(
 def test_notification_selection_identity_collision_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         workspace_module,
-        "_notification_selection_key",
+        "notification_selection_key",
         lambda _: "aeat_sync.notification.collision",
     )
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="selection identities"):

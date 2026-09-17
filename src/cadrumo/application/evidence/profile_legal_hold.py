@@ -17,6 +17,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import PrefixedContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -80,6 +81,7 @@ class LegalHoldCaseSnapshot(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_snapshot(self) -> LegalHoldCaseSnapshot:
         validate_utc_aware(self.observed_at)
         if self.self_digest != self.computed_self_digest:
