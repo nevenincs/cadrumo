@@ -55,7 +55,7 @@ from ._modelo_349_registry_support import (
     _load_modelo_349,
     _modelo_349_revision,
 )
-from .profile_schema_support import committed_registry_validator
+from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -81,17 +81,19 @@ def test_committed_modelo_349_validates_against_catalogues() -> None:
 
 
 def test_committed_modelo_349_resolves_revision_for_monthly_and_quarterly_periods() -> None:
-    for filing_year, period, expected_revision in (
-        (2020, "1T", "2020-y-siguientes"),
-        (2024, "05", "2020-y-siguientes"),
-        (2026, "01", "2020-y-siguientes"),
-        (2026, "12", "2020-y-siguientes"),
-        (2026, "1T", "2020-y-siguientes"),
-        (2026, "4T", "2020-y-siguientes"),
+    support = committed_supported_filing_years()
+    floor, horizon = support.floor, support.horizon
+    for filing_year, period in (
+        (floor, "1T"),
+        (floor, "05"),
+        (horizon, "01"),
+        (horizon, "12"),
+        (horizon, "1T"),
+        (horizon, "4T"),
     ):
         snapshot = _snapshot_349(filing_year, period)
 
-        assert snapshot.revision.id == expected_revision, (filing_year, period)
+        assert snapshot.revision.id == "2020-y-siguientes", (filing_year, period)
         assert snapshot.revision.orden_aplicabilidad == (
             "orden-eha-769-2010:art-1",
             "orden-hac-174-2020:art-1",

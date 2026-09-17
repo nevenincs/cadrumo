@@ -179,6 +179,10 @@ def _read_source_text(source: SourceReference, source_path: Path, *, source_root
         return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
     if source_path.suffix.casefold() == ".xlsx":
         return normalise_corpus_text(_extract_xlsx_text_impl(str(source_path)))
+    if source_path.suffix.casefold() == ".pdf":
+        # A record-design PDF is compressed; its citations are against the text
+        # it renders, never against the raw bytes.
+        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
 
 
@@ -555,7 +559,14 @@ class EvidenceValidator:
             return ""
         source_path = _resolve_source_path(source, source_root)
         stat = source_path.stat()
-        extraction_contract = f"{source.kind}:xlsx-text-v1" if source_path.suffix.casefold() == ".xlsx" else source.kind
+        suffix = source_path.suffix.casefold()
+        extraction_contract = (
+            f"{source.kind}:xlsx-text-v1"
+            if suffix == ".xlsx"
+            else f"{source.kind}:pdf-text-v1"
+            if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF
+            else source.kind
+        )
         sidecar_digest = ""
         if source.kind is RegistrySourceKind.MANUAL_PDF:
             sidecar = _manual_sidecar_path(source.corpus_path, source_root)
