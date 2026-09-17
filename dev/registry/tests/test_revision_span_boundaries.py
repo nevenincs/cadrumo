@@ -62,12 +62,11 @@ Reading the design SOURCES rather than their markdown derivatives took this
 module from roughly 28s to roughly 185s, a five-fold increase, because it now
 parses spreadsheets and PDFs instead of pre-extracted text. Two things keep that
 acceptable and both are worth knowing before anyone tries to "optimise" it. The
-parse is memoized per process AND persisted under the development cache, keyed by
-the file's own digest and the compiler identity, so it is paid once per corpus
-rather than per call, per test or per xdist worker. That claim was once written
-here while only two helpers were cached and every design was reparsed on every
-call, which is how this module reached 403s in a run; measure before trusting it
-again. And
+parse is persisted across processes by the compiler's own record-design
+extraction cache and memoized per process here, so it is paid once per corpus
+rather than once per call. That claim was once written here while neither memo
+existed: every helper re-entered the extractor per call, which is how this module
+reached 403s in one run. Measure before trusting it again. And
 it cannot be scoped away: restricting the parse to modelos that actually declare
 an export layout removes only ~37% of the files and ~15% of the bytes, because
 the largest designs belong to modelos that do export. The cost buys the offsets
