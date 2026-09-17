@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
+from .profile_schema_support import authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,6 +48,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             effective_date=effective_date,
         ),
         authority_digest="a" * 64,
+        support=authored_history_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedScalarFact)
     return resolved

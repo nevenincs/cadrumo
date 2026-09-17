@@ -62,6 +62,7 @@ from ..compiler.legal_grounding import (
     verify_legal_catalogue_grounding,
 )
 from ..compiler.loader import load_shared_catalogues
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -390,6 +391,7 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
             effective_date=date(2024, 12, 31),
         ),
         authority_digest="0" * 64,
+        support=committed_supported_filing_years(),
     )
     assert isinstance(resolved.payload, ScalarFactPayload)
     assert str(resolved.payload.value) == "0.25"
@@ -398,7 +400,7 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
     assert {citation.source_ref for citation in resolved.source_citations} == set(DANA_SOURCE_REFS)
 
     for effective_date in (date(2024, 11, 12), date(2025, 1, 1)):
-        with pytest.raises(RegistryValidationError, match="falls outside its hard support boundaries"):
+        with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
             resolve_governed_fact(
                 catalogue=authority.facts,
                 query=ScalarFactQuery(
@@ -407,6 +409,7 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
                     effective_date=effective_date,
                 ),
                 authority_digest="0" * 64,
+                support=committed_supported_filing_years(),
             )
 
 

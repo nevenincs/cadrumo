@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
+from .profile_schema_support import authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,6 +47,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedEntitySetFact:
         _catalogue(),
         EntitySetFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
         authority_digest="7" * 64,
+        support=authored_history_supported_filing_years(),
     )
     assert isinstance(resolved, ResolvedEntitySetFact)
     return resolved
@@ -126,7 +128,7 @@ def test_payment_fraction_selectors_exclude_retired_broad_identity() -> None:
         ),
     ),
 )
-def test_payment_fraction_selectors_back_project_before_their_first_citable_window(
+def test_payment_fraction_selectors_reach_the_support_floor_before_their_first_citable_window(
     fact_id: str,
     before_first_window: date,
     first_authored_date: date,
@@ -135,8 +137,8 @@ def test_payment_fraction_selectors_back_project_before_their_first_citable_wind
 ) -> None:
     resolved = _resolve(fact_id, before_first_window)
 
-    assert resolved.projection_direction == "backward"
-    assert resolved.projected_from_date == first_authored_date
+    assert resolved.projection_direction == "authored"
+    assert resolved.authored_valid_from is None
     assert resolved.variant_id.endswith(first_authored_date.isoformat())
     assert resolved.payload.entities == entities
     assert resolved.source_refs == source_refs
@@ -158,10 +160,8 @@ def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036
     assert shared.sources[_ARTICLE_110_SOURCE].bytes == 11554
     assert shared.sources[_ARTICLE_110_SOURCE].applies_from == date(2018, 12, 23)
     assert shared.sources[_M036_TABLE_SOURCE].applies_from == _FIRST_GROUNDED_DATE
-    assert (
-        catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from
-        == _M131_FIRST_GROUNDED_DATE
-    )
+    # The instruction's publication date is a coverage marker: the variant reaches the support floor.
+    assert catalogue.facts["modelo-131:selector-m036-volumen-ingresos-agrario"].variants[0].valid_from is None
     assert shared.sources["aeat-modelo-131-instructions-2026-04-01"].applies_from == _M131_FIRST_GROUNDED_DATE
     assert (
         governed_fact_catalogue_failures(

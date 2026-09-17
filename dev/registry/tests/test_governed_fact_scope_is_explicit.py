@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 
 from ..compiler.authority import compiled_bundled_authority
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,7 +32,7 @@ def test_token_construction_without_a_scope_refuses() -> None:
 def test_the_same_token_resolves_inside_an_explicit_candidate_scope() -> None:
     facts = compiled_bundled_authority().catalogues.facts
 
-    with validating_governed_facts(CandidateFactAuthority(facts)):
+    with validating_governed_facts(CandidateFactAuthority(facts, committed_supported_filing_years())):
         category = require_iva_category("domestic_general", effective_date=_EFFECTIVE_DATE)
 
     assert str(category) == "domestic_general"

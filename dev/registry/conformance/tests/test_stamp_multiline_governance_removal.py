@@ -45,7 +45,13 @@ def _manifest_path(registry_root: Path) -> Path:
 
 def _shipped_revision_table() -> dict[str, object]:
     shipped = bundled_path("registry", "aeat", "modelos", _MODELO, "revisions", _REVISION, "revision.toml")
-    return parse_toml(shipped.read_text("utf-8"))["revisions"][_REVISION]
+    revision_table = parse_toml(shipped.read_text("utf-8"))["revisions"][_REVISION]
+    assert isinstance(revision_table, dict), f"revision table must be a TOML table, found: {revision_table!r}"
+    validated: dict[str, object] = {}
+    for key, value in revision_table.items():
+        assert isinstance(key, str), f"revision table key must be a string, found: {key!r}"
+        validated[key] = value
+    return validated
 
 
 def _prepared_registry(tmp_path: Path, reviewed_by_block: str, *, suffix: str = "") -> Path:

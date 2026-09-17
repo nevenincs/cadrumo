@@ -61,6 +61,7 @@ def _bundled_convenio_authority():
     return convenio_authority_from_facts(
         GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}),
         catalogues.legal,
+        support=catalogues.require_supported_filing_years(),
     )
 
 

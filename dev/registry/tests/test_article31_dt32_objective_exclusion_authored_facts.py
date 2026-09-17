@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts
+from .profile_schema_support import authored_history_supported_filing_years
 
 _IDS = frozenset(
     (
@@ -38,6 +39,7 @@ def _value(fact_id: str, effective_date: date) -> Decimal:
         _catalogue(),
         ScalarFactQuery(fact_id=fact_id, date_axis=DateAxis.FILING_PERIOD, effective_date=effective_date),
         authority_digest="3" * 64,
+        support=authored_history_supported_filing_years(),
     )
     if not isinstance(resolved, ResolvedScalarFact):
         raise TypeError(f"fact {fact_id!r} resolved to a non-scalar payload")

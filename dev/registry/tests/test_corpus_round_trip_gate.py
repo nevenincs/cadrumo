@@ -48,7 +48,9 @@ def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
 def candidate_fact_scope() -> Iterator[None]:
     """Validate mutated profiles against the same candidate facts as their validator."""
     _modelo, catalogues = _committed_130()
-    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
         yield
 
 

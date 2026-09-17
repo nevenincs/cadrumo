@@ -164,7 +164,9 @@ _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
 
 
 def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
-    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
         RegistryValidator(
             catalogues,
             source_root=bundled_path(),
@@ -1069,7 +1071,9 @@ def test_validator_rejects_missing_legal_reference() -> None:
 
     with (
         pytest.raises(RegistryValidationError, match="unknown legal id"),
-        validating_governed_facts(CandidateFactAuthority(missing_legal.facts)),
+        validating_governed_facts(
+            CandidateFactAuthority(missing_legal.facts, missing_legal.require_supported_filing_years())
+        ),
     ):
         RegistryValidator(
             missing_legal,

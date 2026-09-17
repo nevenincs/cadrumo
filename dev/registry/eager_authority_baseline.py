@@ -35,7 +35,11 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    RegistryCatalogues,
+    SupportedFilingYearsCatalogue,
+)
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from dev.registry.pipeline.authority_publication import require_evidence_closure
 
@@ -146,8 +150,11 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
     build_document = _mapping(payload, "build_identity")
     evidence_document = _mapping(payload, "evidence")
     facts = GovernedFactCatalogue.model_validate(_mapping(catalogues_document, "facts"), context=_TAGGED_CONTEXT)
+    support = SupportedFilingYearsCatalogue.model_validate(
+        _mapping(catalogues_document, "supported_filing_years"), context=_TAGGED_CONTEXT
+    )
     decode_context = {**_TAGGED_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format_from_catalogue(facts)}
-    with validating_governed_facts(CandidateFactAuthority(facts, authority_digest=identity_digest)):
+    with validating_governed_facts(CandidateFactAuthority(facts, support, authority_digest=identity_digest)):
         modelos = tuple(
             ModeloDefinition.model_validate(_mapping_item(item), context=decode_context) for item in modelos_document
         )

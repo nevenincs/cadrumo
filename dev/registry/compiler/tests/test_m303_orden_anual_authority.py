@@ -108,7 +108,9 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
     _, catalogues = registry_tree
 
-    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
         census = extract_m303_annual_orden_source(
             ejercicio=ejercicio,
             source=catalogues.sources[source_ref],

@@ -20,11 +20,12 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.convenio import convenio_authority_from_facts
 from ..compiler.fact_loader import load_governed_facts
-from ..compiler.loader import load_registry_tree
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,6 +54,10 @@ _EXPECTED_ROWS = {
 }
 
 
+def _bundled_support() -> SupportedFilingYearsCatalogue:
+    return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
+
+
 def _bundled_fact_catalogue() -> GovernedFactCatalogue:
     facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
     return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
@@ -62,7 +67,7 @@ def _bundled_tipo_renta_catalogue(facts: GovernedFactCatalogue):
     """Resolve income tokens through the candidate fact authority under test."""
     return resolve_tipo_renta_irnr_catalogue(
         effective_date=date(2025, 6, 30),
-        authority=CandidateFactAuthority(facts),
+        authority=CandidateFactAuthority(facts, _bundled_support()),
     )
 
 
@@ -105,9 +110,12 @@ def test_direct_fact_resolves_and_projects_the_existing_runtime_catalogue() -> N
             ),
         ),
         authority_digest="a" * 64,
+        support=_bundled_support(),
     )
     _modelos, catalogues = load_registry_tree(root)
-    convenio = convenio_authority_from_facts(catalogue, catalogues.legal)
+    convenio = convenio_authority_from_facts(
+        catalogue, catalogues.legal, support=catalogues.require_supported_filing_years()
+    )
     tipo_renta_catalogue = _bundled_tipo_renta_catalogue(catalogue)
     general = tipo_renta_catalogue.require("general")
     interest = tipo_renta_catalogue.require("interest")

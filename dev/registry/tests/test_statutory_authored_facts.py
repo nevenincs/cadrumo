@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_providers import compile_registered_fact_providers
+from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -96,6 +97,7 @@ def test_authored_statutory_facts_preserve_values_and_provenance() -> None:
             effective_date=date(2025, 12, 31),
         ),
         authority_digest="a" * 64,
+        support=committed_supported_filing_years(),
     )
     schedule = resolve_governed_fact(
         catalogue,
@@ -105,6 +107,7 @@ def test_authored_statutory_facts_preserve_values_and_provenance() -> None:
             effective_date=date(2025, 12, 31),
         ),
         authority_digest="b" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(threshold, ResolvedScalarFact)
@@ -144,6 +147,7 @@ def test_authored_reduced_multiple_payer_limit_projects_forward_after_last_groun
             effective_date=date(2027, 1, 1),
         ),
         authority_digest="c" * 64,
+        support=committed_supported_filing_years(),
     )
 
     assert isinstance(resolved, ResolvedMappingFact)
