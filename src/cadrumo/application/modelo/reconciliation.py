@@ -491,9 +491,14 @@ def reconcile_parsed_justificante(
         ),
     )
 
-    total_diffs, total_advisories = _reconcile_receipt_totals(
+    try:
+        filed_revision = _filed_revision_for_work_unit(work_unit, operation=operation)
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
+        filed_revision = None
+    total_diffs, total_advisories = reconcile_receipt_totals(
         work_unit=work_unit,
         justificante=justificante,
+        revision=filed_revision,
         operation=operation,
     )
     diffs.extend(total_diffs)
@@ -815,24 +820,25 @@ def _totals_not_reconciled(reason: str, *, modelo: str, detail: str = "") -> Mod
     )
 
 
-def _reconcile_receipt_totals(
+def reconcile_receipt_totals(
     *,
     work_unit: WorkUnit,
     justificante: Justificante,
+    revision: CalculationRevision | None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[list[ModeloReconciliationDiff], list[ModeloReconciliationAdvisory]]:
     """Reconcile the receipt total against the canonical computed result casilla.
 
     Resolves the registry snapshot for ``work_unit``, reads the
     ``reconciliation_total_casilla_ids`` map its verification expectations
-    declare (the same map ``calculation_result_summary`` consumes), loads the
-    filed / verified persisted :class:`~CalculationRevision`,
-    and compares the receipt's printed total against
+    declare (the same map ``calculation_result_summary`` consumes), and
+    compares the receipt's printed total against
     ``revision.casilla_values[target_casilla]`` at the expectation's declared
-    tolerance. A divergence is a typed ``total`` diff carrying the reconciling
-    expectation's ``legal_refs`` / ``source_refs``. Every branch that cannot
-    perform the comparison returns a ``totals_not_reconciled`` advisory instead
-    of silently passing.
+    tolerance. ``revision`` is the persisted revision the caller asserts was
+    presented; ``None`` means no such revision exists. A divergence is a typed
+    ``total`` diff carrying the reconciling expectation's ``legal_refs`` /
+    ``source_refs``. Every branch that cannot perform the comparison returns a
+    ``totals_not_reconciled`` advisory instead of silently passing.
     """
     modelo = str(work_unit.modelo)
     try:
@@ -850,10 +856,7 @@ def _reconcile_receipt_totals(
     if target is None:
         return [], [_totals_not_reconciled("receipt_kind_unmapped", modelo=modelo, detail=receipt_kind)]
 
-    try:
-        computed = _computed_result_value(work_unit, target.casilla_id, operation=operation)
-    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
-        return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
+    computed = revision.casilla_values.get(target.casilla_id) if revision is not None else None
     if computed is None:
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
 
@@ -1148,26 +1151,6 @@ def _decimal_declaracion_values(declaracion: ReconciliationDeclaracionObservatio
     return values
 
 
-def _computed_result_value(
-    work_unit: WorkUnit,
-    casilla_id: str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> Decimal | None:
-    """Return the canonical computed value of ``casilla_id`` for ``work_unit``.
-
-    Reads the persisted filed / verified calculation revision (never a fresh
-    calculation — the reconcile path stays local-only), so the value compared is
-    the same canonical ``revision.casilla_values`` the result-summary and export
-    surfaces render (``aeat-calculation-aggregation``). Returns
-    ``None`` when no persisted revision carries the casilla.
-    """
-    revision = _filed_revision_for_work_unit(work_unit, operation=operation)
-    if revision is None:
-        return None
-    return revision.casilla_values.get(casilla_id)
-
-
 def _filed_revision_for_work_unit(
     work_unit: WorkUnit,
     *,
@@ -1176,7 +1159,7 @@ def _filed_revision_for_work_unit(
     """Return the persisted filed / verified revision selected for ``work_unit``.
 
     Shared read path for both the receipt-total compare
-    (:func:`_computed_result_value`) and the casilla-level declaración compare
+    (:func:`reconcile_receipt_totals`) and the casilla-level declaración compare
     (:func:`_reconcile_declaracion_casillas`): both must read the exact same
     persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
@@ -1297,4 +1280,5 @@ __all__ = [
     "modelo_reconcile_bytes",
     "reconcile_parsed_declaracion",
     "reconcile_parsed_justificante",
+    "reconcile_receipt_totals",
 ]

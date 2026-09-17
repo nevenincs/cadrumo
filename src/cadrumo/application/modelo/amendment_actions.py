@@ -72,6 +72,9 @@ from ...domain.modelos.calculation_revision_amendment import (
 )
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -311,7 +314,7 @@ def amend_modelo_revision[CasillaKey](
 
     The baseline filing is marked ``SUPERSEDIDO`` and linked to the new current
     amendment record. The new filing record is an internal filing envelope:
-    ``aeat_accepted`` remains false, ``external_evidence`` is cleared, and
+    the record stays ``PENDIENTE``, ``external_evidence`` is cleared, and
     ``amends_filing_record_id`` points back to the imported baseline. A
     ``modelo.amended`` bucket event records the amendment kind, override count,
     work-unit id, and amended baseline id.
@@ -520,6 +523,7 @@ def amend_modelo_revision[CasillaKey](
         baseline=baseline,
         filing_catalogue=filing_catalogue,
         new_revision_id=new_revision_id,
+        declaration_kind=FilingDeclarationKind(amendment_kind.value),
         actor=actor,
         now=now,
     )
@@ -646,6 +650,7 @@ def _build_amendment_filing_updates(
     baseline: ModeloRecord,
     filing_catalogue: ModeloRecordCatalogue,
     new_revision_id: CalculationRevisionId,
+    declaration_kind: FilingDeclarationKind,
     actor: str,
     now: datetime,
 ) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
@@ -659,6 +664,7 @@ def _build_amendment_filing_updates(
         filing_record_id=new_filing_id,
         baseline=baseline,
         calculation_revision_id=new_revision_id,
+        declaration_kind=declaration_kind,
         filed_at=now,
         filed_by=actor.strip(),
     )
@@ -758,10 +764,11 @@ def _build_amendment_filing_record(
     filing_record_id: str,
     baseline: ModeloRecord,
     calculation_revision_id: CalculationRevisionId,
+    declaration_kind: FilingDeclarationKind,
     filed_at: datetime,
     filed_by: str,
 ) -> ModeloRecord:
-    """Create the current filing record that points back to ``baseline``."""
+    """Create the pending current filing record that points back to ``baseline``."""
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=baseline.work_unit_id,
@@ -774,7 +781,9 @@ def _build_amendment_filing_record(
         filed_at=filed_at,
         filed_by=filed_by,
         notes=None,
-        aeat_accepted=False,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=declaration_kind,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,

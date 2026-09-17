@@ -84,6 +84,9 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -929,7 +932,9 @@ def _new_local_filing_record(
         filed_at=now,
         filed_by=actor.strip(),
         notes=notes.strip() if notes else None,
-        aeat_accepted=False,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,
     )

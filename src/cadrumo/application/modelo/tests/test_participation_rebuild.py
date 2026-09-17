@@ -27,6 +27,9 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -430,6 +433,9 @@ def test_rebuild_includes_finalized_excludes_borrador_and_carries_filing_record(
         filed_at=_T0 + timedelta(hours=2),
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     fr_repo.save(upsert_filing_record(fr_repo.load(), filing_record))
 
