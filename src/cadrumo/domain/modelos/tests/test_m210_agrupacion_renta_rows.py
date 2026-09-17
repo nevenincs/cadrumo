@@ -16,7 +16,7 @@ from ..row_models import (
     validate_m210_agrupacion_renta_rows,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _M210_EFFECTIVE_DATE = date(2025, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)

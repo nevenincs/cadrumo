@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ..codes import ModeloCode
+from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,7 +20,7 @@ def test_value_round_trip() -> None:
 
 def test_invalid_value_rejected() -> None:
     for raw in ("", "13", "1300", "abc", "13A"):
-        with pytest.raises(ValueError, match=r"modelo code|three-digit"):
+        with pytest.raises(ModeloValidationError, match=r"modelo code|three-digit"):
             ModeloCode(raw)
 
 

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.ids import RevisionId
@@ -69,13 +69,13 @@ def _registry_m303_rectificativa_declarations(
     operation: PinnedAuthorityOperation,
 ) -> Mapping[str, str]:
     """Resolve M303 amendment declarations from the dated registry mapping."""
-    if not any(metadata.contains_date(date.today()) for metadata in operation.modelo_directory("303").revisions):
+    if not any(metadata.contains_date(today_madrid()) for metadata in operation.modelo_directory("303").revisions):
         raise ModeloValidationError("M303 has no registry revision for today's date")
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-303-rectificativa-record-design-mapping",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

@@ -23,7 +23,7 @@ from ._row_model_support import (
     _ValidationErrorCase,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _DetailRowFactory = Callable[
     [],

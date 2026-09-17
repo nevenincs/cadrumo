@@ -31,7 +31,7 @@ from typing import Annotated, override
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from ...core.identity.hex_ids import CalculationRevisionId, VerificationReportId
@@ -264,6 +264,7 @@ class VerificationReport(BaseModel):
 
     @field_validator("run_at")
     @classmethod
+    @pydantic_validation_boundary
     def _run_at_is_utc(cls, value: datetime) -> datetime:
         """Reject naive and non-UTC verification instants at the model boundary."""
         return validate_utc_aware(value)

@@ -19,7 +19,7 @@ from ._calculation_revision_test_support import (
     _WHITESPACE_CASILLA_KEY,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     modelo="720",

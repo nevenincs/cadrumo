@@ -29,6 +29,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
@@ -224,6 +225,7 @@ class WorkUnit(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> ModeloCode:
         """Accept a raw modelo string and coerce it into ``ModeloCode``.
 
@@ -239,6 +241,7 @@ class WorkUnit(BaseModel):
         raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_derived_id(self) -> WorkUnit:
         """Confirm ``work_unit_id`` matches the deterministic derivation.
 
@@ -267,6 +270,7 @@ class WorkUnitCatalogue(BaseModel):
     work_units: Mapping[str, WorkUnit] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_keys_match(self) -> WorkUnitCatalogue:
         """Pin that every mapping key equals its record's ``work_unit_id``."""
         for key, unit in self.work_units.items():

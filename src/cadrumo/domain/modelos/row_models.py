@@ -531,6 +531,7 @@ class Modelo349RectificacionRow(BaseModel):
 
     @field_validator("periodo", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _periodo_uppercase(cls, value: object, info: ValidationInfo) -> object:
         if isinstance(value, str):
             normalised = value.strip().upper()

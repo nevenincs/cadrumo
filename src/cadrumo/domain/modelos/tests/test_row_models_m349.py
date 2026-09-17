@@ -10,6 +10,8 @@ from pydantic import ValidationError
 from ....core.aggregation import IntracomOperationType
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
+from ...calculations.registry.errors import NoRevisionForPeriodError
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..row_models import (
     Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
@@ -25,7 +27,7 @@ from ._row_model_support import (
     _ValidationErrorCase,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _M349_INVALID_ROW_CASES = (
@@ -191,15 +193,6 @@ _M349_CONTEXT_ALLOWED_CASES = (
             clave_operacion="E",
             filing_year=2025,
             period="4T",
-        ),
-    ),
-    _CountryContextCase(
-        "gb-first-2021-transition-goods",
-        lambda: validate_m349_country_prefix_context(
-            country_code="GB",
-            clave_operacion="E",
-            filing_year=2021,
-            period="1T",
         ),
     ),
     _CountryContextCase(
@@ -400,6 +393,18 @@ class TestValidateM349CountryPrefixContext:
     def test_allowed_country_prefix_contexts(self) -> None:
         for case in _M349_CONTEXT_ALLOWED_CASES:
             case.call()
+
+    def test_gb_transition_goods_below_the_supported_floor_is_refused(self) -> None:
+        """The 2021 GB goods transition sits below the supported floor and cannot be selected."""
+        support = published_supported_filing_years()
+        assert support is not None
+        with pytest.raises(NoRevisionForPeriodError):
+            validate_m349_country_prefix_context(
+                country_code="GB",
+                clave_operacion="E",
+                filing_year=support.floor - 1,
+                period="1T",
+            )
 
     def test_rejected_country_prefix_contexts(self) -> None:
         for case in _M349_CONTEXT_REJECTED_CASES:

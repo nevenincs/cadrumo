@@ -59,6 +59,7 @@ from pydantic import (
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -371,6 +372,7 @@ class CalculationSourceRef(BaseModel):
     dependency_treatment: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_coherent_lineage(self) -> CalculationSourceRef:
         try:
             contributor_kind = BindingSourceKind(self.contributor_source_kind)
@@ -893,6 +895,7 @@ class CalculationRevision(BaseModel):
         "discarded_at",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _lifecycle_instants_are_utc(cls, value: datetime | None) -> datetime | None:
         """Reject naive and non-UTC lifecycle instants before persistence or ordering."""
         if value is None:
@@ -900,6 +903,7 @@ class CalculationRevision(BaseModel):
         return validate_utc_aware(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
         validation_context = _string_keyed_context(info.context)
         _validate_secure_revision_context(self, validation_context)
@@ -918,6 +922,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("source_transaction_ids", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_source_transaction_ids(cls, value: object) -> tuple[str, ...]:
         if not isinstance(value, Sequence) or isinstance(value, str | bytes):
             raise ModeloValidationError("source_transaction_ids must be a sequence")
@@ -930,6 +935,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("source_transaction_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_source_transaction_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(sorted(item.strip().lower() for item in value))
         if len(set(normalized)) != len(normalized):
@@ -938,6 +944,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("m210_official_tipo_renta_code")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_m210_official_tipo_renta_code(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -950,6 +957,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("row_binding_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_row_binding_values(cls, value: object) -> Mapping[BindingId, Mapping[str, str]]:
         if value is None:
             empty: dict[BindingId, Mapping[str, str]] = {}
@@ -964,6 +972,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("row_source_identities", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_row_source_identities(
         cls, value: object, info: ValidationInfo
     ) -> Mapping[RowBindingKey, RowSourceIdentity]:
@@ -1003,6 +1012,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("row_casilla_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_row_casilla_values(cls, value: object, info: ValidationInfo) -> Mapping[RowCasillaKey, Decimal]:
         validation_context = _string_keyed_context(info.context)
         if (
@@ -1029,6 +1039,7 @@ class CalculationRevision(BaseModel):
 
     @field_validator("row_casilla_provenance", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_row_casilla_provenance(
         cls, value: object, info: ValidationInfo
     ) -> Mapping[RowCasillaKey, DirectRowMaterializationProvenance]:
@@ -1134,6 +1145,7 @@ class CalculationRevisionCatalogue(BaseModel):
     revisions: Mapping[str, CalculationRevision] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_keys_match(self) -> CalculationRevisionCatalogue:
         for key, revision in self.revisions.items():
             if key != revision.calculation_revision_id:
