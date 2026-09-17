@@ -8366,6 +8366,12 @@ sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
 
 [[revisions."2024".family_overrides]]
 family = "parameters"
+selector = {revision = "2023", id = "renta-minimo-descendientes-named-detail-limit"}
+sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["mínimo por descendientes"]}], source_refs = ["aeat-renta-2024-manual-parte1"], values = [{value = "3", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
+sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "parameters"
 selector = {revision = "2023", id = "renta-minimo-descendientes-madrid-menor-tres-anos"}
 sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Comunidad Autónoma de Madrid", "se aumentará en 3.005,16 euros anuales"]}], source_refs = ["aeat-renta-2024-manual-parte1"], values = [{value = "3005.16", date_axis = "filing_period", valid_from = 2024-01-01, valid_to = 2024-12-31}]}
 sequence_removals = {source_citations = [0], source_refs = [0], values = [0]}
