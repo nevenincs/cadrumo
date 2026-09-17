@@ -175,7 +175,7 @@ def test_dangling_construct_casilla_ref() -> None:
     """construct.casilla_ids pointing at nonexistent CasillaId raises."""
     construct = ConstructDefinition(
         id="ct.test",
-        localization_key="test.schema.construct.ct-test.title",
+        localization_keys=("test.schema.construct.ct-test.title",),
         casilla_ids=(_NONEXISTENT_CASILLA,),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -197,7 +197,7 @@ def test_snapshot_integrity_checks_construct_filing_schedule_ref() -> None:
     )
     construct = ConstructDefinition(
         id="ct.filing-schedule",
-        localization_key="test.schema.construct.ct-filing-schedule.title",
+        localization_keys=("test.schema.construct.ct-filing-schedule.title",),
         filing_schedules=("schedule.test",),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
