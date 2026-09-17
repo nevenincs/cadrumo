@@ -5,40 +5,15 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:98bd28de60d621629b19892401eeb798ddf9d498d8723bad7f09c955cba9bc4e'
+body_hash: 'sha256:4f3d73e125642b97f2f0bcdc518042489f95247421a35fc0e38439286ad21d1d'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `github-actions` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S12` `A` `dev/ci/change_scope.py`
 - `S12` `A` `dev/ci/tests/test_change_scope.py`
 - `S12` `M` `pyproject.toml`
@@ -91,4 +66,13 @@ related:
 - `S21` `M` `RELEASING.md`
 - `S21` `M` `dev/runners/README.md`
 - `S21` `by:` `ci-docs`
+- `S20` `M` `.github/workflows/release-please.yml`
+- `S20` `M` `dev/packaging/cohort_manifest.py`
+- `S20` `M` `dev/packaging/release_cohort.py`
+- `S20` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S20` `verify:` `dev.actionlint` -> `pass`
+- `S20` `by:` `ci-fix`
 
+## Notes
+
+- `S20` phase-close review fixes: scoped exclusions, sigpipe, prove commit binding, docs gating, release-please permissions

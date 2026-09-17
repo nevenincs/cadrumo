@@ -5,29 +5,10 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:ce77f59434ec7b83ae3b6a3ab3279a76722c352a0a07866488fa47d541b48c7f'
+body_hash: 'sha256:5f5cd634e6de85dca2e6c5ed81ceffe041167cf7f66ea61fb6b747bf1c4d0dd3'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace github-actions with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `github-actions` audit: `github-actions phase-close review`
 

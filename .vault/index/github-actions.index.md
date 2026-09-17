@@ -6,9 +6,11 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8aedd9b2246984582a23c019faf1c2db0967fd7acacd35674176810b729f587'
+body_hash: 'sha256:8800e389a3a3c8900ac8a45ec70689e35478bd7587b808a499458bfeefa90e7f'
 related:
   - '[[2026-09-17-github-actions-adr]]'
+  - '[[2026-09-17-github-actions-audit]]'
+  - '[[2026-09-17-github-actions-ledger]]'
   - '[[2026-09-17-github-actions-plan]]'
   - '[[2026-09-17-github-actions-research]]'
 ---
@@ -22,6 +24,14 @@ Auto-generated index of all documents tagged with `#github-actions`.
 ### adr
 
 - `2026-09-17-github-actions-adr` - `github-actions` adr: `GitHub Actions lanes: PR lint, merge gate, release` | (**status:** `accepted`)
+
+### audit
+
+- `2026-09-17-github-actions-audit` - `github-actions` audit: `github-actions phase-close review`
+
+### exec
+
+- `2026-09-17-github-actions-ledger` - `github-actions` ledger
 
 ### plan
 
