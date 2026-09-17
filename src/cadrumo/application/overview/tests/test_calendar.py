@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import NoRevisionForPeriodError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
@@ -99,10 +100,7 @@ def _annual_work_unit_without_authored_window(*, modelo: str, filing_year: int) 
 
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "calendar_range"),
-    (
-        ("180", 2023, OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 1, 31))),
-        ("100", 2019, OverviewCalendarRange(from_date=date(2021, 4, 1), to_date=date(2021, 6, 30))),
-    ),
+    (("180", 2023, OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 1, 31))),),
 )
 def test_calendar_does_not_project_historic_annual_work_into_future_registry_window(
     modelo: str,
@@ -124,6 +122,16 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     )
 
     assert all(entry.local_work_unit_id != work_unit.work_unit_id for entry in calendar.entries)
+
+
+def test_calendar_refuses_a_window_for_annual_work_below_the_supported_floor() -> None:
+    """A work unit below the supported floor is refused rather than given a later campaign."""
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    work_unit = _annual_work_unit_without_authored_window(modelo="100", filing_year=supported_years.floor - 1)
+
+    with pytest.raises(NoRevisionForPeriodError):
+        _registry_window_for_work_unit(work_unit)
 
 
 def test_calendar_censo_warning_requires_every_modelo_enrolment_key(

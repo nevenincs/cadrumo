@@ -14,6 +14,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -112,6 +113,7 @@ class HomeZoneState(BaseModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_honest_availability_evidence(self) -> Self:
         if self.missing_profile_paths and self.reason_code is None:
             raise ValueError("missing profile paths explain a reason and require one")
@@ -136,6 +138,7 @@ class HomeAccountSession(BaseModel):
     expires_at: datetime | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_posture_shape(self) -> Self:
         if self.posture is HomeSessionPosture.NO_PROFILE and self.profile_label is not None:
             raise ValueError("a no-profile session cannot carry a profile label")
@@ -159,6 +162,7 @@ class HomeNextAction(BaseModel):
     period: Period | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_complete_natural_address(self) -> Self:
         address = (self.modelo, self.filing_year, self.period)
         if any(value is not None for value in address) and not all(value is not None for value in address):
@@ -182,6 +186,7 @@ class HomeDeclarationResume(BaseModel):
     revision_id: RevisionId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_period_year(self) -> Self:
         if self.filing_year != self.period.filing_year:
             raise ValueError("declaration filing_year must match its period year")
@@ -199,6 +204,7 @@ class HomeLedgerReadiness(BaseModel):
     missing_evidence: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_subsets(self) -> Self:
         if any(value > self.entries for value in (self.requiring_review, self.unclassified, self.missing_evidence)):
             raise ValueError("Ledger issue counts cannot exceed the entry count")
@@ -239,6 +245,7 @@ class HomeProjectionV1(BaseModel):
     messages_requiring_attention: NonNegativeInt | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _prevent_unavailable_zones_from_claiming_empty_or_zero(self) -> Self:
         _reject_unavailable_zone_rows(
             (
@@ -331,6 +338,7 @@ class HomeProjectionInput(BaseModel):
     messages_requiring_attention: int | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_duplicate_reader_identities(self) -> Self:
         declaration_ids = tuple(item.work_unit_id for item in self.declarations)
         if len(set(declaration_ids)) != len(declaration_ids):

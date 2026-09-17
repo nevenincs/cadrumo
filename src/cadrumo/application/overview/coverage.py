@@ -40,6 +40,7 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -140,6 +141,7 @@ class ObligationCoverageReport(BaseModel):
         return bool(self.advised)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_disjoint_dispositions(self) -> Self:
         """Refuse a report that files one modelo under more than one disposition.
 
