@@ -394,7 +394,9 @@ def test_previous_year_binding_accepts_a_manual_override(
     including every year below the supported filing floor -- the ``--binding``
     override is the channel that carries the operator's value into modelo 130.
     """
-    filing_year = 2025
+    support = operation.modelo_directory("130").supported_filing_years
+    assert support is not None
+    filing_year = support.horizon
     period = Period.from_year_and_code(filing_year, "1T")
     snapshot = operation.snapshot("130", filing_year=filing_year, period=period.registry_token)
     assert _M130_PREVIOUS_YEAR_BINDING in {binding.id for binding in snapshot.revision.bindings}
