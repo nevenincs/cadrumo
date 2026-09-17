@@ -377,6 +377,20 @@ def test_matching_casillas_confirm_the_pending_entry(profile: _Profile, operatio
     assert layers.official.observation.casilla_values[_C01] == Decimal("1500")
 
 
+def test_a_register_entry_older_than_the_pending_entry_never_supersedes_it_in_the_past(
+    profile: _Profile, operation: PinnedAuthorityOperation
+) -> None:
+    work_unit = _work_unit(profile, operation)
+    pending = _seed_local_filing(profile, work_unit, {_C01: Decimal("1500")}, at=_T3)
+
+    result = _reconcile(profile, operation, _entry("EXP-1", values={_C01: Decimal("1700")}), at=_T1)
+
+    assert result.outcome is FilingReconciliationOutcome.CONTRADICTED
+    discrepant = profile.filings.load().records[pending.filing_record_id]
+    assert discrepant.confirmation is AeatConfirmationState.DISCREPANTE
+    assert discrepant.superseded_at == pending.filed_at
+
+
 def test_different_casillas_contradict_the_pending_correction(
     profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:

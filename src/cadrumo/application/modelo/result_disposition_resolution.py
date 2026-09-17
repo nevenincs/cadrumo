@@ -147,6 +147,30 @@ def resolve_modelo_result_disposition(
                 payment_election=payment_election,
                 operation=indexed_operation,
             )
+    base_disposition = base_modelo_result_disposition(
+        work_unit=work_unit,
+        revision=revision,
+        period=period,
+        operation=operation,
+    )
+    return _resolve_elected_disposition(
+        base_disposition,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+        period=period,
+        refund_election=refund_election,
+        payment_election=payment_election,
+    )
+
+
+def base_modelo_result_disposition(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> ResultDisposition:
+    """Return the disposition the final-result casilla implies before any operator election."""
     base = derive_result_disposition(
         work_unit.modelo,
         _result_disposition_values_for_revision(
@@ -156,15 +180,7 @@ def resolve_modelo_result_disposition(
             operation=operation,
         ),
     )
-    base_disposition = base or DECLARATION_TYPE_FALLBACK
-    return _resolve_elected_disposition(
-        base_disposition,
-        work_unit=work_unit,
-        workflow_profile=workflow_profile,
-        period=period,
-        refund_election=refund_election,
-        payment_election=payment_election,
-    )
+    return base or DECLARATION_TYPE_FALLBACK
 
 
 def _resolve_elected_disposition(
@@ -395,5 +411,6 @@ def _apply_modelo_303_refund_election(
 
 __all__ = [
     "DECLARATION_TYPE_FALLBACK",
+    "base_modelo_result_disposition",
     "resolve_modelo_result_disposition",
 ]

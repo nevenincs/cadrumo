@@ -360,24 +360,17 @@ def resolve_external_filing_work_unit(
     )
 
 
-def import_external_filing_source(
+def external_filing_source_casillas(
     source: ExternalFilingBaselineSource,
-    *,
-    bucket_id: str,
-    work_lifecycle_ports: WorkLifecyclePorts,
-    operation: PinnedAuthorityOperation,
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    actor: str = "aeat-import",
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    clock: datetime | None = None,
-) -> ExternalFilingImportResult:
-    """Resolve or create the target work unit and reconcile an amendable baseline.
+) -> tuple[dict[CasillaId, str], dict[CasillaId, Decimal]]:
+    """Return a source's printed lexicals and their parsed values, once proven complete.
 
-    Source lexical tokens are retained verbatim on the revision input snapshot;
-    their independently parsed Decimal values feed the filing baseline.
+    Refuses a source whose coordinate is inconsistent, whose lexicals are blank
+    or non-numeric, or which omits a required numeric casilla of the registry
+    revision.
+
+    Raises:
+        ExternalModeloImportError: The source cannot be recorded as a baseline.
     """
     _validate_external_source_shape(source)
     lexical_values, decimal_values = _parse_external_source_values(source)
@@ -392,6 +385,30 @@ def import_external_filing_source(
         canonical_values=canonical_values,
         lexical_values=lexical_values,
     )
+    return lexical_values, decimal_values
+
+
+def import_external_filing_source(
+    source: ExternalFilingBaselineSource,
+    *,
+    bucket_id: str,
+    work_lifecycle_ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    declared_kind: FilingDeclarationKind | None = None,
+    actor: str = "aeat-import",
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    clock: datetime | None = None,
+) -> ExternalFilingImportResult:
+    """Resolve or create the target work unit and reconcile an amendable baseline.
+
+    Source lexical tokens are retained verbatim on the revision input snapshot;
+    their independently parsed Decimal values feed the filing baseline.
+    """
+    lexical_values, decimal_values = external_filing_source_casillas(source)
     resolved_justificante_repository = _validate_external_source_requirements(
         source=source,
         bucket_id=bucket_id,
@@ -420,6 +437,8 @@ def import_external_filing_source(
         source_lexical_values_by_casilla_id=lexical_values,
         evidence_kind=source.evidence_kind,
         evidence_reference_id=source.evidence_reference_id,
+        filing_instance_evidence=filing_instance_evidence,
+        declared_kind=declared_kind,
         actor=actor,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,

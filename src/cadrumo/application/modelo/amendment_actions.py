@@ -117,6 +117,7 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .profile_export_binding import resolve_export_identity
+from .result_disposition_resolution import base_modelo_result_disposition
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 
 
@@ -579,8 +580,10 @@ def amend_modelo_revision[CasillaKey](
         captured_at=now,
         result_disposition=_amendment_result_disposition(
             work_unit=work_unit,
+            amendment=filed_amendment,
             supplied=result_disposition,
             ports=ports,
+            operation=operation,
         ),
         filing_record_id=new_filing_id,
         iva_compensation_history_repository=ports.iva_compensation_history_repository,
@@ -614,16 +617,28 @@ def amend_modelo_revision[CasillaKey](
 def _amendment_result_disposition(
     *,
     work_unit: WorkUnit,
+    amendment: CalculationRevision,
     supplied: ResultDisposition | None,
     ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
 ) -> ResultDisposition | None:
-    """Return the correction's disposition, keeping the period's recorded one when none is supplied."""
+    """Return the correction's disposition.
+
+    A supplied disposition wins. Otherwise the period's recorded disposition is
+    kept, and with none recorded the disposition the corrected result implies
+    before any refund or payment election is used.
+    """
     if supplied is not None or work_unit.modelo != Modelo("303").value:
         return supplied
     recorded = ports.observation_repository.load_observation(work_unit.modelo, work_unit.period)
-    if recorded is None or recorded.result_disposition is None:
-        return None
-    return recorded.result_disposition.disposition
+    if recorded is not None and recorded.result_disposition is not None:
+        return recorded.result_disposition.disposition
+    return base_modelo_result_disposition(
+        work_unit=work_unit,
+        revision=amendment,
+        period=work_unit.period,
+        operation=operation,
+    )
 
 
 def _require_amendment_detail_rows(
