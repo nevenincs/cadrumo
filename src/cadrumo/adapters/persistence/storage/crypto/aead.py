@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import DecryptionError, EncryptionError, KeyDerivationError
-from .aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE, AesGcmKeyLengthError, open_sealed, seal
+from .aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE, open_sealed, seal
 
 
 class EncryptedBlob(BaseModel):
@@ -107,13 +107,18 @@ def encrypt_record(
             or if the underlying AEAD operation fails for any other
             reason.
     """
+    _require_key_size(key)
     try:
         nonce, ciphertext = seal(plaintext, key=key, associated_data=associated_data)
-    except AesGcmKeyLengthError as exc:
-        raise EncryptionError(str(exc)) from None
     except (TypeError, ValueError) as exc:
         raise EncryptionError(f"AES-256-GCM encryption failed: {exc}") from exc
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext)
+
+
+def _require_key_size(key: bytes) -> None:
+    """Refuse a key the AES-256 primitive would refuse, as an encryption fault."""
+    if len(key) != KEY_SIZE:
+        raise EncryptionError(f"AES-256-GCM key must be exactly {KEY_SIZE} bytes; got {len(key)}")
 
 
 def decrypt_record(
@@ -139,10 +144,9 @@ def decrypt_record(
             or the associated-data binding is wrong.
         EncryptionError: If ``key`` is not exactly ``KEY_SIZE`` bytes.
     """
+    _require_key_size(key)
     try:
         return open_sealed(blob.nonce, blob.ciphertext, key=key, associated_data=associated_data)
-    except AesGcmKeyLengthError as exc:
-        raise EncryptionError(str(exc)) from None
     except InvalidTag as exc:
         raise DecryptionError("AES-256-GCM tag verification failed") from exc
     except (TypeError, ValueError) as exc:

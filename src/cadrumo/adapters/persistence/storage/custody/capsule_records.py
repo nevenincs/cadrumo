@@ -12,6 +12,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
@@ -56,6 +57,7 @@ class _ProfileCustodyCapsuleLabelPayload(BaseModel):
 
     @field_validator("label_revision")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_label_revision(cls, value: int) -> int:
         if value < 1:
             raise ValueError("profile capsule label revision must be at least one")
@@ -63,12 +65,14 @@ class _ProfileCustodyCapsuleLabelPayload(BaseModel):
 
     @field_validator("previous_label_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_previous_label_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
         return validate_prefixed_digest(value, field_name="profile capsule previous label digest")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_label_lineage(self) -> _ProfileCustodyCapsuleLabelPayload:
         if self.label_revision == 1 and self.previous_label_digest is not None:
             raise ValueError("first profile capsule label revision must not carry a predecessor")
@@ -90,15 +94,18 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
     @field_validator("content_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_content_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="profile capsule label content digest")
 
     @field_validator("self_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="profile capsule label self digest")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verify_digests(self) -> ProfileCustodyCapsuleLabel:
         if self.content_digest != self.computed_content_digest:
             raise ValueError("profile capsule label content digest does not match")
@@ -220,6 +227,7 @@ class _ProfileCustodyCommitPayload(BaseModel):
 
     @field_validator("published_at")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_published_at(cls, value: str) -> str:
         if _COMMIT_TIME_RE.fullmatch(value) is None:
             raise ValueError("profile capsule publication time must be canonical UTC microseconds")
@@ -241,6 +249,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
 
     @field_validator("self_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="profile capsule self_digest")
 

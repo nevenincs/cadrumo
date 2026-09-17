@@ -25,6 +25,7 @@ from typing import Any, ClassVar, Self, TypeVar, cast
 
 from pydantic import BaseModel, ValidationError, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.models import STRICT_FROZEN_CONFIG
 from .errors import ProfileCustodyRecordError
@@ -70,6 +71,7 @@ class CustodyDigestModel(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verify_self_digest(self) -> Self:
         """Refuse a record whose stored digest does not describe what it holds.
 

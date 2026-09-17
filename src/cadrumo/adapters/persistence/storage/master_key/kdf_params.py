@@ -38,6 +38,7 @@ from typing import Final, Literal, get_args
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
@@ -86,6 +87,7 @@ class KdfParams(BaseModel):
 
     @field_validator("salt")
     @classmethod
+    @pydantic_validation_boundary
     def _check_salt_length(cls, value: bytes) -> bytes:
         return require_kdf_salt_length(value, error_type=StorageValidationError)
 
@@ -95,6 +97,7 @@ class KdfParams(BaseModel):
 
     @field_validator("salt", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _decode_salt(cls, value: object) -> bytes:
         return decode_kdf_salt(value, error_type=StorageValidationError)
 

@@ -16,6 +16,7 @@ from sqlalchemy import Engine, Select
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
+from .....application.user_profile.profile_record_repository import close_active_profile_record_session
 from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
@@ -435,6 +436,10 @@ def isolated_runtime_profile(
                     repository=repository,
                 )
             finally:
+                # A record authority derived during the test is process-wide and
+                # pinned to that test's authority generation; left bound, it
+                # answers the next test that reuses this profile id.
+                close_active_profile_record_session()
                 session.close()
                 reap_profile_session_keys(storage_root)
 

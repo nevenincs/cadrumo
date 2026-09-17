@@ -26,7 +26,7 @@ from .secure_sql import TestRuntimeProfile
 
 _runtime_profile = default_bucket_runtime_profile_fixture()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 15, 0, 0, tzinfo=UTC)

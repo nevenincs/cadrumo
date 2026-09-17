@@ -9,6 +9,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from .....core.identity.profile import canonical_profile_bucket_id
@@ -88,29 +89,34 @@ class ProfileCustodySentinelRecord(BaseModel):
 
     @field_validator("dek_epoch")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_epoch(cls, value: str) -> str:
         _decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=16)
         return value
 
     @field_validator("nonce_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_nonce(cls, value: str) -> str:
         _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
         return value
 
     @field_validator("tag_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_tag(cls, value: str) -> str:
         _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
         return value
 
     @field_validator("ciphertext_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_ciphertext(cls, value: str) -> str:
         _decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=None)
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verify_exact_proof_shape(self) -> ProfileCustodySentinelRecord:
         ciphertext = _decode_canonical_b64(
             self.ciphertext_b64,

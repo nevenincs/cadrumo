@@ -1,6 +1,6 @@
 """Unit tests for the SQLAlchemy engine factory.
 
-Exercises :func:`cadrumo.adapters.persistence.storage.sql.create_engine_from_settings`
+Exercises :func:`cadrumo.adapters.persistence.storage.sql.engine.create_engine_from_settings`
 covering the round-trip happy path, parent-directory creation, the
 storage-root fallback derivation, and the application-data-root anchoring of
 relative SQLite URLs.

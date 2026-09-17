@@ -23,7 +23,7 @@ through the integrity probe, which unwraps every row's ciphertext and returns
 counts rather than plaintext.
 
 See Also:
-    :class:`~cadrumo.adapters.persistence.storage.sql.SecureObjectNamespaceIntegrity`
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_object_records.SecureObjectNamespaceIntegrity`
         The per-namespace decryptability counts the readback assertion rests on.
 """
 

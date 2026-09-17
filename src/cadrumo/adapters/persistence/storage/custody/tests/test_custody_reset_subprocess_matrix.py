@@ -44,6 +44,16 @@ from cadrumo.application.user_profile.login_session_port import bind_profile_log
 composition = ExitStack()
 composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
 composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.application.user_profile.custody_ports import profile_custody_port
+
+reset_ports = {
+    "certificate_secret_backend_factory": build_certificate_secret_backend,
+    "operator_scope_ports": build_operator_scope_ports(),
+    "bucket_storage": profile_custody_port().bucket_storage(),
+}
 """
 
 _RESET_CHILD = (
@@ -63,11 +73,11 @@ root = sys.argv[1]
 profile_id = sys.argv[2]
 with open_test_profile_session(profile_id):
     register_minimal_profile(profile_id=profile_id, record_empty_legal_hold=True)
-operation = start_config_reset(confirmed=True)
+operation = start_config_reset(**reset_ports, confirmed=True)
 for _ in range(8):
     if operation.status is ConfigResetOperationStatus.COMPLETE:
         break
-    operation = resume_config_reset(operation.operation_id, confirmed=True)
+    operation = resume_config_reset(operation.operation_id, **reset_ports, confirmed=True)
 print(operation.status.value, flush=True)
 sys.exit(0 if operation.status is ConfigResetOperationStatus.COMPLETE else 9)
 """
@@ -88,7 +98,7 @@ bucket_dir = root / "buckets" / bucket_id
 bucket_dir.mkdir(parents=True)
 (bucket_dir / "manifest.toml").write_text(f"bucket_id = {bucket_id!r}\n", encoding="utf-8")
 try:
-    start_config_reset(confirmed=True)
+    start_config_reset(**reset_ports, confirmed=True)
 except ProfileCustodyRefusedError as exc:
     print(exc.refusal.value, flush=True)
     print(exc.recovery_guidance[0].value, exc.recovery_guidance[1].value, flush=True)

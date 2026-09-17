@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -69,6 +70,7 @@ class ProfileCustodyKdfParameters(BaseModel):
 
     @field_validator("salt_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_salt(cls, value: str) -> str:
         return canonical_b64(value, field_name="salt_b64", expected_bytes=KDF_SALT_BYTES)
 
@@ -84,16 +86,19 @@ class ProfileCustodyWrappedDek(BaseModel):
 
     @field_validator("nonce_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_nonce(cls, value: str) -> str:
         return canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
 
     @field_validator("ciphertext_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_ciphertext(cls, value: str) -> str:
         return canonical_b64(value, field_name="ciphertext_b64", expected_bytes=KEY_SIZE)
 
     @field_validator("tag_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_tag(cls, value: str) -> str:
         return canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
 
@@ -129,11 +134,13 @@ class _ProfileCustodyEnvelopePayload(BaseModel):
 
     @field_validator("dek_epoch")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_dek_epoch(cls, value: str) -> str:
         return canonical_b64(value, field_name="dek_epoch", expected_bytes=_DEK_EPOCH_BYTES)
 
     @field_validator("previous_envelope_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_previous_envelope_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -151,6 +158,7 @@ class ProfileCustodyEnvelope(_ProfileCustodyEnvelopePayload, CustodyDigestModel)
 
     @field_validator("self_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 

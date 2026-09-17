@@ -26,7 +26,7 @@ holds a random key with nothing to decrypt; altering any persisted
 deadline breaks the GCM tag. Resume evaluation is FAIL-CLOSED: an
 expired, tampered, version-mismatched, or keychain-orphaned record is
 deleted and refused with a typed
-:class:`~cadrumo.core.ProfileSessionRefusalReason`, never silently
+:class:`~cadrumo.core.profile_session.ProfileSessionRefusalReason`, never silently
 tolerated. No plaintext KEK, DEK, or session-key byte ever lands on disk.
 
 Zeroisation honesty: the session key and DEK are held in ``bytearray``

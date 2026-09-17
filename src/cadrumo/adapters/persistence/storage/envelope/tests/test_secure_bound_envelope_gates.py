@@ -20,6 +20,8 @@ from __future__ import annotations
 import ast
 import inspect
 import textwrap
+from collections.abc import Callable
+from typing import override
 
 import pytest
 
@@ -91,12 +93,32 @@ def test_each_read_path_labels_its_own_row() -> None:
     assert "{subject}" in gate_source, "the gate hard-codes a row label instead of using the caller's"
 
 
+def _delegates_to_the_shared_load(method: Callable[..., object]) -> bool:
+    """Whether ``method`` reaches ``SecureBoundRepository.load`` through ``super()``.
+
+    A subclass may wrap the shared read to translate its failures at a port
+    boundary; it may not replace it. Only a body that calls ``super(...).load``
+    keeps the gate on the path.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(method)))
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "load"
+        and isinstance(node.func.value, ast.Call)
+        and isinstance(node.func.value.func, ast.Name)
+        and node.func.value.func.id == "super"
+        for node in ast.walk(tree)
+    )
+
+
 def test_the_gate_is_reachable_from_every_production_subclass() -> None:
-    """No subclass overrides the gate or either read path.
+    """No subclass overrides the gate or the iterator, or replaces the shared load.
 
     SUPPORTING: green under any re-inlining of the gate body. It forecloses a
     different escape -- a subclass shadowing ``load`` or the iterator and
-    bringing its own checks back -- rather than proving the extraction.
+    bringing its own checks back -- rather than proving the extraction. A
+    ``load`` override that only wraps ``super().load`` keeps the gate on the path.
     """
     subclasses: list[type] = []
     pending: list[type] = [SecureBoundRepository]
@@ -107,10 +129,35 @@ def test_the_gate_is_reachable_from_every_production_subclass() -> None:
             pending.append(child)
 
     for subclass in subclasses:
-        for attribute in ("_validate_envelope", "load", "_iter_validated_rows"):
+        for attribute in ("_validate_envelope", "_iter_validated_rows"):
             assert attribute not in vars(subclass), (
                 f"{subclass.__name__} overrides {attribute}, bypassing the shared envelope gate"
             )
+        override = vars(subclass).get("load")
+        assert override is None or _delegates_to_the_shared_load(override), (
+            f"{subclass.__name__} overrides load without delegating to it, bypassing the shared envelope gate"
+        )
+
+
+def test_a_load_override_that_does_not_delegate_is_detected() -> None:
+    """The delegation check refuses a replacement read."""
+
+    class _Shared:
+        def load(self, identifier: str) -> object:
+            return identifier
+
+    class _Replacement(_Shared):
+        @override
+        def load(self, identifier: str) -> object:
+            return identifier.upper()
+
+    class _Wrapper(_Shared):
+        @override
+        def load(self, identifier: str) -> object:
+            return super().load(identifier)
+
+    assert not _delegates_to_the_shared_load(_Replacement.load)
+    assert _delegates_to_the_shared_load(_Wrapper.load)
 
 
 def test_sensitivity_and_schema_version_are_the_gate_inputs() -> None:

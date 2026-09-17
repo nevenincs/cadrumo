@@ -18,6 +18,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -90,11 +91,13 @@ class _RecoveryPayload(BaseModel):
 
     @field_validator("dek_epoch")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_epoch(cls, value: str) -> str:
         return validate_profile_custody_dek_epoch(value)
 
     @field_validator("previous_recovery_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_previous_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -112,6 +115,7 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload, CustodyDigestModel):
 
     @field_validator("self_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_self_digest(cls, value: str) -> str:
         return validate_prefixed_digest(value, field_name="self_digest")
 
