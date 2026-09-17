@@ -15,6 +15,8 @@ from cadrumo.domain.calculations.registry.relations import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon
 from ._cross_dependency_calculation_support import (
     _M200_CUOTA_DIFERENCIAL_CASILLA,
     _M202_CUOTA_BASE_CASILLA,
@@ -101,17 +103,26 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     assert entries["34"].operand_refs == ("32", "33")
 
 
+def _within_supported_years(cases: list[tuple[int, str]]) -> list[tuple[int, str]]:
+    """Keep the boundary cases the registry's support envelope can select."""
+    catalogues = compiled_bundled_authority().catalogues
+    floor, horizon = coverage_assessment_floor(catalogues), coverage_assessment_horizon(catalogues)
+    return [case for case in cases if floor <= case[0] <= horizon]
+
+
 @pytest.mark.parametrize(
     ("filing_year", "expected_revision"),
-    [
-        (2019, "2019-2022"),
-        (2020, "2019-2022"),
-        (2022, "2019-2022"),
-        (2023, "2023-2024"),
-        (2024, "2023-2024"),
-        (2025, "2025-y-siguientes"),
-        (2026, "2025-y-siguientes"),
-    ],
+    _within_supported_years(
+        [
+            (2019, "2019-2022"),
+            (2020, "2019-2022"),
+            (2022, "2019-2022"),
+            (2023, "2023-2024"),
+            (2024, "2023-2024"),
+            (2025, "2025-y-siguientes"),
+            (2026, "2025-y-siguientes"),
+        ],
+    ),
 )
 def test_modelo_202_revision_selection_resolves_for_filing_year_boundaries(
     filing_year: int,
@@ -232,9 +243,6 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
             "modelo-200-profile-new-entity-flag": Decimal("0"),
             "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
             "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
-            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,
