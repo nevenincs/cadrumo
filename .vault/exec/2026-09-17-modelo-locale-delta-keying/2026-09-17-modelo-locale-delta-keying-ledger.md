@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:fb507bd52fda38a43e2c83f070a7b345d09cc3c705308e639faafbf013df9206'
+body_hash: 'sha256:f022cda5d3f5cef4ff93f5ff618a6e7930cbb46d607f11068e92bd574d675a6e'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -91,6 +91,11 @@ related:
 - `S12` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
 - `S12` `M` `src/cadrumo/locales`
 - `S12` `verify:` `pytest dev/locales` -> `pass`
+- `S12` `A` `dev/locales/casilla_orthography.py`
+- `S12` `A` `dev/locales/tests/test_casilla_orthography.py`
+- `S12` `M` `dev/locales/cli.py`
+- `S12` `M` `src/cadrumo/entrypoints/tui/profile/local_reader.py`
+- `S12` `verify:` `pytest dev/locales/tests/test_casilla_orthography.py` -> `pass`
 
 ## Notes
 
