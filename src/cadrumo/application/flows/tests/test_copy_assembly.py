@@ -36,7 +36,7 @@ from ..copy import assemble_page_copy, register_copy_source, resolve_copy
 from ..definition import CopyRef, FlowChoice, FlowLegalRef, FlowPage
 from ..errors import FlowCopyResolutionError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

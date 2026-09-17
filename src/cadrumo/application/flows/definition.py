@@ -25,6 +25,7 @@ from typing import cast
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.flows import (
     DEFER_TOKEN,
     CheckpointAvailability,
@@ -87,6 +88,7 @@ class FlowCondition(BaseModel):
     contains: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_exactly_one_clause(self) -> FlowCondition:
         declared = [name for name, value in (("equals", self.equals), ("contains", self.contains)) if value is not None]
         if len(declared) != 1:
@@ -121,6 +123,7 @@ class FlowChoice(BaseModel):
     provenance: CopyRef | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_reserved_defer_token(self) -> FlowChoice:
         if self.value == DEFER_TOKEN:
             raise ValueError(f"FlowChoice value {DEFER_TOKEN!r} is reserved for the engine's defer arm")
@@ -156,6 +159,7 @@ class FlowPage(BaseModel):
     answer_validator_ids: tuple[str, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_choice_widgets(self) -> FlowPage:
         if self.widget in _CHOICE_WIDGETS and not self.choices:
             raise ValueError(f"FlowPage {self.id!r} declares {self.widget} but no choices")
@@ -233,6 +237,7 @@ class FlowDefinition(BaseModel):
     flow_validator_ids: tuple[str, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_checkpoint_covers_modes(self) -> FlowDefinition:
         missing = [mode.value for mode in FlowMode if mode not in self.checkpoint]
         if missing:
@@ -240,6 +245,7 @@ class FlowDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_ids(self) -> FlowDefinition:
         seen: set[str] = set()
         duplicates: list[str] = []
@@ -252,6 +258,7 @@ class FlowDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_visible_when_targets(self) -> FlowDefinition:
         """Every gate clause must name an earlier page so the engine holds the parent answer.
 
@@ -285,6 +292,7 @@ class FlowDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_repeating_count_sources(self) -> FlowDefinition:
         """A repeating group's count source is an earlier top-level INTEGER page."""
         integer_pages_seen: set[str] = set()
