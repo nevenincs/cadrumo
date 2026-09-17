@@ -665,6 +665,39 @@ def select_revision_metadata(
     )
 
 
+def select_authored_revision_metadata(
+    directory: ModeloRevisionDirectory,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+) -> RevisionSelectionMetadata:
+    """Select the revision the law applies to a coordinate, outside the support envelope.
+
+    The support envelope gates what the product will FILE, not which design the
+    law applied to a past period. Reading a carried prior filing needs the latter,
+    so this selects only among revisions whose own period selector covers the
+    exact coordinate and never projects a year onto another authored edition.
+    """
+    matching, _authored_year = _nearest_authored_candidates(
+        directory.revisions,
+        filing_year=filing_year,
+        period=period,
+        revision_id=None,
+        support=None,
+    )
+    candidates = _effective_candidates(matching, on=on, filing_year=filing_year, period=period)
+    return _select_single_revision(
+        directory.modelo_id,
+        directory.revisions,
+        directory.pending_ejercicio_ordenes,
+        candidates,
+        filing_year=filing_year,
+        period=period,
+        revision_id=None,
+    )
+
+
 def _select_single_revision[RevisionT: _SelectableRevision](
     modelo_id: str,
     revisions: Sequence[RevisionT],
