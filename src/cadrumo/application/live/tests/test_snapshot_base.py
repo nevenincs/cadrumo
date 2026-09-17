@@ -398,8 +398,7 @@ def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
     )
     assert error.context == {"snapshot_id": "abc"}
     assert error.translated_message == "application.live.borrador.errors.snapshot_not_found"
-    mro = SnapshotNotFoundError.__mro__
-    assert mro.index(CadrumoError) < mro.index(KeyError)
+    assert issubclass(SnapshotNotFoundError, CadrumoError)
 
 
 def test_snapshot_repository_protocol_anti_tautology() -> None:

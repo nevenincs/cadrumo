@@ -164,6 +164,7 @@ class SheetCellAddress(BaseModel):
     a1: str = Field(min_length=2)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a1_matches_row_column(self) -> SheetCellAddress:
         letters = column_index_to_letters(self.column)
         expected = f"{letters}{self.row}"
@@ -348,6 +349,7 @@ class SheetProtectedRange(BaseModel):
     description: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _range_well_formed(self) -> SheetProtectedRange:
         if self.end_row < self.start_row:
             raise CalcSheetsRecordError(
@@ -427,6 +429,7 @@ class SheetStyledRange(BaseModel):
     wrap: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _range_well_formed(self) -> SheetStyledRange:
         if self.end_row < self.start_row:
             raise CalcSheetsRecordError(
@@ -472,6 +475,7 @@ class SheetFrozenView(BaseModel):
     frozen_columns: int = Field(ge=0, default=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _at_least_one(self) -> SheetFrozenView:
         if self.frozen_rows == 0 and self.frozen_columns == 0:
             raise CalcSheetsRecordError(
@@ -497,6 +501,7 @@ class SheetAutoFilter(BaseModel):
     end_column: int = Field(ge=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _range_well_formed(self) -> SheetAutoFilter:
         if self.end_row < self.start_row:
             raise CalcSheetsRecordError(
@@ -619,6 +624,7 @@ class SheetTariffTable(BaseModel):
     bracket_rows: tuple[SheetTariffTableRow, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _shape_well_formed(self) -> SheetTariffTable:
         if self.data_type == "bracket_table":
             if not self.bracket_rows:
@@ -833,6 +839,7 @@ class SheetExportMetadata(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches_metadata(self) -> SheetExportMetadata:
         if self.period.filing_year != self.filing_year:
             raise ValueError(
@@ -877,6 +884,7 @@ class SheetExportPlan(BaseModel):
     guide: SheetGuideContent
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _writable_cells_are_unique(self) -> SheetExportPlan:
         seen: set[tuple[TabName, int, int]] = set()
         duplicate_count = 0

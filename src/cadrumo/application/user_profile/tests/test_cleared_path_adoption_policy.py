@@ -62,9 +62,10 @@ _DECLARED_WRITERS: dict[str, str] = {
         "PRESENT in the projection. The resume-answer seed treats an absent path as "
         "unanswered and re-asks it, which is what clearing an answer should cause."
     ),
-    "application/wizard/persistence.py": (
-        "Writes operator-supplied wizard answers, which are unconditional on what the "
-        "projection holds. Its projection read is a descendant-list scan that only reads."
+    "application/user_profile/fact_write.py": (
+        "Reads the projection of the record it has just published, only to mirror the "
+        "output-language preference into the pre-login hint. The one fact it builds carries "
+        "the manager's explicit value, so absence never re-adopts a cleared path."
     ),
     "application/user_profile/section_rows.py": (
         "Reads the projection only to choose the next repeatable-row index. Every fact "
