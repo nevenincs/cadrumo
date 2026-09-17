@@ -31,6 +31,7 @@ from ...calculations.registry.facts.resolution import (
 )
 from ...calculations.registry.facts.schema import FactOwnership, ScalarFactPayload
 from ...calculations.registry.governed_fact_scope import GovernedFactSource
+from ...calculations.registry.schema import SupportedFilingYearsCatalogue
 from ...calculations.registry.schema_base import DateAxis
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
@@ -189,6 +190,9 @@ def test_selector_resolution_refuses_a_non_entity_set_fact(authority_operation: 
     """
 
     class ScalarAuthority:
+        def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+            return authority_operation.supported_filing_years()
+
         def resolve_governed_fact(self, query: object) -> ResolvedGovernedFact:
             if isinstance(query, MappingFactQuery):
                 return authority_operation.resolve_governed_fact(query)
