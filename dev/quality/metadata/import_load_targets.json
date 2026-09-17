@@ -2746,7 +2746,6 @@
         "dev.sanitizer.errors",
         "dev.sanitizer.fixtures",
         "dev.sanitizer.residual_identity",
-        "dev.scripted_registration_channels",
         "dev.smoke",
         "dev.smoke.smoke_check",
         "dev.source_tree",
