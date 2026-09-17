@@ -2761,6 +2761,18 @@ modelo:
           '01606':
             label: Equalization reserve - Tax base reduction - Total - Amount included
               in the return due to non-compliance with requirements [01606]
+          01608:
+            label: 'Joint taxation of State and provincial tax administrations - Corrective:
+              amount payable following the processing of earlier self-assessments
+              or administrative assessments for tax period 2025 - Gipuzkoa [01608]'
+          01609:
+            label: 'Joint taxation of State and provincial tax administrations - Corrective:
+              amount payable following the processing of earlier self-assessments
+              or administrative assessments for tax period 2025 - Bizkaia [01609]'
+          '01610':
+            label: 'Joint taxation of State and provincial tax administrations - Corrective:
+              amount payable following the processing of earlier self-assessments
+              or administrative assessments for tax period 2025 - Navarra [01610]'
           '01614':
             label: Canary Islands investment deductions - Fixed assets 2024 - Pending/generated
               deduction [01614]
@@ -4906,6 +4918,17 @@ modelo:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - 1st instalment - Regional (foral) administrations/Navarre
               (Totals) [02484]
+          02487:
+            label: Settlement IV - Instalment option in cases of change of residence
+              (art. 19.1 LIS) - Amending return - Self-assessment result including
+              the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+              or administrative assessment for tax period 2025 - State [02487]
+          02488:
+            label: Settlement IV - Instalment option in cases of change of residence
+              (art. 19.1 LIS) - Amending return - Self-assessment result including
+              the first instalment under art. 19.1 LIS arising from an earlier self-assessment
+              or administrative assessment for tax period 2025 - Regional (foral)
+              administrations/Navarre (Totals) [02488]
           02489:
             label: Settlement IV - Instalment option in cases of change of residence
               (art. 19.1 LIS) - Result including the first instalment under art. 19.1
@@ -5722,6 +5745,10 @@ modelo:
             label: Temporary business consortium, adjustments for exempt income of
               a consortium operating abroad (art. 45.2 LIS) - Decrease - Balance carried
               forward at year-end [03100]
+          '03105':
+            label: Temporary business association, adjustments for income exempt through
+              foreign participation in collaboration arrangements analogous to a UTE
+              (art. 45.2 LIS) - Increase - Balance carried forward at year-end [03105]
           '03111':
             label: Temporary business consortium, adjustments for timing-recognition
               criteria (art. 46.2 LIS) - Increase - Adjustments for the tax year -
@@ -9797,6 +9824,10 @@ modelo:
               and Foral Communities [00028].
             label: Joint taxation State / Provincial Councils / Foral Communities
               [00028]
+          is-tributacion-conjunta-estado-forales-rectificacion-importe:
+            label: 'Joint taxation of State and provincial tax administrations - Corrective:
+              amount payable following the processing of earlier self-assessments
+              or administrative assessments for tax period 2025 - Araba/Alava [01607]'
           is-tributacion-conjunta-fraccionamiento-importe:
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Included amount - Gipuzkoa [01632]
@@ -11119,22 +11150,6 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
                 to 2015 - DTA converted into credit [01591]
-            '01607':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: amount payable following the processing of earlier self-assessments
-                or administrative assessments for tax period 2025 - Araba/Alava [01607]'
-            01608:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: amount payable following the processing of earlier self-assessments
-                or administrative assessments for tax period 2025 - Gipuzkoa [01608]'
-            01609:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: amount payable following the processing of earlier self-assessments
-                or administrative assessments for tax period 2025 - Bizkaia [01609]'
-            '01610':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Corrective: amount payable following the processing of earlier self-assessments
-                or administrative assessments for tax period 2025 - Navarra [01610]'
             '01611':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund granted by the Tax Agency following the processing
@@ -11718,17 +11733,6 @@ modelo:
                 (art. 19.1 LIS) - Result of the self-assessment including the first
                 instalment under art. 19.1 LIS - Regional (foral) administrations/Navarre
                 (Totals) [02486]
-            02487:
-              label: Settlement IV - Instalment option in cases of change of residence
-                (art. 19.1 LIS) - Amending return - Self-assessment result including
-                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-                or administrative assessment for tax period 2025 - State [02487]
-            02488:
-              label: Settlement IV - Instalment option in cases of change of residence
-                (art. 19.1 LIS) - Amending return - Self-assessment result including
-                the first instalment under art. 19.1 LIS arising from an earlier self-assessment
-                or administrative assessment for tax period 2025 - Regional (foral)
-                administrations/Navarre (Totals) [02488]
             02490:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - DTA conversion
@@ -12078,11 +12082,6 @@ modelo:
                 through foreign participation in collaboration arrangements analogous
                 to a UTE (art. 45.2 LIS) - Increase - Balance carried forward at start
                 of year [03104]
-            '03105':
-              label: Temporary business association, adjustments for income exempt
-                through foreign participation in collaboration arrangements analogous
-                to a UTE (art. 45.2 LIS) - Increase - Balance carried forward at year-end
-                [03105]
             '03106':
               label: Temporary business association, adjustments for income exempt
                 through foreign participation in collaboration arrangements analogous
@@ -13050,22 +13049,6 @@ modelo:
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
                 to 2015 - DTA converted into credit
-            '01607':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Rectifying return: Amount payable as a result of processing prior
-                self-assessments or administrative assessments corresponding ...'
-            01608:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Rectifying return: Amount payable as a result of processing prior
-                self-assessments or administrative assessments corresponding ...'
-            01609:
-              label: 'Joint taxation of State and provincial tax administrations -
-                Rectifying return: Amount payable as a result of processing prior
-                self-assessments or administrative assessments corresponding ...'
-            '01610':
-              label: 'Joint taxation of State and provincial tax administrations -
-                Rectifying return: Amount payable as a result of processing prior
-                self-assessments or administrative assessments corresponding ...'
             '01611':
               label: 'Joint taxation of State and provincial tax administrations -
                 Rectifying return: Refund agreed by the Tax Agency as a result of
@@ -13657,14 +13640,6 @@ modelo:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
                 instalment under art. 19.1 LIS - D. Forales/Navarra (Totals)
-            02487:
-              label: Settlement IV - Instalment option in cases of change of residence
-                (art. 19.1 LIS) - Amending return - Result of the self-assessment
-                including the first instalment under art. 19.1 LIS ...
-            02488:
-              label: Settlement IV - Instalment option in cases of change of residence
-                (art. 19.1 LIS) - Amending return - Result of the self-assessment
-                including the first instalment under art. 19.1 LIS ...
             02490:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
@@ -14020,11 +13995,6 @@ modelo:
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Increase - Balance carried forward
                 at the start of the tax year
-            '03105':
-              label: Temporary business consortium, adjustments for exempt income
-                from participating abroad in collaboration arrangements similar to
-                a consortium (art. 45.2 LIS) - Increase - Balance carried forward
-                at year-end ...
             '03106':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to

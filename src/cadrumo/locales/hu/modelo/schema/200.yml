@@ -2789,6 +2789,21 @@ modelo:
           '01606':
             label: Kiegyenlítési tartalék - Adóalap-csökkentés - Total - Követelmények
               megsértése miatt a bevallásba beépített összeg [01606]
+          01608:
+            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+              a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
+              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Gipuzkoa
+              [01608]'
+          01609:
+            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+              a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
+              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Bizkaia
+              [01609]'
+          '01610':
+            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+              a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
+              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Navarra
+              [01610]'
           '01614':
             label: Kanári-szigeteki beruházási levonások - Befektetett eszközök 2024
               - Függőben lévő/keletkezett levonás [01614]
@@ -4926,6 +4941,17 @@ modelo:
             label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
               (LIS 19.1 cikk) - 1. részletfizetés - Tartományi adóhatóságok/Navarra
               (Összesen) [02484]
+          02487:
+            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+              19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy hatósági
+              megállapítás alapján, a 2025. adómegállapítási időszakra - Állam [02487]
+          02488:
+            label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
+              (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
+              19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy hatósági
+              megállapítás alapján, a 2025. adómegállapítási időszakra - Tartományi
+              adóhatóságok/Navarra (Összesen) [02488]
           02489:
             label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
               (LIS 19.1 cikk) - Eredmény a LIS 19.1. cikke szerinti 1. részletfizetéssel
@@ -5720,6 +5746,10 @@ modelo:
             label: Ideiglenes vállalati társulás, külföldön működő UTE mentes jövedelmeinek
               korrekciói (LIS 45.2. cikk) - Csökkenés - Év végén függőben lévő egyenleg
               [03100]
+          '03105':
+            label: Ideiglenes vállalkozási társulás, a UTE-hez hasonló külföldi együttműködési
+              formákban való részvétel miatt mentes jövedelem korrekciói (LIS 45.2
+              cikk) - Növekedés - Év végén függőben lévő egyenleg [03105]
           '03111':
             label: Ideiglenes vállalati társulás, időbeli elszámolási kritériumok
               miatti korrekciók (LIS 46.2 cikk) - Növekedés - Évi korrekciók - Végleges
@@ -9759,6 +9789,11 @@ modelo:
               közös adózás esetén [00028].
             label: 'Közös adózás: állam / tartományi tanácsok / forális közösségek
               [00028]'
+          is-tributacion-conjunta-estado-forales-rectificacion-importe:
+            label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
+              a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
+              hatósági megállapítások feldolgozása nyomán fizetendő összeg - Araba/Alava
+              [01607]'
           is-tributacion-conjunta-fraccionamiento-importe:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Részletfizetési
               lehetőség LIS 19.1 cikk - Beépített összeg - Gipuzkoa [01632]
@@ -11106,26 +11141,6 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen 2008-2015 - Követeléssé alakított DTA [01591]
-            '01607':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-                a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-                hatósági megállapítások feldolgozása nyomán fizetendő összeg - Araba/Alava
-                [01607]'
-            01608:
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-                a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-                hatósági megállapítások feldolgozása nyomán fizetendő összeg - Gipuzkoa
-                [01608]'
-            01609:
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-                a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-                hatósági megállapítások feldolgozása nyomán fizetendő összeg - Bizkaia
-                [01609]'
-            '01610':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
-                a 2025. adómegállapítási időszakra vonatkozó korábbi önadózások vagy
-                hatósági megállapítások feldolgozása nyomán fizetendő összeg - Navarra
-                [01610]'
             '01611':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő:
                 az Adóhatóság által a 2025. adómegállapítási időszakra vonatkozó korábbi
@@ -11708,18 +11723,6 @@ modelo:
                 (LIS 19.1 cikk) - Az önadózás eredménye a LIS 19.1. cikke szerinti
                 1. részletfizetéssel együtt - Tartományi adóhatóságok/Navarra (Összesen)
                 [02486]
-            02487:
-              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
-                hatósági megállapítás alapján, a 2025. adómegállapítási időszakra
-                - Állam [02487]
-            02488:
-              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-                19.1 cikke szerinti első részlettel együtt, korábbi önadózás vagy
-                hatósági megállapítás alapján, a 2025. adómegállapítási időszakra
-                - Tartományi adóhatóságok/Navarra (Összesen) [02488]
             02490:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -12055,10 +12058,6 @@ modelo:
                 együttműködési formákban való részvétel miatt mentes jövedelem korrekciói
                 (LIS 45.2 cikk) - Növekedés - Az időszak elején fennálló egyenleg
                 [03104]
-            '03105':
-              label: Ideiglenes vállalkozási társulás, a UTE-hez hasonló külföldi
-                együttműködési formákban való részvétel miatt mentes jövedelem korrekciói
-                (LIS 45.2 cikk) - Növekedés - Év végén függőben lévő egyenleg [03105]
             '03106':
               label: Ideiglenes vállalkozási társulás, a UTE-hez hasonló külföldi
                 együttműködési formákban való részvétel miatt mentes jövedelem korrekciói
@@ -13011,22 +13010,6 @@ modelo:
                 érvényesíthető követeléssé - Halasztott adókövetelések (DTA). LIS
                 33. átmeneti rendelkezés és 13. kiegészítő rendelkezés - Keletkezés
                 éve - Összesen 2008-2015 - DTA átalakítva követeléssé
-            '01607':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-                bevallás: Fizetendő összeg korábbi önbevallások vagy megfelelő közigazgatási
-                adómegállapítások feldolgozása következtében ...'
-            01608:
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-                bevallás: Fizetendő összeg korábbi önbevallások vagy megfelelő közigazgatási
-                adómegállapítások feldolgozása következtében ...'
-            01609:
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-                bevallás: Fizetendő összeg korábbi önbevallások vagy megfelelő közigazgatási
-                adómegállapítások feldolgozása következtében ...'
-            '01610':
-              label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
-                bevallás: Fizetendő összeg korábbi önbevallások vagy megfelelő közigazgatási
-                adómegállapítások feldolgozása következtében ...'
             '01611':
               label: 'Állami és tartományi adóhatóságok együttes adóztatása - Helyesbítő
                 bevallás: Az Adóügynökség által megállapított visszatérítés korábbi
@@ -13571,14 +13554,6 @@ modelo:
               label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
                 (LIS 19.1 cikk) - Az önadózás eredménye a LIS 19.1. cikke szerinti
                 1. részletfizetéssel együtt - Tartományi (foral) közigazgatás / Navarra
-            02487:
-              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-                19.1. cikke szerinti 1. részletfizetéssel együtt
-            02488:
-              label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
-                (LIS 19.1 cikk) - Helyesbítő bevallás - Az önadózás eredménye a LIS
-                19.1. cikke szerinti 1. részletfizetéssel együtt
             02490:
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -
@@ -13901,10 +13876,6 @@ modelo:
               label: Ideiglenes vállalati társulás, az UTE-hoz hasonló külföldi együttműködési
                 formákban való részvételből származó mentes jövedelmek korrekciói
                 (LIS 45.2. cikk) - Növekedés - Az időszak elején fennálló egyenleg
-            '03105':
-              label: Ideiglenes vállalati társulás, az UTE-hoz hasonló külföldi együttműködési
-                formákban való részvételből származó mentes jövedelmek korrekciói
-                (LIS 45.2. cikk) - Növekedés - Év végén függőben lévő egyenleg
             '03106':
               label: Ideiglenes vállalati társulás, a külföldön az UTE-hoz hasonló
                 együttműködési formákban való részvételből eredő mentesített jövedelmek

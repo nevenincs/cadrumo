@@ -2781,6 +2781,21 @@ modelo:
           '01606':
             label: Reserva de nivellació - Reducció base imposable - Total - Import
               integrat en la declaració per incompliment de requisits [01606]
+          01608:
+            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+              a ingressar com a conseqüència de la tramitació d''autoliquidacions
+              anteriors o liquidacions administratives corresponents al període impositiu
+              2025 - Gipuzkoa [01608]'
+          01609:
+            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+              a ingressar com a conseqüència de la tramitació d''autoliquidacions
+              anteriors o liquidacions administratives corresponents al període impositiu
+              2025 - Bizkaia [01609]'
+          '01610':
+            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+              a ingressar com a conseqüència de la tramitació d''autoliquidacions
+              anteriors o liquidacions administratives corresponents al període impositiu
+              2025 - Navarra [01610]'
           '01614':
             label: Deduccions inversió Canàries - Actius fixos 2024 - Deducció pendent/generada
               [01614]
@@ -4855,6 +4870,18 @@ modelo:
             label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
               residència (art. 19.1 LIS) - 1r fraccionament - D. Forals/Navarra (Totals)
               [02484]
+          02487:
+            label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
+              residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+              inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+              anterior o liquidació administrativa corresponent al període impositiu
+              2025 - Estat [02487]
+          02488:
+            label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
+              residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
+              inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
+              anterior o liquidació administrativa corresponent al període impositiu
+              2025 - D. Forals/Navarra (Totals) [02488]
           02489:
             label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
               residència (art. 19.1 LIS) - Resultat inclòs el 1r fraccionament de
@@ -5641,6 +5668,10 @@ modelo:
             label: Unió temporal d'empreses, ajustaments per rendes exemptes d'UTE
               que opera a l'estranger (art. 45.2 LIS) - Disminució - Saldo pendent
               a fi d'exercici [03100]
+          '03105':
+            label: Unió temporal d'empreses, ajustos per rendes exemptes per participar
+              a l'estranger en fórmules de col·laboració anàlogues a les UTE (art.
+              45.2 LIS) - Augment - Saldo pendent a fi d'exercici [03105]
           '03111':
             label: Unió temporal d'empreses, ajustaments per criteris d'imputació
               temporal (art. 46.2 LIS) - Augment - Correccions de l'exercici - Permanents
@@ -9702,6 +9733,11 @@ modelo:
             help: Indicador de tributació conjunta entre l'Estat, les diputacions
               i les comunitats forals [00028].
             label: Tributació conjunta Estat / diputacions / comunitats forals [00028]
+          is-tributacion-conjunta-estado-forales-rectificacion-importe:
+            label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
+              a ingressar com a conseqüència de la tramitació d''autoliquidacions
+              anteriors o liquidacions administratives corresponents al període impositiu
+              2025 - Araba/Àlaba [01607]'
           is-tributacion-conjunta-fraccionamiento-importe:
             label: Tributació conjunta Estat i Adm. forals - Opció de fraccionament
               art. 19.1 LIS - Import integrat - Gipuzkoa [01632]
@@ -10971,26 +11007,6 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total 2008 a 2015 - AID convertits en crèdit [01591]
-            '01607':
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-                a ingressar com a conseqüència de la tramitació d''autoliquidacions
-                anteriors o liquidacions administratives corresponents al període
-                impositiu 2025 - Araba/Àlaba [01607]'
-            01608:
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-                a ingressar com a conseqüència de la tramitació d''autoliquidacions
-                anteriors o liquidacions administratives corresponents al període
-                impositiu 2025 - Gipuzkoa [01608]'
-            01609:
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-                a ingressar com a conseqüència de la tramitació d''autoliquidacions
-                anteriors o liquidacions administratives corresponents al període
-                impositiu 2025 - Bizkaia [01609]'
-            '01610':
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: resultat
-                a ingressar com a conseqüència de la tramitació d''autoliquidacions
-                anteriors o liquidacions administratives corresponents al període
-                impositiu 2025 - Navarra [01610]'
             '01611':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: devolució
                 acordada per l''Agència Tributària com a conseqüència de la tramitació
@@ -11541,18 +11557,6 @@ modelo:
               label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
                 residència (art. 19.1 LIS) - Resultat de l'autoliquidació inclòs el
                 1r fraccionament de l'art. 19.1 LIS - D. Forals/Navarra (Totals) [02486]
-            02487:
-              label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
-                residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
-                anterior o liquidació administrativa corresponent al període impositiu
-                2025 - Estat [02487]
-            02488:
-              label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
-                residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-                inclòs el 1r fraccionament de l'art. 19.1 LIS procedent d'una autoliquidació
-                anterior o liquidació administrativa corresponent al període impositiu
-                2025 - D. Forals/Navarra (Totals) [02488]
             02490:
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -11893,10 +11897,6 @@ modelo:
               label: Unió temporal d'empreses, ajustos per rendes exemptes per participar
                 a l'estranger en fórmules de col·laboració anàlogues a les UTE (art.
                 45.2 LIS) - Augment - Saldo pendent a principi d'exercici [03104]
-            '03105':
-              label: Unió temporal d'empreses, ajustos per rendes exemptes per participar
-                a l'estranger en fórmules de col·laboració anàlogues a les UTE (art.
-                45.2 LIS) - Augment - Saldo pendent a fi d'exercici [03105]
             '03106':
               label: Unió temporal d'empreses, ajustos per rendes exemptes per participar
                 a l'estranger en fórmules de col·laboració anàlogues a les UTE (art.
@@ -12821,22 +12821,6 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Actius impost diferit (AID). DT 33a i DA 13a LIS - Exercici generació
                 - Total 2008 a 2015 - AID convertits en crèdit
-            '01607':
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                a ingressar com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents ...'
-            01608:
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                a ingressar com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents ...'
-            01609:
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                a ingressar com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents ...'
-            '01610':
-              label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Resultat
-                a ingressar com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents ...'
             '01611':
               label: 'Tributació conjunta Estat i Adm. forals - Rectificativa: Devolució
                 acordada per l’Agència Tributària com a conseqüència de la tramitació
@@ -13399,14 +13383,6 @@ modelo:
               label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
                 residència (art. 19.1 LIS) - Resultat de l'autoliquidació inclòs el
                 1r fraccionament de l'art. 19.1 LIS - D. Forals/Navarra (Totals)
-            02487:
-              label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
-                residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-                inclòs el 1r fraccionament de l'art. 19.1 LIS ...
-            02488:
-              label: Liquidació IV - Opció de fraccionament en supòsits de canvi de
-                residència (art. 19.1 LIS) - Rectificativa - Resultat de l'autoliquidació
-                inclòs el 1r fraccionament de l'art. 19.1 LIS ...
             02490:
               label: 'Conversió d''actius per impost diferit en crèdit exigible davant
                 l''Administració tributària (art. 130 LIS) - Rectificativa - Resultat
@@ -13739,11 +13715,6 @@ modelo:
               label: Unió temporal d'empreses, ajustaments per rendes exemptes per
                 participar a l'estranger en fórmules de col·laboració anàlogues a
                 les UTE (art. 45.2 LIS) - Augment - Saldo pendent a principi de l'exercici
-            '03105':
-              label: Unió temporal d'empreses, ajustaments per rendes exemptes per
-                participar a l'estranger en fórmules de col·laboració anàlogues a
-                les UTE (art. 45.2 LIS) - Augment - Saldo pendent a fi d'exercici
-                ...
             '03106':
               label: Unió temporal d'empreses, ajustaments per rendes exemptes per
                 participar a l'estranger en fórmules de col·laboració anàlogues a
