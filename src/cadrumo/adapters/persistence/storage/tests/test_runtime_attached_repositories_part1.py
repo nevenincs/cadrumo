@@ -67,10 +67,10 @@ from ....outbound.aeat.auth import session_store as _session_store
 from ....outbound.aeat.sede.errors import ExpedienteNotFoundError
 from ....outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....outbound.google import session_store as google_session_store
-from ....outbound.llm.cache import LLMCache
-from ....outbound.llm.consent_ledger import EvidenceConsentLedger
-from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
-from ....outbound.llm.usage import UsageRecorder
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.consent_ledger import EvidenceConsentLedger
+from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.usage import UsageRecorder
 from ...profile.inventory import InventoryLedgerRepository
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository

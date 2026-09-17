@@ -205,6 +205,9 @@ def parameterized_envelope_type[PayloadT: BaseModel](
     Keeping the dynamic ``__class_getitem__`` operation behind a free generic
     function gives callers a type-inferable boundary; Ty cannot propagate the
     payload variable through the generic model's classmethod receiver.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`.
     """
     return cast("type[Envelope[PayloadT]]", envelope_cls.__class_getitem__(payload_cls))
 

@@ -3,6 +3,9 @@
 This module owns the encrypted secret-store record and its persistence errors.
 The application-facing contract receives only ``SecretStr`` values, absence,
 and non-secret mutation witnesses; storage records never cross that boundary.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations
