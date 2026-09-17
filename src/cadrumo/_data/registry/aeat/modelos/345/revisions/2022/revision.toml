@@ -98,7 +98,7 @@ legal_refs = [
     "orden-hfp-823-2022:art-4",
     "orden-hfp-823-2022:art-5",
 ]
-source_refs = ["boe-modelo-345-base-order"]
+source_refs = ["boe-modelo-345-base-order", "boe-dr-345-2022"]
 
 [revisions."2022".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

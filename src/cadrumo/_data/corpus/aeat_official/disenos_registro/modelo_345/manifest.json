@@ -4,9 +4,10 @@
   "retrieved_at": "2026-07-21",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://www.boe.es/boe/dias/2022/08/29/pdfs/BOE-A-2022-14168.pdf"
   ],
-  "artefact_count": 4,
+  "artefact_count": 5,
   "artefacts": [
     {
       "modelo": "345",
@@ -55,6 +56,18 @@
       "bytes": 245193,
       "sha256": "90b12b42a644c55793a93831cc279bc6cdaad832802d3e7b1f309a0743a46c1f",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "345",
+      "title": "Orden HFP/823/2022, BOE-A-2022-14168",
+      "source_page": "https://www.boe.es/boe/dias/2022/08/29/pdfs/BOE-A-2022-14168.pdf",
+      "url": "https://www.boe.es/boe/dias/2022/08/29/pdfs/BOE-A-2022-14168.pdf",
+      "stored_path": "files/05-345-orden-hfp-823-2022-boe-a-2022-14168.pdf",
+      "original_filename": "BOE-A-2022-14168.pdf",
+      "content_type": "application/pdf",
+      "bytes": 495960,
+      "sha256": "75975d86406df229cd5eaebc7ba26dc06359f753faf4553d50ee9e7743a61825",
+      "retrieved_at": "2026-09-17"
     }
   ]
 }

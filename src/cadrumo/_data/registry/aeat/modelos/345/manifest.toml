@@ -24,6 +24,7 @@ source_refs = [
     "aeat-modelo-345-deadlines",
     "aeat-dr-345-2025",
     "boe-modelo-345-base-order",
+    "boe-dr-345-2022",
     "boe-modelo-345-2023-amendment-hfp-528",
     "boe-modelo-345-2023-amendment-hfp-1397",
     "boe-modelo-345-2024-amendment-hac-1504",
