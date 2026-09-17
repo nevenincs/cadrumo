@@ -67,62 +67,6 @@ modelo:
           field:
             label: Model 136, exercicis 2022 a 2025
         '2026':
-          casilla:
-            '01':
-              help: 'Consulteu la informació de la casella: Import del premio obtenido
-                per el boleto, cupon o apuesta premiado.'
-            '02':
-              help: Informació fiscal de la casella 02 del Modelo 136.
-            '03':
-              help: 'Consulteu la informació de la casella: Cuantia exempta del gravamen
-                especial.'
-            '04':
-              help: Informació fiscal sobre informació fiscal de la casella 04 del
-                Modelo 136.
-            '05':
-              help: 'Consulteu la informació de la casella: Quota del gravamen especial.'
-            '06':
-              help: Informació fiscal sobre informació fiscal de la casella 06 del
-                Modelo 136.
-            '07':
-              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
-            09:
-              help: 'Consulteu la informació de la casella: Import ingresado a favor
-                del Tesoro Publico.'
-            autoliquidacion-complementaria:
-              help: 'Consulteu la informació de la casella: Autoliquidació complementària.'
-            declarante-nif:
-              help: Informació fiscal de la casella del Modelo 136.
-            declarante-nombre:
-              help: Informació fiscal de la casella del Modelo 136.
-            ejercicio-declaracion:
-              help: 'Consulteu la informació de la casella: Exercici.'
-            fecha-celebracion:
-              help: 'Consulteu la informació de la casella: Data de celebracion.'
-            fecha-cobro-premio:
-              help: 'Consulteu la informació de la casella: Data de cobro del premio.'
-            forma-pago:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                136.
-            iban:
-              help: Informació fiscal de la casella del Modelo 136.
-            justificante-anterior:
-              help: Informació fiscal de la casella del Modelo 136.
-            loteria-apuesta-denominacion:
-              help: Informació fiscal de la casella del Modelo 136.
-            organizador-codigo-pais:
-              help: Informació fiscal de la casella del Modelo 136.
-            organizador-denominacion:
-              help: Informació fiscal de la casella del Modelo 136.
-            organizador-pais:
-              help: 'Consulteu la informació de la casella: Pais del organismo o entitat
-                organizadora.'
-            periodo-declaracion:
-              help: 'Consulteu la informació de la casella: Període.'
-            precio-unitario:
-              help: 'Consulteu la informació de la casella: Precio unitario.'
-            provincia-residencia-irpf:
-              help: Informació fiscal de la casella del Modelo 136.
           construct:
             modelo-136-calculation-construct:
               field:

@@ -12,6 +12,7 @@ from typing import cast
 from ...adapters.inbound.justificante.parser import parse_justificante_bytes
 from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ...adapters.outbound.aeat.sede.filed_observation_persistence import FilingReconciliationAdapter
 from ...adapters.outbound.aeat.sede.schema import Expediente
 from ...adapters.outbound.aeat.sede.walker import capture_justificante, walk_expedientes_tree
 from ...adapters.outbound.aeat.verify.contract import (
@@ -20,8 +21,11 @@ from ...adapters.outbound.aeat.verify.contract import (
     verify_csv,
 )
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
+from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -46,11 +50,11 @@ from ...application.live.justificante_ports import (
     JustificanteRegistrationPorts,
 )
 from ...application.live.session import active_verified_session
+from ...application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import UTF_8_ENCODING
-from ...domain.buckets.event import BucketEvent
-from ...domain.buckets.event_repository import emit_bucket_events
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.justificante.schema import Justificante
 
@@ -109,11 +113,6 @@ class _SnapshotPersistence:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
-
-
-class _RegistrationEvents:
-    def emit(self, events: tuple[BucketEvent, ...]) -> None:
-        emit_bucket_events(repository=BucketEventHistoryRepository(), events=events)
 
 
 class _JustificanteMetadata:
@@ -239,12 +238,29 @@ def build_justificante_capture_service(bucket_id: str) -> JustificanteCaptureSna
 
 
 def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
-    """Bind receipt metadata, filing catalogue, and event persistence adapters."""
+    """Bind receipt metadata, the filing catalogue and chain reconciliation to the active bucket.
+
+    Every repository shares one secure-object backend, so a reconciliation
+    commits its catalogue, observation and event writes in one unit.
+    """
+    bucket_id = require_active_bucket_id()
+    objects = secure_object_repository_for_bucket(bucket_id)
+    justificante_repository = JustificanteRepository(bucket_id=bucket_id, objects=objects)
+    filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
     return JustificanteRegistrationPorts(
         parse_pdf=parse_justificante_bytes,
-        metadata=_JustificanteMetadata(JustificanteRepository()),
-        filing=ModeloRecordCatalogueRepository(),
-        events=_RegistrationEvents(),
+        metadata=_JustificanteMetadata(justificante_repository),
+        filing=filing_repository,
+        filing_reconciliation=FilingReconciliationAdapter(
+            work_lifecycle_ports=WorkLifecyclePorts(
+                work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects),
+                bucket_event_repository=BucketEventHistoryRepository(objects=objects),
+            ),
+            calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+            filing_repository=filing_repository,
+            justificante_repository=justificante_repository,
+            observation_repository=CalculationObservationRepository(bucket_id=bucket_id, objects=objects),
+        ),
     )
 
 

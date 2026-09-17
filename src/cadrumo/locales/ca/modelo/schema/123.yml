@@ -4,52 +4,30 @@ modelo:
       casilla:
         continuidad:
           base-rentas-dividendos:
-            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
-              123.
             label: Base dividends i participacions
           base-rentas-resto:
-            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
-              123.
             label: Base resta de rendes
-          base-retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
-              123.
           cuota-a-ingresar:
-            help: 'Consulteu la informació de la casella: Resultat a ingresar.'
             label: Resultat a ingressar
           ingresos-ejercicios-anteriores:
-            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
-              123.
             label: Ingressos d'exercicis anteriors
           numero-rentas-dividendos:
-            help: Informació fiscal de la casella 01 del Modelo 123.
             label: Nombre de rendes dividends i participacions
           numero-rentas-resto:
-            help: Informació fiscal de la casella 02 del Modelo 123.
             label: Nombre de la resta de rendes
           numero-rentas-total:
-            help: Informació fiscal de la casella 03 del Modelo 123.
             label: Nombre total de rendes
           perceptor-count:
-            help: Informació fiscal de la casella 01 del Modelo 123.
             label: Nombre de perceptors
           regularizacion:
-            help: 'Consulteu la informació de la casella: Regularització.'
             label: Regularització
           resultado-anteriores-autoliquidaciones:
-            help: 'Consulteu la informació de la casella: Resultat de anteriors autoliquidacions.'
             label: Resultat d'autoliquidacions anteriors
           retenciones-rentas-dividendos:
-            help: 'Consulteu la informació de la casella: Retencions dividendos i
-              participacions.'
             label: Retencions dividends i participacions
           retenciones-rentas-resto:
-            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
-              123.
             label: Retencions resta de rendes
           suma-retenciones-regularizacion:
-            help: Informació fiscal sobre informació fiscal de la casella 06 del Modelo
-              123.
             label: Suma de retencions i regularització
       field:
         official_name: Retencions i ingressos a compte de l'IRPF, l'Impost sobre Societats
@@ -62,8 +40,6 @@ modelo:
             '02':
               label: Base de retencions i ingressos a compte
             '03':
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte.'
               label: Retencions i ingressos a compte
           construct:
             modelo-123-capital-withholding:
@@ -74,18 +50,8 @@ modelo:
             label: Ordre EHA/3435/2007, exercicis 2019 a 2023
         2024-y-siguientes:
           casilla:
-            '06':
-              help: Informació fiscal sobre informació fiscal de la casella 06 del
-                Modelo 123.
             09:
-              help: 'Consulteu la informació de la casella: Retencions total.'
               label: Retencions total
-            '10':
-              help: Informació fiscal sobre informació fiscal de la casella 10 del
-                Modelo 123.
-            '12':
-              help: Informació fiscal sobre informació fiscal de la casella 12 del
-                Modelo 123.
           construct:
             modelo-123-capital-withholding:
               field:

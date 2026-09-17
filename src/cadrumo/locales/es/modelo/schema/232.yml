@@ -97,6 +97,9 @@ modelo:
             help: Dato de la operación vinculada número 4 declarada en el modelo 232.
           related-party-tipo-vinculacion-5:
             help: Dato de la operación vinculada número 5 declarada en el modelo 232.
+          tipo-ejercicio-232:
+            label: Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior
+              a 12 meses)
       construct:
         modelo-232-informative:
           field:
@@ -235,9 +238,6 @@ modelo:
               label: Operaciones con personas o entidades vinculadas 5 - Tipo de operación
             vinculada-5-tipo-vinculacion:
               label: Operaciones con personas o entidades vinculadas 5 - Tipo de vinculación
-            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              label: Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior
-                a 12 meses)
           field:
             label: Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)
         2018-y-siguientes:
@@ -336,8 +336,5 @@ modelo:
               help: C.N.A.E. de la actividad principal
             x-chim6r1ecll6asj3d5hmiro:
               help: Ejercicio de devengo
-            x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              label: Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior
-                a 12 meses)
           field:
             label: Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)

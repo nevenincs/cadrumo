@@ -13,7 +13,7 @@ modelo:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
               label: 7. Acuse de recibo, empresa o entidad pagadora
             x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
-              label: 7. Acuse de recibo, fecha, anio
+              label: 7. Acuse de recibo, fecha, año
             x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
               label: 7. Acuse de recibo, fecha, dia
             x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
@@ -25,102 +25,100 @@ modelo:
             x-c5n7aobcd5i62p35ecmm2r39dlimst3fecn6irbgdtp78p9dc5n7aobc:
               label: 4. Anualidades por alimentos en favor de los hijos, importe anual
             x-c5pm6pbechkmarjkckmj2bj1dpkmubbec5hmirb9cln78ro:
-              label: 3.1. Ascendientes mayores de 65 anios, anio de nacimiento
+              label: 3.1. Ascendientes mayores de 65 años, año de nacimiento
             x-c5pm6pbechkmarjkckmj2bj1f5qm8o9ddlnncqbcd5i62p0:
-              label: 3.1. Ascendientes mayores de 65 anios, ayuda de terceras personas
+              label: 3.1. Ascendientes mayores de 65 años, ayuda de terceras personas
                 o movilidad reducida
             x-c5pm6pbechkmarjkckmj2bj3dtn7cqbmcln66qb15lnn8sjfec:
-              label: 3.1. Ascendientes mayores de 65 anios, convivencia con otros
-                descendientes
+              label: 3.1. Ascendientes mayores de 65 años, convivencia con otros descendientes
             x-c5pm6pbechkmarjkckmj2bj4d5pm6obgc5hmip31cgmmesj1chng:
-              label: 3.1. Ascendientes mayores de 65 anios, grado de discapacidad
+              label: 3.1. Ascendientes mayores de 65 años, grado de discapacidad
             x-c5pm6pbechkmarjkckmj4bj1dpkmubbec5hmirb9cln78ro:
-              label: 3.2. Ascendientes mayores de 65 anios, anio de nacimiento
+              label: 3.2. Ascendientes mayores de 65 años, año de nacimiento
             x-c5pm6pbechkmarjkckmj4bj1f5qm8o9ddlnncqbcd5i62p0:
-              label: 3.2. Ascendientes mayores de 65 anios, ayuda de terceras personas
+              label: 3.2. Ascendientes mayores de 65 años, ayuda de terceras personas
                 o movilidad reducida
             x-c5pm6pbechkmarjkckmj4bj3dtn7cqbmcln66qb15lnn8sjfec:
-              label: 3.2. Ascendientes mayores de 65 anios, convivencia con otros
-                descendientes
+              label: 3.2. Ascendientes mayores de 65 años, convivencia con otros descendientes
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
-              label: 3.2. Ascendientes mayores de 65 anios, grado de discapacidad
+              label: 3.2. Ascendientes mayores de 65 años, grado de discapacidad
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
-              label: 6. Fecha y firma de la comunicacion, anio
+              label: 6. Fecha y firma de la comunicación, año
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
-              label: 6. Fecha y firma de la comunicacion, dia
+              label: 6. Fecha y firma de la comunicación, día
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
-              label: 6. Fecha y firma de la comunicacion, mes
+              label: 6. Fecha y firma de la comunicación, mes
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
-              label: 6. Fecha y firma de la comunicacion, lugar
+              label: 6. Fecha y firma de la comunicación, lugar
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbkd5o6u:
-              label: 6. Fecha y firma de la comunicacion, tipo de firma
+              label: 6. Fecha y firma de la comunicación, tipo de firma
             x-cdnmqtbed5hm2or9dtn2ss31ctkmso9dcdnmqs3cclmmarjkc5p6io8:
               label: Indicador de pagina complementaria
             x-chin6or5dpi6ipbeehiiqc9ec5n6irpdc5i6us33d5nms:
-              label: 2.1. Hijos y descendientes menores de 25 anios, anio de adopcion
+              label: 2.1. Hijos y descendientes menores de 25 años, año de adopción
                 o acogimiento
             x-chin6or5dpi6ipbeehiiqc9ec5n6irpddpgm6qbdd5imst3f:
-              label: 2.1. Hijos y descendientes menores de 25 anios, anio de nacimiento
+              label: 2.1. Hijos y descendientes menores de 25 años, año de nacimiento
             x-chin6or5dpi6ipbeehiiqc9ec5snap315lmmutj9dhkm8ob4:
-              label: 2.1. Hijos y descendientes menores de 25 anios, ayuda de terceras
+              label: 2.1. Hijos y descendientes menores de 25 años, ayuda de terceras
                 personas o movilidad reducida
             x-chin6or5dpi6ipbeehiiqc9ecdnmqs3lehniqpbeehin4ro:
-              label: 2.1. Hijos y descendientes menores de 25 anios, computo por entero
+              label: 2.1. Hijos y descendientes menores de 25 años, computo por entero
             x-chin6or5dpi6ipbeehiiqc9echkn6or1e1gm6qb4c5i2qpric5i6u:
-              label: 2.1. Hijos y descendientes menores de 25 anios, grado de discapacidad
+              label: 2.1. Hijos y descendientes menores de 25 años, grado de discapacidad
             x-chin6or5dpi6ipbeehiiqchec5n6irpdc5i6us33d5nms:
-              label: 2.2. Hijos y descendientes menores de 25 anios, anio de adopcion
+              label: 2.2. Hijos y descendientes menores de 25 años, año de adopción
                 o acogimiento
             x-chin6or5dpi6ipbeehiiqchec5n6irpddpgm6qbdd5imst3f:
-              label: 2.2. Hijos y descendientes menores de 25 anios, anio de nacimiento
+              label: 2.2. Hijos y descendientes menores de 25 años, año de nacimiento
             x-chin6or5dpi6ipbeehiiqchec5snap315lmmutj9dhkm8ob4:
-              label: 2.2. Hijos y descendientes menores de 25 anios, ayuda de terceras
+              label: 2.2. Hijos y descendientes menores de 25 años, ayuda de terceras
                 personas o movilidad reducida
             x-chin6or5dpi6ipbeehiiqchecdnmqs3lehniqpbeehin4ro:
-              label: 2.2. Hijos y descendientes menores de 25 anios, computo por entero
+              label: 2.2. Hijos y descendientes menores de 25 años, computo por entero
             x-chin6or5dpi6ipbeehiiqchechkn6or1e1gm6qb4c5i2qpric5i6u:
-              label: 2.2. Hijos y descendientes menores de 25 anios, grado de discapacidad
+              label: 2.2. Hijos y descendientes menores de 25 años, grado de discapacidad
             x-chin6or5dpi6ipbeehiiqcpec5n6irpdc5i6us33d5nms:
-              label: 2.3. Hijos y descendientes menores de 25 anios, anio de adopcion
+              label: 2.3. Hijos y descendientes menores de 25 años, año de adopción
                 o acogimiento
             x-chin6or5dpi6ipbeehiiqcpec5n6irpddpgm6qbdd5imst3f:
-              label: 2.3. Hijos y descendientes menores de 25 anios, anio de nacimiento
+              label: 2.3. Hijos y descendientes menores de 25 años, año de nacimiento
             x-chin6or5dpi6ipbeehiiqcpec5snap315lmmutj9dhkm8ob4:
-              label: 2.3. Hijos y descendientes menores de 25 anios, ayuda de terceras
+              label: 2.3. Hijos y descendientes menores de 25 años, ayuda de terceras
                 personas o movilidad reducida
             x-chin6or5dpi6ipbeehiiqcpecdnmqs3lehniqpbeehin4ro:
-              label: 2.3. Hijos y descendientes menores de 25 anios, computo por entero
+              label: 2.3. Hijos y descendientes menores de 25 años, computo por entero
             x-chin6or5dpi6ipbeehiiqcpechkn6or1e1gm6qb4c5i2qpric5i6u:
-              label: 2.3. Hijos y descendientes menores de 25 anios, grado de discapacidad
+              label: 2.3. Hijos y descendientes menores de 25 años, grado de discapacidad
             x-chin6or5dpi6ipbeehiiqd1ec5n6irpdc5i6us33d5nms:
-              label: 2.4. Hijos y descendientes menores de 25 anios, anio de adopcion
+              label: 2.4. Hijos y descendientes menores de 25 años, año de adopción
                 o acogimiento
             x-chin6or5dpi6ipbeehiiqd1ec5n6irpddpgm6qbdd5imst3f:
-              label: 2.4. Hijos y descendientes menores de 25 anios, anio de nacimiento
+              label: 2.4. Hijos y descendientes menores de 25 años, año de nacimiento
             x-chin6or5dpi6ipbeehiiqd1ec5snap315lmmutj9dhkm8ob4:
-              label: 2.4. Hijos y descendientes menores de 25 anios, ayuda de terceras
+              label: 2.4. Hijos y descendientes menores de 25 años, ayuda de terceras
                 personas o movilidad reducida
             x-chin6or5dpi6ipbeehiiqd1ecdnmqs3lehniqpbeehin4ro:
-              label: 2.4. Hijos y descendientes menores de 25 anios, computo por entero
+              label: 2.4. Hijos y descendientes menores de 25 años, computo por entero
             x-chin6or5dpi6ipbeehiiqd1echkn6or1e1gm6qb4c5i2qpric5i6u:
-              label: 2.4. Hijos y descendientes menores de 25 anios, grado de discapacidad
+              label: 2.4. Hijos y descendientes menores de 25 años, grado de discapacidad
             x-e1imssr9dtn2qorfdlo6arjjc5q6usj9c4n6irbgdtp78p9dc5n7aobc:
-              label: 4. Pension compensatoria en favor del conyuge, importe anual
+              label: 4. Pensión compensatoria en favor del cónyuge, importe anual
             x-e1in4or5e1q6ushec5n6irpddpgm6qbdd5imst3f:
-              label: 1. Anio de nacimiento del perceptor
+              label: 1. Año de nacimiento del perceptor
             x-e1in4or5e1q6ushecdnmsublctiiqrj9co:
-              label: 1. NIF del conyuge cuando la situacion familiar es 2
+              label: 1. NIF del cónyuge cuando la situación familiar es 2
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qobpeli62:
               label: 1. Discapacidad del perceptor, ayuda de terceras personas o movilidad
                 reducida
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
               label: 1. Discapacidad del perceptor, grado reconocido
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
-              label: 1. Movilidad geografica, fecha de traslado, anio
+              label: 1. Movilidad geográfica, fecha de traslado, año
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
-              label: 1. Movilidad geografica, fecha de traslado, dia
+              label: 1. Movilidad geográfica, fecha de traslado, día
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
-              label: 1. Movilidad geografica, fecha de traslado, mes
+              label: 1. Movilidad geográfica, fecha de traslado, mes
             x-e1in4or5e1q6ushedpkmc:
               label: 1. NIF del perceptor
             x-e1in4or5e1q6ushedpnmqojick:
@@ -128,14 +126,14 @@ modelo:
             x-e1in4or5e1q6ushee1p6irb5e8mm2s35dhm6ip3f:
               label: 1. Primer apellido del perceptor
             x-e1in4or5e1q6ushee1p6ur3fdpjm2or9dtn2qob3ehkncqb4c5i2qr31c9nn4obc:
-              label: 1. Prolongacion de la actividad laboral
+              label: 1. Prolongación de la actividad laboral
             x-e1in4or5e1q6usheedimetbechniqobgclm6oqb4ds:
               label: 1. Segundo apellido del perceptor
             x-e1in4or5e1q6usheedkn8tb1cdkmurhdcpgmqqbcd5gn4:
-              label: 1. Situacion familiar del perceptor
+              label: 1. Situación familiar del perceptor
             x-epkncqb5dpi62bb8c5h6it3lc5m2spj9dpgmsor9c5hmirre5lgmkpbec4:
-              label: 5. Pagos por adquisicion o rehabilitacion de vivienda habitual
-                con financiacion ajena
+              label: 5. Pagos por adquisición o rehabilitación de vivienda habitual
+                con financiación ajena
           field:
             label: Modelo 145 comunicacion de datos al pagador desde 31 de enero de
               2012 (diseno de registro v2.0)

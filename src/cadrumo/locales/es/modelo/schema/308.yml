@@ -4,14 +4,14 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: Dato declarado en el modelo 308, tomado del diseno de registro oficial.
+            help: Dato declarado en el modelo 308, tomado del diseño de registro oficial.
             label: Devengo. Periodo
           filing-year:
             label: Ejercicio al que se refiere la solicitud
       construct:
         modelo-308-iva-solicitud-devolucion:
           field:
-            title: Modelo 308 IVA solicitud de devolucion
+            title: Modelo 308 IVA solicitud de devolución
       field:
         official_name: 'Modelo 308. Impuesto sobre el Valor Añadido. Solicitud de
           devolución: Recargo de equivalencia, artículo 30 bis del Reglamento del

@@ -55,7 +55,7 @@ from .._distribution_names import normalise_distribution_name
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = REPO_ROOT
-_INFERENCE_PACKAGE = _REPO_ROOT / "src" / "cadrumo" / "llm"
+_INFERENCE_PACKAGE = _REPO_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "llm"
 
 #: Import names that are the standard library or this project itself, so they
 #: are never expected to appear in a dependency declaration.

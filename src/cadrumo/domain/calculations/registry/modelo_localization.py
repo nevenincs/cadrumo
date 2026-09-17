@@ -309,19 +309,20 @@ def modelo_localization_source(
     for consumers that report which catalogue coordinate supplied a text.
     ``lookup`` replaces the shared catalogue read, so catalogue tooling can
     evaluate a proposed catalogue with exactly the runtime selection rule.
+
+    A translation renders the Spanish source, so it is read only at the tier
+    where Spanish text resolves or a more specific one. A chain with no Spanish
+    text has nothing to translate and is served by no locale.
     """
     read = _catalogue_lookup if lookup is None else lookup
-    spanish_tier: int | None = None
-    for index, key in enumerate(keys):
-        if read(key, _SOURCE_LOCALE) is not None:
-            spanish_tier = index
-            break
+    spanish_tier = next((index for index, key in enumerate(keys) if read(key, _SOURCE_LOCALE) is not None), None)
+    if spanish_tier is None:
+        return None
     if locale != _SOURCE_LOCALE:
-        reachable = keys if spanish_tier is None else keys[: spanish_tier + 1]
-        for key in reachable:
+        for key in keys[: spanish_tier + 1]:
             if read(key, locale) is not None:
                 return key, locale
-    return None if spanish_tier is None else (keys[spanish_tier], _SOURCE_LOCALE)
+    return keys[spanish_tier], _SOURCE_LOCALE
 
 
 type LocalizationLookup = Callable[[str, str], str | None]

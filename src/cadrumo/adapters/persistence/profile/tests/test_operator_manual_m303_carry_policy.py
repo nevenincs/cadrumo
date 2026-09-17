@@ -8,10 +8,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
-from cadrumo.application.modelo.local_observation_actions import record_operator_local_observation
+from cadrumo.application.modelo.local_observation_actions import (
+    LocalObservationPorts,
+    record_operator_local_observation,
+)
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -28,9 +33,15 @@ def test_operator_manual_m303_carry_policy_refuses_without_persisting(
     """M303 has one canonical filing write door; operator-manual rows are refused."""
     with (
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        isolated_runtime_profile(tmp_path=tmp_path),
+        isolated_runtime_profile(tmp_path=tmp_path) as profile,
     ):
         repository = CalculationObservationRepository()
+        ports = LocalObservationPorts(
+            bucket_id=profile.bucket_id,
+            observation_repository=repository,
+            bucket_event_repository=BucketEventHistoryRepository(),
+            work_unit_repository=WorkUnitCatalogueRepository(),
+        )
         period = Period.from_year_and_code(_FILING_YEAR, "1T")
         with pytest.raises(ModeloLocalObservationError, match="require canonical filed or official evidence"):
             record_operator_local_observation(
@@ -38,7 +49,9 @@ def test_operator_manual_m303_carry_policy_refuses_without_persisting(
                 filing_year=_FILING_YEAR,
                 period=period,
                 casilla_values={"iva.cuota-devengada-total": Decimal("10")},
-                repository=repository,
+                reason="prior return figures",
+                actor="operator-A",
+                ports=ports,
                 clock=_CAPTURED_AT,
                 operation=_authority_operation_for_test,
             )

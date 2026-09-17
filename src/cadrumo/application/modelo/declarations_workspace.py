@@ -36,7 +36,10 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -101,6 +104,9 @@ class DeclarationsLifecycleKind(StrEnum):
     DISCARDED = "discarded"
     EXTERNAL_EVIDENCE_IMPORTED = "external_evidence_imported"
     EXPORTED = "exported"
+    RECONCILED = "reconciled"
+    OBSERVATION_OVERRIDDEN = "observation_overridden"
+    OBSERVATION_OVERRIDE_CLEARED = "observation_override_cleared"
 
 
 class DeclarationsWorkspaceZoneObservationV1(BaseModel):
@@ -207,7 +213,7 @@ class DeclarationsWorkspaceCalculationRevisionRefV1(BaseModel):
 
 
 class DeclarationsWorkspaceFilingRefV1(BaseModel):
-    """Safe local filing currency and separately observed AEAT evidence."""
+    """One chain entry: local currency, origin, AEAT confirmation and correction link."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -219,8 +225,21 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
     period: Period
     filed_at: UtcInstant
     local_status: ModeloRecordStatus
-    aeat_accepted: bool
+    origin: FilingOrigin
+    confirmation: AeatConfirmationState
+    declaration_kind: FilingDeclarationKind
+    amends_filing_record_id: FilingRecordId | None = Field(default=None, exclude=True, repr=False)
     evidence_kind: ExternalEvidenceKind | None = None
+
+    @property
+    def aeat_accepted(self) -> bool:
+        """Return whether AEAT has been observed to hold this entry."""
+        return self.confirmation is AeatConfirmationState.CONFIRMADA
+
+    @property
+    def amends_prior_entry(self) -> bool:
+        """Return whether this entry corrects an earlier declaration of its period."""
+        return self.amends_filing_record_id is not None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -228,7 +247,9 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
         if self.period.filing_year != self.filing_year:
             raise ValueError("filing period must match its filing year")
         if self.aeat_accepted != (self.evidence_kind is not None):
-            raise ValueError("AEAT acceptance and external evidence presence must agree")
+            raise ValueError("AEAT confirmation and external evidence presence must agree")
+        if self.origin is FilingOrigin.AEAT and not self.aeat_accepted:
+            raise ValueError("an AEAT-origin chain entry must be confirmed")
         return self
 
 
@@ -782,7 +803,10 @@ def _filing_rows(filings: tuple[ModeloRecord, ...]) -> tuple[DeclarationsWorkspa
             period=record.period,
             filed_at=record.filed_at,
             local_status=record.status,
-            aeat_accepted=record.aeat_accepted,
+            origin=record.origin,
+            confirmation=record.confirmation,
+            declaration_kind=record.declaration_kind,
+            amends_filing_record_id=record.amends_filing_record_id,
             evidence_kind=record.external_evidence.kind if record.external_evidence is not None else None,
         )
         for record in sorted(

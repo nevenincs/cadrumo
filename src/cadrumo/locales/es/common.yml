@@ -1270,7 +1270,7 @@ tui:
         late: Atrasada
         unknown: Desconocida
     column:
-      aeat_accepted: Aceptación de la AEAT observada
+      aeat_confirmation: Confirmación AEAT
       aeat_evidence: Evidencia de la AEAT
       availability: Disponibilidad
       calculation: Cálculo actual
@@ -1283,6 +1283,16 @@ tui:
       result: Resultado
       updated: Actualizada
       when: Fecha
+    confirmation:
+      confirmada: Confirmada
+      descartada: Descartada
+      discrepante: Discrepante
+      pendiente: Pendiente
+    declaration_kind:
+      complementaria: Complementaria
+      original: Original
+      rectificativa: Rectificativa
+      sustitutiva: Sustitutiva
     destination:
       calendar: Calendario fiscal
       filing_history: Historial de presentaciones
@@ -1291,12 +1301,15 @@ tui:
       revisions: Revisiones de cálculo
     empty: Todavía no hay nada registrado aquí.
     evidence:
+      aeat_csv_register: Registro CSV de la AEAT observado
       aeat_justificante_pdf: Justificante PDF de la AEAT observado
       aeat_live_capture: Observación en directo de la AEAT
       none: Sin evidencia observada de la AEAT
     filing_history:
-      axes: El estado local de presentación y la evidencia observada de la AEAT son
-        hechos distintos.
+      axes: El estado local de presentación, la confirmación de la AEAT y la evidencia
+        observada de la AEAT son hechos distintos.
+      chain_detail: 'Origen: {origin} · Tipo: {kind} · AEAT: {confirmation} · Corrige
+        una declaración anterior: {amends}'
       title: Historial de presentaciones
     filing_state:
       supersedido: Registro local sustituido
@@ -1309,10 +1322,16 @@ tui:
       exported: Declaración exportada
       external_evidence_imported: Evidencia externa de la AEAT importada
       filed: Presentación registrada localmente
+      observation_overridden: Observación sustituida por el operador
+      observation_override_cleared: Sustitución del operador eliminada
+      reconciled: Conciliada con la AEAT
       renamed: Declaración renombrada
       superseded: Presentación sustituida localmente
       verification_refused: Verificación rechazada
       verified: Verificación completada
+    origin:
+      aeat: AEAT
+      local: Local
     overview:
       areas: Áreas de declaraciones
       declarations: Declaraciones

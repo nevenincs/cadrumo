@@ -21,7 +21,7 @@ required_text = ["Modelo 347"]
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-347-2025"
-required_text = ["%PDF"]
+required_text = ["Modelo 347"]
 
 [fact.variants.payload]
 kind = "mapping"

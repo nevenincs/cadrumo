@@ -158,26 +158,26 @@ modelo:
             label: Valoración de la percepción en especie no derivada de incapacidad
               laboral
           prestacion-incapacidad:
-            help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
+            help: Indicativo 1 o 0 según se haya satisfecho o no este tipo de prestación
               de la clave B.01 en el ejercicio.
             label: Tipo de prestación de la clave B.01. 03. Incapacidad permanente
               total o parcial
           prestacion-jubilacion:
-            help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
+            help: Indicativo 1 o 0 según se haya satisfecho o no este tipo de prestación
               de la clave B.01 en el ejercicio.
             label: Tipo de prestación de la clave B.01. 01. Jubilación
           prestacion-no-contributiva:
-            help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
+            help: Indicativo 1 o 0 según se haya satisfecho o no este tipo de prestación
               de la clave B.01 en el ejercicio.
             label: Tipo de prestación de la clave B.01. 04. Pensiones no contributivas
               por invalidez o jubilación
           prestacion-resto:
-            help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
+            help: Indicativo 1 o 0 según se haya satisfecho o no este tipo de prestación
               de la clave B.01 en el ejercicio.
             label: Tipo de prestación de la clave B.01. 05. Resto de prestaciones
               del art. 17.2.a).1ª de la Ley 35/2006
           prestacion-viudedad:
-            help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
+            help: Indicativo 1 o 0 según se haya satisfecho o no este tipo de prestación
               de la clave B.01 en el ejercicio.
             label: Tipo de prestación de la clave B.01. 02. Viudedad
           rendimientos-trabajo-fondos-emprendimiento:
@@ -218,36 +218,36 @@ modelo:
                 190.
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -256,46 +256,46 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmqs3lehniqq39d9niqcg:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmqs3lehniqq39d9niqco:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -305,21 +305,21 @@ modelo:
                 190.
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -335,7 +335,7 @@ modelo:
                 190.
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -344,22 +344,22 @@ modelo:
                 190.
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 323-335 del modelo 190, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -376,36 +376,36 @@ modelo:
                 190.
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -414,46 +414,46 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmqs3lehniqq39d9niqcg:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmqs3lehniqq39d9niqco:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
-              help: Dato del perceptor declarado en el modelo 190, para el minimo
+              help: Dato del perceptor declarado en el modelo 190, para el mínimo
                 por descendientes o ascendientes.
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -463,21 +463,21 @@ modelo:
                 190.
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
@@ -493,7 +493,7 @@ modelo:
                 190.
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -502,22 +502,22 @@ modelo:
                 190.
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
-                El diseno lo divide en parte entera y parte decimal.
+                El diseño lo divide en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 323-335 del modelo 190, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
                 DIPUTACIONES FORALES DEL PAÍS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
-              help: Dato del perceptor declarado en el modelo 190. El diseno divide
+              help: Dato del perceptor declarado en el modelo 190. El diseño divide
                 los importes en parte entera y parte decimal.
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo

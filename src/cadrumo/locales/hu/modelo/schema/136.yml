@@ -66,56 +66,6 @@ modelo:
           field:
             label: 136-os modelo, 2022-2025. adóévek
         '2026':
-          casilla:
-            '01':
-              help: 'A Modelo 136 01. casilla adóügyi adatai: adóügyi információ.'
-            '02':
-              help: A Modelo 136 02. casilla adóügyi adatai.
-            '03':
-              help: 'Tekintse át a casilla adatait: Cuantia adómentes - gravamen especial.'
-            '04':
-              help: 'Tekintse át a casilla adatait: Adóalap.'
-            '05':
-              help: 'Tekintse át a casilla adatait: Adóösszeg - gravamen especial.'
-            '06':
-              help: 'A Modelo 136 06. casilla adóügyi adatai: adóügyi információ.'
-            '07':
-              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
-            09:
-              help: 'Tekintse át a casilla adatait: Összeg ingresado a favor - Tesoro
-                Publico.'
-            autoliquidacion-complementaria:
-              help: 'Tekintse át a casilla adatait: Önadózási bevallás kiegészítő.'
-            declarante-nif:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            declarante-nombre:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            ejercicio-declaracion:
-              help: 'Tekintse át a casilla adatait: Adóév.'
-            fecha-celebracion:
-              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-            fecha-cobro-premio:
-              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-            forma-pago:
-              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-            iban:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            justificante-anterior:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            loteria-apuesta-denominacion:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            organizador-codigo-pais:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            organizador-denominacion:
-              help: A Modelo 136 . casilla adóügyi adatai.
-            organizador-pais:
-              help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-            periodo-declaracion:
-              help: 'Tekintse át a casilla adatait: Időszak.'
-            precio-unitario:
-              help: 'Tekintse át a casilla adatait: Precio unitario.'
-            provincia-residencia-irpf:
-              help: A Modelo 136 . casilla adóügyi adatai.
           construct:
             modelo-136-calculation-construct:
               field:

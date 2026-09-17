@@ -188,6 +188,10 @@ modelo:
             label: Deductible input VAT on domestic current transactions
           iva-resultado-regimen-general:
             label: General regime result
+          m322-actividad-principal-codigo:
+            label: Activity code - Main
+          m322-actividad-principal-epigrafe-iae:
+            label: IAE heading - Main
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Compensation under the special agriculture, livestock and fisheries
@@ -909,10 +913,8 @@ modelo:
               label: IAE heading - Other 5
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
               help: Completed only in the last period of the return.
-              label: Activity code - Principal
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: Completed only in the last period of the return.
-              label: IAE heading - Principal
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
@@ -1465,8 +1467,6 @@ modelo:
               help: 'Tax information about tax information in casilla 11 of Modelo
                 322 References: [11].'
             '112':
-              help: 'Tax information about tax information in casilla 112 of Modelo
-                322 References: [112].'
               label: Settlement (continued). Payment on account for supplies of petrol,
                 diesel and biofuels after the end of the non-customs warehousing regime
                 [112]
@@ -2035,12 +2035,9 @@ modelo:
               label: IAE heading - Other 5th
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
               help: Tax information for casilla of Modelo 322.
-              label: Activity code - Main
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: Tax information for casilla of Modelo 322.
-              label: IAE heading - Main
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
-              help: Tax information about tax information in casilla  of Modelo 322.
               label: Entitled to deduct the advance payment on supplies of petrol,
                 diesel and biofuels
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:

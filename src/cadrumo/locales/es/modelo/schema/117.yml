@@ -24,22 +24,22 @@ modelo:
               label: Retenciones e ingresos a cuenta por transmisiones o reembolsos
                 de acciones y participaciones de IIC
             '04':
-              label: Número de perceptores por transmisiones de derechos de suscripcion
+              label: Número de perceptores por transmisiones de derechos de suscripción
             '05':
               label: Base de retenciones e ingresos a cuenta por transmisiones de
-                derechos de suscripcion
+                derechos de suscripción
             '06':
               label: Retenciones e ingresos a cuenta por transmisiones de derechos
-                de suscripcion
+                de suscripción
             '07':
-              label: Base del pago a cuenta previsto en la disposicion adicional decimonovena
+              label: Base del pago a cuenta previsto en la disposición adicional decimonovena
                 de la Ley 35/2006
             08:
-              label: Pago a cuenta previsto en la disposicion adicional decimonovena
+              label: Pago a cuenta previsto en la disposición adicional decimonovena
                 de la Ley 35/2006
             09:
-              label: 'Total liquidacion: suma de retenciones, ingresos a cuenta, pagos
-                a cuenta y regularizacion'
+              label: 'Total liquidación: suma de retenciones, ingresos a cuenta, pagos
+                a cuenta y regularización'
             '10':
               label: Resultados a ingresar de anteriores declaraciones por el mismo
                 concepto, ejercicio y periodo

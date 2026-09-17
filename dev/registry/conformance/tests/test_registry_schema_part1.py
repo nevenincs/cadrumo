@@ -414,11 +414,12 @@ source_refs = ["aeat-manual"]
         load_modelo_directory(write_fragmented_modelo_from_text(tmp_path / "999", text))
 
 
-def test_snapshot_requires_source_integrity(tmp_path: Path) -> None:
+def test_validation_requires_source_integrity(tmp_path: Path) -> None:
+    """Validation against a source root lacking the cited corpus refuses by name."""
     modelo, catalogues = _committed_registry()
 
-    with pytest.raises(RegistryValidationError, match="missing corpus file"):
-        build_snapshot(modelo, catalogues, source_root=tmp_path, filing_year=2024, period="3T")
+    with pytest.raises(RegistryValidationError, match=r"missing (extracted )?corpus"):
+        RegistryValidator(catalogues, source_root=tmp_path).validate_modelo(modelo)
 
 
 def test_validator_rejects_duplicate_formula_targets() -> None:

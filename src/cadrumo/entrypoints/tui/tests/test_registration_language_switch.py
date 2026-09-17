@@ -137,10 +137,10 @@ async def _choose(pilot, language: str) -> None:
 async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
     """The page answers in the language just picked, down to the chrome.
 
-    The chooser's own rows are part of the claim: they are translated too,
-    so a page that re-worded its labels and left the chooser behind would
-    still be showing the operator the language names in a language they
-    may have just navigated away from.
+    The chooser's own rows are the exception, and part of the claim: each
+    language is named in that language, so an operator who cannot read the
+    page can still find their own, and switching must leave those names
+    exactly as they were.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
@@ -160,11 +160,11 @@ async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
             assert _page_copy(app) == target, "taking the chooser must re-word the whole page"
 
             expected_rows = [
-                tr(f"wizard.setup.profile.output-language.choices.{language}.label", locale=_TARGET_LANGUAGE)
+                tr(f"wizard.setup.profile.output-language.choices.{language}.label", locale=language)
                 for language in ("es", "en", "ca", "hu")
             ]
             assert set(_chooser_rows(app)) == set(expected_rows), (
-                f"the chooser's own rows must be re-worded too, but read {_chooser_rows(app)}"
+                f"the chooser must name each language in that language, but read {_chooser_rows(app)}"
             )
             assert str(app.query_one("#btn-create", Button).label) == tr(
                 "flows.registration.create_button", locale=_TARGET_LANGUAGE
@@ -263,7 +263,8 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
 
             await pilot.click("#btn-setup-recovery")
             assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
-                "setting up must show the code screen"
+                f"setting up must show the code screen, but {type(pilot.app.screen).__name__} is active: "
+                f"{[str(widget.render()) for widget in pilot.app.screen.query(Static)][:6]}"
             )
             code_screen = pilot.app.screen
             code_zones = {

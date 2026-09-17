@@ -357,6 +357,7 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("observation_roles", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _observation_roles_unique(
         cls,
         value: tuple[IvaLedgerObservationRole, ...],
@@ -367,6 +368,7 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("exemption_articles", mode="after")
     @classmethod
+    @pydantic_validation_boundary
     def _exemption_articles_unique(
         cls,
         value: tuple[IvaExemptionArticle, ...] | None,
@@ -379,6 +381,7 @@ class LedgerIvaProvider(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _exemption_article_filter_requires_domestic_exempt(self) -> LedgerIvaProvider:
         if (
             self.exemption_articles is not None

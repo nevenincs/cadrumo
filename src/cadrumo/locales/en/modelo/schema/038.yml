@@ -4,10 +4,8 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Tax information for casilla of Modelo 038.
             label: Filing year to which the return relates
           tipo-declaracion:
-            help: Tax information for casilla of Modelo 038.
             label: Return type (original / substitute / supplementary)
       construct:
         modelo-038-informative:

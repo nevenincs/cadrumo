@@ -4,10 +4,8 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: 'Tekintse át a casilla adatait: Időszak (trimestre natural).'
             label: Időszak (naptári negyedév)
           filing-year:
-            help: 'A Modelo 763 . casilla adóügyi adatai: adóév.'
             label: Az önadózás vonatkozási éve
       construct:
         modelo-763-autoliquidacion:

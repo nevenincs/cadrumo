@@ -73,12 +73,14 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import ModeloId
-from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import resolve_modelo_obligation_scope
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import CalculationClass, CalculationClassField
 
-from ..compiler.loader import load_registry_tree
+from ..compiler.fact_providers import compile_authored_fact_catalogue
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 from ..compiler.validate_revision_rules import validate_informative_class_invariant
 
 #: The ``calculation_class`` value naming the informative enforcement posture.
@@ -322,10 +324,19 @@ def audit_bundled_classification_coherence() -> RegistryClassificationAudit:
     outright. The returned audit is stamped ``registry_validated=False``
     accordingly.
     """
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    root = bundled_path("registry", "aeat")
+    # The tree's own authored facts answer every governed-vocabulary read, so the
+    # audit depends on no published generation and no ambient scope.
+    authority = CandidateFactAuthority(
+        compile_authored_fact_catalogue(root),
+        load_shared_catalogues(root).require_supported_filing_years(),
+    )
+    with validating_governed_facts(authority):
+        modelos, _catalogues = load_registry_tree(root)
+    _out_of_scope, non_registry_modelos = resolve_modelo_obligation_scope(authority=authority)
     return build_classification_coherence_audit(
         modelos,
-        non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
+        non_registry_modelo_codes=frozenset(item.value for item in non_registry_modelos),
         known_modelo_codes=frozenset(str(modelo.id) for modelo in modelos),
         registry_validated=False,
     )

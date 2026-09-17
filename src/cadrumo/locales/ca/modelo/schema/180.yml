@@ -4,115 +4,68 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 145-160
-              del Modelo 180.
             label: Base total de retencions i ingressos a compte
           declaracion-complementaria-sustitutiva:
-            help: Informació fiscal de la casella 121-122 del Modelo 180.
             label: Declaració complementària o substitutiva
           devengo-year:
-            help: 'Consulteu la informació de la casella: Exercici de meritació.'
             label: Exercici de meritació
           numero-identificativo-declaracion:
-            help: Informació fiscal de la casella 108-120 del Modelo 180.
             label: Número identificatiu de la declaració
           numero-identificativo-declaracion-anterior:
-            help: Informació fiscal de la casella 123-135 del Modelo 180.
             label: Número identificatiu de la declaració anterior
           payee-inmueble-bloque:
-            help: Informació fiscal sobre informació fiscal de la casella 201-203
-              del Modelo 180.
             label: Bloc de l'immoble arrendat
           payee-inmueble-calificador-numero:
-            help: Informació fiscal de la casella 198-200 del Modelo 180.
             label: Qualificador del número de l'immoble arrendat
           payee-inmueble-codigo-municipio:
-            help: Informació fiscal de la casella 316-320 del Modelo 180.
             label: Codi de municipi de l'immoble arrendat
           payee-inmueble-codigo-postal:
-            help: Informació fiscal de la casella 323-327 del Modelo 180.
             label: Codi postal de l'immoble arrendat
           payee-inmueble-complemento:
-            help: 'Consulteu la informació de la casella: Complemento de domicili
-              del inmueble arrendado.'
             label: Complement de domicili de l'immoble arrendat
           payee-inmueble-escalera:
-            help: 'Consulteu la informació de la casella: Escalera del inmueble arrendado.'
             label: Escala de l'immoble arrendat
           payee-inmueble-localidad:
-            help: 'Consulteu la informació de la casella: Localidad del inmueble arrendado.'
             label: Localitat de l'immoble arrendat
           payee-inmueble-municipio:
-            help: Informació fiscal sobre informació fiscal de la casella 286-315
-              del Modelo 180.
             label: Municipi de l'immoble arrendat
           payee-inmueble-nombre-via:
-            help: 'Consulteu la informació de la casella: Nom de la via pública del
-              inmueble arrendado.'
             label: Nom de la via pública de l'immoble arrendat
           payee-inmueble-numero-casa:
-            help: Informació fiscal de la casella 193-197 del Modelo 180.
             label: Número de casa de l'immoble arrendat
           payee-inmueble-planta:
-            help: 'Consulteu la informació de la casella: Planta del inmueble arrendado.'
             label: Planta de l'immoble arrendat
           payee-inmueble-portal:
-            help: 'Consulteu la informació de la casella: Portal del inmueble arrendado.'
             label: Portal de l'immoble arrendat
           payee-inmueble-provincia:
-            help: Informació fiscal de la casella 321-322 del Modelo 180.
             label: Codi de província de l'immoble arrendat
           payee-inmueble-puerta:
-            help: 'Consulteu la informació de la casella: Puerta del inmueble arrendado.'
             label: Porta de l'immoble arrendat
           payee-inmueble-referencia-catastral:
-            help: 'Consulteu la informació de la casella: Referencia catastral del
-              inmueble arrendado.'
             label: Referència cadastral de l'immoble arrendat
           payee-inmueble-situacion:
-            help: 'Consulteu la informació de la casella: Situacion del inmueble.'
             label: Situació de l'immoble
           payee-inmueble-tipo-numeracion:
-            help: 'Consulteu la informació de la casella: Tipus de numeracion del
-              inmueble arrendado.'
             label: Tipus de numeració de l'immoble arrendat
           payee-inmueble-tipo-via:
-            help: 'Consulteu la informació de la casella: Tipus de via del inmueble
-              arrendado.'
             label: Tipus de via de l'immoble arrendat
           payee-modalidad-renta:
-            help: Informació fiscal sobre informació fiscal de la casella 78 del Modelo
-              180.
             label: Modalitat de renda o rendiment
           payee-name:
-            help: Informació fiscal de la casella 36-75 del Modelo 180.
             label: Cognoms i nom, raó social o denominació del perceptor
-          payee-nif:
-            help: 'Consulteu la informació de la casella: NIF del perceptor.'
           payee-province:
-            help: Informació fiscal de la casella 76-77 del Modelo 180.
             label: Codi de província del domicili del perceptor
           payee-representative-nif:
-            help: Informació fiscal sobre NIF del representant de la casella 27-35
-              del Modelo 180.
             label: NIF del representant legal del perceptor
           perc-base:
-            help: Informació fiscal sobre informació fiscal de la casella 79-92 del
-              Modelo 180.
             label: Base de retencions i ingressos a compte del perceptor
           perc-retenciones:
-            help: 'Consulteu la informació de la casella: Retencions e ingressos a
-              compte del perceptor.'
             label: Retencions i ingressos a compte del perceptor
           porcentaje-retencion:
-            help: Informació fiscal de la casella 93-96 del Modelo 180.
             label: Percentatge de retenció aplicat
           retenciones-ingresos-a-cuenta:
-            help: 'Consulteu la informació de la casella: Retencions e ingressos a
-              compte total.'
             label: Retencions i ingressos a compte totals
           total-perceptores-count:
-            help: Informació fiscal de la casella 136-144 del Modelo 180.
             label: Nombre total de perceptors
       construct:
         modelo-180-annual-summary:

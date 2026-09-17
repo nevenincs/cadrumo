@@ -157,7 +157,8 @@ def _click_children(typer_app) -> dict[str, Any]:
     if not _is_group(command):
         return {}
     context = ClickContext(command)
-    return {name: child for name in command.list_commands(context) if (child := command.get_command(context, name))}
+    group = cast("Any", command)
+    return {name: child for name in group.list_commands(context) if (child := group.get_command(context, name))}
 
 
 def _click_paths(command: Any, prefix: tuple[str, ...], *, groups_only: bool) -> list[tuple[str, ...]]:

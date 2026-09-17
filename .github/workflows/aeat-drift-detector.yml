@@ -52,10 +52,24 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up toolchain
-        uses: ./.github/actions/setup
+      - name: Set up just
+        uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
         with:
-          browser: "true"
+          tool: just@1.38.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          version: "0.11.29"
+          # Self-hosted: the runner-local uv cache persists between jobs; the
+          # GitHub cloud-cache round-trip only adds transfer time.
+          enable-cache: false
+
+      - name: Initialize the worktree
+        run: just setup
+
+      - name: Provision Playwright Chromium
+        run: just setup-browser
 
       - name: Run GROI live drift tests
         env:

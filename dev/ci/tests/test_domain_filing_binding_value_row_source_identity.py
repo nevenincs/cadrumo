@@ -27,7 +27,7 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _RAW_IDENTITY = "opaque-activity-row-canary"
 _FINGERPRINT = "a" * 64

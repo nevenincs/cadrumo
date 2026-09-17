@@ -4,298 +4,172 @@ modelo:
       casilla:
         continuidad:
           devengo-year:
-            help: Informació fiscal de la casella 148-151 del Modelo 190.
             label: Exercici de meritació
           ingresos-a-cuenta-efectuados:
-            help: Informació fiscal sobre informació fiscal de la casella 122-134
-              del Modelo 190.
             label: Ingressos a compte efectuats sobre les percepcions en espècie
           ingresos-a-cuenta-repercutidos:
-            help: Informació fiscal sobre informació fiscal de la casella 135-147
-              del Modelo 190.
             label: Ingressos a compte
           m190-correo-electronico:
-            help: Informació fiscal de la casella 176-225 del Modelo 190.
             label: Correu electrònic de la persona amb qui relacionar-se
           m190-declaracion-complementaria:
-            help: Informació fiscal sobre informació fiscal de la casella 121 del
-              Modelo 190.
             label: Declaració complementària
           m190-declaracion-sustitutiva:
-            help: Informació fiscal de la casella 122 del Modelo 190.
             label: Declaració substitutiva
           m190-numero-identificativo:
-            help: Informació fiscal de la casella 108-120 del Modelo 190.
             label: Número identificatiu de la declaració
           m190-numero-identificativo-anterior:
-            help: Informació fiscal de la casella 123-135 del Modelo 190.
             label: Número identificatiu de la declaració anterior
           m190-persona-contacto-nombre:
-            help: Informació fiscal sobre informació fiscal de la casella 68-107 del
-              Modelo 190.
             label: Cognoms i nom de la persona amb qui relacionar-se
           m190-persona-contacto-telefono:
-            help: Informació fiscal sobre informació fiscal de la casella 59-67 del
-              Modelo 190.
             label: Telèfon de la persona amb qui relacionar-se
           payee-anualidades-alimentos:
-            help: Informació fiscal sobre anualitats per aliments de la casella 210-222
-              del Modelo 190.
             label: Anualitats per aliments
           payee-ascendientes-75-mas-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 244 del
-              Modelo 190.
             label: Ascendents. De 75 anys o més. Còmput per enter
           payee-ascendientes-75-mas-total:
-            help: Informació fiscal sobre informació fiscal de la casella 243 del
-              Modelo 190.
             label: Ascendents. De 75 anys o més. Nre. total
           payee-ascendientes-discapacidad-33-65-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 246 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Còmput
               per enter
           payee-ascendientes-discapacidad-33-65-total:
-            help: Informació fiscal sobre informació fiscal de la casella 245 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Discapacitat ≥ 33% i < 65%. Nre. total
           payee-ascendientes-discapacidad-65-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 250 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Còmput per enter
           payee-ascendientes-discapacidad-65-total:
-            help: Informació fiscal sobre informació fiscal de la casella 249 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Discapacitat ≥ 65%. Nre. total
           payee-ascendientes-discapacidad-movilidad-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 248 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Mobilitat reduïda. Còmput per enter
           payee-ascendientes-discapacidad-movilidad-total:
-            help: Informació fiscal sobre informació fiscal de la casella 247 del
-              Modelo 190.
             label: Ascendents amb discapacitat. Mobilitat reduïda. Nre. total
           payee-ascendientes-menores-75-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 242 del
-              Modelo 190.
             label: Ascendents. Menors de 75 anys. Còmput per enter
           payee-ascendientes-menores-75-total:
-            help: Informació fiscal sobre informació fiscal de la casella 241 del
-              Modelo 190.
             label: Ascendents. Menors de 75 anys. Nre. total
           payee-birth-year:
-            help: Informació fiscal de la casella 153-156 del Modelo 190.
             label: Any de naixement
-          payee-ceuta-melilla-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 152 del
-              Modelo 190.
           payee-clave-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 78 del Modelo
-              190.
             label: Clau de percepció
           payee-complemento-ayuda-infancia:
-            help: Informació fiscal sobre informació fiscal de la casella 322 del
-              Modelo 190.
             label: Complement d'ajuda per a la infància
           payee-computo-hijo-1:
-            help: Informació fiscal sobre informació fiscal de la casella 251 del
-              Modelo 190.
             label: Còmput dels 3 primers fills. Fill 1r
           payee-computo-hijo-2:
-            help: Informació fiscal sobre informació fiscal de la casella 252 del
-              Modelo 190.
             label: Còmput dels 3 primers fills. Fill 2n
           payee-computo-hijo-3:
-            help: Informació fiscal sobre informació fiscal de la casella 253 del
-              Modelo 190.
             label: Còmput dels 3 primers fills. Fill 3r
           payee-contract-relation-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 168 del
-              Modelo 190.
             label: Contracte o relació
           payee-descendientes-discapacidad-33-65-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 231-232
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
               i < 65%. Còmput per enter
           payee-descendientes-discapacidad-33-65-total:
-            help: Informació fiscal sobre informació fiscal de la casella 229-230
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 33%
               i < 65%. Nre. total
           payee-descendientes-discapacidad-65-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 239-240
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
               Còmput per enter
           payee-descendientes-discapacidad-65-total:
-            help: Informació fiscal sobre informació fiscal de la casella 237-238
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Discapacitat ≥ 65%.
               Nre. total
           payee-descendientes-discapacidad-movilidad-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 235-236
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
               Còmput per enter
           payee-descendientes-discapacidad-movilidad-total:
-            help: Informació fiscal sobre informació fiscal de la casella 233-234
-              del Modelo 190.
             label: Fills i altres descendents amb discapacitat. Mobilitat reduïda.
               Nre. total
           payee-descendientes-menores-3-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 224 del
-              Modelo 190.
             label: Fills i altres descendents. Menors de 3 anys. Còmput per enter
           payee-descendientes-menores-3-total:
-            help: Informació fiscal sobre informació fiscal de la casella 223 del
-              Modelo 190.
             label: Fills i altres descendents. Menors de 3 anys. Nre. total
           payee-descendientes-resto-entero:
-            help: Informació fiscal sobre informació fiscal de la casella 227-228
-              del Modelo 190.
             label: Fills i altres descendents. Resta. Còmput per enter
           payee-descendientes-resto-total:
-            help: Informació fiscal sobre informació fiscal de la casella 225-226
-              del Modelo 190.
             label: Fills i altres descendents. Resta. Nre. total
           payee-disability-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 167 del
-              Modelo 190.
             label: Discapacitat
           payee-emerging-stock-excess-clave:
             help: Dada del perceptor declarada en el registre de tipus 2 del model
               190.
             label: Excessos per lliurament d'accions d'empreses emergents
           payee-family-situation:
-            help: Informació fiscal sobre situació familiar del perceptor de la casella
-              157 del Modelo 190.
             label: Situació familiar
           payee-gastos-deducibles:
-            help: Informació fiscal sobre despeses deduïbles del perceptor de la casella
-              184-196 del Modelo 190.
             label: Despeses deduïbles
           payee-geographic-mobility-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 170 del
-              Modelo 190.
             label: Mobilitat geogràfica
           payee-incapacidad-dineraria-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 256-268
-              del Modelo 190.
             label: Prestacions derivades d'incapacitat laboral. Percepció íntegra
               dinerària
           payee-incapacidad-dineraria-retenciones:
-            help: Informació fiscal sobre informació fiscal de la casella 269-281
-              del Modelo 190.
             label: Prestacions derivades d'incapacitat laboral. Retencions practicades
               sobre la prestació dinerària
           payee-incapacidad-especie-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 296-308
-              del Modelo 190.
             label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
               efectuats per prestacions en espècie
           payee-incapacidad-especie-repercutidos:
-            help: Informació fiscal sobre informació fiscal de la casella 309-321
-              del Modelo 190.
             label: Prestacions derivades d'incapacitat laboral. Ingressos a compte
               repercutits per prestacions en espècie
           payee-incapacidad-especie-valoracion:
-            help: Informació fiscal sobre informació fiscal de la casella 283-295
-              del Modelo 190.
             label: Prestacions derivades d'incapacitat laboral. Valoració de la percepció
               en espècie
           payee-name:
-            help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
-              Modelo 190.
             label: Cognoms i nom o denominació del perceptor
-          payee-nif:
-            help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
-              Modelo 190.
           payee-pension-compensatoria:
-            help: Informació fiscal sobre pensió compensatòria de la casella 197-209
-              del Modelo 190.
             label: Pensions compensatòries
           payee-prestamos-vivienda-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 254 del
-              Modelo 190.
             label: Comunicació de préstecs per a habitatge habitual
           payee-province:
-            help: Informació fiscal sobre província del perceptor de la casella 76-77
-              del Modelo 190.
             label: Codi de província
           payee-reducciones-aplicables:
-            help: Informació fiscal sobre informació fiscal de la casella 171-183
-              del Modelo 190.
             label: Reduccions aplicables
           payee-retenciones-forales-araba:
-            help: Informació fiscal sobre informació fiscal de la casella 349-361
-              del Modelo 190.
             label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
           payee-retenciones-forales-bizkaia:
-            help: Informació fiscal sobre informació fiscal de la casella 375-387
-              del Modelo 190.
             label: Retencions i ingressos a compte ingressats. Diputació Foral de
               Biscaia
           payee-retenciones-forales-estatal:
-            help: Informació fiscal sobre informació fiscal de la casella 323-335
-              del Modelo 190.
             label: Retencions i ingressos a compte ingressats. Hisenda estatal
           payee-retenciones-forales-gipuzkoa:
-            help: Informació fiscal sobre informació fiscal de la casella 362-374
-              del Modelo 190.
             label: Retencions i ingressos a compte ingressats. Diputació Foral de
               Guipúscoa
           payee-retenciones-forales-navarra:
-            help: Informació fiscal sobre informació fiscal de la casella 336-348
-              del Modelo 190.
             label: Retencions i ingressos a compte ingressats. Comunitat Foral de
               Navarra
           payee-spouse-or-unit-titular-nif:
-            help: Informació fiscal sobre NIF del cònjuge o de la unitat titular de
-              la casella 158-166 del Modelo 190.
             label: NIF del cònjuge o del titular de la unitat de convivència
           payee-subclave-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 79-80 del
-              Modelo 190.
             label: Subclau de percepció
           payee-unit-convivencia-titular-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 169 del
-              Modelo 190.
             label: Titular de la unitat de convivència
           perc-retenciones-practicadas:
-            help: Informació fiscal sobre informació fiscal de la casella 95-107 del
-              Modelo 190.
             label: Retencions practicades sobre les percepcions dineràries
           percepcion-integra-dineraria:
-            help: Informació fiscal sobre informació fiscal de la casella 82-94 del
-              Modelo 190.
             label: Percepció íntegra dinerària no derivada d'incapacitat laboral
           percepcion-valoracion-especie:
-            help: Informació fiscal sobre informació fiscal de la casella 109-121
-              del Modelo 190.
             label: Valoració de la percepció en espècie no derivada d'incapacitat
               laboral
           prestacion-incapacidad:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 03. Incapacitat permanent total
               o parcial
           prestacion-jubilacion:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 01. Jubilació
           prestacion-no-contributiva:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 04. Pensions no contributives
               per invalidesa o jubilació
           prestacion-resto:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 05. Resta de prestacions de
               l'art. 17.2.a).1a de la Llei 35/2006
           prestacion-viudedad:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 02. Viduïtat
           rendimientos-trabajo-fondos-emprendimiento:
@@ -304,20 +178,12 @@ modelo:
             label: Rendiments del treball per la gestió de fons vinculats a l'emprenedoria,
               la innovació i el desenvolupament de l'activitat econòmica
           representante-legal-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
-              Modelo 190.
             label: NIF del representant legal
           retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 161-175
-              del Modelo 190.
             label: Import total de retencions i ingressos a compte
           total-percepciones-amount:
-            help: Informació fiscal sobre informació fiscal de la casella 145-160
-              del Modelo 190.
             label: Import total de les percepcions
           total-percepciones-count:
-            help: Informació fiscal sobre informació fiscal de la casella 136-144
-              del Modelo 190.
             label: Nombre total de percepcions
       construct:
         modelo-190-annual-summary:
@@ -338,16 +204,6 @@ modelo:
             label: Model 190, exercici 2023
         '2024':
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: 'Consulteu la informació de la casella: Declaració complementària.'
-            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: Informació fiscal sobre informació fiscal de la casella 176-225
-                del Modelo 190.
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: 'Consulteu la informació de la casella: Import total de retencions
-                e ingressos a compte.'
-            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: Informació fiscal de la casella 136-144 del Modelo 190.
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -462,17 +318,12 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-            x-e1in4opedpkmc:
-              help: 'Consulteu la informació de la casella: NIF del perceptor.'
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-            x-e1in4opedpnmqojick:
-              help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
-                del perceptor.'
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
@@ -511,16 +362,6 @@ modelo:
             label: Modelo 190 exercici 2024 i següents
         2025-y-siguientes:
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: 'Consulteu la informació de la casella: Declaració complementària.'
-            x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: Informació fiscal sobre informació fiscal de la casella 176-225
-                del Modelo 190.
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: 'Consulteu la informació de la casella: Import total de retencions
-                e ingressos a compte.'
-            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: Informació fiscal de la casella 136-144 del Modelo 190.
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -635,17 +476,12 @@ modelo:
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-            x-e1in4opedpkmc:
-              help: 'Consulteu la informació de la casella: NIF del perceptor.'
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-            x-e1in4opedpnmqojick:
-              help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
-                del perceptor.'
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.

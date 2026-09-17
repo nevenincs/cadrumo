@@ -4,67 +4,37 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: 'Consulteu la informació de la casella: Període mensual (01..12).'
             label: Període mensual (01..12)
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              353.
             label: Exercici a què es refereix l'autoliquidació
           iva-agregado-reconciliacion-deducible-322:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              353.
             label: Quota deduïble agregada del grup reconciliada des dels Models 322
               dels membres
           iva-agregado-reconciliacion-devengada-322:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              353.
             label: Quota meritada agregada del grup reconciliada des dels Models 322
               dels membres
           iva-agregado-reconciliacion-resultado-322:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              353.
             label: Resultat agregat del grup reconciliat des dels Models 322 dels
               membres
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-              en adquisicions intracomunitàries - agregado del grup.'
             label: Quota d'IVA autorepercutit en adquisicions intracomunitàries -
               agregat del grup
           iva-cuota-deducible-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA deduïble
-              (agregado del grup).'
             label: Total quota d'IVA deduïble (agregat del grup)
           iva-cuota-devengada-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA meritada
-              (agregado del grup).'
             label: Total quota d'IVA meritada (agregat del grup)
           iva-cuota-repercutida-general:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus general (21%) - agregado del grup.'
             label: Quota d'IVA repercutit al tipus general (21%) - agregat del grup
           iva-cuota-repercutida-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus reduït (10%) - agregado del grup.'
             label: Quota d'IVA repercutit al tipus reduït (10%) - agregat del grup
           iva-cuota-repercutida-super-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus superreduït (4%) - agregado del grup.'
             label: Quota d'IVA repercutit al tipus superreduït (4%) - agregat del
               grup
           iva-cuota-soportada-interiores:
-            help: 'Consulteu la informació de la casella: Quota IVA suportat en operacions
-              interiors corrientes - agregado del grup.'
             label: Quota d'IVA suportat en operacions interiors corrents - agregat
               del grup
           iva-resultado-regimen-general:
-            help: 'Consulteu la informació de la casella: Resultat del grup (quota
-              meritada agregada - quota deduïble agregada).'
             label: Resultat del grup (quota meritada agregada - quota deduïble agregada)
-          m353-cuotas-a-compensar:
-            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
-              353.
-          m353-resultado-total-entidades:
-            help: Informació fiscal de la casella 01 del Modelo 353.
       construct:
         modelo-353-iva-grupo-agregado:
           field:
@@ -82,26 +52,16 @@ modelo:
             '02':
               label: Quotes a compensar pendents d'exercicis anteriors
             '03':
-              help: 'Consulteu la informació de la casella: Resultat ([01] - [08]).'
               label: Resultat ([01] - [08])
             '04':
-              help: 'Consulteu la informació de la casella: A deduir: resultat de
-                las autoliquidacions anteriors presentadas per el mateix concepto,
-                exercici i període.'
               label: 'A deduir: resultat de les autoliquidacions anteriors presentades
                 pel mateix concepte, exercici i període'
             '05':
-              help: 'Informació fiscal sobre informació fiscal de la casella 05 del
-                Modelo 353 Referències: [03], [04].'
               label: Resultat de l'autoliquidació ([03] - [04])
             08:
-              help: 'Consulteu la informació de la casella: Quotes a compensar de
-                períodes anteriors aplicadas en este període.'
               label: Quotes a compensar de períodes anteriors aplicades en aquest
                 període
             09:
-              help: 'Consulteu la informació de la casella: Quotes a compensar de
-                períodes previos pendientes per a períodes posteriors ([02] - [08]).'
               label: Quotes a compensar de períodes previs pendents per a períodes
                 posteriors ([02] - [08])
           field:
@@ -109,41 +69,23 @@ modelo:
         2026-desde-02:
           casilla:
             '01':
-              help: 'Informació fiscal sobre informació fiscal de la casella 01 del
-                Modelo 353 Referències: [01].'
               label: Resultat total (sumatori del resultat d'entitats) [01]
             '02':
-              help: 'Informació fiscal sobre informació fiscal de la casella 02 del
-                Modelo 353 Referències: [02].'
               label: Quotes a compensar pendents d'exercicis anteriors [02]
             '03':
-              help: 'Consulteu la informació de la casella: Resultat ([01] - [08])
-                [03].'
               label: Resultat ([01] - [08]) [03]
             '04':
-              help: 'Consulteu la informació de la casella: A deduir: resultat de
-                autoliquidacions anteriors del mateix concepto, exercici i període
-                [04].'
               label: 'A deduir: resultat d''autoliquidacions anteriors del mateix
                 concepte, exercici i període [04]'
             '05':
-              help: 'Informació fiscal sobre informació fiscal de la casella 05 del
-                Modelo 353 Referències: [03], [04], [05].'
               label: Resultat de l'autoliquidació ([03] - [04]) [05]
             08:
-              help: 'Consulteu la informació de la casella: Quotes a compensar de
-                períodes anteriors aplicadas en este període [08].'
               label: Quotes a compensar de períodes anteriors aplicades en aquest
                 període [08]
             09:
-              help: 'Consulteu la informació de la casella: Quotes a compensar de
-                períodes previos pendientes per a períodes posteriors ([02]-[08])
-                [09].'
               label: Quotes a compensar de períodes previs pendents per a períodes
                 posteriors ([02]-[08]) [09]
             '10':
-              help: 'Informació fiscal sobre informació fiscal de la casella 10 del
-                Modelo 353 Referències: [10].'
               label: Pagament a compte de lliuraments de gasolines, gasoils i biocarburants
                 atribuïble a l'Administració de l'Estat [10]
           field:

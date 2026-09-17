@@ -29,10 +29,9 @@ if TYPE_CHECKING:
     from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...domain.justificante.protocols import JustificanteRepositoryProtocol
     from ...domain.justificante.schema import Justificante
-    from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
     from ..calculations.observations_repository import ObservationEnvelopePayload, ObservationSourceKind
-    from ..modelo.external_import_actions import ExternalFilingBaselineSource
+    from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
 
 
 class FiledObservationArtefactProtocol(Protocol):
@@ -305,18 +304,17 @@ class FiledIvaObservationPersistencePort(Protocol):
         ...
 
 
-class FiledBaselineImportPort(Protocol):
-    """Persist a complete numeric filed observation as an external baseline."""
+class FiledFilingReconciliationPort(Protocol):
+    """Apply one AEAT register entry to the filing chain of its period."""
 
-    def import_source(
+    def reconcile(
         self,
-        source: ExternalFilingBaselineSource,
+        entry: AeatRegisterEntry,
         *,
-        bucket_id: str,
         actor: str,
         clock: datetime,
-    ) -> ModeloRecord:
-        """Import a complete numeric observation as an external baseline."""
+    ) -> FilingReconciliationResult:
+        """Reconcile ``entry`` and return the chain decision."""
         ...
 
 
@@ -333,14 +331,14 @@ class FiledObservationPersistencePorts:
     justificante_repository: JustificanteRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
-    baseline_import: FiledBaselineImportPort
+    filing_reconciliation: FiledFilingReconciliationPort
 
 
 __all__ = [
-    "FiledBaselineImportPort",
     "FiledCalculationObservationRepositoryPort",
     "FiledDeclarationProtocol",
     "FiledDeclarationTransformationPort",
+    "FiledFilingReconciliationPort",
     "FiledIvaHistoryRepositoryPort",
     "FiledIvaObservationPersistencePort",
     "FiledObservationArtefactProtocol",

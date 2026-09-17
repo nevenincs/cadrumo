@@ -38,11 +38,17 @@ _RESTORABLE: Final[dict[str, dict[str, str]]] = {
 _FOREIGN_DICTIONARIES: Final[dict[str, tuple[str, ...]]] = {"es": (), "ca": ("en", "es"), "hu": ("en", "es")}
 _DIACRITICS: Final = frozenset("".join(chars for table in _RESTORABLE.values() for chars in table.values()))
 _WORD: Final = re.compile(r"[^\W\d_]+")
+#: Registry identifiers quoted in help text, and words cut short by an ellipsis, are not prose.
+_NOT_PROSE: Final = re.compile(r"[\w-]+(?:\.[\w-]+)+|\b[a-z]\d+(?:-[\w]+)+|\w+(?=\.\.\.|…)")
 _MIN_LENGTH: Final = 4
 _MAX_RESTORED: Final = 3
 
 #: Words a review found correct as stored, per locale.
-REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {}
+REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
+    # English product text and the abbreviation "impon." of "imponible";
+    # "super" only occurs bound in the official rate name "super-reducido".
+    "es": frozenset({"Coin", "Comic", "Name", "impon", "name", "super"}),
+}
 
 
 @dataclass(frozen=True)
@@ -60,7 +66,7 @@ def _restorations(word: str, table: Mapping[str, str], known: Callable[[str], bo
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))
     for base in bases:
-        found = {base} if base != word and known(base) else set()
+        found: set[str] = {base} if base != word and known(base) else set()
         positions = [index for index, char in enumerate(base) if char.lower() in table]
         for size in range(1, _MAX_RESTORED + 1):
             for chosen in combinations(positions, size):
@@ -90,7 +96,7 @@ def unaccented_words(
         for key, value in sorted(values.get(locale, {}).items()):
             if value is None:
                 continue
-            for word in sorted(set(_WORD.findall(value))):
+            for word in sorted(set(_WORD.findall(_NOT_PROSE.sub(" ", value)))):
                 if len(word) < _MIN_LENGTH or word.isupper() or word in accepted or _DIACRITICS & set(word.lower()):
                     continue
                 if word not in verdicts:

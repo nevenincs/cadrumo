@@ -67,6 +67,11 @@ from ...core.type_guards import is_str_keyed_dict
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from ._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
+from ._filing_chain_payloads import (
+    filing_reconciliation_lines,
+    filing_reconciliation_notices,
+    filing_reconciliation_payload,
+)
 from .common import (
     emit_envelope,
     notice_lines,
@@ -1464,13 +1469,17 @@ def _emit_single_filed_pull(
         casilla_count=report.casilla_count,
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
+        reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
     )
-    notices = _filed_capture_notices(report, limit=limit)
+    notices = (
+        *_filed_capture_notices(report, limit=limit),
+        *filing_reconciliation_notices(report.reconciliation_results),
+    )
     emit_envelope(
         ctx,
         command="app.live.filed.pull",
         result=result,
-        lines=(*lines, *notice_lines(notices)),
+        lines=(*lines, *filing_reconciliation_lines(report.reconciliation_results), *notice_lines(notices)),
         notices=notices,
     )
 
@@ -1535,6 +1544,7 @@ def _emit_bulk_filed_pull(
         casilla_count=report.casilla_count,
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
+        reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
         failures=[
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
@@ -1548,7 +1558,10 @@ def _emit_bulk_filed_pull(
         ],
     )
     skipped = _skipped_casilla_notice(report.skipped_casillas)
-    capture_notices = _filed_capture_notices(report, limit=limit)
+    capture_notices = (
+        *_filed_capture_notices(report, limit=limit),
+        *filing_reconciliation_notices(report.reconciliation_results),
+    )
     notices = [*capture_notices]
     # Rebuilt from the notice rather than written twice, so the text line and the
     # JSON notice cannot drift apart.
@@ -1559,7 +1572,7 @@ def _emit_bulk_filed_pull(
         ctx,
         command="app.live.filed.pull",
         result=result,
-        lines=(*lines, *notice_lines(capture_notices)),
+        lines=(*lines, *filing_reconciliation_lines(report.reconciliation_results), *notice_lines(capture_notices)),
         notices=notices,
     )
 

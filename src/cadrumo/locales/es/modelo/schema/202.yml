@@ -6,38 +6,38 @@ modelo:
           '25':
             label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
           importe-bonificacion-art-26-ley-19-1994:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe correspondiente a la bonificación
               prevista en el art. 26 de la Ley 19/1994
           importe-bonificacion-art-34-lis:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe de la bonificación prevista
               en el art. 34 LIS
           importe-excluido-aumento-capital-art-17-2-lis:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
           importe-excluido-quita-espera:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe excluido por operaciones de
               quita o espera
           importe-integrado-base-imponible-quita-espera:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Parte integrada en la base imponible
               por operaciones de quita o espera
           importe-integrado-cuota-quita-espera-cooperativas:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
           importe-no-computable-regimen-zec:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe no computable por aplicación
               del régimen fiscal de la ZEC
           importe-reserva-inversiones-canarias:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe correspondiente a la reserva
               para inversiones en Canarias
@@ -48,19 +48,19 @@ modelo:
           is-pf-mod-40-2-resultado-declaracion-anterior:
             label: Mod. 40.2 LIS - Resultado de la declaración anterior (complementarias)
           is-pf-mod-40-3-amortizacion-30pct-dism:
-            label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
+            label: Mod. 40.3 LIS - 30% gastos amortización - Disminuciones
           is-pf-mod-40-3-b1-base-pago-fraccionado:
             label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
-            label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
+            label: Mod. 40.3 LIS B1 - Compensación de cuotas negativas (cooperativas)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
             label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
           is-pf-mod-40-3-b1-porcentaje:
             label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
-            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
+            label: Mod. 40.3 LIS B1 - Reserva nivelación convertida - Aumentos
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
-            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
+            label: Mod. 40.3 LIS B1 - Reserva nivelación convertida - Disminuciones
           is-pf-mod-40-3-b1-resultado-previo:
             label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
           is-pf-mod-40-3-b2-base-pago-fraccionado:
@@ -70,7 +70,7 @@ modelo:
           is-pf-mod-40-3-b2-base-tipo-2:
             label: Mod. 40.3 LIS B2 - Base a tipo 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
-            label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
+            label: Mod. 40.3 LIS B2 - Compensación de cuotas negativas (cooperativas)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
             label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
           is-pf-mod-40-3-b2-importe-pago-fraccionado:
@@ -80,9 +80,9 @@ modelo:
           is-pf-mod-40-3-b2-porcentaje-2:
             label: Mod. 40.3 LIS B2 - Porcentaje 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
-            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            label: Mod. 40.3 LIS B2 - Reserva de nivelación (art. 105 LIS) - Aumentos
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
-            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            label: Mod. 40.3 LIS B2 - Reserva de nivelación (art. 105 LIS) - Disminuciones
           is-pf-mod-40-3-b2-resultado-previo:
             label: Mod. 40.3 LIS B2 - Resultado previo
           is-pf-mod-40-3-base-imponible-previa:
@@ -92,23 +92,23 @@ modelo:
           is-pf-mod-40-3-cantidad-a-ingresar:
             label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
-            label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios anteriores
+            label: Mod. 40.3 LIS - Compensación de bases negativas de ejercicios anteriores
           is-pf-mod-40-3-correcciones-is-aumentos:
             label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
           is-pf-mod-40-3-correcciones-is-disminuciones:
             label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
           is-pf-mod-40-3-minimo-a-ingresar:
-            label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
+            label: Mod. 40.3 LIS - Mínimo a ingresar (CN >= 10 millones euros)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
             label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en Territorio
-              Comun
+              Común
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
-            label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
+            label: Mod. 40.3 LIS - Remanente reserva de capitalización no aplicada
               por insuficiencia de base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
-            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
+            label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) - Aumentos
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
-            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
+            label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) - Disminuciones
           is-pf-mod-40-3-resto-correcciones-aumentos:
             label: Mod. 40.3 LIS - Resto correcciones - Aumentos
           is-pf-mod-40-3-resto-correcciones-disminuciones:
@@ -116,7 +116,7 @@ modelo:
           is-pf-mod-40-3-resultado:
             label: Mod. 40.3 LIS - Resultado
           is-pf-mod-40-3-resultado-contable:
-            label: Mod. 40.3 LIS - Resultado contable despues del IS
+            label: Mod. 40.3 LIS - Resultado contable después del IS
           is-pf-mod-40-3-resultado-declaracion-anterior:
             label: Mod. 40.3 LIS - Resultado de la declaración anterior (complementaria)
           is-pf-mod-40-3-total-correcciones-aumentos:
@@ -124,17 +124,17 @@ modelo:
           is-pf-mod-40-3-total-correcciones-disminuciones:
             label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
           is-pf-mod-40-3-volumen-territorio-comun-pct:
-            label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
+            label: Mod. 40.3 LIS - Volumen operaciones en Territorio Común (%)
           minoracion-rentas-bonificacion-art-33-lis:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Importe de la minoración correspondiente
               a las rentas que tengan derecho a la bonificación art. 33 LIS
           renta-exenta-cap-xiv-tit-vii-lis:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
           rentas-reversion-deterioros-integradas-base-imponible:
-            help: Importe declarado en el bloque de información adicional de la liquidacion
+            help: Importe declarado en el bloque de información adicional de la liquidación
               del pago fraccionado.
             label: Información adicional (5) - Rentas de reversión de deterioros que
               se integran en la base imponible

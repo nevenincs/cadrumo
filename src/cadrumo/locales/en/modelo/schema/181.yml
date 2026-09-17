@@ -14,131 +14,88 @@ modelo:
         2022-y-siguientes:
           casilla:
             cantidades-minorar-principal:
-              help: Tax information for casilla of Modelo 181.
               label: Amounts applied to reduce the loan principal
             clave-intervencion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Code for the role held in the transaction
             clave-tipo-identificacion:
-              help: Tax information for casilla of Modelo 181.
               label: Identification type code
             codigo-provincia:
-              help: Tax information for casilla of Modelo 181.
               label: Province code
             declaracion-complementaria-sustitutiva:
-              help: Tax information for casilla of Modelo 181.
               label: Supplementary or replacement return
             declarado-nif:
-              help: 'Review the casilla information: NIF of the declarado.'
               label: Tax ID of the reported person
             declarado-nombre:
-              help: Tax information for casilla of Modelo 181.
               label: Surnames and given name or business name of the reported person
             declarante-razon-social:
-              help: Tax information for casilla of Modelo 181.
               label: Business name of the filer
             direccion-inmueble:
-              help: 'Review the casilla information: Direccion of the inmueble.'
               label: Address of the property
             duracion-operacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Duration of the transaction in months
             fecha-operacion:
-              help: 'Review the casilla information: Date of the operacion.'
               label: Transaction date
             identificacion-operacion:
-              help: Tax information for casilla of Modelo 181.
               label: Identifier of the loan, credit or other financial transaction
             importe-amortizacion-capital:
-              help: Tax information for casilla of Modelo 181.
               label: Amount paid during the year as repayment of principal
             importe-gastos-financiacion:
-              help: Tax information for casilla of Modelo 181.
               label: Amount paid during the year as costs arising from external financing
             importe-intereses:
-              help: Tax information for casilla of Modelo 181.
               label: Amount paid during the year as interest
             importe-operacion:
-              help: 'Review the casilla information: Amount of the prestamo, credito
-                u otra operacion financiera.'
               label: Amount of the loan, credit or other financial transaction
             importe-reintegro-intereses:
-              help: Tax information for casilla of Modelo 181.
               label: Amount accrued during the year as refunded interest
             importe-total-capital-amortizado:
-              help: 'Review the casilla information: Amount total of the capital amortizado.'
               label: Total amount of principal repaid
             importe-total-gastos-financiacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Total costs arising from external financing
             importe-total-intereses:
-              help: Tax information for casilla of Modelo 181.
               label: Total interest paid during the year
             importe-total-saldos-pendientes:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Total balances outstanding at 31 December
             intereses-indemnizatorios:
-              help: 'Review the casilla information: Intereses indemnizatorios.'
               label: Compensatory interest
             numero-identificativo-anterior:
-              help: Tax information for casilla of Modelo 181.
               label: Identifying number of the previous return
             numero-identificativo-declaracion:
-              help: Tax information for casilla of Modelo 181.
               label: Declaration identifying number
             numero-total-declarados:
-              help: Tax information for casilla of Modelo 181.
               label: Total number of reported records
             origen-operacion:
-              help: 'Review the casilla information: Origen of the operacion.'
               label: Origin of the transaction
             otras-cantidades-indemnizatorias:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Other compensatory amounts
             persona-relacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Contact person
             porcentaje-financiacion-vivienda-habitual:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Percentage of the financing applied to the main residence
             porcentaje-participacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Percentage of participation
             prefijo-codigo-iban:
-              help: Tax information for casilla of Modelo 181.
               label: IBAN code prefix
             prestamista-nif:
-              help: 'Review the casilla information: NIF of the prestamista.'
               label: Tax ID of the lender
             prestamista-nombre:
-              help: Tax information for casilla of Modelo 181.
               label: Surnames and given name or business name of the lender
             referencia-catastral:
-              help: 'Review the casilla information: Referencia catastral.'
               label: Cadastral reference
             representante-legal-nif:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Tax ID of the legal representative
             saldo-pendiente:
-              help: Tax information for casilla of Modelo 181.
               label: Balance outstanding at 31 December
             situacion-inmueble:
-              help: 'Review the casilla information: Situacion of the inmueble.'
               label: Location status of the property
             subclave-operacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Transaction subcode
             tipo-operacion:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Transaction type
             valor-tasacion-inmueble:
-              help: Tax information about tax information in casilla  of Modelo 181.
               label: Appraised value of the property pledged as security
             x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 181.
               label: Filing year to which the return relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 181.
               label: Return type (original / substitute / supplementary)
           field:
             label: Modelo 181 (Order EHA/3514/2009), tax years 2009 onwards

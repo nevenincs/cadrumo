@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import unresolved_successor_rows
@@ -176,10 +177,10 @@ def test_one_to_one_and_many_to_many_are_not_structural_shapes() -> None:
         to_source_refs=("aeat-after",),
         evidence="Evidence",
     )
-    with pytest.raises(RegistryError, match="one-to-many"):
+    with pytest.raises(ValidationError, match="one-to-many"):
         CasillaStructuralSuccession.model_validate(payload)
     payload.update({"source_lineages": ("a", "c"), "target_lineages": ("b", "d")})
-    with pytest.raises(RegistryError, match="one-to-many"):
+    with pytest.raises(ValidationError, match="one-to-many"):
         CasillaStructuralSuccession.model_validate(payload)
 
 

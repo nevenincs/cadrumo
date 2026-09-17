@@ -15,30 +15,19 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: Informació fiscal de la casella 01 del Modelo 128.
               label: Nombre de perceptors
             '02':
-              help: Informació fiscal sobre informació fiscal de la casella 02 del
-                Modelo 128.
               label: Base de retencions i ingressos a compte
             '03':
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte.'
               label: Retencions i ingressos a compte
             '04':
-              help: Informació fiscal de la casella 04 del Modelo 128.
               label: Nombre de perceptors (bloc addicional)
             '05':
-              help: Informació fiscal sobre informació fiscal de la casella 05 del
-                Modelo 128.
               label: Base de retencions i ingressos a compte (bloc addicional)
             '06':
-              help: Informació fiscal sobre informació fiscal de la casella 06 del
-                Modelo 128.
               label: Resultat a ingressar de declaracions anteriors pel mateix concepte,
                 exercici i període
             '07':
-              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           field:
             label: Ordre EHA/3435/2007, exercicis 2019 i següents

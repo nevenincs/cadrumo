@@ -31,11 +31,16 @@ def test_the_packaging_declares_one_console_entry_point_and_no_tui_alias() -> No
 
 
 def test_the_tui_module_imports_no_cli_internals() -> None:
-    """The TUI root remains an outermost entrypoint in a fresh process."""
+    """The TUI root remains an outermost entrypoint in a fresh process.
+
+    ``__main__`` defers its imports until it runs as a script, so the probe
+    also imports the launcher that script executes.
+    """
     probe = (
         "import json, sys\n"
         f"sys.modules.pop({_SESSION_MODULE!r}, None)\n"
         f"__import__({_SESSION_MODULE!r} + '.__main__')\n"
+        f"__import__({_SESSION_MODULE!r} + '.launcher')\n"
         "print(json.dumps(sorted(m for m in sys.modules if m.startswith('cadrumo.entrypoints.'))))\n"
     )
     completed = run_audited_process(

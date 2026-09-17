@@ -8,7 +8,6 @@ modelo:
               összege euróban.
             label: A forrásadó vagy adóelőleg alapjának teljes összege
           filing-year:
-            help: 'A Modelo 270 . casilla adóügyi adatai: adóév.'
             label: Az adóbevallás vonatkozási éve
           m270-clave-personalidad:
             help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
@@ -127,7 +126,6 @@ modelo:
               összege euróban.
             label: A forrásadó vagy adóelőleg teljes összege
           tipo-declaracion:
-            help: A Modelo 270 . casilla adóügyi adatai.
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           total-perceptores-count:
             help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek teljes

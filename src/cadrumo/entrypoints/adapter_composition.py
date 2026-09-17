@@ -1069,6 +1069,8 @@ def build_amendment_action_ports(
 ) -> AmendmentActionPorts:
     """Compose every persisted authority required by one Modelo amendment."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -1097,6 +1099,11 @@ def build_amendment_action_ports(
         justificante_repository=JustificanteRepository(objects=objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
         transaction_repository=TransactionCatalogueRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
+        observation_repository=CalculationObservationRepository(bucket_id=normalized_bucket_id, objects=objects),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),

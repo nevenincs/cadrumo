@@ -4,168 +4,90 @@ modelo:
       casilla:
         continuidad:
           base-imponible-operaciones-sujetas-no-exentas:
-            help: 'Informació fiscal sobre informació fiscal de la casella 01 del
-              Modelo 604 Referències: [01].'
             label: Operacions subjectes no exemptes realitzades en el període. Base
               imposable [01]
           base-imponible-rectificaciones:
-            help: 'Informació fiscal sobre informació fiscal de la casella 03 del
-              Modelo 604 Referències: [03].'
             label: Rectificacions. Base imposable [03]
           cuota-operaciones-sujetas-no-exentas:
-            help: 'Consulteu la informació de la casella: Operacions subjectes no
-              exemptes realizadas en el període. Quota [02].'
             label: Operacions subjectes no exemptes realitzades en el període. Quota
               [02]
           cuota-rectificaciones:
-            help: 'Consulteu la informació de la casella: Rectificaciones. Quota [04].'
             label: Rectificacions. Quota [04]
           declaracion-complementaria:
-            help: 'Consulteu la informació de la casella: Declaració complementària.'
             label: Declaració complementària
           domicilio-fiscal-espana-bloque:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Domicili fiscal en territori espanyol. Bloc
           domicilio-fiscal-espana-calificador-numero:
-            help: Informació fiscal de la casella del Modelo 604.
             label: Domicili fiscal en territori espanyol. Qualificador del número
           domicilio-fiscal-espana-codigo-postal:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Codi postal.'
             label: Domicili fiscal en territori espanyol. Codi postal
           domicilio-fiscal-espana-codigo-provincia:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Domicili fiscal en territori espanyol. Codi de província
           domicilio-fiscal-espana-complemento:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Complemento del domicili.'
             label: Domicili fiscal en territori espanyol. Complement del domicili
           domicilio-fiscal-espana-escalera:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Escalera.'
             label: Domicili fiscal en territori espanyol. Escala
           domicilio-fiscal-espana-localidad:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Localidad o población.'
             label: Domicili fiscal en territori espanyol. Localitat o població
           domicilio-fiscal-espana-municipio:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Domicili fiscal en territori espanyol. Municipi
           domicilio-fiscal-espana-nombre-via:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Nom de la vía.'
             label: Domicili fiscal en territori espanyol. Nom de la via
           domicilio-fiscal-espana-numero-casa:
-            help: Informació fiscal de la casella del Modelo 604.
             label: Domicili fiscal en territori espanyol. Número de casa
           domicilio-fiscal-espana-planta:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Planta.'
             label: Domicili fiscal en territori espanyol. Planta
           domicilio-fiscal-espana-portal:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Portal.'
             label: Domicili fiscal en territori espanyol. Portal
           domicilio-fiscal-espana-provincia:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Domicili fiscal en territori espanyol. Província
           domicilio-fiscal-espana-puerta:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Puerta.'
             label: Domicili fiscal en territori espanyol. Porta
           domicilio-fiscal-espana-tipo-numeracion:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Tipus de numeración.'
             label: Domicili fiscal en territori espanyol. Tipus de numeració
           domicilio-fiscal-espana-tipo-via:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en territori
-              español. Tipus de vía.'
             label: Domicili fiscal en territori espanyol. Tipus de via
           domicilio-fiscal-extranjero-codigo-pais:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              Codi de país.'
             label: Domicili fiscal a l'estranger. Codi de país
           domicilio-fiscal-extranjero-codigo-postal:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              Codi postal (ZIP).'
             label: Domicili fiscal a l'estranger. Codi postal (ZIP)
           domicilio-fiscal-extranjero-complemento:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              Complemento del domicili.'
             label: Domicili fiscal a l'estranger. Complement del domicili
           domicilio-fiscal-extranjero-domicilio:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              Domicili.'
             label: Domicili fiscal a l'estranger. Domicili
           domicilio-fiscal-extranjero-pais:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              País.'
             label: Domicili fiscal a l'estranger. País
           domicilio-fiscal-extranjero-poblacion:
-            help: 'Consulteu la informació de la casella: Domicili fiscal en el estranger.
-              Población o ciudad.'
             label: Domicili fiscal a l'estranger. Població o ciutat
           domicilio-fiscal-extranjero-provincia-region-estado:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Domicili fiscal a l'estranger. Província, regió o estat
           filing-period:
-            help: 'Consulteu la informació de la casella: Període (més natural).'
             label: Període (mes natural)
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              604.
             label: Exercici a què es refereix l'autoliquidació
           idioma-declaracion:
-            help: 'Consulteu la informació de la casella: Idioma de la declaració.'
             label: Idioma de la declaració
           importe-a-deducir:
-            help: 'Consulteu la informació de la casella: A deduir [06].'
             label: A deduir [06]
           importe-operaciones-exentas:
-            help: 'Consulteu la informació de la casella: Operacions exemptes realizadas
-              en el període [05].'
             label: Operacions exemptes realitzades en el període [05]
           numero-justificante-anexo-informativo:
-            help: Informació fiscal de la casella del Modelo 604.
             label: Annex informatiu. Número de justificant
           numero-justificante-declaracion-anterior:
-            help: Informació fiscal de la casella del Modelo 604.
             label: Número de justificant de la declaració anterior
           resultado-autoliquidacion:
-            help: 'Informació fiscal sobre informació fiscal de la casella 07 del
-              Modelo 604 Referències: [07].'
             label: Resultat de l'autoliquidació [07]
-          signo-base-sujetas:
-            help: 'Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604 Referències: [03].'
           signo-cuota-rectificaciones:
-            help: 'Consulteu la informació de la casella: Rectificaciones. Signo de
-              la quota [04].'
             label: Rectificacions. Signe de la quota [04]
           sujeto-pasivo-codigo-bic:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Subjecte passiu. Codi BIC
           sujeto-pasivo-codigo-lei:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Subjecte passiu. Codi LEI (norma ISO 17442)
           sujeto-pasivo-persona-contacto:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Subjecte passiu. Persona de contacte
           sujeto-pasivo-telefono-contacto:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              604.
             label: Subjecte passiu. Telèfon de contacte
           tipo-autoliquidacion:
-            help: 'Consulteu la informació de la casella: Tipus de autoliquidació
-              (I: a ingresar, N: negativa).'
             label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
       construct:
         modelo-604-autoliquidacion:
@@ -188,171 +110,99 @@ modelo:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
               label: Rectificacions. Signe de la base imposable [03]
             x-dhkn2bhg70mm8qb6clp6arj3d5gg:
-              help: 'Consulteu la informació de la casella: Diferència ([02] - [04])
-                [08].'
               label: Diferència ([02] - [04]) [08]
             x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
-              help: 'Consulteu la informació de la casella: Quota de operacions subjectes
-                no exemptes del període atribuïble a la Administració del Estat [09].'
               label: Quota d'operacions subjectes no exemptes del període atribuïble
                 a l'Administració de l'Estat [09]
             x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
-              help: 'Consulteu la informació de la casella: Quota de rectificaciones
-                realizadas en el període atribuïble a la Administració del Estat [10].'
               label: Quota de rectificacions realitzades en el període atribuïble
                 a l'Administració de l'Estat [10]
             x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
-              help: 'Consulteu la informació de la casella: Signo de la quota de rectificaciones
-                del període atribuïble a la Administració del Estat [10].'
               label: Signe de la quota de rectificacions del període atribuïble a
                 l'Administració de l'Estat [10]
             x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
-              help: 'Consulteu la informació de la casella: Percentatge atribuïble
-                a la Administració del Estat [11].'
               label: Percentatge atribuïble a l'Administració de l'Estat [11]
             x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
-              help: 'Consulteu la informació de la casella: Resultat atribuïble a
-                la Administració del Estat ([09] - [10]) [12].'
               label: Resultat atribuïble a l'Administració de l'Estat ([09] - [10])
                 [12]
             x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. Quota de rectificaciones realizadas en el període [14].'
               label: Tributació per territori. Àlaba. Quota de rectificacions realitzades
                 en el període [14]
             x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. Quota de operacions subjectes no exemptes del període [13].'
               label: Tributació per territori. Àlaba. Quota d'operacions subjectes
                 no exemptes del període [13]
             x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. Quota total atribuïble [15].'
               label: Tributació per territori. Àlaba. Quota total atribuïble [15]
             x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. Import de las operacions exemptes [17].'
               label: Tributació per territori. Àlaba. Import de les operacions exemptes
                 [17]
             x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. % atribuïble [16].'
               label: Tributació per territori. Àlaba. % atribuïble [16]
             x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Álava. Signo de la quota de rectificaciones del període [14].'
               label: Tributació per territori. Àlaba. Signe de la quota de rectificacions
                 del període [14]
             x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. Quota de rectificaciones realizadas en el període [34].'
               label: Tributació per territori. Estat. Quota de rectificacions realitzades
                 en el període [34]
             x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. Quota de operacions subjectes no exemptes del període [33].'
               label: Tributació per territori. Estat. Quota d'operacions subjectes
                 no exemptes del període [33]
             x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. Quota total atribuïble [35].'
               label: Tributació per territori. Estat. Quota total atribuïble [35]
             x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. Import de las operacions exemptes [37].'
               label: Tributació per territori. Estat. Import de les operacions exemptes
                 [37]
             x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. % atribuïble [36].'
               label: Tributació per territori. Estat. % atribuïble [36]
             x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Estat. Signo de la quota de rectificaciones del període [34].'
               label: Tributació per territori. Estat. Signe de la quota de rectificacions
                 del període [34]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. Quota de rectificaciones realizadas en el període [19].'
               label: Tributació per territori. Guipúscoa. Quota de rectificacions
                 realitzades en el període [19]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. Quota de operacions subjectes no exemptes del període [18].'
               label: Tributació per territori. Guipúscoa. Quota d'operacions subjectes
                 no exemptes del període [18]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. Quota total atribuïble [20].'
               label: Tributació per territori. Guipúscoa. Quota total atribuïble [20]
             x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. Import de las operacions exemptes [22].'
               label: Tributació per territori. Guipúscoa. Import de les operacions
                 exemptes [22]
             x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. % atribuïble [21].'
               label: Tributació per territori. Guipúscoa. % atribuïble [21]
             x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Guipúzcoa. Signo de la quota de rectificaciones del període [19].'
               label: Tributació per territori. Guipúscoa. Signe de la quota de rectificacions
                 del període [19]
             x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'Informació fiscal sobre informació fiscal de la casella 29 del
-                Modelo 604 Referències: [29].'
               label: Tributació per territori. Navarra. Quota de rectificacions realitzades
                 en el període [29]
             x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
-              help: 'Informació fiscal sobre informació fiscal de la casella 28 del
-                Modelo 604 Referències: [28].'
               label: Tributació per territori. Navarra. Quota d'operacions subjectes
                 no exemptes del període [28]
             x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
-              help: 'Informació fiscal sobre informació fiscal de la casella 30 del
-                Modelo 604 Referències: [30].'
               label: Tributació per territori. Navarra. Quota total atribuïble [30]
             x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
-              help: 'Informació fiscal sobre informació fiscal de la casella 32 del
-                Modelo 604 Referències: [32].'
               label: Tributació per territori. Navarra. Import de les operacions exemptes
                 [32]
             x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
-              help: 'Informació fiscal sobre informació fiscal de la casella 31 del
-                Modelo 604 Referències: [31].'
               label: Tributació per territori. Navarra. % atribuïble [31]
             x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
-              help: 'Informació fiscal sobre informació fiscal de la casella  del
-                Modelo 604 Referències: [29].'
               label: Tributació per territori. Navarra. Signe de la quota de rectificacions
                 del període [29]
             x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. Quota de rectificaciones realizadas en el període [24].'
               label: Tributació per territori. Biscaia. Quota de rectificacions realitzades
                 en el període [24]
             x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. Quota de operacions subjectes no exemptes del període [23].'
               label: Tributació per territori. Biscaia. Quota d'operacions subjectes
                 no exemptes del període [23]
             x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. Quota total atribuïble [25].'
               label: Tributació per territori. Biscaia. Quota total atribuïble [25]
             x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. Import de las operacions exemptes [27].'
               label: Tributació per territori. Biscaia. Import de les operacions exemptes
                 [27]
             x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. % atribuïble [26].'
               label: Tributació per territori. Biscaia. % atribuïble [26]
             x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
-              help: 'Consulteu la informació de la casella: Tributació per territori.
-                Vizcaya. Signo de la quota de rectificaciones del període [24].'
               label: Tributació per territori. Biscaia. Signe de la quota de rectificacions
                 del període [24]
           field:

@@ -1,10 +1,11 @@
 """THE canonical CI/justfile coupling contract. One implementation, five repos.
 
-WHY THIS IS A DEPLOYED COPY AND NOT A REUSABLE ACTION. Same reason as
-`preflight.sh` beside it: ci-fleet is PRIVATE and every consuming repo is
-PUBLIC, and a public repository cannot resolve an action or a reusable
-workflow out of a private one. So the sharing model is DEPLOYMENT - this file
-is the source, and `fleetctl ci contract` renders it into a consumer's `dev/`.
+WHY THIS IS A DEPLOYED COPY AND NOT A REUSABLE ACTION. Same reason as the
+runner preflight: the source lives in a PRIVATE repository and every consuming
+repo is PUBLIC, and a public repository cannot resolve an action or a reusable
+workflow out of a private one. So the sharing model is DEPLOYMENT - one source
+is rendered into each consumer's `dev/`, and a parity check fails when a
+deployed copy drifts from it.
 
 WHAT IT ASSERTS, AND WHY EACH RULE EARNS ITS PLACE.
 
@@ -53,7 +54,9 @@ JUST_VERSION = "1.38.0"
 #: The one action, pinned by commit. taiki-e/install-action fetches the
 #: upstream release for every runner OS, which is what retires the bespoke
 #: Windows paths (a hand-rolled pwsh download, and an unpinned `scoop install`).
-JUST_ACTION_SHA = "d56249f532886d210664917b882ad7e152e17d68"
+#: The commit is the one the action's `just` tag points at; a `# v2` comment
+#: beside it would name a tag this commit is not on.
+JUST_ACTION_SHA = "6012bba2f8e3e666a2b212f8823c06831704ce92"
 JUST_INSTALL_USES = f"taiki-e/install-action@{JUST_ACTION_SHA}"
 JUST_INSTALL_TOOL = f"just@{JUST_VERSION}"
 
@@ -194,30 +197,6 @@ def _recipes(root: Path) -> set[str]:
     return set()
 
 
-#: A step that runs a composite action stored in this repository.
-_LOCAL_ACTION = re.compile(r"^\s*-?\s*uses:\s*(\./\.github/actions/[^\s#]+)")
-
-
-def _install_text(root: Path, text: str) -> str:
-    """Return the workflow text joined with every local composite action it runs.
-
-    A workflow that installs `just` through a repository composite action
-    installs it exactly as that action does, so rule 2 reads the action too.
-    """
-    parts = [text]
-    for line in text.splitlines():
-        match = _LOCAL_ACTION.match(line)
-        if not match:
-            continue
-        directory = root / match.group(1).removeprefix("./").rstrip("/")
-        for filename in ("action.yml", "action.yaml"):
-            action = directory / filename
-            if action.is_file():
-                parts.append(action.read_text(encoding="utf-8"))
-                break
-    return "\n".join(parts)
-
-
 def _first_word(command: str) -> str:
     """Return the executable a command line invokes, ignoring env prefixes.
 
@@ -247,8 +226,7 @@ def audit(root: Path) -> list[Finding]:
 
         calls_just = any(_first_word(command) == "just" for _, _, command in _run_commands(text))
         if calls_just:
-            install_text = _install_text(root, text)
-            if JUST_INSTALL_USES not in install_text:
+            if JUST_INSTALL_USES not in text:
                 findings.append(
                     Finding(
                         path,
@@ -257,7 +235,7 @@ def audit(root: Path) -> list[Finding]:
                         f"calls `just`, but installs it without {JUST_INSTALL_USES}",
                     )
                 )
-            elif JUST_INSTALL_TOOL not in install_text:
+            elif JUST_INSTALL_TOOL not in text:
                 findings.append(
                     Finding(
                         path,

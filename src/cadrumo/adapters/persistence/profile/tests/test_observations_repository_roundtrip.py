@@ -202,7 +202,7 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
         )
 
         def replace_text_scalar(envelope):
-            rows = envelope["payload"]["observation"]["observations"]
+            rows = envelope["payload"]["official"]["observation"]["observations"]
             period_row = next(row for row in rows if row["casilla_id"] == _M303_PERIOD_CASILLA)
             assert period_row["value_kind"] == "text" and period_row["value"] == "1T"
             period_row["value"] = "0"
@@ -412,72 +412,6 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
         assert casilla_14.absent_by_design is False
 
 
-def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
-    tmp_path: Path,
-) -> None:
-    """A second write to one (modelo, period) slot replaces the first irrecoverably.
-
-    Observations are keyed naturally by modelo and filing period, so there is
-    exactly one slot per period and a later write is an update of that row. This
-    measures what a second write COSTS, which decides whether displacing an
-    official observation is shadowing (the earlier payload survives and the
-    wrong one is selected) or destruction (the earlier payload is gone).
-
-    The claim is bounded to what this repository exposes: after the second
-    write, no read surface it offers returns the first payload. It is not a
-    claim that no trace exists anywhere in the substrate.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        period = Period.from_year_and_code(2025, "1T")
-        generic_observation = RegistryModeloObservation(modelo="130", filing_year=2025, period="1T")
-
-        repo.save(
-            repo.prepare_observation_envelope(
-                generic_observation,
-                source_kind="aeat_sede_justificante",
-                stamped_revision_id=_revision_id("130", 2025, "1T"),
-                captured_at=_CAPTURED_AT,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "202530300000001Z",
-                },
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                generic_observation,
-                source_kind="operator_manual",
-                stamped_revision_id=_revision_id("130", 2025, "1T"),
-                captured_at=_CAPTURED_AT + timedelta(days=1),
-                source_metadata={"local_observation_kind": "operator_supplied"},
-                # This displacement is now refused by default. The intent is stated
-                # explicitly because what this test measures is the COST of
-                # displacing official evidence, not whether it is permitted -- the
-                # refusal is measured separately. Removing this argument would turn
-                # a cost measurement into a duplicate of the guard's own test.
-                replace_official_evidence=True,
-            )
-        )
-
-        loaded = repo.load_observation("130", period)
-        assert loaded is not None
-        assert loaded.source_kind == "operator_manual", (
-            "the later write did not take the slot, so this measurement does not describe the code"
-        )
-
-        scanned = [row for row in repo.iter_modelo("130") if row.observation.period == "1T"]
-        assert len(scanned) == 1, (
-            f"expected one row per natural key, found {len(scanned)} -- if the substrate keeps prior "
-            "payloads reachable through the modelo scan, displacing an official observation is "
-            "shadowing rather than destruction and the remedy is selection, not a write guard"
-        )
-        assert scanned[0].source_kind == "operator_manual"
-        assert "aeat_expediente_id" not in dict(scanned[0].source_metadata), (
-            "the displaced AEAT provenance is still reachable, so this is not destruction"
-        )
-
-
 def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
     tmp_path: Path,
 ) -> None:
@@ -557,7 +491,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
         )
 
         def mutate(envelope):
-            casillas = envelope["payload"]["observation"]["observations"]
+            casillas = envelope["payload"]["official"]["observation"]["observations"]
             assert casillas and casillas[1]["legal_refs"], (
                 "fixture must serialise legal_refs onto the computed casilla for this proof test to be meaningful"
             )

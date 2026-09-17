@@ -4,105 +4,70 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: 'A Modelo 180 145-160. casilla adóügyi adatai: adóügyi információ.'
             label: A forrásadó és előlegfizetés teljes alapja
           declaracion-complementaria-sustitutiva:
-            help: A Modelo 180 121-122. casilla adóügyi adatai.
             label: Kiegészítő vagy helyettesítő bevallás
           devengo-year:
-            help: 'A Modelo 180 110-113. casilla adóügyi adatai: teljesítési év.'
             label: Az adóztatandó esemény adóéve
           numero-identificativo-declaracion:
-            help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás.'
             label: A bevallás azonosító száma
           numero-identificativo-declaracion-anterior:
-            help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás korábbi.'
             label: Az előző bevallás azonosító száma
           payee-inmueble-bloque:
-            help: 'A Modelo 180 201-203. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan tömbje
           payee-inmueble-calificador-numero:
-            help: A Modelo 180 198-200. casilla adóügyi adatai.
             label: A bérbe adott ingatlan házszám-minősítője
           payee-inmueble-codigo-municipio:
-            help: A Modelo 180 316-320. casilla adóügyi adatai.
             label: A bérbe adott ingatlan település kódja
           payee-inmueble-codigo-postal:
-            help: A Modelo 180 323-327. casilla adóügyi adatai.
             label: A bérbe adott ingatlan irányítószáma
           payee-inmueble-complemento:
-            help: 'A Modelo 180 216-255. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan cím kiegészítése
           payee-inmueble-escalera:
-            help: 'Tekintse át a casilla adatait: Escalera - inmueble arrendado.'
             label: A bérbe adott ingatlan lépcsőháza
           payee-inmueble-localidad:
-            help: 'Tekintse át a casilla adatait: Localidad - inmueble arrendado.'
             label: A bérbe adott ingatlan helysége
           payee-inmueble-municipio:
-            help: 'A Modelo 180 286-315. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan települése
           payee-inmueble-nombre-via:
-            help: 'Tekintse át a casilla adatait: Név - via publica - inmueble arrendado.'
             label: A bérbe adott ingatlan közterületének neve
           payee-inmueble-numero-casa:
-            help: A Modelo 180 193-197. casilla adóügyi adatai.
             label: A bérbe adott ingatlan házszáma
           payee-inmueble-planta:
-            help: 'Tekintse át a casilla adatait: Planta - inmueble arrendado.'
             label: A bérbe adott ingatlan emelete
           payee-inmueble-portal:
-            help: 'Tekintse át a casilla adatait: Portal - inmueble arrendado.'
             label: A bérbe adott ingatlan bejárata
           payee-inmueble-provincia:
-            help: A Modelo 180 321-322. casilla adóügyi adatai.
             label: A bérbe adott ingatlan tartományának kódja
           payee-inmueble-puerta:
-            help: 'Tekintse át a casilla adatait: Puerta - inmueble arrendado.'
             label: A bérbe adott ingatlan ajtaja
           payee-inmueble-referencia-catastral:
-            help: 'Tekintse át a casilla adatait: Referencia catastral - inmueble
-              arrendado.'
             label: A bérbe adott ingatlan kataszteri hivatkozása
           payee-inmueble-situacion:
-            help: 'Tekintse át a casilla adatait: Situacion - inmueble.'
             label: Az ingatlan helyzete
           payee-inmueble-tipo-numeracion:
-            help: 'A Modelo 180 190-192. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan számozásának típusa
           payee-inmueble-tipo-via:
-            help: 'A Modelo 180 135-139. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan közterületének típusa
           payee-modalidad-renta:
-            help: 'A Modelo 180 78. casilla adóügyi adatai: adóügyi információ.'
             label: Jövedelem vagy hozam típusa
           payee-name:
-            help: A Modelo 180 36-75. casilla adóügyi adatai.
             label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
           payee-nif:
-            help: 'Tekintse át a casilla adatait: NIF - kedvezményezett.'
             label: A kedvezményezett adóazonosító száma (NIF)
           payee-province:
-            help: A Modelo 180 76-77. casilla adóügyi adatai.
             label: A kedvezményezett lakóhelye szerinti tartomány kódja
           payee-representative-nif:
-            help: 'A Modelo 180 27-35. casilla adóügyi adatai: a képviselő NIF-je.'
             label: A kedvezményezett törvényes képviselőjének adóazonosító száma (NIF)
           perc-base:
-            help: 'A Modelo 180 79-92. casilla adóügyi adatai: adóügyi információ.'
             label: A kedvezményezett forrásadó- és előlegfizetés-alapja
           perc-retenciones:
-            help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések -
-              kedvezményezett.'
             label: A kedvezményezett forrásadója és előlegfizetése
           porcentaje-retencion:
-            help: A Modelo 180 93-96. casilla adóügyi adatai.
             label: Az alkalmazott forrásadó százaléka
           retenciones-ingresos-a-cuenta:
-            help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések total.'
             label: Forrásadó és előlegfizetés összesen
           total-perceptores-count:
-            help: A Modelo 180 136-144. casilla adóügyi adatai.
             label: Kedvezményezettek teljes száma
       construct:
         modelo-180-annual-summary:

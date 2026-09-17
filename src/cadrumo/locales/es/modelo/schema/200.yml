@@ -10334,13 +10334,13 @@ modelo:
             '01020':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
-                de activos por impuesto diferido en crédito exigible frente a la admon.tribut.
+                de activos por impuesto diferido en crédito exigible frente a la admón.tribut.
                 (art. 130 LIS) - Estado [01020]
             '01021':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Compensación
                 por conversión de activos por impuesto diferido en crédito exigible
-                frente a la admon.tribut. (art. 130 LIS) - Estado [01021]
+                frente a la admón.tribut. (art. 130 LIS) - Estado [01021]
             '01022':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Unión temporal de empresas, ajustes por rentas exentas
@@ -10374,13 +10374,13 @@ modelo:
             '01043':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
-                de activos por impuesto diferido en crédito exigible frente a la admon.tribut.
+                de activos por impuesto diferido en crédito exigible frente a la admón.tribut.
                 (art. 130 LIS) - D. Forales/Navarra (Totales) [01043]
             '01044':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Compensación
                 por conversión de activos por impuesto diferido en crédito exigible
-                frente a la admon.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
+                frente a la admón.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
                 [01044]
             '01061':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
@@ -12807,7 +12807,7 @@ modelo:
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
-                residencia a Estados miembros de la Unión Europea o EEE - Disminucion...
+                residencia a Estados miembros de la Unión Europea o EEE - Disminución...
             '01576':
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Parte de la base imponible que proceda

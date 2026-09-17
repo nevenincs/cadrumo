@@ -4,158 +4,109 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: 'A Modelo 193 145-159. casilla adóügyi adatai: adóügyi információ.'
             label: A levonások és előlegfizetések alapja
           declaracion-anterior-numero:
-            help: A Modelo 193 123-135. casilla adóügyi adatai.
             label: A korábbi bevallás azonosító száma
           declaracion-complementaria:
-            help: 'A casilla adatai: Casilla 121: bevallás kiegészítő.'
             label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
           declaracion-numero-identificativo:
-            help: A Modelo 193 108-120. casilla adóügyi adatai.
             label: A BEVALLÁS AZONOSÍTÓ SZÁMA
           declaracion-sustitutiva:
-            help: A Modelo 193 122. casilla adóügyi adatai.
             label: Helyettesítő bevallás
           declarante-contacto-nombre:
-            help: A Modelo 193 68-107. casilla adóügyi adatai.
             label: VEZETÉKNÉV ÉS UTÓNÉV
           declarante-contacto-telefono:
-            help: A Modelo 193 59-67. casilla adóügyi adatai.
             label: TELEFON
           declarante-naturaleza:
-            help: A Modelo 193 235. casilla adóügyi adatai.
             label: A BEVALLÓ JELLEGE
           devengo-year:
-            help: A Modelo 193 118-121. casilla adóügyi adatai.
             label: ESEDÉKESSÉG ÉVE
           gasto-contributor-nif:
-            help: 'Lásd a mezőre vonatkozó tájékoztatást: Az adózó adóazonosító száma
-              (NIF).'
             label: Az adózó adóazonosító száma (NIF)
           gasto-contributor-nombre:
-            help: 'A casilla adatai: Casilla 36-75: gasto contributor név.'
             label: Az adózó vezetékneve és utóneve, vagy elnevezése
           gasto-importe-anual:
-            help: 'A casilla adatai: Casilla 195-207: gasto összeg éves.'
             label: Költségek összege
           gastos-total-declarante:
-            help: A Modelo 193 220-234. casilla adóügyi adatai.
             label: Levonható költségek (35/2006 törvény 26.1.a cikk)
           payee-base-retenciones-193:
-            help: 'A Modelo 193 152-164. casilla adóügyi adatai: adóügyi információ.'
             label: A levonások és előlegfizetések alapja
           payee-ceuta-melilla-clave:
-            help: 'A Modelo 193 314. casilla adóügyi adatai: adóügyi információ.'
             label: CEUTA VAGY MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
-            help: A Modelo 193 79. casilla adóügyi adatai.
             label: KÓD KULCSA
           payee-clave-mercado:
             label: PIACI KÓD
           payee-clave-percepcion:
-            help: 'A Modelo 193 92. casilla adóügyi adatai: adóügyi információ.'
             label: JUTTATÁS KÓDJA
           payee-codigo-cuenta:
-            help: A Modelo 193 97-116. casilla adóügyi adatai.
             label: ÉRTÉKPAPÍRSZÁMLA KÓDJA / KÖLCSÖNÜGYLET SZÁMA
           payee-codigo-emisor:
-            help: A Modelo 193 80-91. casilla adóügyi adatai.
             label: KIBOCSÁTÓ KÓDJA
           payee-compensaciones:
-            help: 'A Modelo 193 225-236. casilla adóügyi adatai: adóügyi információ.'
             label: Kompenzációk
           payee-fecha-devengo:
             label: ESEDÉKESSÉG DÁTUMA
           payee-fecha-inicio-prestamo:
-            help: 'A Modelo 193 209-216. casilla adóügyi adatai: adóügyi információ.'
             label: A KÖLCSÖN KEZDŐ DÁTUMA
           payee-fecha-vencimiento-prestamo:
-            help: 'A Modelo 193 217-224. casilla adóügyi adatai: adóügyi információ.'
             label: A KÖLCSÖN LEJÁRATI DÁTUMA
           payee-garantias:
-            help: 'A Modelo 193 237-248. casilla adóügyi adatai: adóügyi információ.'
             label: Garanciák
           payee-mediador-flag:
-            help: 'A Modelo 193 76. casilla adóügyi adatai: adóügyi információ.'
             label: Kifizetés közvetítőnek
           payee-name:
-            help: 'A Modelo 193 36-75. casilla adóügyi adatai: a kedvezményezett neve.'
             label: A kedvezményezett vezetékneve és keresztneve, cégneve vagy megnevezése
           payee-naturaleza-declarante:
-            help: A Modelo 193 208. casilla adóügyi adatai.
             label: A BEVALLÓ JELLEGE
           payee-naturaleza-percepcion:
-            help: 'A Modelo 193 93-94. casilla adóügyi adatai: adóügyi információ.'
             label: JELLEG
           payee-nif:
-            help: 'A Modelo 193 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
             label: A kedvezményezett adószáma
           payee-nif-pagador-anterior:
             label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
           payee-numero-orden-193:
             label: SORSZÁM
           payee-pago:
-            help: 'A Modelo 193 95. casilla adóügyi adatai: adóügyi információ.'
             label: KIFIZETÉS
           payee-penalizaciones:
-            help: 'A Modelo 193 182-192. casilla adóügyi adatai: adóügyi információ.'
             label: BÜNTETÉSEK
           payee-pendiente-flag:
-            help: A Modelo 193 117. casilla adóügyi adatai.
             label: FÜGGŐBEN
           payee-percepciones-193:
-            help: 'A Modelo 193 123-135. casilla adóügyi adatai: adóügyi információ.'
             label: Kifizetések összege / a kölcsönadó díjazása
           payee-porcentaje-retencion:
-            help: 'A Modelo 193 165-168. casilla adóügyi adatai: adóügyi információ.'
             label: Levonási %
           payee-province:
-            help: 'A Modelo 193 77-78. casilla adóügyi adatai: a kedvezményezett tartománya.'
             label: TARTOMÁNYKÓD
           payee-reducciones-193:
-            help: 'A Modelo 193 139-151. casilla adóügyi adatai: adóügyi információ.'
             label: Csökkentések összege
           payee-retenciones-193:
-            help: 'A Modelo 193 169-181. casilla adóügyi adatai: adóügyi információ.'
             label: Levonások és előlegfizetések
           payee-retenciones-forales-araba:
-            help: 'A Modelo 193 275-287. casilla adóügyi adatai: adóügyi információ.'
             label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
               Tanácsa
           payee-retenciones-forales-bizkaia:
-            help: 'A Modelo 193 301-313. casilla adóügyi adatai: adóügyi információ.'
             label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
           payee-retenciones-forales-estatal:
-            help: 'A Modelo 193 249-261. casilla adóügyi adatai: adóügyi információ.'
             label: Az államnak befizetett levonások és előlegfizetések
           payee-retenciones-forales-gipuzkoa:
-            help: 'A Modelo 193 288-300. casilla adóügyi adatai: adóügyi információ.'
             label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi Tanácsa
           payee-retenciones-forales-navarra:
-            help: 'A Modelo 193 262-274. casilla adóügyi adatai: adóügyi információ.'
             label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
           payee-tipo-codigo:
-            help: A Modelo 193 96. casilla adóügyi adatai.
             label: KÓD TÍPUSA
           payee-tipo-percepcion:
-            help: 'A Modelo 193 122. casilla adóügyi adatai: adóügyi információ.'
             label: A juttatás típusa
           perc-nif-representante:
-            help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselő adószáma
           representante-legal-nif:
-            help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselő adószáma
           retenciones-ingresadas-total:
-            help: 'A casilla adatai: Casilla 175-189: adólevonások ingresadas total.'
             label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
           retenciones-ingresos-a-cuenta:
-            help: 'A casilla adatai: Casilla 160-174: adólevonások előlegfizetések.'
             label: Levonások és előlegfizetések
           total-perceptores-count:
-            help: 'A Modelo 193 136-144. casilla adóügyi adatai: adóügyi információ.'
             label: A KEDVEZMÉNYEZETTEK SZÁMA
       construct:
         modelo-193-annual-summary:
@@ -176,13 +127,13 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 193-es modelo 121. rovata, 2024. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2024. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -197,8 +148,8 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: A 193-es modelo 175-189. rovata, 2024. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: A 193-es modelo 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
@@ -311,13 +262,13 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: A 193-es modelo 121. rovata, 2025. adóév.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2025. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -332,8 +283,8 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: A 193-es modelo 175-189. rovata, 2025. adóév.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
-                egesz es tizedes reszre bontja.
+              help: A 193-as modelo bevallói rekordjában bevallott végösszeg. A nyomtatvány
+                egész és tizedes részre bontja.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: A 193-es modelo 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA

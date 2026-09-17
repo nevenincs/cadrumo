@@ -1678,6 +1678,10 @@ type ModeloDetailRowWireV1 = Annotated[
 ModeloWorkAmendRequest.model_rebuild()
 
 
+type DetailRowKindToken = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+"""Lower-case registry token naming a detail-row family."""
+
+
 class ModeloEditApplyDetailRowAddressV1(BaseModel):
     """Wire mirror of ModeloEditDetailRowAddressV1 carrying the key's components.
 
@@ -1702,7 +1706,7 @@ class ModeloEditApplyDetailRowAddressV1(BaseModel):
     model_config = _WIRE_CONFIG
 
     kind: Literal["detail_row"] = "detail_row"
-    detail_row_kind: Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+    detail_row_kind: DetailRowKindToken
     identity_components: Annotated[
         tuple[Annotated[str, Field(min_length=1, max_length=200)], ...],
         Field(min_length=1, max_length=8),
@@ -2072,6 +2076,7 @@ __all__ = [
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
+    "DetailRowKindToken",
     "ModeloEditApplyExecutor",
     "ModeloEditApplyOperationRequestV1",
     "ModeloEditApplyPublicResultV1",

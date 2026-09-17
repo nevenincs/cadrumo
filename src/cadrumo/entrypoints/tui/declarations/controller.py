@@ -76,6 +76,7 @@ _FILING_STATE_KEYS: Final = {
     ModeloRecordStatus.SUPERSEDIDO: "tui.declarations.filing_state.supersedido",
 }
 _EVIDENCE_KEYS: Final = {
+    ExternalEvidenceKind.AEAT_CSV_REGISTER: "tui.declarations.evidence.aeat_csv_register",
     ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "tui.declarations.evidence.aeat_justificante_pdf",
     ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "tui.declarations.evidence.aeat_live_capture",
 }

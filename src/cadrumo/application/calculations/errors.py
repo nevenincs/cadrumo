@@ -61,7 +61,6 @@ class CalculationRefusalPrecondition(StrEnum):
     typed refusal.
     """
 
-    OFFICIAL_EVIDENCE_PRESERVED = "calculations.observations.official_evidence_preserved"
     M303_CARRY_DISPOSITION_CONSISTENT = "calculations.m303_carry.disposition_consistent"
     M303_CARRY_DERIVATION_CONSISTENT = "calculations.m303_carry.derivation_consistent"
     M303_CARRY_MATCHES_REGISTRY_FORMULA = "calculations.m303_carry.matches_registry_formula"
@@ -134,27 +133,6 @@ class ObservationKeyError(CoreValidationError):
     :mod:`application.calculations.observations_repository` raise this
     error instead of a bare :class:`ValueError` so failures propagate through
     the typed error registry and produce structured envelopes.
-    """
-
-
-class ObservationEvidenceDisplacementError(_CalculationPreconditionErrorMixin, CoreValidationError):
-    """Raised when a non-official write would displace official AEAT evidence.
-
-    A ``(modelo, filing_year, period)`` slot holding evidence observed from AEAT
-    -- a captured justificante, a live Sede capture, a CSV register row -- is the
-    only record of what the authority holds. Writing a locally-sourced
-    observation into that slot replaces it, and the displaced evidence cannot be
-    recovered through any path this repository exposes.
-
-    Both non-official provenances are refused, for different reasons that the
-    refusal message distinguishes. An operator-manual figure displacing captured
-    evidence is a downgrade with no compensating gain. A local filing
-    recalculation displacing it is the same downgrade wearing a plausible
-    justification: if the recalculation is correct the operator must re-file with
-    AEAT and re-pull, so the local figure is not the authority either way.
-
-    The operator verb can override deliberately; the local filing flow cannot,
-    because there is no situation in which it should silently win.
     """
 
 

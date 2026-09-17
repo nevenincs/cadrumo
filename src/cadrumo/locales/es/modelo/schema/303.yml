@@ -34,46 +34,46 @@ modelo:
             label: IVA devengado adquisiciones intracomunitarias bienes y servicios
               - Cuota
           dr303-111:
-            label: Rectificativa - Importe de la rectificacion
+            label: Rectificativa - Importe de la rectificación
           dr303-112:
-            help: Pago a cuenta por entregas de gasolinas, gasoleos y biocarburantes
+            help: Pago a cuenta por entregas de gasolinas, gasóleos y biocarburantes
               atribuido al Estado
             label: Resultado - Pago a cuenta entregas de gasolinas, gasóleos y biocarburantes
               tras ultimación del régimen de depósito distinto del aduanero (Administración
               del Estado)
           dr303-12:
-            label: IVA devengado otras ops inversion sujeto pasivo excl intracom -
+            label: IVA devengado otras ops inversión sujeto pasivo excl intracom -
               Base
           dr303-120:
-            label: Información adicional - Ops no sujetas reglas localizacion (excl
+            label: Información adicional - Ops no sujetas reglas localización (excl
               casilla 123)
           dr303-122:
-            label: Información adicional - Ops sujetas inversion sujeto pasivo
+            label: Información adicional - Ops sujetas inversión sujeto pasivo
           dr303-123:
-            label: Información adicional - Ops no sujetas localizacion regimenes especiales
-              ventanilla unica
+            label: Información adicional - Ops no sujetas localización regímenes especiales
+              ventanilla única
           dr303-124:
-            label: Información adicional - Ops sujetas regimenes especiales ventanilla
-              unica
+            label: Información adicional - Ops sujetas regímenes especiales ventanilla
+              única
           dr303-13:
-            label: IVA devengado otras ops inversion sujeto pasivo excl intracom -
+            label: IVA devengado otras ops inversión sujeto pasivo excl intracom -
               Cuota
           dr303-14:
-            label: Modificacion bases y cuotas IVA devengado - Base imponible
+            label: Modificación bases y cuotas IVA devengado - Base imponible
           dr303-15:
-            label: Modificacion bases y cuotas IVA devengado - Cuota
+            label: Modificación bases y cuotas IVA devengado - Cuota
           dr303-150:
-            label: IVA devengado regimen general nuevo tipo tier 1 - Base imponible
+            label: IVA devengado régimen general nuevo tipo tier 1 - Base imponible
           dr303-151:
-            label: IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje
+            label: IVA devengado régimen general nuevo tipo tier 1 - Tipo porcentaje
           dr303-152:
-            label: IVA devengado regimen general nuevo tipo tier 1 - Cuota
+            label: IVA devengado régimen general nuevo tipo tier 1 - Cuota
           dr303-153:
-            label: IVA devengado regimen general nuevo tipo tier 2 - Base imponible
+            label: IVA devengado régimen general nuevo tipo tier 2 - Base imponible
           dr303-154:
-            label: IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje
+            label: IVA devengado régimen general nuevo tipo tier 2 - Tipo porcentaje
           dr303-155:
-            label: IVA devengado regimen general nuevo tipo tier 2 - Cuota
+            label: IVA devengado régimen general nuevo tipo tier 2 - Cuota
           dr303-156:
             label: Recargo equivalencia tipo 0.5pct - Base imponible
           dr303-157:
@@ -83,11 +83,11 @@ modelo:
           dr303-16:
             label: Recargo equivalencia tipo 1.0pct - Base imponible
           dr303-165:
-            label: IVA devengado regimen general tipo 2pct desde 2024 - Base imponible
+            label: IVA devengado régimen general tipo 2pct desde 2024 - Base imponible
           dr303-166:
-            label: IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje
+            label: IVA devengado régimen general tipo 2pct desde 2024 - Tipo porcentaje
           dr303-167:
-            label: IVA devengado regimen general tipo 2pct desde 2024 - Cuota
+            label: IVA devengado régimen general tipo 2pct desde 2024 - Cuota
           dr303-168:
             label: Recargo equivalencia nuevo tipo desde 2024 - Base imponible
           dr303-169:
@@ -111,9 +111,9 @@ modelo:
           dr303-24:
             label: Recargo equivalencia tipo 5.2pct - Cuota
           dr303-25:
-            label: Modificacion bases y cuotas recargo equivalencia - Base imponible
+            label: Modificación bases y cuotas recargo equivalencia - Base imponible
           dr303-26:
-            label: Modificacion bases y cuotas recargo equivalencia - Cuota
+            label: Modificación bases y cuotas recargo equivalencia - Cuota
           dr303-27:
             label: Total cuota devengada
           dr303-28:
@@ -121,44 +121,44 @@ modelo:
           dr303-29:
             label: IVA deducible ops interiores corrientes - Cuota
           dr303-30:
-            label: IVA deducible ops interiores bienes inversion - Base
+            label: IVA deducible ops interiores bienes inversión - Base
           dr303-31:
-            label: IVA deducible ops interiores bienes inversion - Cuota
+            label: IVA deducible ops interiores bienes inversión - Cuota
           dr303-32:
             label: IVA deducible importaciones bienes corrientes - Base
           dr303-33:
             label: IVA deducible importaciones bienes corrientes - Cuota
           dr303-34:
-            label: IVA deducible importaciones bienes inversion - Base
+            label: IVA deducible importaciones bienes inversión - Base
           dr303-35:
-            label: IVA deducible importaciones bienes inversion - Cuota
+            label: IVA deducible importaciones bienes inversión - Cuota
           dr303-36:
             label: IVA deducible adquisiciones intracomunitarias corrientes - Base
           dr303-37:
             label: IVA deducible adquisiciones intracomunitarias corrientes - Cuota
           dr303-38:
-            label: IVA deducible adquisiciones intracomunitarias bienes inversion
+            label: IVA deducible adquisiciones intracomunitarias bienes inversión
               - Base
           dr303-39:
-            label: IVA deducible adquisiciones intracomunitarias bienes inversion
+            label: IVA deducible adquisiciones intracomunitarias bienes inversión
               - Cuota
           dr303-40:
-            label: Rectificacion deducciones - Base
+            label: Rectificación deducciones - Base
           dr303-41:
-            label: Rectificacion deducciones - Cuota
+            label: Rectificación deducciones - Cuota
           dr303-42:
-            label: Compensaciones regimen especial agricultura ganaderia y pesca -
+            label: Compensaciones régimen especial agricultura ganadería y pesca -
               Cuota
           dr303-43:
-            label: Regularizacion bienes de inversion - Cuota
+            label: Regularización bienes de inversión - Cuota
           dr303-44:
-            label: Regularizacion prorrata por porcentaje definitivo - Cuota
+            label: Regularización prorrata por porcentaje definitivo - Cuota
           dr303-45:
             label: Total a deducir - Cuota
           dr303-47:
             label: RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades
           dr303-48:
-            label: RS - 4T - Suma cuotas derivadas regimen simplificado conjunto actividades
+            label: RS - 4T - Suma cuotas derivadas régimen simplificado conjunto actividades
           dr303-49:
             label: RS - 4T - Suma ingresos a cuenta realizados en el ejercicio
           dr303-50:
@@ -168,17 +168,17 @@ modelo:
           dr303-52:
             label: RS - Cuotas devengadas entregas activos fijos
           dr303-53:
-            label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
+            label: RS - Cuotas devengadas IVA devengado inversión sujeto pasivo
           dr303-54:
             label: RS - Total cuota resultante
           dr303-55:
-            label: RS - IVA deducible adquisicion o importacion activos fijos
+            label: RS - IVA deducible adquisición o importación activos fijos
           dr303-56:
-            label: RS - IVA deducible regularizacion bienes inversion
+            label: RS - IVA deducible regularización bienes inversión
           dr303-57:
-            label: RS - Total IVA deducible regimen simplificado ([55]+[56])
+            label: RS - Total IVA deducible régimen simplificado ([55]+[56])
           dr303-58:
-            label: RS - Resultado regimen simplificado ([54]-[57])
+            label: RS - Resultado régimen simplificado ([54]-[57])
           dr303-59:
             label: Información adicional - Entregas intracomunitarias bienes y servicios
           dr303-60:
@@ -190,26 +190,26 @@ modelo:
             label: Información adicional - Entregas criterio caja devengado art 75
               LIVA - Cuota
           dr303-64:
-            help: Dato declarado en el modelo 303, tomado del diseno de registro oficial.
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           dr303-65:
             label: Resultado - Porcentaje atribuible Administración del Estado
           dr303-66:
-            help: Dato declarado en el modelo 303, tomado del diseno de registro oficial.
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           dr303-68:
-            label: Resultado - Tributacion conjunta resultado regularizacion anual
+            label: Resultado - Tributación conjunta resultado regularización anual
           dr303-70:
             label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
               del ejercicio y periodo
           dr303-71:
-            help: Dato declarado en el modelo 303, tomado del diseno de registro oficial.
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           dr303-74:
             label: Información adicional - Adquisiciones criterio caja - Base imponible
           dr303-75:
             label: Información adicional - Adquisiciones criterio caja - Cuota
           dr303-76:
-            label: Resultado - Regularizacion cuotas art 80 cinco 5a LIVA
+            label: Resultado - Regularización cuotas art 80 cinco 5a LIVA
           dr303-77:
-            label: Resultado - IVA a la importacion liquidado por la Aduana pendiente
+            label: Resultado - IVA a la importación liquidado por la Aduana pendiente
               de ingreso
           filing-period:
             label: Periodo trimestral (1T / 2T / 3T / 4T)
@@ -217,7 +217,7 @@ modelo:
             label: Ejercicio al que se refiere la autoliquidación
           iva-autoconsumo-promotor-base:
             label: Base imponible del autoconsumo del promotor inmobiliario (coste
-              de construccion, Art. 9.1.c + Art. 79.4 LISIVA)
+              de construcción, Art. 9.1.c + Art. 79.4 LISIVA)
           iva-autoconsumo-promotor-cuota:
             label: Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre
               base imponible, Art. 9.1.c + Art. 90 LISIVA)
@@ -229,7 +229,7 @@ modelo:
           iva-compensacion-aplicada-periodo:
             label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
           iva-compensacion-disponible-fin-periodo:
-            label: Saldo de compensacion disponible para periodos posteriores
+            label: Saldo de compensación disponible para periodos posteriores
           iva-compensacion-generada-periodo:
             label: Saldo a compensar generado en este periodo
           iva-compensacion-pendiente-anteriores:
@@ -239,10 +239,10 @@ modelo:
               posteriores
           iva-cuota-autorepercutida-interior-deducible:
             label: Cuota IVA deducible autorepercutida en operaciones interiores con
-              inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial casilla
+              inversión del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial casilla
               37)
           iva-cuota-autorepercutida-interior-devengado:
-            label: Cuota IVA autorepercutida en operaciones interiores con inversion
+            label: Cuota IVA autorepercutida en operaciones interiores con inversión
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
           iva-cuota-autorepercutida-intracomunitaria:
             label: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
@@ -289,9 +289,9 @@ modelo:
           iva-regularizacion-inversiones:
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
-            help: Dato declarado en el modelo 303, tomado del diseno de registro oficial.
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           iva-resultado-regimen-general:
-            label: Resultado del regimen general (cuota devengada - cuota deducible)
+            label: Resultado del régimen general (cuota devengada - cuota deducible)
           m303-deducciones-sector-1-domestic-current-base:
             help: Casilla 700 del modelo 303, ejercicio 2022.
             label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes
@@ -483,7 +483,7 @@ modelo:
             label: 'Información de la tributación por razón de territorio: Álava'
           m303-exonerado-390-90:
             help: Casilla 90 del modelo 303, ejercicio 2022.
-            label: 'Información de la tributación por razón de territorio: Guipuzcoa'
+            label: 'Información de la tributación por razón de territorio: Guipúzcoa'
           m303-exonerado-390-91:
             help: Casilla 91 del modelo 303, ejercicio 2022.
             label: 'Información de la tributación por razón de territorio: Vizcaya'

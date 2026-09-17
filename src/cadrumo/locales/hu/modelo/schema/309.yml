@@ -41,7 +41,6 @@ modelo:
           embarcacion-tipo:
             label: Jellemzők és műszaki adatok (7) - Vízi járművek - Típus-Modell
           filing-year:
-            help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
             label: Az adóbevallás vonatkozási éve
           hecho-imponible:
             label: 'Adóköteles tényállás (6):'
@@ -65,16 +64,12 @@ modelo:
             label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
               közigazgatási és bírósági eljárásokban'
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
             label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén (új
               közlekedési eszközök stb.)
           iva-cuota-no-periodica-total:
-            help: A Modelo 309 . casilla adóügyi adatai.
             label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
               előzetesen felszámított)
           iva-cuota-soportada-recargo-equivalencia:
-            help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
-              minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
             label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
               felár keretében (utasoknak járó visszatérítés)
           justificante-anterior:
@@ -83,7 +78,6 @@ modelo:
             help: A 309-es modell 15-18. mezője, 2004-2015. adóév.
             label: Az azonosító címke betűi
           motivo-declaracion-no-periodica:
-            help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
             label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
               szabályozás / egyenértékűségi felár / végrehajtási eljárás)
           mtn-embarcacion-identificacion:

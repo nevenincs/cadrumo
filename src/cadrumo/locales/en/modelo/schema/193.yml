@@ -4,173 +4,112 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: 'Casilla information: Casilla 145-159: base withholdings payments
-              on account.'
             label: Base for withholdings and payments on account
           declaracion-anterior-numero:
-            help: Tax information for casilla 123-135 of Modelo 193.
             label: Identifying number of the previous return
           declaracion-complementaria:
-            help: 'Casilla information: Casilla 121: return supplementary.'
             label: SUPPLEMENTARY OR REPLACEMENT RETURN
           declaracion-numero-identificativo:
-            help: Tax information for casilla 108-120 of Modelo 193.
             label: IDENTIFYING NUMBER OF THE RETURN
           declaracion-sustitutiva:
-            help: Tax information for casilla 122 of Modelo 193.
             label: Supplementary return
           declarante-contacto-nombre:
-            help: Tax information for casilla 68-107 of Modelo 193.
             label: SURNAMES AND FIRST NAME
           declarante-contacto-telefono:
-            help: Tax information for casilla 59-67 of Modelo 193.
             label: TELEPHONE
           declarante-naturaleza:
-            help: Tax information for casilla 235 of Modelo 193.
             label: NATURE OF THE DECLARANT
           devengo-year:
-            help: Tax information for casilla 118-121 of Modelo 193.
             label: ACCRUAL YEAR
           gasto-contributor-nif:
-            help: 'See the information for this box: Taxpayer''s tax ID (NIF).'
             label: Taxpayer's tax ID (NIF)
           gasto-contributor-nombre:
-            help: 'Casilla information: Casilla 36-75: gasto contributor name.'
             label: Taxpayer's surnames and given name, or business name
           gasto-importe-anual:
-            help: 'Casilla information: Casilla 195-207: gasto amount annual.'
             label: Amount of expenses
           gastos-total-declarante:
-            help: Tax information for casilla 220-234 of Modelo 193.
             label: Deductible expenses (art. 26.1.a Law 35/2006)
           payee-base-retenciones-193:
-            help: 'Casilla information: Casilla 152-164: payee base withholdings 193.'
             label: Base for withholdings and payments on account
           payee-ceuta-melilla-clave:
-            help: 'Casilla information: Casilla 314: payee ceuta melilla clave.'
             label: CEUTA OR MELILLA / ISLA DE LA PALMA
           payee-clave-codigo:
-            help: Tax information for casilla 79 of Modelo 193.
             label: CODE KEY
           payee-clave-mercado:
             label: MARKET CODE
           payee-clave-percepcion:
-            help: Tax information about tax information in casilla 92 of Modelo 193.
             label: RECEIPT CODE
           payee-codigo-cuenta:
-            help: Tax information for casilla 97-116 of Modelo 193.
             label: SECURITIES ACCOUNT CODE / LOAN TRANSACTION NUMBER
           payee-codigo-emisor:
-            help: Tax information for casilla 80-91 of Modelo 193.
             label: ISSUER CODE
           payee-compensaciones:
-            help: 'Casilla information: Casilla 225-236: payee compensaciones.'
             label: Compensations
           payee-fecha-devengo:
             label: ACCRUAL DATE
           payee-fecha-inicio-prestamo:
-            help: 'Casilla information: Casilla 209-216: payee date inicio prestamo.'
             label: LOAN START DATE
           payee-fecha-vencimiento-prestamo:
-            help: 'Casilla information: Casilla 217-224: payee date vencimiento prestamo.'
             label: LOAN MATURITY DATE
           payee-garantias:
-            help: 'Casilla information: Casilla 237-248: payee garantias.'
             label: Guarantees
           payee-mediador-flag:
-            help: Tax information about tax information in casilla 76 of Modelo 193.
             label: Payment to an intermediary
           payee-name:
-            help: 'Casilla information: Casilla 36-75: payee name.'
             label: Recipient's name
           payee-naturaleza-declarante:
-            help: Tax information for casilla 208 of Modelo 193.
             label: NATURE OF THE DECLARANT
           payee-naturaleza-percepcion:
-            help: Tax information about tax information in casilla 93-94 of Modelo
-              193.
             label: NATURE
           payee-nif:
-            help: 'Casilla information: Casilla 18-26: payee nif.'
             label: Recipient's tax ID (NIF)
           payee-nif-pagador-anterior:
             label: NIF OF THE PREVIOUS PAYER
           payee-numero-orden-193:
             label: SEQUENCE NUMBER
           payee-pago:
-            help: Tax information about tax information in casilla 95 of Modelo 193.
             label: PAYMENT
           payee-penalizaciones:
-            help: Tax information about tax information in casilla 182-192 of Modelo
-              193.
             label: PENALTIES
           payee-pendiente-flag:
-            help: Tax information for casilla 117 of Modelo 193.
             label: OUTSTANDING
           payee-percepciones-193:
-            help: Tax information about tax information in casilla 123-135 of Modelo
-              193.
             label: Amount of payments/remuneration to the lender
           payee-porcentaje-retencion:
-            help: 'Casilla information: Casilla 165-168: payee percentage retencion.'
             label: Withholding %
           payee-province:
-            help: 'Casilla information: Casilla 77-78: payee province.'
             label: PROVINCE CODE
           payee-reducciones-193:
-            help: 'Casilla information: Casilla 139-151: payee reducciones 193.'
             label: Amount of reductions
           payee-retenciones-193:
-            help: 'Casilla information: Casilla 169-181: payee withholdings 193.'
             label: Withholdings and payments on account
           payee-retenciones-forales-araba:
-            help: Tax information about tax information in casilla 275-287 of Modelo
-              193.
             label: Withholdings and payments on account paid in. Provincial Council
               of Araba/Álava
           payee-retenciones-forales-bizkaia:
-            help: Tax information about tax information in casilla 301-313 of Modelo
-              193.
             label: Withholdings and payments on account paid in. Provincial Council
               of Bizkaia
           payee-retenciones-forales-estatal:
-            help: Tax information about tax information in casilla 249-261 of Modelo
-              193.
             label: Withholdings and payments on account paid in. State Treasury
           payee-retenciones-forales-gipuzkoa:
-            help: Tax information about tax information in casilla 288-300 of Modelo
-              193.
             label: Withholdings and payments on account paid in. Provincial Council
               of Gipuzkoa
           payee-retenciones-forales-navarra:
-            help: Tax information about tax information in casilla 262-274 of Modelo
-              193.
             label: Withholdings and payments on account paid in. Chartered Community
               of Navarre
           payee-tipo-codigo:
-            help: Tax information for casilla 96 of Modelo 193.
             label: CODE TYPE
           payee-tipo-percepcion:
-            help: Tax information about tax information in casilla 122 of Modelo 193.
             label: Type of payment
           perc-nif-representante:
-            help: Tax information about tax information in casilla 27-35 of Modelo
-              193.
             label: Tax ID of the legal representative
           representante-legal-nif:
-            help: Tax information about tax information in casilla 27-35 of Modelo
-              193.
             label: Tax ID of the legal representative
           retenciones-ingresadas-total:
-            help: 'Casilla information: Casilla 175-189: withholdings ingresadas total.'
             label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID IN
           retenciones-ingresos-a-cuenta:
-            help: 'Casilla information: Casilla 160-174: withholdings payments on
-              account.'
             label: Withholdings and payments on account
           total-perceptores-count:
-            help: Tax information about tax information in casilla 136-144 of Modelo
-              193.
             label: TOTAL NUMBER OF RECIPIENTS
       construct:
         modelo-193-annual-summary:

@@ -40,7 +40,7 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.entrypoints.adapter_composition import (
     build_amendment_action_ports,
     build_calculation_action_ports,
@@ -61,15 +61,15 @@ def _import_external_filing_source(source: Any, **kwargs: Any) -> Any:
     kwargs.setdefault("work_lifecycle_ports", build_work_lifecycle_ports(bucket_id=_PROFILE_ID))
     kwargs.setdefault("observation_repository", CalculationObservationRepository())
     if "operation" in kwargs:
-        return import_external_filing_source(source, **kwargs)
+        return import_external_filing_source(source, **kwargs).filing_record
     with bundled_indexed_authority().operation() as operation:
-        return import_external_filing_source(source, operation=operation, **kwargs)
+        return import_external_filing_source(source, operation=operation, **kwargs).filing_record
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:
     """Compose the observation capability required by evidence import."""
     kwargs.setdefault("observation_repository", CalculationObservationRepository())
-    return import_external_filing_evidence(**kwargs)
+    return import_external_filing_evidence(**kwargs).filing_record
 
 
 def _get_calculation_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
@@ -361,6 +361,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
                     _IMPORT_EXPENSE_CASILLA: "300",
                 },
             ),
+            declared_kind=FilingDeclarationKind.COMPLEMENTARIA,
             bucket_id=_PROFILE_ID,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,

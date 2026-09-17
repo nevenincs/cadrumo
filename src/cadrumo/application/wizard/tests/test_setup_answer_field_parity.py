@@ -1,6 +1,6 @@
 """The setup wizard and domain answer table must describe the same fields.
 
-The domain :data:`SETUP_ANSWER_FIELDS` table is what the deadline engine
+The domain :func:`setup_answer_fields` table is what the deadline engine
 projects a taxpayer profile through, and it is deliberately independent of
 this package: a schedule is computed from stored facts and must not need an
 interactive surface to exist. While the wizard still ships, both
@@ -21,7 +21,7 @@ import pytest
 from cadrumo.application.wizard.models import WizardFlow
 from cadrumo.application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
 
-from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
+from ....domain.deadlines.setup_answer_projection import project_setup_answers, setup_answer_fields
 from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
@@ -31,6 +31,7 @@ from ..persistence import project_answers
 from ..widgets import _POSTCODE_QUESTION_IDS
 
 pytestmark = [
+    pytest.mark.usefixtures("operation"),
     pytest.mark.unit,
     pytest.mark.hex_application,
 ]
@@ -66,9 +67,9 @@ def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardF
     mismatches: list[str] = []
     for question in questions:
         field = question.id.replace("-", "_")
-        spec = SETUP_ANSWER_FIELDS.get(field)
+        spec = setup_answer_fields().get(field)
         if spec is None:
-            mismatches.append(f"{field}: no row in SETUP_ANSWER_FIELDS")
+            mismatches.append(f"{field}: no row in setup_answer_fields()")
             continue
         actual = (spec.path, spec.answer_type, spec.default)
         expected = (question.profile_key, question.answer_type, question.default)
@@ -81,12 +82,12 @@ def test_the_table_adds_nothing_beyond_the_documented_rows(*, registry_setup_flo
     """A row with no question must be a deliberate, named addition."""
     questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     asked = {question.id.replace("-", "_") for question in questions}
-    assert set(SETUP_ANSWER_FIELDS) - asked == _TABLE_ONLY_FIELDS
+    assert set(setup_answer_fields()) - asked == _TABLE_ONLY_FIELDS
 
 
 def test_every_table_field_exists_on_the_answers_model() -> None:
     """A row naming a field the model does not declare would be silently dropped."""
-    assert set(SETUP_ANSWER_FIELDS) <= set(SetupAnswers.model_fields)
+    assert set(setup_answer_fields()) <= set(SetupAnswers.model_fields)
 
 
 def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: WizardFlow) -> None:

@@ -187,6 +187,7 @@ def _import_external_filing(
     expected_tax_id: str | None = None,
     clock: datetime = _T1,
     actor: str = "aeat-import",
+    declared_kind: FilingDeclarationKind | None = None,
 ) -> ModeloRecord:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     resolved_casilla_values = {_IMPORT_INCOME_CASILLA: Decimal("1500")} if casilla_values is None else casilla_values
@@ -195,6 +196,7 @@ def _import_external_filing(
         casilla_values=resolved_casilla_values,
         evidence_kind=evidence_kind,
         evidence_reference_id=evidence_reference_id,
+        declared_kind=declared_kind,
         actor=actor,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -203,7 +205,7 @@ def _import_external_filing(
         observation_repository=CalculationObservationRepository(),
         expected_tax_id=expected_tax_id,
         clock=clock,
-    )
+    ).filing_record
 
 
 def _drive_import_persists_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> _ImportOutcome:

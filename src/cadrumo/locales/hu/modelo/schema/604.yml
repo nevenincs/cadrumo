@@ -4,141 +4,89 @@ modelo:
       casilla:
         continuidad:
           base-imponible-operaciones-sujetas-no-exentas:
-            help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső no adómentes
-              realizadas -ban időszak. Adóalap [01].'
             label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adóalap
               [01]
           base-imponible-rectificaciones:
-            help: 'Tekintse át a casilla adatait: Rectificaciones. Adóalap [03].'
             label: Helyesbítések. Adóalap [03]
           cuota-operaciones-sujetas-no-exentas:
-            help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső no adómentes
-              realizadas -ban időszak. Adóösszeg [02].'
             label: Az időszakban végzett adóköteles, nem mentes ügyletek. Adó [02]
           cuota-rectificaciones:
-            help: 'Tekintse át a casilla adatait: Rectificaciones. Adóösszeg [04].'
             label: Helyesbítések. Adó [04]
           declaracion-complementaria:
-            help: 'Tekintse át a casilla adatait: Bevallás kiegészítő.'
             label: Kiegészítő bevallás
           domicilio-fiscal-espana-bloque:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Tömb
           domicilio-fiscal-espana-calificador-numero:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Calificador
-              - szám.'
             label: Adóügyi lakóhely spanyol területen. Házszám kiegészítő
           domicilio-fiscal-espana-codigo-postal:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Kód
-              postal.'
             label: Adóügyi lakóhely spanyol területen. Irányítószám
           domicilio-fiscal-espana-codigo-provincia:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Tartománykód
           domicilio-fiscal-espana-complemento:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Complemento
-              - cím.'
             label: Adóügyi lakóhely spanyol területen. Cím kiegészítés
           domicilio-fiscal-espana-escalera:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Escalera.'
             label: Adóügyi lakóhely spanyol területen. Lépcsőház
           domicilio-fiscal-espana-localidad:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Helység vagy település
           domicilio-fiscal-espana-municipio:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Önkormányzat
           domicilio-fiscal-espana-nombre-via:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Név
-              - vía.'
             label: Adóügyi lakóhely spanyol területen. Közterület neve
           domicilio-fiscal-espana-numero-casa:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Házszám
           domicilio-fiscal-espana-planta:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Planta.'
             label: Adóügyi lakóhely spanyol területen. Emelet
           domicilio-fiscal-espana-portal:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Portal.'
             label: Adóügyi lakóhely spanyol területen. Bejárat
           domicilio-fiscal-espana-provincia:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Tartomány
           domicilio-fiscal-espana-puerta:
-            help: 'Tekintse át a casilla adatait: Cím fiscal en terület español. Puerta.'
             label: Adóügyi lakóhely spanyol területen. Ajtó
           domicilio-fiscal-espana-tipo-numeracion:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Házszámozás típusa
           domicilio-fiscal-espana-tipo-via:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely spanyol területen. Közterület jellege
           domicilio-fiscal-extranjero-codigo-pais:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely külföldön. Országkód
           domicilio-fiscal-extranjero-codigo-postal:
-            help: 'Tekintse át a casilla adatait: Cím fiscal -ban külföldi. Kód postal
-              (ZIP).'
             label: Adóügyi lakóhely külföldön. Irányítószám (ZIP)
           domicilio-fiscal-extranjero-complemento:
-            help: 'Tekintse át a casilla adatait: Cím fiscal -ban külföldi. Complemento
-              - cím.'
             label: Adóügyi lakóhely külföldön. Cím kiegészítés
           domicilio-fiscal-extranjero-domicilio:
-            help: 'Tekintse át a casilla adatait: Cím fiscal -ban külföldi. Cím.'
             label: Adóügyi lakóhely külföldön. Cím
           domicilio-fiscal-extranjero-pais:
-            help: 'Tekintse át a casilla adatait: Cím fiscal -ban külföldi. Ország.'
             label: Adóügyi lakóhely külföldön. Ország
           domicilio-fiscal-extranjero-poblacion:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely külföldön. Település vagy város
           domicilio-fiscal-extranjero-provincia-region-estado:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóügyi lakóhely külföldön. Tartomány, régió vagy állam
           filing-period:
-            help: 'Tekintse át a casilla adatait: Időszak (mes natural).'
             label: Időszak (naptári hónap)
           filing-year:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóév.'
             label: Az önadózás vonatkozási éve
           idioma-declaracion:
-            help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
             label: A bevallás nyelve
           importe-a-deducir:
-            help: 'Tekintse át a casilla adatait: A levonni [06].'
             label: Levonandó [06]
           importe-operaciones-exentas:
-            help: 'Tekintse át a casilla adatait: Ügyletek adómentes realizadas -ban
-              időszak [05].'
             label: Az időszakban végzett mentes ügyletek [05]
           numero-justificante-anexo-informativo:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Tájékoztató melléklet. Igazolásszám
           numero-justificante-declaracion-anterior:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Az előző bevallás igazolásszáma
           resultado-autoliquidacion:
-            help: 'Tekintse át a casilla adatait: Eredmény - önadózási bevallás [07].'
             label: Az önadózás eredménye [07]
           signo-cuota-rectificaciones:
-            help: 'Tekintse át a casilla adatait: Rectificaciones. Signo - adóösszeg
-              [04].'
             label: Helyesbítések. Az adó előjele [04]
           sujeto-pasivo-codigo-bic:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóalany. BIC-kód
           sujeto-pasivo-codigo-lei:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóalany. LEI-kód (ISO 17442 szabvány)
           sujeto-pasivo-persona-contacto:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóalany. Kapcsolattartó személy
           sujeto-pasivo-telefono-contacto:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: Adóalany. Kapcsolattartó telefonszáma
           tipo-autoliquidacion:
-            help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ.'
             label: 'Az önadózás típusa (I: fizetendő, N: nemleges)'
       construct:
         modelo-604-autoliquidacion:
@@ -152,8 +100,6 @@ modelo:
         2021-2023:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
-              help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső no
-                adómentes realizadas -ban időszak. Signo - adóalap [03].'
               label: Az időszak adóköteles, nem mentes ügyletei. Az adóalap előjele
                 [03]
           field:
@@ -161,168 +107,95 @@ modelo:
         2024-y-siguientes:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'Tekintse át a casilla adatait: Rectificaciones. Signo - adóalap
-                [03].'
               label: Helyesbítések. Az adóalap előjele [03]
             x-dhkn2bhg70mm8qb6clp6arj3d5gg:
-              help: 'Tekintse át a casilla adatait: Diferencia ([02] - [04]) [08].'
               label: Különbözet ([02] - [04]) [08]
             x-dhkn2bhg74mm6tbfehgiqpbjehgm8ro:
-              help: 'A Modelo 604 09. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [09].'
               label: Az időszak adóköteles, nem mentes ügyleteinek az államigazgatásnak
                 betudható adója [09]
             x-dhkn2bhh60mm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6bb5edq62p3f:
-              help: 'A Modelo 604 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [10].'
               label: Az időszakban végzett helyesbítések államigazgatásnak betudható
                 adója [10]
             x-dhkn2bhh60mn6qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aspdclpn8ob4ds:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [10].'
               label: Az időszak államigazgatásnak betudható helyesbítési adójának
                 előjele [10]
             x-dhkn2bhh64mn0rricdimst31d9iiqobke9km4tb9c9m6abb5edq62p3f:
-              help: 'A Modelo 604 11. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [11].'
               label: Az államigazgatásnak betudható százalék [11]
             x-dhkn2bhh68mn4pbjelm78ob4dsmmasrkc5i6u:
-              help: 'A Modelo 604 12. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [09], [10], [12].'
               label: Az államigazgatásnak betudható eredmény ([09] - [10]) [12]
             x-ehin4shec5m62tj15phnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'A Modelo 604 14. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [14].'
               label: Területi adózás. Álava. Az időszakban végzett helyesbítések adója
                 [14]
             x-ehin4shec5m62tj15phnarrkc4mn6tbaclq62spddpniqpbocln78obj:
-              help: 'A Modelo 604 13. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [13].'
               label: Területi adózás. Álava. Az időszak adóköteles, nem mentes ügyleteinek
                 adója [13]
             x-ehin4shec5m62tj15phnarrkc4mn8rrkc5m2qobke9km4tb9c9m6a:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Álava.
-                Adóösszeg total hozzárendelhető [15].'
               label: Területi adózás. Álava. Teljes betudható adó [15]
             x-ehin4shec5m62tj15pkmqs3fe9q6abbfe1in4ob3d5nmspbj5lingpbeehgn6:
-              help: 'A Modelo 604 17. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [17].'
               label: Területi adózás. Álava. A mentes ügyletek összege [17]
             x-ehin4shec5m62tj15po6usj3cln78obackmm2t3id5h7aqb2dhig:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Álava.
-                % hozzárendelhető [16].'
               label: Területi adózás. Álava. Betudható százalék [16]
             x-ehin4shec5m62tj15ppmipredsmm6tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [14].'
               label: Területi adózás. Álava. Az időszaki helyesbítések adójának előjele
                 [14]
             x-ehin4sheclpn8ob4dsn66tbfehgiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: 'A Modelo 604 34. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [34].'
               label: Területi adózás. Állam. Az időszakban végzett helyesbítések adója
                 [34]
             x-ehin4sheclpn8ob4dsn66tbfehgiqsrld9in8obj5ln6ubb5f1imst31ec:
-              help: 'A Modelo 604 33. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [33].'
               label: Területi adózás. Állam. Az időszak adóköteles, nem mentes ügyleteinek
                 adója [33]
             x-ehin4sheclpn8ob4dsn66tbfehgiqt3fehgmobb1ehp6iojld5h6op8:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Állapot.
-                Adóösszeg total hozzárendelhető [35].'
               label: Területi adózás. Állam. Teljes betudható adó [35]
             x-ehin4sheclpn8ob4dsn6irbgdtp78p9ddto6asj1cdkmurj5ecmmau35dpq62so:
-              help: 'A Modelo 604 37. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [37].'
               label: Területi adózás. Állam. A mentes ügyletek összege [37]
             x-ehin4sheclpn8ob4dsn70rricdimst31d9iiqobke9km4tb9c9m6a:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Állapot.
-                % hozzárendelhető [36].'
               label: Területi adózás. Állam. Betudható százalék [36]
             x-ehin4sheclpn8ob4dsn76qb7dpniqorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [34].'
               label: Területi adózás. Állam. Az időszaki helyesbítések adójának előjele
                 [34]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lp6aorkd5j6ior1cdkmurj5ec:
-              help: 'A Modelo 604 19. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [19].'
               label: Területi adózás. Gipuzkoa. Az időszakban végzett helyesbítések
                 adója [19]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lpnaqj5ehgn6bbedsmmau35dpq62so:
-              help: 'A Modelo 604 18. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [18].'
               label: Területi adózás. Gipuzkoa. Az időszak adóköteles, nem mentes
                 ügyleteinek adója [18]
             x-ehin4shectqmis3lf9hmuo9ecdqmut315lq6ut31dgmm2t3id5h7aqb2dhig:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Guipúzcoa.
-                Adóösszeg total hozzárendelhető [20].'
               label: Területi adózás. Gipuzkoa. Teljes betudható adó [20]
             x-ehin4shectqmis3lf9hmuo9ed5mn0rriehiiqrrgclp62or9dtn6aspdcls6arjkc5pg:
-              help: 'A Modelo 604 22. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [22].'
               label: Területi adózás. Gipuzkoa. A mentes ügyletek összege [22]
             x-ehin4shectqmis3lf9hmuo9ee1nn4or5dpq62qj55lgn8sj9c9qmiojcck:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Guipúzcoa.
-                % hozzárendelhető [21].'
               label: Területi adózás. Gipuzkoa. Betudható százalék [21]
             x-ehin4shectqmis3lf9hmuo9eedkmerjf5lhnarrkc4mn4pb3ehkmcqb3c5hmirreclpg:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [19].'
               label: Területi adózás. Gipuzkoa. Az időszaki helyesbítések adójának
                 előjele [19]
             x-ehin4shedpgncobie9gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'A Modelo 604 29. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [29].'
               label: Területi adózás. Navarra. Az időszakban végzett helyesbítések
                 adója [29]
             x-ehin4shedpgncobie9gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
-              help: 'A Modelo 604 28. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [28].'
               label: Területi adózás. Navarra. Az időszak adóköteles, nem mentes ügyleteinek
                 adója [28]
             x-ehin4shedpgncobie9gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
-              help: 'A Modelo 604 30. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [30].'
               label: Területi adózás. Navarra. Teljes betudható adó [30]
             x-ehin4shedpgncobie9gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
-              help: 'A Modelo 604 32. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [32].'
               label: Területi adózás. Navarra. A mentes ügyletek összege [32]
             x-ehin4shedpgncobie9giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
-              help: 'A Modelo 604 31. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [31].'
               label: Területi adózás. Navarra. Betudható százalék [31]
             x-ehin4shedpgncobie9gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [29].'
               label: Területi adózás. Navarra. Az időszaki helyesbítések adójának
                 előjele [29]
             x-ehin4sheepknkor1f5gisorldtq62bbiclhn8qb6d5hm2or9dtn6aso:
-              help: 'A Modelo 604 24. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [24].'
               label: Területi adózás. Bizkaia. Az időszakban végzett helyesbítések
                 adója [24]
             x-ehin4sheepknkor1f5gisorldtq62bbjell6at31ecmmsrpdcls6arjkc5pg:
-              help: 'A Modelo 604 23. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [23].'
               label: Területi adózás. Bizkaia. Az időszak adóköteles, nem mentes ügyleteinek
                 adója [23]
             x-ehin4sheepknkor1f5gisorldtq62bbkdtq62r1dc5q74qb2elkm4r35:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Vizcaya.
-                Adóösszeg total hozzárendelhető [25].'
               label: Területi adózás. Bizkaia. Teljes betudható adó [25]
             x-ehin4sheepknkor1f5gisqbde1nn4t355lnn0pbic5hmirreclpiqpbocln78obj:
-              help: 'A Modelo 604 27. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [27].'
               label: Területi adózás. Bizkaia. A mentes ügyletek összege [27]
             x-ehin4sheepknkor1f5giss3fe9hmarjkc5l6abb1ehp6iojld5h6op8:
-              help: 'Tekintse át a casilla adatait: Adóztatás szerinti terület. Vizcaya.
-                % hozzárendelhető [26].'
               label: Területi adózás. Bizkaia. Betudható százalék [26]
             x-ehin4sheepknkor1f5gissr9ctn6ubb3elnn8o9de9im6t39cpkm6ob3d5nmspbj:
-              help: 'A Modelo 604 . casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [24].'
               label: Területi adózás. Bizkaia. Az időszaki helyesbítések adójának
                 előjele [24]
           field:

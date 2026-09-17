@@ -8,15 +8,15 @@ modelo:
           m165-declaracion-complementaria-sustitutiva:
             label: Declaración complementaria o sustitutiva
           m165-declarante-razon-social:
-            label: Denominacion o razon social del declarante
+            label: Denominación o razón social del declarante
           m165-fecha-adquisicion:
-            label: Fecha de adquisicion de las acciones o participaciones
+            label: Fecha de adquisición de las acciones o participaciones
           m165-fecha-constitucion:
-            label: Fecha de constitucion
+            label: Fecha de constitución
           m165-importe-fondos-propios:
             label: Importe de los fondos propios
           m165-importe-suscripcion:
-            label: Importe de la suscripcion o adquisicion
+            label: Importe de la suscripción o adquisición
           m165-importe-total-suscripciones:
             label: Importe total de las suscripciones o adquisiciones
           m165-numero-identificativo-anterior:
@@ -28,7 +28,7 @@ modelo:
           m165-persona-relacion:
             label: Persona con quien relacionarse
           m165-porcentaje-participacion:
-            label: Porcentaje de participacion
+            label: Porcentaje de participación
           m165-representante-legal-nif:
             label: NIF del representante legal
           m165-socio-nif:
@@ -61,17 +61,17 @@ modelo:
             declaracion-complementaria-sustitutiva:
               label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              label: Denominacion o razon social del declarante
+              label: Denominación o razón social del declarante
             empresa-emergente:
               label: Empresa emergente
             fecha-adquisicion:
-              label: Fecha de adquisicion de las acciones o participaciones
+              label: Fecha de adquisición de las acciones o participaciones
             fecha-constitucion:
-              label: Fecha de constitucion
+              label: Fecha de constitución
             importe-fondos-propios:
               label: Importe de los fondos propios
             importe-suscripcion:
-              label: Importe de la suscripcion o adquisicion
+              label: Importe de la suscripción o adquisición
             importe-total-suscripciones:
               label: Importe total de las suscripciones o adquisiciones
             numero-identificativo-anterior:
@@ -83,7 +83,7 @@ modelo:
             persona-relacion:
               label: Persona con quien relacionarse
             porcentaje-participacion:
-              label: Porcentaje de participacion
+              label: Porcentaje de participación
             representante-legal-nif:
               label: NIF del representante legal
             socio-nif:

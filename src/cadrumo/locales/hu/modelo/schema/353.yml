@@ -3,65 +3,36 @@ modelo:
     '353':
       casilla:
         continuidad:
-          08:
-            help: 'A Modelo 353 08. casilla adóügyi adatai: adóügyi információ.'
           filing-period:
-            help: 'Tekintse át a casilla adatait: Időszak mensual (01..12).'
             label: Havi időszak (01..12)
           filing-year:
-            help: 'A Modelo 353 . casilla adóügyi adatai: adóév.'
             label: Az önadózás adóéve
           iva-agregado-reconciliacion-deducible-322:
-            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
             label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
               levonható összeg
           iva-agregado-reconciliacion-devengada-322:
-            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
             label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
               keletkezett ÁFA
           iva-agregado-reconciliacion-resultado-322:
-            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
             label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
               eredmény
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'Tekintse át a casilla adatait: Adóösszeg IVA autorepercutida en
-              Közösségen belüli beszerzések - agregado - csoport.'
             label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - csoportösszesítés
           iva-cuota-deducible-total:
-            help: 'Tekintse át a casilla adatait: Total adóösszeg IVA levonható (agregado
-              - csoport).'
             label: Levonható ÁFA összesen (csoportösszesítés)
           iva-cuota-devengada-total:
-            help: 'Tekintse át a casilla adatait: Total adóösszeg Felszámított áfa
-              (agregado - csoport).'
             label: Keletkezett ÁFA összesen (csoportösszesítés)
           iva-cuota-repercutida-general:
-            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
-              general (21%) - agregado - csoport.'
             label: Általános kulcs (21%) szerint felszámított ÁFA - csoportösszesítés
           iva-cuota-repercutida-reducido:
-            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
-              csökkentett (10%) - agregado - csoport.'
             label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
           iva-cuota-repercutida-super-reducido:
-            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
-              szupercsökkentett (4%) - agregado - csoport.'
             label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
           iva-cuota-soportada-interiores:
-            help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
-              interiores corrientes - agregado - csoport.'
             label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
           iva-resultado-regimen-general:
-            help: 'Tekintse át a casilla adatait: Eredmény - csoport (adóösszeg felszámított
-              agregada - adóösszeg levonható agregada).'
             label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
               levonható ÁFA)
-          m353-a-deducir-autoliquidaciones-anteriores:
-            help: 'A Modelo 353 04. casilla adóügyi adatai: adóügyi információ.'
-          m353-cuotas-a-compensar:
-            help: 'A Modelo 353 02. casilla adóügyi adatai: adóügyi információ.'
-          m353-resultado-total-entidades:
-            help: A Modelo 353 01. casilla adóügyi adatai.
       construct:
         modelo-353-iva-grupo-agregado:
           field:
@@ -78,21 +49,16 @@ modelo:
             '02':
               label: Korábbi évekről áthozott, beszámítandó összegek
             '03':
-              help: 'Tekintse át a casilla adatait: Eredmény ([01] - [08]).'
               label: Eredmény ([01] - [08])
             '04':
               label: 'Levonandó: az ugyanazon jogcímen, évre és időszakra korábban
                 benyújtott önadózások eredménye'
             '05':
-              help: 'Tekintse át a casilla adatait: Eredmény - önadózási bevallás
-                ([03] - [04]).'
               label: Az önadózás eredménye ([03] - [04])
             08:
               label: Korábbi időszakokból származó, ebben az időszakban felhasznált
                 beszámítandó összegek
             09:
-              help: 'A Modelo 353 09. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [02], [08].'
               label: Korábbi időszakokból származó, későbbi időszakokra fennmaradó
                 beszámítandó összegek ([02] - [08])
           field:
@@ -100,38 +66,23 @@ modelo:
         2026-desde-02:
           casilla:
             '01':
-              help: 'A Modelo 353 01. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [01].'
               label: Teljes eredmény (a csoporttagok eredményeinek összege) [01]
             '02':
-              help: 'A Modelo 353 02. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [02].'
               label: Korábbi évekből fennmaradó, beszámítható összegek [02]
             '03':
-              help: 'Tekintse át a casilla adatait: Eredmény ([01] - [08]) [03].'
               label: Eredmény ([01] - [08]) [03]
             '04':
-              help: 'A Modelo 353 04. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [04].'
               label: 'Levonandó: azonos jogcímű, évi és időszaki korábbi önadózások
                 eredménye [04]'
             '05':
-              help: 'Tekintse át a casilla adatait: Eredmény - önadózási bevallás
-                ([03] - [04]) [05].'
               label: Az önadózás eredménye ([03] - [04]) [05]
             08:
-              help: 'A Modelo 353 08. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [08].'
               label: Korábbi időszakok beszámítható összegei, ebben az időszakban
                 felhasználva [08]
             09:
-              help: 'A Modelo 353 09. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [02], [08], [09].'
               label: Korábbi időszakok beszámítható összegei, későbbi időszakokra
                 átvive ([02]-[08]) [09]
             '10':
-              help: 'A Modelo 353 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-                [10].'
               label: Benzin, gázolaj és bioüzemanyag értékesítése utáni előleg, az
                 állami adóhatóságnak betudhatóan [10]
           field:

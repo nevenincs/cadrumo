@@ -20,7 +20,7 @@ modelo:
           perceptor-count:
             label: Número de perceptores
           regularizacion:
-            label: Regularizacion
+            label: Regularización
           resultado-anteriores-autoliquidaciones:
             label: Resultado de anteriores autoliquidaciones
           retenciones-rentas-dividendos:
@@ -28,7 +28,7 @@ modelo:
           retenciones-rentas-resto:
             label: Retenciones resto de rentas
           suma-retenciones-regularizacion:
-            label: Suma de retenciones y regularizacion
+            label: Suma de retenciones y regularización
       field:
         official_name: Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades
           e IRNR establecimientos permanentes. Determinados rendimientos del capital

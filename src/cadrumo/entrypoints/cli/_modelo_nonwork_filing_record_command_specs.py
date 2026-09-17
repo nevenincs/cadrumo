@@ -122,6 +122,19 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
+            OptionSpec(
+                name="declared_kind",
+                declarations=("--declared-kind",),
+                value=ValueContract(
+                    DeferredTarget("...domain.modelos.filing_record", "FilingDeclarationKind", __package__)
+                ),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.filing_record.import_declared_kind_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(DeferredTarget("._modelo_records_cli", "filing_record_import", __package__)),
@@ -143,6 +156,7 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _required_text_option("modelo", ("--modelo",), "cli.app.modelo.work.modelo_help"),
             _required_whole_number_option("year", ("--year",), "cli.app.modelo.work.year_help"),
             _required_text_option("period", ("--period",), "cli.app.modelo.work.period_help"),
+            _required_text_option("reason", ("--reason",), "cli.app.modelo.filing_record.observe_local_reason_help"),
             _optional_text_option("actor", ("--by",), "cli.app.modelo.work.actor_help"),
             _repeatable_text_option("set_overrides", ("--set",), "cli.app.modelo.filing_record.observe_local_set_help"),
             OptionSpec(
@@ -159,11 +173,7 @@ MODELO_NONWORK_FILING_RECORD_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            _boolean_flag_option(
-                "replace_official_evidence",
-                ("--replace-official-evidence",),
-                "cli.app.modelo.filing_record.observe_local_replace_official_evidence_help",
-            ),
+            _boolean_flag_option("clear", ("--clear",), "cli.app.modelo.filing_record.observe_local_clear_help"),
         ),
         policy=_MODEL_WRITE,
         handler=LazyBinding.available(

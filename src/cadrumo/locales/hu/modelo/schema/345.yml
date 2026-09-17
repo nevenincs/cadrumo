@@ -92,78 +92,8 @@ modelo:
             label: 345-ös modelo, 2024. adóév
         '2025':
           casilla:
-            anio-nacimiento:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            beneficiario-nif:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            clave:
-              help: 'Tekintse át a casilla adatait: Clave.'
-            codigo-provincia:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            datos-adicionales-clave-i:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            datos-adicionales-clave-m:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            datos-adicionales-claves-abc:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            datos-identificativos-empleador:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            declaracion-complementaria-sustitutiva:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            declarado-nif:
-              help: 'Tekintse át a casilla adatait: NIF - declarado.'
-            declarado-nombre:
-              help: 'Tekintse át a casilla adatait: Vezetéknév és név - declarado.'
-            declarante-nif:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            declarante-razon-social:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            devoluciones-excesos:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            ejercicio-declaracion:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            empleador-nif:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            empleador-nombre:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            entidad-aseguradora-nif:
-              help: 'Tekintse át a casilla adatait: NIF - szervezet aseguradora.'
-            fondo-pensiones-nif:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            fondo-pensiones-numero-registro:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            importe:
-              help: 'Tekintse át a casilla adatait: Összeg.'
-            importe-total-aportaciones:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            numero-identificativo-anterior:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            numero-identificativo-declaracion:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            pepp-cuenta-subcuenta:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            pepp-denominacion:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            pepp-numero-inscripcion:
-              help: A Modelo 345 . casilla adóügyi adatai.
-            persona-relacion:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            pias-fecha-primera-prima:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            pias-importe-acumulado:
-              help: 'Tekintse át a casilla adatait: Összeg acumulado PIAS.'
-            plan-pensiones-denominacion:
-              help: A Modelo 345 . casilla adóügyi adatai.
             rendimientos-trabajo-superiores-60000:
-              help: 'Tekintse át a casilla adatait: Jövedelmek integros - trabajo
-                superiores a 60000 euros.'
               label: Jövedelmek integros - trabajo superiores a 60000 euros
-            representante-legal-nif:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            subclave:
-              help: 'A Modelo 345 . casilla adóügyi adatai: adóügyi információ.'
-            total-declarados:
-              help: A Modelo 345 . casilla adóügyi adatai.
           field:
             label: 345-ös modelo, 2025. adóév (HFP/823/2022 rendelet és HAC/1430/2025
               rendelet)

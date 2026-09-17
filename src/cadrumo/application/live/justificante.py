@@ -97,7 +97,6 @@ from .snapshot_base import (
 )
 
 JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = "cadrumo.application.live.justificante_capture_snapshot"
-_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION = 2
 
 # Official source kind stamped on the captured receipt. Its explicit
 # ``is_official_aeat`` capability lets a dependent period whose upstream evidence
@@ -706,28 +705,27 @@ def register_capture_as_filing_evidence(
     snapshot: JustificanteCaptureSnapshot,
     ports: JustificanteRegistrationPorts,
 ) -> ModeloRecord:
-    """Stamp a persisted live capture as official evidence on its filing record.
+    """Confirm the period's filing with a persisted live capture of its receipt.
 
-    Loads the work unit's current filing record first; with one present, parses
+    Loads the period's current filing record first; with one present, parses
     the captured receipt into a domain ``Justificante`` (keyed by the capture's
-    CSV, which is the gate's evidence reference), registers it, and updates the
-    filing record to carry ``AEAT_LIVE_CAPTURE`` external evidence referencing
-    it. After this, the cross-period clean-state gate's
-    ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for the period, because
-    ``aeat_live_capture`` is a justificante-verified evidence kind and the
-    referenced justificante record loads. Emits a
-    ``MODELO_LIVE_EVIDENCE_STAMPED`` bucket event recording the action.
+    CSV, which is the gate's evidence reference), registers it, and reconciles
+    the filing chain with it through
+    :func:`~cadrumo.application.modelo.filing_chain_reconciliation.reconcile_aeat_register_entry`.
+    A receipt carries only totals, so a pending filing is confirmed only when
+    its computed result matches them. Once confirmed, the cross-period
+    clean-state gate's ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for
+    the period.
 
-    Returns the stamped :class:`~ModeloRecord`.
+    Returns the confirmed :class:`~ModeloRecord`.
 
     Raises:
         LiveApplicationInputError: when no current filing record exists for the
-            captured ``(modelo, filing_year, period)`` — the operator must file
-            the period before attaching live-capture evidence to it.
+            captured ``(modelo, filing_year, period)``, when the receipt does not
+            match it, or when the reconciliation does not confirm it.
     """
-    from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
-    from ...domain.modelos.filing_record import AeatConfirmationState, ExternalEvidence, ExternalEvidenceKind
-    from ...domain.modelos.filing_repository import upsert_filing_record
+    from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
+    from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationOutcome
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
@@ -775,10 +773,9 @@ def register_capture_as_filing_evidence(
                 },
             ),
         )
-    if current.aeat_accepted and current.external_evidence is not None:
-        if _existing_capture_evidence_matches_current_csv(current, snapshot.csv):
-            ports.metadata.save(justificante)
-            return current
+    if current.external_evidence is not None and not _existing_capture_evidence_matches_current_csv(
+        current, snapshot.csv
+    ):
         raise LiveApplicationInputError(
             translated_message="application.live.justificante.errors.evidence_overwrite_refused",
             context={
@@ -794,72 +791,45 @@ def register_capture_as_filing_evidence(
                 },
             ),
         )
-    # ORDER IS LOAD-BEARING, and these are separate writes rather than one.
-    # The justificante lands BEFORE the filing record cites it, so a failure
-    # between them leaves an orphan receipt -- harmless, and re-running restores
-    # the pair. The reverse order leaves a filing record carrying
-    # AEAT_LIVE_CAPTURE evidence whose justificante does not load, and that
-    # record CLEARS the cross-period clean-state gate's missing-justificante
-    # blocker on the strength of evidence that is not there. Do not reorder
-    # these to read more naturally, and prefer making them one unit of work over
-    # swapping them: the sibling linking and reconciliation writers co-commit
-    # their two catalogues through the transaction repository's composed write
-    # for the same class of reason.
+    # The receipt lands before any chain entry cites it, so a failure between
+    # the two leaves an orphan receipt rather than a filing record whose
+    # AEAT_LIVE_CAPTURE evidence does not load.
     ports.metadata.save(justificante)
-
-    stamped_at = now()
-    stamped = current.model_copy(
-        update={
-            "external_evidence": ExternalEvidence(
-                kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                reference_id=snapshot.csv,
-                imported_at=stamped_at,
+    result = ports.filing_reconciliation.reconcile(
+        AeatRegisterEntry(
+            bucket_id=snapshot.bucket_id,
+            modelo=snapshot.modelo,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            register=AeatRegisterRef(
+                expediente_id=snapshot.expediente_id,
+                csv=snapshot.csv,
+                justificante_number=justificante.presentation_id,
             ),
-            "confirmation": AeatConfirmationState.CONFIRMADA,
-        },
-    )
-    ports.filing.save(upsert_filing_record(catalogue, stamped))
-
-    event_payload = {
-        "work_unit_id": current.work_unit_id,
-        "modelo": snapshot.modelo,
-        "filing_year": str(snapshot.filing_year),
-        "period": snapshot.period.registry_token,
-        "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
-        "evidence_reference_id": snapshot.csv,
-        "snapshot_id": snapshot.snapshot_id,
-        "source_kind": snapshot.source_kind,
-        "pdf_sha256": snapshot.pdf_sha256,
-        "captured_at": snapshot.captured_at.isoformat(),
-        "expediente_id": snapshot.expediente_id,
-    }
-    # Through the domain emitter, not a local load-append-save: the history is a
-    # singleton row, so appending here directly discards an event a concurrent
-    # caller wrote, and content-addressed survivors leave no gap to notice it.
-    ports.events.emit(
-        (
-            BucketEvent(
-                event_id=derive_bucket_event_id(
-                    bucket_id=snapshot.bucket_id,
-                    event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
-                    occurred_at=stamped_at,
-                    actor="aeat-live-capture",
-                    object_type=BucketEventObjectType.FILING_RECORD,
-                    object_id=stamped.filing_record_id,
-                    payload=event_payload,
-                ),
-                bucket_id=snapshot.bucket_id,
-                event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
-                occurred_at=stamped_at,
-                actor="aeat-live-capture",
-                object_type=BucketEventObjectType.FILING_RECORD,
-                object_id=stamped.filing_record_id,
-                payload_version=_LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION,
-                payload=event_payload,
-            ),
+            evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+            tax_id=expected_tax_id,
+            justificante=justificante,
         ),
+        actor="aeat-live-capture",
+        clock=now(),
     )
-    return stamped
+    settled = (
+        ports.filing.load().get(result.filing_record_id)
+        if result.outcome in {FilingReconciliationOutcome.CONFIRMED, FilingReconciliationOutcome.ALREADY_RECORDED}
+        and result.filing_record_id is not None
+        else None
+    )
+    if settled is None or not settled.aeat_accepted:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.filing_record_unconfirmed",
+            context={
+                "filing_record_id": current.filing_record_id,
+                "snapshot_id": snapshot.snapshot_id,
+                "outcome": result.outcome.value,
+                "notices": ",".join(notice.code.value for notice in result.notices),
+            },
+        )
+    return settled
 
 
 def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:

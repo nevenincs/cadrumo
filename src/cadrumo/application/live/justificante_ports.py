@@ -13,9 +13,9 @@ from datetime import datetime
 from typing import Protocol
 
 from ...core.period import Period
-from ...domain.buckets.event import BucketEvent
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
+from .filed_observation_ports import FiledFilingReconciliationPort
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +78,7 @@ class JustificanteSnapshotPersistencePort(Protocol):
 class JustificanteMetadataPort(Protocol):
     """Durable metadata registration for a parsed receipt."""
 
-    def save(self, justificante: Justificante) -> None:
+    def save(self, payload: Justificante) -> None:
         """Persist parsed receipt metadata."""
         ...
 
@@ -95,14 +95,6 @@ class JustificanteFilingPort(Protocol):
         ...
 
 
-class JustificanteEventPort(Protocol):
-    """Append the capture's lifecycle event through the owning history store."""
-
-    def emit(self, events: tuple[BucketEvent, ...]) -> None:
-        """Append lifecycle events for the capture."""
-        ...
-
-
 @dataclass(frozen=True, slots=True)
 class JustificanteRegistrationPorts:
     """Application-owned local persistence dependencies for receipt enrolment."""
@@ -110,7 +102,7 @@ class JustificanteRegistrationPorts:
     parse_pdf: Callable[[bytes], Justificante]
     metadata: JustificanteMetadataPort
     filing: JustificanteFilingPort
-    events: JustificanteEventPort
+    filing_reconciliation: FiledFilingReconciliationPort
 
 
 class JustificanteLiveReadPort(Protocol):

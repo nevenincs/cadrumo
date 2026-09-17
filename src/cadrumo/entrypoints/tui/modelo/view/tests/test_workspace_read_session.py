@@ -60,14 +60,16 @@ def test_the_locale_axes_actually_move_across_a_language_switch(
     assert english.locale != spanish.projection.locale
     assert english.baseline.token != spanish.projection.baseline.token
 
-    # The catalogue digest is deliberately NOT asserted to differ. This
-    # revision key has no English entry, so the English read falls back to
-    # Spanish and reports the SPANISH shard's digest -- identical to the
-    # Spanish read's. The requested/resolved split on the summary is what
-    # keeps the two reads distinguishable, and it is the axis the session
-    # compares.
-    assert english.locale.resolved_language is OutputLanguage.ES
-    assert english.baseline.locale_catalogue_digest == spanish.projection.baseline.locale_catalogue_digest
+    # The digest follows the shard that actually answered. A revision key with
+    # no English entry falls back to Spanish and reports the Spanish shard's
+    # digest, so the requested/resolved split is what keeps the two reads
+    # distinguishable; an English entry reports its own shard.
+    same_digest = english.baseline.locale_catalogue_digest == spanish.projection.baseline.locale_catalogue_digest
+    if english.locale.resolved_language is OutputLanguage.ES:
+        assert same_digest
+    else:
+        assert english.locale.resolved_language is OutputLanguage.EN
+        assert not same_digest
 
 
 def test_the_semantic_identity_ignores_every_locale_bearing_field(

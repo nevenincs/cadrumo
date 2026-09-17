@@ -231,7 +231,7 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     Raises:
         RegistryValidationError: If a screened fact declares no reader. The
             import-time gate
-        (:func:`assert_quantity_readers_cover_independent_facts`) pins the
+            (:func:`assert_quantity_readers_cover_independent_facts`) pins the
             two together, so reaching here means that gate was bypassed.
     """
     matchers_by_fact = _matchers_by_fact(

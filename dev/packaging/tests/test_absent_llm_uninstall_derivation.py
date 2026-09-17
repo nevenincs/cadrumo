@@ -53,13 +53,13 @@ def test_the_derived_set_is_a_subset_of_what_the_lane_drives() -> None:
 
 
 def _synthetic_package(root: Path, *modules: tuple[str, str]) -> Path:
-    """Materialise a minimal ``src/cadrumo/llm`` tree for the derivation to walk.
+    """Materialise a minimal ``src/cadrumo/adapters/outbound/llm`` tree for the derivation to walk.
 
     The initialiser is written inert, matching the real package: reachability is
     a property of the module a surface is defined in, so these fixtures place a
     surface in a public or a private module to say which they mean.
     """
-    package = root / "src" / "cadrumo" / "llm"
+    package = root / "src" / "cadrumo" / "adapters" / "outbound" / "llm"
     package.mkdir(parents=True)
     (package / "__init__.py").write_text("__all__: tuple[str, ...] = ()\n", encoding="utf-8")
     for name, body in modules:

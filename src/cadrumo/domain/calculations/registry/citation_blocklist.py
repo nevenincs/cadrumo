@@ -13,7 +13,7 @@ from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
-    from .schema import SupportedFilingYearsCatalogue
+    from .schema_references import TemporalSupportEnvelope
 
 
 @runtime_checkable
@@ -27,7 +27,7 @@ class _FilingYearFloorSource(Protocol):
     the method.
     """
 
-    def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
         """Return the generation's single filing-year support envelope."""
         ...
 

@@ -11,6 +11,7 @@ and this module supplies all three:
   complete by construction rather than by anyone remembering to log.
 * **Mark** which persisted artefacts were derived from an off-host read, by the
   transport segment of their provenance stamp.
+
 The consent ledger is injected rather than imported. It lives on the adapter
 side; this layer receives its projection so it can enumerate the honest history
 without reversing the dependency direction.

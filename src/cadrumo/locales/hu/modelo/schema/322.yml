@@ -197,6 +197,10 @@ modelo:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
           iva-resultado-regimen-general:
             label: Általános rendszer eredménye
+          m322-actividad-principal-codigo:
+            label: Tevékenységi kód - Fő
+          m322-actividad-principal-epigrafe-iae:
+            label: IAE besorolás - Fő
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
             label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
               Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
@@ -888,41 +892,39 @@ modelo:
             '99':
               help: A 322-es modelo 99. rovata, 2008. adóév.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 5.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
-              label: Tevékenységi kód - Fő
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: Kizarolag a bevallas utolso idoszakaban kell kitolteni.
-              label: IAE besorolás - Fő
+              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
@@ -1477,8 +1479,6 @@ modelo:
               help: 'A Modelo 322 11. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [11].'
             '112':
-              help: 'A Modelo 322 112. casilla adóügyi adatai: adóügyi információ
-                Hivatkozások: [112].'
               label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
                 utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
                 követően [112]
@@ -2054,12 +2054,9 @@ modelo:
               label: IAE besorolás - Egyéb 5.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
               help: A Modelo 322 . casilla adóügyi adatai.
-              label: Tevékenységi kód - Fő
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: A Modelo 322 . casilla adóügyi adatai.
-              label: IAE besorolás - Fő
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
-              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Jogosult a benzin, gázolaj és bioüzemanyag értékesítése utáni
                 előleg levonására
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:

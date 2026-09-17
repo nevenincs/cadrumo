@@ -4,427 +4,265 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: 'Consulteu la informació de la casella: Període (anual, 0A).'
             label: Període (anual, 0A)
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              714.
             label: Exercici a què es refereix la declaració
           patrimonio-anio-declaracion:
-            help: Informació fiscal de la casella del Modelo 714.
             label: Data de la declaració - Any
           patrimonio-arte-antiguedades:
-            help: Informació fiscal de la casella 17 del Modelo 714.
             label: Béns i drets - L. Objectes d'art i antiguitats - Total
           patrimonio-base-ahorro-excluida:
-            help: Informació fiscal sobre informació fiscal de la casella 32 del Modelo
-              714.
             label: Liquidació - Límit de la quota íntegra - Part de la base imposable
               de l'estalvi de l'IRPF
           patrimonio-base-imponible:
-            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
-              714.
             label: 'Resum del patrimoni net: base liquidable - Base imposable'
           patrimonio-base-liquidable:
-            help: Informació fiscal sobre informació fiscal de la casella 27 del Modelo
-              714.
             label: 'Resum del patrimoni net: base liquidable - Base liquidable'
           patrimonio-base-liquidable-gravada-extranjero:
-            help: Informació fiscal de la casella b del Modelo 714.
             label: Liquidació - Deducció per impostos satisfets a l'estranger - Part
               de la base liquidable gravada a l'estranger
           patrimonio-bienes-afectos-exentos:
-            help: Informació fiscal de la casella 04 del Modelo 714.
             label: Béns i drets - D. Béns i drets exempts afectes a activitats empresarials
               i professionals - Total (net de deutes)
           patrimonio-bienes-afectos-no-exentos:
-            help: Informació fiscal de la casella 03 del Modelo 714.
             label: Béns i drets - C. Béns i drets no exempts afectes a activitats
               empresarials i professionals - Total
           patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles:
-            help: Informació fiscal de la casella a del Modelo 714.
             label: Béns i drets - C1. No exempts afectes a activitats empresarials
               i professionals (no immobles) - Total
           patrimonio-bonificacion-autonomica-aplicada:
-            help: Informació fiscal de la casella 50 del Modelo 714.
             label: Liquidació - Deduccions i bonificacions autonòmiques - Bonificació
               autonòmica - Import aplicat
           patrimonio-bonificacion-ceuta-melilla:
-            help: Informació fiscal de la casella 44 del Modelo 714.
             label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Import
               de la bonificació
           patrimonio-clase-discapacidad:
-            help: Informació fiscal de la casella del Modelo 714.
             label: Subjecte passiu - Discapacitat - Classe de discapacitat
           patrimonio-complementaria-cuotas-anteriores:
-            help: 'Consulteu la informació de la casella: Declaració complementària
-              - Quotes a ingresar de anteriors autoliquidacions o liquidaciones administrativas.'
             label: Declaració complementària - Quotes a ingressar d'anteriors autoliquidacions
               o liquidacions administratives
           patrimonio-comunidad-mayor-valor-bienes:
-            help: Informació fiscal de la casella 3 del Modelo 714.
             label: Modalitats especials de tributació - Comunitat Autònoma on radiqui
               el major dels béns o drets
           patrimonio-concesiones-administrativas:
-            help: Informació fiscal de la casella 19 del Modelo 714.
             label: Béns i drets - N. Concessions administratives - Total
           patrimonio-cuota-a-ingresar:
-            help: 'Consulteu la informació de la casella: Liquidació - Quota a ingresar
-              - Quota a ingresar.'
             label: Liquidació - Quota a ingressar - Quota a ingressar
           patrimonio-cuota-integra:
-            help: 'Consulteu la informació de la casella: Liquidació - Quota íntegra
-              - Quota íntegra.'
             label: Liquidació - Quota íntegra - Quota íntegra
           patrimonio-cuota-integra-susceptible-limitacion:
-            help: Informació fiscal sobre informació fiscal de la casella 36 del Modelo
-              714.
             label: Liquidació - Límit de la quota íntegra - Part de la quota íntegra
               de l'Impost sobre el Patrimoni susceptible de limitació
           patrimonio-cuota-minorada:
-            help: 'Consulteu la informació de la casella: Liquidació - Quota minorada
-              - Quota minorada.'
             label: Liquidació - Quota minorada - Quota minorada
           patrimonio-cuota-proporcional-bienes-ceuta-melilla:
-            help: Informació fiscal de la casella 43 del Modelo 714.
             label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Part proporcional
               de la quota que correspon a aquests béns i drets
           patrimonio-cuotas-previas-complementaria:
-            help: 'Consulteu la informació de la casella: Regularització declaració
-              complementària - Quota ingresar anteriors autoliquidacions/liquidaciones.'
             label: Regularització de declaració complementària - Quota a ingressar
               d'autoliquidacions o liquidacions anteriors
           patrimonio-declaracion-complementaria:
-            help: 'Consulteu la informació de la casella: Declaració Complementària.'
             label: Declaració complementària
           patrimonio-declaracion-negativa:
-            help: 'Consulteu la informació de la casella: Declaració negativa.'
             label: Declaració negativa
           patrimonio-deduccion-impuestos-extranjero:
-            help: Informació fiscal de la casella 41 del Modelo 714.
             label: Liquidació - Deducció per impostos a l'estranger - Import de la
               deducció
           patrimonio-deducciones-autonomicas-aplicadas:
-            help: Informació fiscal de la casella 49 del Modelo 714.
             label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
               autonòmiques - Import aplicat
           patrimonio-deducciones-autonomicas-derecho:
-            help: Informació fiscal de la casella 48 del Modelo 714.
             label: Liquidació - Deduccions i bonificacions autonòmiques - Deduccions
               autonòmiques - Import total amb dret a deducció
           patrimonio-demas-bienes-derechos:
-            help: Informació fiscal de la casella 22 del Modelo 714.
             label: Béns i drets - R. Altres béns i drets de contingut econòmic - Total
           patrimonio-depositos-cuentas:
-            help: Informació fiscal de la casella 05 del Modelo 714.
             label: Béns i drets - E. Dipòsits en compte corrent, estalvi, financeres,
               imposicions... - Total
           patrimonio-derechos-reales-uso-disfrute:
-            help: Informació fiscal de la casella 18 del Modelo 714.
             label: Béns i drets - M. Drets reals d'ús i gaudi (exclòs l'habitatge
               habitual) - Total
           patrimonio-deudas-deducibles:
-            help: 'Consulteu la informació de la casella: Deudas deducibles - Total.'
             label: Deutes deduïbles - Total
           patrimonio-dia-declaracion:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Data de la declaració - Dia
           patrimonio-diferencia-ingresar-complementaria:
-            help: 'Consulteu la informació de la casella: Regularització declaració
-              complementària - Diferència a ingresar resultat declaració complementària.'
             label: Regularització de declaració complementària - Diferència a ingressar
               com a resultat de la declaració complementària
           patrimonio-dividendos-no-irpf:
-            help: Informació fiscal sobre informació fiscal de la casella 31 del Modelo
-              714.
             label: Liquidació - Límit de la quota íntegra - Dividends i participacions
               en beneficis, no integrats en l'IRPF
           patrimonio-domicilio-extranjero-codigo-pais:
-            help: Informació fiscal sobre informació fiscal de la casella 42 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - Codi de país
           patrimonio-domicilio-extranjero-codigo-postal:
-            help: 'Informació fiscal sobre informació fiscal de la casella 39 del
-              Modelo 714 Referències: [ZIP].'
             label: Subjecte passiu - Domicili estranger - Codi postal (ZIP)
           patrimonio-domicilio-extranjero-datos-complementarios:
-            help: Informació fiscal sobre informació fiscal de la casella 36 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - Dades complementàries del
               domicili
           patrimonio-domicilio-extranjero-direccion:
-            help: Informació fiscal sobre informació fiscal de la casella 35 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - Domicili
           patrimonio-domicilio-extranjero-pais:
-            help: Informació fiscal sobre informació fiscal de la casella 41 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - País
           patrimonio-domicilio-extranjero-poblacion:
-            help: Informació fiscal sobre informació fiscal de la casella 37 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - Població / ciutat
           patrimonio-domicilio-extranjero-provincia-region-estado:
-            help: Informació fiscal sobre informació fiscal de la casella 40 del Modelo
-              714.
             label: Subjecte passiu - Domicili estranger - Província / regió / estat
           patrimonio-domicilio-habitual-bloque:
-            help: Informació fiscal sobre informació fiscal de la casella 20 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Bloc
           patrimonio-domicilio-habitual-calificador-numero:
-            help: Informació fiscal de la casella 19 del Modelo 714.
             label: Subjecte passiu - Domicili habitual - Qualificador del número
           patrimonio-domicilio-habitual-codigo-postal:
-            help: Informació fiscal sobre informació fiscal de la casella 27 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Codi postal
           patrimonio-domicilio-habitual-codigo-provincia:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Codi de província
           patrimonio-domicilio-habitual-datos-complementarios:
-            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Dades complementàries del
               domicili
           patrimonio-domicilio-habitual-escalera:
-            help: Informació fiscal sobre informació fiscal de la casella 22 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Escala
           patrimonio-domicilio-habitual-localidad:
-            help: Informació fiscal sobre informació fiscal de la casella 26 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Localitat / població (si
               és diferent del municipi)
           patrimonio-domicilio-habitual-municipio:
-            help: Informació fiscal sobre informació fiscal de la casella 28 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Nom del municipi
           patrimonio-domicilio-habitual-nombre-via:
-            help: Informació fiscal sobre informació fiscal de la casella 16 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Nom de la via pública
           patrimonio-domicilio-habitual-numero-casa:
-            help: Informació fiscal de la casella 18 del Modelo 714.
             label: Subjecte passiu - Domicili habitual - Número de casa
           patrimonio-domicilio-habitual-planta:
-            help: Informació fiscal sobre informació fiscal de la casella 23 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Planta
           patrimonio-domicilio-habitual-portal:
-            help: Informació fiscal sobre informació fiscal de la casella 21 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Portal
           patrimonio-domicilio-habitual-provincia:
-            help: Informació fiscal sobre informació fiscal de la casella 29 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Província
           patrimonio-domicilio-habitual-puerta:
-            help: Informació fiscal sobre informació fiscal de la casella 24 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Porta
           patrimonio-domicilio-habitual-tipo-numeracion:
-            help: Informació fiscal sobre informació fiscal de la casella 17 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Tipus de numeració
           patrimonio-domicilio-habitual-tipo-via:
-            help: Informació fiscal sobre informació fiscal de la casella 15 del Modelo
-              714.
             label: Subjecte passiu - Domicili habitual - Tipus de via
           patrimonio-estado-civil:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Subjecte passiu - Estat civil
           patrimonio-exceso-limite-conjunto:
-            help: 'Consulteu la informació de la casella: Liquidació - Límite quota
-              íntegra - a) Exceso.'
             label: Liquidació - Límit de la quota íntegra - a) Excés
           patrimonio-exento-progresividad:
-            help: Informació fiscal de la casella 28 del Modelo 714.
             label: Patrimoni exempt amb progressivitat - Béns i drets exempts, excepte
               els que determinen el tipus de gravamen aplicable a la resta
           patrimonio-fecha-nacimiento:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Subjecte passiu - Data de naixement
           patrimonio-forma-pago:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Ingrés - Forma de pagament
           patrimonio-idioma-declaracion:
-            help: 'Consulteu la informació de la casella: Idioma de la declaració.'
             label: Idioma de la declaració
           patrimonio-importe-ingreso:
-            help: 'Consulteu la informació de la casella: Ingrés - Import del ingrés.'
             label: Ingrés - Import de l'ingrés
           patrimonio-impuestos-satisfechos-extranjero:
-            help: Informació fiscal de la casella a del Modelo 714.
             label: Liquidació - Deducció per impostos satisfets a l'estranger - Impostos
               efectivament satisfets a l'estranger
           patrimonio-inmuebles-afectos-no-exentos:
-            help: Informació fiscal de la casella b del Modelo 714.
             label: Béns i drets - C2. Béns immobles no exempts afectes a activitats
               empresarials i professionals - Total
           patrimonio-inmuebles-rusticos:
-            help: Informació fiscal de la casella 02 del Modelo 714.
             label: Béns i drets - B. Béns immobles de naturalesa rústica - Total
           patrimonio-inmuebles-urbanos-no-exentos:
-            help: Informació fiscal de la casella 01 del Modelo 714.
             label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
               immobles - Total de béns immobles de naturalesa urbana
           patrimonio-inversion-colectiva-negociada-no-exenta:
-            help: Informació fiscal de la casella 08 del Modelo 714.
             label: Béns i drets - G1. Valors no exempts - Accions i participacions
               d'institucions d'inversió col·lectiva negociades - Total
           patrimonio-inversion-colectiva-no-negociada-no-exenta:
-            help: Informació fiscal de la casella 10 del Modelo 714.
             label: Béns i drets - G3. Valors no exempts - Accions i participacions
               d'institucions d'inversió col·lectiva no negociades - total
           patrimonio-irpf-bases-imponibles:
-            help: Informació fiscal sobre informació fiscal de la casella 30 del Modelo
-              714.
             label: Liquidació - Límit de la quota íntegra - Suma de les bases imposables
               de l'IRPF
           patrimonio-irpf-cuotas-excluidas-base-ahorro:
-            help: 'Consulteu la informació de la casella: Liquidació - Límite quota
-              íntegra - Parte quotes íntegras IRPF, saldo positivo ganancias i pérdidas
-              patrimonials.'
             label: Liquidació - Límit de la quota íntegra - Part de les quotes íntegres
               de l'IRPF, saldo positiu de guanys i pèrdues patrimonials...
           patrimonio-irpf-cuotas-integras:
-            help: 'Consulteu la informació de la casella: Liquidació - Límite quota
-              íntegra - Quotes íntegras del IRPF.'
             label: Liquidació - Límit de la quota íntegra - Quotes íntegres de l'IRPF
           patrimonio-limite-conjunto:
-            help: Informació fiscal de la casella 33 del Modelo 714.
             label: Liquidació - Límit de la quota íntegra - Límit conjunt de quotes
               de l'Impost sobre el Patrimoni i de l'IRPF
           patrimonio-localidad-declaracion:
-            help: 'Consulteu la informació de la casella: Data de la declaració -
-              Localidad.'
             label: Data de la declaració - Localitat
           patrimonio-mes-declaracion:
-            help: 'Consulteu la informació de la casella: Data de la declaració -
-              Més.'
             label: Data de la declaració - Mes
           patrimonio-minimo-exento:
-            help: Informació fiscal sobre informació fiscal de la casella 26 del Modelo
-              714.
             label: 'Resum del patrimoni net: base liquidable - Reducció en concepte
               de mínim exempt'
           patrimonio-monedas-virtuales:
-            help: Informació fiscal de la casella 46 del Modelo 714.
             label: Béns i drets - Q. Saldos en monedes virtuals - Total
           patrimonio-nacionalidad:
-            help: Informació fiscal sobre informació fiscal de la casella nacionalidad
-              del Modelo 714.
             label: Subjecte passiu - Nacionalitat
-          patrimonio-obligacion-real-regimen-impatriados:
-            help: Informació fiscal sobre informació fiscal de la casella 4 del Modelo
-              714.
           patrimonio-opcion-normativa-autonomica-impatriados:
-            help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
-              714.
             label: Si ha consignat la modalitat de la casella 4 i vol optar per l'aplicació
               de la normativa autonòmica
           patrimonio-opciones-contractuales:
-            help: Informació fiscal de la casella 21 del Modelo 714.
             label: Béns i drets - P. Opcions contractuals - Total
           patrimonio-otras-entidades-negociadas-no-exentas:
-            help: Informació fiscal de la casella 09 del Modelo 714.
             label: Béns i drets - G2. Valors no exempts - Accions i participacions
               en fons d'altres entitats - Total
           patrimonio-otras-entidades-no-negociadas-no-exentas:
-            help: Informació fiscal de la casella 11 del Modelo 714.
             label: Béns i drets - G4. Valors no exempts - Accions i participacions
               d'altres entitats jurídiques no negociades - Total
           patrimonio-otros-inmuebles-urbanos:
-            help: Informació fiscal de la casella 63 del Modelo 714.
             label: Béns i drets - A2. Béns immobles de naturalesa urbana - Altres
               immobles - Total
           patrimonio-participaciones-negociadas-exentas:
-            help: Informació fiscal de la casella 12 del Modelo 714.
             label: Béns i drets - H1. Valors exempts - Accions i participacions d'entitats
               jurídiques negociades - Total (net de deutes)
           patrimonio-participaciones-no-negociadas-exentas:
-            help: Informació fiscal de la casella 13 del Modelo 714.
             label: Béns i drets - H2. Valors exempts - Accions i participacions exemptes
               d'entitats jurídiques no negociades - Total (net de deutes)
           patrimonio-porcentaje-discapacidad:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              714.
             label: Subjecte passiu - Discapacitat - Percentatge de discapacitat
           patrimonio-propiedad-intelectual-industrial:
-            help: Informació fiscal de la casella 20 del Modelo 714.
             label: Béns i drets - O. Drets derivats de la propietat intel·lectual
               o industrial - Total
           patrimonio-reduccion-limite-ochenta:
-            help: Informació fiscal sobre informació fiscal de la casella 39 del Modelo
-              714.
             label: Liquidació - Límit de la quota íntegra - b) 80% de la quota íntegra
               de l'Impost sobre el Patrimoni
           patrimonio-regimen-economico-matrimonio:
-            help: 'Consulteu la informació de la casella: Règim económico del matrimonio.'
             label: Règim econòmic del matrimoni
           patrimonio-rentas-temporales-vitalicias:
-            help: Informació fiscal de la casella 15 del Modelo 714.
             label: Béns i drets - J. Rendes temporals i vitalícies - Total
           patrimonio-representante-nif:
-            help: 'Consulteu la informació de la casella: Representant - NIF.'
             label: Representant - NIF
           patrimonio-representante-nombre:
-            help: 'Consulteu la informació de la casella: Representant - Cognoms i
-              nom o raó social.'
             label: Representant - Cognoms i nom o raó social
           patrimonio-seguros-vida:
-            help: Informació fiscal de la casella 14 del Modelo 714.
             label: Béns i drets - I. Assegurances de vida - Total
           patrimonio-sexo-contribuyente:
-            help: Informació fiscal sobre informació fiscal de la casella sexo del
-              Modelo 714.
             label: Subjecte passiu - Sexe
           patrimonio-suma-cuotas-limite:
-            help: Informació fiscal de la casella 37 del Modelo 714.
             label: Liquidació - Límit de la quota íntegra - Suma de quotes a efectes
               del límit conjunt
           patrimonio-tipo-declaracion:
-            help: 'Consulteu la informació de la casella: Tipus de declaració.'
             label: Tipus de declaració
           patrimonio-total-bienes-derechos-no-exentos:
-            help: Informació fiscal de la casella 23 del Modelo 714.
             label: 'Resum del patrimoni net: base liquidable - Total de béns i drets
               no exempts'
           patrimonio-total-cuota-integra:
-            help: 'Consulteu la informació de la casella: Liquidació - Total quota
-              íntegra - Total quota íntegra.'
             label: Liquidació - Total de la quota íntegra - Total de la quota íntegra
           patrimonio-valor-neto-bienes-ceuta-melilla:
-            help: Informació fiscal de la casella 42 del Modelo 714.
             label: Liquidació - Bonificació de la quota a Ceuta i Melilla - Valor
               net dels béns i drets a Ceuta i Melilla
           patrimonio-valores-cesion-capitales-negociados:
-            help: Informació fiscal de la casella 06 del Modelo 714.
             label: Béns i drets - F1. Valors de cessió a tercers - Deute públic, obligacions,
               bons... - Total
           patrimonio-valores-cesion-capitales-no-negociados:
-            help: Informació fiscal de la casella 07 del Modelo 714.
             label: Béns i drets - F2. Valors de cessió a tercers - Obligacions, bons,
               certificats, pagarés... - total
           patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves:
-            help: Informació fiscal de la casella 16 del Modelo 714.
             label: Béns i drets - K. Vehicles, joies, pells de caràcter sumptuari,
               embarcacions i aeronaus - Total
           patrimonio-vivienda-habitual-exenta:
-            help: Informació fiscal de la casella 61 del Modelo 714.
             label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor exempt
           patrimonio-vivienda-habitual-no-exenta:
-            help: Informació fiscal de la casella 62 del Modelo 714.
             label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor no
               exempt
           patrimonio-vivienda-habitual-susceptible-exencion:
-            help: Informació fiscal de la casella 60 del Modelo 714.
             label: Béns i drets - A1. Béns immobles de naturalesa urbana - Valor total
               de l'habitatge habitual susceptible d'exempció
       construct:
@@ -438,15 +276,9 @@ modelo:
         '2021':
           casilla:
             identificacion-1:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2020 ha tenido su residencia habitual fuera del
-                territori español i tributa per obligación real.'
               label: Modalitats especials de tributació - El 2020 ha tingut la residència
                 habitual fora del territori espanyol i tributa per obligació real
             identificacion-2:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2020 ha dejado de ser resident en territori español
-                pero sigue tributando per obligación personal.'
               label: Modalitats especials de tributació - El 2020 ha deixat de ser
                 resident en territori espanyol però continua tributant per obligació
                 personal
@@ -456,23 +288,15 @@ modelo:
                 sobre el Patrimoni per haver optat pel règim especial de l'article
                 93 de la Llei 35/2006, de l'IRPF
             identificacion-8:
-              help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
-                de residencia en 2020.'
               label: Comunitat o Ciutat Autònoma de residència el 2020
           field:
             label: Impost sobre el Patrimoni 2021
         '2022':
           casilla:
             identificacion-1:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2022 ha tenido su residencia habitual fuera del
-                territori español i tributa per obligación real.'
               label: Modalitats especials de tributació - El 2022 ha tingut la residència
                 habitual fora del territori espanyol i tributa per obligació real
             identificacion-2:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2022 ha dejado de ser resident en territori español
-                pero sigue tributando per obligación personal.'
               label: Modalitats especials de tributació - El 2022 ha deixat de ser
                 resident en territori espanyol però continua tributant per obligació
                 personal
@@ -482,23 +306,15 @@ modelo:
                 sobre el Patrimoni per haver optat pel règim especial de l'article
                 93 de la Llei 35/2006, de l'IRPF
             identificacion-8:
-              help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
-                de residencia en 2022.'
               label: Comunitat o Ciutat Autònoma de residència el 2022
           field:
             label: Impost sobre el Patrimoni 2022
         '2023':
           casilla:
             identificacion-1:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2023 ha tenido su residencia habitual fuera del
-                territori español i tributa per obligación real.'
               label: Modalitats especials de tributació - El 2023 ha tingut la residència
                 habitual fora del territori espanyol i tributa per obligació real
             identificacion-2:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2023 ha dejado de ser resident en territori español
-                pero sigue tributando per obligación personal.'
               label: Modalitats especials de tributació - El 2023 ha deixat de ser
                 resident en territori espanyol però continua tributant per obligació
                 personal
@@ -508,23 +324,15 @@ modelo:
                 sobre el Patrimoni per haver optat pel règim especial de l'article
                 93 de la Llei 35/2006, de l'IRPF
             identificacion-8:
-              help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
-                de residencia en 2023.'
               label: Comunitat o Ciutat Autònoma de residència el 2023
           field:
             label: Impost sobre el Patrimoni 2023
         '2024':
           casilla:
             identificacion-1:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2024 ha tenido su residencia habitual fuera del
-                territori español i tributa per obligación real.'
               label: Modalitats especials de tributació - El 2024 ha tingut la residència
                 habitual fora del territori espanyol i tributa per obligació real
             identificacion-2:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2024 ha dejado de ser resident en territori español
-                pero sigue tributando per obligación personal.'
               label: Modalitats especials de tributació - El 2024 ha deixat de ser
                 resident en territori espanyol però continua tributant per obligació
                 personal
@@ -534,23 +342,15 @@ modelo:
                 sobre el Patrimoni per haver optat pel règim especial de l'article
                 93 de la Llei 35/2006, de l'IRPF
             identificacion-8:
-              help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
-                de residencia en 2024.'
               label: Comunitat o Ciutat Autònoma de residència el 2024
           field:
             label: Impost sobre el Patrimoni 2024
         '2025':
           casilla:
             identificacion-1:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2025 ha tenido su residencia habitual fuera del
-                territori español i tributa per obligación real.'
               label: Modalitats especials de tributació - El 2025 ha tingut la residència
                 habitual fora del territori espanyol i tributa per obligació real
             identificacion-2:
-              help: 'Consulteu la informació de la casella: Modalidades especiales
-                de tributació - En 2025 o anterior ha dejado de ser resident en territori
-                español pero sigue tributando per obligación personal.'
               label: Modalitats especials de tributació - El 2025 o abans ha deixat
                 de ser resident en territori espanyol però continua tributant per
                 obligació personal
@@ -560,8 +360,6 @@ modelo:
                 sobre el Patrimoni per haver optat pel règim especial de l'article
                 93 de la Llei 35/2006, de l'IRPF
             identificacion-8:
-              help: 'Consulteu la informació de la casella: Comunidad o Ciudad Autónoma
-                de residencia en 2025.'
               label: Comunitat o Ciutat Autònoma de residència el 2025
           field:
             label: Impost sobre el Patrimoni 2025

@@ -254,19 +254,25 @@ def test_casillas_accepts_censo_event_period_token() -> None:
 def test_bindings_for_scope_resolves_the_law_determined_revision() -> None:
     """``bindings_for_scope`` selects the revision fixed by year and period.
 
-    Modelo 100 carries one revision per renta year. Resolving by year
-    and annual period must return the 2024 revision's binding ids, not
-    the latest revision's.
+    Modelo 100 carries one revision per renta year. Resolving by year and
+    annual period must return that year's revision and its bindings, not the
+    latest revision's.
     """
 
+    authority = compiled_bundled_authority()
     service = _service()
+    horizon = authority.catalogues.require_supported_filing_years().horizon
+    scoped_year = horizon - 1
+    selected = authority.snapshot("100", filing_year=scoped_year, period="0A").revision
+    latest = authority.snapshot("100", filing_year=horizon, period="0A").revision
+    assert selected.id != latest.id, "the envelope's last two renta years share a revision, so nothing is shown"
 
-    report = service.bindings_for_scope("100", filing_year=2024, period="0A")
+    report = service.bindings_for_scope("100", filing_year=scoped_year, period="0A")
 
     assert report.code == "100"
-    assert report.filing_year == 2024
-    assert report.rows
-    assert all(row.binding_id.startswith("renta-2024-") for row in report.rows)
+    assert report.filing_year == scoped_year
+    assert report.revision == str(selected.id)
+    assert {row.binding_id for row in report.rows} == {str(binding.id) for binding in selected.bindings}
 
 
 def test_binding_rows_surface_the_typed_enum_a_binding_declares() -> None:

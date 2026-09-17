@@ -22,12 +22,12 @@ from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
 from ..adapters.outbound.aeat.sede.filed_data_capture_port import SedeFiledDataCapturePort
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
-    BaselineImportAdapter,
     BucketEventRepositoryAdapter,
     CalculationObservationRepositoryAdapter,
     FiledDeclarationTransformationAdapter,
     FiledObservationParserAdapter,
     FiledObservationStoreAdapter,
+    FilingReconciliationAdapter,
     FilingRepositoryAdapter,
     IvaHistoryRepositoryAdapter,
     IvaObservationPersistenceAdapter,
@@ -265,13 +265,32 @@ def compose_filed_observation_persistence_ports(
         justificante_repository=JustificanteRepositoryAdapter(repository=justificante_repository),
         filing_repository=FilingRepositoryAdapter(repository=filing_repository),
         bucket_event_repository=BucketEventRepositoryAdapter(repository=bucket_event_repository),
-        baseline_import=BaselineImportAdapter(
+        filing_reconciliation=FilingReconciliationAdapter(
             work_lifecycle_ports=work_lifecycle_ports,
             calculation_repository=calculation_revision_repository,
             filing_repository=filing_repository,
             justificante_repository=justificante_repository,
             observation_repository=calculation_repository,
         ),
+    )
+
+
+def build_filed_data_capture_port(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+) -> FiledDataCapturePort:
+    """Build the AEAT Sede transport that reads filed declarations.
+
+    This is the only place the live composition constructs that transport, so a
+    recorded in-memory port can stand in for AEAT while every capture,
+    finalization and reconciliation step downstream stays real.
+    """
+    return SedeFiledDataCapturePort(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operator_scope_ports=operator_scope_ports,
     )
 
 
@@ -300,7 +319,7 @@ def compose_live_state(
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
-    filed_data_port = SedeFiledDataCapturePort(
+    filed_data_port = build_filed_data_capture_port(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,

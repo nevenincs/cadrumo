@@ -66,57 +66,6 @@ modelo:
           field:
             label: Modelo 189, tax year 2024
         '2025':
-          casilla:
-            clave-identificacion:
-              help: Tax information for casilla of Modelo 189.
-            clave-mercado:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            clave-representacion:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            clave-titularidad:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            clave-valor:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            codigo-pais:
-              help: Tax information for casilla of Modelo 189.
-            codigo-provincia:
-              help: Tax information for casilla of Modelo 189.
-            declaracion-complementaria-sustitutiva:
-              help: Tax information for casilla of Modelo 189.
-            declarado-nif:
-              help: 'Review the casilla information: NIF of the declarado.'
-            declarado-nombre:
-              help: Tax information for casilla of Modelo 189.
-            declarante-nif:
-              help: Tax information for casilla of Modelo 189.
-            declarante-razon-social:
-              help: Tax information for casilla of Modelo 189.
-            ejercicio-declaracion:
-              help: Tax information for casilla of Modelo 189.
-            identificacion-valores:
-              help: Tax information for casilla of Modelo 189.
-            nominal-unitario-valores:
-              help: Tax information for casilla of Modelo 189.
-            numero-identificativo-anterior:
-              help: Tax information for casilla of Modelo 189.
-            numero-justificante:
-              help: Tax information for casilla of Modelo 189.
-            numero-total-declarados:
-              help: Tax information for casilla of Modelo 189.
-            numero-valores:
-              help: Tax information for casilla of Modelo 189.
-            persona-relacion:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            porcentaje-participacion:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            representante-legal-nif:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            tipo-soporte:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            valoracion:
-              help: Tax information about tax information in casilla  of Modelo 189.
-            valoracion-total:
-              help: Tax information about tax information in casilla  of Modelo 189.
           field:
             label: Modelo 189, tax year 2025 (Order EHA/3481/2008; Orders HFP/1180/2023,
               HFP/1284/2023 and HAC/132/2026)

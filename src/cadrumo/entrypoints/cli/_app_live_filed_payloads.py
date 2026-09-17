@@ -10,6 +10,7 @@ from ...application.live.capture_mode import LiveCaptureMode, LiveCaptureModeVal
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
+from ._filing_chain_payloads import FilingReconciliationPayload
 
 
 class FiledListingRowPayload(OutputSchema):
@@ -210,7 +211,8 @@ class FiledCaptureResult(OutputSchema):
     ``observation_paths`` and ``artefact_refs`` fields identify local encrypted
     stores, while justificante and filing-evidence counts report local metadata
     enrolment against existing :class:`ModeloRecord`
-    records.
+    records. ``reconciliations`` reports, per captured period, what the AEAT
+    register entry did to the local filing chain.
     """
 
     mode: LiveCaptureModeValue = LiveCaptureMode.SINGLE
@@ -234,6 +236,7 @@ class FiledCaptureResult(OutputSchema):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: list[str]
+    reconciliations: list[FilingReconciliationPayload] = []
     failures: list[FiledCaptureFailurePayload] = []
 
 

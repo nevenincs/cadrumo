@@ -128,6 +128,9 @@ def compose_secure_profile_workbench_generation_provider(
         # they carry the evidence records as read at composition, so a bundle
         # held across captures would keep reporting the evidence the session
         # started with after the operator had added more.
+        # The session is checked before composing them: composition opens the
+        # bucket's storage, and a closed session must refuse as itself.
+        account_session()
         return ApplicationGenerationProviderV1(read_door())()
 
     def read_door() -> SecureProfileWorkbenchGenerationReadDoorV1:
@@ -190,16 +193,14 @@ def live_account_session_reader(*, profile_id: str, profile_label: str) -> Calla
     def account_session() -> HomeAccountSession:
         """Recheck custody and return the current non-secret account facts."""
         current_session = profile_current_bucket_session()
-        if (
-            current_session is None
-            or current_session.sealed
-            or not profile_session_serves_bucket(current_session, profile_id)
-        ):
+        # A session closed elsewhere (sign-out, seal) is the same operator
+        # outcome as an expired one: the workbench must be recomposed.
+        if current_session is None or current_session.sealed or current_session.is_expired(now()):
+            raise AccountSessionExpiredError()
+        if not profile_session_serves_bucket(current_session, profile_id):
             raise InternalInvariantError(
                 "installed workbench requires the live secure session for its selected profile"
             )
-        if current_session.is_expired(now()):
-            raise AccountSessionExpiredError()
         return HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label=profile_label,
@@ -630,9 +631,9 @@ def _workspace_action_candidates(
     suggested actions and the palette open the workspace that performs them.
     With none declared, a suggested action was selectable and led nowhere.
     """
-    from .navigation import TuiActionCandidateV1
+    from .navigation import TuiActionCandidateV1, TuiDestinationIdV1
 
-    owned = (
+    owned: tuple[tuple[TuiDestinationIdV1, tuple[ActionReference, ...]], ...] = (
         (
             "workbench.ledger",
             (

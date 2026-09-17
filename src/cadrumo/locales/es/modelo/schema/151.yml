@@ -273,7 +273,7 @@ modelo:
           p08-resultado-de-la-declaracion-43:
             label: Resultado de la declaración [43]
           p08-resultados-a-ingresar-cion-administrativas-41:
-            label: Resultados a ingresar de las anteriores declaraciones o liquidacion
+            label: Resultados a ingresar de las anteriores declaraciones o liquidación
               administrativas [41]
           representante-fax:
             label: Representante. 61 - Nº de Fax.
@@ -299,11 +299,11 @@ modelo:
             x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
               label: Cuota diferencial (cuota integra general menos retenciones)
             x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
-              label: Asignacion de cantidades a fines sociales
+              label: Asignación de cantidades a fines sociales
             x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
-              label: Asignacion Tributaria a la Iglesia Católica
+              label: Asignación Tributaria a la Iglesia Católica
             x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
-              label: Comunidad Autonoma de residencia durante el ejercicio indicado
+              label: Comunidad Autónoma de residencia durante el ejercicio indicado
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
               label: Contribuyente. 44 - Tipo de vía.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
@@ -1180,12 +1180,12 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               label: Ingreso/Domiciliación/Devolución - IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              help: Dato del anexo de transmision de acciones o participaciones de
+              help: Dato del anexo de transmisión de acciones o participaciones de
                 IIC del modelo 151.
               label: Anexo. Transmisión de acciones o participaciones de IIC. Ganancia
                 patrimonial
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              help: Dato del anexo de transmision de acciones o participaciones de
+              help: Dato del anexo de transmisión de acciones o participaciones de
                 IIC del modelo 151.
               label: Anexo. Transmisión de acciones o participaciones de IIC. NIF
                 de la sociedad o fondo de inversión
@@ -1196,12 +1196,12 @@ modelo:
               help: Casilla 01 del modelo 151, ejercicio 2025.
               label: Inicio del identificador de modelo y página
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              help: Dato del anexo de transmision de acciones o participaciones de
+              help: Dato del anexo de transmisión de acciones o participaciones de
                 IIC del modelo 151.
               label: Anexo. Transmisión de acciones o participaciones de IIC. Total
                 de ganancias patrimoniales
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              help: Dato del anexo de transmision de acciones o participaciones de
+              help: Dato del anexo de transmisión de acciones o participaciones de
                 IIC del modelo 151.
               label: Anexo. Transmisión de acciones o participaciones de IIC. Total
                 de retenciones o ingresos a cuenta
@@ -1217,11 +1217,11 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
             x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj5kp34:
-              label: Asignacion de cantidades a fines sociales [22]
+              label: Asignación de cantidades a fines sociales [22]
             x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgiqchh:
-              label: Asignacion Tributaria a la Iglesia Catolica [21]
+              label: Asignación Tributaria a la Iglesia Católica [21]
             x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355lp6asr9chimsor9c4mm8tbic5n78p9dclm2qpbaclp66qb3d5niqqbecgmj4c0:
-              label: Comunidad Autonoma de residencia durante el ejercicio indicado
+              label: Comunidad Autónoma de residencia durante el ejercicio indicado
                 [20]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqojcdtonap9d6cog:
               label: Contribuyente. Bloque [31]
@@ -1230,14 +1230,14 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5niqc9j:
               label: Contribuyente. Cambio de domicilio [13]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
-              label: Contribuyente. Codigo de Provincia [40]
+              label: Contribuyente. Código de Provincia [40]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
               label: Contribuyente. Código postal del domicilio [38]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmm2srfcdkm2p3f5lgiqrrke9niqs3id4mj0do:
-              label: Contribuyente. Condicion. Contribuyente asociado a otro principal
+              label: Contribuyente. Condición. Contribuyente asociado a otro principal
                 [07]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmj0dg:
-              label: Contribuyente. Condicion. Contribuyente principal [06]
+              label: Contribuyente. Condición. Contribuyente principal [06]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn0rricdimst31d8mj2d8:
               label: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
                 [15]
@@ -1245,7 +1245,7 @@ modelo:
               label: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
                 [17]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn6qbkelgm6qbfdomj2dg:
-              label: Contribuyente Datos Adicionales vivienda actual. Situacion [16]
+              label: Contribuyente Datos Adicionales vivienda actual. Situación [16]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn8qbkelm62sj9cgmj2d0:
               label: Contribuyente Datos Adicionales vivienda actual. Titularidad
                 [14]
@@ -1257,7 +1257,7 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmmsqb65koj2:
               label: Contribuyente. Datos del contribuyente principal. NIF [11]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb3dti6iprf5lo6usrkc5m2quj9e0mj8do:
-              label: Contribuyente Domicilio Extranjero. Codigo postal/ZIP [47]
+              label: Contribuyente Domicilio Extranjero. Código postal/ZIP [47]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5kq38:
               label: Contribuyente Domicilio Extranjero. Datos complementarios domicilio
                 [44]
@@ -1266,11 +1266,11 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb5dlgmir1d6gr0:
               label: Contribuyente Domicilio Extranjero. Email [46]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgc5kn6b9l60:
-              label: Contribuyente Domicilio Extranjero. Pais [50]
+              label: Contribuyente Domicilio Extranjero. País [50]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgdth6oob3d5nmsbb3d5qm8ob45kq3a:
-              label: Contribuyente Domicilio Extranjero. Poblacion/Ciudad [45]
+              label: Contribuyente Domicilio Extranjero. Población/Ciudad [45]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbge9nncqbecdkm2bbicljmirre5lin6t31cgmj8e0:
-              label: Contribuyente Domicilio Extranjero. Provincia/Region/Estado [48]
+              label: Contribuyente Domicilio Extranjero. Provincia/Región/Estado [48]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqpj9d9niqd9h:
               label: Contribuyente Domicilio Extranjero. Teléfono Fijo [51]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqrbfepkmob9l68:
@@ -1280,7 +1280,7 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehniqc1l:
               label: Contribuyente. Fecha de nacimiento [05]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qcpn:
-              label: Contribuyente. Localidad/Poblacion [37]
+              label: Contribuyente. Localidad/Población [37]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchiiqr315lr6io9de1qm4r39cdgiqchn:
               label: Contribuyente. Nombre de la vía pública [27]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchimobbdeln6ior9e1kmub9j74:
@@ -1324,7 +1324,7 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqor1dhkmcqb3c5i6ushdchiiqrjldlin4rpd6co0:
               label: Representante. Calificador de número [30]
             x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
-              label: Representante. Codigo de Provincia [40]
+              label: Representante. Código de Provincia [40]
             x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
               label: Representante. Código postal del domicilio [38]
             x-e0o32bjiclo74pbjcln78obeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
@@ -1332,7 +1332,7 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqpbjcdgmopbic4mj6co:
               label: Representante. Escalera [33]
             x-e0o32bjiclo74pbjcln78obeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qsr95lin6bb4d5pn8qbeehgiqp35dgmmqtbed4mj6do:
-              label: Representante. Localidad/Poblacion (si es distinta del municipio)
+              label: Representante. Localidad/Población (si es distinta del municipio)
                 [37]
             x-e0o32bjiclo74pbjcln78obeehiiqrj9comj2e0:
               label: Representante. NIF [18]

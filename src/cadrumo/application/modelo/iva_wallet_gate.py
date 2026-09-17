@@ -42,7 +42,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
+from typing import TYPE_CHECKING, Final, NamedTuple, Never, cast, override
 
 from ...core.casilla_id import CasillaId
 from ...core.identity.tax_id import same_tax_identifier
@@ -869,7 +869,8 @@ def _source_proves_concrete_zero_authority(source: object, *, target_start: date
         return getattr(source, "captured_at", None) is not None
     if source_kind not in _LOCAL_EVIDENCE_SOURCE_KINDS:
         return False
-    periods = tuple(getattr(source, "source_periods", ()) or ())
+    raw_periods = getattr(source, "source_periods", None)
+    periods = cast("tuple[_Period, ...]", tuple(raw_periods) if raw_periods else ())
     # Local evidence proves a zero only from periods before the target; a
     # source naming the target period itself is the first-period placeholder,
     # which only the activity start can ground.

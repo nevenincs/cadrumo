@@ -30,6 +30,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -56,6 +57,12 @@ _PERIOD = Period.from_year_and_code(2025, "1T")
 
 
 _IVA_RESULTADO: CasillaId = validated_casilla_id("iva.resultado", surface="header facts roundtrip")
+
+
+def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
+    """Return the one observation layer the mutated row holds."""
+    layers = envelope["payload"]
+    return layers["pending_local"] or layers["official"]
 
 
 def _observation() -> RegistryModeloObservation:
@@ -182,7 +189,7 @@ def test_a_header_fact_stripped_of_its_locator_refuses_at_load(tmp_path: Path) -
         )
 
         def mutate(envelope):
-            facts = envelope["payload"]["source_headers"]
+            facts = _stored_layer(envelope)["source_headers"]
             assert facts and facts[0]["source_locator"], (
                 "the fixture did not serialise a locator, so this proof would pass over a broken boundary"
             )
@@ -227,7 +234,7 @@ def test_dropping_the_whole_header_channel_surfaces_as_inequality(tmp_path: Path
         )
 
         def mutate(envelope):
-            del envelope["payload"]["source_headers"]
+            del _stored_layer(envelope)["source_headers"]
 
         mutate_encrypted_secure_object_json(
             profile.repository._engine,

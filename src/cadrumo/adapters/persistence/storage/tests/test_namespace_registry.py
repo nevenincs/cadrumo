@@ -279,7 +279,7 @@ def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
     expected_addresses = {
         MODELO_WORK_UNIT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.work_units", 1),
         MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.calculation_revisions", 4),
-        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.filing_records", 1),
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.filing_records", 2),
         MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.verification_reports", 1),
     }
 

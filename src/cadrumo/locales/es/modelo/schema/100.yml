@@ -78,11 +78,11 @@ modelo:
           irpf-aeip-barcelona-mobile-world-capital-aplicado:
             label: '"Barcelona Mobile World Capital": Aplicado en esta declaración'
           irpf-aeip-bicentenario-de-la-policia-nacional-aplicado:
-            label: '"Bicentenario de la Policia Nacional": Aplicado en esta declaración'
+            label: '"Bicentenario de la Policía Nacional": Aplicado en esta declaración'
           irpf-aeip-bicentenario-del-ateneo-de-madrid-aplicado:
             label: '"Bicentenario del Ateneo de Madrid": Aplicado en esta declaración'
           irpf-aeip-bicentenarios-de-la-independencia-de-las-republicas-lberoamericanas-aplicado:
-            label: '"Bicentenarios de la independencia de las Republicas lberoamericanas":
+            label: '"Bicentenarios de la independencia de las Repúblicas lberoamericanas":
               Aplicado en esta declaración'
           irpf-aeip-camino-lebaniego-aplicado:
             label: '"Camino Lebaniego": Aplicado en esta declaración'
@@ -134,7 +134,7 @@ modelo:
           irpf-aeip-expo-dubai-2020-aplicado:
             label: '"Expo Dubai 2020": Aplicado en esta declaración'
           irpf-aeip-festival-internacional-sonar-de-musica-creativitat-i-tecnologia-aplicado:
-            label: '"Festival Internacional Sónar de Música, Creativitat i Tecnologia":
+            label: '"Festival Internacional Sónar de Música, Creativitat i Tecnología":
               Aplicado en esta declaración'
           irpf-aeip-fitur-especial-recuperacion-turismo-aplicado:
             label: '"FITUR especial: recuperación turismo": Aplicado en esta declaración'
@@ -755,7 +755,7 @@ modelo:
           irpf-centro-guarderia-nif-nif2can9:
             label: NIF de la guardería autorizada 1
           irpf-centro-guarderia-nif-nifcm19:
-            label: NIF de la guarderia o centro de educación infantil autorizado
+            label: NIF de la guardería o centro de educación infantil autorizado
           irpf-cesion-derechos-imagen-imputacion-contribuyente:
             label: Contribuyente que debe efectuar la imputación como consecuencia
               de la cesión del derecho de imagen
@@ -1276,7 +1276,7 @@ modelo:
           irpf-deduccion-cantabria-gastos-educacion:
             label: Por gastos de educación
           irpf-deduccion-cantabria-guarderia:
-            label: Por gastos de guarderia
+            label: Por gastos de guardería
           irpf-deduccion-cantabria-nacimiento-adopcion:
             label: Por nacimiento o adopción de hijos
           irpf-deduccion-cantabria-obras-mejora:
@@ -1668,7 +1668,7 @@ modelo:
           irpf-deduccion-madrid-gastos-educativos:
             label: Por gastos educativos
           irpf-deduccion-madrid-intereses-prestamos-estudios:
-            label: Por el pago de intereses de préstamos a estudios de Grado, Master
+            label: Por el pago de intereses de préstamos a estudios de Grado, Máster
               y Doctorado
           irpf-deduccion-madrid-intereses-prestamos-vivienda:
             label: Por el pago de intereses de préstamos para adquisición de vivienda
@@ -1747,7 +1747,7 @@ modelo:
           irpf-deduccion-nueva-empresa-entidad-nif-nifrc2:
             label: NIF de la entidad 2 nueva o reciente creación
           irpf-deduccion-obtencion-rendimientos-trabajo:
-            label: Deduccion por obtencion de rendimientos del trabajo
+            label: Deducción por obtención de rendimientos del trabajo
           irpf-deduccion-rib-illes-balears-autonomica:
             label: 'Por dotaciones a la Reserva para Inversiones en las Illes Balears
               (D.A. septuagésima Ley 31/2022): Parte autonómica'
@@ -1817,6 +1817,8 @@ modelo:
               varias actividades del mismo tipo)
           irpf-ed-actividad-tipo-clave:
             label: 'Tipo de actividad/es realizada/s: clave indicativa'
+          irpf-ed-arrendamientos-canones:
+            label: Arrendamientos y cánones
           irpf-ed-autoconsumo:
             label: Autoconsumo de bienes y servicios
           irpf-ed-cobros-pagos-flag:
@@ -1834,6 +1836,10 @@ modelo:
             label: Gastos financieros
           irpf-ed-indemnizaciones:
             label: Indemnizaciones
+          irpf-ed-ingresos-explotacion:
+            label: Ingresos de explotación
+          irpf-ed-ingresos-subvenciones-capital:
+            label: Imputación de ingresos por subvenciones de capital
           irpf-ed-ingresos-subvenciones-corrientes:
             label: Ingresos por subvenciones corrientes
           irpf-ed-modalidad-clave:
@@ -1841,6 +1847,8 @@ modelo:
               N:normal S:simplificada)
           irpf-ed-mutualidades-alternativas-titular:
             label: Aportaciones a mutualidades alternativas del titular de la actividad
+          irpf-ed-otros-consumos-explotacion:
+            label: Otros consumos de explotación
           irpf-ed-otros-gastos-personal:
             label: Otros gastos de personal
           irpf-ed-otros-ingresos:
@@ -1856,7 +1864,9 @@ modelo:
           irpf-ed-provisiones-deducibles:
             label: Provisiones fiscalmente deducibles
           irpf-ed-rdto-neto-previo-reduccion:
-            label: Rendimiento neto de actividades economicas en estimacion directa
+            label: Rendimiento neto de actividades económicas en estimación directa
+          irpf-ed-reparaciones-conservacion:
+            label: Reparaciones y conservación
           irpf-ed-seguridad-social-empresa:
             label: Seguridad Social a cargo de la empresa
           irpf-ed-seguridad-social-titular:
@@ -3256,14 +3266,20 @@ modelo:
           irpf-regularizacion-rectificacion-resultado:
             label: Resultado
           irpf-rendimiento-act-eco-atribuido-rdto-neto:
-            label: Rendimiento neto de actividad economica atribuido por entidades
-              en regimen de atribucion de rentas
+            label: Rendimiento neto de actividad económica atribuido por entidades
+              en régimen de atribución de rentas
           irpf-rendimiento-act-eco-eo-agr-rdto-neto:
-            label: Rendimiento neto de actividades agricolas ganaderas y forestales
-              en estimacion objetiva
+            label: Rendimiento neto de actividades agrícolas ganaderas y forestales
+              en estimación objetiva
           irpf-rendimiento-act-eco-eo-resto-rdto-neto:
-            label: Rendimiento neto de actividades economicas en estimacion objetiva
-              excepto agricolas, ganaderas y forestales
+            label: Rendimiento neto de actividades económicas en estimación objetiva
+              excepto agrícolas, ganaderas y forestales
+          irpf-rendimiento-capital-inmobiliario-amortizacion-bienes-muebles:
+            label: Amortización de bienes muebles
+          irpf-rendimiento-capital-inmobiliario-amortizacion-casos-especiales:
+            label: Amortización en casos especiales
+          irpf-rendimiento-capital-inmobiliario-amortizacion-inmueble:
+            label: Amortización del inmueble y la mejora
           irpf-rendimiento-capital-inmobiliario-gasto-comunidad:
             label: Gastos de comunidad
           irpf-rendimiento-capital-inmobiliario-gasto-otros:
@@ -3280,6 +3296,8 @@ modelo:
               los mismos a medida que vayan devengándose los derechos...
           irpf-rendimiento-trabajo-gasto-sindicato:
             label: Cuotas satisfechas a sindicatos
+          irpf-rendimiento-trabajo-reduccion-gastos-generales:
+            label: Cuantía aplicable con carácter general
           irpf-rendimientos-trabajo-contribuyente-titular:
             label: Contribuyente que obtiene los rendimientos
           irpf-rentas-exentas-base-ahorro:
@@ -3443,8 +3461,6 @@ modelo:
                 (*)
             '0022':
               label: Rendimiento neto
-            '0023':
-              label: Cuantía aplicable con carácter general
             '0025':
               label: Rendimiento neto reducido
             '0027':
@@ -3550,18 +3566,12 @@ modelo:
               label: Servicios y suministros (luz, agua, internet, gas...)
             '0115':
               label: Tributos, recargos y tasas
-            '0117':
-              label: Amortización de bienes muebles
             '0121':
               label: Fecha de transmisión, en su caso, en el ejercicio 2020, del inmueble
                 (día, mes y año)
             0129:
               label: Importe de las mejoras realizadas en 2020 (Desglose en el anexo
                 D, cumplimentación voluntaria)
-            '0131':
-              label: Amortización del inmueble y la mejora
-            '0132':
-              label: Amortización en casos especiales
             '0134':
               label: Onerosa (compraventa, permuta, etc.)
             '0136':
@@ -3600,13 +3610,9 @@ modelo:
             '0156':
               label: Suma de rendimientos netos reducidos del capital inmobiliario
                 (suma de las casillas [0154] )
-            '0171':
-              label: Ingresos de explotación
             '0172':
               label: Ingresos financieros derivados del aplazamiento o fraccionamiento
                 de operaciones realizadas en desarrollo de la actividad
-            '0174':
-              label: Imputación de ingresos por subvenciones de capital
             '0176':
               label: IVA devengado (por ejemplo, recargo de equivalencia y/o compensación
                 de agricultura, ganadería y pesca)
@@ -3620,8 +3626,6 @@ modelo:
               label: Total ingresos computables ( Suma [0171] a [0179] )
             0182:
               label: Variación de existencias (disminución de existencias finales)
-            0183:
-              label: Otros consumos de explotación
             0186:
               label: Seguridad Social o aportaciones a mutualidades alternativas del
                 titular de la actividad
@@ -3631,10 +3635,6 @@ modelo:
             0191:
               label: Gastos de manutención del contribuyente (artículo 30.2.5ª.c de
                 la Ley del Impuesto)
-            0192:
-              label: Arrendamientos y cánones
-            0193:
-              label: Reparaciones y conservación
             0194:
               label: Suministros (luz, agua, gas, telefonía e internet)
             '0205':
@@ -3709,7 +3709,7 @@ modelo:
                 fiscal internacional: (suma de las casillas [0269])'
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales (suma de
+                de inversión Colectiva constituidas en paraísos fiscales (suma de
                 las casillas [0278])
             0286:
               label: Importe computable ([0283] + [0284] - [0285])
@@ -4058,11 +4058,11 @@ modelo:
                 misma casilla del anexo B.1, B.2, B.3, B.4, B.5 ó B.6, según corresponda)
             '0565':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo (traslade los importes de estas mismas casilla...
             '0566':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo (traslade los importes de estas mismas casilla...
             '0572':
               label: 'Importe de las deducciones a las que se ha perdido el derecho
@@ -4155,7 +4155,7 @@ modelo:
               label: Importe del abono anticipado de la deducción correspondiente
                 a 2020
             '0613':
-              label: Incremento por gastos en guarderias o centros de educación infantil
+              label: Incremento por gastos en guarderías o centros de educación infantil
                 autorizados
             '0614':
               label: NIF del descendiente
@@ -4246,7 +4246,7 @@ modelo:
               label: NIF del arrendador 2
             '0725':
               label: 'Importe de la deducción: Cuotas de afiliación y aportaciones
-                a partidos politicos federaciones, coaliciones o agrupaciones electorales'
+                a partidos políticos federaciones, coaliciones o agrupaciones electorales'
             '0733':
               label: 'Reserva para Inversiones en Canarias 2016: Importe de las dotaciones'
             '0734':
@@ -4719,7 +4719,7 @@ modelo:
             '1076':
               label: NIF de la Escuela, Centro  o Guardería Infantil
             '1077':
-              label: Por adquisición de vehiculos eléctricos nuevos
+              label: Por adquisición de vehículos eléctricos nuevos
             '1078':
               label: Importe satisfecho en 2019 pendiente de aplicación (para inversiones
                 en cualquier tipo de vivienda o edificio dónde se ubique)
@@ -5351,10 +5351,10 @@ modelo:
                   de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: Modelo 100 2020 estimacion directa aggregators
+                title: Modelo 100 2020 estimación directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2020 estimacion objetiva aggregators
+                title: Modelo 100 2020 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2020 base imponible / base liquidable / cuota aggregators
@@ -5369,7 +5369,7 @@ modelo:
                 title: Modelo 100 2020 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2020 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2020 atribución / imputación de rentas aggregators
             renta-mini-model-trabajo:
               field:
                 title: Modelo 100 2020 rendimientos del trabajo aggregators
@@ -5478,12 +5478,12 @@ modelo:
                 Histórico Español destinadas a su conservación o rehabilitación. Importe
                 imputable a 2021 (cumplimente el Anexo C.1)
             0279:
-              label: Ayudas públicas para la primera instalación de jovenes agricultores
+              label: Ayudas públicas para la primera instalación de jóvenes agricultores
                 previstas en el Marco Nacional de Desarrollo Rural destinadas a la
                 adquisición de una participación en el capital de empresas agr...
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales  (suma de
+                de inversión Colectiva constituidas en paraísos fiscales  (suma de
                 las casillas [0278])
             0285:
               label: Ingr. a cuenta repercutidos
@@ -5745,11 +5745,11 @@ modelo:
                 los importes de estas mismas casillas del anexo A.5): Parte autonómica'
             '0565':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0566':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0567':
               label: 'Por obras de mejora de la eficiencia energética de viviendas
@@ -6691,10 +6691,10 @@ modelo:
                   de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: Modelo 100 2021 estimacion directa aggregators
+                title: Modelo 100 2021 estimación directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2021 estimacion objetiva aggregators
+                title: Modelo 100 2021 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2021 base imponible / base liquidable / cuota aggregators
@@ -6709,7 +6709,7 @@ modelo:
                 title: Modelo 100 2021 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2021 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2021 atribución / imputación de rentas aggregators
             renta-mini-model-trabajo:
               field:
                 title: Modelo 100 2021 rendimientos del trabajo aggregators
@@ -6818,13 +6818,9 @@ modelo:
               label: Ayudas públicas a los titulares de bienes integrantes del Patrimonio
                 Histórico Español destinadas a su conservación o rehabilitación. Importe
                 imputable a 2022 (cumplimente el Anexo C.1)
-            0279:
-              label: Ayudas públicas para la primera instalación de jóvenes agricultores
-                previstas en el Marco Nacional de Desarrollo Rural destinadas a la
-                adquisición de una participación en el capital de empresas agr...
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales  (suma de
+                de inversión Colectiva constituidas en paraísos fiscales  (suma de
                 las casillas [0278])
             0286:
               label: Importe computable([0283] + [0284] - [0285])
@@ -7073,11 +7069,11 @@ modelo:
                 Parte autonómica'
             '0565':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0566':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             0568:
               label: 'Incremento de las cuotas líquidas por pérdida del derecho a
@@ -7895,7 +7891,7 @@ modelo:
               label: 'Actividad forestal dedicada a la extracción de resina: Ingresos
                 íntegros'
             '1521':
-              label: 'Raices (excepto remolacha azucarera), tubérculos, forrajes,
+              label: 'Raíces (excepto remolacha azucarera), tubérculos, forrajes,
                 algodón, frutos no cítricos y otros productos agrícolas no comprendidos
                 expresamente en otros números: Ingresos íntegros'
             '1524':
@@ -8088,10 +8084,10 @@ modelo:
                   de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: Modelo 100 2022 estimacion directa aggregators
+                title: Modelo 100 2022 estimación directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2022 estimacion objetiva aggregators
+                title: Modelo 100 2022 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2022 base imponible / base liquidable / cuota aggregators
@@ -8106,7 +8102,7 @@ modelo:
                 title: Modelo 100 2022 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2022 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2022 atribución / imputación de rentas aggregators
             renta-mini-model-trabajo:
               field:
                 title: Modelo 100 2022 rendimientos del trabajo aggregators
@@ -8235,13 +8231,9 @@ modelo:
               label: Ayudas públicas a los titulares de bienes integrantes del Patrimonio
                 Histórico Español destinadas a su conservación o rehabilitación. Importe
                 imputable a 2023 (cumplimente el Anexo C.1)
-            0279:
-              label: Ayudas públicas para la primera instalación de jóvenes agricultores
-                previstas en el Marco Nacional de Desarrollo Rural destinadas a la
-                adquisición de una participación en el capital de empresas agr...
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales  (suma de
+                de inversión Colectiva constituidas en paraísos fiscales  (suma de
                 las casillas [0278])
             0286:
               label: Importe computable([0283] + [0284] - [0285])
@@ -8478,11 +8470,11 @@ modelo:
                 Parte autonómica'
             '0565':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0566':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0567':
               label: 'Por obras de mejora de la eficiencia energética de viviendas
@@ -9466,10 +9458,10 @@ modelo:
                   de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: Modelo 100 2023 estimacion directa aggregators
+                title: Modelo 100 2023 estimación directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2023 estimacion objetiva aggregators
+                title: Modelo 100 2023 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2023 base imponible / base liquidable / cuota aggregators
@@ -9484,7 +9476,7 @@ modelo:
                 title: Modelo 100 2023 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2023 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2023 atribución / imputación de rentas aggregators
             renta-mini-model-trabajo:
               field:
                 title: Modelo 100 2023 rendimientos del trabajo aggregators
@@ -9620,13 +9612,9 @@ modelo:
               label: Ayudas públicas a los titulares de bienes integrantes del Patrimonio
                 Histórico Español destinadas a su conservación o rehabilitación. Importe
                 imputable a 2024 (cumplimente el Anexo C.1)(*)
-            0279:
-              label: Ayudas públicas para la primera instalación de jóvenes agricultores
-                previstas en el Marco Nacional de Desarrollo Rural destinadas a la
-                adquisición de una participación en el capital de empresas agr...
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales  (suma de
+                de inversión Colectiva constituidas en paraísos fiscales  (suma de
                 las casillas [0278])
             0286:
               label: Importe computable([0283] + [0284] - [0285])
@@ -9890,11 +9878,11 @@ modelo:
                 corresponda): Parte autonómica'
             '0565':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0566':
               label: Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (traslade los importes de estas mismas casill...
             '0567':
               label: 'Por obras de mejora de la eficiencia energética de viviendas
@@ -11033,19 +11021,19 @@ modelo:
             DNIASDLG:
               label: Ascendiente NIF
             DPFNAC_C:
-              label: Conyuge fecha de nacimiento
+              label: Cónyuge fecha de nacimiento
             DPFNAC_D:
               label: Primer declarante fecha de nacimiento
             DPGMIN_C:
-              label: Conyuge grado de discapacidad
+              label: Cónyuge grado de discapacidad
             DPGMIN_D:
               label: Primer declarante grado de discapacidad
             DPNIF_C:
-              label: Conyuge NIF
+              label: Cónyuge NIF
             DPNIF_D:
               label: Primer declarante NIF
             DP_APENOM_C:
-              label: Conyuge apellidos y nombre
+              label: Cónyuge apellidos y nombre
             DP_APENOM_D:
               label: Primer declarante apellidos y nombre
             E:
@@ -11080,23 +11068,23 @@ modelo:
             NIFDLG:
               label: Hijo o descendiente NIF
             NORESIDENTE:
-              label: Conyuge no residente no contribuyente IRPF
+              label: Cónyuge no residente no contribuyente IRPF
             PCTMINASDLG:
               label: Ascendiente clave de discapacidad
             PH18:
               label: Hijos menores de 18 anos en la unidad familiar
             RESIDENTEUE:
-              label: Conyuge residente UE o EEE
+              label: Cónyuge residente UE o EEE
             SEXO_C:
-              label: Conyuge sexo
+              label: Cónyuge sexo
             SEXO_D:
               label: Primer declarante sexo
             TIPOTRIBUTACION:
               label: Tipo de tributacion
             ZCCAD:
-              label: Comunidad Autonoma de residencia
+              label: Comunidad Autónoma de residencia
             ZRUE2:
-              label: Pais UE o EEE del conyuge
+              label: País UE o EEE del cónyuge
             prestacion-inss-maternidad-paternidad-exenta:
               label: Prestaciones públicas por maternidad y paternidad exentas percibidas
                 del INSS
@@ -11110,10 +11098,10 @@ modelo:
                 title: Modelo 100 2024 final settlement result
             renta-mini-model-actividades-economicas-directa:
               field:
-                title: Modelo 100 2024 estimacion directa aggregators
+                title: Modelo 100 2024 estimación directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2024 estimacion objetiva aggregators
+                title: Modelo 100 2024 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2024 base imponible / base liquidable / cuota aggregators
@@ -11128,7 +11116,7 @@ modelo:
                 title: Modelo 100 2024 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2024 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2024 atribución / imputación de rentas aggregators
             renta-mini-model-trabajo:
               field:
                 title: Modelo 100 2024 rendimientos del trabajo aggregators
@@ -11142,7 +11130,7 @@ modelo:
             '0003':
               label: Retribuciones dinerarias. Importe integro
             '0004':
-              label: Rendimientos del trabajo en especie. Valoracion
+              label: Rendimientos del trabajo en especie. Valoración
             '0005':
               label: Rendimientos del trabajo en especie. Ingresos a cuenta
             '0006':
@@ -11150,7 +11138,7 @@ modelo:
             '0007':
               label: Rendimientos del trabajo en especie. Importe integro
             0008:
-              label: Contribuciones empresariales a planes de pensiones y prevision
+              label: Contribuciones empresariales a planes de pensiones y previsión
                 social
             0009:
               label: Contribuciones empresariales a seguros colectivos de dependencia
@@ -11159,13 +11147,13 @@ modelo:
             '0011':
               label: Reducciones de rendimientos del trabajo
             '0012':
-              label: Total ingresos integros computables del trabajo
+              label: Total ingresos íntegros computables del trabajo
             '0013':
               label: Cotizaciones a la Seguridad Social o mutualidades obligatorias
             '0015':
               label: Cuotas satisfechas a colegios profesionales
             '0016':
-              label: Gastos de defensa juridica derivados de litigios con el empleador
+              label: Gastos de defensa jurídica derivados de litigios con el empleador
             '0017':
               label: Rendimiento neto previo del trabajo
             0018:
@@ -11179,28 +11167,26 @@ modelo:
               label: Incremento para trabajadores activos con discapacidad
             '0022':
               label: Rendimiento neto del trabajo
-            '0023':
-              label: Cuantia aplicable con caracter general
             '0024':
-              label: Cantidades aportadas por la empresa a sistemas de prevision social
-                por decision del trabajador
+              label: Cantidades aportadas por la empresa a sistemas de previsión social
+                por decisión del trabajador
             '0025':
               label: Rendimiento neto reducido del trabajo
             '0027':
-              label: Intereses de cuentas, depositos y activos financieros en general
+              label: Intereses de cuentas, depósitos y activos financieros en general
             0028:
-              label: Intereses de activos financieros con derecho a bonificacion
+              label: Intereses de activos financieros con derecho a bonificación
             0029:
-              label: Dividendos y rendimientos por participacion en fondos propios
+              label: Dividendos y rendimientos por participación en fondos propios
             '0030':
-              label: Rendimientos de transmision o amortizacion de Letras del Tesoro
+              label: Rendimientos de transmisión o amortización de Letras del Tesoro
             '0031':
               label: Rendimientos de otros activos financieros
             '0032':
               label: Rendimientos de seguros de vida o invalidez y operaciones de
-                capitalizacion
+                capitalización
             '0033':
-              label: Rentas por imposicion de capitales y otros rendimientos en base
+              label: Rentas por imposición de capitales y otros rendimientos en base
                 del ahorro
             '0034':
               label: Rendimientos derivados de deuda subordinada o participaciones
@@ -11208,14 +11194,14 @@ modelo:
             '0035':
               label: Rendimientos de Planes de Ahorro a Largo Plazo
             '0036':
-              label: Total ingresos integros del capital mobiliario en base del ahorro
+              label: Total ingresos íntegros del capital mobiliario en base del ahorro
             '0037':
               label: Gastos fiscalmente deducibles de capital mobiliario en base del
                 ahorro
             0038:
               label: Rendimiento neto del capital mobiliario en base del ahorro
             0039:
-              label: Reduccion aplicable a determinados contratos de seguro
+              label: Reducción aplicable a determinados contratos de seguro
             '0040':
               label: Rendimiento neto reducido del capital mobiliario en base del
                 ahorro
@@ -11232,15 +11218,15 @@ modelo:
             '0046':
               label: Arrendamiento de bienes muebles, negocios o minas y subarrendamientos
             '0047':
-              label: Prestacion de asistencia tecnica
+              label: Prestación de asistencia técnica
             0048:
               label: Propiedad intelectual cuando el contribuyente no sea autor
             '0050':
-              label: Propiedad industrial no afecta a una actividad economica
+              label: Propiedad industrial no afecta a una actividad económica
             '0051':
               label: Otros rendimientos del capital mobiliario en base general
             '0052':
-              label: Total ingresos integros del capital mobiliario en base general
+              label: Total ingresos íntegros del capital mobiliario en base general
             '0053':
               label: Gastos fiscalmente deducibles de capital mobiliario en base general
             '0054':
@@ -11250,10 +11236,10 @@ modelo:
             '0056':
               label: Rendimiento neto reducido del capital mobiliario en base general
             '0057':
-              label: Reduccion de rendimientos acogidos al regimen fiscal del acontecimiento
-                XXXVII Copa America Barcelona
+              label: Reducción de rendimientos acogidos al régimen fiscal del acontecimiento
+                XXXVII Copa América Barcelona
             0058:
-              label: Reduccion por rendimientos de actividades artisticas obtenidos
+              label: Reducción por rendimientos de actividades artísticas obtenidos
                 de manera excepcional
             '0060':
               label: Suma de rendimientos reducidos del capital mobiliario en base
@@ -11266,7 +11252,7 @@ modelo:
               label: Número de días en que el inmueble ha sido su vivienda habitual
                 en 2025
             '0102':
-              label: Ingresos integros computables del capital inmobiliario
+              label: Ingresos íntegros computables del capital inmobiliario
             '0103':
               label: Importe pendiente de deducir de los ejercicios 2021, 2022, 2023
                 y 2024 (Cumplimente el anexo C.1)
@@ -11279,32 +11265,26 @@ modelo:
               label: Gastos de reparación y conservación correspondientes al ejercicio
                 2025 (Desglose en el anexo D, cumplimentación voluntaria)
             '0107':
-              label: Intereses y reparación/conservacion aplicados en esta declaración
+              label: Intereses y reparación/conservación aplicados en esta declaración
             0108:
               label: Importe de 2025 pendiente de deducir en los 4 años siguientes
                 (Cumplimente el anexo C.1)
             '0110':
-              label: Gastos de formalizacion del contrato
+              label: Gastos de formalización del contrato
             '0111':
-              label: Gastos de defensa juridica
+              label: Gastos de defensa jurídica
             '0112':
               label: Otras cantidades devengadas por terceros por servicios personales
             '0113':
               label: Servicios y suministros
             '0115':
               label: Tributos recargos y tasas
-            '0117':
-              label: Amortizacion de bienes muebles
             '0121':
               label: Fecha de transmisión, en su caso, en el ejercicio 2025, del inmueble
                 (día, mes y año)
             0129:
               label: Importe de las mejoras realizadas en 2025 (Desglose en el anexo
                 D, cumplimentación voluntaria)
-            '0131':
-              label: Amortizacion del inmueble y la mejora
-            '0132':
-              label: Amortizacion en casos especiales
             '0136':
               label: Fecha de transmisión, en su caso, en el ejercicio 2025, del inmueble
                 (día, mes y año)
@@ -11312,17 +11292,17 @@ modelo:
               label: Importe de las mejoras realizadas en 2025 en el inmueble accesorio
                 (Desglose en el anexo D, cumplimentación voluntaria)
             '0146':
-              label: Amortizacion del inmueble accesorio y mejoras
+              label: Amortización del inmueble accesorio y mejoras
             '0147':
-              label: Amortizacion en casos especiales del inmueble accesorio
+              label: Amortización en casos especiales del inmueble accesorio
             0149:
               label: Rendimiento neto del capital inmobiliario
             '0150':
-              label: Reduccion por arrendamiento de inmuebles destinados a vivienda
+              label: Reducción por arrendamiento de inmuebles destinados a vivienda
             '0151':
-              label: Reduccion por rendimientos irregulares del capital inmobiliario
+              label: Reducción por rendimientos irregulares del capital inmobiliario
             '0152':
-              label: Rendimiento minimo computable en caso de parentesco
+              label: Rendimiento mínimo computable en caso de parentesco
             '0153':
               label: Retenciones e ingresos a cuenta de capital inmobiliario
             '0154':
@@ -11347,43 +11327,33 @@ modelo:
               label: Agrícola, ganadera y forestal
             '0164':
               label: Resto
-            '0171':
-              label: Ingresos de explotacion
             '0172':
               label: Ingresos financieros derivados del aplazamiento o fraccionamiento
-            '0174':
-              label: Imputacion de ingresos por subvenciones de capital
             '0176':
               label: IVA devengado
             '0177':
-              label: Variacion de existencias por incremento de existencias finales
+              label: Variación de existencias por incremento de existencias finales
             0179:
-              label: Exceso de amortizacion por transmision de elementos con libertad
-                de amortizacion
+              label: Exceso de amortización por transmisión de elementos con libertad
+                de amortización
             0180:
               label: Total ingresos computables
             0182:
-              label: Variacion de existencias por disminucion de existencias finales
-            0183:
-              label: Otros consumos de explotacion
+              label: Variación de existencias por disminución de existencias finales
             0189:
-              label: Aportaciones a sistemas de prevision social del personal empleado
+              label: Aportaciones a sistemas de previsión social del personal empleado
             0191:
-              label: Gastos de manutencion del contribuyente
-            0192:
-              label: Arrendamientos y canones
-            0193:
-              label: Reparaciones y conservacion
+              label: Gastos de manutención del contribuyente
             0194:
               label: Suministros
             0196:
-              label: Regularizacion cuotas RETA a ingresar
+              label: Regularización cuotas RETA a ingresar
             0197:
-              label: Regularizacion cuotas RETA a devolver
+              label: Regularización cuotas RETA a devolver
             '0205':
               label: IVA soportado
             0208:
-              label: Amortizacion del inmovilizado material
+              label: Amortización del inmovilizado material
             '0212':
               label: Por arrendamiento de vivienda habitual vinculado a determinadas
                 operaciones de dación en pago (importe de la casilla [1170] del anexo
@@ -11394,27 +11364,27 @@ modelo:
             '0214':
               label: Perdidas por insolvencias de deudores
             '0215':
-              label: Incentivos al mecenazgo por convenios de colaboracion
+              label: Incentivos al mecenazgo por convenios de colaboración
             '0216':
-              label: Incentivos al mecenazgo por actividades de interes general
+              label: Incentivos al mecenazgo por actividades de interés general
             '0217':
               label: Otros conceptos fiscalmente deducibles excepto provisiones
             0218:
-              label: Suma de gastos previos de estimacion directa
+              label: Suma de gastos previos de estimación directa
             '0220':
-              label: Total gastos deducibles en estimacion directa normal
+              label: Total gastos deducibles en estimación directa normal
             '0221':
               label: Diferencia entre ingresos y gastos previos
             '0222':
-              label: Provisiones deducibles y gastos de dificil justificacion
+              label: Provisiones deducibles y gastos de difícil justificación
             '0223':
-              label: Total gastos deducibles en estimacion directa simplificada
+              label: Total gastos deducibles en estimación directa simplificada
             '0225':
               label: Reducciones de rendimientos irregulares
             '0226':
               label: Rendimiento neto reducido
             '0227':
-              label: Amortizacion del inmovilizado inmaterial
+              label: Amortización del inmovilizado inmaterial
             0228:
               label: Por arrendamiento de vivienda habitual por familias monoparentales
                 (importe de la casilla [1130] del anexo B.11)
@@ -11422,21 +11392,21 @@ modelo:
               label: Por arrendamiento de vivienda habitual por personas con discapacidad
                 (importe de la casilla [1130] del anexo B.11)
             '0231':
-              label: Suma de rendimientos netos reducidos de estimacion directa
+              label: Suma de rendimientos netos reducidos de estimación directa
             '0232':
-              label: Reduccion por el ejercicio de determinadas actividades economicas
+              label: Reducción por el ejercicio de determinadas actividades económicas
             '0233':
-              label: Reduccion por el ejercicio de determinadas actividades economicas
+              label: Reducción por el ejercicio de determinadas actividades económicas
                 articulo 32 2 3
             '0234':
-              label: Reduccion por inicio de una actividad economica
+              label: Reducción por inicio de una actividad económica
             '0235':
-              label: Rendimiento neto reducido total de estimacion directa
+              label: Rendimiento neto reducido total de estimación directa
             '0236':
-              label: Reduccion de rendimientos acogidos al regimen fiscal del acontecimiento
-                XXXVII Copa America Barcelona
+              label: Reducción de rendimientos acogidos al régimen fiscal del acontecimiento
+                XXXVII Copa América Barcelona
             '0237':
-              label: Reduccion por rendimientos de actividades artisticos obtenidos
+              label: Reducción por rendimientos de actividades artísticos obtenidos
                 de manera excepcional
             0238:
               label: Reintegro de subvenciones
@@ -11451,22 +11421,18 @@ modelo:
             '0247':
               label: Último mes completo de 2025 en que estuvo vigente el matrimonio
             0248:
-              label: Deduccion por conyuge con discapacidad
+              label: Deducción por cónyuge con discapacidad
             0249:
-              label: Abono anticipado por conyuge con discapacidad
+              label: Abono anticipado por cónyuge con discapacidad
             '0255':
               label: Por adquisición de vehículos eléctricos nuevos
             '0266':
               label: Ayudas públicas a los titulares de bienes integrantes del Patrimonio
                 Histórico Español destinadas a su conservación o rehabilitación. Importe
                 imputable a 2025 (cumplimente el Anexo C.1)(*)
-            0279:
-              label: Ayudas públicas para la primera instalación de jóvenes agricultores
-                previstas en el Marco Nacional de Desarrollo Rural destinadas a la
-                adquisición de una participación en el capital de empresas agr...
             0280:
               label: Suma de imputaciones de rentas por la participación en instituciones
-                de inversión Colectiva constituidas en paraisos fiscales  (suma de
+                de inversión Colectiva constituidas en paraísos fiscales  (suma de
                 las casillas [0278])
             0286:
               label: Importe computable([0283] + [0284] - [0285])
@@ -11776,11 +11742,11 @@ modelo:
                 Parte autonómica'
             '0565':
               label: 'Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (importes de esta casillas del anexo A.4): Pa...'
             '0566':
               label: 'Deducción aplicable a las unidades familiares formadas por residentes
-                fiscales en Estados miembros de la Unión Europea o del Espacio Economico
+                fiscales en Estados miembros de la Unión Europea o del Espacio Económico
                 Europeo  (importes de esta casillas del anexo A.4): Pa...'
             '0567':
               label: 'Por obras de mejora de la eficiencia energética de viviendas
@@ -11814,41 +11780,41 @@ modelo:
             0585:
               label: Cuota liquida estatal incrementada
             0586:
-              label: Cuota liquida autonomica incrementada
+              label: Cuota liquida autonómica incrementada
             0587:
               label: Cuota liquida incrementada total
             0588:
-              label: Deduccion por doble imposicion internacional
+              label: Deducción por doble imposición internacional
             0589:
-              label: Deduccion por doble imposicion internacional en transparencia
+              label: Deducción por doble imposición internacional en transparencia
                 fiscal internacional
             0590:
-              label: Deduccion por doble imposicion por imputacion de rentas de derechos
+              label: Deducción por doble imposición por imputación de rentas de derechos
                 de imagen
             0591:
               label: Retenciones no practicadas deducibles de la cuota
             0592:
-              label: Por atribucion de retenciones de rendimientos del capital mobiliario
+              label: Por atribución de retenciones de rendimientos del capital mobiliario
             0593:
-              label: Por atribucion de retenciones de rendimientos del capital inmobiliario
+              label: Por atribución de retenciones de rendimientos del capital inmobiliario
             0594:
-              label: Por atribucion de retenciones de rendimientos de actividades
-                economicas
+              label: Por atribución de retenciones de rendimientos de actividades
+                económicas
             0595:
               label: Cuota resultante de la autoliquidación
             0598:
               label: Por arrendamientos de inmuebles urbanos
             0599:
-              label: Por rendimientos de actividades economicas
+              label: Por rendimientos de actividades económicas
             '0600':
-              label: Por atribucion de retenciones de ganancias y perdidas patrimoniales
+              label: Por atribución de retenciones de ganancias y perdidas patrimoniales
                 imputables a 2025
             '0601':
-              label: Imputados por agrupaciones de interes economico y UTEs
+              label: Imputados por agrupaciones de interés económico y UTEs
             '0602':
               label: Ingresos a cuenta del articulo 92.8 de la Ley del Impuesto
             '0604':
-              label: Pagos fraccionados ingresados por actividades economicas
+              label: Pagos fraccionados ingresados por actividades económicas
             '0605':
               label: Cuotas del Impuesto sobre la Renta de no Residentes
             '0606':
@@ -11866,30 +11832,30 @@ modelo:
             '0611':
               label: Deducción por maternidad. Importe de la deducción
             '0612':
-              label: Deduccion por maternidad. Abono anticipado
+              label: Deducción por maternidad. Abono anticipado
             '0613':
-              label: Incremento por gastos en guarderias
+              label: Incremento por gastos en guarderías
             '0623':
-              label: Deduccion por descendiente con discapacidad
+              label: Deducción por descendiente con discapacidad
             '0624':
               label: Abono anticipado por descendiente con discapacidad
             '0636':
-              label: Deduccion por ascendiente con discapacidad
+              label: Deducción por ascendiente con discapacidad
             '0637':
               label: Abono anticipado por ascendiente con discapacidad
             '0660':
-              label: Deduccion por familia numerosa
+              label: Deducción por familia numerosa
             '0661':
               label: Abono anticipado por familia numerosa
             '0662':
-              label: Deduccion por ascendiente separado legalmente o sin vinculo matrimonial
+              label: Deducción por ascendiente separado legalmente o sin vinculo matrimonial
             '0663':
               label: Abono anticipado por ascendiente separado legalmente o sin vinculo
                 matrimonial
             '0664':
-              label: Regularizacion de abono anticipado de descendiente con discapacidad
+              label: Regularización de abono anticipado de descendiente con discapacidad
             '0666':
-              label: Regularizacion de abono anticipado de ascendiente con discapacidad
+              label: Regularización de abono anticipado de ascendiente con discapacidad
             0669:
               label: Discrepancia de criterio administrativo
             '0670':
@@ -13382,9 +13348,9 @@ modelo:
             DECFAL:
               label: Primer declarante fecha de fallecimiento
             DPFNAC_C:
-              label: Conyuge fecha de nacimiento
+              label: Cónyuge fecha de nacimiento
             DPGMIN_C:
-              label: Conyuge grado de discapacidad
+              label: Cónyuge grado de discapacidad
             DPGMIN_D:
               label: Primer declarante grado de discapacidad
             ECIVIL:
@@ -13396,23 +13362,23 @@ modelo:
             MINUSDLG:
               label: Hijo o descendiente clave discapacidad
             NORESIDENTE:
-              label: Conyuge no residente y no contribuyente IRPF
+              label: Cónyuge no residente y no contribuyente IRPF
             PCTMINASDLG:
               label: Ascendiente clave discapacidad
             PH18:
               label: Hijos menores en unidad familiar
             RESIDENTEUE:
-              label: Conyuge residente UE o EEE
+              label: Cónyuge residente UE o EEE
             SEXO_C:
-              label: Conyuge sexo
+              label: Cónyuge sexo
             SEXO_D:
               label: Primer declarante sexo
             TIPOTRIBUTACION:
-              label: Opcion de tributacion elegida
+              label: Opción de tributación elegida
             ZCCAD:
               label: Comunidad autónoma de la declaración
             ZRUE2:
-              label: Conyuge pais de residencia UE o EEE
+              label: Cónyuge país de residencia UE o EEE
             base-liq-neg-general-2024-aplicada-maxima:
               label: 'Base liquidable general negativa ej. 2024: compensación máxima
                 aplicable (límite art. 50.3 LIRPF) [interno]'
@@ -13432,7 +13398,7 @@ modelo:
                 title: Modelo 100 final settlement result
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2025 estimacion objetiva aggregators
+                title: Modelo 100 2025 estimación objetiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2025 base imponible / base liquidable / cuota aggregators
@@ -13447,7 +13413,7 @@ modelo:
                 title: Modelo 100 2025 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
-                title: Modelo 100 2025 atribucion / imputacion de rentas aggregators
+                title: Modelo 100 2025 atribución / imputación de rentas aggregators
             renta-personal-family:
               field:
                 title: 'Modelo 100: datos del perfil personal y familiar'

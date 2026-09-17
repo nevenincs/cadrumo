@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-360-iva-devolucion-ue:
           field:
-            title: Modelo 360 IVA solicitud de devolucion 8a Directiva (cuotas soportadas
+            title: Modelo 360 IVA solicitud de devolución 8a Directiva (cuotas soportadas
               en otros Estados miembros)
       field:
         official_name: Modelo 360. Solicitud de devolución del Impuesto sobre el Valor
@@ -222,7 +222,7 @@ modelo:
               help: Casilla 2728-2732 del modelo 360, ejercicio 2010.
               label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
-              help: Dato declarado en el modelo 360, tomado del diseno de registro
+              help: Dato declarado en el modelo 360, tomado del diseño de registro
                 oficial.
               label: Datos del proveedor. Dirección
             x-chim6r1edto32bbge9nncpb5chnn4bbedtmm4sj5:
@@ -236,7 +236,7 @@ modelo:
               help: Casilla 3109-3110 del modelo 360, ejercicio 2010.
               label: 1. Datos del proveeedor de bienes/prestador de servicios. País
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
-              help: Dato declarado en el modelo 360, tomado del diseno de registro
+              help: Dato declarado en el modelo 360, tomado del diseño de registro
                 oficial.
               label: Datos del proveedor. País emisor del NVAT
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
@@ -402,7 +402,7 @@ modelo:
               help: Casilla 5851-5851 del modelo 360, ejercicio 2010.
               label: 2. Indicador de simplificada
             x-chim6r1edto34bbkd5o6u:
-              help: Dato declarado en el modelo 360, tomado del diseno de registro
+              help: Dato declarado en el modelo 360, tomado del diseño de registro
                 oficial.
               label: Tipo de operación
             x-chim6r1ee1p6asr5dpq62or9dtn2qs3ielim4obj:
@@ -494,7 +494,7 @@ modelo:
               label: 3. Representante. Dirección en el extranjero. Domicilio
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1gmiso:
               help: Casilla 1774-1775 del modelo 360, ejercicio 2010.
-              label: 3. Representante. Dirección en el extranjero. Pais
+              label: 3. Representante. Dirección en el extranjero. País
             x-chim6r1ee9in0sj5edimst31dpq6abj5f1q74obed9in4rpee1nm4r31cdkmurg:
               help: Casilla 1704-1733 del modelo 360, ejercicio 2010.
               label: 3. Representante. Dirección en el extranjero. Localidad / Población
@@ -592,7 +592,7 @@ modelo:
               label: 2. Solicitante. Dirección en el extranjero. Domicilio
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss31d5pg:
               help: Casilla 715-716 del modelo 360, ejercicio 2010.
-              label: 2. Solicitante. Dirección en el extranjero. Pais
+              label: 2. Solicitante. Dirección en el extranjero. País
             x-chim6r1eednmoqb3d5q62rjkckn6au3ke9gmsqj5e9niss3fc9m62or9dtn0:
               help: Casilla 645-674 del modelo 360, ejercicio 2010.
               label: 2. Solicitante. Dirección en el extranjero. Población / Ciudad

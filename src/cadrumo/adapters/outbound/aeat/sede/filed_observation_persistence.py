@@ -3,7 +3,7 @@
 The live filed-history service owns only protocols.  This module is the outer
 binding for those protocols: it joins the existing Sede parser and observation
 store to the encrypted calculation, filing, IVA-history, event, and baseline
-repositories.  Adapter failures are translated at this boundary so an
+repositories and the filing-chain reconciliation.  Adapter failures are translated at this boundary so an
 application caller never has to know a Sede or secure-object exception type.
 
 Core types:
@@ -29,9 +29,9 @@ from .....application.calculations.observations_repository import (
 )
 from .....application.live.errors import LiveApplicationError
 from .....application.live.filed_observation_ports import (
-    FiledBaselineImportPort,
     FiledCalculationObservationRepositoryPort,
     FiledDeclarationTransformationPort,
+    FiledFilingReconciliationPort,
     FiledIvaHistoryRepositoryPort,
     FiledIvaObservationPersistencePort,
     FiledObservationArtefactProtocol,
@@ -40,9 +40,11 @@ from .....application.live.filed_observation_ports import (
     FiledObservationProtocol,
     FiledObservationSkipProtocol,
 )
-from .....application.modelo.external_import_actions import (
-    ExternalFilingBaselineSource,
-    import_external_filing_source,
+from .....application.modelo.filing_chain_reconciliation import (
+    AeatRegisterEntry,
+    FilingReconciliationPorts,
+    FilingReconciliationResult,
+    reconcile_aeat_register_entry,
 )
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -55,7 +57,7 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
-from .....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
+from .....domain.modelos.filing_record import ModeloRecordCatalogue
 from .....domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ....inbound.justificante.parser import parse_justificante_bytes
 from ....persistence.profile.buckets import BucketEventHistoryRepository
@@ -440,8 +442,8 @@ class BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
         )
 
 
-class BaselineImportAdapter(FiledBaselineImportPort):
-    """Adapt the external-baseline application operation with explicit ports."""
+class FilingReconciliationAdapter(FiledFilingReconciliationPort):
+    """Adapt the filing-chain reconciliation service with explicit repositories."""
 
     def __init__(
         self,
@@ -452,49 +454,45 @@ class BaselineImportAdapter(FiledBaselineImportPort):
         justificante_repository: JustificanteRepository,
         observation_repository: CalculationObservationRepository,
     ) -> None:
-        """Bind all baseline dependencies to one secure-object backend."""
-        self._calculation_repository = calculation_repository
-        self._filing_repository = filing_repository
-        self._work_lifecycle_ports = work_lifecycle_ports
-        self._justificante_repository = justificante_repository
-        self._observation_repository = observation_repository
+        """Bind every repository the reconciliation reads and co-commits to one backend."""
+        self._ports = FilingReconciliationPorts(
+            filing_repository=filing_repository,
+            calculation_repository=calculation_repository,
+            work_lifecycle=work_lifecycle_ports,
+            observation_repository=observation_repository,
+            justificante_repository=justificante_repository,
+        )
 
     @override
-    def import_source(
+    def reconcile(
         self,
-        source: ExternalFilingBaselineSource,
+        entry: AeatRegisterEntry,
         *,
-        bucket_id: str,
         actor: str,
         clock: datetime,
-    ) -> ModeloRecord:
-        """Import one complete filed observation as an amendable baseline."""
+    ) -> FilingReconciliationResult:
+        """Reconcile one AEAT register entry under the bundled authority."""
 
-        def import_with_authority() -> ModeloRecord:
+        def reconcile_with_authority() -> FilingReconciliationResult:
             with bundled_indexed_authority().operation() as operation:
-                return import_external_filing_source(
-                    source,
-                    bucket_id=bucket_id,
-                    actor=actor,
-                    work_lifecycle_ports=self._work_lifecycle_ports,
+                return reconcile_aeat_register_entry(
+                    entry,
+                    ports=self._ports,
                     operation=operation,
-                    calculation_repository=self._calculation_repository,
-                    filing_repository=self._filing_repository,
-                    justificante_repository=self._justificante_repository,
-                    observation_repository=self._observation_repository,
+                    actor=actor,
                     clock=clock,
                 )
 
-        return _call_adapter("import_filed_baseline", import_with_authority)
+        return _call_adapter("reconcile_filed_register_entry", reconcile_with_authority)
 
 
 __all__ = [
-    "BaselineImportAdapter",
     "BucketEventRepositoryAdapter",
     "CalculationObservationRepositoryAdapter",
     "FiledDeclarationTransformationAdapter",
     "FiledObservationParserAdapter",
     "FiledObservationStoreAdapter",
+    "FilingReconciliationAdapter",
     "FilingRepositoryAdapter",
     "IvaHistoryRepositoryAdapter",
     "IvaObservationPersistenceAdapter",

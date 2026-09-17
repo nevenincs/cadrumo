@@ -237,7 +237,8 @@ async def test_missing_handoff_refuses_and_escape_dismisses_only_child() -> None
         table = screen.query_one("#declarations-calendar-agenda", DataTable)
         table.focus()
         await pilot.press("enter")
-        assert "destino" in str(screen.query_one("#declarations-calendar-notice", Static).render()).lower()
+        notice = str(screen.query_one("#declarations-calendar-notice", Static).render())
+        assert notice == declarations_copy("tui.declarations.refusal.handoff")
         await pilot.press("escape")
         await pilot.pause()
         assert app.return_value is None

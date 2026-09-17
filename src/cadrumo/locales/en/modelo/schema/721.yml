@@ -4,28 +4,20 @@ modelo:
       casilla:
         continuidad:
           custodio-nombre:
-            help: Tax information for casilla of Modelo 721.
             label: Name or company name of the foreign virtual currency custodian
           custodio-pais:
-            help: Tax information for casilla of Modelo 721.
             label: Custodian's country code (ISO 3166-1 alpha-2)
           filing-year:
-            help: Tax information for casilla of Modelo 721.
             label: Tax year the foreign virtual currency return refers to
           moneda-virtual-clave-token:
-            help: 'Review the casilla information: Identificador of the moneda virtual
-              (ticker / token ID, p.ej. BTC, ETH).'
             label: Virtual currency identifier (ticker / token ID, e.g. BTC, ETH)
           moneda-virtual-saldo-31-diciembre:
-            help: Tax information about tax information in casilla  of Modelo 721.
             label: Balance or value of the virtual currency at 31 December, expressed
               in euros
           moneda-virtual-saldo-inicio:
-            help: Tax information for casilla of Modelo 721.
             label: Balance or value of the virtual currency at the start of the period
               (for significant variations)
           tipo-declaracion:
-            help: Tax information for casilla of Modelo 721.
             label: Type of return (original / supplementary / replacement)
       construct:
         modelo-721-informative:

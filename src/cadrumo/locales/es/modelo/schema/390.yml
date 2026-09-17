@@ -156,7 +156,7 @@ modelo:
             label: Operaciones en régimen general. Recargo de equivalencia. Tipo 1%.
               Base imponible
           iva-anual-resultado-regimen-general:
-            label: Resultado del regimen general (cuota devengada - cuota deducible)
+            label: Resultado del régimen general (cuota devengada - cuota deducible)
           iva-anual-total-bases-cuotas-iva:
             label: Total bases y cuotas de IVA del ejercicio
           iva-base-imponible-aic-bienes-general:
@@ -652,7 +652,7 @@ modelo:
             label: Base imponible IVA autorepercutido en operaciones interiores con
               inversión del sujeto pasivo
           iva-isp-interior-cuota:
-            label: Cuota IVA autorepercutida en operaciones interiores con inversion
+            label: Cuota IVA autorepercutida en operaciones interiores con inversión
               del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
           iva-liquidaciones-total-a-ingresar:
             label: Total resultados a ingresar de las autoliquidaciones de IVA del
@@ -1215,7 +1215,7 @@ modelo:
               help: Base imponible IVA autorepercutido en operaciones interiores con
                 inversión del sujeto pasivo
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Cuota IVA autorepercutida en operaciones interiores con inversion
+              help: Cuota IVA autorepercutida en operaciones interiores con inversión
                 del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
@@ -1771,7 +1771,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpddhkn2tb9chgm6qbfdo:
               help: Resultado de la liquidación
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
-              help: Resultado del regimen general (cuota devengada - cuota deducible)
+              help: Resultado del régimen general (cuota devengada - cuota deducible)
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd64n62qb35lhmusjid5imst35ecn64objck:
               help: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
                 de bienes corrientes - Base imponible [147]
@@ -2100,7 +2100,7 @@ modelo:
               help: Base imponible IVA autorepercutido en operaciones interiores con
                 inversión del sujeto pasivo
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Cuota IVA autorepercutida en operaciones interiores con inversion
+              help: Cuota IVA autorepercutida en operaciones interiores con inversión
                 del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
@@ -2652,7 +2652,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpddhkn2tb9chgm6qbfdo:
               help: Resultado de la liquidación
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
-              help: Resultado del regimen general (cuota devengada - cuota deducible)
+              help: Resultado del régimen general (cuota devengada - cuota deducible)
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd64n62qb35lhmusjid5imst35ecn64objck:
               help: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
                 de bienes corrientes - Base imponible [147]
@@ -3005,7 +3005,7 @@ modelo:
               help: Base imponible IVA autorepercutido en operaciones interiores con
                 inversión del sujeto pasivo
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Cuota IVA autorepercutida en operaciones interiores con inversion
+              help: Cuota IVA autorepercutida en operaciones interiores con inversión
                 del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
@@ -3557,7 +3557,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpddhkn2tb9chgm6qbfdo:
               help: Resultado de la liquidación
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
-              help: Resultado del regimen general (cuota devengada - cuota deducible)
+              help: Resultado del régimen general (cuota devengada - cuota deducible)
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd64n62qb35lhmusjid5imst35ecn64objck:
               help: Sector diferenciado 1 - IVA deducible en adquisiciones intracomunitarias
                 de bienes corrientes - Base imponible [147]

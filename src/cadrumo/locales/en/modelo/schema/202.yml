@@ -4,7 +4,6 @@ modelo:
       casilla:
         continuidad:
           '25':
-            help: Tax information about tax information in casilla 25 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
               rate 2
           importe-bonificacion-art-26-ley-19-1994:
@@ -44,165 +43,107 @@ modelo:
             label: Additional information (5) - Amount corresponding to the Canary
               Islands investment reserve
           is-pf-mod-40-2-a-ingresar:
-            help: 'Review the casilla information: Mod. 40.2 LIS - A ingresar.'
             label: Method under art. 40.2 LIS - Payable
           is-pf-mod-40-2-base-pago-fraccionado:
-            help: Tax information about tax information in casilla 01 of Modelo 202.
             label: Method under art. 40.2 LIS - Instalment payment base
           is-pf-mod-40-2-resultado-declaracion-anterior:
-            help: 'Review the casilla information: Mod. 40.2 LIS - Result of the return
-              previous (supplementary).'
             label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
           is-pf-mod-40-3-amortizacion-30pct-dism:
-            help: Tax information about tax information in casilla 37 of Modelo 202.
             label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
           is-pf-mod-40-3-b1-base-pago-fraccionado:
-            help: Tax information about tax information in casilla 16 of Modelo 202.
             label: Method under art. 40.3 LIS, block B1 - General case - Instalment
               payment base
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
-            help: Tax information about tax information in casilla 40 of Modelo 202.
             label: Method under art. 40.3 LIS, block B1 - Offset of negative tax liabilities
               (cooperatives)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
-            help: 'Review the casilla information: Mod. 40.3 LIS B1 - Dotaciones of
-              the art. 11.12 LIS.'
             label: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
               LIS
           is-pf-mod-40-3-b1-porcentaje:
-            help: 'Review the casilla information: Mod. 40.3 LIS B1 - Caso general
-              - Percentage.'
             label: Method under art. 40.3 LIS, block B1 - General case - Percentage
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
-            help: 'Review the casilla information: Mod. 40.3 LIS B1 - Reserva nivelacion
-              convertida - Aumentos.'
             label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
               - Increases
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
-            help: 'Review the casilla information: Mod. 40.3 LIS B1 - Reserva nivelacion
-              convertida - Disminuciones.'
             label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
               - Decreases
           is-pf-mod-40-3-b1-resultado-previo:
-            help: 'Review the casilla information: Mod. 40.3 LIS B1 - Caso general
-              - Result previo.'
             label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
               result
           is-pf-mod-40-3-b2-base-pago-fraccionado:
-            help: Tax information about tax information in casilla 19 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Instalment payment base
           is-pf-mod-40-3-b2-base-tipo-1:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Base a rate
-              1.'
             label: Method under art. 40.3 LIS, block B2 - Base at rate 1
           is-pf-mod-40-3-b2-base-tipo-2:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Base a rate
-              2.'
             label: Method under art. 40.3 LIS, block B2 - Base at rate 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
-            help: Tax information about tax information in casilla 42 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Offset of negative tax liabilities
               (cooperatives)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Dotaciones art.
-              11.12 LIS (cooperativas).'
             label: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
               LIS (cooperatives)
           is-pf-mod-40-3-b2-importe-pago-fraccionado:
-            help: Tax information about tax information in casilla 22 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
               rate 1
           is-pf-mod-40-3-b2-porcentaje-1:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Percentage 1.'
             label: Method under art. 40.3 LIS, block B2 - Percentage 1
           is-pf-mod-40-3-b2-porcentaje-2:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Percentage 2.'
             label: Method under art. 40.3 LIS, block B2 - Percentage 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
-            help: Tax information about tax information in casilla 51 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
               105 LIS) - Increases
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
-            help: Tax information about tax information in casilla 52 of Modelo 202.
             label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
               105 LIS) - Decreases
           is-pf-mod-40-3-b2-resultado-previo:
-            help: 'Review the casilla information: Mod. 40.3 LIS B2 - Result previo.'
             label: Method under art. 40.3 LIS, block B2 - Preliminary result
           is-pf-mod-40-3-base-imponible-previa:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Tax base previa.'
             label: Method under art. 40.3 LIS - Preliminary taxable base
           is-pf-mod-40-3-bonificaciones:
-            help: Tax information for casilla 27 of Modelo 202.
             label: Method under art. 40.3 LIS - Tax credits for the computed period
           is-pf-mod-40-3-cantidad-a-ingresar:
-            help: 'Tax information about tax information in casilla 34 of Modelo 202
-              References: [32], [33].'
             label: Method under art. 40.3 LIS - Amount payable (greater of boxes [32]
               and [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
-            help: Tax information about tax information in casilla 14 of Modelo 202.
             label: Method under art. 40.3 LIS - Offset of negative bases from prior
               tax years
           is-pf-mod-40-3-correcciones-is-aumentos:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Correcciones by
-              IS - Aumentos.'
             label: Method under art. 40.3 LIS - Corporate income tax adjustments -
               Increases
           is-pf-mod-40-3-correcciones-is-disminuciones:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Correcciones by
-              IS - Disminuciones.'
             label: Method under art. 40.3 LIS - Corporate income tax adjustments -
               Decreases
           is-pf-mod-40-3-minimo-a-ingresar:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Minimo a ingresar
-              (CN >= 10 millones euros).'
             label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR 10
               million)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
-            help: Tax information about tax information in casilla 30 of Modelo 202.
             label: Method under art. 40.3 LIS - Instalment payments from prior periods
               in Common Territory
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
-            help: Tax information for casilla 44 of Modelo 202.
             label: Method under art. 40.3 LIS - Capitalisation reserve remainder not
               applied due to insufficient base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
-            help: Tax information about tax information in casilla 45 of Modelo 202.
             label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Increases
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
-            help: Tax information about tax information in casilla 46 of Modelo 202.
             label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Decreases
           is-pf-mod-40-3-resto-correcciones-aumentos:
-            help: Tax information about tax information in casilla 07 of Modelo 202.
             label: Method under art. 40.3 LIS - Other adjustments - Increases
           is-pf-mod-40-3-resto-correcciones-disminuciones:
-            help: Tax information about tax information in casilla 08 of Modelo 202.
             label: Method under art. 40.3 LIS - Other adjustments - Decreases
           is-pf-mod-40-3-resultado:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Result.'
             label: Method under art. 40.3 LIS - Result
           is-pf-mod-40-3-resultado-contable:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Result contable
-              despues of the IS.'
             label: Method under art. 40.3 LIS - Accounting result after corporate
               income tax
           is-pf-mod-40-3-resultado-declaracion-anterior:
-            help: 'Review the casilla information: Mod. 40.3 LIS - Result of the return
-              previous (supplementary).'
             label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
           is-pf-mod-40-3-total-correcciones-aumentos:
-            help: 'Review the casilla information: Mod. 40.3 LIS - TOTAL correcciones
-              - Aumentos.'
             label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
           is-pf-mod-40-3-total-correcciones-disminuciones:
-            help: 'Review the casilla information: Mod. 40.3 LIS - TOTAL correcciones
-              - Disminuciones.'
             label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
           is-pf-mod-40-3-volumen-territorio-comun-pct:
-            help: Tax information about tax information in casilla 29 of Modelo 202.
             label: Method under art. 40.3 LIS - Volume of transactions in Common Territory
               (%)
           minoracion-rentas-bonificacion-art-33-lis:
@@ -219,7 +160,6 @@ modelo:
             label: Additional information (5) - Income from reversal of impairments
               integrated into the tax base
           retenciones-ingresos-a-cuenta:
-            help: Tax information for casilla 28 of Modelo 202.
             label: Method under art. 40.3 LIS - Withholdings and payments on account
               on income for the computed period
       field:
@@ -269,34 +209,20 @@ modelo:
         2025-y-siguientes:
           casilla:
             '61':
-              help: 'Review the casilla information: Mod. 40.3 LIS B2 - Base a rate
-                3.'
               label: Method under art. 40.3 LIS, block B2 - Base at rate 3
             '62':
-              help: 'Review the casilla information: Mod. 40.3 LIS B2 - Percentage
-                3.'
               label: Method under art. 40.3 LIS, block B2 - Percentage 3
             '63':
-              help: Tax information about tax information in casilla 63 of Modelo
-                202.
               label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 3
             '64':
-              help: 'Review the casilla information: Mod. 40.3 LIS B2 - Base a rate
-                4.'
               label: Method under art. 40.3 LIS, block B2 - Base at rate 4
             '65':
-              help: 'Review the casilla information: Mod. 40.3 LIS B2 - Percentage
-                4.'
               label: Method under art. 40.3 LIS, block B2 - Percentage 4
             '66':
-              help: Tax information about tax information in casilla 66 of Modelo
-                202.
               label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 4
             '67':
-              help: 'Review the casilla information: Mod. 40.3 LIS - Correcciones
-                by Impuesto Complementario (IC) - Aumentos.'
               label: Method under art. 40.3 LIS - Top-up Tax (IC) adjustments - Increases
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
               label: Additional information (5) - Amount excluded for capital or equity

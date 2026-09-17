@@ -24,7 +24,7 @@ modelo:
               con terceras personas.
             label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
           contraparte-clave-operacion:
-            label: Clave de operacion con la contraparte (A=entregas/prestaciones,
+            label: Clave de operación con la contraparte (A=entregas/prestaciones,
               B=adquisiciones/recepciones, ...)
           contraparte-importe-q1:
             label: Importe de operaciones con la contraparte en primer trimestre
@@ -37,13 +37,13 @@ modelo:
           contraparte-nif:
             label: NIF de la contraparte declarada
           contraparte-nombre:
-            label: Nombre o razon social de la contraparte declarada
+            label: Nombre o razón social de la contraparte declarada
           contraparte-pais-codigo:
-            label: Codigo de pais de la contraparte (ISO 3166-1 alfa-2; vacio para
+            label: Código de país de la contraparte (ISO 3166-1 alfa-2; vacío para
               contrapartes nacionales)
           contraparte-provincia-codigo:
             help: Casilla contraparte.provincia-codigo del modelo 347.
-            label: Codigo de provincia de la contraparte (dos digitos)
+            label: Código de provincia de la contraparte (dos dígitos)
           declarante-representante-legal-nif:
             help: Dato declarado en el modelo 347, declaración anual de operaciones
               con terceras personas.
@@ -191,7 +191,7 @@ modelo:
               label: OPERACIÓN CON BIENES VINCULADOS O DESTINADOS A VINCULARSE AL
                 RÉGIMEN DE DEPÓSITO DISTINTO DEL ADUANERO
             x-cdnmst3ic5o62sjkckn66r31epiiqrrgclp62or9dtn0:
-              help: Casilla contraparte.clave-operacion del modelo 347, ejercicio
+              help: Casilla contraparte.clave-operación del modelo 347, ejercicio
                 2025.
             x-cdnmst3ic5o62sjkckn66sj9ehin4qbf5lhm2qj1:
               help: Dato declarado en el modelo 347, declaración anual de operaciones
@@ -223,7 +223,7 @@ modelo:
                 con terceras personas.
               label: NÚMERO DE CONVOCATORIA BDNS
             x-cdnmst3ic5o62sjkckn70ob9ecmm6rr4d5jmu:
-              help: Casilla contraparte.pais-codigo del modelo 347, ejercicio 2025.
+              help: Casilla contraparte.país-código del modelo 347, ejercicio 2025.
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 347, ejercicio 2025.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:

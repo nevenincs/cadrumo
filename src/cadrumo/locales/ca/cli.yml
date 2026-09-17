@@ -853,6 +853,11 @@ cli:
         filing_record_id_help: Identificador estable d'un filing record
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
+        import_declared_kind_file_error: --declared-kind no s'admet amb --file; importeu
+          la correcció amb valors --set.
+        import_declared_kind_help: Tipus de declaració que l'AEAT registra per a aquesta
+          presentació (original, complementaria, sustitutiva, rectificativa); obligatori
+          quan l'AEAT ja té una declaració confirmada del període
         import_file_help: Camí a un manifest de caselles CSV o XLSX exportat des de
           la font de la declaració externa
         import_help: Persistir una declaració presentada externament com a filing
@@ -862,17 +867,50 @@ cli:
           defecte)
         list_help: Llistar els filing records registrats
         modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
+        observe_local_clear_help: Elimina la substitució de l'operador perquè es torni
+          a fer servir l'observació oficial de l'AEAT
+        observe_local_clear_values_error: --clear elimina una substitució i no admet
+          valors --set ni --file.
+        observe_local_cleared_notice: Substitució de l'operador eliminada; els càlculs
+          tornen a llegir l'observació oficial de l'AEAT quan n'hi ha.
         observe_local_file_help: Camí a un full de càlcul local CSV o XLSX de files
           casilla_code,value (una reconstrucció sense certificat d'una presentació
           passada). Es combina amb --set; un valor de --set per a la mateixa casella
           sobreescriu la fila del full de càlcul
-        observe_local_help: Registra una observació local aportada per l'operador
-          per al preomplert del càlcul
-        observe_local_replace_official_evidence_help: Permet que aquesta observació
-          aportada per l'operador substitueixi les proves oficials de l'AEAT existents
-          per al mateix model i període.
+        observe_local_help: Registra o elimina una substitució auditada de l'operador
+          sobre l'observació d'un període; es conserva qualsevol observació oficial
+          de l'AEAT
+        observe_local_reason_help: Motiu pel qual l'operador substitueix l'observació
+          d'aquest període; es desa a l'auditoria de la substitució
+        observe_local_recorded_notice: Substitució de l'operador registrada com a
+          observació local pendent només per al preomplert del càlcul; no és prova
+          de l'AEAT, es conserva qualsevol observació oficial i no s'ha creat cap
+          registre de presentació.
         observe_local_set_help: Id de casella canònic i valor Decimal a registrar,
           p. ex. --set 1391=0
+        reconciliation_contradicted: 'Model {modelo} {period} {filing_year}: l''AEAT
+          té un contingut diferent del de la presentació local pendent (caselles {casillas}).
+          La declaració de l''AEAT passa a estar vigent i la presentació local queda
+          marcada com a discrepant.'
+        reconciliation_notice:
+          content_unavailable: 'Model {modelo} {period} {filing_year}: l''entrada
+            de l''AEAT no conté valors de caselles ni un justificant comparable, per
+            això no s''ha pogut conciliar.'
+          correction_without_confirmed_baseline: 'Model {modelo} {period} {filing_year}:
+            l''AEAT indica una correcció, però no consta cap declaració confirmada
+            que corregeixi.'
+          declaration_kind_mismatch: 'Model {modelo} {period} {filing_year}: l''AEAT
+            indica un tipus de declaració diferent del de la presentació local pendent.'
+          declaration_kind_undetermined: 'Model {modelo} {period} {filing_year}: l''AEAT
+            registra una presentació posterior sense indicar si és una correcció.'
+          receipt_totals_mismatch: 'Model {modelo} {period} {filing_year}: l''import
+            del justificant difereix de la presentació local pendent, però sense valors
+            de caselles no s''ha pogut registrar el contingut de l''AEAT.'
+          receipt_totals_not_reconciled: 'Model {modelo} {period} {filing_year}: no
+            s''ha pogut comparar l''import del justificant amb la presentació local
+            pendent.'
+          receipt_totals_only: 'Model {modelo} {period} {filing_year}: la confirmació
+            es basa en els imports del justificant, no en la igualtat casella a casella.'
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)

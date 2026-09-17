@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ..classification.policies import RedactionRule, SensitivityClass, default_policy_for
 from ..errors.hierarchy import RedactionError
 from ..redaction.rules import (
@@ -37,7 +38,7 @@ _SHAPES = (
     "GB82WEST12345698765432",
     "2025-12-31T09:32:12.345678Z",
     "1470176e-bf82-490d-a09d-1234567890ab",
-    "https://sede.agenciatributaria.gob.es/path?q=1",
+    f"{SEDE_ROOT_URL_FIXTURE}path?q=1",
     "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdefghijk",
     "Cierre 2025",
     "Probe 3902",
