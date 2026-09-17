@@ -19,7 +19,7 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "8d87424d-0b5a-469e-b802-02ffdad316f1"
 _ACTIVE_PROFILE_ID = "503a9d70-8308-4cf8-9f56-0dd357f88594"

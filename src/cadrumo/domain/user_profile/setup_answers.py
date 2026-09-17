@@ -29,7 +29,7 @@ from typing import Any, Final
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
-from ...core.errors.hierarchy import ProfileAnswerTypeError
+from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.utils import parse_bool
@@ -126,6 +126,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("output_language", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_output_language(cls, value: object) -> OutputLanguage:
         if isinstance(value, OutputLanguage):
             return value
@@ -258,6 +259,7 @@ class SetupAnswers(BaseModel):
     # distinct from each enum's value space.
     @field_validator("iva_regime", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_iva_regime(cls, value: object) -> Any:
         if isinstance(value, IVARegime):
             try:
@@ -288,11 +290,13 @@ class SetupAnswers(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _parse_optional_iva_bool(cls, value: object) -> Any:
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_tax_residence_ccaa(cls, value: object) -> Any:
         if isinstance(value, CCAA):
             return value
@@ -309,6 +313,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("entity_type", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_entity_type(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -323,6 +328,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("legal_entity_form", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_legal_entity_form(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -337,6 +343,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_estimation_regime", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_irpf_estimation_regime(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -347,6 +354,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_activity_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_irpf_activity_kind(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -359,6 +367,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("situacion_familiar", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_situacion_familiar(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -371,6 +380,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_unidad_familiar_descendientes_exclusivos(
         cls,
         value: object,
@@ -390,6 +400,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_special_regime", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_irpf_special_regime(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -400,6 +411,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("fiscal_residency", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_fiscal_residency(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -418,6 +430,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_income_categories")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_irpf_income_categories(cls, value: str) -> str:
         tokens = [token.strip() for token in value.split(",") if token.strip()]
         for token in tokens:
@@ -431,6 +444,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("declaration_roles")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_declaration_roles(cls, value: str) -> str:
         tokens = [token.strip() for token in value.split(",") if token.strip()]
         for token in tokens:
@@ -444,6 +458,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxation_type", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_taxation_type(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -455,6 +470,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_sex_code(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -466,6 +482,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_marital_status", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_marital_status(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -479,6 +496,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_marriage_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_taxpayer_marriage_date(cls, value: str) -> str:
         from datetime import date
 
@@ -496,6 +514,7 @@ class SetupAnswers(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _parse_disability_grade(cls, value: object) -> Any:
         if value == "":
             return ""
@@ -507,6 +526,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("incn_prior_12_months")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_incn_prior_12_months(cls, value: str) -> str:
         from decimal import Decimal, InvalidOperation
 
@@ -528,6 +548,7 @@ class SetupAnswers(BaseModel):
         "objective_estimation_modulos_module_7_units",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _validate_objective_estimation_modulos_units(cls, value: str) -> str:
         from decimal import Decimal, InvalidOperation
 
@@ -541,6 +562,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("new_entity_first_two_profit_periods", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_new_entity_first_two_profit_periods(
         cls,
         value: object,
@@ -556,6 +578,7 @@ class SetupAnswers(BaseModel):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _parse_ley_49_2002_optional_bool(
         cls,
         value: object,
@@ -564,6 +587,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("activity_start_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_activity_start_date(cls, value: str) -> str:
         from datetime import date
 
@@ -577,6 +601,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("ley_49_2002_option_date", "ley_49_2002_renunciation_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_ley_49_2002_dates(cls, value: str) -> str:
         from datetime import date
 
@@ -590,6 +615,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_special_regime_start_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_irpf_special_regime_start_date(cls, value: str) -> str:
         from datetime import date
 
@@ -602,6 +628,7 @@ class SetupAnswers(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
         if self.taxation_type == RentaDeclaracionType.JOINT and not self.spouse_tax_id:
             # A stable custom error type (not the generic ``value_error``) lets
@@ -614,6 +641,7 @@ class SetupAnswers(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_eu_eea_country_when_resident(self) -> SetupAnswers:
         if self.spouse_eu_eea_resident and not self.spouse_eu_eea_country:
             raise PydanticCustomError(

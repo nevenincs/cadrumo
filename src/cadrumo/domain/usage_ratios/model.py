@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, PrivateAttr, field_serializer, field_vali
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import is_unit_proportion
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.governed_fact_scope import (
     cache_governed_projection,
     governed_facts_in_scope,
@@ -267,11 +268,11 @@ def validate_usage_ratio_reference(
         raise UsageRatioValidationError("usage_ratio_id requires category_id on the ledger transaction")
     try:
         category = require_spending_category(category_id)
-    except (TypeError, ValueError) as exc:
+    except RegistryValidationError as exc:
         raise UsageRatioValidationError(f"category_id {category_id!r} is not a spending category") from exc
     try:
         ratio_category = require_spending_category(usage_ratio_id)
-    except (TypeError, ValueError) as exc:
+    except RegistryValidationError as exc:
         raise UsageRatioValidationError(
             f"usage_ratio_id {usage_ratio_id!r} must be a concrete eligible spending category",
         ) from exc

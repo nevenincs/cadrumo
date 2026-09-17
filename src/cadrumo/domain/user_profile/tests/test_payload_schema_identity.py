@@ -33,6 +33,7 @@ from ..values import (
     UserProfileRecord,
     UserProfileSnapshot,
     _derive_canonical_hash,
+    create_user_profile_record,
     new_profile_snapshot_id,
 )
 
@@ -55,13 +56,17 @@ def _facts() -> tuple[UserProfileFact, ...]:
 
 
 def _record(**overrides: object) -> UserProfileRecord:
+    context = _profile_creation_context_for_test()
     return UserProfileRecord.model_validate(
         {
+            "schema_id": context.schema.id,
+            "schema_version": context.schema.version,
             "profile_id": _PROFILE_ID,
             "facts": _facts(),
             "setup_state": ProfileSetupState.COMPLETE,
             **overrides,
         },
+        context=context,
     )
 
 
@@ -127,14 +132,20 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
 
 def test_snapshot_refuses_an_unknown_schema_id() -> None:
     with pytest.raises(ValidationError, match=_SCHEMA_REFUSAL):
-        UserProfileSnapshot.model_validate(_snapshot_payload(schema_id="bogus.profile"))
+        UserProfileSnapshot.model_validate(
+            _snapshot_payload(schema_id="bogus.profile"),
+            context=_profile_creation_context_for_test(),
+        )
 
 
 def test_snapshot_refuses_a_future_schema_version() -> None:
     canonical = published_profile_schema()
 
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
-        UserProfileSnapshot.model_validate(_snapshot_payload(schema_version=canonical.version + 1))
+        UserProfileSnapshot.model_validate(
+            _snapshot_payload(schema_version=canonical.version + 1),
+            context=_profile_creation_context_for_test(),
+        )
 
 
 def test_snapshot_refuses_a_pre_current_schema_version() -> None:
@@ -143,6 +154,7 @@ def test_snapshot_refuses_a_pre_current_schema_version() -> None:
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(
             _snapshot_payload(schema_version=_pre_current_version(canonical.version)),
+            context=_profile_creation_context_for_test(),
         )
 
 
@@ -159,18 +171,26 @@ def test_the_current_schema_hydrates_through_the_snapshot() -> None:
     """A canonical payload survives the record and the snapshot untouched."""
     canonical = published_profile_schema()
 
-    snapshot = UserProfileSnapshot.model_validate(_snapshot_payload())
+    snapshot = UserProfileSnapshot.model_validate(
+        _snapshot_payload(),
+        context=_profile_creation_context_for_test(),
+    )
 
     assert snapshot.schema_id == canonical.id
     assert snapshot.schema_version == canonical.version
     assert snapshot.facts == _facts()
 
 
-def test_a_defaulted_record_carries_the_canonical_version() -> None:
-    """The default this codebase writes is the current schema, not a stale one."""
+def test_a_created_record_carries_the_canonical_version() -> None:
+    """The creation door stamps the current schema, not a stale one."""
     canonical = published_profile_schema()
 
-    defaulted = _record()
+    defaulted = create_user_profile_record(
+        context=_profile_creation_context_for_test(),
+        profile_id=_PROFILE_ID,
+        facts=_facts(),
+        setup_state=ProfileSetupState.COMPLETE,
+    )
 
     assert defaulted.schema_version == canonical.version
     assert defaulted.schema_id == canonical.id

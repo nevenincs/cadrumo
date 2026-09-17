@@ -21,6 +21,7 @@ from typing import Literal, cast
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.classification.policies import SensitivityClass
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant, validate_utc_aware
@@ -81,6 +82,7 @@ class CarriedSecureObject(BaseModel):
 
     @field_validator("written_at")
     @classmethod
+    @pydantic_validation_boundary
     def _written_at_is_utc(cls, value: datetime) -> datetime:
         """Reject a carried write instant that is naive or not UTC.
 

@@ -73,7 +73,7 @@ def test_invalid_ratio_values_rejected(ratio: Decimal, message: str) -> None:
 
 def test_unknown_category_key_rejected_from_json() -> None:
     """JSON payloads naming a non-enum category fail validation."""
-    with pytest.raises(ValidationError, match=r"Input should be"):
+    with pytest.raises(ValidationError, match=r"is not declared"):
         UsageRatioProfile.model_validate_json('{"ratios": {"telefonia_turbo": "0.5"}}')
 
 
