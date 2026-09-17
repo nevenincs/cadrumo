@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -564,7 +565,7 @@ def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> No
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     forward = reference.model_dump() | {"governs_periods_from": date(2026, 1, 1)}
 
-    with pytest.raises(RegistryValidationError, match="RETROACTIVE reach only"):
+    with pytest.raises(ValidationError, match="RETROACTIVE reach only"):
         LegalReference.model_validate(forward)
 
 
@@ -574,5 +575,5 @@ def test_a_governed_period_end_without_a_start_is_refused() -> None:
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     dangling = reference.model_dump() | {"governs_periods_from": None}
 
-    with pytest.raises(RegistryValidationError, match="governs_periods_to without governs_periods_from"):
+    with pytest.raises(ValidationError, match="governs_periods_to without governs_periods_from"):
         LegalReference.model_validate(dangling)
