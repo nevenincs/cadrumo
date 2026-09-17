@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.decimal.constants import ZERO
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
@@ -134,6 +135,7 @@ class IvaCompensationPeriodState(BaseModel):
     )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _expediente_and_status_match_provenance(self) -> IvaCompensationPeriodState:
         is_aeat = self.provenance is IvaCompensationStateProvenance.AEAT_CAPTURE
         if is_aeat and self.expediente_id is None:
@@ -153,6 +155,7 @@ class IvaCompensationPeriodState(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches(self) -> IvaCompensationPeriodState:
         if self.period.filing_year != self.filing_year:
             raise ValueError("period.filing_year must match filing_year")
@@ -188,6 +191,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
     source_observation_key: str = Field(min_length=1, max_length=96)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _amounts_balance(self) -> IvaCompensationCarryForwardLot:
         if self.source_period.filing_year != self.source_filing_year:
             raise ValueError("source_period.filing_year must match source_filing_year")
@@ -392,6 +396,7 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
     total_year_remaining_amount: Decimal = Field(ge=ZERO)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _partition_sums(self) -> IvaCompensationYearEndCarryPartition:
         if self.last_period_amount + self.generated_not_in_last_amount != self.total_year_remaining_amount:
             raise ValueError("last_period_amount + generated_not_in_last_amount must equal total_year_remaining_amount")

@@ -26,7 +26,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..carry_forward import IvaCompensationPeriodState
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _VALID_NIF = "12345678Z"
 _PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
