@@ -1,4 +1,9 @@
-"""Encrypted persistence adapter for application filing-history ports."""
+"""Encrypted persistence adapter for application filing-history ports.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`,
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

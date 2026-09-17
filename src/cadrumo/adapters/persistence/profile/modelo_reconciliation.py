@@ -1,4 +1,8 @@
-"""Encrypted persistence for modelo reconciliation records and audit events."""
+"""Encrypted persistence for modelo reconciliation records and audit events.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

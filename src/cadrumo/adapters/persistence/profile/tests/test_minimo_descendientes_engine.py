@@ -26,6 +26,10 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -44,10 +48,34 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
         yield operation
 
 
-_ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+def _supported_filing_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no supported filing years"
+    assert support.years, "the published support envelope admits no filing year"
+    return tuple(support.years)
+
+
+def _authored_renta_filing_year() -> int:
+    """Return the newest supported year whose Renta revision is authored for that year.
+
+    A year the envelope admits only by projecting an earlier revision forward
+    carries no dated thresholds of its own.
+    """
+    for year in sorted(_supported_filing_years(), reverse=True):
+        valid_to = published_snapshot("100", filing_year=year, period="0A").revision.valid_to
+        if valid_to is None or valid_to.year >= year:
+            return year
+    raise AssertionError("no supported filing year has an authored Renta revision")
+
+
+_FILING_YEAR = _authored_renta_filing_year()
+#: The worked example's figures (7,900 of mínimo, 3,097 of cuota) are the
+#: Cataluña computation for this Renta campaign, so its year is part of the
+#: example rather than a coordinate the test may move.
+_WORKED_EXAMPLE_FILING_YEAR = 2024
 _BUCKET = "00000000-0000-4000-8000-000000000516"
 _PROFILE_LABEL = "M100 minimo descendientes engine profile"
-_T0 = datetime(2026, 7, 2, 10, 0, tzinfo=UTC)
+_T0 = datetime(max(_supported_filing_years()), 7, 2, 10, 0, tzinfo=UTC)
 
 
 @lru_cache
@@ -97,7 +125,7 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
-        descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
+        descendientes = (DescendantInfo(birth_date=date(_FILING_YEAR - 12, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
             _create_profile_record_for_test(
@@ -109,7 +137,7 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
                 context=_profile_creation_context_for_test(),
             ),
         )
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_FILING_YEAR)
         binding_id = _binding_id_for_estatal(snapshot)
         resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)
 
@@ -117,16 +145,19 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(
     assert resolution.binding_values[binding_id] == tranches[0]
 
 
-def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(
+def test_profile_descendant_facts_feed_the_worked_example_minimo_and_downstream_tariff(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """Real profile descendientes feed 0513/0514 and the downstream cuota path."""
-    snapshot = _snapshot(2024)
+    assert _WORKED_EXAMPLE_FILING_YEAR in _supported_filing_years()
+    year = _WORKED_EXAMPLE_FILING_YEAR
+    snapshot = _snapshot(year)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
+        # One descendant of nine and one under three at the end of the campaign.
         descendientes = (
-            DescendantInfo(birth_date=date(2015, 1, 1)),
-            DescendantInfo(birth_date=date(2023, 1, 15)),
+            DescendantInfo(birth_date=date(year - 9, 1, 1)),
+            DescendantInfo(birth_date=date(year - 1, 1, 15)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
@@ -141,6 +172,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(
                     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1975, 6, 15)),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
                     UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
                 ),
                 created_at=_T0,
                 updated_at=_T0,
@@ -152,7 +184,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(
     result = calculate_registry_snapshot(
         snapshot,
         inputs={validated_casilla_id("0003", surface="test_minimo_descendientes_engine.casilla"): Decimal("37400")},
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values={
             **resolution.binding_values,
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -167,6 +199,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(
         },
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
+        boolean_binding_values=resolution.boolean_binding_values,
         relation_values={
             "renta-modelo-111-retenciones-periodicas": Decimal("0"),
             "renta-modelo-123-retenciones-periodicas": Decimal("0"),
@@ -196,9 +229,9 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
     """End-to-end: a real Madrid profile resolves the Madrid-specific tranches."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL):
         descendientes = (
-            DescendantInfo(birth_date=date(2005, 1, 1)),
-            DescendantInfo(birth_date=date(2008, 1, 1)),
-            DescendantInfo(birth_date=date(2012, 1, 1)),
+            DescendantInfo(birth_date=date(_FILING_YEAR - 19, 1, 1)),
+            DescendantInfo(birth_date=date(_FILING_YEAR - 16, 1, 1)),
+            DescendantInfo(birth_date=date(_FILING_YEAR - 12, 1, 1)),
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
@@ -211,7 +244,7 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
                 context=_profile_creation_context_for_test(),
             ),
         )
-        snapshot = _snapshot(2024)
+        snapshot = _snapshot(_FILING_YEAR)
         estatal_binding_id = _binding_id_for_estatal(snapshot)
         autonomico_binding_id = _binding_id_for_autonomico(snapshot)
         resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET, operation=authority_operation)

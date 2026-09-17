@@ -4,6 +4,10 @@ This module is the outward implementation of the application-owned
 ``ApoderadoConfigurationRepository``.  It owns the secure-envelope substrate,
 namespace contract, bucket key derivation, and translation of row-identity
 refusals into the application error understood by the service.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope`,
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations

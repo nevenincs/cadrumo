@@ -77,7 +77,7 @@ from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanState
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, ModeloExportUnsupportedError, export_modelo_revision
+from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision

@@ -27,16 +27,17 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.actions_common import blocking_modelo_references
 from cadrumo.application.modelo.revision_persistence import persist_filed_revision
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
-from cadrumo.core.result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    result_disposition_casilla_ids,
-)
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
+from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -51,19 +52,6 @@ from cadrumo.domain.modelos.participation_index import (
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 
-
-def _filed_result_disposition(revision: CalculationRevision) -> ResultDisposition:
-    """Resolve the disposition the filing states from the revision's own result."""
-    casilla_ids = result_disposition_casilla_ids("303")
-    assert casilla_ids is not None
-    disposition = derive_result_disposition(
-        "303",
-        {casilla_id: revision.casilla_values.get(casilla_id, Decimal("0")) for casilla_id in casilla_ids},
-    )
-    assert disposition is not None
-    return disposition
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "5fb44bbf-c0c5-4701-b2a9-d4d521e66fb5"  # was 'modelo-participation-co-emission'
@@ -76,10 +64,9 @@ def _hex(seed: str) -> str:
 
 _TX_A = _hex("a")
 _TX_B = _hex("b")
-_IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
-    "iva.base-imponible",
-    surface="_IVA_BASE_IMPONIBLE_CASILLA",
-)
+# The Modelo 303 result casilla: a filed observation must name a casilla the
+# selected registry revision declares, and its value states the disposition.
+_M303_RESULT_CASILLA: CasillaId = M303_COMPENSATION_RESULTADO_CASILLA
 
 
 def _iva_wallet_repositories() -> tuple[CalculationObservationRepository, IvaCompensationHistoryRepository]:
@@ -97,7 +84,9 @@ def _seed_borrador(
     wu_repo: WorkUnitCatalogueRepository,
 ) -> tuple[CalculationRevision, WorkUnit]:
     """Persist a BORRADOR revision over two ledger transactions plus its work unit."""
-    revision_id_seed = "303"
+    snapshot = published_snapshot("303", filing_year=2024, period="2T")
+    revision_id_seed = str(snapshot.revision.id)
+    result_casilla = casillas_by_id(snapshot.revision)[_M303_RESULT_CASILLA]
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -119,8 +108,8 @@ def _seed_borrador(
     wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
 
     source_transaction_ids = (_TX_A, _TX_B)
-    input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
-    casilla_values = {_IVA_BASE_IMPONIBLE_CASILLA: Decimal("1000.00")}
+    input_values_by_casilla_id = {_M303_RESULT_CASILLA: "1000.00"}
+    casilla_values = {_M303_RESULT_CASILLA: Decimal("1000.00")}
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -145,10 +134,10 @@ def _seed_borrador(
         casilla_values=casilla_values,
         observations=(
             CasillaObservation(
-                casilla_id=_IVA_BASE_IMPONIBLE_CASILLA,
+                casilla_id=_M303_RESULT_CASILLA,
                 value=Decimal("1000.00"),
-                legal_refs=("ley-37-1992:art-164",),
-                source_refs=("participation-co-emission-test",),
+                legal_refs=tuple(result_casilla.legal_refs),
+                source_refs=tuple(result_casilla.source_refs),
             ),
         ),
         created_at=_T0,
@@ -258,7 +247,8 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 iva_compensation_history_repository=iva_compensation_history_repository,
                 participation_index_repository=participation_repo,
                 prorrata_register_repository=prorrata_repository,
-                result_disposition=_filed_result_disposition(verified_revision),
+                # The seeded result is a positive amount due, so the filing is an ingreso.
+                result_disposition=ResultDisposition.INGRESO,
                 operation=_authority_operation_for_test,
             )
 

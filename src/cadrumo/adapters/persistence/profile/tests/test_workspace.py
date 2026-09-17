@@ -67,6 +67,10 @@ from cadrumo.application.modelo.workspace_models import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
@@ -74,8 +78,19 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
+def _supported_filing_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no supported filing years"
+    assert support.years, "the published support envelope admits no filing year"
+    return tuple(support.years)
+
+
+#: The envelope's newest filing year: the coordinate an operator works in today.
+_FILING_YEAR = max(_supported_filing_years())
+
 _WORKSPACE_PROFILE_ID = "13000000-0000-4000-8000-000000000231"
-_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_T0 = datetime(_FILING_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 _LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -128,8 +143,8 @@ def _seed_work_unit(
     return create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id=revision_id,
         ports=WorkLifecyclePorts(
             work_unit_repository=repository,
@@ -144,8 +159,8 @@ def _visible_target(bucket_id: str, *, revision_id: str | None = None) -> Modelo
     return ModeloWorkspaceVisibleFilingTargetV1(
         target=ModeloVisibleFilingTarget(
             modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
+            filing_year=_FILING_YEAR,
+            period=Period.from_year_and_code(_FILING_YEAR, "1T"),
             registry_revision_id=revision_id,
             bucket_id=bucket_id,
         ),
@@ -215,7 +230,7 @@ def test_visible_target_projects_into_a_selector_request_with_no_exact_operands(
     request = modelo_work_selector_request_for_target(target, bucket_id="some-bucket")
 
     assert request.modelo == "130"
-    assert request.filing_year == 2026
+    assert request.filing_year == _FILING_YEAR
     assert request.revision_id == "2019-y-siguientes"
     assert request.bucket_id == "some-bucket"
     assert request.work_unit_id is None
@@ -226,7 +241,7 @@ def test_visible_target_projects_into_a_selector_request_with_no_exact_operands(
 def test_formula_operand_references_answer_the_input_direction_not_the_output_direction() -> None:
     """A real revision where the same casilla is both a formula's output and another's input."""
     authority = published_authority_operation()
-    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("130", filing_year=_FILING_YEAR, period="1T")
     formulas = snapshot.revision.formulas
 
     producing_formula_ids = {formula.id for formula in formulas if formula.target_casilla_id == "03"}
@@ -242,17 +257,35 @@ def test_formula_operand_references_answer_the_input_direction_not_the_output_di
     assert consuming[0].formula_id not in producing_formula_ids
 
 
+# Modelo 100 folds the Modelo 184 attributed income through a relation-prefill
+# binding; that binding is the real fold slot these endpoint rows describe.
+_RELATION_BINDING_ID = "renta-modelo-184-atribucion-actividades-economicas"
+_RELATION_SOURCE_CASILLA_ID = "tipo2.renta-atribuible-importe"
+
+
+def _relation_fold_filing_year() -> int:
+    """Return the newest supported filing year whose Renta revision declares the fold."""
+    for year in sorted(_supported_filing_years(), reverse=True):
+        bindings = published_snapshot("100", filing_year=year, period="0A").revision.bindings
+        if any(binding_id == _RELATION_BINDING_ID for binding_id, _provider in fold_slots(bindings)):
+            return year
+    raise AssertionError("no supported filing year declares the Modelo 184 relation fold")
+
+
+_RELATION_FILING_YEAR = _relation_fold_filing_year()
+
+
 def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field() -> None:
     authority = published_authority_operation()
-    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
     bindings = snapshot.revision.bindings
     assert bindings  # sanity: this fixture coordinate carries a real fold slot
 
-    endpoints = relation_source_endpoints_for_casilla(bindings, "iva.compensacion-disponible-fin-periodo")
+    endpoints = relation_source_endpoints_for_casilla(bindings, _RELATION_SOURCE_CASILLA_ID)
 
     assert len(endpoints) == 1
-    assert endpoints[0].relation_id == "modelo-303-compensacion-pendiente-anteriores"
-    assert endpoints[0].casilla_id == "iva.compensacion-disponible-fin-periodo"
+    assert endpoints[0].relation_id == _RELATION_BINDING_ID
+    assert endpoints[0].casilla_id == _RELATION_SOURCE_CASILLA_ID
 
     # A different casilla id must never match.
     assert relation_source_endpoints_for_casilla(bindings, "not-the-source-casilla") == ()
@@ -260,17 +293,17 @@ def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field
 
 def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
     authority = published_authority_operation()
-    snapshot = authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("100", filing_year=_RELATION_FILING_YEAR, period="0A")
     bindings = snapshot.revision.bindings
 
-    endpoints = relation_target_endpoints_for_binding(bindings, "modelo-303-compensacion-pendiente-anteriores")
+    endpoints = relation_target_endpoints_for_binding(bindings, _RELATION_BINDING_ID)
 
     assert len(endpoints) == 1
-    assert endpoints[0].relation_id == "modelo-303-compensacion-pendiente-anteriores"
-    assert endpoints[0].binding_id == "modelo-303-compensacion-pendiente-anteriores"
+    assert endpoints[0].relation_id == _RELATION_BINDING_ID
+    assert endpoints[0].binding_id == _RELATION_BINDING_ID
 
     # The relation's own SOURCE casilla id must never be accepted as a target binding.
-    assert relation_target_endpoints_for_binding(bindings, "iva.compensacion-disponible-fin-periodo") == ()
+    assert relation_target_endpoints_for_binding(bindings, _RELATION_SOURCE_CASILLA_ID) == ()
 
 
 def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_digest() -> None:
@@ -279,7 +312,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
 
@@ -296,7 +329,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
 
 def test_static_inspection_evidence_horizon_is_stable_and_sourced_from_the_inspection() -> None:
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
     inspection = capture.projection
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -391,7 +424,7 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
     from cadrumo.core.external_constants import OutputLanguage
 
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     inspection = capture.projection
@@ -408,8 +441,8 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
     target = ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
         modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         law_selected_revision_id=_LAW_SELECTED_REVISION_ID,
         review_status=inspection.review_status,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
@@ -538,14 +571,22 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
         )
 
 
-def _real_303_inspection() -> RegistryRevisionInspection:
+def _real_inspection(modelo: str, *, filing_year: int, period: str) -> RegistryRevisionInspection:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("303", filing_year=2026, period="1T")
+    capture = authority.capture_law_selected_projection(modelo, filing_year=filing_year, period=period)
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
     return inspection
+
+
+def _real_303_inspection() -> RegistryRevisionInspection:
+    return _real_inspection("303", filing_year=_FILING_YEAR, period="1T")
+
+
+def _real_100_inspection() -> RegistryRevisionInspection:
+    return _real_inspection("100", filing_year=_RELATION_FILING_YEAR, period="0A")
 
 
 def _real_303_snapshot():
@@ -554,7 +595,7 @@ def _real_303_snapshot():
 
     authority = published_authority_operation()
     capture = authority.capture_law_selected_projection(
-        "303", filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        "303", filing_year=_FILING_YEAR, period="1T", grade=RegistryAuthorityGrade.CALCULATION
     )
     snapshot = capture.projection
     assert isinstance(snapshot, RegistrySnapshot)
@@ -598,7 +639,7 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
         ModeloWorkspaceTechnicalLabelV1,
     )
 
-    inspection = _real_303_inspection()
+    inspection = _real_100_inspection()
     records = binding_schema_records(inspection.binding_ids, inspection.bindings)
 
     assert len(records) == len(inspection.binding_ids)
@@ -613,10 +654,8 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
     assert binding_ids == sorted(inspection.binding_ids)
 
     by_id = dict(zip(binding_ids, records, strict=True))
-    target_binding = "modelo-303-compensacion-pendiente-anteriores"
     assert any(
-        endpoint.relation_id == "modelo-303-compensacion-pendiente-anteriores"
-        for endpoint in by_id[target_binding].relation_endpoints
+        endpoint.relation_id == _RELATION_BINDING_ID for endpoint in by_id[_RELATION_BINDING_ID].relation_endpoints
     )
 
 
@@ -654,8 +693,8 @@ def test_static_inspection_schema_records_project_four_reference_kinds_and_relat
 ):
     from cadrumo.core.external_constants import OutputLanguage
 
-    inspection = _real_303_inspection()
-    target = _minimal_resolved_target(inspection)
+    inspection = _real_100_inspection()
+    target = _minimal_resolved_target(inspection, modelo="100", filing_year=_RELATION_FILING_YEAR, period="0A")
 
     records = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
     records_again = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
@@ -697,7 +736,7 @@ def test_static_inspection_schema_records_project_four_reference_kinds_and_relat
     assert sorted(actual_targets) == sorted(expected_targets)
 
 
-def _minimal_resolved_target(inspection):
+def _minimal_resolved_target(inspection, *, modelo: str = "303", filing_year: int = _FILING_YEAR, period: str = "1T"):
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceResolvedTargetV1,
         ModeloWorkspaceRevisionAssertionV1,
@@ -705,9 +744,9 @@ def _minimal_resolved_target(inspection):
 
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
-        modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period),
         law_selected_revision_id=inspection.revision_id,
         review_status=inspection.review_status,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
@@ -950,13 +989,13 @@ def _real_calculation_revision_with_row_materialization():
     bucket_id = "30330300-0000-4000-8000-000000000601"
     scalar_casilla = validated_casilla_id("00501")
     row_casilla = validated_casilla_id("00181")
-    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+    now = datetime(_FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
 
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         revision_id="2022",
     )
     row_identity = RowSourceIdentity(
@@ -994,7 +1033,7 @@ def _real_calculation_revision_with_row_materialization():
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2022",
-            modelo_year=2026,
+            modelo_year=_FILING_YEAR,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,
@@ -1025,7 +1064,7 @@ def _production_default_page_size() -> int:
 
 
 def _real_303_casilla_ids() -> tuple[str, ...]:
-    """Return every casilla id the bundled M303 2026/1T revision declares.
+    """Return every casilla id the bundled M303 revision for the horizon year's first quarter declares.
 
     The bundled registry drives the count: this revision declares more
     casillas than the graded assembly's own page size, which is what makes
@@ -1204,8 +1243,8 @@ def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "20
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         law_selected_revision_id=revision_id,
         review_status=RevisionReviewStatus.PENDING_REVIEW,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
@@ -1231,7 +1270,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         derive_calculation_revision_id,
     )
 
-    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+    now = datetime(_FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -1248,7 +1287,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2022",
-            modelo_year=2026,
+            modelo_year=_FILING_YEAR,
             period="1T",
         ),
         state=state,

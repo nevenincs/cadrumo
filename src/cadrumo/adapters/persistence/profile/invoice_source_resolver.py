@@ -1,4 +1,8 @@
-"""Outward adapter for the invoice source-mesh read capability."""
+"""Outward adapter for the invoice source-mesh read capability.
+
+Core types:
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+"""
 
 from __future__ import annotations
 

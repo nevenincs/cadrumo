@@ -1,4 +1,8 @@
-"""Encrypted persistence bindings for application evidence-bundle ports."""
+"""Encrypted persistence bindings for application evidence-bundle ports.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 

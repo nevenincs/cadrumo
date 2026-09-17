@@ -9,6 +9,7 @@ from pathlib import Path
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.workflow.persistence import workflow_state_repository
@@ -56,8 +57,10 @@ def _active_bucket_id() -> str:
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = _active_bucket_id()
-    revision_id = "r" + "0" * 63
     filing_period = Period.from_year_and_code(filing_year, period)
+    revision_id = str(
+        published_authority_operation().snapshot(modelo, filing_year=filing_year, period=period).revision.id
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,

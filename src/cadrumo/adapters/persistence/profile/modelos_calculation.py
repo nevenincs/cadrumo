@@ -32,6 +32,9 @@ See Also:
         contract for these secure objects.
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Runtime-created encrypted storage boundary used for load/save.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

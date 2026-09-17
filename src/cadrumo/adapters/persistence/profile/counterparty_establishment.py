@@ -1,4 +1,8 @@
-"""Encrypted profile adapter for counterparty-establishment facts."""
+"""Encrypted profile adapter for counterparty-establishment facts.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
+"""
 
 from __future__ import annotations
 

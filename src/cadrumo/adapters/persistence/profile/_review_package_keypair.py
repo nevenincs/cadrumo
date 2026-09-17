@@ -33,7 +33,11 @@ def ensure_singleton_keypair[KeypairT: BaseModel](
     mismatch_error: Callable[[], Exception],
     write_provenance: str,
 ) -> KeypairT:
-    """Return a bucket singleton, minting once and returning a race winner."""
+    """Return a bucket singleton, minting once and returning a race winner.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    """
 
     def _validated(payload: bytes) -> KeypairT:
         keypair = model_type.model_validate_json(payload)

@@ -73,7 +73,11 @@ def _logout(*, unlock: str | None = None, **kwargs):
     operator has unlocked the profile they are revoking".
     """
     with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
-        return logout_operator_auth(**kwargs, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        return logout_operator_auth(
+            **kwargs,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
 
 def _reset(*, unlock: str | None = None, **kwargs):
@@ -84,7 +88,11 @@ def _reset(*, unlock: str | None = None, **kwargs):
     custody guard refuses.
     """
     with open_test_profile_session(unlock or kwargs.get("target_bucket_id") or _PROFILE_A):
-        return reset_operator_auth(**kwargs, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+        return reset_operator_auth(
+            **kwargs,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
 
 def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> None:
@@ -429,7 +437,7 @@ def test_explicit_target_bucket_restores_unrelated_ambient_session(
             )
 
             ambient_after = _OPERATOR_SCOPE_PORTS.session.current()
-            assert ambient_after is ambient_before
+            assert ambient_after == ambient_before
             assert workflow_state_repository().load() == state_a_before
 
         with open_test_profile_session(_PROFILE_B):
@@ -457,12 +465,13 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(
         _create_profile(_PROFILE_A, provider="certificate", operation=operation)
 
         with override_settings(cadrumo_active_profile=_PROFILE_A):
-            assert build_inward_operator_scope_ports(session=None).session.current() is None
+            locked_scope_ports = build_inward_operator_scope_ports(session=None)
+            assert locked_scope_ports.session.current() is None
 
             with pytest.raises(AuthOperationRequiresCustodySessionError) as raised:
                 logout_operator_auth(
                     provider="certificate",
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=locked_scope_ports,
                     certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
 

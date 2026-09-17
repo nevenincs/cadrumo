@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -227,7 +228,10 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
         with bundled_indexed_authority().operation() as operation:
             revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
-                ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                ports=dataclasses.replace(
+                    build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+                    transaction_repository=injected_transaction_repository,
+                ),
                 actor="operator",
                 casilla_inputs={},
                 text_casilla_inputs={"tipo_renta": "general"},

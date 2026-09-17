@@ -1,4 +1,8 @@
-"""Persistence adapter for the operator state-projection read contract."""
+"""Persistence adapter for the operator state-projection read contract.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

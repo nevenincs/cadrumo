@@ -51,6 +51,7 @@ from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconcilia
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
+from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
@@ -267,7 +268,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         history = IvaCompensationHistoryRepository().load_period(filed_period)
         assert history is not None
         assert history.taxpayer_nif == taxpayer_nif
-        assert history.status == "app_filing"
+        assert history.provenance is IvaCompensationStateProvenance.APP_FILING
         assert history.generated_amount == generated_carry
         assert history.available_end_amount == generated_carry
         balance = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
@@ -299,6 +300,9 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 ),
             )
 
-        assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
+        assert (
+            exc_info.value.translated_message
+            == "application.iva_wallet.decision_reason.local_recurrence_requires_override"
+        )
         assert exc_info.value.context is not None
-        assert exc_info.value.context["divergence"] == "filed_history_only"
+        assert exc_info.value.context["divergence"] == "wallet_missing"

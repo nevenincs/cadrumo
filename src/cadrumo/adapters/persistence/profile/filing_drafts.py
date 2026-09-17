@@ -153,7 +153,11 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         *,
         expected_revision_id: str | None = None,
     ) -> SecureObjectWrite:
-        """Prepare the same identity-preserving encrypted payload as :meth:`save`."""
+        """Prepare the same identity-preserving encrypted payload as :meth:`save`.
+
+        Core types:
+        :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+        """
         self._validate_durable_content_address(payload)
         identifier, envelope = self._identified_envelope(payload)
         return SecureObjectWrite(

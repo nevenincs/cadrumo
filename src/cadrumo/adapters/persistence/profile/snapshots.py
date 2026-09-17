@@ -31,6 +31,9 @@ See Also:
     :mod:`adapters.persistence.profile.prorrata_register`
         Sibling profile-local secure-object adapter whose placement this
         follows.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations
