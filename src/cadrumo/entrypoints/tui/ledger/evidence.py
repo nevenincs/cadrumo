@@ -247,21 +247,21 @@ class LedgerEvidenceScreen(LedgerWorkspaceScreen):
             case "ledger-evidence-add":
                 self._add()
             case "ledger-evidence-extract" if self.selected_record_id is not None:
-                self._start(self._extract(self.selected_record_id), "tui.ledger.evidence.reading")
+                self._start(self._extract(self.selected_record_id), ledger_copy("tui.ledger.evidence.reading"))
             case "ledger-evidence-confirm" if self.selected_record_id is not None:
                 confirmation = self._confirmation(self.selected_record_id)
                 if confirmation is not None:
-                    self._start(self._confirm(confirmation), "tui.ledger.evidence.confirming")
+                    self._start(self._confirm(confirmation), ledger_copy("tui.ledger.evidence.confirming"))
             case _:
                 return
 
-    def _start(self, work: Coroutine[object, object, None], status_key: str) -> None:
+    def _start(self, work: Coroutine[object, object, None], status_text: str) -> None:
         if self.reading:
             work.close()
             return
         self.reading = True
         self.query_one("#ledger-refusal", Static).update("")
-        self.query_one("#ledger-flow-status", Static).update(ledger_copy(status_key))
+        self.query_one("#ledger-flow-status", Static).update(status_text)
         self.run_worker(self._when_reader_ready(work), group="ledger-evidence-reading")
 
     async def _when_reader_ready(self, work: Coroutine[object, object, None]) -> None:
