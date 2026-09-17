@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS
+from ....domain.deadlines.setup_answer_projection import setup_answer_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -108,5 +108,5 @@ def test_every_projected_path_is_declared_in_the_profile_schema() -> None:
     """
     schema = published_profile_schema()
     declared = {f"{section.key}.{field.key}" for section in schema.sections for field in section.fields}
-    undeclared = sorted(spec.path for spec in SETUP_ANSWER_FIELDS.values() if spec.path not in declared)
+    undeclared = sorted(spec.path for spec in setup_answer_fields().values() if spec.path not in declared)
     assert not undeclared, f"paths absent from the profile schema: {undeclared}"

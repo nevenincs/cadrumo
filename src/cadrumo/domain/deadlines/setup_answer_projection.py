@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import override
 
 from ..user_profile.setup_answers import SetupAnswers
 
@@ -34,37 +33,18 @@ class SetupFieldSpec:
     """
 
 
-class _RegistrySetupAnswerFields(Mapping[str, SetupFieldSpec]):
-    """Lazy view of the registry-owned setup-field declarations."""
+def setup_answer_fields() -> dict[str, SetupFieldSpec]:
+    """Return every setup-answer field that a persisted profile record can fill.
 
-    def __init__(self) -> None:
-        self._resolved: dict[str, SetupFieldSpec] | None = None
+    The declarations are resolved from the registry authority in scope on each
+    call, so a republished generation is never answered from a stale copy.
+    """
+    from ..calculations.registry.setup_profile_bindings import setup_answer_declarations
 
-    def _values(self) -> dict[str, SetupFieldSpec]:
-        if self._resolved is None:
-            from ..calculations.registry.setup_profile_bindings import setup_answer_declarations
-
-            self._resolved = {
-                field: SetupFieldSpec(path, answer_type, default)
-                for field, (path, answer_type, default) in setup_answer_declarations().items()
-            }
-        return self._resolved
-
-    @override
-    def __getitem__(self, key: str) -> SetupFieldSpec:
-        return self._values()[key]
-
-    @override
-    def __iter__(self):
-        return iter(self._values())
-
-    @override
-    def __len__(self) -> int:
-        return len(self._values())
-
-
-SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = _RegistrySetupAnswerFields()
-"""Every setup-answer field that a persisted profile record can fill."""
+    return {
+        field: SetupFieldSpec(path, answer_type, default)
+        for field, (path, answer_type, default) in setup_answer_declarations().items()
+    }
 
 
 def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
@@ -75,7 +55,7 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
     rather than being collapsed to ``False``.
     """
     typed: dict[str, object] = {}
-    for field, spec in SETUP_ANSWER_FIELDS.items():
+    for field, spec in setup_answer_fields().items():
         raw = values.get(spec.path)
         if raw is None:
             raw = spec.default
@@ -86,7 +66,7 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
 
 
 __all__ = [
-    "SETUP_ANSWER_FIELDS",
     "SetupFieldSpec",
     "project_setup_answers",
+    "setup_answer_fields",
 ]
