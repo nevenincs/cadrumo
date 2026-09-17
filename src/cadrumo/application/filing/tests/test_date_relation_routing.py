@@ -46,7 +46,7 @@ from ..draft_construction import (
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _M100_BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 _M100_TAX_RESIDENCE_CCAA_BINDING = "renta-profile-tax-residence-ccaa"

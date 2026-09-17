@@ -17,7 +17,7 @@ from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScop
 from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TIPO_RENTA_CASILLA: CasillaId = validated_casilla_id("tipo_renta", surface="_TIPO_RENTA_CASILLA")
 _RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(

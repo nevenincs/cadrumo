@@ -18,7 +18,7 @@ from ....domain.filing.errors import FilingExportValidationError
 from .._record_field_renderer import _header_field_value
 from ..producer_snapshot import TaxpayerIdentityFacts
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _nombre_field(**overrides: object) -> ExportFieldDefinition:

@@ -51,7 +51,7 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema(operation: Pin
 
 def test_runtime_schema_provider_rejects_unknown_modelo() -> None:
     period = Period.from_year_and_code(2026, "1T")
-    provider = build_runtime_schema_provider(filing_year=period.filing_year, period=period)
+    provider = build_runtime_schema_provider(filing_year=period.filing_year, period=period, modelos=["303"])
 
     # Assert the translated key rather than English prose: these refusals are
     # localized, so matching the rendered sentence tracks the catalogue's wording

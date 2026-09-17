@@ -643,6 +643,12 @@ def _schema_provider_for_operation(
             translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
             context={"modelos": "explicit selection required for indexed operation"},
         )
+    missing = sorted(set(selected_tuple).difference(operation.modelo_ids()))
+    if missing:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+            context={"modelos": ", ".join(missing)},
+        )
     snapshots: dict[str, RegistrySnapshot] = {}
     for modelo_id in selected_tuple:
         try:

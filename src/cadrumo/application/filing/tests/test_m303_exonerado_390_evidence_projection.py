@@ -32,7 +32,7 @@ from ....domain.modelos.calculation_revision_m303_evidence import (
 )
 from .._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERIODS = (
     Period.from_year_and_code(2023, "4T"),

@@ -82,7 +82,7 @@ from ..producer_snapshot import (
 )
 from ..runtime import RegistrySchemaAccessor, collection_from_snapshot, subview_from_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 #: Provenance stamped onto directly-constructed projections in this module. A

@@ -30,7 +30,10 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from ....domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows
+from ....domain.calculations.registry.m303_regimen_simplificado_projection import (
+    m303_iae_epigraph_wire_value,
+    project_m303_regimen_simplificado_rows,
+)
 from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -42,6 +45,7 @@ from ....domain.iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
+    LorcaActivityEligibility,
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
@@ -173,7 +177,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields(
 
     assert len(projected) == 1
     assert tuple(field.value for field in projected[0].fields) == (
-        annual_activity.iae_epigrafe,
+        m303_iae_epigraph_wire_value(annual_activity.iae_epigrafe),
         Decimal("1"),
         None,
         evidence.calculation_result.activities[0].module_results[0].cuota_devengada,
@@ -252,6 +256,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
                     )
                     for identity in activity.applicable_fact_identities
                 ),
+                lorca_eligibility=LorcaActivityEligibility(eligible=False, evidence_reference=reference),
                 evidence_reference=reference,
             )
         )

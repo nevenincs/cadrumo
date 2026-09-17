@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _HEX64 = "a" * 64
 

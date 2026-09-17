@@ -70,8 +70,6 @@ _FILING_OWNED_ERRORS: frozenset[str] = frozenset(
 #: must therefore never author message text.
 _SWEPT_MODULES: tuple[str, ...] = (
     "__init__.py",
-    "_calculate.py",
-    "_complementaria.py",
     "draft_construction.py",
     "_export_parity.py",
     "_m303_exonerado_390.py",
@@ -87,6 +85,17 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
     "export.py": (
         "The public export/verify boundary owns field and digest declaration "
         "failures and projects them at the filed-artifact boundary."
+    ),
+    "export_envelope.py": (
+        "Envelope prefix and closer layout invariants are consumed by export.py's render-request boundary."
+    ),
+    "export_verification.py": (
+        "Export receipt and read-back digest invariants are consumed by export.py, whose "
+        "export/verify boundary projects them at the filed-artifact boundary."
+    ),
+    "_producer_ownership.py": (
+        "Producer-key ownership invariants are consumed by export_producer.py and reach "
+        "the operator only through export.py's public export boundary."
     ),
     "export_producer.py": (
         "Producer-snapshot completeness is consumed by export.py, whose "
@@ -116,7 +125,6 @@ _UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 #: an undeclared exception type would bypass the registered error taxonomy.
 _OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
     "draft_construction.py": "_ModeloBuilderError",
-    "_complementaria.py": "ModeloBuilderError",
     "_export_parity.py": "FilingExportError",
     "_m303_exonerado_390.py": "FilingExportError",
     "_m303_export_applicability.py": "FilingExportError",

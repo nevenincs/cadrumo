@@ -28,7 +28,7 @@ from ..producer_snapshot import (
 )
 from .export_support import _approved_modelo_111_registry_draft, _schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: Path) -> None:

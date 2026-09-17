@@ -13,7 +13,7 @@ from .export_support import (
     _typed_modelo_131_producer_snapshot,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_snapshot_free_renderer_and_external_projection_arguments_are_unreachable() -> None:

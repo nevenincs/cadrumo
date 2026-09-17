@@ -24,7 +24,7 @@ from ..retention import (
     try_record_filing_retention_snapshot,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = UUID("2f8c6b41-9d05-4e73-a1c2-7b3e5d09f846")
 _OBSERVED_AT = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)

@@ -7,6 +7,7 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_projection_ref import (
     FilingProjectionRef,
     M303DifferentiatedDeductionProjectionRef,
@@ -56,6 +57,7 @@ class FilingProjectionValue(BaseModel):
 
     @field_validator("projection_ref", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _require_typed_projection_ref(cls, value: object) -> object:
         if not isinstance(value, BaseModel):
             raise ValueError("filing projection values require an actual typed projection_ref")
@@ -73,6 +75,7 @@ class FilingRecordRenderContext(BaseModel):
     occurrence: int = Field(gt=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_snapshot_owned_record(self) -> FilingRecordRenderContext:
         if not any(candidate is self.layout for candidate in self.registry_snapshot.revision.export_layouts):
             raise ValueError("filing render context layout is not owned by its registry snapshot")

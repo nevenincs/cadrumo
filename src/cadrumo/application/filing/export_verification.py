@@ -11,6 +11,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ...core.hashing import hash_file, sha256_file, sha256_hex
@@ -69,6 +70,7 @@ class DeclaracionExportResult(BaseModel):
 
     @field_validator("file_sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_sha256_hex(cls, value: str) -> str:
         try:
             int(value, 16)
@@ -95,6 +97,7 @@ class FilingExportConsumedResult(BaseModel):
 
     @field_validator("file_sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_sha256_hex(cls, value: str) -> str:
         if any(character not in "0123456789abcdef" for character in value):
             raise FilingExportValidationError("file_sha256 must be lowercase hexadecimal")
@@ -140,6 +143,7 @@ class DeclaracionVerifyResult(BaseModel):
 
     @field_validator("mismatched_casilla_ids", "unchecked_casilla_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_casilla_ids(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         for entry in value:
             if not entry or entry != entry.strip():
@@ -148,6 +152,7 @@ class DeclaracionVerifyResult(BaseModel):
 
     @field_validator("file_sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_sha256_hex(cls, value: str | None) -> str | None:
         if value is None:
             return None

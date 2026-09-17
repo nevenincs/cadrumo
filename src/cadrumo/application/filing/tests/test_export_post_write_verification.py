@@ -28,7 +28,7 @@ from .export_support import (
     _typed_producer_snapshot,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _modelo_131_snapshot() -> FilingProducerSnapshot:

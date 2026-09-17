@@ -27,7 +27,7 @@ from .._record_field_renderer import format_field, projection_field_value
 from ..export_verification import _mismatched_casilla_ids
 from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # The layouts below are synthetic: they exist to exercise the value-policy
 # renderer and the verifier's record-and-field identity lookup, both of which
