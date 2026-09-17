@@ -6,10 +6,10 @@
 #
 # THE GROUPS BELOW ARE THE BURNDOWN ORDER, cheapest and most duplicated first.
 
-# --- runner-plane - belongs to ci-fleet ----------------------------------------
+# --- runner-plane - belongs to the shared runner preflight ---------------------
 # `dev.ci.runner_queue_watchdog` is this repository's own implementation of a
-# check ci-fleet OWNS as `runners/ci/preflight.sh`; replacing it with the
-# rendered copy retires this entry.
+# check the shared runner preflight owns; replacing it with the rendered copy
+# retires this entry.
 release.yml:Fail fast on a lane no online runner can serve
 
 # --- CI-plane bookkeeping ------------------------------------------------------
