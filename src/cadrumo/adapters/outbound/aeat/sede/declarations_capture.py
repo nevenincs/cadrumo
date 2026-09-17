@@ -1,4 +1,8 @@
-"""Capture filed-declaration evidence after the register reader selects a row."""
+"""Capture filed-declaration evidence after the register reader selects a row.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
@@ -292,6 +296,9 @@ async def capture_previous_filing_observations(
     The binding requirements choose the source modelo, filing year, and period;
     this function selects the authoritative filed row and refuses incomplete
     observed-source coverage before returning its evidence.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     from .declarations import open_declarations_register
 
@@ -355,6 +362,9 @@ async def capture_relation_source_observations(
 
     A relation may require several source periods. Every selected filed row is
     validated for the casillas the relation declares before it is returned.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     from .declarations import open_declarations_register
 

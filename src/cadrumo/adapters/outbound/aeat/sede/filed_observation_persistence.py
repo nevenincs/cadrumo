@@ -5,6 +5,10 @@ binding for those protocols: it joins the existing Sede parser and observation
 store to the encrypted calculation, filing, IVA-history, event, and baseline
 repositories.  Adapter failures are translated at this boundary so an
 application caller never has to know a Sede or secure-object exception type.
+
+Core types:
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
 """
 
 from __future__ import annotations
