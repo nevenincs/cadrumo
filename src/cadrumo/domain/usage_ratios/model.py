@@ -4,7 +4,7 @@ Defines :class:`UsageRatioProfile` — the strict, frozen pydantic v2 record
 that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
 ``cadrumo.domain.deductibility`` to look up an override before falling back to
-the statutory :attr:`domain.categories.ProportionalityRule.default_ratio`.
+the statutory :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio`.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived lazily
 from the current pinned generation's complete category-profile corpus, never
 from one filing year. Each decoded profile retains only that immutable set so
@@ -12,7 +12,7 @@ later pure edits perform no hidden authority read. Eligibility gates what a
 persisted profile may STORE, so a year-scoped set would invalidate an operator's
 stored overrides the moment the filing year rolled over. The year-versioned half -- the statutory multiplier
 and default ratio the law fixes per year -- is read at use time from
-:func:`domain.categories.resolve_category_profiles`, which takes the year
+:func:`domain.categories.registry.resolve_category_profiles`, which takes the year
 explicitly.
 """
 
@@ -134,7 +134,7 @@ class UsageRatioProfile(BaseModel):
     :meth:`with_ratio` / :meth:`without_ratio` to derive new profiles.
 
     Attributes:
-        ratios: Frozen mapping from :class:`domain.categories.SpendingCategory`
+        ratios: Frozen mapping from :class:`domain.categories.spending_category.SpendingCategory`
             to a :class:`~decimal.Decimal` in ``[0, 1]``.
     """
 
@@ -223,7 +223,7 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
 
     Pure helper consumed by ``cadrumo.domain.deductibility``. When the return
     value is ``None`` the caller falls back to
-    :attr:`domain.categories.ProportionalityRule.default_ratio` and
+    :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio` and
     records the resolution source in the transaction trace fields.
 
     Args:

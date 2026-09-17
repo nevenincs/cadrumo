@@ -77,7 +77,7 @@ class ExternalEvidenceKind(StrEnum):
     A :class:`ModeloRecord` marked with one of these kinds
     carries imported official evidence (justificante, CSV register, or live
     capture) rather than a tool-computed calculation revision. This is the gate
-    :func:`~cadrumo.application.modelo.amend_modelo_revision` requires before it
+    :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision` requires before it
     accepts an amendment baseline.
     """
 
@@ -90,7 +90,7 @@ def is_justificante_backed_external_evidence(kind: ExternalEvidenceKind) -> bool
     """Return whether ``kind`` requires matching persisted receipt metadata.
 
     Every current external-evidence kind is filing-grade only after its
-    reference resolves to a matching :class:`domain.justificante.Justificante`.
+    reference resolves to a matching :class:`domain.justificante.schema.Justificante`.
     Keeping this closed policy beside the enum prevents application consumers
     from silently disagreeing when a new evidence kind is introduced.
     """
@@ -117,9 +117,9 @@ class ExternalEvidence(BaseModel):
     """Imported-evidence metadata for an externally-filed return.
 
     Populated by
-    :func:`~cadrumo.application.modelo.import_external_filing_evidence` for a
+    :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence` for a
     current :class:`ModeloRecord`; consumed by
-    :func:`~cadrumo.application.modelo.amend_modelo_revision` as the gate that
+    :func:`~cadrumo.application.modelo.amendment_actions.amend_modelo_revision` as the gate that
     proves the baseline is AEAT-attested and not a fabricated local draft.
     """
 
@@ -175,7 +175,7 @@ class ModeloRecord(BaseModel):
     through evidence channels; it does not imply that the application submitted
     anything. It must travel with
     :class:`ExternalEvidence`, while locally filed records
-    created by :func:`~cadrumo.application.modelo.file_modelo_revision` carry neither.
+    created by :func:`~cadrumo.application.modelo.filing_actions.file_modelo_revision` carry neither.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -364,7 +364,7 @@ class ModeloRecordCatalogue(BaseModel):
         about it. A one-sided link, where the baseline names some third record
         as its successor, describes an audit chain that reads differently
         depending on which end you start from. The sibling
-        :func:`~domain.invoices.verify_link_consistency` *reports* the
+        :func:`~domain.invoices.service.verify_link_consistency` *reports* the
         equivalent one-sided state across the invoice and transaction
         catalogues, because those are two independently-written stores that can
         legitimately be inconsistent between writes; both ends of this link live

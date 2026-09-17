@@ -208,6 +208,7 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: Pin
     below its floor is stored history and must be refused, not built.
     """
     directory = operation.modelo_directory("100")
+    assert directory.supported_filing_years is not None, "modelo 100 declares no supported filing years"
     floor = directory.supported_filing_years.floor
     authored_years = sorted(int(revision.id) for revision in directory.revisions)
     supported = [year for year in authored_years if year >= floor]

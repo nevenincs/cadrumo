@@ -8,14 +8,14 @@ are set by law independently of when the movement was booked, so a row
 booked in one quarter can carry an observation in another.
 
 These are the single owners of both answers. The plaintext routing index
-(:class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`) records
+(:class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`) records
 what they return, and the period partition selects candidates by overlap
 against the span rather than by equality against the filing date.
 
 See Also:
-    :class:`~domain.transactions.Transaction`
+    :class:`~domain.transactions.models.Transaction`
         Ledger row whose cash-accounting timing facts these read.
-    :class:`~domain.transactions.LedgerDatePartition`
+    :class:`~domain.transactions.models.LedgerDatePartition`
         Partition contract the eligible span feeds.
 """
 

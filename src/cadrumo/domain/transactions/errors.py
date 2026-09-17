@@ -28,7 +28,7 @@ class StoredTransactionDriftError(TransactionPersistenceError):
     Mirrors :class:`~cadrumo.domain.user_profile.errors.StoredProfileDriftError`:
     the catalogue was valid when written; schema evolution or an
     out-of-band edit caused the on-disk envelope payload to drift from
-    the current :class:`~cadrumo.domain.transactions.TransactionCatalogue`
+    the current :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`
     schema. The original :exc:`pydantic.ValidationError` is preserved
     on ``original_exception`` so callers can inspect the typed
     field errors without losing the deserialization detail.

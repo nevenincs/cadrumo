@@ -105,7 +105,7 @@ class SetupAnswers(BaseModel):
     flow carries typed enum members alongside the blank undeclared sentinel.
     That ``Any`` is not a loose schema: validators enforce the same invariants,
     reject values outside the declared enum / blank-string set, and raise
-    :class:`~cadrumo.core.errors.ProfileAnswerTypeError`.
+    :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError`.
     """
 
     model_config = STRICT_FROZEN_CONFIG

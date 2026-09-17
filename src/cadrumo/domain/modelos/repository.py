@@ -2,15 +2,15 @@
 
 :class:`~adapters.persistence.profile.modelos_work_units.WorkUnitCatalogueRepository` persists
 :class:`WorkUnit` records in a :class:`WorkUnitCatalogue` at
-``FINANCIAL`` :class:`~cadrumo.adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` :class:`~cadrumo.core.classification.policies.SensitivityClass`
 through
-:class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`. The
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`. The
 catalogue is serialised as a single
 :class:`~cadrumo.adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 The storage contract is declared by
-:data:`cadrumo.adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
+:data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`;
 its default object key is the singleton ``catalogue`` row.
 """
 

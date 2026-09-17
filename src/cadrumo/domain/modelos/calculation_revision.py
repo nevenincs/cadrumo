@@ -315,7 +315,7 @@ class CalculationSourceRef(BaseModel):
 
     It deliberately does NOT carry ``legal_refs`` / ``source_refs`` â€” those are the
     per-casilla regulatory grounding already carried by
-    :class:`~cadrumo.domain.calculations.registry.CasillaObservation` on the same
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` on the same
     revision; duplicating them here would fragment the grounding across two
     surfaces.
 

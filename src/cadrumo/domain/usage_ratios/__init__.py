@@ -6,7 +6,7 @@ coefficients: a frozen :class:`UsageRatioProfile`, the
 :mod:`domain.categories`, the pure resolver :func:`resolve_user_ratio`,
 and the ledger reference validator :func:`validate_usage_ratio_reference`.
 Usage-ratio identifiers are concrete
-:class:`domain.categories.SpendingCategory` values, not aliases or
+:class:`domain.categories.spending_category.SpendingCategory` values, not aliases or
 parallel ids.
 
 Profile persistence is an encrypted ``FINANCIAL`` secure-object round trip via

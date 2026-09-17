@@ -15,14 +15,14 @@ breach was found by hand, and a hand is not a gate.
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
 
 from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ..values import UserProfileFact, declared_provenance_sources
+from ..errors import UserProfileValidationError
+from ..values import UserProfileFact, declared_provenance_sources, validate_profile_fact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,8 +54,9 @@ def test_fact_refuses_an_undeclared_source() -> None:
     token became a new origin no query would ever find.
     """
 
-    with pytest.raises(ValidationError) as raised:
-        UserProfileFact(path="identity.tax_id", value="12345678Z", source="not_a_declared_source")
+    fact = UserProfileFact(path="identity.tax_id", value="12345678Z", source="not_a_declared_source")
+    with pytest.raises(UserProfileValidationError) as raised:
+        validate_profile_fact(fact, schema=published_profile_schema())
 
     message = str(raised.value)
     assert "not_a_declared_source" in message

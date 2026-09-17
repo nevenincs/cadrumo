@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -135,13 +135,21 @@ def test_the_inference_bound_is_the_general_rate() -> None:
     assert rates.inicio_actividad_rate < rates.general_rate
 
 
-def test_rate_selection_is_reproducible_across_the_2015_legal_change() -> None:
-    """The caller's date, not the wall clock, chooses the settled legal rate."""
-    before = load_retencion_actividades_rates(effective_date=date(2015, 7, 11))
-    after = load_retencion_actividades_rates(effective_date=date(2015, 7, 12))
+def test_the_rate_is_chosen_by_the_caller_date_inside_the_supported_span() -> None:
+    """The caller's date, not the wall clock, chooses the settled legal rate.
 
-    assert before.general_rate == Decimal("0.18")
-    assert after.general_rate == Decimal("0.15")
+    The general rate resolves at the supported floor and is carried forward past
+    the horizon; the day before the floor is refused at the support gate.
+    """
+    with bundled_indexed_authority().operation() as operation:
+        envelope = operation.supported_filing_years().date_envelope()
+
+    at_floor = load_retencion_actividades_rates(effective_date=envelope.floor)
+    past_horizon = load_retencion_actividades_rates(effective_date=envelope.horizon + timedelta(days=1))
+    assert past_horizon.general_rate == load_retencion_actividades_rates(effective_date=envelope.horizon).general_rate
+    assert at_floor.general_rate > 0
+    with pytest.raises(TransactionValidationError, match="failed to resolve retención fact"):
+        load_retencion_actividades_rates(effective_date=envelope.floor - timedelta(days=1))
 
 
 def test_unsupported_pre_source_date_refuses_instead_of_selecting_a_nearest_rate() -> None:
