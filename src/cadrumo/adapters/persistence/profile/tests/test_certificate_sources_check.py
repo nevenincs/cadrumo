@@ -19,11 +19,9 @@ from pydantic import SecretStr
 from cadrumo.adapters.outbound.aeat.auth import session_store
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
-    build_inward_operator_scope_ports_for_active_route,
-)
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.actions import update_auth
@@ -65,7 +63,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
-_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -921,7 +919,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
                 assert root_a_fixture.name not in str(context["storage_root"])
 
             ambient_after = _OPERATOR_SCOPE_PORTS.session.current()
-            assert ambient_after is ambient_before
+            assert ambient_after == ambient_before
             assert ambient_after.bucket_id == _BUCKET_ID
             assert cert_a.exists()
             assert cert_b.exists()
@@ -1439,7 +1437,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         assert len(check_report.entries) == 1
         assert check_report.entries[0].certificate_path == str(cert_b)
         assert check_report.entries[0].result == ProviderProbeResult.OK
-        assert ambient_after is ambient_before
+        assert ambient_after == ambient_before
 
 
 def test_unreadable_explicit_settings_target_fails_closed_without_global_fallback(
@@ -1638,6 +1636,7 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
+        certificate_secret_backend_factory.make_unreadable()
         with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,

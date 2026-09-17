@@ -13,11 +13,20 @@ from cadrumo.application.auth.certificate_secret_backend import CertificateSecre
 class InMemoryCertificateSecretBackend:
     """Bucket-scoped fake for the application certificate-secret capability."""
 
-    def __init__(self, values: dict[str, SecretStr], operation_ids: dict[str, str | None]) -> None:
+    def __init__(
+        self,
+        values: dict[str, SecretStr],
+        operation_ids: dict[str, str | None],
+        *,
+        unreadable: bool = False,
+    ) -> None:
         self._values = values
         self._operation_ids = operation_ids
+        self._unreadable = unreadable
 
     def get(self, name: str) -> SecretStr | None:
+        if self._unreadable:
+            raise OSError("secure certificate-secret storage cannot be read")
         return self._values.get(name)
 
     def set(
@@ -53,6 +62,11 @@ class InMemoryCertificateSecretBackendFactory:
     def __init__(self) -> None:
         self._values_by_bucket: dict[str, dict[str, SecretStr]] = {}
         self._operation_ids_by_bucket: dict[str, dict[str, str | None]] = {}
+        self._unreadable = False
+
+    def make_unreadable(self) -> None:
+        """Make every later secret read fail as a damaged secure store does."""
+        self._unreadable = True
 
     def __call__(self, *, bucket_id: str, settings: object) -> CertificateSecretBackend:
         storage_scope = getattr(settings, "cadrumo_local_storage_root", None)
@@ -61,7 +75,7 @@ class InMemoryCertificateSecretBackendFactory:
         scope_key = f"{bucket_id}:{storage_scope}"
         values = self._values_by_bucket.setdefault(scope_key, {})
         operation_ids = self._operation_ids_by_bucket.setdefault(scope_key, {})
-        return InMemoryCertificateSecretBackend(values, operation_ids)
+        return InMemoryCertificateSecretBackend(values, operation_ids, unreadable=self._unreadable)
 
 
 __all__ = ["InMemoryCertificateSecretBackendFactory"]
