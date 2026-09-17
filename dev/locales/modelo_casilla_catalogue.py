@@ -73,9 +73,21 @@ _REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revis
 #: legitimately open with its box number, so only labels are judged.
 _PLACEHOLDER: Final = re.compile(
     r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci"
-    r"|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
+    r"|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—"
+    r"|^(?:Informació fiscal de la casella|Tax information for this field|Az űrlap adóadata)\.?$",
     re.IGNORECASE,
 )
+
+#: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
+#: alternations standing alone, and Spanish function words left untranslated.
+_GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
+    "hu": re.compile(
+        r"-(?:ban/-ben|nak/-nek|ra/-re|ról/-ről|ba/-be|val/-vel|tól/-től|hoz/-hez|ból/-ből|ként)\b"
+        r"|\ba\(z\) [a-záéíóöőúüű]+ -|\b(?:Aplicado|esta)\b"
+    ),
+    "en": re.compile(r"\b(?:Aplicado|esta|otros|otras|excepto|según|cuyo|cuya)\b"),
+    "ca": re.compile(r"\b(?:Aplicado|esta|otros|otras|excepto|según|cuyo|cuya)\b"),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,6 +230,8 @@ class CatalogueFindings:
     """Per locale, empty lineage keys that could carry text now stored per edition."""
     derived_help: dict[str, tuple[str, ...]] = field(default_factory=dict)
     placeholders: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    glossary_artifacts: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, translations a word-by-word glossary pass produced."""
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -241,6 +255,7 @@ class CatalogueFindings:
             "lineage_lifts": total(self.lineage_lifts),
             "derived_help": total(self.derived_help),
             "placeholders": total(self.placeholders),
+            "glossary_artifacts": total(self.glossary_artifacts),
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
@@ -274,6 +289,7 @@ class CatalogueFindings:
                 any(self.lineage_lifts.values()),
                 any(self.derived_help.values()),
                 any(self.placeholders.values()),
+                any(self.glossary_artifacts.values()),
                 any(self.translation_drift.values()),
                 any(self.stranded_translations.values()),
                 any(self.stale_translations.values()),
@@ -399,6 +415,12 @@ class ModeloCasillaCatalogue:
                         or (key.endswith(".title") and _EDITION_TEXT_PLACEHOLDER.search(value))
                     )
                 )
+            )
+            artifact = _GLOSSARY_ARTIFACT.get(locale)
+            found.glossary_artifacts[locale] = (
+                ()
+                if artifact is None
+                else tuple(sorted(key for key, value in leaves.items() if value and artifact.search(value)))
             )
             found.redundant_values[locale] = tuple(
                 sorted(key for key, reason in plan.plan.removals.get(locale, {}).items() if reason == "redundant")
