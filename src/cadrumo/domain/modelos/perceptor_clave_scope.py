@@ -8,6 +8,9 @@ required input there. The scope is registry data, authored per design edition
 in a governed mapping fact, never a list in code.
 
 A scope token is ``CLAVE`` (every subclave) or ``CLAVE.SUBCLAVE``.
+
+The scope is evaluated against a :class:`ModeloRevision`, whose export layouts
+name each record's row-field casillas and whose bindings fill them.
 """
 
 from __future__ import annotations
@@ -136,6 +139,10 @@ def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, Bindin
 
     The export record names the casilla of each row field, and the row-set
     binding names the row field it supplies for that record.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose export layouts and bindings
+            are joined on the record and row field they share.
     """
     casilla_by_record_field: dict[tuple[str, str], CasillaId] = {}
     for layout in revision.export_layouts:
