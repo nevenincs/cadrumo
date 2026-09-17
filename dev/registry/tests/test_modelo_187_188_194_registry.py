@@ -138,9 +138,13 @@ def test_modelo_188_selects_only_the_2023_design_era() -> None:
     assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-188-")} == {"aeat-dr-188-2023"}
     assert catalogues.sources["aeat-dr-188-2023"].applies_from == date(2023, 1, 1)
     assert select_revision(modelo, filing_year=2023, period="0A", on=date(2023, 12, 31)) == revision
-    for filing_year in range(2019, 2023):
-        with pytest.raises(NoRevisionForPeriodError):
-            select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+    # Earlier ejercicios are served by their own edition, never by the 2023 design.
+    for earlier_id, earlier in modelo.revisions.items():
+        if earlier_id == revision.id:
+            continue
+        year = earlier.period_selector.year_from
+        assert year is not None and year < 2023
+        assert select_revision(modelo, filing_year=year, period="0A", on=date(year, 12, 31)) == earlier
 
 
 def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:

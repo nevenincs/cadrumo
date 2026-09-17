@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
-from .profile_schema_support import committed_registry_validator
+from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 _WWW1_HOST = aeat_host("www1")
@@ -44,7 +44,14 @@ def test_committed_modelo_347_validates_against_catalogues() -> None:
     assert set(modelo.revisions) == {"2011-2024", "2025-y-siguientes"}
 
 
-@pytest.mark.parametrize("filing_year", [2011, 2018, 2024, 2026])
+_SUPPORT = committed_supported_filing_years()
+# The envelope ends plus the legal 2024/2025 edition split that falls inside it.
+_RESOLVED_YEARS = sorted(
+    year for year in {_SUPPORT.floor, 2024, 2025, _SUPPORT.horizon} if _SUPPORT.floor <= year <= _SUPPORT.horizon
+)
+
+
+@pytest.mark.parametrize("filing_year", _RESOLVED_YEARS)
 def test_committed_modelo_347_resolves_revision_by_filing_year(filing_year: int) -> None:
     modelo, catalogues = _load_modelo_347()
     snapshot = build_snapshot(
