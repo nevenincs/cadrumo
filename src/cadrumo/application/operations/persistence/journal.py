@@ -8,7 +8,7 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
@@ -98,6 +98,7 @@ class OperationPersistedSnapshot(BaseModel):
         return self.identity.operation_id
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_persisted_snapshot(self) -> OperationPersistedSnapshot:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)

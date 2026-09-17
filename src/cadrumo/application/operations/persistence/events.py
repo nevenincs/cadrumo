@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -34,6 +35,7 @@ class _OperationEventBase(BaseModel):
     code: OperationEventCode
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_timestamp(self) -> _OperationEventBase:
         validate_utc_aware(self.timestamp)
         return self

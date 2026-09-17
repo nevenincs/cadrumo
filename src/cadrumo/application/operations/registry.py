@@ -15,7 +15,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -140,6 +140,7 @@ class OperationPublicDefinitionContractV1(BaseModel):
     definition_contract_digest: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_digest(self) -> OperationPublicDefinitionContractV1:
         expected = _definition_contract_digest(self)
         if self.definition_contract_digest != expected:
@@ -158,6 +159,7 @@ class OperationPublicContractSetV1(BaseModel):
 
     @field_validator("definitions")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_contracts(
         cls,
         value: tuple[OperationPublicDefinitionContractV1, ...],
@@ -170,6 +172,7 @@ class OperationPublicContractSetV1(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_digest(self) -> OperationPublicContractSetV1:
         expected = _contract_set_digest(self.definitions)
         if self.contract_set_digest != expected:
@@ -211,6 +214,7 @@ class OperationExecutorFactory(BaseModel):
     build: Callable[[], object]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_executor_type(self) -> OperationExecutorFactory:
         if not issubclass(self.executor_type, OperationExecutor):
             raise ValueError("operation executor type must structurally implement OperationExecutor")
@@ -244,12 +248,14 @@ class OperationDefinition(BaseModel):
 
     @field_validator("phase_codes")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_phase_codes(cls, value: tuple[OperationEventCode, ...]) -> tuple[OperationEventCode, ...]:
         if len(set(value)) != len(value):
             raise ValueError("operation definition phase codes must be unique")
         return tuple(sorted(value))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_factory_request_type(self) -> OperationDefinition:
         if self.executor_factory.request_type is not self.request_type:
             raise ValueError("operation executor factory request type must match the definition request type")
@@ -330,6 +336,7 @@ class OperationEffectReceipt(BaseModel):
     narrowed_from: OperationEffect | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_narrowing(self) -> OperationEffectReceipt:
         if self.narrowed_from is not None and self.narrowed_from is self.effect:
             raise ValueError("an effect receipt records a narrowing only when the claim actually changed")
@@ -345,6 +352,7 @@ class OperationSchemaBindingV1(BaseModel):
     model_type: type[BaseModel]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fingerprint(self) -> OperationSchemaBindingV1:
         schema = strict_model_json_schema(self.model_type)
         fingerprint = content_hash_hex(schema)
@@ -425,6 +433,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
 
     @field_validator("schema_bindings")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_schema_bindings(
         cls,
         value: tuple[OperationSchemaBindingV1, ...],
@@ -435,6 +444,7 @@ class OperationPublicDefinitionRegistrationV1(BaseModel):
         return tuple(sorted(value, key=lambda item: (item.identity.schema_id, item.identity.schema_version)))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_adapter_signatures(self) -> OperationPublicDefinitionRegistrationV1:
         if self.review_projector is not None:
             _require_positional_callable_signature(self.review_projector, arity=2, label="REVIEW projector")
@@ -525,6 +535,7 @@ class OperationRegistry(BaseModel):
 
     @field_validator("definitions")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_definitions(cls, value: tuple[OperationDefinition, ...]) -> tuple[OperationDefinition, ...]:
         definition_ids = tuple(item.definition_id for item in value)
         if len(set(definition_ids)) != len(definition_ids):
@@ -535,6 +546,7 @@ class OperationRegistry(BaseModel):
         return tuple(sorted(value, key=lambda item: item.definition_id))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_public_fixed_point(self) -> OperationRegistry:
         if not self.public_registrations:
             return self

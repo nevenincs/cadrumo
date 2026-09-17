@@ -32,6 +32,7 @@ import httpx
 from pydantic import Field, model_validator
 
 from ..core.config import Settings, load_settings
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .provisioning_contracts import (
     OLLAMA_INSTALL_TIMEOUT_S,
     OLLAMA_PROBE_TIMEOUT_S,
@@ -206,6 +207,7 @@ class RuntimeHostStatus(ProvisioningOutcome):
     available: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_host_outcome(self) -> RuntimeHostStatus:
         require_provisioning_verdict(failed=not self.available, verdict=self.precondition_verdict)
         return self
@@ -263,6 +265,7 @@ class RuntimeStartOutcome(ProvisioningOutcome):
     started_pid: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_start_outcome(self) -> RuntimeStartOutcome:
         require_provisioning_verdict(failed=not self.running, verdict=self.precondition_verdict)
         return self
@@ -363,6 +366,7 @@ class RuntimeInstallOutcome(ProvisioningOutcome):
     installer_exit_code: int | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_install_outcome(self) -> RuntimeInstallOutcome:
         require_provisioning_verdict(failed=not self.installed, verdict=self.precondition_verdict)
         return self

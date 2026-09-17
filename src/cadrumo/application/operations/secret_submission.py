@@ -10,6 +10,7 @@ from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .interactions import OperationInteractionId
@@ -50,6 +51,7 @@ class OperationSecretRequirement(BaseModel):
     expires_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expiry(self) -> OperationSecretRequirement:
         validate_utc_aware(self.expires_at)
         return self

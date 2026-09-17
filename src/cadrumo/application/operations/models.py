@@ -12,6 +12,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
@@ -109,6 +110,7 @@ class OperationTerminalReceipt(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_terminal_references(self) -> OperationTerminalReceipt:
         validate_utc_aware(self.settled_at)
         validate_terminal_reference_meaning(
@@ -209,6 +211,7 @@ class OperationSnapshot[RequestPayloadT: BaseModel](BaseModel):
     terminal_receipt: OperationTerminalReceipt | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_snapshot(self) -> OperationSnapshot[RequestPayloadT]:
         validate_utc_aware(self.updated_at)
         self._validate_request_identity()

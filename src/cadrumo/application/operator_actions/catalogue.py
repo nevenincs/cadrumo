@@ -14,6 +14,7 @@ from collections.abc import Iterable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import FIELD_KEY_PATTERN, NamespacedId
 from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -37,6 +38,7 @@ class ActionArgumentBindingSpecification(BaseModel):
     source_evidence_id: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_evidence_requirement(self) -> ActionArgumentBindingSpecification:
         """Require an exact evidence identity only for evidence-derived arguments."""
         if self.source is ActionArgumentSource.CONDITION_EVIDENCE:
@@ -58,6 +60,7 @@ class ActionCatalogueEntry(BaseModel):
 
     @field_validator("argument_specifications")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_source_specifications(
         cls,
         value: tuple[ActionArgumentBindingSpecification, ...],
@@ -98,6 +101,7 @@ class ActionCatalogue(BaseModel):
 
     @field_validator("entries")
     @classmethod
+    @pydantic_validation_boundary
     def _unique_action_ids(
         cls,
         value: tuple[ActionCatalogueEntry, ...],

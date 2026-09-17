@@ -7,6 +7,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from .models import OPERATOR_SURFACE_MODEL_CONFIG
 
 
@@ -66,6 +67,7 @@ class RootLandingReport(BaseModel):
     message: str = Field(min_length=1, max_length=160)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _selected_profile_owns_display_identity(self) -> RootLandingReport:
         """Reject a display label that has no corresponding selected profile."""
         if self.active_profile is not None and not self.profile_selected:

@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ..event_replay import OperationEventCursor
 from .events import OperationEvent
@@ -133,6 +134,7 @@ class OperationReplayPage(BaseModel):
     restart_cursor: OperationEventCursor | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_status(self) -> OperationReplayPage:
         _validate_replay_events(self.status, self.requested_cursor, self.events, self.next_cursor)
         _validate_replay_cursor_state(self.status, self.requested_cursor, self.next_cursor, self.restart_cursor)

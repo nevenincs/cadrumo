@@ -90,6 +90,7 @@ __all__ = [
     "verify_model_ready",
 ]
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .provisioning_contracts import (
     ProvisioningFactValue,
     ProvisioningOutcome,
@@ -134,6 +135,7 @@ class DependencyStatus(ProvisioningOutcome):
     available: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_availability_outcome(self) -> DependencyStatus:
         require_provisioning_verdict(failed=not self.available, verdict=self.precondition_verdict)
         return self
@@ -709,6 +711,7 @@ class ModelSelection(ProvisioningOutcome):
     advisories: tuple[ModelSelectionAdvisory, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_selection_outcome(self) -> ModelSelection:
         require_provisioning_verdict(failed=not self.selected, verdict=self.precondition_verdict)
         return self

@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ..operator_actions.catalogue import ActionCatalogue, ActionCatalogueEntry
 from .errors import OperatorSurfaceContractError
 from .models import ManifestActionProfile
@@ -67,11 +68,13 @@ class LiveLeafInventoryRow(BaseModel):
 
     @field_validator("subject_leaf_key", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _non_blank_text(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
     @field_validator("canonical_cli_path")
     @classmethod
+    @pydantic_validation_boundary
     def _canonical_path_has_non_blank_tokens(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not token.strip() for token in value):
             raise ValueError("CLI paths must contain non-blank tokens")
@@ -79,6 +82,7 @@ class LiveLeafInventoryRow(BaseModel):
 
     @field_validator("alias_cli_paths")
     @classmethod
+    @pydantic_validation_boundary
     def _aliases_are_distinct_and_non_blank(
         cls,
         value: tuple[tuple[str, ...], ...],
@@ -90,6 +94,7 @@ class LiveLeafInventoryRow(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _empty_path_is_only_the_root_status_callback(self) -> LiveLeafInventoryRow:
         if not self.canonical_cli_path and self.subject_leaf_key != "root.status":
             raise ValueError("an empty canonical CLI path is valid only for root.status")
@@ -107,6 +112,7 @@ class ResultSchemaInventoryRow(BaseModel):
 
     @field_validator("subject_leaf_key", "schema_name", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _result_schema_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -129,6 +135,7 @@ class InputSchemaInventoryRow(BaseModel):
 
     @field_validator("required_input_names")
     @classmethod
+    @pydantic_validation_boundary
     def _required_inputs_are_unique_and_non_blank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise ValueError("required input names must be unique")
@@ -138,6 +145,7 @@ class InputSchemaInventoryRow(BaseModel):
 
     @field_validator("subject_leaf_key", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _input_schema_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -153,6 +161,7 @@ class MountedFamilyInventoryRow(BaseModel):
 
     @field_validator("root", "child", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _mounted_family_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -174,6 +183,7 @@ class ProfilePolicyInventoryRow(BaseModel):
 
     @field_validator("classification", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _policy_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -194,6 +204,7 @@ class SurfaceExposureInventoryRow(BaseModel):
 
     @field_validator("provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _provenance_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -216,6 +227,7 @@ class ExplicitExclusionInventoryRow(BaseModel):
 
     @field_validator("reason", "authority", "provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _exclusion_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
 
@@ -258,6 +270,7 @@ class ResolvedCatalogueAction(BaseModel):
     target_leaf: ReconciledOperatorLeaf
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_target_and_sufficient_sources(self) -> ResolvedCatalogueAction:
         target_key = self.declaration.target_command_key
         live_key = self.target_leaf.live_leaf.subject_leaf_key
@@ -323,6 +336,7 @@ class ResolvedManifestActionProfile(BaseModel):
     resolved_action: ResolvedCatalogueAction | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_profile_resolution(self) -> ResolvedManifestActionProfile:
         subject_key = self.subject_leaf.live_leaf.subject_leaf_key
         if subject_key != self.declaration.subject_leaf_key:
