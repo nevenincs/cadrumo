@@ -50,11 +50,13 @@ from typing import TYPE_CHECKING, NamedTuple, TypeGuard
 from pydantic import Field, model_validator
 from pydantic_core import core_schema
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.logging import get_logger
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.clock import today_madrid
 from ..calculations.registry.iva_category_catalogue import (
     IvaCategoryCatalogue,
+    require_iva_category,
     resolve_iva_category_catalogue,
 )
 from ..calculations.registry.iva_rate_kind_catalogue import (
@@ -697,6 +699,17 @@ class IvaClassificationResult(IvaStrictFrozen):
             " operation."
         ),
     )
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
+        """Keep the Art. 20 discriminator coupled to a domestic-exempt result."""
+        if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
+            raise IvaValidationError(
+                f"exemption_article {self.exemption_article.value!r} is only valid when "
+                f"category is DOMESTIC_EXEMPT; got category {self.category.value!r}",
+            )
+        return self
 
 
 def domestic_categories_by_rate_kind(
