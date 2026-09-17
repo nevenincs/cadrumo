@@ -37,6 +37,7 @@ from collections.abc import Mapping
 from datetime import date
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
@@ -88,7 +89,7 @@ def _m210_convenio_lob_advisory_finding(
     tipo_renta_raw = input_values_by_casilla_id.get(tipo_renta_id, "")
     try:
         tipo_renta = require_tipo_renta_irnr(tipo_renta_raw)
-    except ValueError:
+    except RegistryValidationError:
         return None
 
     override = resolve_m210_convenio_override(

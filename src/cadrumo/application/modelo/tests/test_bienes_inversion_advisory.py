@@ -19,6 +19,7 @@ from ....domain.bienes_inversion.register import (
     BienInversionIvaRecord,
 )
 from ....domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
@@ -98,22 +99,17 @@ def test_advisory_fires_on_m303_settlement_period_with_in_window_good() -> None:
     assert diagnostic.legal_refs, "casilla 43's own registry grounding must reach the advisory"
 
 
-def test_advisory_fires_on_m303_annual_period() -> None:
-    """The annual period token (``0A``) is also a valid settlement period."""
-    diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
-        # 0A resolves no registered M303 revision on its own (a real
-        # quarterly-filer revision, selected on any of its valid quarterly
-        # tokens); the collector's own period-token handling is a pure
-        # calendar check independent of which revision variant is loaded.
-        _revision("303", filing_year=2024, period_token="4T"),
-        modelo="303",
-        period_token="0A",
-        filing_year=2024,
-        bucket_id=_BUCKET,
-        register_repository=_InMemoryRegisterRepository(BienesInversionIvaRegister(records=(_record(),))),
-    )
-
-    assert len(diagnostics) == 1
+def test_annual_token_is_refused_as_a_modelo_303_settlement_period() -> None:
+    """Modelo 303 liquidates quarterly or monthly; ``0A`` belongs to Modelo 390 and is refused."""
+    with pytest.raises(RegistryValidationError, match="quarterly or monthly liquidation period"):
+        collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
+            modelo="303",
+            period_token="0A",
+            filing_year=2024,
+            bucket_id=_BUCKET,
+            register_repository=_InMemoryRegisterRepository(BienesInversionIvaRegister(records=(_record(),))),
+        )
 
 
 def test_no_advisory_on_mid_year_quarter() -> None:

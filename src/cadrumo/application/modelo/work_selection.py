@@ -13,6 +13,7 @@ from typing import Annotated
 from pydantic import BaseModel, StringConstraints, field_validator
 
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -103,6 +104,7 @@ class ModeloWorkSelectorRequest(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> ModeloCode | None:
         if value is None or isinstance(value, ModeloCode):
             return value
@@ -112,6 +114,7 @@ class ModeloWorkSelectorRequest(BaseModel):
 
     @field_validator("revision_id", "bucket_id")
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_optional_text(cls, value: str | None) -> str | None:
         return value.strip() if value is not None else None
 

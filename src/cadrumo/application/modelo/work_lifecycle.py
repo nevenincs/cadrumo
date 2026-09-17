@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -152,6 +153,7 @@ class ModeloWorkLifecycleContinuation(BaseModel):
 
     @field_validator("argument_bindings")
     @classmethod
+    @pydantic_validation_boundary
     def _canonicalize_argument_bindings(
         cls,
         value: tuple[ActionArgumentBinding, ...],
@@ -165,6 +167,7 @@ class ModeloWorkLifecycleContinuation(BaseModel):
         return tuple(sorted(value, key=lambda item: item.argument_name))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_action_or_explicit_outcome(self) -> ModeloWorkLifecycleContinuation:
         """Keep each observed continuation either executable or explicitly closed."""
         if (self.action is None) == (self.no_recovery_outcome is None):

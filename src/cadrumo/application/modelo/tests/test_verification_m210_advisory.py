@@ -40,7 +40,7 @@ from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PREDICATE_ID = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
 _INMOBILIARIA_PREDICATE_ID = "modelo-210-2025-inmobiliaria-implica-base-imponible"

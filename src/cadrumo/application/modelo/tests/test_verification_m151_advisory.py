@@ -17,7 +17,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _M151_ADVISORY_PREDICATE_ID = "modelo-151-base-liquidable-implica-cuota-integra"
 _M151_BASE_LIQUIDABLE: CasillaId = validated_casilla_id(

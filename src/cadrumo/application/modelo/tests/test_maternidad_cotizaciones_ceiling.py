@@ -31,11 +31,13 @@ from datetime import UTC, date, datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
@@ -51,13 +53,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET = "0de41ce4-0000-4000-8000-000000000626"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
 
-#: The years the ceiling applied to. The Manual Practico fixes the cutover at
-#: 1 January 2023, so 2023 is NOT a member -- a fix spanning four years would
-#: swap this over-grant for an under-grant in the year the limitation ended.
-_CEILINGED_YEARS = (2020, 2021, 2022)
-
 #: The first year the deduccion is correctly un-capped.
 _FIRST_UNCEILINGED_YEAR = 2023
+
+#: The first year the ceiling applied to, per the Manual Practico de Renta 2020.
+_FIRST_KNOWN_CEILINGED_YEAR = 2020
+
+
+def _supported_filing_years() -> tuple[int, ...]:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None, "the bundled registry declares no supported filing years"
+    return supported_years.years
+
+
+#: The supported years the ceiling applied to. The Manual Practico fixes the
+#: cutover at 1 January 2023, so 2023 is NOT a member -- a fix spanning one more
+#: year would swap this over-grant for an under-grant in the year the limitation
+#: ended. Ceilinged years below the supported floor are refused outright.
+_CEILINGED_YEARS = tuple(year for year in _supported_filing_years() if year < _FIRST_UNCEILINGED_YEAR)
+_UNSUPPORTED_CEILINGED_YEARS = tuple(
+    year for year in range(_FIRST_KNOWN_CEILINGED_YEAR, _FIRST_UNCEILINGED_YEAR) if year not in _CEILINGED_YEARS
+)
 
 
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
@@ -96,9 +112,18 @@ class TestCotizacionesCeilingYears:
         The descendant is eligible on every other axis, so a granted figure here
         would be un-capped by the cotizaciones the statute required.
         """
+        assert _CEILINGED_YEARS, "no supported filing year falls under the ceiling"
         for filing_year in _CEILINGED_YEARS:
             resolution = _resolution(filing_year, operation=operation)
             assert resolution.pairs == (), filing_year
+
+    def test_ceilinged_years_below_the_supported_floor_are_refused(
+        self, *, operation: PinnedAuthorityOperation
+    ) -> None:
+        """A ceilinged year the product does not support is refused, never granted."""
+        for filing_year in _UNSUPPORTED_CEILINGED_YEARS:
+            with pytest.raises(NoRevisionForPeriodError):
+                _resolution(filing_year, operation=operation)
 
     def test_the_withholding_is_disclosed_rather_than_silent(self, *, operation: PinnedAuthorityOperation) -> None:
         """A declared figure that vanishes without explanation is the other failure.

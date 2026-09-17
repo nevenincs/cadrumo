@@ -36,6 +36,7 @@ __all__ = ["m210_snapshot"]
 from ....core.casilla_id import CasillaId
 from ....core.irnr import TipoRentaIrnr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
@@ -354,10 +355,10 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     assert findings[0].message_facts["reason_code"] == "convenio_rate_missing"
 
 
-def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
+def test_m210_unresolved_outcome_findings_refuses_an_undeclared_tipo(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A typed baseline-deferred outcome + unknown type emits a finding."""
+    """A baseline-deferred outcome naming an undeclared income type is refused, not rated."""
 
     outcome = _unresolved_rate_outcome(
         RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
@@ -365,18 +366,15 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
         tipo_renta="royalty",
         country="",
     )
-    findings = m210_unresolved_outcome_findings(
-        (outcome,),
-        profile=_resident_profile(),
-        snapshot=m210_snapshot,
-        year=2025,
-        devengo_date=_DEVENGO_DATE,
-        tipo_renta="royalty",
-    )
-
-    assert len(findings) == 1
-    assert findings[0].casilla_id == outcome.casilla_id
-    assert findings[0].message_facts["reason_code"] == "baseline_rate_unavailable"
+    with pytest.raises(RegistryValidationError, match="'royalty' is not declared"):
+        m210_unresolved_outcome_findings(
+            (outcome,),
+            profile=_resident_profile(),
+            snapshot=m210_snapshot,
+            year=2025,
+            devengo_date=_DEVENGO_DATE,
+            tipo_renta="royalty",
+        )
 
 
 def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(

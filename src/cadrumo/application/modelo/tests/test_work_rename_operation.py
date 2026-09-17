@@ -335,7 +335,9 @@ def test_the_filing_executor_reaches_no_remote_surface() -> None:
     """Nothing in this enrolment may submit, send, or transmit to AEAT."""
     source = inspect.getsource(ModeloWorkFileExecutor)
     tree = ast.parse(textwrap.dedent(source))
-    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    # Names, not only direct calls: the authority runs off the event loop
+    # through ``functools.partial``, which references it without calling it.
+    called = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
 
     assert "file_modelo_revision" in called
 

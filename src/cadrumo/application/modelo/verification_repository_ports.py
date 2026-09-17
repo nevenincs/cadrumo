@@ -24,6 +24,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
@@ -61,6 +62,7 @@ class VerificationRepositoryBundle:
     verification: VerificationReportCatalogueRepositoryProtocol
     bucket_event: BucketEventHistoryRepositoryProtocol
     observation: CalculationObservationRepositoryProtocol
+    iva_compensation_history: IvaCompensationHistoryRepositoryProtocol
     iva_compensation_decision: IvaWalletDecisionRepositoryProtocol
     participation_index: TransactionParticipationIndexRepositoryProtocol
     workflow_run: WorkflowRunRepositoryProtocol

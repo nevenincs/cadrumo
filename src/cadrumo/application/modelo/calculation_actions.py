@@ -543,6 +543,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         resolved_date_bindings=prepared.channels.date_bindings,
         resolved_relations=resolved_relations,
         resolved_row_bindings=_optional_mapping_as_dict(row_binding_values),
+        resolved_boolean_bindings=prepared.channels.boolean_bindings,
     )
     casilla_values = dict(engine_result.values)
     _require_m303_regimen_simplificado_annual_summary_arrival_values(
@@ -1307,6 +1308,7 @@ def _bucket_aggregation_channels(
     )
     _raise_if_m349_intracom_ledger_rows_need_operator_rows(
         work_unit=preparation.work_unit,
+        revision=preparation.snapshot.revision,
         transaction_repository=transaction_repository,
         detail_rows=all_detail_rows,
     )

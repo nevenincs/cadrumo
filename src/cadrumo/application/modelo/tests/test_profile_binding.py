@@ -91,7 +91,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             # resolves the profile-sourced bindings.
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -260,8 +260,8 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
     """Extend the M100 snapshot with a synthetic bool-channel profile binding.
 
     The synthetic binding mirrors the LIS Art. 29 new-entity-override
-    pattern: a yes/no profile fact consumed as a numeric 1/0 operand
-    inside an ``if_then_else`` predicate on the Decimal channel.
+    pattern: a yes/no profile fact carried on the boolean channel and read
+    by the formula as its own 1/0 answer.
     """
     binding = BindingDefinition.model_validate(
         {
@@ -303,16 +303,15 @@ def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
 
 
 class TestBoolTypedProfileBinding:
-    """Pin the typed-bool path through profile_fact_index → _decimal_value.
+    """Pin the typed-bool path through profile_fact_index to the boolean channel.
 
-    contract regression: a bool-typed profile fact must arrive at the Decimal
-    channel as Decimal("1")/Decimal("0") via the isinstance(value, bool)
-    branch in _decimal_value, never as a string "True"/"False" that would
-    require re-parsing, and never silently as Decimal("1") via the int
-    subclass path without the explicit bool check.
+    A binding whose value contract declares the boolean channel carries the
+    fact as a real ``bool``: never a string "True"/"False" that would require
+    re-parsing, and never a Decimal 1/0 on the numeric channel, where a truth
+    value is indistinguishable from a count.
     """
 
-    def test_bool_true_fact_resolves_to_decimal_one_in_binding_channel(
+    def test_bool_true_fact_resolves_to_true_in_boolean_channel(
         self,
         authority_operation: PinnedAuthorityOperation,
     ) -> None:
@@ -323,10 +322,11 @@ class TestBoolTypedProfileBinding:
             profile_record=_profile_with_bool_fact(True),
             operation=authority_operation,
         )
-        assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("1")
+        assert result.boolean_binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] is True
+        assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.binding_values
         assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
 
-    def test_bool_false_fact_resolves_to_decimal_zero_in_binding_channel(
+    def test_bool_false_fact_resolves_to_false_in_boolean_channel(
         self,
         authority_operation: PinnedAuthorityOperation,
     ) -> None:
@@ -337,14 +337,15 @@ class TestBoolTypedProfileBinding:
             profile_record=_profile_with_bool_fact(False),
             operation=authority_operation,
         )
-        assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("0")
+        assert result.boolean_binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] is False
+        assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.binding_values
         assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
 
-    def test_bool_true_and_false_resolve_to_distinct_decimal_values(
+    def test_bool_true_and_false_resolve_to_distinct_boolean_values(
         self,
         authority_operation: PinnedAuthorityOperation,
     ) -> None:
-        """Anti-tautology: the two bool values produce distinct Decimal outputs."""
+        """Anti-tautology: the two bool values produce distinct boolean outputs."""
         snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
         true_result = resolve_profile_sourced_bindings(
             snapshot,
@@ -359,8 +360,8 @@ class TestBoolTypedProfileBinding:
             operation=authority_operation,
         )
         assert (
-            true_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
-            != false_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
+            true_result.boolean_binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
+            != false_result.boolean_binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
         )
 
     def test_bool_fact_on_enum_channel_raises(

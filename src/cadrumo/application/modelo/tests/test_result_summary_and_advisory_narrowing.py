@@ -165,7 +165,7 @@ class TestResultSummaryNarrowing:
 
         observed: list[RegistryAuthorityGrade] = []
 
-        def _capture_grade(_work_unit: object, *, grade: RegistryAuthorityGrade) -> NoReturn:
+        def _capture_grade(_work_unit: object, *, grade: RegistryAuthorityGrade, **_: object) -> NoReturn:
             observed.append(grade)
             raise CadrumoError("stop after observing the requested grade")
 

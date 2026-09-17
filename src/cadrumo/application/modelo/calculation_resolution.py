@@ -269,18 +269,38 @@ def build_calculation_replay_payloads(
     resolved_date_bindings: Mapping[BindingId, date],
     resolved_relations: Mapping[RelationId, Decimal],
     resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
+    resolved_boolean_bindings: Mapping[BindingId, bool] | None = None,
 ) -> CalculationReplayPayloads:
     """Convert resolved engine inputs into persisted :class:`CalculationReplayPayloads`.
 
     Casilla and relation Decimals are canonicalized with the domain decimal
-    formatter. Decimal, enum, and date binding channels share the single
-    ``binding_overrides`` replay map because that is the persisted scalar
+    formatter. Decimal, enum, date, and boolean binding channels share the single
+    ``binding_overrides`` replay map (a truth value as ``true``/``false``) because that is the persisted scalar
     :class:`CalculationRevision` contract. Row-indexed bindings are carried in
     ``row_binding_values`` so the row coordinate remains structured for draft
     and export replay instead of being encoded into a synthetic binding id. The
     replay payload is built after source precedence and bound-casilla projection
     so its values match the engine inputs exactly.
+
+    A carried relation value is keyed by the binding it folds into, so the
+    relation prefill resolves it on both channels. Replay reads both channels
+    into one namespace, so a relation entry that repeats its binding's value
+    is dropped; a relation entry that disagrees is kept, and the revision's
+    channel-uniqueness invariant refuses it rather than choosing a winner.
     """
+    binding_overrides = dict(
+        sorted(
+            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
+            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
+            + [(k.strip(), "true" if v else "false") for k, v in (resolved_boolean_bindings or {}).items()],
+        ),
+    )
+    relation_overrides = {
+        relation_id: value
+        for relation_id, value in sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items())
+        if binding_overrides.get(relation_id) != value
+    }
     return CalculationReplayPayloads(
         input_values_by_casilla_id=dict(
             sorted(
@@ -291,17 +311,9 @@ def build_calculation_replay_payloads(
                 for k, v in resolved_inputs.items()
             ),
         ),
-        binding_overrides=dict(
-            sorted(
-                [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
-                + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
-                + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()],
-            ),
-        ),
+        binding_overrides=binding_overrides,
         row_binding_values=_row_binding_replay_values(resolved_row_bindings or {}),
-        relation_overrides=dict(
-            sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()),
-        ),
+        relation_overrides=relation_overrides,
     )
 
 

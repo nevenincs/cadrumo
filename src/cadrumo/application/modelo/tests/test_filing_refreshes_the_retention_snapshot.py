@@ -25,7 +25,7 @@ from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ...filing.retention import FilingRetentionAuthority
 from ..revision_persistence import _refresh_filing_retention_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "9c4e17b3-58da-4d2f-b6a1-3f70e9c85d26"
 _FILED_AT = datetime(2026, 6, 30, tzinfo=UTC)

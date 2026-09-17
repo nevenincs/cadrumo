@@ -13,6 +13,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
 from ...core.parsing.dates import parse_date
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.renta_codes_catalogue import resolve_fiscal_residency_catalogue
 from ...domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     ParsedVerificationPredicate,
@@ -117,11 +118,26 @@ def _roll_forward_balance_reconciles(
     return abs(closing - expected) <= CENT
 
 
+_NON_RESIDENT_IRNR_NON_EEA_FILTER = "non_resident_irnr_non_eea"
+_IRNR_TAX_REGIME = "irnr"
+
+
 def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
-    """Reject undeclared applicability filters instead of embedding registry data."""
-    del profile
+    """Return whether the profile falls inside a predicate's named applicability filter.
+
+    Each filter name a registry predicate may cite has one entry here; any other
+    name is refused rather than silently treated as applicable or not.
+    """
     if not filter_name:
         return True
+    if filter_name == _NON_RESIDENT_IRNR_NON_EEA_FILTER:
+        # TRLIRNR art. 10: a non-resident taxed under IRNR must appoint a fiscal
+        # representative unless it resides in the EU/EEA.
+        residency = profile.fiscal_residency
+        if residency is None:
+            return False
+        tax_regime = resolve_fiscal_residency_catalogue().definition(residency).tax_regime
+        return tax_regime == _IRNR_TAX_REGIME and not profile.ue_eee_status
     raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
 
 

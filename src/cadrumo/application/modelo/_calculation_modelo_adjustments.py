@@ -399,12 +399,21 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     if not targets:
         return
 
+    # Several bindings may feed one casilla as alternative sources (M100 0596
+    # from Modelo 111, Modelo 190, or a salary certificate); any resolved source
+    # already grounds it.
+    target_casillas_by_binding = casillas_by_binding(snapshot.revision)
+    resolved_annual_casillas = {
+        casilla_id
+        for binding_id in resolved_binding_values
+        for casilla_id in target_casillas_by_binding.get(binding_id, ())
+    }
     missing_relations: list[RelationId] = []
     missing_bindings: list[BindingId] = []
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
-        if binding_id in resolved_binding_values:
+        if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
             continue
         if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
             continue

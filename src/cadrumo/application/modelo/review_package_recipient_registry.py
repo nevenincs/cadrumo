@@ -43,7 +43,7 @@ from datetime import datetime
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -110,6 +110,7 @@ class RecipientFingerprintRegister(BaseModel):
     records: tuple[RecipientFingerprintRecord, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_unique_recipient_ids(self) -> RecipientFingerprintRegister:
         """Refuse a register carrying two records under one ``recipient_id``.
 

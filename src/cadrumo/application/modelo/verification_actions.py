@@ -69,6 +69,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ...domain.calculations.registry.ids import (
@@ -84,6 +85,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.components import registry_category_projection
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -126,6 +128,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
 from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
@@ -447,6 +450,7 @@ def _collect_verification_gate_findings(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    justificante_repository: JustificanteRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
@@ -498,7 +502,7 @@ def _collect_verification_gate_findings(
             subject_leaf_key="modelo.work.verify",
         )
     except ModeloIvaWalletReconciliationBlocked as exc:
-        finding = _iva_wallet_error_verification_finding(exc)
+        finding = _iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)
         findings.append(finding)
         failures_by_finding_id[id(finding)] = exc.precondition_failure
     clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
@@ -507,6 +511,7 @@ def _collect_verification_gate_findings(
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
+        justificante_repository=justificante_repository,
         expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,
             cross_period_expected_member_sets,
@@ -710,6 +715,7 @@ def _append_model_specific_findings(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Append cross-model and detail-row verification findings in one place."""
@@ -753,6 +759,7 @@ def _append_model_specific_findings(
             work_unit=work_unit,
             revision=target,
             observation_repository=observation_repository,
+            iva_history_repository=iva_history_repository,
             operation=operation,
         ),
     )
@@ -930,6 +937,7 @@ def verify_modelo_revision_with_preconditions(
             filing_repository=repos.filing,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
+            justificante_repository=repos.justificante,
             transaction_repository=repos.transaction,
             iva_compensation_decision_repository=repos.iva_compensation_decision,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
@@ -945,6 +953,7 @@ def verify_modelo_revision_with_preconditions(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         observation_repository=repos.observation,
+        iva_history_repository=repos.iva_compensation_history,
         operation=operation,
     )
     completeness, granted = _classify_verification_outcome(
@@ -1813,7 +1822,24 @@ def _missing_required_casilla_finding(
     )
 
 
-def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:
+def _iva_wallet_error_verification_finding(
+    error: ModeloIvaWalletReconciliationBlocked,
+    *,
+    work_unit: WorkUnit,
+    operation: PinnedAuthorityOperation,
+) -> ModeloVerificationFinding:
+    # The block concerns the carried-compensation casilla, so its provenance is
+    # that casilla's own registry grounding for the work unit's revision.
+    snapshot = operation.snapshot(
+        work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    casilla_def = casillas_by_id(snapshot.revision).get(M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA)
+    if casilla_def is None or not casilla_def.legal_refs or not casilla_def.source_refs:
+        raise ModeloValidationError(
+            "IVA wallet finding requires the compensation casilla's legal_refs/source_refs provenance",
+        )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -1823,7 +1849,8 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
             "condition_id": error.precondition_failure.verdict.failed_condition_id,
             "scenario_id": error.precondition_failure.scenario_id,
         },
-        legal_refs=(),
+        legal_refs=tuple(str(ref) for ref in casilla_def.legal_refs),
+        source_refs=tuple(str(ref) for ref in casilla_def.source_refs),
     )
 
 

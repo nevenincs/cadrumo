@@ -41,6 +41,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -129,7 +130,7 @@ def _registry_calculate_input_declarations(
     operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve calculate-input declarations from the selected registry mapping."""
-    effective_date = date(work_unit.filing_year, 12, 31) if work_unit is not None else date.today()
+    effective_date = date(work_unit.filing_year, 12, 31) if work_unit is not None else today_madrid()
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-calculate-input-declarations-mapping",

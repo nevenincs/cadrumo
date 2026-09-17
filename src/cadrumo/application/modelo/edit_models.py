@@ -23,6 +23,7 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -481,6 +482,7 @@ class ModeloEditBaselineV1(EditModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_ordered_validity_window(self) -> ModeloEditBaselineV1:
         validate_utc_aware(self.issued_at)
         validate_utc_aware(self.expires_at)

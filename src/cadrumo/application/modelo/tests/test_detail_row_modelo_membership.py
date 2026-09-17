@@ -33,7 +33,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from .._calculation_modelo_adjustments import require_detail_rows_declared_for_their_owning_modelo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _M210_EFFECTIVE_DATE = date(2025, 1, 1)
 

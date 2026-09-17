@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -118,6 +119,7 @@ class ModeloWorkspaceProducerContractV1(_WorkspaceProducerModel):
     contract_digest: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_reproducible_contract_digest(self) -> ModeloWorkspaceProducerContractV1:
         if self.contract_digest != _producer_contract_digest(self):
             raise ValueError("workspace producer contract is stale: digest does not reproduce")
@@ -270,6 +272,7 @@ class ModeloWorkspaceRegistryProjectionV1(_WorkspaceProducerModel):
     snapshot: RegistrySnapshot | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exactly_one_admission_shape(self) -> Self:
         if (self.inspection is None) == (self.snapshot is None):
             raise ValueError("registry workspace projection must carry exactly one admission shape")

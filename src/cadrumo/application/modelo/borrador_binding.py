@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, ClassVar
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
@@ -87,6 +88,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
     caller_enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_binding_key_shape(self) -> Modelo100BorradorBindingCommand:
         blank_decimal_keys = sorted(key for key in self.caller_binding_values if not key.strip())
         blank_enum_keys = sorted(key for key in self.caller_enum_binding_values if not key.strip())

@@ -456,6 +456,7 @@ def _require_filing_preconditions(
         filing_repository=ports.filing_repository,
         calculation_repository=ports.calculation_repository,
         verification_repository=ports.verification_repository,
+        justificante_repository=ports.justificante_repository,
         iva_compensation_decision=iva_compensation_decision,
         expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,

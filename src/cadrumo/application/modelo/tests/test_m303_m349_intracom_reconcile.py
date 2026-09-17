@@ -289,8 +289,8 @@ def test_advisory_fires_when_m303_intracom_exceeds_m349_resumen(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
@@ -322,8 +322,8 @@ def test_advisory_silent_when_totals_reconcile(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
@@ -347,8 +347,8 @@ def test_advisory_fires_when_verifying_the_m349_side(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     _persist_revision(
         m303,
         _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")),
@@ -377,7 +377,7 @@ def test_no_finding_when_sibling_declaration_absent(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
@@ -400,8 +400,8 @@ def test_within_de_minimis_gap_is_silent(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(
         m303, _m303_values(adquisiciones=Decimal("6000"), entregas=Decimal("4000")), operation=operation
     )
@@ -426,8 +426,8 @@ def test_no_finding_when_nothing_intracommunity_declared(
     operation: PinnedAuthorityOperation,
 ) -> None:
     work_unit_repository, calculation_repository = repositories
-    m303 = _seed_work_unit(modelo="303", filing_year=2024, period="1T", repository=work_unit_repository)
-    m349 = _seed_work_unit(modelo="349", filing_year=2024, period="1T", repository=work_unit_repository)
+    m303 = _seed_work_unit(modelo="303", filing_year=2025, period="1T", repository=work_unit_repository)
+    m349 = _seed_work_unit(modelo="349", filing_year=2025, period="1T", repository=work_unit_repository)
     target = _build_revision(m303, _m303_values(adquisiciones=Decimal("0"), entregas=Decimal("0")), operation=operation)
     _persist_revision(m349, _m349_values(importe=Decimal("0")), calculation_repository, operation=operation)
 

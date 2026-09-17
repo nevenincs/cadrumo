@@ -21,7 +21,7 @@ from ..calculate_input import (
 from ..selectors import ModeloCalculationRevisionSelector
 from ..work_addressing import ModeloRevisionPick, ModeloRevisionPickError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_decimal_override_error_is_typed_registered_and_localized() -> None:

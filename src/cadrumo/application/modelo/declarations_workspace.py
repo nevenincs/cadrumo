@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Final, Protocol, Self
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
@@ -110,6 +110,7 @@ class DeclarationsWorkspaceZoneObservationV1(BaseModel):
     reason_code: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _availability_has_truthful_evidence(self) -> Self:
         observable = self.availability in {
             DeclarationsWorkspaceAvailability.AVAILABLE,
@@ -133,6 +134,7 @@ class DeclarationsWorkspaceZoneStateV1(DeclarationsWorkspaceZoneObservationV1):
     item_count: NonNegativeInt | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
         observable = self.availability in {
             DeclarationsWorkspaceAvailability.AVAILABLE,
@@ -169,6 +171,7 @@ class DeclarationsWorkspaceDeclarationRefV1(BaseModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_year(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("declaration period must match its filing year")
@@ -192,6 +195,7 @@ class DeclarationsWorkspaceCalculationRevisionRefV1(BaseModel):
     is_filed: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_year(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("calculation revision period must match its filing year")
@@ -215,6 +219,7 @@ class DeclarationsWorkspaceFilingRefV1(BaseModel):
     evidence_kind: ExternalEvidenceKind | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _evidence_axes_are_truthful(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("filing period must match its filing year")
@@ -262,6 +267,7 @@ class DeclarationsWorkspaceProjectionV1(BaseModel):
     lifecycle: tuple[DeclarationsWorkspaceLifecycleRefV1, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _zones_are_total_and_ordered(self) -> Self:
         if tuple(state.zone for state in self.zones) != tuple(DeclarationsWorkspaceZone):
             raise ValueError("Declarations zones must cover the closed catalogue in canonical order")

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -27,6 +28,7 @@ class VerificationFindingPreconditionProjection(BaseModel):
     precondition_failure: ModeloPreconditionFailure | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_a_failure_only_for_blocking_findings(self) -> VerificationFindingPreconditionProjection:
         is_blocking = self.finding.severity is ModeloVerificationFindingSeverity.BLOCKING
         if not is_blocking and self.precondition_failure is not None:
@@ -47,6 +49,7 @@ class ModeloVerificationResult(BaseModel):
     finding_preconditions: tuple[VerificationFindingPreconditionProjection, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_report_finding_projection(self) -> ModeloVerificationResult:
         if tuple(projection.finding for projection in self.finding_preconditions) != self.report.findings:
             raise ValueError("verification preconditions must project the report findings in order")

@@ -28,7 +28,7 @@ from ....domain.transactions.protocols import TransactionCatalogueRepositoryProt
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "51515151-5151-4151-9151-515151515151"
 

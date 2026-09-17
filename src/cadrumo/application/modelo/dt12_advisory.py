@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.errors import ModeloError
@@ -34,7 +34,7 @@ def _registry_dt12_declaration(
     operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve selected Modelo 100 context and the dated DT12 mapping fact."""
-    effective_date = getattr(revision, "valid_to", None) or date.today()
+    effective_date = getattr(revision, "valid_to", None) or today_madrid()
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="lirpf-dt12-reduction-verification-mapping",

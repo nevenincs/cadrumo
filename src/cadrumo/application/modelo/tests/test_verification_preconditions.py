@@ -93,7 +93,7 @@ def test_registry_snapshot_failure_is_terminal_without_an_operator_action() -> N
     )
     assert failure.verdict.action is None
     assert failure.verdict.argument_bindings == ()
-    assert failure.verdict.conditionality is ActionConditionality.IMMEDIATE
+    assert failure.verdict.conditionality is ActionConditionality.NOT_APPLICABLE
 
 
 def test_operator_decision_failure_preserves_branch_identity_and_typed_facts() -> None:

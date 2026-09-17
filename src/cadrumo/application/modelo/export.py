@@ -1308,6 +1308,7 @@ def _require_modelo_export_clean_state(
         filing_repository=export_ports.filing,
         calculation_repository=export_ports.calculation,
         verification_repository=export_ports.verification,
+        justificante_repository=export_ports.justificante,
         iva_compensation_decision=iva_wallet_decision,
         expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,

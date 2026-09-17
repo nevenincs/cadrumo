@@ -855,7 +855,9 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent(
     )
 
 
-def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
+def test_iva_wallet_blocked_exception_carries_translated_message_key(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     decision = _blocked_wallet_decision(
         divergence="filed_history_only",
         reason_identity="filed_history_requires_override",
@@ -880,7 +882,13 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
-    assert _iva_wallet_error_verification_finding(exc).casilla_id == M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+    finding = _iva_wallet_error_verification_finding(
+        exc,
+        work_unit=_minimal_work_unit(modelo="303", period="1T"),
+        operation=authority_operation,
+    )
+    assert finding.casilla_id == M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+    assert finding.legal_refs
     assert not hasattr(exc, "suggestion")
 
 

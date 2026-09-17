@@ -39,6 +39,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.calculations.registry.tests.published_authority import (
     published_profile_schema,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -136,7 +137,13 @@ def test_empty_profile_does_not_fire_the_advisory(
     assert _derived_advisories(_record(), operation=authority_operation) == ()
 
 
-@pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])
+def _supported_filing_years() -> tuple[int, ...]:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None, "the bundled registry declares no supported filing years"
+    return supported_years.years
+
+
+@pytest.mark.parametrize("year", _supported_filing_years())
 def test_no_advisory_on_any_covered_filing_year(
     year: int,
     authority_operation: PinnedAuthorityOperation,

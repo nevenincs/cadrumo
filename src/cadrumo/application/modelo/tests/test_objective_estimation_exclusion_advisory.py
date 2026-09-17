@@ -25,7 +25,7 @@ from ....domain.transactions.models import LedgerDatePartition, TransactionCatal
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ..verification_actions import _collect_revision_verification_findings
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 

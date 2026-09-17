@@ -15,6 +15,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -55,6 +56,7 @@ class RecipientEncryptedPackage(BaseModel):
 
     @field_validator("ciphertext", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _ciphertext_accepts_hex_or_raw_bytes(cls, value: object) -> object:
         if isinstance(value, str):
             return bytes.fromhex(value)
@@ -65,6 +67,7 @@ class RecipientEncryptedPackage(BaseModel):
         return value.hex()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _valid_until_is_after_issued_at(self) -> RecipientEncryptedPackage:
         if self.valid_until is not None and self.valid_until <= self.issued_at:
             raise ValueError("valid_until must be strictly after issued_at")

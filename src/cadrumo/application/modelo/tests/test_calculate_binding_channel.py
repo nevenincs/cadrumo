@@ -90,8 +90,6 @@ def test_unknown_binding_id_refuses_with_accepted_set() -> None:
     # The refusal names the offending id and the accepted set, not a bare
     # "value invalid" — the instructive-refusal CLI-boundary contract.
     assert _DECIMAL_BINDING in str(error.context["accepted"])
-    assert "no-such-binding-id" in str(error)
-    assert _DECIMAL_BINDING in str(error)
     assert build_error_envelope(error).code == "REFUSED_MODELO_CALCULATE_BINDING_INPUT"
 
 

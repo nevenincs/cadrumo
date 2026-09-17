@@ -3,7 +3,7 @@
 A settlement-bearing revision whose terminal liquidación casilla is
 ``input_kind = "manual"`` (the calc chain models the inputs but not the final
 liquidación) surfaces a non-blocking advisory on the calculate path -- M100
-2020-2023 are the live case; M100 2025 computes the settlement (no advisory). The
+2022-2023 are the live case; M100 2025 computes the settlement (no advisory). The
 assertions read the LOADED snapshot's casilla ``input_kind`` (structural) and
 cross-check the collector against it -- non-tautological, no formula output, no
 mocks. The structural complement to the value-level settlement predicate (#24-B/#38).
@@ -24,9 +24,9 @@ def _revision(modelo: str, year: int, period: str):
     return published_snapshot(modelo, filing_year=year, period=period).revision
 
 
-@pytest.mark.parametrize("year", [2020, 2023])
+@pytest.mark.parametrize("year", [2022, 2023])
 def test_advises_exactly_the_manual_settlement_casillas_m100(year: int) -> None:
-    """M100 2020/2023 leave the settlement casillas manual (with a formula chain) → advise.
+    """M100 2022/2023 leave the settlement casillas manual (with a formula chain) → advise.
 
     The flagged casilla set must equal exactly the settlement-role casillas whose
     ``input_kind`` is not ``computed`` -- computed from the revision independently

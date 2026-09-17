@@ -14,7 +14,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # The shipped id carries the full revision stem. The `modelo-123-2024-...`
 # spelling this replaced matched nothing, and the lookup below reported that

@@ -22,7 +22,7 @@ from __future__ import annotations
 import asyncio
 import functools
 from collections.abc import Callable
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Final, Literal
@@ -48,6 +48,7 @@ from ...core.operations import (
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
+from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
@@ -1924,7 +1925,7 @@ class ModeloEditApplyExecutor:
                 operation=operation,
             ),
             receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
-            now=datetime.now(UTC),
+            now=_utc_now(),
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):

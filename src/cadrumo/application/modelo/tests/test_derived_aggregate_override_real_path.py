@@ -17,7 +17,7 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "51300000-0000-4000-8000-000000000513"
 _DERIVED_PATH = "renta_family.descendientes_minimos_aggregate_2024"

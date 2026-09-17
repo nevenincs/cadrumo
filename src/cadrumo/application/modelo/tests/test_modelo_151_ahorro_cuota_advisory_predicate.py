@@ -35,12 +35,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SURFACE = "modelo-151-ahorro-cuota-advisory"
 _BASE_AHORRO = validated_casilla_id("p08.base-liquidable-del-ahorro-18", surface=_SURFACE)
@@ -62,7 +62,7 @@ def _profile() -> TaxpayerProfile:
 
 
 def _revision(year: int):
-    return published_snapshot("151", filing_year=year, period="0A").revision
+    return published_authored_revision("151", year=year)
 
 
 def _predicate(year: int):

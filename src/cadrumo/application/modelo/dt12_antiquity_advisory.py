@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.errors import ModeloError
@@ -75,7 +76,7 @@ def dt12_antiquity_advisory_finding(
     if reduccion_value <= Decimal(0):
         return None
 
-    effective_date = getattr(revision, "valid_to", None) or date.today()
+    effective_date = getattr(revision, "valid_to", None) or today_madrid()
     declaration = _registry_dt12_antiquity_declaration(
         revision,
         operation=operation,

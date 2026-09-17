@@ -125,13 +125,24 @@ def test_the_scan_still_matches_the_symbol(symbol: str) -> None:
     and a number people routinely bump has stopped being a guard. The floor still
     refuses the silently-empty scan this design exists to prevent.
     """
-    importers, scanned = _scan(symbol)
+    _importers, scanned = _scan(symbol)
 
     assert scanned >= _MINIMUM_MODULES_SCANNED, (
         f"only {scanned} production modules scanned; the walk has stopped matching and an "
         "empty violation list would be meaningless"
     )
-    assert importers, f"no module imports {symbol}; it was renamed or removed and this gate is now inert"
+    assert _owning_package_defines(symbol), (
+        f"the owning package no longer defines {symbol}; it was renamed or removed and this gate is now inert"
+    )
+
+
+def _owning_package_defines(symbol: str) -> bool:
+    """Whether a module of the owning package defines ``symbol`` at top level."""
+    for path in scan_directory(_OWNING_PACKAGE, pattern="*.py", recursive=False):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if any(isinstance(node, (ast.ClassDef, ast.FunctionDef)) and node.name == symbol for node in tree.body):
+            return True
+    return False
 
 
 def test_the_boundary_predicates_can_fail() -> None:

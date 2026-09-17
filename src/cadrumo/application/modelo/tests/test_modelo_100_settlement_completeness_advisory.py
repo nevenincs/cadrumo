@@ -35,7 +35,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EXPRESSION = 'implies_nonzero(["0500", "0595"])'
 _PREDICATE_ID_SUFFIX = "cuota-resultante-determinada-cuando-base-liquidable-general-positiva"

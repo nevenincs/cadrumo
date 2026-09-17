@@ -23,6 +23,8 @@ See Also:
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
@@ -75,11 +77,9 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     # literal revision id: AEAT re-cuts revision layouts, and this modelo's
     # a broad M303 revision was decomposed into four narrower revisions.
     revision = published_snapshot("303", filing_year=2025, period="1T").revision
-    synthetic = BindingDefinition.model_construct(
-        id="synthetic-missing-source-binding",
-        provider={"kind": "synthetic_unrouted_source_qqq"},
-        value={"data_type": "money", "channel": "decimal"},
-    )
+    # The typed provider union is closed, so an unrouted kind only exists as a
+    # stand-in exposing the one attribute the gate reads.
+    synthetic = SimpleNamespace(id="synthetic-missing-source-binding", source="synthetic_unrouted_source_qqq")
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic)})
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
@@ -127,10 +127,7 @@ def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape()
 
     assert_no_novel_source_kinds(patched)
 
-    scalar_novel = BindingDefinition.model_construct(
-        id="synthetic-scalar-novel",
-        provider=_deferred_binding().provider.model_copy(update={"kind": "synthetic_unrouted_source_qqq"}),
-    )
+    scalar_novel = SimpleNamespace(id="synthetic-scalar-novel", source="synthetic_unrouted_source_qqq")
     with pytest.raises(ModeloAggregationBindingError):
         assert_no_novel_source_kinds(revision.model_copy(update={"bindings": (*revision.bindings, scalar_novel)}))
 

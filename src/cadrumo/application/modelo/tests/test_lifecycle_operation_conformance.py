@@ -29,6 +29,15 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "actor": "operator",
     "profile_resolver": lambda: None,
     "command_builder": lambda revision, path: None,
+    "operator_scope_ports": object(),
+    "work_lifecycle_ports_factory": lambda: None,
+    "verification_repository_bundle_factory": lambda bucket_id: None,
+    "certificate_secret_backend_factory": lambda: None,
+    "filing_action_ports_factory": lambda **_: None,
+    "export_ports_factory": lambda **_: None,
+    "amendment_action_ports_factory": lambda **_: None,
+    "calculation_action_ports_factory": lambda **_: None,
+    "receipt_repository_factory": lambda **_: None,
 }
 
 _KNOWN_AUTHORITIES = {
@@ -126,7 +135,15 @@ def test_each_executor_delegates_to_exactly_one_known_writer(factory_name: str) 
     definition = _build(_definition_factories()[factory_name])
     source = inspect.getsource(definition.executor_factory.executor_type)
     tree = ast.parse(textwrap.dedent(source))
-    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    # A writer is delegated to either by calling it or by handing it to a
+    # deferred invoker such as ``functools.partial``.
+    called = {
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        for target in (node.func, *node.args)
+        if isinstance(target, ast.Name)
+    }
     writers = called & _KNOWN_AUTHORITIES
 
     assert len(writers) == 1, f"{factory_name} delegates to {writers or 'no known writer'}"

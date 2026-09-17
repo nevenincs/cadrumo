@@ -33,7 +33,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...filing.draft_construction import build_draft
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CLOCK = datetime(2026, 6, 27, 12, 45, tzinfo=UTC)
 _BUCKET_ID = "e6d780ee-3271-4087-a705-7cc7e97010c9"  # was 'revision-replay-inputs'

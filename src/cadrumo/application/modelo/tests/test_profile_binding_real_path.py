@@ -39,6 +39,7 @@ import pytest
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
@@ -179,10 +180,9 @@ def test_all_profile_key_selectors_resolve_to_schema_paths() -> None:
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
-        selector = binding.selector
-        if not isinstance(selector, dict):
-            continue
-        pk = selector.get("profile_key")
+        provider = binding.provider
+        assert isinstance(provider, ProfileProvider), binding.id
+        pk = provider.profile_key
         if pk is None:
             continue
         assert pk in known_paths, (
@@ -250,14 +250,13 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
         binding_id = binding.id
         if binding_id == absent:
             continue
-        selector = binding.selector
-        if not isinstance(selector, dict):
-            continue
+        selector = binding.provider
+        assert isinstance(selector, ProfileProvider), binding_id
         # Skip composite display-name (profile_keys) — export-layout, no scalar path.
-        if "profile_keys" in selector:
+        if selector.profile_keys:
             continue
         # Skip repeating-collection bindings — list-valued, not scalar.
-        if selector.get("repeating"):
+        if selector.repeating:
             continue
 
         value = resolve_profile_binding_value(binding, fact_index)
@@ -485,7 +484,7 @@ def test_ccaa_binding_selector_yields_model_selector_string() -> None:
     """
     profile_bindings = _profile_bindings()
     ccaa_binding = next(b for b in profile_bindings if str(b.id) == "renta-profile-tax-residence-ccaa")
-    selectors = list(profile_binding_selectors(ccaa_binding.selector))
+    selectors = list(profile_binding_selectors(ccaa_binding.provider))
     assert selectors == ["TaxResidenceProfile.ccaa"], f"expected ['TaxResidenceProfile.ccaa'], got {selectors!r}"
 
 
@@ -505,10 +504,9 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
-        selector = binding.selector
-        if not isinstance(selector, dict):
-            continue
-        if not selector.get("repeating"):
+        selector = binding.provider
+        assert isinstance(selector, ProfileProvider), binding.id
+        if not selector.repeating:
             continue
         selectors = list(profile_binding_selectors(selector))
         assert selectors, (

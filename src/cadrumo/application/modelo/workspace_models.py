@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core.aggregation import BindingSourceKind
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
@@ -262,6 +263,7 @@ class ModeloWorkspaceRevisionAssertionV1(_WorkspaceModel):
     asserted_revision_id: RevisionId | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_consistent_assertion_shape(self) -> ModeloWorkspaceRevisionAssertionV1:
         asserted = self.asserted_revision_id is not None
         if (self.disposition is ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT) != (not asserted):
@@ -284,6 +286,7 @@ class ModeloWorkspaceResolvedTargetV1(_WorkspaceModel):
     work_state: WorkUnitState | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_work_identity_and_state_together(self) -> ModeloWorkspaceResolvedTargetV1:
         if (self.work_unit_id is None) != (self.work_state is None):
             raise ValueError("resolved workspace work_unit_id and work_state must be present together")
@@ -303,6 +306,7 @@ class ModeloWorkspaceLocaleSummaryV1(_WorkspaceModel):
     catalogue_digest: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_resolution(self) -> ModeloWorkspaceLocaleSummaryV1:
         if self.disposition is ModeloWorkspaceLocaleDisposition.EXACT:
             if self.requested_language is not self.resolved_language:
@@ -459,6 +463,7 @@ class ModeloWorkspaceFormulaDispatchOperandReferenceV1(_WorkspaceModel):
 
     @field_validator("parameter_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_formula_dispatch_parameters(cls, value: tuple[ParameterId, ...]) -> tuple[ParameterId, ...]:
         if not value or len(set(value)) != len(value):
             raise ValueError("workspace formula dispatch parameters must be non-empty and unique")
@@ -721,6 +726,7 @@ class ModeloWorkspaceBaselineV1(_WorkspaceModel):
     locale_catalogue_digest: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_baseline_coordinate(self) -> ModeloWorkspaceBaselineV1:
         if self.selected_revision_id != self.target.law_selected_revision_id:
             raise ValueError("workspace baseline selected_revision_id must equal the target law-selected revision")
@@ -746,6 +752,7 @@ class ModeloWorkspaceCursorV1(_WorkspaceModel):
     continuation: _BoundedText
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_cursor_coordinate(self) -> ModeloWorkspaceCursorV1:
         if self.baseline.contract_version != self.contract_version:
             raise ValueError("workspace cursor baseline must retain the V1 contract version")
@@ -776,6 +783,7 @@ class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
 
     @field_validator("facts")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_bounded_facts(
         cls, value: tuple[ModeloWorkspaceEvidenceFactV1, ...]
     ) -> tuple[ModeloWorkspaceEvidenceFactV1, ...]:
@@ -786,6 +794,7 @@ class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
         return tuple(sorted(value, key=lambda fact: fact.name))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_capability_coordinate(self) -> ModeloWorkspaceCapabilityV1:
         if self.selected_revision_id != self.target.law_selected_revision_id:
             raise ValueError("workspace capability selected_revision_id must equal the target law-selected revision")
@@ -812,12 +821,14 @@ class ModeloWorkspaceBoundedFacetV1[RecordT](_WorkspaceModel):
 
     @field_validator("contributors")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_facet_contributors(
         cls, value: tuple[ModeloWorkspaceContributorIdentityV1, ...]
     ) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
         return _require_unique_contributor_identities(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_page(self) -> ModeloWorkspaceBoundedFacetV1[RecordT]:
         _require_facet_baseline_coordinate(self)
         _require_facet_page_state(self)
@@ -833,6 +844,7 @@ class ModeloWorkspaceWorkReviewFacetV1(_WorkspaceModel):
     review: ModeloWorkReview | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_review_only_when_available(self) -> ModeloWorkspaceWorkReviewFacetV1:
         if (self.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE) != (self.review is not None):
             raise ValueError("work review facet must contain its canonical review exactly when available")
@@ -926,6 +938,7 @@ class ModeloWorkspaceReadinessV1(_WorkspaceModel):
     ready: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_period_to_match_readiness_year(self) -> ModeloWorkspaceReadinessV1:
         if self.period.filing_year != self.filing_year:
             raise ValueError("workspace readiness filing_year must match period.filing_year")
@@ -1004,6 +1017,7 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
 
     @field_validator("capabilities")
     @classmethod
+    @pydantic_validation_boundary
     def _require_complete_capability_denominator(
         cls, value: tuple[ModeloWorkspaceCapabilityV1, ...]
     ) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
@@ -1011,6 +1025,7 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
 
     @field_validator("family_dispositions")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_family_dispositions(
         cls, value: tuple[ModeloWorkspaceFamilyDispositionV1, ...]
     ) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
@@ -1020,12 +1035,14 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
 
     @field_validator("contributors")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_projection_contributors(
         cls, value: tuple[ModeloWorkspaceContributorIdentityV1, ...]
     ) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
         return _require_unique_contributor_identities(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_admission_scope(self) -> ModeloWorkspaceProjectionV1:
         _require_projection_schema_facet_name(self)
         _require_projection_baseline_coordinate(self)
@@ -1051,6 +1068,7 @@ class ModeloWorkspaceStaticInspectionResultV1(_WorkspaceModel):
     projection: ModeloWorkspaceProjectionV1
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_static_projection(self) -> ModeloWorkspaceStaticInspectionResultV1:
         if self.projection.contract_version != self.contract_version or not isinstance(
             self.projection.admission, ModeloWorkspaceStaticInspectionScopeV1
@@ -1067,6 +1085,7 @@ class ModeloWorkspaceGradedSnapshotResultV1(_WorkspaceModel):
     projection: ModeloWorkspaceProjectionV1
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_graded_projection(self) -> ModeloWorkspaceGradedSnapshotResultV1:
         if self.projection.contract_version != self.contract_version or not isinstance(
             self.projection.admission, ModeloWorkspaceGradedSnapshotScopeV1
@@ -1094,6 +1113,7 @@ class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
 
     @field_validator("facts")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_refusal_facts(
         cls, value: tuple[ModeloWorkspaceEvidenceFactV1, ...]
     ) -> tuple[ModeloWorkspaceEvidenceFactV1, ...]:

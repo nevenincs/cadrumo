@@ -41,7 +41,7 @@ from ..operation_definitions import (
 )
 from .test_edit_detail_row_wire_mirror import _PAIRS
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: The four modelos whose rows constitute the declaration, named here so the
 #: test fails if the domain ever changes which they are rather than silently

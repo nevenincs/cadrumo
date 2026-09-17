@@ -50,7 +50,7 @@ from ..operation_definitions import (
 _M210_EFFECTIVE_DATE = date(2025, 1, 1)
 _SINGLE_PAYER = resolve_m210_payer_mode(effective_date=_M210_EFFECTIVE_DATE)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
