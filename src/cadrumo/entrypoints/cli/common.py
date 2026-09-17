@@ -226,15 +226,21 @@ _BOUNDARY_REQUESTED_CLI_LEAF: ContextVar[RequestedCliLeaf | None] = ContextVar(
     "cadrumo_boundary_requested_cli_leaf",
     default=None,
 )
+_BOUNDARY_REQUESTED_CLI_LEAF_SCOPED: ContextVar[bool] = ContextVar(
+    "cadrumo_boundary_requested_cli_leaf_scoped",
+    default=False,
+)
 
 
 @contextmanager
 def boundary_requested_leaf_scope() -> Generator[None]:
     """Bound the invocation-scoped requested leaf to one CLI dispatch."""
     token = _BOUNDARY_REQUESTED_CLI_LEAF.set(None)
+    scoped = _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.set(True)
     try:
         yield
     finally:
+        _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.reset(scoped)
         _BOUNDARY_REQUESTED_CLI_LEAF.reset(token)
 
 
@@ -324,8 +330,10 @@ def _bind_requested_cli_leaf(ctx: typer.Context, requested: RequestedCliLeaf) ->
     ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
     # Written through to the invocation-scoped holder as well, so the
     # process boundary can still name the command after this Click
-    # context has closed. Deliberately NOT reset on close.
-    _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
+    # context has closed. Deliberately NOT reset on close, so it is written
+    # only inside the dispatch scope that owns its reset.
+    if _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.get():
+        _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
 
 
 def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
