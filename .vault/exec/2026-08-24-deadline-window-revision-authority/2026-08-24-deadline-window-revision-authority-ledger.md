@@ -94,4 +94,3 @@ related:
 - `S08` `T` `src/cadrumo/domain/calculations/registry/_validate.py`
 - `S08` `T` `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py`
 - `S08` `T` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_ownership.py`
-

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-09-02'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:34ade86169f5d6f4a24d0c34a951503ab4712efbc730229f6b875cbacc81ddf8'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-P02-S76]]"
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `P02 S76 ADR lifecycle self review`

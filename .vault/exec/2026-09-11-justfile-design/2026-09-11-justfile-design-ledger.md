@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec63da8ca8527fcb6240cb97ab021080f6145a08f1b3e82db1cb446a4b2a85df'
+body_hash: 'sha256:b8ac75b2ab71c219fda1ec8309b0a45d32dfb502f9676069a3c60b96cde55413'
 related:
   - "[[2026-09-11-justfile-design-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `justfile-design` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `dev/init/__init__.py`
 - `S01` `M` `dev/init/README.md`
 - `S01` `M` `dev/init/__main__.py`

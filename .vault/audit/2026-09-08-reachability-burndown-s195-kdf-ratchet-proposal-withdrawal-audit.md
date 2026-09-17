@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:c85ffb4abdae153e39b44e3a0f9ed9be5f132e376a618134710b36dd78fd6f8c'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S195]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
 ---
 

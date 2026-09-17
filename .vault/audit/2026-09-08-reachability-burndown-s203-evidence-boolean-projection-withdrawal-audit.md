@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:dbf79256b0c6ec2186f9c979e036e9b5b993f5928b230312eea4b531acf4d14a'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S203]]"
 ---
 
 # `reachability-burndown` audit: `S203 evidence boolean projection withdrawal review`

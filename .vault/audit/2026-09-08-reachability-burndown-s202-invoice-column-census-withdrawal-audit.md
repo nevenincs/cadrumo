@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:bdb104e01dbfaf746c29d6fc5eb93d91a3e99224cf4dd5fbb4c168e546efedc6'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S202]]"
 ---
 
 # `reachability-burndown` audit: `S202 invoice column census withdrawal review`

@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#registry-generator'
 date: '2026-09-09'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:0415eb66ac1bd45ccf0a186458213cede323dfa3209286dc9967a96cd0b044fa'
+body_hash: 'sha256:fbd05b8a9dc119b808184f5f1af352acf00831842194d4abed5be8e79d71aad4'
 related:
   - "[[2026-09-09-registry-generator-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `registry-generator` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S75` `M` `dev/corpus/sync_aeat_record_design_corpus.py`
 - `S75` `M` `dev/corpus/tests/test_record_design_support.py`
 - `S75` `M` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/manifest.json`

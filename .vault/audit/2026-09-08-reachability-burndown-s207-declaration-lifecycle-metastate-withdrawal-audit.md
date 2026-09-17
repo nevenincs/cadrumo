@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:20c7ba424dd3e410e6641608b655d1063c6c2a8793c78b238b4a7cb1f4550343'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S207]]"
   - "[[2026-09-07-tuimodelo-filing-lifecycle-adr]]"
 ---
 

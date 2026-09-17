@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#duplication-burndown'
 date: '2026-09-03'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c21732af6a6af3b1c33d8ffc9d6ab75e11e6aeae90713f5db8089b34a5a3087'
+body_hash: 'sha256:fd3940ffe2c156e0dc04941df059df9ae1f7e5503b40ac03eec4be5c143d08cf'
 related:
   - "[[2026-09-03-duplication-burndown-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `duplication-burndown` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `dev/audit/duplication_dispositions.toml`
 - `S01` `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
 - `S02` `A` `dev/audit/tests/_duplication_support.py`

@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:7587a972d6f91c7e4a5894c73cfeef733f60ba85d1bd94f4d70274c6c0f2fbfe'
+body_hash: 'sha256:67c33b3564e3cd2be816bbcc0aadc6c502a06431a70266638bde5ba40fab0b3c'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `registry-authority-artifact-boundary` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `dev/registry/compiler/authority.py`
 - `S01` `M` `dev/registry/pipeline/cli.py`
 - `S01` `M` `dev/registry/pipeline/authority_publication.py`

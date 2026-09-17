@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#ci-lane-deconflation'
 date: '2026-08-31'
-modified: '2026-09-02'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:91a523ea32d711c0d4721d63e04d992dde62ff712140ba6a816bf8240f1ad631'
-related:
-  - "[[2026-08-05-ci-lane-deconflation-P02-S74]]"
+related: []
 ---
 
 # `ci-lane-deconflation` audit: `P02 S74 design correction self review`

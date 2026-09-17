@@ -3,30 +3,11 @@ tags:
   - '#audit'
   - '#ruff-zero'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:171de56e8d5804781ed6a44dd5bf0e4cbccfd395f4054081ca5a90e19bd48c95'
+body_hash: 'sha256:44f2f8e6a44952eed6c0f1e9a14910f50364cfeb40b3c9b6c5a22994710662dc'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace ruff-zero with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `ruff-zero` audit: `bounded semantic review`
 
@@ -39,15 +20,6 @@ docstrings. The repository-wide suppression census was also checked. The
 required Ruff gate was run after source workers settled.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### {topic} | {level} | {summary}
-
-     followed by a paragraph carrying the detail. {topic} is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### subprocess-detector-evasion | high | Dynamic dispatch hides a subprocess security finding
 
@@ -69,10 +41,6 @@ than suppressed. The campaign requirement is not met until the count reaches
 zero and each underlying issue has a real remediation.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 Replace the dynamic subprocess lookup with a directly auditable process
 boundary and make its command allow-list, `shell=False`, timeout, and data-flow

@@ -3,32 +3,13 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7e49de90ad1e94682f63171e7351d52f96611f462bde4ff6e5f6a6afa300aac'
+body_hash: 'sha256:4535119574003bb2884677e98c8ce81cfe2250349b4d17e0971e0b438561d02e'
 related:
   - "[[2026-09-15-registry-authority-artifact-boundary-lane3-integration-review-audit]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-authority-artifact-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `registry-authority-artifact-boundary` audit: `migration r02 runtime adoption closure`
 
@@ -83,7 +64,3 @@ Real-recipe planted-defect tests in `dev/tests/test_import_quality_gate.py` fail
 `cadrumo.core.tests.test_irnr` moved to `src/cadrumo/domain/calculations/registry/tests/test_irnr_registry_tokens.py`; four core-is-innermost entries remain and count as blocking retirement candidates because `_valid_retirement` in `dev/quality/import_health.py` requires composition-integrity evidence with no producer. Entries are not removed by policy override. Disposition: pending harness repair and owning evidence path.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->

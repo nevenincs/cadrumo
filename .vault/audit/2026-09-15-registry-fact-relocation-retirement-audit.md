@@ -9,8 +9,6 @@ body_hash: 'sha256:3e7b2a8a77e1dbea7bb951e5deef4c841d3301ecc3fc43d806fbcefe0b518
 related: []
 ---
 
-
-
 # `registry-fact-relocation-retirement` audit: remove the completed campaign surface
 
 ## Scope

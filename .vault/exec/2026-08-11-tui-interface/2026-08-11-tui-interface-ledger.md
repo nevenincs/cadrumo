@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:64464fcd93e6df333dbf731e3b363bed128993388fe9143f231a710bce2971cf'
+body_hash: 'sha256:e8aa13a437730ad0249297499e9ad201ff6581b5a24ec85bc4bb84c0559a20c7'
 related:
   - "[[2026-08-11-tui-interface-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `tui-interface` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `.vault/exec/2026-08-11-tui-interface/2026-08-11-tui-interface-W01-P01-S01.md`
 - `S01` `verify:` `pytest dev/tests/test_modelo_workspace_action_denominator.py` -> `9 passed`
 - `S02` `A` `dev/quality/modelo_workspace_receipts.py`

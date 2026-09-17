@@ -46,4 +46,3 @@ The module and `migrate_modelo` contracts in `dev/registry/edition_delta_migrati
 - Align the converter's module and function contracts with the source-application/publication-readiness split, and add a non-source-finding apply test so the distinction cannot drift again.
 - Correct the manager docstring and malformed checklist sentence while preserving the rule that storage ancestry never manufactures legal continuity.
 - After correction, rerun the focused scaffold, installer, converter-assessment, registry-collapse and modelo-100 integration tests; exercise live CLI help and every retained recipe with `just --dry-run`; then run the owning registry aggregate and a final deleted-symbol/reference sweep.
-

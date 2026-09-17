@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:def0be3752bd110abea4331e96d1f3477fb566ac5e65473357616ef099ba87e4'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S226]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
   - "[[2026-09-04-reachability-burndown-reference]]"
 ---

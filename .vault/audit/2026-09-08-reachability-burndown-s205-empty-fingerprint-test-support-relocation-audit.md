@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:451d6c5fc5cea15f584952aa33a20dde7018e22ae65b805f54ef469a23b35f72'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S205]]"
 ---
 
 # `reachability-burndown` audit: `S205 empty fingerprint test-support relocation review`

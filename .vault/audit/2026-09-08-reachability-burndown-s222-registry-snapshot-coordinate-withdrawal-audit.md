@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:018db459e1515883e2a7469593436300a6f64c397d0f8f2808149d1034dc3ed1'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S222]]"
   - "[[2026-08-07-canonical-identifiers-adr]]"
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-09-04-reachability-burndown-reference]]"

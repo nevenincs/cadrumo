@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:b3c519454f3aa559c1461aeee9e08570b417c65be6a183d807d933579bc74f75'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S197]]"
 ---
 
 # `reachability-burndown` audit: `S197 encrypted file envelope withdrawal review`

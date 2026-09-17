@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:a62b8796c6ad27597556dbc58720245d2b99f7a2c12a4697b516cb8ba2a3be97'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S219]]"
 ---
 
 # `reachability-burndown` audit: `S219 custody retryability handler routing review`

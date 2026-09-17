@@ -9,8 +9,6 @@ body_hash: 'sha256:693a9b67cd28c899f4405dc16ca164b95792cf48ed7a1edd87ec5c501fef7
 related: []
 ---
 
-
-
 # `m100-prepublication-continuity` audit: pre-publication continuity repair
 
 ## Scope

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:95ea0bb106e9e1a31d8c85a1efc9c16b17eca5bf5711b82690716a51b599a05d'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S215]]"
 ---
 
 # `reachability-burndown` audit: `S215 Modelo verify progress unit alias withdrawal review`

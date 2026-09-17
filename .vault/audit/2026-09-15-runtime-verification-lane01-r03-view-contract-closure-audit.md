@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-verification'
 date: '2026-09-15'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:80c4262dd60492ce871790f260dc055c15127facf3d61143e30821149defd661'
+body_hash: 'sha256:8832c598b74b1d9d95800e006d456ce627a6304310874948c8dab99822ca14f7'
 related:
   - "[[2026-09-15-runtime-verification-lane01-r02-revision-view-repair-audit]]"
 ---
@@ -99,7 +99,6 @@ Observed file changes: V03 started at 18:28:44. `queries.py` was rewritten at 18
 - `V03` | focused regression | `uv run --no-sync pytest -o addopts= -p no:randomly -n 0 --strict-config --strict-markers --capture=sys --tb=short -ra -q src/cadrumo/domain/calculations/registry/tests/test_modelo_revision_directory_view.py` | exit 0 | `10 passed in 299.62s`. The run log is under `.logs/test-runs/2026-09-15/20260915T162844.499313Z-pytest-46084-f4b3c213`.
 
 The static checks `R03-C01` were not re-run. This entry does not re-examine the source analysis in `l01-r03-f02` or `l01-r03-f03`. The lane's own evidence (`R03-C01` to `R03-C03`) stands as originally recorded.
-
 
 ## Recommendations
 

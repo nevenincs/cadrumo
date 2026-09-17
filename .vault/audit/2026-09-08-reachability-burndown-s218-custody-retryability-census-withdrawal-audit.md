@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:6b924d9e6314365a047849d39714a87ceb94011d9b9ad9f7827ba351cb2b97b8'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S218]]"
 ---
 
 # `reachability-burndown` audit: `S218 custody retryability census withdrawal review`

@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#semantic-consolidation'
 date: '2026-08-28'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:586be196d7f2ce2b5b721351afb7502a6c0fd264e572f840f343e2b93adfd852'
+body_hash: 'sha256:5955f0568873cc14a0adfad65472745f6ee48fcef79d97fe61047a781f90fb8f'
 related:
   - "[[2026-08-28-semantic-consolidation-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `semantic-consolidation` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `A` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
 - `S01` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py` -> `pass`
 - `S02` `A` `src/cadrumo/domain/modelos/filing_text.py`

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:dc30d589995f09852bff877c3f4cb09b04de54f0b6e9d0bc4fca1d4ab4391321'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S211]]"
 ---
 
 # `reachability-burndown` audit: `S211 notification field census withdrawal review`

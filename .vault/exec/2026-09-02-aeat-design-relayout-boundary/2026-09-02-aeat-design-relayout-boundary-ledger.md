@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#aeat-design-relayout-boundary'
 date: '2026-09-02'
-modified: '2026-09-15'
+modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:2c13ad046baebeb8d971e23bb27a9fd2a87810869f70ed59efd6915f3d2f4cb4'
+body_hash: 'sha256:be6c1c8f9425937ff7d201f99443a8815d6caacbd69a3c22d89cd84d50f3126c'
 related:
   - "[[2026-09-02-aeat-design-relayout-boundary-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `aeat-design-relayout-boundary` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `dev/registry/analysis/m200_2024_full_reconciliation.py`
 - `S01` `verify:` `uv run --no-sync python -m dev.registry.analysis.m200_2024_full_reconciliation` -> `pass`
 - `S01` `verify:` `uv run --no-sync ruff check dev/registry/analysis/m200_2024_full_reconciliation.py dev/registry/tests/test_m200_2024_full_reconciliation.py` -> `pass`

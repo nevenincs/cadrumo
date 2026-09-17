@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-17'
 body_schema: 'body-v2'
 body_hash: 'sha256:6bd22cef31d395be7ccd021d9f474c6c3027e6af4f034390a547e313faa553e6'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
-  - "[[2026-09-04-reachability-burndown-W05-P12-S204]]"
 ---
 
 # `reachability-burndown` audit: `S204 aggregation catalogue alias withdrawal review`

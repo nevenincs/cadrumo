@@ -1437,4 +1437,3 @@ count is not knowable until `S55` lands.
 - `S233` `core.errors.registry` is one of the 32, and its non-inertness is what makes
 - `S233` `core.errors.error_codes` circular with it -- a cycle that module already
 - `S233` carries a deliberate deferred-binding window in order to survive.
-
