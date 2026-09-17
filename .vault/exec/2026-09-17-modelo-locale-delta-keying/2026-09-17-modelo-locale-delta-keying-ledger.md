@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1d4c05a89f457eb2ec22964cf6e336e6da4bbf08d5b2d9b599cee6d98c7cebf'
+body_hash: 'sha256:3ba92004815dd6f405a3ee0cad683f8d4ca2f09bc4c9992855325a93e2f52940'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -100,6 +100,7 @@ related:
 - `S12` `M` `src/cadrumo/domain/calculations/registry/tests/test_localization_continuity_tier_is_reached.py`
 - `S12` `M` `dev/locales/casilla_orthography.py`
 - `S12` `verify:` `pytest test_localization_continuity_tier_is_reached` -> `pass`
+- `S12` `M` `dev/locales/tests/test_casilla_orthography.py`
 
 ## Notes
 
