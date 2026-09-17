@@ -1154,7 +1154,7 @@ def _local_model_provisioning_refusal(
 
 
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:
-    """Probe every capability-gated :class:`~cadrumo.core.optional_extras.OptionalExtra` into :class:`DependencyStatus` rows.
+    """Probe each :class:`~cadrumo.core.optional_extras.OptionalExtra` into :class:`DependencyStatus` rows.
 
     The result set is keyed by the same :data:`~cadrumo.core.OPTIONAL_EXTRAS`
     catalogue used by :func:`~cadrumo.core.optional_extras.require_optional_extra`, keeping
