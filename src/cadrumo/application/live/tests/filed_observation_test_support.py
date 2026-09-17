@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...auth.session_types import AeatSession
     from ...auth.sessions import AuthenticatedAeatSessionResult
-    from ...modelo.external_import_actions import ExternalFilingBaselineSource
+    from ...modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
     from ..remote_state_models import (
         IvaCompensationHistoryCaptureReport,
         IvaCompensationHistoryReport,
@@ -512,27 +512,26 @@ def in_memory_filed_observation_test_bundle() -> InMemoryFiledObservationTestBun
             justificante_repository=_InMemoryJustificanteRepository(),
             filing_repository=_InMemoryFilingRepository(),
             bucket_event_repository=_InMemoryBucketEventRepository(),
-            baseline_import=_InMemoryBaselineImport(),
+            filing_reconciliation=_UnavailableFilingReconciliation(),
         ),
         filed_data_port=UnavailableFiledDataCapturePort(),
         iva_remote_state_port=_UnavailableIvaRemoteStatePort(),
     )
 
 
-class _InMemoryBaselineImport:
-    """Decline complete-baseline import because it is outside these tests."""
+class _UnavailableFilingReconciliation:
+    """Decline filing-chain reconciliation because it is outside these tests."""
 
-    def import_source(
+    def reconcile(
         self,
-        source: ExternalFilingBaselineSource,
+        entry: AeatRegisterEntry,
         *,
-        bucket_id: str,
         actor: str,
         clock: datetime,
-    ) -> ModeloRecord:
-        """Refuse rather than fabricate a filing record on the test-only surface."""
-        del source, bucket_id, actor, clock
-        raise RuntimeError("test bundle does not provide baseline import")
+    ) -> FilingReconciliationResult:
+        """Refuse rather than fabricate a chain decision on the test-only surface."""
+        del entry, actor, clock
+        raise RuntimeError("test bundle does not provide filing-chain reconciliation")
 
 
 __all__ = ["InMemoryFiledObservationTestBundle", "in_memory_filed_observation_test_bundle"]

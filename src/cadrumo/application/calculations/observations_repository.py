@@ -742,12 +742,14 @@ class CalculationObservationRepositoryProtocol(Protocol):
         period: Period,
         *,
         member_nif: str | None = None,
+        replacement_official: ObservationEnvelopePayload | None = None,
     ) -> tuple[SecureObjectWrite, ...]:
         """Prepare the writes that remove the pending-local layer of one coordinate.
 
-        The official layer is left untouched. Removal is expressed as upserts
-        so the writes join the caller's unit of work. Returns ``()`` when the
-        coordinate has no pending-local layer.
+        The official layer is left untouched unless ``replacement_official`` is
+        given, in which case it replaces the official layer in the same write.
+        Removal is expressed as upserts so the writes join the caller's unit of
+        work. Returns ``()`` when the coordinate has no pending-local layer.
         """
         ...
 
