@@ -20,6 +20,11 @@ one normalized register entry into a chain transition:
 
 Every transition and its bucket event commit in one unit of work with the
 filing catalogue.
+
+A chain entry is a :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`, and the
+content compared against the register is the
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision` that entry was
+filed from.
 """
 
 from __future__ import annotations
@@ -337,6 +342,15 @@ def recorded_chain_entry(history: tuple[ModeloRecord, ...], register: AeatRegist
     same expediente or CSV, or when its evidence reference is that expediente
     or CSV. CSVs compare in their canonical form, so one receipt spelled two
     ways is still one receipt.
+
+    Args:
+        history: The period's chain, each entry a
+            :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+        register: The normalized AEAT register reference to look for.
+
+    Returns:
+        The :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord` already recording
+        ``register``, or ``None`` when no entry does.
     """
     expediente_id = register.expediente_id.strip() if register.expediente_id is not None else None
     csv = normalise_aeat_csv(register.csv) if register.csv is not None else None
