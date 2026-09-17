@@ -19,6 +19,7 @@ from pydantic import SecretStr
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import override_settings
+from ...core.resources.bundled_data import bundled_path
 from ..auth.operator_probe_ports import ClaveIdentityFailure
 from ..auth.probes import ProviderProbeResult
 from ..preflight import (
@@ -161,7 +162,8 @@ def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
 
 def test_corpus_row_healthy_for_bundled_normatives() -> None:
     """The bundled legal-normatives corpus ships with the package and is present."""
-    rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    with override_settings(aeat_normatives_root=bundled_path("corpus", "normatives")):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     normatives = _row(rows, "corpus:normatives")
     assert normatives.healthy is True
     assert normatives.severity is HealthSeverity.OK
