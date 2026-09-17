@@ -283,7 +283,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
     LIVA art. 99 makes the 2T surplus available for the following settlement.
     The two source values are independently grounded form inputs: 63.00
-    deductible less 21.00 accrued VAT yields the asserted 42.00 carry; the
+    deductible less 21.00 IVA devengado yields the asserted 42.00 carry; the
     calculation engine is not used as the expected-value oracle.
     """
     with (
