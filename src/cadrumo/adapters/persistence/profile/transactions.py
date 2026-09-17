@@ -351,7 +351,7 @@ def _translating_storage_failures[**P, R](method: Callable[P, R]) -> Callable[P,
         except StorageError as exc:
             raise LedgerStorageError(
                 "transaction catalogue storage could not be read",
-                context={"operation": method.__name__},
+                context={"operation": getattr(method, "__name__", repr(method))},
             ) from exc
 
     return wrapper
