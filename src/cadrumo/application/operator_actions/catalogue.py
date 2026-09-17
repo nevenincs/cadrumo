@@ -398,6 +398,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="app.live.notifications.list",
         ),
         ActionCatalogueEntry(
+            action_id="operator.provision.browser",
+            target_command_key="config.provision.browser",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.storage.init",
             target_command_key="config.storage.init",
         ),

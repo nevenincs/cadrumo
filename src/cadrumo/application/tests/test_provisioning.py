@@ -12,7 +12,6 @@ import json
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
-from pathlib import Path
 from typing import ClassVar, override
 
 import pytest
@@ -25,10 +24,8 @@ from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write
 from ..local_reader import probe_local_reader
 from ..provisioning import (
     DependencyStatus,
-    _playwright_browsers_root,
     probe_optional_extra,
     probe_optional_extras,
-    probe_playwright_browser,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -84,55 +81,6 @@ def test_local_reader_probe_malformed_successful_tags_response_is_unavailable(pa
     assert status.available is False
     assert status.facts["runtime_reachable"] is False
     assert status.precondition_verdict is not None
-
-
-def test_probe_playwright_browser_absent_when_cache_empty(
-    tmp_path: Path,
-) -> None:
-    """An empty browsers cache reports unavailable with the install command."""
-    status = probe_playwright_browser(cache_root=tmp_path)
-    assert status.service == "playwright-chromium"
-    assert status.available is False
-    assert status.facts["chromium_installed"] is False
-    assert status.precondition_verdict is not None
-    assert status.precondition_verdict.failed_condition_id == "provisioning.playwright_browser.installed"
-
-
-def test_probe_playwright_browser_present_when_chromium_build_exists(
-    tmp_path: Path,
-) -> None:
-    """A `chromium-*` build directory in the cache reports available."""
-    (tmp_path / "chromium-1234").mkdir()
-    status = probe_playwright_browser(cache_root=tmp_path)
-    assert status.service == "playwright-chromium"
-    assert status.available is True
-    assert status.facts["chromium_installed"] is True
-    assert status.precondition_verdict is None
-
-
-def test_probe_playwright_browser_missing_root_is_unavailable_not_an_error(
-    tmp_path: Path,
-) -> None:
-    """A nonexistent cache root reports unavailable rather than raising OSError."""
-    status = probe_playwright_browser(cache_root=tmp_path / "does-not-exist")
-    assert status.available is False
-
-
-def test_playwright_browsers_root_still_honours_vendor_env_var(tmp_path: Path) -> None:
-    """The declared escape does not change resolution: an explicit
-    ``PLAYWRIGHT_BROWSERS_PATH`` still wins over the per-OS default.
-
-    Drives the injectable ``env`` mapping rather than mutating the process
-    environment, so the precedence is asserted against a real dict on the same
-    branch the live probe takes. ``cache_root`` would not test this: it
-    short-circuits before the override is ever read. The absent-override case
-    is asserted alongside it, since "the override wins" only means something
-    once the default it beats is pinned too.
-    """
-    vendor_root = tmp_path / "vendor-playwright-cache"
-
-    assert _playwright_browsers_root(env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == vendor_root
-    assert _playwright_browsers_root(env={}) != vendor_root
 
 
 def test_probe_optional_extra_present_for_an_installed_package() -> None:

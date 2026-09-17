@@ -25,15 +25,11 @@ import contextlib
 import os
 import sys
 from collections.abc import Mapping
-from pathlib import Path
 from typing import TypedDict
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.config import Settings, load_settings
-from ..core.directory_scan import (
-    iter_directory,
-)
 from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
 from ..core.i18n.render import tr
 from ..core.model_catalogue import (
@@ -78,7 +74,6 @@ __all__ = [
     "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
-    "probe_playwright_browser",
     "pull_runtime_model",
     "read_accelerator",
     "read_installed_models",
@@ -139,75 +134,6 @@ class DependencyStatus(ProvisioningOutcome):
     def _require_availability_outcome(self) -> DependencyStatus:
         require_provisioning_verdict(failed=not self.available, verdict=self.precondition_verdict)
         return self
-
-
-def _playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[str, str] | None = None) -> Path:
-    """Return the directory Playwright installs browser binaries into.
-
-    Uses an explicit ``cache_root`` when supplied, otherwise honours
-    ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default cache. A
-    vendor-owned cache is intentionally not a Cadrumo storage setting. It performs
-    a filesystem read only — it never launches the Playwright driver (which can
-    hang inside the CLI process), so the probe stays fast and non-blocking.
-
-    Reads ``env`` (an injectable mapping so the vendor-override precedence is
-    unit-tested against real dict inputs without mutating process environment
-    state; defaults to ``os.environ`` for the live probe). ``cache_root`` is not
-    a substitute for it: that argument short-circuits resolution entirely, so it
-    exercises a different branch than the one the override precedence lives on.
-
-    A third-party-owned cache: the
-    application reads this location to probe for an installed build and never
-    chooses or writes to it.
-    """
-    if cache_root is not None:
-        return cache_root
-    environment = os.environ if env is None else env
-    override = environment.get("PLAYWRIGHT_BROWSERS_PATH")
-    if override:
-        return Path(override)
-    if sys.platform == "win32":
-        base = environment.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-        return Path(base) / "ms-playwright"
-    if sys.platform == "darwin":
-        return Path.home() / "Library" / "Caches" / "ms-playwright"
-    return Path.home() / ".cache" / "ms-playwright"
-
-
-def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus:
-    """Probe the Playwright Chromium browser binary, returning a :class:`DependencyStatus`.
-
-    Scans the Playwright browsers cache for an installed ``chromium*`` build using
-    a fast filesystem check. The Playwright sync driver can hang inside the CLI
-    process, so this probe deliberately never launches it. Missing, unreadable, or
-    empty cache roots return unavailable with a closed precondition outcome.
-    ``cache_root`` is a testable override for the browser cache
-    directory. The row complements the browser health probe in
-    :mod:`cadrumo.application.diagnostics`; it checks workstation provisioning, not
-    AEAT site reachability.
-    """
-    root = _playwright_browsers_root(cache_root)
-    try:
-        installed = root.is_dir() and any(
-            child.name.startswith("chromium") for child in iter_directory(root, require_root=True)
-        )
-    except OSError:
-        installed = False
-    if not installed:
-        return DependencyStatus(
-            service="playwright-chromium",
-            available=False,
-            facts={"browser_cache_root": str(root), "chromium_installed": False},
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED,
-                facts={"browser_cache_root": str(root), "chromium_installed": False},
-            ),
-        )
-    return DependencyStatus(
-        service="playwright-chromium",
-        available=True,
-        facts={"browser_cache_root": str(root), "chromium_installed": True},
-    )
 
 
 class SystemMemoryReading(BaseModel):
