@@ -60,8 +60,11 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
@@ -455,7 +458,9 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         notes=f"runtime attached filing record {label}",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id=f"justificante-{label}",

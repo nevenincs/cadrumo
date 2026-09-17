@@ -54,7 +54,12 @@ from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
-from cadrumo.domain.modelos.filing_record import ModeloRecord
+from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -103,6 +108,9 @@ def _filing_record(*, filed_at: datetime, seed: str) -> ModeloRecord:
         period=Period.from_year_and_code(filed_at.year, "2T"),
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
 
