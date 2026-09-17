@@ -250,7 +250,7 @@ def _seed_303_cross_period_sources(
             if period in csv_periods
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
-        evidence_reference_id = f"AEAT-{period}"
+        evidence_reference_id = f"AEATCSV{period}"
         source_snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
