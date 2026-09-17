@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-github-actions-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:8b307af60dc0ef94ca3013042896c36871171a316292995d5b900a06d6451977'
+body_hash: 'sha256:e8c0de9b7bc49ccadfe48c6b47539adda05da6686e25a693732e4a2e20586798'
 ---
 
 # `github-actions` plan
@@ -80,10 +80,10 @@ Deliver the single PR-triggered workflow with a lint job and a fail-closed merge
 
 Deliver one release workflow that proves the release PR head, builds the cohort once, verifies it on Linux, Windows and macOS, and publishes idempotently.
 
-- [ ] `P03.S16` - Create the release proof phase with the full merge gate, full suites and dev test groups on Linux 3.13 and 3.14, release-only checks, and a 3.15 advisory leg; `.github/workflows/release.yml, justfile`.
-- [ ] `P03.S17` - Build the release cohort once with its source tag and verify it with oracles, campaign, Homebrew, Scoop and runtime smoke on Linux, Windows and macOS, macOS mandatory behind a fail-fast queue watchdog; `.github/workflows/release.yml, dev/packaging/`.
-- [ ] `P03.S18` - Add the idempotent publish phase for PyPI, the Homebrew tap and Scoop bucket, post-publish acquisition, then docs; `.github/workflows/release.yml, dev/packaging/release_pointer_guard.py, dev/release/version_identity.py`.
-- [ ] `P03.S05` - Switch release-please to the GitHub App token and dispatch the release workflow; `.github/workflows/release-please.yml`.
+- [x] `P03.S16` - Create the release proof phase with the full merge gate, full suites and dev test groups on Linux 3.13 and 3.14, release-only checks, and a 3.15 advisory leg; `.github/workflows/release.yml, justfile`.
+- [x] `P03.S17` - Build the release cohort once with its source tag and verify it with oracles, campaign, Homebrew, Scoop and runtime smoke on Linux, Windows and macOS, macOS mandatory behind a fail-fast queue watchdog; `.github/workflows/release.yml, dev/packaging/`.
+- [x] `P03.S18` - Add the idempotent publish phase for PyPI, the Homebrew tap and Scoop bucket, post-publish acquisition, then docs; `.github/workflows/release.yml, dev/packaging/release_pointer_guard.py, dev/release/version_identity.py`.
+- [x] `P03.S05` - Switch release-please to the GitHub App token and dispatch the release workflow; `.github/workflows/release-please.yml`.
 
 ### Phase `P04` - Retire old lanes
 

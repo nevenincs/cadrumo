@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -532,6 +533,28 @@ def _test_worker_count(requested: int | None) -> int | None:
     return None
 
 
+def _adopt_cohort(source: Path, repo_root: Path) -> None:
+    """Verify a prebuilt cohort and place it where every form reads it.
+
+    Args:
+        source: The already-built Python cohort directory.
+        repo_root: The repository root the campaign runs from.
+    """
+    cohort = source.resolve(strict=True)
+    _run_step(
+        [sys.executable, "-m", "dev.packaging.python_cohort", "verify", "--cohort-dir", str(cohort)],
+        repo_root,
+        "verify-cohort",
+    )
+    destination = (repo_root / COHORT_DIR).resolve()
+    if destination == cohort:
+        return
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(cohort, destination)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Build the cohort once, run the profile's lanes concurrently, then the serial oracles."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -550,6 +573,12 @@ def main(argv: list[str] | None = None) -> int:
         "--skip-preflight",
         action="store_true",
         help="Skip the dependency/preflight steps when the workflow already ran them as prior steps.",
+    )
+    parser.add_argument(
+        "--cohort-dir",
+        type=Path,
+        default=None,
+        help="Consume this already-built Python cohort instead of building one.",
     )
     args = parser.parse_args(argv)
 
@@ -612,11 +641,14 @@ def main(argv: list[str] | None = None) -> int:
     # a proof recorded while the file was present.
     _run_step([sys.executable, "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
-    _run_step(
-        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
-        repo_root,
-        "build-cohort",
-    )
+    if args.cohort_dir is None:
+        _run_step(
+            [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],
+            repo_root,
+            "build-cohort",
+        )
+    else:
+        _adopt_cohort(args.cohort_dir, repo_root)
 
     log_dir = repo_root / "var" / "packaging-smoke" / "lane-logs"
     log_dir.mkdir(parents=True, exist_ok=True)

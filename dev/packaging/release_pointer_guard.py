@@ -52,6 +52,12 @@ _HOMEBREW_URL_VERSION: Final[re.Pattern[str]] = re.compile(
     r"""url\s+["'][^"']*/releases/download/v(?P<version>[^/"']+)/cadrumo-[^/"']*["']""",
 )
 
+#: The generator addresses the product sdist on the package index it is
+#: published to, whose stable path carries the version in the filename.
+_HOMEBREW_INDEX_URL_VERSION: Final[re.Pattern[str]] = re.compile(
+    r"""url\s+["'][^"']*/packages/source/c/cadrumo/cadrumo-(?P<version>[^/"']+?)\.tar\.gz["']""",
+)
+
 
 class PointerFormat(StrEnum):
     """Closed set of committed release-pointer formats this guard reads."""
@@ -86,9 +92,9 @@ def extract_pointer_version(text: str, pointer_format: PointerFormat) -> str:
             raise ValueError("scoop manifest carries no 'version' string")
         return version
 
-    match = _HOMEBREW_URL_VERSION.search(text)
+    match = _HOMEBREW_URL_VERSION.search(text) or _HOMEBREW_INDEX_URL_VERSION.search(text)
     if match is None:
-        raise ValueError("homebrew formula carries no '/releases/download/v<version>/cadrumo-*' url")
+        raise ValueError("homebrew formula carries no release or package-index url for the cadrumo sdist")
     version = match.groupdict().get("version")
     if not isinstance(version, str):
         raise ValueError("homebrew formula carries an invalid release URL version")
@@ -154,6 +160,12 @@ def main(argv: list[str] | None = None) -> int:
         choices=tuple(fmt.value for fmt in PointerFormat),
         help="Pointer format to parse.",
     )
+    parser.add_argument(
+        "--incoming",
+        type=Path,
+        default=None,
+        help="Pointer about to be written; a same-version pointer must match it byte for byte.",
+    )
     args = parser.parse_args(argv)
     pointer_format = PointerFormat(args.pointer_format)
 
@@ -161,6 +173,19 @@ def main(argv: list[str] | None = None) -> int:
         existing = check_pointer(args.existing, version=args.version, pointer_format=pointer_format)
     except (BackwardBumpError, ValueError) as exc:
         print(str(exc), flush=True)
+        return 1
+
+    if (
+        args.incoming is not None
+        and existing is not None
+        and Version(existing) == Version(args.version)
+        and args.existing.read_bytes() != args.incoming.read_bytes()
+    ):
+        print(
+            f"{pointer_format.value} pointer already pins {existing} with different content; "
+            "a published version cannot be repointed, so cut a new version",
+            flush=True,
+        )
         return 1
 
     if existing is None:

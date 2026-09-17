@@ -28,10 +28,21 @@ jobs:
     name: "Build: Release proposal (Linux)"
     runs-on: [self-hosted, Linux, X64]
     steps:
+      # Refs, releases and pull requests created with the default token start
+      # no workflow runs, so the release pull request would never report the
+      # merge gate. An App token makes release-please's writes trigger CI.
+      - name: Mint the release App token
+        id: app-token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@8b8fd2cc23b2e18957157a9d923d75aa0c6f6ad5 # v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -40,6 +51,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up uv for the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
@@ -69,6 +81,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: main
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up uv for the lockfile verification
         if: steps.release.outputs.release_created == 'true'
@@ -77,7 +90,7 @@ jobs:
       - name: Open a reconciling pull request when the lockfile drifted
         if: steps.release.outputs.release_created == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG: ${{ steps.release.outputs.tag_name }}
         run: |
           if uv lock --locked; then
@@ -97,41 +110,33 @@ jobs:
             --title "chore(deps): reconcile uv.lock with ${TAG}" \
             --body "Main carries the previous version's \`uv.lock\`. Every job installing with \`--frozen\` fails until this merges."
 
-      - name: Dispatch release validation
-        if: steps.release.outputs.release_created == 'true'
+      - name: Dispatch release proof for the release pull request
+        if: steps.release.outputs.pr && !steps.release.outputs.release_created
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.release.outputs.tag_name }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          HEAD_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
         run: |
-          if [ -z "${TAG}" ]; then
-            echo "::error::release_created is true but tag_name is empty"
+          version="$(jq -r '."."' .release-please-manifest.json)"
+          if [ -z "${version}" ] || [ "${version}" = "null" ]; then
+            echo "::error::could not read the proposed version from the release branch manifest"
             exit 1
           fi
-          gh api --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/packaging-smoke.yml/dispatches" \
-            -f "ref=${TAG}"
-          echo "Dispatched packaging-smoke.yml for ${TAG}. Publication remains blocked until packaging, Homebrew, and Scoop run IDs are supplied to publish.yml." >> "$GITHUB_STEP_SUMMARY"
+          gh workflow run release.yml --ref "${HEAD_BRANCH}"             -f phase=prove -f "ref=${HEAD_BRANCH}" -f "version=${version}"
+          echo "Dispatched release proof for ${version} on ${HEAD_BRANCH}" >> "$GITHUB_STEP_SUMMARY"
 
-      # GitHub raises no workflow events for refs created with the default
-      # GITHUB_TOKEN, so a `release: published` trigger never fires for a
-      # release cut here. Documentation delivery is dispatched explicitly.
-      # docs-publish.yml takes `source_commit`, not a tag.
-      - name: Dispatch the documentation publish workflow
+      - name: Dispatch release publication
         if: steps.release.outputs.release_created == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG: ${{ steps.release.outputs.tag_name }}
-          SHA: ${{ steps.release.outputs.sha }}
+          VERSION: ${{ steps.release.outputs.version }}
         run: |
-          if [ -z "${SHA}" ]; then
-            echo "::error::release_created is true but sha is empty"
+          if [ -z "${TAG}" ] || [ -z "${VERSION}" ]; then
+            echo "::error::release_created is true but the tag or version is empty"
             exit 1
           fi
-          gh api --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/docs-publish.yml/dispatches" \
-            -f "ref=${TAG}" \
-            -f "inputs[source_commit]=${SHA}"
-          echo "Dispatched docs-publish.yml for ${TAG} at ${SHA}" >> "$GITHUB_STEP_SUMMARY"
+          gh workflow run release.yml --ref "${TAG}"             -f phase=publish -f "ref=${TAG}" -f "version=${VERSION}"
+          echo "Dispatched release publication for ${VERSION} at ${TAG}" >> "$GITHUB_STEP_SUMMARY"
 
       # A release-please run that finds a merged, untagged release PR aborts
       # and exits ZERO. That green abort is why this repository went six months

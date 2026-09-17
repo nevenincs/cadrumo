@@ -1,0 +1,1355 @@
+name: Cadrumo Release
+
+run-name: "Cadrumo Release ${{ inputs.phase }} ${{ inputs.version }} (${{ inputs.ref }})"
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Release phase to run
+        required: true
+        type: choice
+        options:
+          - prove
+          - publish
+      ref:
+        description: Git ref to prove (release pull request head) or tag to publish
+        required: true
+        type: string
+      version:
+        description: Release version (for example 0.3.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.phase }}-${{ inputs.version }}
+  cancel-in-progress: ${{ inputs.phase == 'prove' }}
+
+jobs:
+  # ---------------------------------------------------------------- prove ----
+
+  merge-gate:
+    name: "Check: Merge gate (Linux)"
+    if: inputs.phase == 'prove'
+    uses: ./.github/workflows/merge-gate.yml
+    with:
+      full: true
+
+  runtime-inventory:
+    name: "Check: Runtime inventory (Linux)"
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    outputs:
+      next-python: ${{ steps.next.outputs.python }}
+      smoke-matrix: ${{ steps.smoke.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Emit the prerelease runtime row
+        id: next
+        shell: bash
+        run: |
+          set -euo pipefail
+          python="$(uv run --no-sync python -m dev.ci.python_runtime_matrix --phase next | jq -r '.include[0]["python-version"]')"
+          test -n "$python" -a "$python" != null
+          echo "python=$python" >> "$GITHUB_OUTPUT"
+
+      - name: Emit the stable runtime smoke matrix
+        id: smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"check-name":f"Test: Release artifacts {row.minor} {row.phase.value} ({os[1]})"} for row in inventory.stable for os in (["self-hosted","Linux","X64"],["self-hosted","macOS","ARM64"],["self-hosted","Windows","X64"])]}, separators=(",",":")))')"
+          entries="$(jq '.include | length' <<<"$matrix")"
+          if [ "$entries" -eq 0 ]; then
+            echo "::error::the stable runtime inventory yielded no smoke targets"
+            exit 1
+          fi
+          {
+            echo 'matrix<<STABLE_RUNTIME_MATRIX'
+            echo "$matrix"
+            echo 'STABLE_RUNTIME_MATRIX'
+          } >> "$GITHUB_OUTPUT"
+
+  test-full:
+    name: "Test: Full suites (Linux, ${{ matrix.python }})"
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    env:
+      CADRUMO_PYTEST_WORKERS: "8"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python }}
+          browser: "true"
+
+      - name: Unit suite
+        if: ${{ !cancelled() }}
+        run: just test-unit 100
+
+      - name: Integration suite (parallel)
+        if: ${{ !cancelled() }}
+        run: just test-integration-parallel
+
+      - name: Integration suite (serial)
+        if: ${{ !cancelled() }}
+        run: just test-integration-serial
+
+      - name: Registry calculations and conformance
+        if: ${{ !cancelled() }}
+        run: just test-registry
+
+      - name: CI contracts
+        if: ${{ !cancelled() }}
+        run: just test-ci-contracts
+
+      - name: Tooling contracts
+        if: ${{ !cancelled() }}
+        run: just test-test-policy test-repository-contracts
+
+  test-full-next:
+    name: "Test: Full suites (Linux, ${{ needs.runtime-inventory.outputs.next-python }})"
+    needs: runtime-inventory
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 240
+    continue-on-error: true
+    env:
+      CADRUMO_PYTEST_WORKERS: "8"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ needs.runtime-inventory.outputs.next-python }}
+          browser: "true"
+
+      - name: Unit suite
+        if: ${{ !cancelled() }}
+        run: just test-unit 100
+
+      - name: Integration suite (parallel)
+        if: ${{ !cancelled() }}
+        run: just test-integration-parallel
+
+      - name: Integration suite (serial)
+        if: ${{ !cancelled() }}
+        run: just test-integration-serial
+
+      - name: Registry calculations and conformance
+        if: ${{ !cancelled() }}
+        run: just test-registry
+
+      - name: CI contracts
+        if: ${{ !cancelled() }}
+        run: just test-ci-contracts
+
+      - name: Tooling contracts
+        if: ${{ !cancelled() }}
+        run: just test-test-policy test-repository-contracts
+
+  check-conformance:
+    name: "Check: Release conformance (Linux)"
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Data file format
+        if: ${{ !cancelled() }}
+        run: just check-data-format
+
+      - name: Module reachability
+        if: ${{ !cancelled() }}
+        run: just check-module-reachability
+
+      - name: Docstring references
+        if: ${{ !cancelled() }}
+        run: just check-docstring-references
+
+      - name: Build the documentation site
+        id: docs-build
+        if: ${{ !cancelled() }}
+        run: just docs-build
+
+      - name: Documentation conformance
+        if: ${{ !cancelled() && steps.docs-build.outcome == 'success' }}
+        run: just docs-check 8
+
+      - name: Audit dependencies for known CVEs
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          requirements="${RUNNER_TEMP}/audit-reqs-${GITHUB_RUN_ID}.txt"
+          uv export --frozen --no-dev --no-emit-project --no-hashes > "$requirements"
+          uvx pip-audit --strict -r "$requirements"
+
+      - name: Packaging performance contracts
+        if: ${{ !cancelled() }}
+        run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
+
+      - name: Future-directive policy
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --no-sync pytest -q --tb=short \
+            dev/tests/test_future_directive_policy.py \
+            -k future_directive
+
+  build-cohort:
+    name: "Build: Release cohort (Linux)"
+    needs: [merge-gate, test-full, check-conformance]
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Read the interpreter pin
+        id: pin
+        shell: bash
+        run: echo "python=$(tr -d '[:space:]' < .python-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ steps.pin.outputs.python }}
+
+      - name: Refuse a burned or mismatched version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          declared="$(uv run --no-sync python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
+          if [ "$declared" != "$version" ]; then
+            echo "::error::pyproject declares ${declared}, but this release is ${version}"
+            exit 1
+          fi
+          uv run --no-sync python -m dev.release.version_identity --version "$version" --scope seal
+
+      - name: Build the immutable release cohort
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          uv run --no-sync python -m dev.packaging.release_cohort build \
+            --output var/release-cohort \
+            --source-tag "v${INPUT_VERSION#v}"
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+
+      - name: Refuse a distribution over the index file cap
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-dist
+          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz var/release-dist/
+          test "$(find var/release-dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          uv run --no-sync python -m dev.packaging.distribution_cap --directory var/release-dist
+
+      - name: Seal the release cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -czf cadrumo-release-cohort.tar.gz -C var/release-cohort .
+          sha256sum cadrumo-release-cohort.tar.gz > cadrumo-release-cohort.tar.gz.sha256
+
+      - name: Upload the sealed release cohort
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: |
+            cadrumo-release-cohort.tar.gz
+            cadrumo-release-cohort.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  runner-queue-watchdog:
+    name: "Check: Runner queue (Linux)"
+    needs: build-cohort
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "480"
+        run: python3 -m dev.ci.runner_queue_watchdog
+
+  test-installed-oracles:
+    name: "Test: Installed transports (${{ matrix.os }})"
+    needs: build-cohort
+    if: inputs.phase == 'prove'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: Linux
+            runner: [self-hosted, Linux, X64]
+            row-id: python-linux-x86-64
+          - os: Windows
+            runner: [self-hosted, Windows, X64]
+            row-id: python-windows-x86-64
+          - os: macOS
+            runner: [self-hosted, macOS, ARM64]
+            row-id: python-macos-arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the sealed release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+
+      - name: Extract and verify the sealed release cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+
+      - name: Install the cohort, run installed oracles, emit the row
+        shell: bash
+        env:
+          ROW_ID: ${{ matrix.row-id }}
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
+            --release-cohort-dir var/release-cohort \
+            --row-id "$ROW_ID" \
+            --work-dir var/oracle-emit-work \
+            --distribution-evidence-dir var/distribution-install-readiness
+
+      - name: Upload the distribution-evidence record
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: distribution-evidence-${{ matrix.row-id }}
+          path: var/distribution-install-readiness/*.json
+          if-no-files-found: error
+
+  test-installer-campaign:
+    name: "Test: Distribution artifacts (${{ matrix.os }})"
+    needs: build-cohort
+    if: inputs.phase == 'prove'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: Linux
+            runner: [self-hosted, Linux, X64]
+            profile: ci
+            test-workers: "8"
+            lane-concurrency: "3"
+          - os: Windows
+            runner: [self-hosted, Windows, X64]
+            profile: portable
+            test-workers: "8"
+            lane-concurrency: "2"
+          - os: macOS
+            runner: [self-hosted, macOS, ARM64]
+            profile: portable
+            test-workers: "2"
+            lane-concurrency: "2"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the sealed release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+
+      - name: Extract and verify the sealed release cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+
+      - name: Packaging campaign against the sealed cohort
+        shell: bash
+        env:
+          CADRUMO_TEST_WORKERS: ${{ matrix.test-workers }}
+          CADRUMO_PACKAGING_LANE_CONCURRENCY: ${{ matrix.lane-concurrency }}
+          CAMPAIGN_PROFILE: ${{ matrix.profile }}
+        run: |
+          uv run --no-sync python -m dev.packaging.campaign \
+            --profile "$CAMPAIGN_PROFILE" \
+            --cohort-dir var/release-cohort/python
+
+      - name: Checkpoint packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+  test-homebrew:
+    name: "Test: Channel acquisition (${{ matrix.label }})"
+    needs: build-cohort
+    if: inputs.phase == 'prove'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - id: macos-arm64
+            label: macOS arm64
+            runner: [self-hosted, macOS, ARM64]
+            expected_os: Darwin
+            expected_arch: arm64
+            brew: /opt/homebrew/bin/brew
+            row_id: homebrew-macos-arm64
+            make_jobs: "2"
+          - id: linux-x86_64
+            label: Linux x86_64
+            runner: [self-hosted, Linux, X64]
+            expected_os: Linux
+            expected_arch: x86_64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-x86-64
+            make_jobs: "8"
+          - id: linux-arm64
+            label: Linux arm64
+            runner: [self-hosted, Linux, ARM64]
+            expected_os: Linux
+            expected_arch: aarch64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-arm64
+            make_jobs: "2"
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          root="${RUNNER_TEMP}/cadrumo-homebrew-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          rm -rf "$root"
+          mkdir -p "$root"
+          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Verify declared Homebrew release row
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          EXPECTED_ARCH: ${{ matrix.expected_arch }}
+          EXPECTED_OS: ${{ matrix.expected_os }}
+        run: |
+          test "$(uname -s)" = "$EXPECTED_OS"
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          test -x "$BREW_PATH"
+          "$BREW_PATH" --version
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the sealed release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/download
+
+      - name: Extract and verify the sealed release cohort
+        run: |
+          set -euo pipefail
+          mkdir -p "$CADRUMO_HOMEBREW_ROOT/release-cohort"
+          tar -xzf "$CADRUMO_HOMEBREW_ROOT/download/cadrumo-release-cohort.tar.gz" \
+            -C "$CADRUMO_HOMEBREW_ROOT/release-cohort"
+          uv run --no-sync python -m dev.packaging.release_cohort verify \
+            --cohort-dir "$CADRUMO_HOMEBREW_ROOT/release-cohort"
+
+      - name: Audit install and exercise the cohort's own formula
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          MATRIX_ID: ${{ matrix.id }}
+          HOMEBREW_MAKE_JOBS: ${{ matrix.make_jobs }}
+        run: |
+          uv run --no-sync python dev/packaging/smoke_homebrew.py \
+            --formula "$CADRUMO_HOMEBREW_ROOT/release-cohort/homebrew/Formula/cadrumo.rb" \
+            --cohort-dir "$CADRUMO_HOMEBREW_ROOT/release-cohort/python" \
+            --evidence-dir "$CADRUMO_HOMEBREW_ROOT/evidence" \
+            --tap-name "cadrumo-smoke/${MATRIX_ID}" \
+            --brew "$BREW_PATH" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --retain-install
+
+      - name: Emit the Homebrew distribution-evidence record
+        env:
+          ROW_ID: ${{ matrix.row_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          set -euo pipefail
+          tax="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name tax-evidence.json -print -quit)"
+          if [[ -z "$tax" ]]; then
+            echo "homebrew tax oracle evidence JSON not found under $CADRUMO_HOMEBREW_ROOT/evidence" >&2
+            exit 1
+          fi
+          uv run --no-sync python -m dev.packaging.distribution_evidence_emit \
+            --row-id "$ROW_ID" \
+            --release-cohort-dir "$CADRUMO_HOMEBREW_ROOT/release-cohort" \
+            --tax-evidence "$tax" \
+            --acquisition-mechanism brew \
+            --acquisition-source "nevenincs/tap" \
+            --destination-kind homebrew-cellar \
+            --destination-locator "$MATRIX_ID" \
+            --distribution-evidence-dir "$CADRUMO_HOMEBREW_ROOT/distribution-install-readiness"
+
+      - name: Clean up the retained Homebrew install
+        if: always() && steps.initialize.outputs.ready == 'true'
+        run: |
+          state="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
+          if [[ -n "$state" ]]; then
+            uv run --no-sync python dev/packaging/smoke_homebrew.py --cleanup-state "$state"
+          else
+            echo "no retained Homebrew install to clean up"
+          fi
+
+      - name: Stage the Homebrew evidence bundle
+        if: always() && steps.initialize.outputs.ready == 'true'
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          tar --exclude=./release-cohort --exclude=./download \
+            -czf "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" -C "$CADRUMO_HOMEBREW_ROOT" .
+
+      - name: Upload the Homebrew distribution-evidence rows
+        if: always() && steps.initialize.outputs.ready == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: distribution-evidence-homebrew-${{ matrix.id }}
+          path: ${{ env.CADRUMO_HOMEBREW_ROOT }}/distribution-install-readiness/*.json
+          if-no-files-found: ignore
+
+      - name: Upload the Homebrew acquisition bundle
+        if: always() && steps.initialize.outputs.ready == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cadrumo-homebrew-acquisition-${{ matrix.id }}
+          path: cadrumo-homebrew-acquisition-${{ matrix.id }}.tar.gz
+          if-no-files-found: ignore
+
+  test-scoop:
+    name: "Test: Channel acquisition (Windows)"
+    needs: build-cohort
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        shell: powershell
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP "cadrumo-scoop-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) {
+            Remove-Item -LiteralPath $root -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_SCOOP_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
+      - name: Verify declared Windows native release row
+        shell: powershell
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
+            throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
+          }
+          if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+            throw "scoop is unavailable to the lane user; install Scoop into this runner user's own profile"
+          }
+          $scoopRoot = if ($env:SCOOP) { $env:SCOOP } else { Join-Path $env:USERPROFILE "scoop" }
+          foreach ($required in @("apps", "buckets", "shims")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $scoopRoot $required) -PathType Container)) {
+              throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
+            }
+          }
+          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+          $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+          if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            throw "the Scoop lane must run as the dedicated non-admin runner user; got elevated identity $($identity.Name)"
+          }
+          # A UAC-filtered administrator token passes IsInRole, so membership is
+          # read from the group by well-known SID and an unreadable group refuses.
+          try {
+            $administrators = @(Get-LocalGroupMember -SID "S-1-5-32-544" -ErrorAction Stop)
+          }
+          catch {
+            throw "cannot determine whether the lane user is an administrator ($($_.Exception.Message))"
+          }
+          $tokenGroups = @($identity.Groups | ForEach-Object { $_.Value })
+          foreach ($member in $administrators) {
+            $memberSid = [string]$member.SID.Value
+            if ($memberSid -eq $identity.User.Value -or $tokenGroups -contains $memberSid) {
+              throw "the Scoop lane must run as the dedicated non-admin runner user; $($identity.Name) is an administrator"
+            }
+          }
+
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the sealed release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: ${{ env.CADRUMO_SCOOP_ROOT }}/download
+
+      - name: Extract and verify the sealed release cohort
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force "$env:CADRUMO_SCOOP_ROOT/release-cohort" | Out-Null
+          tar -xzf "$env:CADRUMO_SCOOP_ROOT/download/cadrumo-release-cohort.tar.gz" `
+            -C "$env:CADRUMO_SCOOP_ROOT/release-cohort"
+          if ($LASTEXITCODE -ne 0) { throw "release cohort extraction failed" }
+          uv run --no-sync python -m dev.packaging.release_cohort verify `
+            --cohort-dir "$env:CADRUMO_SCOOP_ROOT/release-cohort"
+          if ($LASTEXITCODE -ne 0) { throw "release cohort verification failed" }
+
+      - name: Stage token-free smoke harness
+        shell: powershell
+        run: |
+          $harness = Join-Path $env:CADRUMO_SCOOP_ROOT "harness"
+          $packaging = Join-Path $harness "dev/packaging"
+          New-Item -ItemType Directory -Force -Path $packaging | Out-Null
+          Copy-Item -LiteralPath "dev/__init__.py" -Destination (Join-Path $harness "dev/__init__.py")
+          Copy-Item -LiteralPath "dev/packaging/__init__.py" -Destination (Join-Path $packaging "__init__.py")
+          foreach ($file in @(
+            "smoke_scoop.ps1",
+            "command_execution.py",
+            "constraint_effect.py",
+            "installed_tax_oracle.py"
+          )) {
+            Copy-Item -LiteralPath (Join-Path "dev/packaging" $file) -Destination (Join-Path $packaging $file)
+          }
+
+      - name: Install and exercise the cohort's own manifest
+        shell: powershell
+        run: |
+          & "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" `
+            -Mode Host `
+            -CohortDir "$env:CADRUMO_SCOOP_ROOT/release-cohort/python" `
+            -ManifestPath "$env:CADRUMO_SCOOP_ROOT/release-cohort/scoop/cadrumo.json" `
+            -EvidenceDir "$env:CADRUMO_SCOOP_ROOT/evidence" `
+            -AppName cadrumo-scoop-acquisition
+
+      - name: Verify the smoke evidence binds to this cohort
+        shell: powershell
+        run: |
+          $evidenceRoot = "$env:CADRUMO_SCOOP_ROOT/evidence"
+          $evidencePath = Join-Path $evidenceRoot "scoop-evidence.json"
+          if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+            $failurePath = Join-Path $evidenceRoot "scoop-failure.json"
+            if (Test-Path -LiteralPath $failurePath -PathType Leaf) {
+              throw (Get-Content -LiteralPath $failurePath -Raw)
+            }
+            throw "the Scoop smoke produced no evidence"
+          }
+          $evidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+          $expectedManifestHash = (
+            Get-FileHash -LiteralPath "$env:CADRUMO_SCOOP_ROOT/release-cohort/scoop/cadrumo.json" -Algorithm SHA256
+          ).Hash.ToLowerInvariant()
+          if ($evidence.status -ne "passed") { throw "Scoop smoke evidence is not a passing run: $($evidence.status)" }
+          if ($evidence.mode -ne "Host") { throw "Scoop smoke evidence is not a native run: $($evidence.mode)" }
+          if ($evidence.container_identity_verified -ne $false) {
+            throw "native Scoop evidence must not claim a verified container identity"
+          }
+          if ($evidence.orchestration_nonce) { throw "native Scoop evidence must not carry an orchestration nonce" }
+          if ($evidence.source_manifest_sha256 -ne $expectedManifestHash) {
+            throw "Scoop evidence binds manifest $($evidence.source_manifest_sha256), expected $expectedManifestHash"
+          }
+          if ($evidence.cleanup_status -ne "passed") { throw "the Scoop lane did not verify its own profile cleanup" }
+          if (-not $evidence.runtime_identity) { throw "Scoop evidence records no runtime identity" }
+
+      - name: Emit the Scoop distribution-evidence record
+        shell: powershell
+        run: |
+          $evidenceRoot = "$env:CADRUMO_SCOOP_ROOT/evidence"
+          $tax = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter tax-evidence.json | Select-Object -First 1).FullName
+          if (-not $tax) { throw "scoop tax oracle evidence JSON not found under $evidenceRoot" }
+          $scoop = Get-Content -LiteralPath (Join-Path $evidenceRoot "scoop-evidence.json") -Raw | ConvertFrom-Json
+          $locator = if ($scoop.installed_prefix) { [string]$scoop.installed_prefix } else { "cadrumo" }
+          $source = if ($scoop.bucket_url) { [string]$scoop.bucket_url } else { "scoop-bucket" }
+          uv run --no-sync python -m dev.packaging.distribution_evidence_emit `
+            --row-id scoop-windows-x86-64 `
+            --release-cohort-dir "$env:CADRUMO_SCOOP_ROOT/release-cohort" `
+            --tax-evidence $tax `
+            --acquisition-mechanism scoop `
+            --acquisition-source $source `
+            --destination-kind scoop-install `
+            --destination-locator $locator `
+            --distribution-evidence-dir "$env:CADRUMO_SCOOP_ROOT/distribution-install-readiness"
+          if ($LASTEXITCODE -ne 0) { throw "distribution-evidence emission failed" }
+
+      - name: Upload the Scoop distribution-evidence rows
+        if: always() && steps.initialize.outputs.ready == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: distribution-evidence-scoop
+          path: ${{ env.CADRUMO_SCOOP_ROOT }}/distribution-install-readiness/*.json
+          if-no-files-found: ignore
+
+  test-runtime-smoke:
+    name: "${{ matrix.check-name }}"
+    needs: [build-cohort, runtime-inventory]
+    if: inputs.phase == 'prove'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.runtime-inventory.outputs.smoke-matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download the sealed release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+
+      - name: Extract and verify the sealed release cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-cohort dist
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
+
+      - name: Smoke test the built wheels
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          uv run --isolated --no-project --python "$PYTHON_VERSION" --find-links dist \
+            --with "cadrumo==${INPUT_VERSION#v}" \
+            dev/smoke/smoke_check.py
+
+  check-proven:
+    name: "Check: Release proven (Linux)"
+    needs:
+      - merge-gate
+      - runtime-inventory
+      - test-full
+      - check-conformance
+      - build-cohort
+      - runner-queue-watchdog
+      - test-installed-oracles
+      - test-installer-campaign
+      - test-homebrew
+      - test-scoop
+      - test-runtime-smoke
+    if: ${{ !cancelled() && inputs.phase == 'prove' }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Require every prove job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          failed="$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key)=\(.value.result)"' <<<"$NEEDS")"
+          if [ -n "$failed" ]; then
+            echo "::error::release not proven; jobs without success: $(tr '\n' ' ' <<<"$failed")"
+            exit 1
+          fi
+          echo "every prove job succeeded"
+
+  # -------------------------------------------------------------- publish ----
+
+  locate-cohort:
+    name: "Check: Proven release cohort (Linux)"
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run-id: ${{ steps.locate.outputs.run-id }}
+      tag-commit: ${{ steps.locate.outputs.tag-commit }}
+    steps:
+      - name: Locate the successful prove run for this version and commit
+        id: locate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v${INPUT_VERSION#v}"
+          case "$INPUT_REF" in
+            "$tag"|"refs/tags/$tag") ;;
+            *) echo "::error::publish ref ${INPUT_REF} is not the tag ${tag}"; exit 1 ;;
+          esac
+          tag_type="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq .object.type)"
+          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq .object.sha)"
+          if [ "$tag_type" = tag ]; then
+            tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq .object.sha)"
+          fi
+          tag_tree="$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${tag_sha}" --jq .tree.sha)"
+          runs="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release.yml \
+            --event workflow_dispatch --status success --limit 100 \
+            --json databaseId,headSha,displayTitle)"
+          prefix="Cadrumo Release prove ${INPUT_VERSION} ("
+          run_id=""
+          while read -r id sha; do
+            [ -n "$id" ] || continue
+            if [ "$sha" = "$tag_sha" ] || \
+               [ "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${sha}" --jq .tree.sha)" = "$tag_tree" ]; then
+              run_id="$id"
+              break
+            fi
+          done < <(jq -r --arg p "$prefix" '.[] | select(.displayTitle | startswith($p)) | "\(.databaseId) \(.headSha)"' <<<"$runs")
+          if [ -z "$run_id" ]; then
+            echo "::error::no successful prove run found for ${INPUT_VERSION} at ${tag_sha}"
+            exit 1
+          fi
+          echo "proven by run ${run_id}"
+          {
+            echo "run-id=${run_id}"
+            echo "tag-commit=${tag_sha}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ steps.locate.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Verify the seal, version and tag
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          TAG_COMMIT: ${{ steps.locate.outputs.tag-commit }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          test "$(git rev-parse HEAD)" = "$TAG_COMMIT"
+          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          test "$(jq -r .version var/release-cohort/release-cohort.json)" = "$version"
+          test "$(jq -r .source.tag var/release-cohort/release-cohort.json)" = "v${version}"
+          uv run --no-sync python -m dev.release.version_identity --version "$version" --scope seal
+
+  publish-pypi:
+    name: "Build: Package publication (Linux)"
+    needs: locate-cohort
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    environment:
+      name: pypi
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Select the sealed distribution bytes
+        run: |
+          set -euo pipefail
+          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p var/release-cohort dist
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+          cp var/release-cohort/python/*.whl var/release-cohort/python/*.tar.gz dist/
+          test "$(find dist -maxdepth 1 -type f \( -name '*.whl' -o -name '*.tar.gz' \) | wc -l)" -eq 6
+          uv run --no-sync python -m dev.packaging.distribution_cap --directory dist
+
+      - name: Compare the sealed bytes with the package index
+        id: index
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          uv run --no-sync python -m dev.release.pypi_publication_state \
+            --version "${INPUT_VERSION#v}" \
+            --dist-dir dist \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Refuse a version any destination already owns
+        if: steps.index.outputs.state != 'published'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          uv run --no-sync python -m dev.release.version_identity \
+            --version "${INPUT_VERSION#v}" \
+            --repository "$GITHUB_REPOSITORY" \
+            --own-source-commit "$(git rev-parse HEAD)" \
+            --scope publish
+
+      - name: Publish to PyPI
+        if: steps.index.outputs.state != 'published'
+        run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*.whl dist/*.tar.gz
+
+      - name: Report an already published version
+        if: steps.index.outputs.state == 'published'
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: echo "PyPI already serves ${INPUT_VERSION} with the sealed digests; upload skipped" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-homebrew:
+    name: "Build: Homebrew tap publication (Linux)"
+    needs: [locate-cohort, publish-pypi]
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'nevenincs/homebrew-tap' }}
+    steps:
+      - name: Require the tap token
+        env:
+          TAP_TOKEN_PRESENT: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        run: |
+          if [ "$TAP_TOKEN_PRESENT" != true ]; then
+            echo "::error::secret HOMEBREW_TAP_TOKEN is not configured; the tap cannot be published"
+            exit 1
+          fi
+
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Extract and verify the proven release cohort
+        run: |
+          set -euo pipefail
+          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+
+      - name: Checkout the tap
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: ${{ env.TAP_REPOSITORY }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: var/homebrew-tap
+
+      - name: Commit the formula unless the tap already serves it
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          incoming=var/release-cohort/homebrew/Formula/cadrumo.rb
+          existing=var/homebrew-tap/Formula/cadrumo.rb
+          if [ -f "$existing" ] && cmp -s "$existing" "$incoming"; then
+            echo "tap already serves cadrumo ${version} with this formula; nothing to publish"
+            exit 0
+          fi
+          uv run --no-sync python -m dev.packaging.release_pointer_guard \
+            --existing "$existing" --incoming "$incoming" --version "$version" --format homebrew
+          mkdir -p "$(dirname "$existing")"
+          cp "$incoming" "$existing"
+          git -C var/homebrew-tap config user.name "github-actions[bot]"
+          git -C var/homebrew-tap config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C var/homebrew-tap add Formula/cadrumo.rb
+          git -C var/homebrew-tap commit -m "cadrumo ${version}"
+          git -C var/homebrew-tap push
+
+  publish-scoop:
+    name: "Build: Scoop bucket publication (Linux)"
+    needs: [locate-cohort, publish-pypi]
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
+    steps:
+      - name: Require the bucket repository and token
+        env:
+          BUCKET_TOKEN_PRESENT: ${{ secrets.SCOOP_BUCKET_TOKEN != '' }}
+        run: |
+          if [ -z "$BUCKET_REPOSITORY" ] || [ "$BUCKET_TOKEN_PRESENT" != true ]; then
+            echo "::error::variable SCOOP_BUCKET_REPOSITORY and secret SCOOP_BUCKET_TOKEN must both be configured"
+            exit 1
+          fi
+
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Extract and verify the proven release cohort
+        run: |
+          set -euo pipefail
+          (cd var/cohort-download && sha256sum --check cadrumo-release-cohort.tar.gz.sha256)
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
+
+      - name: Checkout the bucket
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: ${{ env.BUCKET_REPOSITORY }}
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: var/scoop-bucket
+
+      - name: Commit the manifest unless the bucket already serves it
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          incoming=var/release-cohort/scoop/cadrumo.json
+          existing=var/scoop-bucket/bucket/cadrumo.json
+          if [ -f "$existing" ] && cmp -s "$existing" "$incoming"; then
+            echo "bucket already serves cadrumo ${version} with this manifest; nothing to publish"
+            exit 0
+          fi
+          uv run --no-sync python -m dev.packaging.release_pointer_guard \
+            --existing "$existing" --incoming "$incoming" --version "$version" --format scoop
+          mkdir -p "$(dirname "$existing")"
+          cp "$incoming" "$existing"
+          git -C var/scoop-bucket config user.name "github-actions[bot]"
+          git -C var/scoop-bucket config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C var/scoop-bucket add bucket/cadrumo.json
+          git -C var/scoop-bucket commit -m "cadrumo ${version}"
+          git -C var/scoop-bucket push
+
+  acquire-pypi:
+    name: "Test: PyPI acquisition (Linux)"
+    needs: [locate-cohort, publish-pypi]
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Extract the proven release cohort
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+
+      - name: Reacquire the cohort from PyPI
+        run: |
+          uv run --no-sync python -m dev.packaging.acquire_pypi \
+            --cohort-dir var/release-cohort/python \
+            --evidence-dir var/acquisition/pypi
+
+  acquire-homebrew:
+    name: "Test: Homebrew acquisition (${{ matrix.os }})"
+    needs: [locate-cohort, publish-homebrew]
+    if: inputs.phase == 'publish'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: Linux
+            runner: [self-hosted, Linux, X64]
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+          - os: macOS
+            runner: [self-hosted, macOS, ARM64]
+            brew: /opt/homebrew/bin/brew
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Extract the proven release cohort
+        run: |
+          set -euo pipefail
+          mkdir -p var/release-cohort
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+
+      - name: Reacquire the cohort from the public tap
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+        run: |
+          uv run --no-sync python -m dev.packaging.acquire_homebrew \
+            --cohort-dir var/release-cohort/python \
+            --evidence-dir var/acquisition/homebrew \
+            --brew "$BREW_PATH"
+
+  acquire-scoop:
+    name: "Test: Scoop acquisition (Windows)"
+    needs: [locate-cohort, publish-scoop]
+    if: inputs.phase == 'publish'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Download the proven release cohort
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: cadrumo-release-cohort
+          path: var/cohort-download
+          run-id: ${{ needs.locate-cohort.outputs.run-id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Reacquire the cohort from the public bucket
+        shell: pwsh
+        env:
+          BUCKET_REPOSITORY: ${{ vars.SCOOP_BUCKET_REPOSITORY }}
+        run: |
+          New-Item -ItemType Directory -Force var/release-cohort | Out-Null
+          tar -xzf var/cohort-download/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          if ($LASTEXITCODE -ne 0) { throw "release cohort extraction failed" }
+          & ./dev/packaging/acquire_scoop.ps1 `
+            -Mode Host `
+            -CohortDir var/release-cohort/python `
+            -BucketSource "https://github.com/$env:BUCKET_REPOSITORY" `
+            -EvidenceDir var/acquisition/scoop
+
+  publish-docs:
+    name: "Build: Documentation site (Linux)"
+    needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
+    if: ${{ !cancelled() && inputs.phase == 'publish' && needs.publish-pypi.result == 'success' }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 45
+    environment: docs
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Require the deploy role before anything else
+        env:
+          DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+        run: |
+          if [[ -z "$DOCS_DEPLOY_ROLE" ]]; then
+            cat >&2 <<'EOF'
+          REFUSED: documentation publication is not provisioned.
+
+          Create the OIDC identity provider, a least-privilege docs role trusting
+          this repository and the `docs` environment only, and set the `docs`
+          environment variable CADRUMO_DOCS_DEPLOY_ROLE to the role identifier.
+          EOF
+            exit 1
+          fi
+          echo "Docs deploy role configured; proceeding."
+
+      - name: Checkout the release tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Publish the documentation site
+        env:
+          CADRUMO_DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+        run: |
+          uv run --no-sync python -m dev.deploy.docs_static_site publish \
+            --confirm publish-cadrumo-docs
+
+      - name: Alert on failure without touching the release
+        if: ${{ failure() || cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
+        run: |
+          echo "::error::Documentation publication failed. The release is unaffected and remains published." >&2
+          uv run --frozen python -m dev.release.alerting --stage "docs-publication" \
+            --detail "Documentation publication failed. The release is unaffected and remains published."
