@@ -21,6 +21,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.model_catalogue import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import (
@@ -186,6 +187,7 @@ class LocalReaderProvisionRequest(CredentialFreeOperationRequest):
     consent: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_coherent_request(self) -> LocalReaderProvisionRequest:
         if self.consent and self.action not in _CONSENTING_ACTIONS:
             raise ValueError("only install and setup accept install consent")

@@ -22,6 +22,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from ..core.config import Settings, load_settings
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import ContentionCause
 from ..core.model_catalogue import ModelRole, default_model_runtime_id, model_candidate
 from ..core.models import STRICT_FROZEN_CONFIG
@@ -112,6 +113,7 @@ class RoleFitnessOutcome(ProvisioningOutcome):
     elapsed_ms: int = Field(ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_fitness_outcome(self) -> RoleFitnessOutcome:
         require_provisioning_verdict(failed=not self.fit, verdict=self.precondition_verdict)
         if self.fit and (self.timed_out or self.transport_failed):
@@ -500,6 +502,7 @@ class LocalReaderStatus(BaseModel):
     text_layer_model_fill_available: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _readiness_agrees(self) -> LocalReaderStatus:
         expected = (
             LocalReaderDocumentReadiness.ALL_DOCUMENTS
