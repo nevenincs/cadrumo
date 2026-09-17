@@ -150,9 +150,7 @@ def _declared_provenance(provenance: ProrrataProvisionalProvenance | None) -> Pr
     """
     carried = carried_prior_definitiva_prorrata_provenance()
     if provenance is None or provenance == carried:
-        accepted = "|".join(
-            member.value for member in prorrata_electable_provenances() if member != carried
-        )
+        accepted = "|".join(member.value for member in prorrata_electable_provenances() if member != carried)
         raise bad(tr("cli.app.ledger.prorrata.provenance_requires_evidence", accepted=accepted))
     return provenance
 
