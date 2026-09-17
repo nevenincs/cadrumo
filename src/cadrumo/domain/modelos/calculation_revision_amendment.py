@@ -106,6 +106,10 @@ def m303_rectificativa_motive_is_applicable(
             )
     declarations = _registry_m303_rectificativa_declarations(operation=operation)
     prefix = f"record_design.{registry_revision_id}"
+    # The mapping enumerates every revision whose record design carries the
+    # rectificativa motive; an unlisted revision's design has no such field.
+    if f"{prefix}.source_ref" not in declarations:
+        return False
     return (
         registry_revision_id,
         record_design.id,
