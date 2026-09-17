@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterator, Mapping
+from functools import cache
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -146,8 +147,13 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
     return f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}"
 
 
+@cache
 def _module_source_path(module: str) -> Path | None:
-    """Return an importable module's source without executing its module body."""
+    """Return an importable module's source without executing its module body.
+
+    Cached because the scan asks about the same target modules once per
+    imported name, tens of thousands of times.
+    """
     try:
         spec = find_spec(module)
     except (ImportError, ModuleNotFoundError, ValueError):
@@ -171,20 +177,28 @@ def _bound_names(tree: ast.AST) -> frozenset[str]:
             names.update(alias.asname or alias.name for alias in node.names if alias.name != "*")
         elif isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name):
-                    names.add(target.id)
+                # Unpacking binds every name in the target tuple or list.
+                names.update(element.id for element in ast.walk(target) if isinstance(element, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            names.add(node.name.id)
     return frozenset(names)
 
 
 def _module_exports(path: Path, name: str) -> bool:
     """Return whether a module binds a runtime-importable name in its source."""
+    return name in _source_bound_names(path)
+
+
+@cache
+def _source_bound_names(path: Path) -> frozenset[str]:
+    """Parse one target module once, however many imports name it."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):
-        return False
-    return name in _bound_names(tree)
+        return frozenset()
+    return _bound_names(tree)
 
 
 def test_cadrumo_cross_module_imports_resolve(

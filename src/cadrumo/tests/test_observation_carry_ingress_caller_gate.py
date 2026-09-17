@@ -23,12 +23,16 @@ class _Caller:
 
 _CANONICAL_WRITE_DOOR_CALLERS = {
     _Caller(
+        "adapters/outbound/aeat/sede/filed_observation_persistence.py",
+        "prepare_observation_envelope",
+    ),
+    _Caller(
         "application/live/filed_observation_persistence.py",
         "persist_filed_calculation_observation",
     ),
     _Caller(
         "application/modelo/external_import_actions.py",
-        "import_external_filing_evidence",
+        "_build_external_import_observation_payload",
     ),
     _Caller(
         "application/modelo/filed_revision_observation.py",

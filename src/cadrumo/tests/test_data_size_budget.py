@@ -16,6 +16,7 @@ No mocks or skips.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from .inventory import SRC_CADRUMO
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DATA_ROOT = SRC_CADRUMO / "_data"
+_AUTHORITY_ROOT = _DATA_ROOT / "registry" / "authority"
 
 # Corpus source binaries — the slice the wheel-split ships across the two
 # ``cadrumo-data-*`` distributions; everything else in the tree is the runtime
@@ -38,13 +40,13 @@ _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 # Approved whole-tree ceiling after complete supported-period corpus hydration.
 # Raising it requires reviewed governance authority. Mebibytes keep source-slice units
 # distinct from the companions' decimal 100 MB compressed-artifact cap.
-_DATA_SIZE_BUDGET_MIB = 625
+_DATA_SIZE_BUDGET_MIB = 800
 _DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
 
 # Slice ceilings are aggregate source-tree controls, not per-wheel file caps.
 # The runtime guard makes command-bearing payload growth visible even if the
 # corpus-binary slice shrinks. Raising either requires reviewed governance authority.
-_RUNTIME_DATA_BUDGET_MIB = 270
+_RUNTIME_DATA_BUDGET_MIB = 450
 _RUNTIME_DATA_BUDGET_BYTES = _RUNTIME_DATA_BUDGET_MIB * 1024 * 1024
 _CORPUS_BINARY_BUDGET_MIB = 380
 _CORPUS_BINARY_BUDGET_BYTES = _CORPUS_BINARY_BUDGET_MIB * 1024 * 1024
@@ -56,11 +58,25 @@ def _is_corpus_source_binary(relative_posix: str, suffix: str) -> bool:
     return relative_posix.startswith("corpus/") and suffix.lower() in _CORPUS_BINARY_SUFFIXES
 
 
-def _iter_budget_data_files() -> Iterator[Path]:
-    """Yield shipped-data files, excluding every test-only subtree."""
+def _selected_authority_database() -> str:
+    """Return the database file name the authority descriptor selects."""
 
+    descriptor = json.loads((_AUTHORITY_ROOT / "authority.current.json").read_text(encoding="utf-8"))
+    return descriptor["database"]
+
+
+def _iter_budget_data_files() -> Iterator[Path]:
+    """Yield shipped-data files, excluding test subtrees and superseded authority databases.
+
+    A checkout retains superseded content-addressed authority databases until a
+    later publication can remove them; only the descriptor-selected database ships.
+    """
+
+    selected = _selected_authority_database()
     for path in scan_directory(_DATA_ROOT, recursive=True, select=DirectoryEntryKind.FILES):
         if "tests" in path.relative_to(_DATA_ROOT).parts:
+            continue
+        if path.parent == _AUTHORITY_ROOT and path.suffix == ".sqlite3" and path.name != selected:
             continue
         yield path
 

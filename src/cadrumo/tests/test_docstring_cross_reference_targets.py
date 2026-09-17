@@ -52,7 +52,7 @@ import pytest
 from ..core.directory_scan import scan_directory
 from .inventory import SRC_CADRUMO, production_python_files, repo_relative
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.usefixtures("operation")]
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

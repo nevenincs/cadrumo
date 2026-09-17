@@ -95,11 +95,28 @@ def _source_path_resolves(path: Path, attrs: list[str]) -> bool:
         return False
     owner: ast.AST = tree
     for attr in attrs:
-        candidates = [node for node in ast.iter_child_nodes(owner) if getattr(node, "name", None) == attr]
+        candidates = [node for node in ast.iter_child_nodes(owner) if attr in _declared_names(node)]
         if not candidates:
             return False
         owner = candidates[0]
     return True
+
+
+def _declared_names(node: ast.AST) -> frozenset[str]:
+    """Return the names a statement declares in its enclosing scope.
+
+    Assignments count: an enum member, a module constant and a pydantic field
+    are all declared by assignment rather than by a ``def`` or ``class``.
+    """
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        return frozenset({node.name})
+    if isinstance(node, ast.Assign):
+        return frozenset(target.id for target in node.targets if isinstance(target, ast.Name))
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return frozenset({node.target.id})
+    if isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+        return frozenset({node.name.id})
+    return frozenset()
 
 
 def _references() -> list[tuple[str, int, str]]:
@@ -136,9 +153,13 @@ def test_the_scan_reaches_a_real_population() -> None:
     tree forever.
     """
     references = _references()
+    paths = {path for path, _, _ in references}
 
-    assert len(references) > 100, f"expected the scoped packages to carry many references, got {len(references)}"
-    assert len({path for path, _, _ in references}) > 20
+    for package in _SCOPED_PACKAGES:
+        prefix = f"src/cadrumo/{package}/"
+        if any((SRC_CADRUMO / package).rglob("*.py")):
+            assert any(path.startswith(prefix) for path in paths), f"the scan found no reference under {prefix}"
+    assert _QUALIFIED_ROLE.search(":class:`~cadrumo.core.modelo.Modelo`") is not None
 
 
 def test_the_resolver_reports_a_missing_target() -> None:
@@ -155,13 +176,20 @@ def test_the_resolver_reports_a_missing_target() -> None:
 def test_the_resolver_counts_a_pydantic_field_as_present() -> None:
     """A model field is declared, not attributed, and must not read as dangling.
 
-    ``getattr(Invoice, "operation_date")`` is nothing in pydantic v2 -- the
-    field lives in ``model_fields``. Without this the gate would report every
-    correct ``:attr:`Model.field``` reference in the tree as stale, and the
-    honest response to that would be to delete the gate.
+    A pydantic field is an annotated assignment, not a ``def``. Without this
+    the gate would report every correct ``:attr:`Model.field``` reference in
+    the tree as stale, and the honest response to that would be to delete the
+    gate.
     """
-    assert _resolves("cadrumo.domain.invoices.Invoice.operation_date") is True
-    assert _resolves("cadrumo.domain.invoices.Invoice.no_such_field_at_all") is False
+    assert _resolves("cadrumo.domain.invoices.models.Invoice.operation_date") is True
+    assert _resolves("cadrumo.domain.invoices.models.Invoice.no_such_field_at_all") is False
+
+
+def test_the_resolver_counts_an_enum_member_and_a_module_constant_as_present() -> None:
+    """Enum members and module constants are declared by plain assignment."""
+    assert _resolves("cadrumo.domain.user_profile.values.ProfileSetupState.INCOMPLETE") is True
+    assert _resolves("cadrumo.domain.user_profile.values.ProfileSetupState.NO_SUCH_MEMBER") is False
+    assert _resolves("cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS") is True
 
 
 def test_the_resolver_accepts_real_canonical_targets() -> None:

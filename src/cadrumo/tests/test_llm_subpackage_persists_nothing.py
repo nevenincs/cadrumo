@@ -29,7 +29,7 @@ from .inventory import SRC_CADRUMO, ast_for_path, leaf_name, non_test_python_fil
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_LLM_PACKAGE = SRC_CADRUMO / "llm"
+_LLM_PACKAGE = SRC_CADRUMO / "adapters" / "outbound" / "llm"
 
 _FORBIDDEN_WRITE_CALLS = {
     "write_text",

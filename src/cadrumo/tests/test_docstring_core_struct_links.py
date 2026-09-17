@@ -46,7 +46,7 @@ CORE_STRUCTS: dict[str, str] = {
     "SchemaEnvelope": "cadrumo.core.json_contract",
     "SecureObjectRepository": "cadrumo.adapters.persistence.storage.sql.secure_objects",
     # Security + classification
-    "SensitivityClass": "cadrumo.core.classification",
+    "SensitivityClass": "cadrumo.core.classification.policies",
     "Envelope": "cadrumo.adapters.persistence.storage.envelope.contract",
     # Portal registry
     "Portal": "cadrumo.domain.portals.codes",
@@ -345,7 +345,7 @@ def test_dotted_reference_detector_still_discriminates() -> None:
     assert unresolved_file.parent.name == "identity", f"reported the wrong owning module: {unresolved_file}"
     assert unresolved_symbol == "ThisSymbolIsNotDefinedAnywhere"
 
-    assert _unresolved_reference("core.identity.BucketId") is None, (
+    assert _unresolved_reference("core.identity.bucket.BucketId") is None, (
         "a known-good target was rejected, so the check always fails"
     )
 
