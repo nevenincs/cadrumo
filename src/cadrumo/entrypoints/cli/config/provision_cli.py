@@ -2,6 +2,7 @@
 
 The boundaries between the actions are the design:
 
+* **browser** — downloads the Chromium build browser automation launches, when missing.
 * **status** — runtime installation, reachability and each reader role's model. Reads only.
 * **report** — measured machine and model-selection state. Reads only.
 * **install** — installs the runtime through the platform package manager, only with ``--confirm``.
@@ -39,6 +40,7 @@ from ....core.json_contract import ResolvedPreconditionAction
 from ....core.model_catalogue import ModelRole
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .provision_payloads import (
+    ProvisionBrowserResult,
     ProvisionContentionPayload,
     ProvisionInstallResult,
     ProvisionLastPullPayload,
@@ -74,6 +76,7 @@ if TYPE_CHECKING:
     from ....application.provisioning import HardwareProfile
 
 __all__ = [
+    "provision_browser",
     "provision_install",
     "provision_load",
     "provision_pull",
@@ -145,6 +148,11 @@ def provision_status(ctx: typer.Context, probe: bool = False) -> None:
 def provision_install(ctx: typer.Context, confirm: bool = False) -> None:
     """Install the local runtime through the platform package manager when ``--confirm`` is given."""
     _emit_provision_install(ctx, confirm=confirm)
+
+
+def provision_browser(ctx: typer.Context) -> None:
+    """Download the Chromium build browser automation launches when it is missing."""
+    _emit_provision_browser(ctx)
 
 
 def provision_start(ctx: typer.Context) -> None:
@@ -627,4 +635,22 @@ def _emit_provision_remove(ctx: typer.Context, *, model: str | None, role: Model
     result = ProvisionRemoveResult(removed=outcome.succeeded, models=items)
     emit_envelope(ctx, command="config.provision.remove", result=result, lines=_provision_result_lines(result))
     if not result.removed:
+        raise typer.Exit(code=2)
+
+
+def _emit_provision_browser(ctx: typer.Context) -> None:
+    """Provision the browser build and emit the envelope, exiting 2 unless it is installed."""
+    from ....adapters.outbound.browser_runtime.installer import run_browser_installer
+    from ....application.provisioning_browser import install_playwright_browser
+
+    outcome = install_playwright_browser(run=run_browser_installer)
+    result = ProvisionBrowserResult(
+        installed=outcome.installed,
+        already_installed=outcome.already_installed,
+        installer_exit_code=outcome.installer_exit_code,
+        facts=outcome.facts,
+        precondition_action=_action(outcome.precondition_verdict),
+    )
+    emit_envelope(ctx, command="config.provision.browser", result=result, lines=_provision_result_lines(result))
+    if not outcome.installed:
         raise typer.Exit(code=2)

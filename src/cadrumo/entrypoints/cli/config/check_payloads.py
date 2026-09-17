@@ -52,7 +52,7 @@ class CheckDependencyPayload(OutputSchema):
     and mirrors
     :class:`DependencyStatus` rows from
     :func:`~application.local_reader.probe_local_reader`,
-    :func:`probe_playwright_browser`, and
+    :func:`~application.provisioning_browser.probe_playwright_browser`, and
     :func:`probe_optional_extras`. The application-owned facts and verdict are
     the full dependency explanation; this boundary resolves the verdict against
     the live action surface without recreating a command string.

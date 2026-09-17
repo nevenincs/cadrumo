@@ -102,8 +102,8 @@ def _probe_dependency_statuses() -> tuple[
         probe_local_model_provisioning,
         probe_model_runtime_hardware_floor,
         probe_optional_extras,
-        probe_playwright_browser,
     )
+    from ....application.provisioning_browser import probe_playwright_browser
     from ....application.provisioning_runtime import read_installed_models
     from ....core.model_catalogue import ModelRole
     from ._check_hardware_rows import contention_row

@@ -201,6 +201,16 @@ class ProvisionInstallResult(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
 
+class ProvisionBrowserResult(OutputSchema):
+    """JSON envelope for ``aeat config provision browser``."""
+
+    installed: bool
+    already_installed: bool = False
+    installer_exit_code: int | None = None
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+
 class ProvisionStartResult(OutputSchema):
     """JSON envelope for ``aeat config provision start``."""
 
@@ -294,6 +304,7 @@ class ProvisionSetupResult(OutputSchema):
 
 
 __all__ = [
+    "ProvisionBrowserResult",
     "ProvisionContentionPayload",
     "ProvisionInstallResult",
     "ProvisionLastPullPayload",

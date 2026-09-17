@@ -28,8 +28,10 @@ class CensoFactPayload(OutputSchema):
     ``source`` keeps each transport's declared provenance token: a G313
     artefact remains non-official while a census read remains AEAT-verified.
     The canonical domain fact contract validates both shapes, so this shared
-    wire row refuses malformed paths and undeclared or oversized provenance
-    instead of giving each transport a parallel validator.
+    wire row refuses malformed paths and blank or oversized provenance instead
+    of giving each transport a parallel validator. Membership of the source
+    token in the profile schema is checked when a record is validated against
+    its pinned schema.
     """
 
     path: str
