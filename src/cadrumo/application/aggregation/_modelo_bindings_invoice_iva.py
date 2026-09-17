@@ -30,7 +30,7 @@ from ...domain.iva.flow import (
     is_inversion_sujeto_pasivo_flow,
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
-from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
+from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate, resolve_recargo_rate_for_applied_rate
 from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
@@ -379,8 +379,7 @@ def _reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
     # A rate-bearing line supplies its own evidence. Whether a slot carries a
     # rate is the registry's answer for the invoice date, not a local tier list.
     return not any(
-        (iva_rate_percentage(line.iva_rate, invoice.issued_at) or Decimal("0")) > Decimal("0")
-        for line in invoice.lines
+        (iva_rate_percentage(line.iva_rate, invoice.issued_at) or Decimal("0")) > Decimal("0") for line in invoice.lines
     )
 
 
@@ -504,6 +503,8 @@ class _RecargoRateDivergence:
     expected: Decimal
     applied_rate: Decimal
     recargo_rate: Decimal
+    legal_refs: tuple[str, ...]
+    provisions: tuple[str, ...]
 
 
 def _recargo_rate_divergence(
@@ -548,12 +549,25 @@ def _recargo_rate_divergence(
     expected = round_to_cents(line.subtotal * recargo_rate)
     if round_to_cents(recorded) == expected:
         return None
+    # The provision the advisory names is the pairing fact's own grounding,
+    # so the message cites whatever the registry cites for that window.
+    legal_refs = tuple(
+        str(ref)
+        for ref in resolve_recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation).legal_refs
+    )
+    provisions = tuple(
+        f"art. {article}"
+        for article in (operation.legal_reference(ref).article for ref in legal_refs)
+        if article is not None
+    )
     return _RecargoRateDivergence(
         invoice=invoice,
         recorded=round_to_cents(recorded),
         expected=expected,
         applied_rate=applied_rate,
         recargo_rate=recargo_rate,
+        legal_refs=legal_refs,
+        provisions=provisions,
     )
 
 
@@ -582,7 +596,9 @@ def recargo_rate_mismatch_diagnostics(
             source_ref=f"invoice:{divergence.invoice.invoice_id}",
             message=(
                 f"invoice {divergence.invoice.invoice_number!r} records a recargo de equivalencia of "
-                f"{divergence.recorded}, while the published schedule pairs the {divergence.applied_rate} IVA rate "
+                f"{divergence.recorded}, while the published schedule "
+                f"({', '.join(divergence.provisions) or ', '.join(divergence.legal_refs)}) pairs the "
+                f"{divergence.applied_rate} IVA rate "
                 f"with a recargo of {divergence.recargo_rate} on that date, which would give "
                 f"{divergence.expected}. The recorded figure is the one declared -- this does not change it"
             ),
@@ -591,6 +607,9 @@ def recargo_rate_mismatch_diagnostics(
                 "the declared figure already matches it; where it was mistyped, correct the transaction "
                 "and recalculate"
             ),
+            # Asserted by the advisory itself: the comparison is per invoice,
+            # so no casilla carries this grounding.
+            asserted_legal_refs=divergence.legal_refs,
         )
         for divergence in divergences
     )
