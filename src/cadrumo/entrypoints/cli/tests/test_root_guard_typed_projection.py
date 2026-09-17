@@ -54,7 +54,7 @@ def test_schema_alias_identity_comes_from_the_shared_live_path_projection() -> N
     leaf = _resolve_real_leaf("config", "profile", "history")
 
     assert leaf.canonical_cli_path == ("config", "profile", "history")
-    assert leaf.subject_leaf_key == "config.bucket.history"
+    assert leaf.subject_leaf_key == "config.profile.history"
 
 
 def test_root_fallback_verdict_projects_the_catalogue_action_and_missing_input(tmp_path: Path) -> None:
