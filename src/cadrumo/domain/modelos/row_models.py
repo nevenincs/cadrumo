@@ -34,11 +34,12 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import (
     BaseModel,
@@ -566,12 +567,24 @@ class Modelo349RectificacionRow(BaseModel):
         return value
 
 
+#: Post-Brexit UK has no entry in the EU NIF-IVA authority, but AEAT's Modelo 349
+#: instructions still admit a ``GB`` prefix for pre-2021 rectifications and the
+#: 2021 1M/1T transition, with a 5, 9 or 12 character number (the 5-character
+#: forms being the GD/HA government and health-authority numbers). The country
+#: context itself is gated by :func:`validate_m349_country_prefix_context`.
+_M349_GB_PREFIX: Final = "GB"
+_M349_NI_PREFIX: Final = "XI"
+_M349_GB_NIF_PATTERN: Final[re.Pattern[str]] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
+
+
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
-    """Return whether the canonical country-format authority accepts ``nif``."""
+    """Return whether ``nif`` has the NIF-IVA structure Modelo 349 accepts for ``pais``."""
     normalized_pais = pais.upper()
     normalized_nif = nif.upper()
     if not normalized_nif.startswith(normalized_pais):
         return False
+    if normalized_pais == _M349_GB_PREFIX:
+        return bool(_M349_GB_NIF_PATTERN.match(normalized_nif))
     spec = nif_iva_format_for_country(normalized_pais)
     if spec is None:
         return False
@@ -588,7 +601,15 @@ def validate_m349_country_prefix_context(
     rectified_year: int | None = None,
     rectified_period: str | None = None,
 ) -> None:
-    """Resolve the selected registry's M349 country-prefix applicability."""
+    """Validate the post-Brexit ``GB`` / ``XI`` prefix rules for one Modelo 349 row.
+
+    AEAT's Modelo 349 instructions keep ``XI`` for Northern Ireland goods
+    operations from the transition year onward and exclude the service keys
+    from it. ``GB`` stays valid only for rectifications of pre-transition
+    periods and for the transition year's first periods, never for service
+    keys. The transition year, first periods and service keys are
+    registry-declared.
+    """
     declarations, periods = _registry_detail_catalogue(
         effective_date=date(filing_year, 12, 31),
         filing_year=filing_year,
@@ -596,13 +617,48 @@ def validate_m349_country_prefix_context(
     )
     operation_keys = _detail_values(declarations, "m349.operation_keys")
     _required_detail_declaration(declarations, "m349.country_prefixes")
-    _required_detail_declaration(declarations, "m349.service_keys")
+    service_keys = _detail_values(declarations, "m349.service_keys")
+    first_periods = _detail_values(declarations, "m349.transition.first_periods")
+    transition_year = int(_required_detail_declaration(declarations, "m349.transition.year"))
     normalized_period = _normalise_m349_period(period)
     if normalized_period not in periods:
         raise ValueError(f"M349 period is not declared by the selected registry: {period!r}")
-    if clave_operacion.upper() not in operation_keys:
+    clave = clave_operacion.strip().upper()
+    if clave not in operation_keys:
         raise ValueError(f"M349 operation key is not declared by the selected registry: {clave_operacion!r}")
-    del country_code, filing_year, is_rectification, rectified_year, rectified_period
+    country = country_code.strip().upper()
+    rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
+
+    def refuse(reason: str) -> None:
+        raise Modelo349CountryPrefixContextError(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=normalized_period,
+            reason=reason,
+        )
+
+    if country == _M349_NI_PREFIX:
+        if clave in service_keys:
+            refuse("Northern Ireland prefix XI is not accepted for service keys")
+        if is_rectification and rectified_year is not None and rectified_year < transition_year:
+            refuse("pre-transition rectifications use GB, not XI")
+        if not is_rectification and filing_year < transition_year:
+            refuse("XI applies only from the transition year onward")
+        return
+    if country != _M349_GB_PREFIX:
+        return
+    if is_rectification:
+        if rectified_year is not None and rectified_year < transition_year:
+            return
+        if rectified_year == transition_year and rectified_period_code in first_periods and clave not in service_keys:
+            return
+        refuse("GB is limited to pre-transition rectifications and the transition year's first periods")
+    if filing_year < transition_year:
+        return
+    if filing_year == transition_year and normalized_period in first_periods and clave not in service_keys:
+        return
+    refuse("GB is not accepted for post-transition ordinary operations")
 
 
 def _normalise_m349_period(period: str | None) -> str:

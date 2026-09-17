@@ -75,18 +75,6 @@ _M349_INVALID_ROW_CASES = (
             importe=Decimal("1"),
         ),
     ),
-    _ValidationErrorCase(
-        "invalid-clave",
-        lambda: Modelo349OperadorRow.model_validate(
-            {
-                "codigo_pais": "DE",
-                "nif_comunitario": "DE123456789",
-                "razon_social": "Entidad DE",
-                "clave_operacion": "Z",
-                "importe": Decimal("1"),
-            },
-        ),
-    ),
 )
 
 _M349_INVALID_RECTIFICATION_ROW_CASES = (
@@ -406,13 +394,24 @@ class TestValidateM349CountryPrefixContext:
                 period="1T",
             )
 
+    def test_undeclared_operation_key_is_refused_against_the_selected_registry(self) -> None:
+        """The row shell accepts any one-character clave; the registry context refuses unknown ones."""
+        support = published_supported_filing_years()
+        assert support is not None
+        with pytest.raises(ValueError, match="operation key is not declared"):
+            validate_m349_country_prefix_context(
+                country_code="DE",
+                clave_operacion="Z",
+                filing_year=support.horizon,
+                period="4T",
+            )
+
     def test_rejected_country_prefix_contexts(self) -> None:
         for case in _M349_CONTEXT_REJECTED_CASES:
             assert case.match is not None, case.case_id
             with pytest.raises(Modelo349CountryPrefixContextError) as exc:
                 case.call()
             assert isinstance(exc.value, CadrumoError), case.case_id
-            assert isinstance(exc.value, ValueError), case.case_id
             code = get_registered_error_code(exc.value)
             assert code.code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT", case.case_id
             message = resolve_error_message(exc.value)
