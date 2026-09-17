@@ -107,9 +107,20 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     "permanent green from this gate while guarding nothing, so it must be a required parameter or not "
     "done at all",
     (
-        "src/cadrumo/application/modelo/external_import_actions.py",
-        "_external_import_secure_writes",
-    ): "the work-unit catalogue is read by _load_external_import_target; the two locally-read catalogues are guarded",
+        "src/cadrumo/application/modelo/filed_revision_observation.py",
+        "filed_revision_observation_writes",
+    ): "the observation row and the IVA history row are each PER COORDINATE rather than one singleton "
+    "document, so the exposure is two writers touching the same period; neither row is read here",
+    (
+        "src/cadrumo/application/modelo/filing_chain_reconciliation.py",
+        "_aeat_content_writes",
+    ): "the work-unit catalogue arrives as a parameter, so its revision belongs to the caller that read it; "
+    "the calculation catalogue beside it IS guarded and the observation row is per coordinate",
+    (
+        "src/cadrumo/application/modelo/local_observation_actions.py",
+        "record_operator_local_observation",
+    ): "the observation row is PER COORDINATE; its layers are read just before the write, but that read's "
+    "revision is not asserted -- not yet judged",
     (
         "src/cadrumo/application/invoices/transaction_linking.py",
         "link_invoice_transaction_repositories",

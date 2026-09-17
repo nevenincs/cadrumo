@@ -584,6 +584,31 @@ def _official_303_envelope(
     repository.save(mutated)
 
 
+def _mutate_stored_local_303_envelope(
+    repository: CalculationObservationRepository,
+    *,
+    work_unit,
+    stamped_revision_id: str | None,
+    result_disposition: ResultDisposition | None = None,
+) -> None:
+    """Corrupt the pending-local envelope a wallet decision was built from.
+
+    A pending local filing is the effective layer over any official evidence,
+    so the read-side mutation has to land on that envelope to reach the replay.
+    """
+    layers = repository.load_observation_layers("303", work_unit.period)
+    stored = layers.pending_local
+    assert stored is not None, "the filed revision must have written its pending-local envelope"
+    update: dict[str, object] = {"stamped_revision_id": stamped_revision_id}
+    if result_disposition is not None:
+        update["result_disposition"] = ResultDispositionProjection(
+            disposition=result_disposition,
+            provenance_kind="source_header",
+            provenance_locator="test:conflicting-local-disposition",
+        )
+    repository.save(stored.model_copy(update=update))
+
+
 def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -864,22 +889,23 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
         assert initial is not None
         assert any(source.source_locator == "observation-envelope:303:2026:1T" for source in initial.authority_sources)
 
+        conflicting = (
+            ResultDisposition.DEVOLUCION
+            if prior_disposition is ResultDisposition.COMPENSACION
+            else ResultDisposition.COMPENSACION
+        )
         if mutation == "stale_stamp":
-            _official_303_envelope(
+            _mutate_stored_local_303_envelope(
                 observations,
-                revision=revision,
                 work_unit=work_unit,
-                declaration_type=ResultDisposition.DEVOLUCION,
                 stamped_revision_id="unrelated-stale-revision",
             )
         else:
-            _official_303_envelope(
+            _mutate_stored_local_303_envelope(
                 observations,
-                revision=revision,
                 work_unit=work_unit,
-                declaration_type=ResultDisposition.DEVOLUCION,
                 stamped_revision_id=work_unit.revision_id,
-                result_disposition=ResultDisposition.COMPENSACION,
+                result_disposition=conflicting,
             )
 
         with _indexed_authority_for_test().operation() as operation:

@@ -35,6 +35,7 @@ from cadrumo.application.modelo.calculation_actions import get_calculation_revis
 from cadrumo.application.modelo.filing_actions import get_filing_record
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
@@ -160,7 +161,7 @@ _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
     ("evidence_kind", "aeat_justificante_pdf"),
     # A receipt import knows the CSV, never the register expediente.
     ("aeat_expediente_id", ""),
-    ("affected_filing_record_ids", ""),
+    ("affected_filing_record_count", "0"),
 )
 
 
@@ -241,8 +242,11 @@ def test_import_of_a_declared_correction_amends_the_prior_filing(
         event_types=(BucketEventType.MODELO_FILING_RECONCILED,),
     )
     assert len(reconciled) == 2
-    assert reconciled[0].payload["affected_filing_record_ids"] == ""
-    assert reconciled[1].payload["affected_filing_record_ids"] == first.filing_record_id
+    assert reconciled[0].payload["affected_filing_record_count"] == "0"
+    assert reconciled[1].payload["affected_filing_record_count"] == "1"
+    assert reconciled[1].payload["affected_filing_record_ids_sha256"] == sha256_hex(
+        first.filing_record_id.encode("utf-8")
+    )
 
 
 def test_import_after_a_confirmed_filing_without_a_declared_kind_is_refused(
