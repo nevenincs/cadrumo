@@ -171,7 +171,6 @@ _EXPECTED_RESULTADO_TOTAL = sum(v[_RESULTADO] for v in _M303_BY_PERIOD.values())
 # 1T-3T generated amounts remain outside the last period.
 _EXPECTED_COMPENSACION_ULTIMO = _M303_BY_PERIOD["4T"][_COMPENSACION]  # 300.00
 _EXPECTED_COMPENSACION_NO97 = sum(_M303_BY_PERIOD[p][_COMPENSACION] for p in ("1T", "2T", "3T"))  # 45.00
-_EXPECTED_SIMPLIFICADO_DEVENGADA = _M303_BY_PERIOD["4T"][_SIMPLIFICADO_DEVENGADA]  # 45.00, copied not summed
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _ANNUAL_PARTITION_SOURCE = "iva_compensation_annual_partition"
@@ -298,7 +297,8 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     - ``iva.anual.reconciliacion.devengada-303`` == sum(1T-4T devengada)
     - ``iva.anual.reconciliacion.deducible-303`` == sum(1T-4T deducible)
     - ``iva.anual.reconciliacion.resultado-303`` == sum(1T-4T resultado)
-    - ``iva.anual.reconciliacion.devengada-simplificado-303`` (casilla 79) == copy(4T casilla 54)
+    - ``iva.anual.reconciliacion.devengada-simplificado-303`` (casilla 79) stays zero: it is fed only by the
+      immutable filed 303/4T simplified-regime handoff, never by observations
     - ``iva.anual.compensacion-ultimo-periodo-97`` (casilla 97) == FIFO last-period partition
     - ``iva.anual.compensacion-generada-ejercicio-no-97`` (casilla 662) == FIFO remainder partition
 
@@ -332,12 +332,11 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
         f"M390 reconciliacion.resultado-303 must fold sum(1T-4T resultado)={_EXPECTED_RESULTADO_TOTAL!r}; "
         f"got {casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]!r}"
     )
-    assert (
-        Decimal(casilla_values[_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA])
-        == _EXPECTED_SIMPLIFICADO_DEVENGADA
-    ), (
-        f"M390 reconciliacion.devengada-simplificado-303 (AEAT casilla 79) must copy the 4T "
-        f"régimen simplificado casilla 54={_EXPECTED_SIMPLIFICADO_DEVENGADA!r}; "
+    # A seeded 4T casilla 54 observation must not leak into casilla 79 for a
+    # régimen general filer: that box is owned by the filed-revision handoff.
+    assert _M303_BY_PERIOD["4T"][_SIMPLIFICADO_DEVENGADA] != Decimal("0")
+    assert Decimal(casilla_values[_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA]) == Decimal("0"), (
+        f"M390 reconciliacion.devengada-simplificado-303 (AEAT casilla 79) must not fold observations; "
         f"got {casilla_values[_M390_RECONCILIACION_DEVENGADA_SIMPLIFICADO_303_CASILLA]!r}"
     )
 
