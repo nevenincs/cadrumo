@@ -96,7 +96,7 @@ def censo_facts_from_certificado(certificado: CertificadoSituacionCensal) -> tup
 
     Every certified ``actividad`` is projected, not only the first. The
     ``activities`` section is schema-declared ``repeatable``, and
-    :func:`~cadrumo.application.user_profile.profile_section_rows` already
+    :func:`~cadrumo.application.user_profile.completeness.profile_section_rows` already
     treats a repeatable fact written WITHOUT an index as the implicit first
     row -- the shape every other single-activity producer in this codebase
     writes -- so the primary activity keeps that unindexed address for

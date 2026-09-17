@@ -14,6 +14,7 @@ from decimal import Decimal
 import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.schema import FactSelector, MappingFactEntry, MappingFactPayload
 from ...calculations.registry.schema_base import DateAxis
@@ -61,11 +62,13 @@ def test_2026_national_diet_cap_carries_both_daily_variants(operation: PinnedAut
     assert all(str(v.label) for v in rule.statutory_cap_variants)
 
 
-def test_year_referenced_cap_outside_its_schedule_is_refused(operation: PinnedAuthorityOperation) -> None:
-    fact = _resolved_profile_fact(require_spending_category("mutualidad_alternativa"), 2026, operation)
+def test_year_referenced_cap_below_the_supported_floor_is_refused(operation: PinnedAuthorityOperation) -> None:
+    support = operation.supported_filing_years()
+    fact = _resolved_profile_fact(require_spending_category("mutualidad_alternativa"), support.horizon, operation)
+    below_floor = support.floor - 1
 
-    with pytest.raises(CategoryValidationError, match="no dated statutory cap for mutualidad_alternativa/2099"):
-        _profile_from_authority_fact(fact, operation=operation, year=2099)
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        _profile_from_authority_fact(fact, operation=operation, year=below_floor)
 
 
 def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAuthorityOperation) -> None:

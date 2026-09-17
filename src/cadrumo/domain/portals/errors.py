@@ -2,7 +2,7 @@
 
 Every error raised from :mod:`cadrumo.domain.portals` derives from
 :class:`PortalRegistryError`, which in turn derives from the project
-root :class:`cadrumo.core.errors.CadrumoError`. Two concrete subclasses cover the
+root :class:`cadrumo.core.errors.hierarchy.CadrumoError`. Two concrete subclasses cover the
 failure modes surfaced to external callers:
 
 - :class:`UnknownPortalError` — raised by registry lookups on an
@@ -80,7 +80,7 @@ class PortalRegistryError(TerminalPreconditionErrorMixin[object], CadrumoError):
 
 
 class UnknownPortalError(PortalRegistryError):
-    """Raised by :func:`cadrumo.domain.portals.get_portal` on unknown names.
+    """Raised by :func:`cadrumo.domain.portals.registry.get_portal` on unknown names.
 
     The operator-facing text is the class's registered locale key and nothing
     else. The offending identifier travels as a locale-neutral machine fact in

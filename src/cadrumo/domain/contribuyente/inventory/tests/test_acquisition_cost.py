@@ -21,6 +21,7 @@ from ..records import (
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
     InventoryLedger,
+    InventoryValidationError,
     MovementKind,
     MovementRecord,
     ValuationMethod,
@@ -115,6 +116,7 @@ def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> No
             movement_date=movement_date,
             kind=MovementKind.OPENING,
             quantity=Decimal("1"),
+            unit_cost=Decimal("10.00"),
         )
 
         assert (
@@ -381,7 +383,7 @@ def test_fingerprint_is_order_independent_and_mutation_sensitive() -> None:
 
 
 def test_fingerprint_refuses_non_purchase_movements() -> None:
-    with pytest.raises(ValueError, match="only a complete purchase"):
+    with pytest.raises(InventoryValidationError, match="only a complete purchase"):
         inventory_acquisition_fingerprint(
             MovementRecord(
                 movement_id="sale-1",

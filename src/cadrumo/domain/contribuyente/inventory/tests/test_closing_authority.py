@@ -9,8 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
-
-# Import concrete model classes only after the record bootstrap has completed.
 from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,

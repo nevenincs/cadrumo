@@ -45,7 +45,7 @@ def _citation() -> CategoryCitation:
 def test_fixed_percentage_requires_percentage() -> None:
     """Fixed-percentage rules must provide the percentage field."""
 
-    with pytest.raises(ValidationError, match=r"fixed_percentage rules require fixed_pct"):
+    with pytest.raises(ValidationError, match=r"fixed-percentage rules require fixed_pct"):
         ProportionalityRule(
             kind=ProportionalityKind.from_registry(
                 "fixed_percentage",

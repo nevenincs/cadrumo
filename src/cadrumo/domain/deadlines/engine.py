@@ -211,8 +211,8 @@ class DeadlineEngine:
 
     Attributes:
         due_soon_days: Window before
-            :attr:`cadrumo.domain.deadlines.ModeloDeadline.closes_on` that
-            flags :attr:`cadrumo.domain.deadlines.ObligationStatus.DUE_SOON`
+            :attr:`cadrumo.domain.deadlines.models.ModeloDeadline.closes_on` that
+            flags :attr:`cadrumo.domain.deadlines.models.ObligationStatus.DUE_SOON`
             (default 14).
     """
 
@@ -257,7 +257,7 @@ class DeadlineEngine:
             year: The fiscal year to compute for.
             today: Reference date for status classification. Defaults
                 to the canonical Europe/Madrid civil date returned by
-                :func:`cadrumo.core.time.today_madrid`.
+                :func:`cadrumo.core.time.clock.today_madrid`.
 
         Returns:
             The :class:`Schedule` containing every obligation that
@@ -591,7 +591,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     Args:
         schedule: The :class:`Schedule` to scan for upcoming obligations.
         today: Reference date. Defaults to the canonical Europe/Madrid civil
-            date returned by :func:`cadrumo.core.time.today_madrid`.
+            date returned by :func:`cadrumo.core.time.clock.today_madrid`.
 
     Returns:
         The earliest non-overdue :class:`ModeloDeadline`, or ``None``
@@ -643,7 +643,7 @@ def compute_obligation_schedule(
 
     This is the single producer of the pending-obligation datum. Both
     the operator state read-projection (``pending_obligations``) and the
-    :class:`~cadrumo.application.workflow.WorkflowEngine`
+    :class:`~cadrumo.application.workflow.engine.WorkflowEngine`
     ``NO_PENDING_OBLIGATION`` gate route their schedule computation
     through here, so the gate and the projection cannot draw a divergent
     obligation set: identical ``(engine, profile, today)`` always yields

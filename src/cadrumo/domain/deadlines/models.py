@@ -38,6 +38,7 @@ from ...core.period import Period
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
+from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
 )
@@ -298,7 +299,7 @@ def _project_persisted_token(
     if value is None or isinstance(value, StrictRegistryToken) or info.field_name is None:
         return value
     resolver = resolvers[info.field_name]
-    if isinstance(value, (list, tuple, set, frozenset)):
+    if is_object_collection(value):
         return frozenset(item if isinstance(item, StrictRegistryToken) else resolver(item) for item in value)
     return resolver(value)
 
@@ -488,7 +489,7 @@ class TaxpayerProfile(BaseModel):
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
-        declaration_roles: The filer's :class:`~core.ThirdPartyDeclarationRole`
+        declaration_roles: The filer's :class:`~core.aggregation.ThirdPartyDeclarationRole`
             memberships -- orthogonal to ``entity_type`` and independent of
             it. Drives Modelo 347 claves C, D and E; empty when the operator
             has not declared any such role, which is the correct default

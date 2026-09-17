@@ -47,7 +47,7 @@ def test_the_axis_carries_exactly_the_two_members_the_rate_table_can_consume(
     Pinned because a third member is the tempting change, and every candidate
     for one splits a pair that selects the same figure.
     """
-    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2026, 4, 1), authority=operation)
     assert len(catalogue.all_activity_kinds) == 2
 
 
@@ -73,7 +73,7 @@ def test_a_declared_activity_kind_survives_the_projection(operation: PinnedAutho
     projection helper, so the assertion covers the route a stored profile
     actually takes.
     """
-    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2025, 1, 1), authority=operation)
+    catalogue = resolve_irpf_activity_kind_catalogue(effective_date=date(2026, 4, 1), authority=operation)
     for declared in catalogue.all_activity_kinds:
         profile = taxpayer_profile_from_mapping(
             {"irpf.activity_kind": declared.value},

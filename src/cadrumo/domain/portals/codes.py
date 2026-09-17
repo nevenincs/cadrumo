@@ -29,7 +29,7 @@ class Portal(StrEnum):
     Values are the member name lowercased. Adding a new member is a
     first-class enum widening and must be accompanied by a new entry
     file under :mod:`cadrumo.domain.portals._entries` or registry assembly will
-    abort with :class:`cadrumo.domain.portals.PortalIntegrityError`.
+    abort with :class:`cadrumo.domain.portals.errors.PortalIntegrityError`.
     """
 
     # Authentication (8)

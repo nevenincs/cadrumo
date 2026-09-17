@@ -297,6 +297,10 @@ def _registry_portal_bindings_for_modelo(
         if operation is None:
             with bundled_indexed_authority().operation() as indexed_operation:
                 return _registry_portal_bindings_for_modelo(code, operation=indexed_operation)
+        if str(code) not in operation.modelo_ids():
+            # A modelo the registry does not carry binds no portal; that is an
+            # answer, not a registry integrity failure.
+            return frozenset[Portal]()
         directory = operation.modelo_directory(str(code))
         revisions = tuple(
             (str(code), operation.revision(str(code), str(metadata.id))) for metadata in directory.revisions

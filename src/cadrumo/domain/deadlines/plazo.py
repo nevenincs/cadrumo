@@ -47,7 +47,7 @@ def resolve_filing_closes_on(
     owning another matcher.
 
     The resolved value belongs to the matching
-    :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`.
+    :class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`.
 
     Matching rule: the registry window period must carry the same
     filing year and bare registry period token as the supplied ``WorkUnit``
@@ -101,7 +101,7 @@ def resolve_filing_window(
     This is the single matching authority for "which registry deadline window
     covers this filing target". Every consumer — the extemporaneidad surface
     that needs only
-    :attr:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition.closes_on`,
+    :attr:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition.closes_on`,
     and the overview calendar that also
     needs ``opens_on`` and ``payment_cutoff_on`` — resolves through here, so a
     change to the year/token matching rule or to the no-window behaviour can
@@ -116,7 +116,7 @@ def resolve_filing_window(
     ``None`` means one thing only: the registry loaded, and declares no window
     matching this combination. A registry that cannot be read or validated is
     NOT an absence of deadline and is not reported as one -- the
-    :class:`~cadrumo.domain.calculations.registry.RegistryError` propagates.
+    :class:`~cadrumo.domain.calculations.registry.errors.RegistryError` propagates.
 
     Reading ``deadline_windows`` costs full modelo validation, because the
     authority validates the modelo before projecting its windows. Catching that
@@ -137,7 +137,7 @@ def resolve_filing_window(
 
     Returns:
         The matching
-        :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`,
+        :class:`~cadrumo.domain.calculations.registry.schema_deadlines.DeadlineWindowDefinition`,
         or ``None`` when the registry declares no window for the combination.
 
     Raises:

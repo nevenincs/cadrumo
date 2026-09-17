@@ -3,7 +3,7 @@
 Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
 code ``PORTAL_M202_SOCIEDADES_FRACCIONADO``, exposed as :data:`ENTRY` under
 the :class:`PortalCategory` member ``FILING``, consumed by
-:data:`cadrumo.domain.portals.PORTAL_REGISTRY` via
+:data:`cadrumo.domain.portals.registry.PORTAL_REGISTRY` via
 :mod:`cadrumo.domain.portals.registry`.
 """
 

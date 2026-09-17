@@ -153,12 +153,12 @@ def test_the_shipped_corpus_satisfies_the_invariant_through_the_real_loader(
     The invariant is a model validator, so a violating citation refuses at load;
     this asserts the corpus is actually reached rather than trivially empty.
     """
-    from ..registry import load_category_profiles
+    from ..registry import category_profile_years, resolve_category_profiles
 
-    profiles = load_category_profiles(operation=operation)
     edition_dated = [
         citation
-        for profile in profiles.values()
+        for year in sorted(category_profile_years(operation=operation))
+        for profile in resolve_category_profiles(year, operation=operation).values()
         for citation in profile.proportionality.citations
         if citation.source in ANNUAL_EDITION_CITATION_SOURCES
     ]

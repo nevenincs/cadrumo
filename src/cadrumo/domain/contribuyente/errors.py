@@ -3,7 +3,7 @@
 Defines :class:`TaxResidenceProfileError` and its concrete failures surfaced
 to RENTA verification. The inventory ledger error hierarchy lives with its
 records in :mod:`domain.contribuyente.inventory`. Every class derives from
-:class:`core.errors.CadrumoError` so the shared error-code registration hook
+:class:`core.errors.hierarchy.CadrumoError` so the shared error-code registration hook
 applies.
 """
 

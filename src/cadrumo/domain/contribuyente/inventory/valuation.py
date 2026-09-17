@@ -65,9 +65,8 @@ class _InventoryAnexoDDerivation:
     prior_closing_link_fingerprint: ContentDigest
     complete_acquisition_total: Decimal
     acquisition_fingerprints: tuple[ContentDigest, ...]
-    casilla_0177: Decimal
-    casilla_0181: Decimal
-    casilla_0182: Decimal
+    variation_increase_value: Decimal
+    variation_decrease_value: Decimal
     closing_conflict: InventoryClosingConflictDiagnostic | None
     issues: tuple[Literal["physical_closing_conflict"], ...]
 
@@ -223,9 +222,8 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         prior_closing_link_fingerprint=resolution.prior_closing_link_fingerprint,
         complete_acquisition_total=acquisition_total,
         acquisition_fingerprints=acquisition_fingerprints,
-        casilla_0177=max(signed_variation, MONEY_ZERO),
-        casilla_0181=acquisition_total,
-        casilla_0182=max(-signed_variation, MONEY_ZERO),
+        variation_increase_value=max(signed_variation, MONEY_ZERO),
+        variation_decrease_value=max(-signed_variation, MONEY_ZERO),
         closing_conflict=resolution.conflict,
         issues=("physical_closing_conflict",) if resolution.conflict is not None else (),
     )

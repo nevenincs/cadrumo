@@ -54,7 +54,7 @@ def parse_meses_trabajo(raw: str, *, field: str) -> tuple[int, ...]:
         repeats.
 
     Raises:
-        :class:`~cadrumo.core.errors.ProfileAnswerTypeError`: If any entry is
+        :class:`~cadrumo.core.errors.hierarchy.ProfileAnswerTypeError`: If any entry is
             malformed, names a month outside 1-12, inverts a range, or repeats
             a month.
     """

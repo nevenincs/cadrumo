@@ -29,7 +29,7 @@ See Also:
     :mod:`domain.calculations.registry`
         Validated application links that declare modelo-to-portal references
         consumed by :func:`portals_for_modelo`.
-    :class:`core.access_gate.AeatAccessGate`
+    :class:`core.access_gate.gate.AeatAccessGate`
         Live-read/live-write gate; this metadata package never invokes it.
 """
 
