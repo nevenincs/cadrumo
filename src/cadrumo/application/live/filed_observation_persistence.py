@@ -38,7 +38,13 @@ from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
-from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
+from ...domain.modelos.filing_record import (
+    AeatRegisterRef,
+    ExternalEvidenceKind,
+    declaration_kind_for_tipo_solicitud,
+)
+from ..modelo.action_errors import ExternalModeloImportError
+from ..modelo.external_import_actions import ExternalFilingBaselineSource, external_filing_source_casillas
 from ..modelo.filing_chain_reconciliation import (
     AeatRegisterEntry,
     FilingReconciliationOutcome,
@@ -260,11 +266,17 @@ def enroll_filed_justificante_evidence(
 
     results: list[FilingReconciliationResult] = []
     if receipts and _chain_identity_matches(observation, bucket_id=bucket_id, ports=ports):
-        casilla_values = _numeric_register_casillas(observation, ports=ports)
         for justificante, artefact in receipts:
+            lexicals, casilla_values = _register_casillas(observation, receipt_csv=justificante.csv)
             results.append(
                 ports.filing_reconciliation.reconcile(
-                    _register_entry(observation, justificante, bucket_id=bucket_id, casilla_values=casilla_values),
+                    _register_entry(
+                        observation,
+                        justificante,
+                        bucket_id=bucket_id,
+                        casilla_values=casilla_values,
+                        source_lexicals=lexicals,
+                    ),
                     actor="aeat-filed-history",
                     clock=artefact.captured_at,
                 ),
@@ -321,17 +333,49 @@ def _chain_identity_matches(
     return same_tax_identifier(observation.authenticated_identity, expected_tax_id)
 
 
-def _numeric_register_casillas(
+def _register_casillas(
     observation: FiledObservationProtocol,
     *,
-    ports: FiledObservationPersistencePorts,
-) -> dict[CasillaId, Decimal] | None:
-    """Return the registry-grounded values AEAT holds, when every observed casilla is numeric."""
-    if not observation.casillas or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas):
-        return None
-    registry_observation = ports.transformation.registry_observation(observation)
-    values = {row.casilla_id: row.value for row in registry_observation.observations if isinstance(row.value, Decimal)}
-    return values or None
+    receipt_csv: str,
+) -> tuple[dict[CasillaId, str] | None, dict[CasillaId, Decimal] | None]:
+    """Return the complete numeric content AEAT holds for the presentation, when the capture carries it.
+
+    A capture with a non-numeric casilla, no casillas, or Modelo 303 (whose
+    content is recorded only with its filing-instance evidence) yields no
+    content. An incomplete numeric manifest is refused rather than recorded.
+    """
+    if (
+        not observation.casillas
+        or observation.modelo == Modelo("303")
+        or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas)
+    ):
+        return None, None
+    lexicals = {casilla.casilla_id: casilla.value for casilla in observation.casillas}
+    if len(lexicals) != len(observation.casillas):
+        raise LiveApplicationInputError(
+            translated_message="application.live.filed_observations.errors.duplicate_casilla",
+            context={
+                "modelo": observation.modelo,
+                "ejercicio": observation.ejercicio,
+                "period": observation.period.registry_token,
+            },
+        )
+    source = ExternalFilingBaselineSource(
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
+        evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        evidence_reference_id=receipt_csv,
+        tax_id=observation.authenticated_identity,
+        casilla_lexicals=lexicals,
+    )
+    try:
+        return external_filing_source_casillas(source)
+    except ExternalModeloImportError as exc:
+        raise LiveApplicationError(
+            translated_message=exc.translated_message,
+            context={"operation": "prepare_filed_register_casillas", "cause_type": type(exc).__name__},
+        ) from exc
 
 
 def _register_entry(
@@ -340,6 +384,7 @@ def _register_entry(
     *,
     bucket_id: str,
     casilla_values: dict[CasillaId, Decimal] | None,
+    source_lexicals: dict[CasillaId, str] | None,
 ) -> AeatRegisterEntry:
     tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip() or None
     presented_at = observation.presented_at if observation.presented_at.tzinfo is not None else None
@@ -357,8 +402,10 @@ def _register_entry(
         ),
         evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
         tax_id=observation.authenticated_identity,
+        declared_kind=declaration_kind_for_tipo_solicitud(tipo_solicitud),
         justificante=justificante,
         casilla_values=casilla_values,
+        source_lexicals=source_lexicals,
     )
 
 
