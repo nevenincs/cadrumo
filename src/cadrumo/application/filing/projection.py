@@ -293,6 +293,9 @@ def _project_prorrata_and_differentiated_record(
         prorrata_contexts=prorrata_contexts,
         differentiated_contexts=differentiated_contexts,
     )
+    if not contexts:
+        # A page 5 without prorrata or differentiated-sector content is omitted.
+        return (), ()
     values_by_reference = {value.projection_ref: value for value in (*prorrata_values, *differentiated_values)}
     if len(values_by_reference) != len(prorrata_values) + len(differentiated_values):
         raise FilingExportValidationError(f"projection record {record.id!r} emitted duplicate typed projection values")
