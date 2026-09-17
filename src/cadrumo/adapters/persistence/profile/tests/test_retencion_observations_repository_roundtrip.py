@@ -27,6 +27,7 @@ from cadrumo.adapters.persistence.storage.crypto.encrypted_columns import secure
 from cadrumo.adapters.persistence.storage.errors import PathContainmentError, SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.retencion_observations_repository import (
+    RetencionObservationPersistenceError,
     RetencionObservationPorts,
     persist_retencion_observations,
     retencion_observation_key,
@@ -443,8 +444,11 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
             payload=write_b.payload,
         )
 
-        with pytest.raises(SecureObjectRowIdentityError):
+        # The adapter surfaces storage failures as its own persistence error;
+        # the row-identity refusal is kept as the cause.
+        with pytest.raises(RetencionObservationPersistenceError) as exc_info:
             repo.load_observations("180", period)
+        assert isinstance(exc_info.value.__cause__, SecureObjectRowIdentityError)
 
 
 @pytest.mark.parametrize(
