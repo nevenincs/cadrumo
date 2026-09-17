@@ -1161,8 +1161,21 @@ def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> No
     elif result_disposition_is_refund(disposition):
         if not isinstance(snapshot.selected_account, RefundAccountSelection):
             raise ValueError("refund disposition requires a selected refund account")
-    elif snapshot.selected_account is not None:
+    elif snapshot.selected_account is not None and not (
+        _m303_nota_three_shape(snapshot) and isinstance(snapshot.selected_account, RefundAccountSelection)
+    ):
         raise ValueError("a result disposition without an account must not retain one")
+
+
+def _m303_nota_three_shape(snapshot: FilingProducerSnapshot) -> bool:
+    """Whether Modelo 303 Nota 3 may carry the refund account on the account page."""
+    amendment = snapshot.amendment_evidence
+    return (
+        snapshot.modelo == Modelo("303")
+        and amendment is not None
+        and amendment.is_rectificativa
+        and snapshot.elections.prior_domiciliation is PriorDomiciliationElection.KEEP
+    )
 
 
 def _validate_snapshot_profile_secrecy(snapshot: FilingProducerSnapshot) -> None:
@@ -1192,6 +1205,7 @@ def build_filing_producer_snapshot(
     charge_account: ChargeAccount | None,
     m303_filing_facts: M303FilingFacts | None,
     declaration_contact: DeclarationContactFacts | None = None,
+    nota_three_refund_account: bool = False,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition.
 
@@ -1208,6 +1222,12 @@ def build_filing_producer_snapshot(
     elif result_disposition_is_refund(elections.result_disposition):
         if refund_account is None or refund_account.iban is None:
             raise FilingProducerSnapshotError("refund disposition requires a refund account")
+        selected_account = RefundAccountSelection(role="refund", account=refund_account)
+    elif nota_three_refund_account:
+        # Modelo 303 Nota 3: the account page carries the refund account even
+        # though the disposition itself is not a refund.
+        if refund_account is None:
+            raise FilingProducerSnapshotError("Nota 3 account page requires a refund account")
         selected_account = RefundAccountSelection(role="refund", account=refund_account)
     else:
         selected_account = None

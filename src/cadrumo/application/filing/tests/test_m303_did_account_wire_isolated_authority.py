@@ -528,7 +528,9 @@ def test_m303_envelope_refuses_a_required_projection_record_without_an_applicabl
         registry_snapshot=registry_snapshot,
     )
 
-    with pytest.raises(FilingExportValidationError, match="required projection record"):
+    with pytest.raises(
+        FilingExportValidationError, match=r"required (?:export|projection) record .* has no applicable"
+    ):
         render_filing_envelope(
             FilingEnvelopeRenderRequest(
                 registry_snapshot=registry_snapshot,

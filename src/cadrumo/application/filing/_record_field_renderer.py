@@ -279,7 +279,22 @@ def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingPro
     value = headers.get(field.producer_key)
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
         raise FilingExportValidationError(f"export producer {field.producer_key!r} is required")
+    if isinstance(value, bool) and field.data_type == "text":
+        return _text_presence_marker(field, value)
     return value.strip() if isinstance(value, str) else value
+
+
+def _text_presence_marker(field: ExportFieldDefinition, value: bool) -> str | None:
+    """Write a boolean producer fact into a one-byte alphanumeric marker slot.
+
+    The official designs reserve such slots for an ``X`` when the fact holds and
+    a blank otherwise; any wider text slot has no such reading.
+    """
+    if field.length != 1:
+        raise FilingExportValidationError(
+            f"export field {field.id!r} cannot write a boolean producer fact into a {field.length}-byte text slot",
+        )
+    return "X" if value else None
 
 
 def _is_blank(value: object) -> bool:
@@ -311,7 +326,7 @@ def _draft_filing_year(draft: ModeloDraft) -> str:
 def _draft_period_code(draft: ModeloDraft) -> str:
     registry_token = draft.period.registry_token
     if draft.modelo == Modelo("369") and registry_token.startswith("EXT-") and registry_token.endswith("T"):
-        return registry_token.removeprefix("EXT-").removesuffix("T").zfill(2)
+        return f"{int(registry_token.removeprefix('EXT-').removesuffix('T')):02d}"
     return registry_token
 
 

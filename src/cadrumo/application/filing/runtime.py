@@ -46,6 +46,7 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
+from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
@@ -54,6 +55,7 @@ from ...domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.authority_artifact import AuthorityComponentCodecError, AuthorityEvidenceProjection
+from ...domain.calculations.registry.casilla_membership import row_template_casilla_ids
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -773,9 +775,21 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     formulas_by_target: dict[CasillaId, FormulaDefinition] = {}
     for formula in revision.formulas:
         formulas_by_target.setdefault(formula.target_casilla_id, formula)
+    # Per-row template casillas are answered by the rows their record emits, so
+    # the scalar required-ness check does not demand them. Modelo 349 keeps them
+    # required: the validator proves its operador and rectificacion rows exist.
+    row_owned = frozenset() if str(modelo.id) == Modelo("349").value else row_template_casilla_ids(revision)
     casillas = tuple(
         sorted(
-            (_casilla_schema(casilla, formulas_by_id, formulas_by_target) for casilla in revision.casillas),
+            (
+                _casilla_schema(
+                    casilla,
+                    formulas_by_id,
+                    formulas_by_target,
+                    scalar_required=casilla.required and casilla.id not in row_owned,
+                )
+                for casilla in revision.casillas
+            ),
             key=lambda c: c.casilla_id,
         ),
     )
@@ -842,6 +856,8 @@ def _casilla_schema(
     casilla: CasillaDefinition,
     formulas_by_id: Mapping[FormulaId, FormulaDefinition],
     formulas_by_target: Mapping[CasillaId, FormulaDefinition],
+    *,
+    scalar_required: bool,
 ) -> RegistryCasillaSchema:
     formula_input_casilla_ids: tuple[CasillaId, ...] = ()
     formula_id = casilla.formula
@@ -852,7 +868,7 @@ def _casilla_schema(
     return RegistryCasillaSchema(
         casilla_id=casilla.id,
         value_type=registry_value_type(casilla.data_type),
-        required=casilla.required,
+        required=scalar_required,
         formula=formula_id,
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,
