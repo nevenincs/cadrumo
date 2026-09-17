@@ -28,13 +28,14 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import CoreValidationError
 from ....core.period import Period
 from ....core.time.utc import validate_utc_aware
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission.models import ModeloDraftStatus
 from ..schema import ModeloBindingValue, ModeloDraft, ModeloValue, ModeloValueKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _UTC_INSTANT = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
 _NAIVE_INSTANT = datetime(2026, 5, 3, 12, 0)
@@ -127,7 +128,7 @@ def test_the_shared_utc_contract_refuses_the_same_values() -> None:
     stricter-or-looser notion of a UTC instant than the rest of the project.
     """
     for bad_instant in (_NAIVE_INSTANT, _OFFSET_INSTANT):
-        with pytest.raises(ValueError):
+        with pytest.raises(CoreValidationError):
             validate_utc_aware(bad_instant)
 
     assert validate_utc_aware(_UTC_INSTANT) == _UTC_INSTANT

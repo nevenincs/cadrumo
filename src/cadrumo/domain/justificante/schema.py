@@ -16,6 +16,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.aeat_presentation import AeatPresentationId
 from ...core.identity.digest import ContentDigest
@@ -94,6 +95,7 @@ class Justificante(BaseModel):
 
     @field_validator("period", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_printed_period(cls, raw_period: object, info: ValidationInfo) -> object:
         ejercicio = info.data.get("ejercicio")
         if not isinstance(raw_period, str):

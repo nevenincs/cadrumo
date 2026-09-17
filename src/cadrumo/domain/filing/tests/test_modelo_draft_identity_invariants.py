@@ -28,7 +28,7 @@ from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...submission.models import ModeloDraftStatus
 from ..schema import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _TIMESTAMP = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
 # Two independently valid Spanish NIFs: each passes the AEAT control-letter

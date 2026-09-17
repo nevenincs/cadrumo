@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from ..schema import ModeloValue, ModeloValueKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_empty_kind_refuses_a_carried_value() -> None:
