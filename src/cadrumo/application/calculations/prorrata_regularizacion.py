@@ -410,6 +410,18 @@ def _prorrata_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
     return tuple(periods)
 
 
+def _prorrata_source_modelo(revision: ModeloRevision) -> str:
+    """Return the one modelo the revision's prorrata bindings declare as their source."""
+    modelos = {
+        str(binding.provider.source_modelo)
+        for binding in revision.bindings
+        if isinstance(binding.provider, ProrrataRegularizacionProvider)
+    }
+    if len(modelos) != 1:
+        raise ValueError("selected prorrata bindings must declare exactly one source modelo")
+    return next(iter(modelos))
+
+
 def _missing_current_year_casillas(
     current_year_values: Mapping[CasillaId, Decimal],
     *,
@@ -815,7 +827,7 @@ def _resolve_prorrata_provisional_source(
                 _prior_definitiva_provenance(
                     carry=prior_definitiva,
                     revision=revision,
-                    source_modelo=context.modelo,
+                    source_modelo=_prorrata_source_modelo(revision),
                 ),
             ),
         )
@@ -960,7 +972,7 @@ class ProrrataRegularizacionSourceResolver:
             source_period_feed = _source_period_feed_from_observations(
                 self._observation_repository,
                 operation=self._operation,
-                modelo=context.modelo,
+                modelo=_prorrata_source_modelo(revision),
                 revision=revision,
                 filing_year=context.filing_year,
             )
@@ -996,7 +1008,7 @@ class ProrrataRegularizacionSourceResolver:
                 self._observation_repository,
                 operation=self._operation,
                 filing_year=context.filing_year,
-                modelo=context.modelo,
+                modelo=_prorrata_source_modelo(revision),
                 revision=revision,
             )
         except (PersistenceDegradationError, ProrrataRegisterError) as exc:
