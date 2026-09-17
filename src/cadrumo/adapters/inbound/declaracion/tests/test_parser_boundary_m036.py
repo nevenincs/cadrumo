@@ -26,19 +26,21 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     section heading "Causas de presentacion de la declaracion". The fixture uses
     that source heading with the enum value on the same line.
     """
+    # The fixture is filed under its own ejercicio.
+    year = int(_MODELO_036_SYNTHETIC_FIXTURE.stem.split("-")[0])
     filing = parse_declaracion(
         _MODELO_036_SYNTHETIC_FIXTURE,
         modelo_override="036",
-        año_override=2025,
+        año_override=year,
         period_override="alta",
     )
 
     assert filing.modelo == "036"
-    assert filing.period == _expected_period(2025, "AD-HOC")
+    assert filing.period == _expected_period(year, "AD-HOC")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "036"
-    assert filing.registry_snapshot_ref.modelo_year == 2025
+    assert filing.registry_snapshot_ref.modelo_year == year
     assert filing.registry_snapshot_ref.period == "ALTA"
 
     assert {value.casilla_id: value.printed_value for value in filing.values} == _M036_EXPECTED_VALUES

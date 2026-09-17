@@ -283,7 +283,7 @@ def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> 
             # no-IVA rows; they are expected for a mixed corpus, not an error.
             for obs in result.observations:
                 rule = by_id[obs.ledger_id]
-                assert obs.category is IvaCategory(rule["iva_category"]), (
+                assert obs.category == IvaCategory(rule["iva_category"]), (
                     f"{rule['match']}: {obs.category} != {rule['iva_category']}"
                 )
                 expected_flow = (
