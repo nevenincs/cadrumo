@@ -18,6 +18,7 @@ from typing import ClassVar, cast, override
 
 import pytest
 
+from ....application.provisioning_browser import required_browser_builds
 from ....application.provisioning_contracts import ProvisioningPreconditionCondition
 from ....core.model_catalogue import ModelRole, default_model_runtime_id
 from ....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
@@ -190,3 +191,26 @@ def test_install_without_confirm_never_runs_the_installer(tmp_path: Path) -> Non
             ProvisioningPreconditionCondition.RUNTIME_INSTALL_CONSENTED.value,
             ProvisioningPreconditionCondition.RUNTIME_INSTALLER_AVAILABLE.value,
         }
+
+
+@pytest.mark.timeout(180)
+def test_browser_provisioning_is_idempotent_over_a_complete_cache(tmp_path: Path) -> None:
+    builds = required_browser_builds()
+    assert builds is not None
+    cache = tmp_path / "browsers"
+    for build in builds:
+        (cache / build.directory_name).mkdir(parents=True)
+        (cache / build.directory_name / "INSTALLATION_COMPLETE").write_bytes(b"")
+
+    completed = run_cadrumo_subprocess(
+        ["--format", "json", "config", "provision", "browser"],
+        settings={"cadrumo_local_storage_root": tmp_path / "storage", "cadrumo_output_language": "en"},
+        extra_env={**_NO_KEYCHAIN, "PLAYWRIGHT_BROWSERS_PATH": str(cache)},
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    result = _result(completed)
+    assert result["installed"] is True
+    assert result["already_installed"] is True
+    assert result["installer_exit_code"] is None
+    assert result["precondition_action"] is None

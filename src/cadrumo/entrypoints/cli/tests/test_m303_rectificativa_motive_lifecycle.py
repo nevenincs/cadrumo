@@ -537,6 +537,19 @@ def test_motive_capability_refuses_source_digest_and_epoch_inference(
     )
 
 
+def test_a_revision_whose_design_carries_no_motive_is_not_applicable_rather_than_missing(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    """The early-2024 design has no rectificativa motive field, so it admits none."""
+    evidence = _filing_evidence(operation=operation)
+    record_design = evidence.m303.regimen_simplificado.regimen_snapshot.record_design
+
+    assert not m303_rectificativa_motive_is_applicable(
+        registry_revision_id="2024-hasta-08-y-2t",
+        record_design=record_design,
+    )
+
+
 @pytest.mark.parametrize(
     ("motive", "expected"),
     (
