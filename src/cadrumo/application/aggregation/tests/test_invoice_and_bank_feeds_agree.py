@@ -273,7 +273,7 @@ def test_the_two_feeds_classify_the_operation_identically() -> None:
     (invoice,) = _invoice_side(category=IvaCategory("intra_community_supply"), country="DE", tax_id="DE811907980")
 
     assert invoice.category == bank.category
-    assert invoice.rate_kind is bank.rate_kind
-    assert invoice.flow_direction is bank.flow_direction
+    assert invoice.rate_kind == bank.rate_kind
+    assert invoice.flow_direction == bank.flow_direction
     assert invoice.base_amount == bank.base_amount
     assert invoice.iva_amount == bank.iva_amount

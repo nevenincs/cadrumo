@@ -139,7 +139,7 @@ def test_the_general_regime_may_record_an_operation_date() -> None:
     """
     transaction = _transaction("tx-allowed", operation_date=_OPERATION)
 
-    assert transaction.cash_accounting_treatment is IvaCashAccountingTreatment("none")
+    assert transaction.cash_accounting_treatment == IvaCashAccountingTreatment("none")
     assert transaction.operation_date == _OPERATION
 
 

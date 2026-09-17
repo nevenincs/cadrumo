@@ -26,6 +26,7 @@ from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     derive_flow_for_classification,
+    is_deducible_flow,
     is_inversion_sujeto_pasivo_flow,
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
@@ -247,12 +248,17 @@ def _invoice_line_iva_observation_without_iva(
     )
     if classification.rate_kind is None:
         return None
+    flow_direction = derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
+    if is_deducible_flow(flow_direction) and deduction_authority is None:
+        # An input-side fact needs the linked ledger's deduction authority; the
+        # screen withholds the line rather than invent one.
+        return None
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=devengo_date,
         category=category,
         rate_kind=classification.rate_kind,
-        flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
+        flow_direction=flow_direction,
         base_amount=base_amount_eur,
         iva_amount=iva_amount_eur,
         recargo_amount=recargo_amount,
