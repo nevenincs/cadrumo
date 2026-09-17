@@ -223,6 +223,7 @@ def _run(tmp_path: Path, ports: _Ports, request: OperationRequest[LocalReaderPro
             submitted = await services.submission.submit(request, actor_ref="operator:local-reader-test")
             operation_id = submitted.receipt.operation_id
             await services.submission.start(operation_id)
+            await services.submission.settled(operation_id)
             terminal = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=64)
             observed = await services.observation.observe(
