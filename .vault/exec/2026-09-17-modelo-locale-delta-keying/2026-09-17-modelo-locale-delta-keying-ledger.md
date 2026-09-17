@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:f022cda5d3f5cef4ff93f5ff618a6e7930cbb46d607f11068e92bd574d675a6e'
+body_hash: 'sha256:e1d4c05a89f457eb2ec22964cf6e336e6da4bbf08d5b2d9b599cee6d98c7cebf'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -96,6 +96,10 @@ related:
 - `S12` `M` `dev/locales/cli.py`
 - `S12` `M` `src/cadrumo/entrypoints/tui/profile/local_reader.py`
 - `S12` `verify:` `pytest dev/locales/tests/test_casilla_orthography.py` -> `pass`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/tests/test_localization_continuity_tier_is_reached.py`
+- `S12` `M` `dev/locales/casilla_orthography.py`
+- `S12` `verify:` `pytest test_localization_continuity_tier_is_reached` -> `pass`
 
 ## Notes
 
@@ -103,4 +107,5 @@ related:
 - `S12` patched rows keep a separate text origin; minimality still judges them (131/2025 carries 8 no-op overrides)
 - `S04` first real apply was interrupted by a Windows file lock and re-planned from a partial state, losing 24,861 resolved translations; restored from the verified rehearsal copy, and apply now stages, verifies and installs from a persistent pending directory
 - `S07` identical cognates are classified in the honesty allowlist rather than stored as copies
+- `S12` Serving no translation where Spanish resolves nowhere removed ~2300 genuine en help texts (ca/hu likewise) that lacked a Spanish source; Spanish help is being authored and the translations restored from 1b7a46e4cb^
 
