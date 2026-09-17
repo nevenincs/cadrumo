@@ -25,6 +25,7 @@ from zipfile import BadZipFile
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -93,6 +94,7 @@ class TabularExportResult(BaseModel):
 
     @field_validator("fieldnames")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_fieldnames(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(field.strip() for field in value)
         if any(not field for field in normalized):
@@ -103,6 +105,7 @@ class TabularExportResult(BaseModel):
 
     @field_validator("sha256")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_sha256(cls, value: str) -> str:
         normalized = value.strip().lower()
         if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
@@ -110,6 +113,7 @@ class TabularExportResult(BaseModel):
         return normalized
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _metadata_describes_the_payload(self) -> TabularExportResult:
         """Refuse a result whose metadata contradicts the bytes it carries.
 

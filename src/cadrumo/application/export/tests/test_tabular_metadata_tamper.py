@@ -27,7 +27,7 @@ from ....core.hashing import sha256_hex
 from ..errors import ExportFieldError
 from ..tabular import ExportSerializationFormat, TabularExportResult, serialize_tabular_rows, verify_export_metadata
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _ROWS = (
     {"transaction_id": "a", "amount": "1.00"},
