@@ -72,7 +72,8 @@ _REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revis
 #: Scaffold renderings standing in for a label that was never authored. Help text may
 #: legitimately open with its box number, so only labels are judged.
 _PLACEHOLDER: Final = re.compile(
-    r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
+    r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci"
+    r"|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
     re.IGNORECASE,
 )
 
@@ -220,11 +221,11 @@ class CatalogueFindings:
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, lineages whose one Spanish text is translated more than one way."""
     stranded_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, rows rendering Spanish although their lineage translates that text."""
     stale_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, lineages rendering two different Spanish texts with one translation."""
-    """Per locale, rows rendering Spanish although their lineage translates that text."""
-    """Per locale, lineages whose one Spanish text is translated more than one way."""
 
     def counts(self) -> dict[str, object]:
         """Summarise every finding family as counts."""

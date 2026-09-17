@@ -117,6 +117,28 @@ def casilla_audit(
         raise typer.Exit(code=1)
 
 
+@app.command("casilla-orthography")
+def casilla_orthography(
+    as_json: Annotated[bool, typer.Option("--json", help="Emit every finding as JSON.")] = False,
+) -> None:
+    """Report stored casilla words that lost their diacritics; exit 1 when any remain."""
+    from .casilla_orthography import unaccented_words
+    from .modelo_casilla_catalogue import load_casilla_values
+
+    findings = list(unaccented_words(load_casilla_values(LOCALES_DIR)))
+    if as_json:
+        payload = [
+            {"locale": item.locale, "key": item.key, "word": item.word, "candidates": list(item.candidates)}
+            for item in findings
+        ]
+        typer.echo(json.dumps(payload, indent=2, ensure_ascii=False))
+    else:
+        for item in findings:
+            typer.echo(f"{item.locale} {item.key} {item.word} -> {'/'.join(item.candidates)}")
+    if findings:
+        raise typer.Exit(code=1)
+
+
 @app.command("casilla-collapse")
 def casilla_collapse(
     apply: Annotated[bool, typer.Option("--apply", help="Write the plan through the catalogue authority.")] = False,

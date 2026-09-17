@@ -21,8 +21,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ...compiler.authority import compiled_bundled_authority
@@ -224,18 +225,18 @@ def test_a_target_stating_every_row_stages_as_the_plain_copy_it_always_was(tmp_p
     assert _tree_bytes(staged_modelo / "revisions" / root_revision) == _tree_bytes(expected)
 
 
-def test_a_delta_target_with_its_existing_tree_is_refused_for_its_withdrawn_review_without_writing(
+def test_a_delta_target_with_its_existing_tree_is_checked_at_filing_grade_without_writing(
     tmp_path: Path,
 ) -> None:
-    """Check of a published tree demands a reviewed edition, and a staged delta's review does not carry over."""
+    """Staging is a representation change, so the delta's review carries into the filing-grade check."""
     target_root = _registry_copy(tmp_path / "target")
     prepared = _prepared(tmp_path / "work", target_root)
     before = _tree_bytes(target_root / "modelos" / _MODELO)
 
-    with pytest.raises(RegistryValidationError, match="is 'pending_review'; filing-grade snapshot requires") as refusal:
-        check_prepared_invocation(prepared)
+    outcome, _rendered, _state = check_prepared_invocation(prepared)
 
-    assert "export_refs" not in str(refusal.value)
+    assert outcome == "matched"
+    assert prepared.validation.required_grade is RegistryAuthorityGrade.FILING
     assert _tree_bytes(target_root / "modelos" / _MODELO) == before
 
 

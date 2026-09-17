@@ -531,9 +531,7 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
     missing_metadata_root = tmp_path / "missing-metadata" / tree.modelo
     shutil.copytree(metadata_modelo_root, missing_metadata_root)
     shutil.rmtree(missing_metadata_root / "revisions" / "2022")
-    with pytest.raises(
-        RegistryValidationError, match="evolution references a revision that the modelo does not declare"
-    ):
+    with pytest.raises(RegistryValidationError, match="edition '2023' has no predecessor edition to continue"):
         validate(missing_metadata_root)
 
     mismatched_metadata_root = tmp_path / "mismatched-metadata" / tree.modelo
