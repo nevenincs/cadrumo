@@ -20,7 +20,6 @@ from __future__ import annotations
 import json
 import re
 import shutil
-from collections import Counter
 from pathlib import Path
 from typing import Final
 
@@ -446,37 +445,6 @@ def _copy_registry(destination: Path, modelo_id: str) -> Path:
     return destination
 
 
-def _toml_array(values: tuple[str, ...]) -> str:
-    return json.dumps(list(values), ensure_ascii=False)
-
-
-def _lift_restated_references(modelo_dir: Path, reference: dict[str, ModeloRevision]) -> Counter[str]:
-    """Delete every row or constraints value equal to its edition's default, and declare that default once.
-
-    The default is each edition's modal row ``source_refs``. A value on its own
-    line belongs to a casilla row or to a ``constraints`` sub-table, both of
-    which take the defaults; a value closing an inline table is a
-    ``constraints`` inline table. Returns how many statements of each spelling
-    were deleted, so a caller can prove it deleted any.
-    """
-    removed: Counter[str] = Counter()
-    for revision_id, revision in reference.items():
-        modal = Counter(tuple(casilla.source_refs) for casilla in revision.casillas).most_common(1)[0][0]
-        edition_dir = modelo_dir / "revisions" / revision_id
-        line_source = f"\nsource_refs = {_toml_array(modal)}\n"
-        line_orden = f"\nlegal_refs = {_toml_array(tuple(revision.orden_aplicabilidad))}\n"
-        inline_source = f", source_refs = {_toml_array(modal)} }}"
-        for fragment in sorted((edition_dir / "casillas").glob("*.toml")):
-            text = fragment.read_text(encoding="utf-8")
-            removed["line source_refs"] += text.count(line_source)
-            removed["line legal_refs"] += text.count(line_orden)
-            removed["inline source_refs"] += text.count(inline_source)
-            text = text.replace(line_source, "\n").replace(line_orden, "\n").replace(inline_source, " }")
-            fragment.write_text(text, encoding="utf-8", newline="\n")
-        _declare_in_manifest(edition_dir, f"casilla_source_refs = {_toml_array(modal)}\n")
-    return removed
-
-
 def _declare_in_manifest(edition_dir: Path, declaration: str) -> None:
     manifest = edition_dir / "revision.toml"
     name = re.escape(edition_dir.name)
@@ -492,69 +460,6 @@ def _declare_in_manifest(edition_dir: Path, declaration: str) -> None:
 
 def _load(registry_root: Path, modelo_id: str) -> dict[str, ModeloRevision]:
     return dict(compile_validated_authority(registry_root, bundled_path()).modelo(modelo_id).revisions)
-
-
-@pytest.mark.parametrize(
-    ("modelo_id", "lifted_kinds"),
-    [
-        pytest.param(
-            "303", {"line source_refs", "line legal_refs", "inline source_refs"}, id="303-constraint-references"
-        ),
-        pytest.param("840", {"line source_refs", "line legal_refs"}, id="840-orden-legal-refs"),
-    ],
-)
-def test_lifting_restated_references_to_the_edition_leaves_every_edition_unchanged(
-    tmp_path: Path, modelo_id: str, lifted_kinds: set[str]
-) -> None:
-    """A real modelo authored with the defaults means exactly what its fully restated form meant.
-
-    Every edition's dump, apart from the new declaration itself, and every
-    casilla's locale key chain are compared with the modelo as shipped.
-    """
-    reference = _load(_copy_registry(tmp_path / "reference" / "registry" / "aeat", modelo_id), modelo_id)
-    live_root = _copy_registry(tmp_path / "live" / "registry" / "aeat", modelo_id)
-    removed = _lift_restated_references(live_root / "modelos" / modelo_id, reference)
-
-    assert {kind for kind, count in removed.items() if count} == lifted_kinds, removed
-    live = _load(live_root, modelo_id)
-    assert list(live) == list(reference)
-    for revision_id, before in reference.items():
-        after = live[revision_id]
-        assert after.casilla_source_refs is not None, revision_id
-        assert after.model_dump(exclude={"casilla_source_refs"}) == before.model_dump(), revision_id
-        assert [casilla.localization_keys for casilla in after.casillas] == [
-            casilla.localization_keys for casilla in before.casillas
-        ], revision_id
-
-
-def test_lifting_a_value_that_is_not_the_editions_default_changes_the_row(tmp_path: Path) -> None:
-    """Teeth for the equivalence: a row whose stated source differs from the default is not left alone."""
-    reference = _load(_copy_registry(tmp_path / "reference" / "registry" / "aeat", "303"), "303")
-    live_root = _copy_registry(tmp_path / "live" / "registry" / "aeat", "303")
-    _lift_restated_references(live_root / "modelos" / "303", reference)
-    revision_id = "2025"
-    modal = Counter(tuple(casilla.source_refs) for casilla in reference[revision_id].casillas).most_common(1)[0][0]
-    outliers = [casilla for casilla in reference[revision_id].casillas if tuple(casilla.source_refs) != modal]
-    assert outliers, "modelo 303 2025 has no row off its modal source"
-    outlier = outliers[0]
-    edition_dir = live_root / "modelos" / "303" / "revisions" / revision_id
-    stated = f"\nsource_refs = {_toml_array(tuple(outlier.source_refs))}\n"
-    fragments = [
-        path for path in sorted((edition_dir / "casillas").glob("*.toml")) if stated in path.read_text("utf-8")
-    ]
-    assert fragments, outlier.id
-    for fragment in fragments:
-        fragment.write_text(fragment.read_text("utf-8").replace(stated, "\n"), encoding="utf-8", newline="\n")
-
-    changed = {
-        casilla.id
-        for casilla, before in zip(
-            _load(live_root, "303")[revision_id].casillas, reference[revision_id].casillas, strict=True
-        )
-        if casilla.model_dump() != before.model_dump()
-    }
-    assert outlier.id in changed
-    assert all(tuple(before.source_refs) != modal for before in reference[revision_id].casillas if before.id in changed)
 
 
 # ── catalogue resolution ────────────────────────────────────────────────────
