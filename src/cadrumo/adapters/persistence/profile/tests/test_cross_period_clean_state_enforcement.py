@@ -20,6 +20,7 @@ from .....domain.user_profile.values import create_user_profile_record as _creat
 from ...storage.operator_scope import build_operator_scope_ports
 from ..buckets import BucketEventHistoryRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -97,6 +98,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...storage.sql.secure_objects import SecureObjectRepository
 _CLOCK = datetime(2026, 6, 5, 10, 0, tzinfo=UTC)
+# A monthly modelo 353 period whose presentation window is open at _CLOCK.
+_GROUP_PERIOD = "05"
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
     surface="_M390_EJERCICIO_CASILLA",
@@ -704,6 +707,11 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
             casilla_values = {
                 casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))
             }
+            source_headers = ()
+            if source_modelo == "303":
+                casilla_values, source_headers = modelo_303_filed_disposition(
+                    casilla_values, source_locator=f"JUST{source_modelo}{filing_year}{period}"
+                )
             registry_observations = registry_grounded_observations(
                 modelo=source_modelo,
                 filing_year=filing_year,
@@ -809,6 +817,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                     ),
                     source_kind="aeat_sede_justificante",
                     captured_at=_CLOCK,
+                    source_headers=source_headers,
                     stamped_revision_id=source_snapshot.revision.id,
                     source_metadata={
                         "aeat_register_status": "ALTA",
@@ -849,7 +858,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_PROFILE_ID) as profile:
-        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period="12")
+        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period=_GROUP_PERIOD)
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
@@ -858,11 +867,11 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 RegistryModeloObservation(
                     modelo="322",
                     filing_year=2026,
-                    period="12",
+                    period=_GROUP_PERIOD,
                     observations=registry_grounded_observations(
                         modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=_GROUP_PERIOD,
                         casilla_values={
                             casilla_id: Decimal(index + 1)
                             for index, casilla_id in enumerate(requirement.source_casilla_ids)
@@ -876,11 +885,11 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                     RegistryModeloObservation(
                         modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=_GROUP_PERIOD,
                         observations=registry_grounded_observations(
                             modelo="322",
                             filing_year=2026,
-                            period="12",
+                            period=_GROUP_PERIOD,
                             casilla_values={
                                 casilla_id: Decimal(index + 1)
                                 for index, casilla_id in enumerate(requirement.source_casilla_ids)
@@ -894,7 +903,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
             bucket_id=profile.bucket_id,
             modelo="353",
             filing_year=2026,
-            period="12",
+            period=_GROUP_PERIOD,
             operation=operation,
         )
 
@@ -914,7 +923,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                     CrossPeriodExpectedMemberSet(
                         source_modelo="322",
                         filing_year=2026,
-                        period=Period.from_year_and_code(2026, "12"),
+                        period=Period.from_year_and_code(2026, _GROUP_PERIOD),
                         member_nifs=("A00000000", "B00000001"),
                     ),
                 ),
@@ -932,7 +941,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_ROSTER_PROFILE_ID) as profile:
-        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period="12")
+        snapshot = published_authority_operation().snapshot("353", filing_year=2026, period=_GROUP_PERIOD)
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
@@ -941,11 +950,11 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 RegistryModeloObservation(
                     modelo="322",
                     filing_year=2026,
-                    period="12",
+                    period=_GROUP_PERIOD,
                     observations=registry_grounded_observations(
                         modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=_GROUP_PERIOD,
                         casilla_values={
                             casilla_id: Decimal(index + 1)
                             for index, casilla_id in enumerate(requirement.source_casilla_ids)
@@ -959,11 +968,11 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                     RegistryModeloObservation(
                         modelo="322",
                         filing_year=2026,
-                        period="12",
+                        period=_GROUP_PERIOD,
                         observations=registry_grounded_observations(
                             modelo="322",
                             filing_year=2026,
-                            period="12",
+                            period=_GROUP_PERIOD,
                             casilla_values={
                                 casilla_id: Decimal(index + 1)
                                 for index, casilla_id in enumerate(requirement.source_casilla_ids)
@@ -977,7 +986,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             bucket_id=profile.bucket_id,
             modelo="353",
             filing_year=2026,
-            period="12",
+            period=_GROUP_PERIOD,
             operation=operation,
         )
         filing_profile = workflow_profile().model_copy(
@@ -986,7 +995,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                     CrossPeriodGroupMemberRoster(
                         source_modelo="322",
                         filing_year=2026,
-                        period=Period.from_year_and_code(2026, "12"),
+                        period=Period.from_year_and_code(2026, _GROUP_PERIOD),
                         member_nifs=("A00000000", "B00000000"),
                     ),
                 ),

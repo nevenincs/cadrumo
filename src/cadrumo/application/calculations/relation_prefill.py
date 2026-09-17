@@ -1179,11 +1179,7 @@ def _relation_prefill_context_inputs(
         ),
         m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(
             bucket_id,
-            modelo=str(snapshot.modelo.id),
-            filing_year=int(snapshot.filing_year),
-            period_token=str(snapshot.period),
-            revision=snapshot.revision,
-            operation=operation,
+            profile_path_values_reader=profile_path_values_reader,
         ),
         not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(
             snapshot,
