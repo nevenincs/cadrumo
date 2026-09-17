@@ -1087,9 +1087,9 @@ def classify_iva(
     """Evaluate registry-projected rows in their supplied order.
 
     This function intentionally has no module-owned table or fallthrough row.
-    Callers must project the selected registry revision into ``rules`` and,
-    when a matched row derives a category from a rate tier, provide the
-    registry-owned ``rate_categories`` and ``rate_territories`` mappings.
+    ``rules`` and the ``rate_categories`` / ``rate_territories`` mappings are
+    registry projections; when omitted they are projected from ``operation``
+    for the criteria's transaction date.
     """
     _registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     vocabulary = resolve_iva_classification_catalogue(criteria.transaction_date, operation=operation)
@@ -1111,7 +1111,16 @@ def classify_iva(
     if criteria.rate_tier is not None:
         rate_catalogue.require(criteria.rate_tier)
     if rules is None:
-        raise IvaValidationError("IVA classification rows must be supplied by registry authority")
+        # The rows come from the same pinned authority the vocabulary did.
+        registry_inputs = resolve_iva_classification_inputs(
+            effective_date=criteria.transaction_date,
+            operation=operation,
+        )
+        rules = registry_inputs.rules
+        if rate_categories is None:
+            rate_categories = registry_inputs.rate_categories
+        if rate_territories is None:
+            rate_territories = registry_inputs.rate_territories
     projected_rules = tuple(rules)
     for rule in projected_rules:
         if rule.category is not None:
@@ -1220,7 +1229,6 @@ __all__ = [
     "classify_iva",
     "customer_tax_status_alias",
     "domestic_categories_by_rate_kind",
-    "territorial_scope_alias",
     "rate_kind_for_domestic_category",
     "require_customer_tax_status",
     "require_iva_territorial_scope",
@@ -1228,4 +1236,5 @@ __all__ = [
     "resolve_iva_classification_catalogue",
     "resolve_iva_classification_inputs",
     "resolve_transaction_kind_catalogue",
+    "territorial_scope_alias",
 ]
