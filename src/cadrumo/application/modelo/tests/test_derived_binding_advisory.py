@@ -181,10 +181,18 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
 
     reasons = {diagnostic.reason for diagnostic in fired}
     assert reasons == {_ADVISORY_REASON}, reasons
-    # Exactly the six declared derived namespaces, and nothing else: an empty
-    # fact index leaves every ordinary profile binding unresolved too, so a
-    # wider count would mean the advisory had escaped its derived scope.
-    assert len(fired) == 6, sorted(str(d.binding_id) for d in fired)
+    # Exactly the declared derived bindings, and nothing else: an empty fact
+    # index leaves every ordinary profile binding unresolved too, so a wider
+    # set would mean the advisory had escaped its derived scope.
+    assert {str(d.binding_id) for d in fired} == {
+        "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-maternidad",
+        "renta-profile-descendientes-guarderia",
+        "renta-profile-guarderia-gastos-reales",
+        "renta-profile-incremento-guarderia",
+        "renta-profile-minimo-descendientes-autonomico",
+        "renta-profile-minimo-descendientes-estatal",
+    }
     assert all(d.source_kind == "profile" for d in fired)
     assert all("derives" in d.message or "derived" in d.message for d in fired)
 
@@ -208,7 +216,9 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile(
         operation=authority_operation,
     )
 
-    resolved = resolution.binding_values
+    # Each derived binding lands in the value channel its registry declaration
+    # names; the boolean régimen flag is not a decimal.
+    resolved = {**resolution.binding_values, **resolution.boolean_binding_values}
     for binding_id in (
         "renta-profile-minimo-descendientes-estatal",
         "renta-profile-minimo-descendientes-autonomico",
