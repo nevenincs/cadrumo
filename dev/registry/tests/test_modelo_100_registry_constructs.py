@@ -48,6 +48,7 @@ from ._modelo_100_registry_support import (
     _modelo_100_with_revision,
     _source_root,
 )
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -695,6 +696,9 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
         resolved.layout,
         payload,
         sources=snapshot.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+        },
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
@@ -740,6 +744,9 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         resolved.layout,
         payload,
         sources=snapshot.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+        },
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
@@ -762,7 +769,11 @@ def test_validator_rejects_construct_sources_without_official_guidance() -> None
         RegistryValidationError,
         match=r"construct .* requires official_source_guidance source evidence",
     ):
-        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+        RegistryValidator(
+            mutated_catalogues,
+            source_root=_source_root(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
@@ -778,7 +789,11 @@ def test_validator_rejects_construct_legal_refs_without_legal_authority() -> Non
         RegistryValidationError,
         match=r"construct .* legal ref .* is not legal authority",
     ):
-        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+        RegistryValidator(
+            mutated_catalogues,
+            source_root=_source_root(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
