@@ -183,6 +183,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceCapabilityDisposition,
+        ModeloWorkspaceCapabilityName,
+        ModeloWorkspaceRevisionAssertionDisposition,
+    )
     from cadrumo.application.operations.frontend_requests import (
         OperationCancellationRefusalCode,
         OperationResponseControlRefusalCode,
@@ -195,10 +200,18 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
     from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.revision_review import RevisionReviewStatus
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_tokens
+    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+    from cadrumo.domain.modelos.verification_report import (
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
     from cadrumo.domain.user_profile.values import ProfileSetupState
+    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
     from dev.locales._registry_scanner import scan_detail_row_fields
 
@@ -207,6 +220,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         apoderado_scope_values = tuple(
             scope.code.lower() for scope in load_default_catalogue(operation=operation).scopes
         )
+        descendant_relations = tuple(token.value for token in descendant_relacion_tokens(authority=operation))
     topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
     row_fields = scan_detail_row_fields()
 
@@ -291,6 +305,47 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="flows.modelo_select.column.* (work-select table columns)",
             key_factory=lambda v: f"flows.modelo_select.column.{v}",
             values=("modelo", "filing_year", "period", "name", "state"),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",
+            key_factory=lambda v: f"wizard.setup.descendientes.relacion.choices.{v}.label",
+            values=descendant_relations,
+        ),
+        *(
+            FStringKeyRegistration(
+                description=f"{prefix}.* (AccountActionV1)",
+                key_factory=lambda v, prefix=prefix: f"{prefix}.{v}",
+                values=tuple(action.value for action in AccountActionV1),
+            )
+            for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
+        ),
+        *(
+            FStringKeyRegistration(
+                description=f"tui.modelo.{leaf}.* ({enum.__name__})",
+                key_factory=lambda v, leaf=leaf: f"tui.modelo.{leaf}.{v}",
+                values=tuple(member.value for member in enum),
+            )
+            for leaf, enum in (
+                ("capability", ModeloWorkspaceCapabilityName),
+                ("disposition", ModeloWorkspaceCapabilityDisposition),
+                ("assertion", ModeloWorkspaceRevisionAssertionDisposition),
+                ("review_status", RevisionReviewStatus),
+                ("input_kind", InputKind),
+                ("finding_kind", ModeloVerificationFindingKind),
+                ("finding_severity", ModeloVerificationFindingSeverity),
+            )
+        ),
+        FStringKeyRegistration(
+            # Pinned to _OTHER_DESTINATIONS in entrypoints/tui/modelo/view/overview.py.
+            description="tui.modelo.destination.* (workspace read pages)",
+            key_factory=lambda v: f"tui.modelo.destination.{v}",
+            values=("inputs", "results", "verification", "provenance", "filing"),
+        ),
+        FStringKeyRegistration(
+            # The registry record families the workspace manifest discloses.
+            description="tui.modelo.record_family.* (schema record families)",
+            key_factory=lambda v: f"tui.modelo.record_family.{v}",
+            values=("bindings", "casillas", "formulas", "parameters", "relations"),
         ),
         FStringKeyRegistration(
             # Bounded enumeration, pinned to the _translated_error codes in

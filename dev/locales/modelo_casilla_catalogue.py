@@ -71,7 +71,10 @@ _DERIVED_HELP: Final = (
 _REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.(?P<revision>[^.]+)\.")
 #: Scaffold renderings standing in for a label that was never authored. Help text may
 #: legitimately open with its box number, so only labels are judged.
-_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci", re.IGNORECASE)
+_PLACEHOLDER: Final = re.compile(
+    r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
