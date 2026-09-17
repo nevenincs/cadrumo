@@ -857,7 +857,10 @@ def test_validator_rejects_unclassified_relation_source() -> None:
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
     modelo, revision = _modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
-    mutated_classification = classification.model_copy(update={"binding_refs": classification.binding_refs[:1]})
+    # A foreign binding in place of the modelo 111 one leaves the 111 relation uncovered.
+    mutated_classification = classification.model_copy(
+        update={"binding_refs": ("renta-modelo-123-retenciones-periodicas",)},
+    )
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -877,8 +880,8 @@ def test_schema_accepts_direct_previous_filing_classification_without_binding_re
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
     assert classification.treatment == "direct_annual_settlement"
-    assert classification.binding_refs == ()
-    assert classification.__class__.model_validate(classification.model_dump(mode="python")) == classification
+    without_refs = classification.model_copy(update={"binding_refs": ()})
+    assert without_refs.__class__.model_validate(without_refs.model_dump(mode="python")) == without_refs
 
 
 def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
@@ -897,7 +900,7 @@ def test_validator_rejects_direct_dependency_classification_without_relation_or_
 
     _assert_registry_validation_error(
         mutated_modelo,
-        match="must declare binding refs or cover direct previous_filing bindings",
+        match="does not cover binding refs",
     )
 
 
