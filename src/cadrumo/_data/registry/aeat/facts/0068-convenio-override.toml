@@ -6,7 +6,6 @@ family = "override"
 variant_id = "irnr.convenio.override.ar.pension.2025-01-01"
 selectors = [{ name = "country_code", value = "AR" }, { name = "tipo_renta", value = "pension" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-ar-1992:art-19", "trlirnr-rdleg-5-2004:art-25.1.b"]
 source_refs = ["boe-convenio-es-ar-1992-art-19"]
 review_status = "agent_reviewed"
@@ -58,7 +57,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.be.canones.2025-01-01"
 selectors = [{ name = "country_code", value = "BE" }, { name = "tipo_renta", value = "canones" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-be-1995:art-12"]
 source_refs = ["boe-convenio-es-be-1995-art-12"]
 review_status = "agent_reviewed"
@@ -76,7 +74,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.de.dividend.2025-01-01"
 selectors = [{ name = "country_code", value = "DE" }, { name = "tipo_renta", value = "dividend" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-de-2011:art-10"]
 source_refs = ["boe-convenio-es-de-2011-art-10"]
 review_status = "agent_reviewed"
@@ -94,7 +91,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.de.interest.2025-01-01"
 selectors = [{ name = "country_code", value = "DE" }, { name = "tipo_renta", value = "interest" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-de-2011:art-11"]
 source_refs = ["boe-convenio-es-de-2011-art-11"]
 review_status = "agent_reviewed"
@@ -110,7 +106,6 @@ override_code = "exempt"
 variant_id = "irnr.convenio.override.de.canones.2025-01-01"
 selectors = [{ name = "country_code", value = "DE" }, { name = "tipo_renta", value = "canones" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-de-2011:art-12"]
 source_refs = ["boe-convenio-es-de-2011-art-12"]
 review_status = "agent_reviewed"
@@ -126,7 +121,6 @@ override_code = "exempt"
 variant_id = "irnr.convenio.override.fr.dividend.2025-01-01"
 selectors = [{ name = "country_code", value = "FR" }, { name = "tipo_renta", value = "dividend" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-fr-1995:art-10"]
 source_refs = ["boe-convenio-es-fr-1995-art-10"]
 review_status = "agent_reviewed"
@@ -144,7 +138,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.fr.interest.2025-01-01"
 selectors = [{ name = "country_code", value = "FR" }, { name = "tipo_renta", value = "interest" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-fr-1995:art-11"]
 source_refs = ["boe-convenio-es-fr-1995-art-11"]
 review_status = "agent_reviewed"
@@ -162,7 +155,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.fr.canones.2025-01-01"
 selectors = [{ name = "country_code", value = "FR" }, { name = "tipo_renta", value = "canones" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-fr-1995:art-12"]
 source_refs = ["boe-convenio-es-fr-1995-art-12"]
 review_status = "agent_reviewed"
@@ -180,7 +172,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.gb.general.2025-01-01"
 selectors = [{ name = "country_code", value = "GB" }, { name = "tipo_renta", value = "general" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-gb-2013:art-6", "trlirnr-rdleg-5-2004:art-25.1.a"]
 source_refs = ["boe-convenio-es-gb-2013-art-6"]
 review_status = "agent_reviewed"
@@ -198,7 +189,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.ma.interest.2025-01-01"
 selectors = [{ name = "country_code", value = "MA" }, { name = "tipo_renta", value = "interest" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-ma-1978:art-11"]
 source_refs = ["boe-convenio-es-ma-1978-art-11"]
 review_status = "agent_reviewed"
@@ -252,7 +242,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.nl.canones.2025-01-01"
 selectors = [{ name = "country_code", value = "NL" }, { name = "tipo_renta", value = "canones" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-nl-1971:art-12"]
 source_refs = ["boe-convenio-es-nl-1971-art-12"]
 review_status = "agent_reviewed"
@@ -306,7 +295,6 @@ unit = "ratio"
 variant_id = "irnr.convenio.override.pt.canones.2025-01-01"
 selectors = [{ name = "country_code", value = "PT" }, { name = "tipo_renta", value = "canones" }]
 date_axis = "devengo_date"
-valid_from = 2025-01-01
 legal_refs = ["convenio-es-pt-1993:art-12"]
 source_refs = ["boe-convenio-es-pt-1993-art-12"]
 review_status = "agent_reviewed"

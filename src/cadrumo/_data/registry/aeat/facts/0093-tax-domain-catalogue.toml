@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "tax-domain-catalogue:2025-01-01"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-modelo-100-procedure"]
 review_status = "agent_reviewed"

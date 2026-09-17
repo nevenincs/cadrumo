@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-100-xml-export-declarations-mapping:2025"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 source_refs = ["boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"]
 review_status = "agent_reviewed"
 ownership = "authored"

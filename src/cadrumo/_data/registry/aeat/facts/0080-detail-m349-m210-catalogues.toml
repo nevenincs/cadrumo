@@ -180,7 +180,6 @@ entries = [
 [[fact.variants]]
 variant_id = "detail-m349-m210-catalogues:2025-01-01"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 valid_to = 2025-12-31
 legal_refs = ["orden-hac-174-2020:art-1"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure"]

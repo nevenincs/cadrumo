@@ -169,9 +169,11 @@ number = "43"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_43"
 continuidad_id = "dr303-43"
+input_kind = "bound"
+binding = "modelo-303-bienes-inversion-regularizacion-casilla-43"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
-# Casilla 44 is `input_kind = "manual"` with NO formula BY DECISION, not by
+# Casilla 44 is `input_kind = "bound"` with NO formula BY DECISION, not by
 # omission. LIVA art. 105.Cuatro settles the definitive prorrata in the year's
 # last declaracion-liquidacion and regularises the provisional deductions; the
 # regularisation amount therefore needs TWO operands that are not casillas of
@@ -210,6 +212,8 @@ number = "44"
 section = ["iva", "regimen_general", "deducible"]
 semantic_role = "dr303_44"
 continuidad_id = "dr303-44"
+input_kind = "bound"
+binding = "modelo-303-prorrata-regularizacion-casilla-44"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]

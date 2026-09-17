@@ -2751,6 +2751,8 @@ semantic_role = "iva_anual_regularizacion_prorrata_definitiva"
 continuidad_id = "iva-anual-regularizacion-prorrata-definitiva"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/13-390-ejercicio-2021-actualizado-25-11-2021-486-kb-xlsx.xlsx.extracted.md:319 (sha256 0164fbea6f50) prints box [522] (15 166 17 N 5. Operaciones Reg. Gral. - IVA deducible - Regularizac...); edition 2021 declares no row for it"
+input_kind = "bound"
+binding = "modelo-390-prorrata-regularizacion-anual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 

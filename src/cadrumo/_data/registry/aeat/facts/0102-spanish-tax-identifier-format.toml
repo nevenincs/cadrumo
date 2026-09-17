@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "spanish-tax-identifier-format:2025-01-01"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 legal_refs = ["rd-1065-2007:art-25"]
 source_refs = [
   "aeat-modelo-036-procedure",

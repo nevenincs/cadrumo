@@ -5,7 +5,6 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "impatriado-income-ledger-registry-mapping:2025"
 date_axis = "filing_period"
-valid_from = 2025-01-01
 # Modelo 151 is one annual filing; the selected M151 schedule declares only
 # the 0A period. Keep the fact selector aligned with this variant's 2025
 # effective boundary rather than admitting quarterly/monthly tokens.
