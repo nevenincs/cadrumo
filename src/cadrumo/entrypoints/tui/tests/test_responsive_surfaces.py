@@ -159,7 +159,14 @@ async def test_every_control_stays_reachable_by_keyboard_at_the_floor(
     app = ScreenHostApp(screen)
     async with app.run_test(size=SUPPORTED_TERMINAL_SIZES[0]) as pilot:
         await pilot.pause()
-        focusable = [widget for widget in app.screen.query(Widget) if widget.focusable]
+        # A control inside a collapsed disclosure is reached through that
+        # disclosure's own toggle, which is in the chain; only displayed
+        # controls must be directly tabbable.
+        focusable = [
+            widget
+            for widget in app.screen.query(Widget)
+            if widget.focusable and all(node.display for node in widget.ancestors_with_self if node is not app)
+        ]
         chain = list(app.screen.focus_chain)
         assert len(chain) == len(focusable), (
             f"{destination_id} mounts {len(focusable)} focusable controls at the floor "

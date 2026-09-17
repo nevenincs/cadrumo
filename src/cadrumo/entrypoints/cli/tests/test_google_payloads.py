@@ -69,8 +69,8 @@ def _base_compute_payload() -> dict[str, object]:
                 "casilla_id": _RENDIMIENTO_NETO_CASILLA,
                 "value": "20.00",
                 "formula_id": "m130-test-formula",
-                "legal_refs": [_LEGAL_REF],
-                "source_refs": [_SOURCE_REF],
+                "legal_refs": (_LEGAL_REF,),
+                "source_refs": (_SOURCE_REF,),
             },
         ],
     }
