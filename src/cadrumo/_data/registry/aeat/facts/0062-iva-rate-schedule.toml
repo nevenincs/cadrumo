@@ -168,11 +168,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["19"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["19"]
 [fact.variants.payload]
 kind = "mapping"
@@ -190,11 +193,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["7"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["7"]
 [fact.variants.payload]
 kind = "mapping"
@@ -212,11 +218,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["20"]
 [fact.variants.payload]
 kind = "mapping"
@@ -234,11 +243,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["10"]
 [fact.variants.payload]
 kind = "mapping"
@@ -278,11 +290,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["22"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["22"]
 [fact.variants.payload]
 kind = "mapping"
@@ -300,11 +315,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["10"]
 [fact.variants.payload]
 kind = "mapping"
@@ -344,11 +362,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -366,11 +387,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["9"]
 [fact.variants.payload]
 kind = "mapping"
@@ -388,11 +412,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -410,11 +437,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["12"]
 [fact.variants.payload]
 kind = "mapping"
@@ -432,11 +462,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["20"]
 [fact.variants.payload]
 kind = "mapping"
@@ -454,11 +487,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["10"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["10"]
 [fact.variants.payload]
 kind = "mapping"
@@ -476,11 +512,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["23"]
 [fact.variants.payload]
 kind = "mapping"
@@ -498,11 +537,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13"]
 [fact.variants.payload]
 kind = "mapping"
@@ -520,11 +562,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["23"]
 [fact.variants.payload]
 kind = "mapping"
@@ -542,11 +587,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13.5"]
 [fact.variants.payload]
 kind = "mapping"
@@ -564,11 +612,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["23"]
 [fact.variants.payload]
 kind = "mapping"
@@ -586,11 +637,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["8"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["8"]
 [fact.variants.payload]
 kind = "mapping"
@@ -608,11 +662,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["25"]
 [fact.variants.payload]
 kind = "mapping"
@@ -630,11 +687,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["12"]
 [fact.variants.payload]
 kind = "mapping"
@@ -652,11 +712,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["25"]
 [fact.variants.payload]
 kind = "mapping"
@@ -674,11 +737,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["25.5"]
 [fact.variants.payload]
 kind = "mapping"
@@ -719,11 +785,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2026-01-01
-source_refs = ["fi-vero-iva-rate-change-2026"]
+source_refs = ["fi-vero-iva-rate-change-2026", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "fi-vero-iva-rate-change-2026"
+required_text = ["13.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13.5"]
 [fact.variants.payload]
 kind = "mapping"
@@ -741,11 +810,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["27"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["27"]
 [fact.variants.payload]
 kind = "mapping"
@@ -763,11 +835,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["18"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["18"]
 [fact.variants.payload]
 kind = "mapping"
@@ -785,11 +860,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["24"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["24"]
 [fact.variants.payload]
 kind = "mapping"
@@ -807,11 +885,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13"]
 [fact.variants.payload]
 kind = "mapping"
@@ -829,11 +910,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -851,11 +935,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["12"]
 [fact.variants.payload]
 kind = "mapping"
@@ -873,11 +960,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["23"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["23"]
 [fact.variants.payload]
 kind = "mapping"
@@ -895,11 +985,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["5"]
 [fact.variants.payload]
 kind = "mapping"
@@ -917,11 +1010,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["17"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["17"]
 [fact.variants.payload]
 kind = "mapping"
@@ -939,11 +1035,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["8"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["8"]
 [fact.variants.payload]
 kind = "mapping"
@@ -961,11 +1060,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["20"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["20"]
 [fact.variants.payload]
 kind = "mapping"
@@ -983,11 +1085,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["25"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["25"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1005,11 +1110,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["13"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1027,11 +1135,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["19"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["19"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1049,11 +1160,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["9"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1094,11 +1208,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["ee-emta-iva-rate-change-2025"]
+source_refs = ["ee-emta-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "ee-emta-iva-rate-change-2025"
+required_text = ["24"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["24"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1116,11 +1233,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1138,11 +1258,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["12"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1160,11 +1283,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1205,11 +1331,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2026-01-01
-source_refs = ["lt-vmi-iva-rate-change-2026"]
+source_refs = ["lt-vmi-iva-rate-change-2026", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lt-vmi-iva-rate-change-2026"
+required_text = ["12"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["12"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1227,11 +1356,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["18"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["18"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1249,11 +1381,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["7"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["7"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1294,11 +1429,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-08-01
-source_refs = ["ro-anaf-iva-rate-change-2025"]
+source_refs = ["ro-anaf-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["21"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["21"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1339,11 +1477,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-08-01
-source_refs = ["ro-anaf-iva-rate-change-2025"]
+source_refs = ["ro-anaf-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "ro-anaf-iva-rate-change-2025"
+required_text = ["11"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["11"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1361,11 +1502,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["22"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["22"]
 [fact.variants.payload]
 kind = "mapping"
@@ -1383,11 +1527,14 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-07-01
-source_refs = ["eu-eprs-iva-rates-2025-07-01"]
+source_refs = ["eu-eprs-iva-rates-2025-07-01", "eu-your-europe-iva-rates-2026-07-13"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "eu-eprs-iva-rates-2025-07-01"
+required_text = ["9.5"]
+[[fact.variants.source_citations]]
+source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["9.5"]
 [fact.variants.payload]
 kind = "mapping"
