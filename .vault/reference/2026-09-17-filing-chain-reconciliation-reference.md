@@ -86,3 +86,36 @@ This section is a survey of official sources, paraphrased. The locators are BOE 
 - Uncertain: the exact position of the M303 prior-justificante field in the record design; the M111, M115, M130, M131 and M202 status (absence of evidence only); and the RD 117/2024 article numbering, which comes from a secondary source.
 
 Consequence for the model: the chain is linear. Each correction supersedes the previous in-force declaration and references its justificante, and the latest AEAT-accepted entry is the one in force.
+
+### Surfaces
+
+CLI leaves:
+- **`aeat app modelo work file`**: spec `src/cadrumo/entrypoints/cli/modelo_work_command_specs.py:417`, handler `_modelo_work_verification_cli.py:367`.
+- **`work amend`**: `_modelo.py:392`.
+- **`work amend-wizard`**: spec `modelo_work_command_specs.py:437`, handler `_modelo_amend_wizard_cli.py:188`, payload `_modelo_amend_wizard_payloads.py:44`.
+- **`filing-record import`**: spec `_modelo_nonwork_filing_record_command_specs.py:73`, handler `_modelo_records_cli.py:252`.
+- **`filing-record observe-local`**: spec `:137`, handler `_modelo_records_cli.py:352`; it carries `--replace-official-evidence` at `:360`.
+- **`filing-record list` and `view`**: specs `:33` and `:56`, handlers `_modelo_records_cli.py:194` and `:238`.
+- **`aeat app live filed pull`**:
+  - spec `_app_live_foundation_command_specs.py:154`;
+  - handler `_app_live.py:1567`, which calls `capture_filed_data` and `capture_filed_data_bulk` (`src/cadrumo/application/live/filed_data_capture.py`);
+  - payload `_app_live_filed_payloads.py`;
+  - the real `SedeFiledDataCapturePort` is built inline by `compose_live_state()` (`src/cadrumo/entrypoints/live_state_composition.py:278`).
+- **`aeat app modelo reconcile`** (`_modelo_reconcile_cli.py`): compares a revision with a justificante or declaración PDF (`src/cadrumo/application/modelo/reconciliation.py:337`, receipt totals `:818`, casillas `:1025`). It does not touch the filing chain.
+
+TUI:
+- `src/cadrumo/entrypoints/tui/declarations/filing_history.py:73` renders the filings and lifecycle read-only.
+- `controller.py:142` accepts an unused `filing_handoff` seam.
+- `action_guards.py:27` declares only read actions.
+- Pilot tests: `entrypoints/tui/declarations/tests/test_declarations_workspace.py:469`.
+
+Live CLI test harness:
+- `src/cadrumo/entrypoints/cli/tests/cli_runner.py:74` (`invoke_cached_cli`);
+- profile fixtures `_cli_surface_profile_fixture.py:15` and `modelo_profile_seed.py:26`;
+- work-unit helpers `modelo_cli.py:14` and `_modelo_work_ux_support.py:116` (M130), `:125` (M303), `:168`;
+- baseline seeding `test_modelo_amend_wizard.py:182`, `:207` and `:224`.
+
+Non-live pull:
+- `finalize_filed_capture` (`src/cadrumo/application/live/filed_capture_finalizer.py:59`) and `capture_filed_data*` take `filed_data_port` and `FiledObservationPersistencePorts` (`filed_observation_ports.py:91`, `:324`) as parameters.
+- In-memory fakes live in `src/cadrumo/application/live/tests/filed_observation_test_support.py:500`.
+- The CLI has no seam: the Sede port is constructed inline in the composition root.

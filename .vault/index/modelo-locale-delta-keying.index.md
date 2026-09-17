@@ -6,9 +6,10 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d4d1cf0257d6c2be04e61faf3679f465023e07f6b6fc41e6e0421c7c45eb27f'
+body_hash: 'sha256:5b1fd388914d3003ba69fd626f086eeb93a864b2b3fcf1fa8b8a01f553ed4e65'
 related:
   - '[[2026-09-17-modelo-locale-delta-keying-adr]]'
+  - '[[2026-09-17-modelo-locale-delta-keying-ledger]]'
   - '[[2026-09-17-modelo-locale-delta-keying-plan]]'
   - '[[2026-09-17-modelo-locale-delta-keying-research]]'
 ---
@@ -21,7 +22,11 @@ Auto-generated index of all documents tagged with `#modelo-locale-delta-keying`.
 
 ### adr
 
-- `2026-09-17-modelo-locale-delta-keying-adr` - `modelo-locale-delta-keying` adr: `modelo locale delta keying and derived-text removal` | (**status:** `proposed`)
+- `2026-09-17-modelo-locale-delta-keying-adr` - `modelo-locale-delta-keying` adr: `modelo locale delta keying and derived-text removal` | (**status:** `accepted`)
+
+### exec
+
+- `2026-09-17-modelo-locale-delta-keying-ledger` - `modelo-locale-delta-keying` ledger
 
 ### plan
 
