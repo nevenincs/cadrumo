@@ -17,17 +17,20 @@ from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation, IvaLedgerObservationRole
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.components import registry_category_projection
 from ...domain.iva.flow import (
     derive_flow_for_classification,
     is_inversion_sujeto_pasivo_flow,
 )
-from ...domain.iva.invoice_classification import invoice_line_to_iva_observation
+from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
@@ -35,6 +38,7 @@ from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
+from .iva_ledger import validate_intracom_export_counterparty
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -120,6 +124,7 @@ def _invoice_line_iva_observation(
     base_amount_eur: Decimal,
     iva_amount_eur: Decimal,
     deduction_authority: IvaLedgerObservation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation | None:
     """Project one invoice line into the observation the screen declares from.
 
@@ -168,6 +173,8 @@ def _invoice_line_iva_observation(
             shape as *base_amount_eur*.
         deduction_authority: Exact frozen transaction-ledger authority linked
             to a received invoice, or ``None`` for an issued invoice.
+        operation: Generation-pinned authority the declared category and the
+            counterparty gate are resolved against.
 
     Returns:
         The observation to declare from, or ``None`` when the line routes
@@ -194,6 +201,7 @@ def _invoice_line_iva_observation(
         base_amount_eur=base_amount_eur,
         iva_amount_eur=iva_amount_eur,
         deduction_authority=deduction_authority,
+        operation=operation,
     )
 
 
@@ -207,6 +215,7 @@ def _invoice_line_iva_observation_without_iva(
     base_amount_eur: Decimal,
     iva_amount_eur: Decimal,
     deduction_authority: IvaLedgerObservation | None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaLedgerObservation | None:
     if invoice.iva_category is None:
         # Without a declared category, the rate slot is the only signal and the
@@ -220,9 +229,83 @@ def _invoice_line_iva_observation_without_iva(
             base_amount_eur=base_amount_eur,
             iva_amount_eur=iva_amount_eur,
         )
-    # A declared category is registry-owned. Until the selected revision is
-    # supplied at this seam, refuse to invent a base-only route or flow.
-    return None
+    category = _declared_invoice_category(invoice, devengo_date=devengo_date, operation=operation)
+    if category is None or _invoice_category_counterparty_contradicted(
+        invoice,
+        category=category,
+        devengo_date=devengo_date,
+        operation=operation,
+    ):
+        return None
+    # The rate slot still supplies the rate kind and the applied rate; only the
+    # category, and the flow it implies, come from the invoice's declaration --
+    # the order the bank-transaction feed resolves them in.
+    classification = classify_invoice_line_for_iva(
+        iva_rate=line.iva_rate,
+        invoice_kind=invoice.kind,
+        on_date=devengo_date,
+    )
+    if classification.rate_kind is None:
+        return None
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=devengo_date,
+        category=category,
+        rate_kind=classification.rate_kind,
+        flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
+        base_amount=base_amount_eur,
+        iva_amount=iva_amount_eur,
+        recargo_amount=recargo_amount,
+        applied_rate=iva_rate_percentage(line.iva_rate, devengo_date),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
+        deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
+        investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
+        rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+    )
+
+
+def _declared_invoice_category(
+    invoice: Invoice,
+    *,
+    devengo_date: date,
+    operation: PinnedAuthorityOperation,
+) -> IvaCategory | None:
+    """Return the invoice's declared category when it produces a ledger IVA observation."""
+    if invoice.iva_category is None:
+        return None
+    category = resolve_iva_category_catalogue(effective_date=devengo_date, authority=operation).require(
+        invoice.iva_category,
+    )
+    if category in registry_category_projection(
+        "m303_base_out_of_scope",
+        effective_date=devengo_date,
+        authority=operation,
+    ):
+        return None
+    return category
+
+
+def _invoice_category_counterparty_contradicted(
+    invoice: Invoice,
+    *,
+    category: IvaCategory,
+    devengo_date: date,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether the counterparty contradicts the declared category, under the bank feed's gate."""
+    return (
+        validate_intracom_export_counterparty(
+            transaction_id=f"invoice:{invoice.invoice_id}",
+            category=category,
+            counterparty_country=invoice.counterparty_country,
+            eu_member_state=None,
+            identification_state=invoice.counterparty_identification_state,
+            effective_date=devengo_date,
+            operation=operation,
+        )
+        is not None
+    )
 
 
 def _standard_invoice_line_iva_observation(
@@ -287,9 +370,12 @@ def _reverse_charge_cuota_not_derivable(invoice: Invoice) -> bool:
         ),
     ):
         return False
-    # A rate-bearing line supplies its own evidence. No local tier catalogue is
-    # retained here; an unresolved selected revision must refuse the gate.
-    return all(getattr(line.iva_rate, "value", None) is None for line in invoice.lines)
+    # A rate-bearing line supplies its own evidence. Whether a slot carries a
+    # rate is the registry's answer for the invoice date, not a local tier list.
+    return not any(
+        (iva_rate_percentage(line.iva_rate, invoice.issued_at) or Decimal("0")) > Decimal("0")
+        for line in invoice.lines
+    )
 
 
 def category_counterparty_mismatch_diagnostics(
@@ -685,19 +771,27 @@ def _screened_invoice_iva_result(
         and any(line.iva_amount > Decimal("0") for line in invoice.lines)
         and deduction_authority is None
     )
+    declared_category = _declared_invoice_category(invoice, devengo_date=devengo.devengo_date, operation=operation)
+    category_counterparty_mismatch = declared_category is not None and _invoice_category_counterparty_contradicted(
+        invoice,
+        category=declared_category,
+        devengo_date=devengo.devengo_date,
+        operation=operation,
+    )
     observations: tuple[IvaLedgerObservation, ...] = ()
-    if not deduction_authority_missing:
+    if not deduction_authority_missing and not category_counterparty_mismatch:
         observations = _screened_invoice_line_observations(
             invoice,
             devengo_date=devengo.devengo_date,
             deduction_authority=deduction_authority,
+            operation=operation,
         )
     return _ScreenedInvoiceIvaResult(
         observations=observations,
         reverse_charge_underivable=reverse_charge_underivable,
         recargo_rate_divergence=recargo_rate_divergence,
         deduction_authority_missing=deduction_authority_missing,
-        category_counterparty_mismatch=False,
+        category_counterparty_mismatch=category_counterparty_mismatch,
     )
 
 
@@ -706,6 +800,7 @@ def _screened_invoice_line_observations(
     *,
     devengo_date: date,
     deduction_authority: IvaLedgerObservation | None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[IvaLedgerObservation, ...]:
     """Return the line observations eligible for one invoice comparison."""
     recargo_line_index = _sole_recargo_bearing_line_index(invoice)
@@ -753,6 +848,7 @@ def _screened_invoice_line_observations(
             base_amount_eur=base_amount_eur,
             iva_amount_eur=iva_amount_eur,
             deduction_authority=deduction_authority,
+            operation=operation,
         )
         if observation is not None:
             observations.append(observation)
