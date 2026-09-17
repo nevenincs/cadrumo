@@ -78,6 +78,8 @@ _PLACEHOLDER: Final = re.compile(
     re.IGNORECASE,
 )
 
+#: A value that a length limit cut mid-text and closed with an ellipsis.
+_TRUNCATED: Final = re.compile(r"\w(?:\.\.\.|…)\s*$")
 #: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
 #: alternations standing alone, and Spanish function words left untranslated.
 _GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
@@ -232,6 +234,8 @@ class CatalogueFindings:
     placeholders: dict[str, tuple[str, ...]] = field(default_factory=dict)
     glossary_artifacts: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, translations a word-by-word glossary pass produced."""
+    truncated_text: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, values cut short and closed with an ellipsis."""
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -256,6 +260,7 @@ class CatalogueFindings:
             "derived_help": total(self.derived_help),
             "placeholders": total(self.placeholders),
             "glossary_artifacts": total(self.glossary_artifacts),
+            "truncated_text": total(self.truncated_text),
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
@@ -290,6 +295,7 @@ class CatalogueFindings:
                 any(self.derived_help.values()),
                 any(self.placeholders.values()),
                 any(self.glossary_artifacts.values()),
+                any(self.truncated_text.values()),
                 any(self.translation_drift.values()),
                 any(self.stranded_translations.values()),
                 any(self.stale_translations.values()),
@@ -422,6 +428,9 @@ class ModeloCasillaCatalogue:
                 if artifact is None
                 else tuple(sorted(key for key, value in leaves.items() if value and artifact.search(value)))
             )
+            found.truncated_text[locale] = tuple(
+                sorted(key for key, value in leaves.items() if value and _TRUNCATED.search(value))
+            )
             found.redundant_values[locale] = tuple(
                 sorted(key for key, reason in plan.plan.removals.get(locale, {}).items() if reason == "redundant")
             )
@@ -551,6 +560,18 @@ class ModeloCasillaCatalogue:
             else:
                 untranslated.append((group, f"{occurrence.modelo}/{occurrence.revision}/{occurrence.casilla}"))
         return tuple(sorted(label for group, label in untranslated if group in translated))
+
+    def served_sources(self, locale: str) -> dict[str, frozenset[str]]:
+        """Return, for each ``locale`` key that serves a text, the Spanish texts it renders."""
+        lookup = self.lookup_for(self.values)
+        sources: dict[str, set[str]] = defaultdict(set)
+        for index, occurrence in enumerate(self.occurrences):
+            for field_name in _FIELDS:
+                source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE)
+                if source is not None and source[1] == locale and spanish is not None:
+                    sources[source[0]].add(spanish)
+        return {key: frozenset(texts) for key, texts in sources.items()}
 
     # -- collapse ---------------------------------------------------------
 

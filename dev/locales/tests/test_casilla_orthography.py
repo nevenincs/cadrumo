@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from dev.locales import casilla_orthography
-from dev.locales.casilla_orthography import unaccented_words
+from dev.locales.casilla_orthography import spanish_leftovers, unaccented_words
 from dev.locales.modelo_casilla_catalogue import Values
 
 pytestmark = [pytest.mark.hex_domain]
@@ -69,3 +69,30 @@ def test_quoted_identifiers_and_truncated_words_are_not_prose() -> None:
     values: Values = {"es": {_KEY: "Ver contraparte.pais-codigo y m131-modulos-coeficientes; ejerci... Codigo"}}
 
     assert {item.word for item in unaccented_words(values)} == {"Codigo"}
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_untranslated_spanish_words_are_reported_outside_quotations() -> None:
+    values: Values = {
+        "en": {
+            "modelo.schema.100.casilla.continuidad.a.label": "Deduction for obras realizadas in the home",
+            "modelo.schema.100.casilla.continuidad.b.label": "Donations to «Fundación para obras sociales»",
+            "modelo.schema.100.casilla.continuidad.c.label": "Box contraparte.importe of modelo 347",
+            "modelo.schema.100.casilla.continuidad.d.label": "Applied - Deducción por inversión en beneficios",
+        },
+    }
+    sources = {
+        "en": {
+            "modelo.schema.100.casilla.continuidad.a.label": frozenset(
+                {"Deducción por obras realizadas en la vivienda"}
+            ),
+            "modelo.schema.100.casilla.continuidad.d.label": frozenset(
+                {"Aplicado - Deducción por inversión en beneficios"}
+            ),
+        },
+    }
+
+    found = {(item.key, item.words) for item in spanish_leftovers(values, sources)}
+
+    assert found == {("modelo.schema.100.casilla.continuidad.a.label", ("obras", "realizadas"))}
