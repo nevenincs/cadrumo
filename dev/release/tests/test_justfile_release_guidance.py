@@ -93,17 +93,20 @@ def _cohort_build_and_fanout_positions(source: str) -> tuple[int, int, int]:
 
 def _build_moved_into_the_worker_pool(source: str) -> str:
     """Return the driver with its cohort build relocated inside `_run_form`."""
+    # The driver builds the cohort only when no sealed cohort was adopted, so
+    # the call sits one level inside ``main``; relocating it leaves ``pass``.
     block = (
-        "    _run_step(\n"
-        '        [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
-        "        repo_root,\n"
-        '        "build-cohort",\n'
-        "    )\n"
+        "        _run_step(\n"
+        '            [sys.executable, "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
+        "            repo_root,\n"
+        '            "build-cohort",\n'
+        "        )\n"
     )
+    relocated = "".join(f"{line[4:]}\n" for line in block.splitlines())
     seat = "    _lane, form = resolve_form(selector)\n"
     assert source.count(block) == 1, "cohort build block anchor moved"
     assert source.count(seat) == 1, "_run_form seat anchor moved"
-    return source.replace(block, "", 1).replace(seat, block + seat, 1)
+    return source.replace(block, "        pass\n", 1).replace(seat, relocated + seat, 1)
 
 
 def test_release_apply_is_absent_from_the_justfile() -> None:
@@ -148,7 +151,7 @@ def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() ->
 
 def test_doctor_invokes_the_aeat_human_cli() -> None:
     """The rendered workstation doctor uses the sole human CLI executable."""
-    rendered = _render_recipe("doctor")
+    rendered = _render_recipe("doctor-product")
 
     assert "aeat config check" in rendered
     assert "cadrumo config check" not in rendered
@@ -164,7 +167,7 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     parsed structure pins the ordering; every portable lane consumes the cohort
     directory by construction (`takes_cohort`).
     """
-    rendered = _render_recipe("packaging-smoke")
+    rendered = _render_recipe("test-packaging-portable")
     assert "dev.packaging.campaign --profile portable" in rendered
 
     from dev.packaging.campaign import COHORT_DIR, PROFILES, resolve_form

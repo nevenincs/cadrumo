@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from cadrumo.adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from cadrumo.adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
-from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError, StorageValidationError
+from cadrumo.adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from cadrumo.adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
 )
@@ -58,12 +58,13 @@ from cadrumo.application.live.remote_state_models import (
 )
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
+from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports, compose_live_state
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
 _TARGET_1T = Period.from_year_and_code(2026, "1T")
@@ -765,7 +766,7 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
             target_period=_TARGET_1T,
         )
 
-        with pytest.raises(StorageValidationError):
+        with pytest.raises(NoActiveProfileError):
             persist_iva_remote_state_acquisition_report(
                 report,
                 ports=_remote_state_port(tmp_path / "remote-state"),
@@ -774,7 +775,7 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
 
 
 def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
         ports = _remote_state_port(tmp_path / "remote-state")
 
         async def run() -> None:
@@ -790,7 +791,7 @@ def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> 
 
 
 def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
         ports = _remote_state_port(tmp_path / "remote-state")
 
         async def run() -> None:
@@ -800,7 +801,7 @@ def test_standalone_iva_wallet_capture_refuses_without_active_profile(tmp_path: 
 
 
 def test_standalone_iva_history_capture_refuses_without_active_profile(tmp_path: Path) -> None:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
+    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(NoActiveProfileError):
         ports = _remote_state_port(tmp_path / "history")
 
         async def run() -> None:

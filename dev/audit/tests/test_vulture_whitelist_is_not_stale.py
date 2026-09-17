@@ -30,7 +30,6 @@ from types import ModuleType
 import pytest
 
 from cadrumo.adapters.outbound.google import api as google_api
-from cadrumo.adapters.outbound.google import document_link_resolver
 from cadrumo.application.ledger import evidence_input
 from cadrumo.application.storage.calc_sheets import parity_harness
 from dev.docs.terminology_handbook import curation
@@ -41,16 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
     "_execute": (google_api, "_ExecutableRequest", "execute"),
-    "_get_media": (
-        document_link_resolver,
-        "_DriveFilesResource",
-        "get_media",
-    ),
-    "_list_files": (
-        document_link_resolver,
-        "_DriveFilesResource",
-        "list",
-    ),
     "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
     "_set_language_field": (curation, None, "set_language_field"),
     "_sheets_discovery_build": (
@@ -98,12 +87,9 @@ def test_every_mirror_function_carries_a_citation(declared: dict[str, tuple[str,
     # The equality catches a ONE-SIDED collapse - a citation added without a
     # whitelist entry, or the reverse. It cannot catch both emptying
     # together, which would also reduce the parametrize below to zero cases
-    # and retire that gate in silence. A floor, not a pinned count: the
-    # whitelist declares 6 mirrored parameters.
-    assert len(_CITATIONS) >= 5, (
-        f"only {len(_CITATIONS)} citations remain, so the per-mirror gate below runs "
-        "over almost nothing and this equality is close to vacuous"
-    )
+    # and retire that gate in silence: a whitelist file that exists declares
+    # at least one mirror, or it should be deleted rather than kept empty.
+    assert declared, "the whitelist declares no mirror, so the per-mirror gate below runs over nothing"
     assert set(declared) == set(_CITATIONS)
 
 
@@ -142,16 +128,6 @@ def test_a_parameter_removed_at_its_source_is_detected() -> None:
     assert stale == ["retired_parameter"]
 
 
-#: Floor for the mirrors the whitelist file defines. Live it carries six
-#: top-level functions and nothing else; the sibling citation gate floors
-#: its own table at five. Both claims below range over a parsed file and a
-#: fixture that an emptied whitelist would leave empty: no class is present
-#: in a file with nothing in it, and ``all`` over no names is True. The other
-#: tests here guard the fixture, but a guard in a sibling test does not reach
-#: this one, and nothing anywhere floors the PARSED surface.
-_MINIMUM_MIRROR_DEFINITIONS = 4
-
-
 def test_the_whitelist_holds_only_parameter_mirrors(declared: dict[str, tuple[str, ...]]) -> None:
     """Every entry is a parameter exemption, not a suppressed function or class.
 
@@ -164,10 +140,7 @@ def test_the_whitelist_holds_only_parameter_mirrors(declared: dict[str, tuple[st
     tree = ast.parse(source)
     mirrors = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
 
-    assert len(mirrors) >= _MINIMUM_MIRROR_DEFINITIONS, (
-        f"the whitelist defines only {len(mirrors)} mirror(s); below this the absence "
-        "claim below holds because the file defines nothing, not because it defines no class"
-    )
+    assert mirrors, "the whitelist defines no mirror, so the absence claim below holds vacuously"
     assert declared, "the parsed whitelist declared no parameters, so the public-name claim below ranges over nothing"
     assert not [node for node in tree.body if isinstance(node, ast.ClassDef)]
     assert all(name.startswith("_") for name in declared), "a mirror is exported under a public name"

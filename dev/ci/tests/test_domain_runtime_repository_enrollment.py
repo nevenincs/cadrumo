@@ -21,7 +21,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
 
@@ -57,7 +57,7 @@ def _invoice(bucket_id: str) -> Invoice:
             quantity=Decimal("1"),
             unit_price=Decimal("100.00"),
             subtotal=Decimal("100.00"),
-            iva_rate=IvaRate.from_registry("rate_21"),
+            iva_rate=IvaRate.from_registry("RATE_21"),
             iva_amount=Decimal("21.00"),
         )
         return Invoice.model_validate(

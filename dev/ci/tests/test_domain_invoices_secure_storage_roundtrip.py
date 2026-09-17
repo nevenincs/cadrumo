@@ -62,7 +62,7 @@ from cadrumo.domain.iva.classification import InvoiceKind, TransactionKind, requ
 from cadrumo.domain.iva.oss import OssIossRegime, require_oss_ioss_regime
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # Mirrors the persistence contract declared in
 # ``adapters/persistence/profile/invoices.py`` (namespace, object key, and

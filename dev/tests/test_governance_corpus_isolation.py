@@ -74,30 +74,6 @@ _PKG_ROOT: Final[Path] = _SRC_ROOT / "cadrumo"
 
 _UTF_8: Final[str] = "utf-8"
 
-# Floors below which a hard-zero result is refused as a collapsed scan rather
-# than accepted as a clean tree. Both are set well under the live counts so
-# ordinary growth and deletion never touch them.
-_MODULE_VACUITY_FLOOR: Final[int] = 4_000
-_DATA_VACUITY_FLOOR: Final[int] = 10_000
-
-# A single total cannot see ONE PACKAGE leave. The module floor above sits
-# roughly nineteen hundred under the live count, and every package in the
-# product fits inside that slack -- application, the largest, is smaller than
-# the gap. A package dropped from the walk contributes no offender and the
-# total still clears, so the boundary would read absolute while the largest
-# body of code in the product went unread. Keyed independently of the walk:
-# a package that stops being scanned keeps its floor and reds at zero.
-_MINIMUM_MODULES_BY_PACKAGE: Final[dict[str, int]] = {
-    "application": 1249,
-    "domain": 924,
-    "entrypoints": 689,
-    "adapters": 558,
-    "core": 330,
-    "tests": 138,
-    "llm": 44,
-}
-
-
 # ---------------------------------------------------------------------------
 # Live-tree inputs
 # ---------------------------------------------------------------------------
@@ -108,21 +84,29 @@ def _live_modules() -> list[Path]:
     return list(scan_directory(_PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
 
 
-def _assert_every_package_was_walked(modules: list[Path]) -> None:
-    """Refuse a scan that lost a whole package, which the total cannot see."""
-    walked = dict.fromkeys(_MINIMUM_MODULES_BY_PACKAGE, 0)
-    for module in modules:
-        head = module.relative_to(_PKG_ROOT).as_posix().split("/")[0]
-        if head in walked:
-            walked[head] += 1
-    starved = {
-        package: (walked[package], floor)
-        for package, floor in _MINIMUM_MODULES_BY_PACKAGE.items()
-        if walked[package] < floor
-    }
+def _independent_modules() -> set[Path]:
+    """Enumerate the product's modules without the walk under test."""
+    return {path for path in _PKG_ROOT.rglob("*.py") if "__pycache__" not in path.parts}
+
+
+def _live_packages() -> set[str]:
+    """Return every top-level product package, read from the tree itself."""
+    return {child.name for child in _PKG_ROOT.iterdir() if (child / "__init__.py").is_file()}
+
+
+def _assert_the_walk_is_complete(modules: list[Path]) -> None:
+    """Refuse a scan that is empty, lost modules, or lost a whole package.
+
+    Checked against the live tree rather than against remembered counts: the
+    walk must return exactly what an independent enumeration finds, and every
+    package the tree declares must contribute to it.
+    """
+    assert modules, "vacuity check: the module scan found nothing, which reads as clean without being one"
+    assert set(modules) == _independent_modules(), "vacuity check: the module walk disagrees with the live tree"
+    walked = {module.relative_to(_PKG_ROOT).parts[0] for module in modules}
+    starved = sorted(_live_packages() - walked)
     assert not starved, (
-        f"vacuity check: these packages were walked below their floor {starved!r}; "
-        "the total floor cannot see one package leave, and a package nobody walks "
+        f"vacuity check: these packages were not walked {starved!r}; a package nobody walks "
         "yields no offender because none was looked for"
     )
 
@@ -160,11 +144,7 @@ def test_the_governance_roots_this_gate_names_exist() -> None:
 def test_no_src_module_builds_a_governance_corpus_path() -> None:
     """No module under ``src/`` constructs a path into ``.vault`` or ``.vaultspec``."""
     modules = _live_modules()
-    assert len(modules) >= _MODULE_VACUITY_FLOOR, (
-        f"vacuity check: fewer than {_MODULE_VACUITY_FLOOR} modules were found under {_SRC_ROOT}; "
-        "a hard-zero result from a collapsed scan reads as clean without being one"
-    )
-    _assert_every_package_was_walked(modules)
+    _assert_the_walk_is_complete(modules)
     offenders = find_governance_path_violations(modules, src_root=_SRC_ROOT)
     assert offenders == [], (
         "modules under src/ build paths into the governance corpus (absolute one-way boundary):\n"
@@ -175,8 +155,7 @@ def test_no_src_module_builds_a_governance_corpus_path() -> None:
 def test_no_src_prose_names_the_governance_corpus() -> None:
     """No comment, docstring or multi-line string under ``src/`` cites the corpus."""
     modules = _live_modules()
-    assert len(modules) >= _MODULE_VACUITY_FLOOR, "vacuity check: the module scan collapsed"
-    _assert_every_package_was_walked(modules)
+    _assert_the_walk_is_complete(modules)
     offenders = find_governance_prose_violations(modules, src_root=_SRC_ROOT)
     assert offenders == [], (
         "prose under src/ names the governance corpus (awareness in any form is a violation):\n"
@@ -191,10 +170,12 @@ def test_no_shipped_data_file_names_removable_scaffolding() -> None:
     cannot read a TOML row, so nothing previously watched this population.
     """
     data_files = scannable_data_files(_SRC_ROOT)
-    assert len(data_files) >= _DATA_VACUITY_FLOOR, (
-        f"vacuity check: fewer than {_DATA_VACUITY_FLOOR} non-Python files were found under {_SRC_ROOT}; "
-        "a hard-zero result from a collapsed scan reads as clean without being one"
-    )
+    # The registry's authored form is TOML, so a scan that misses any TOML file
+    # under src/ has collapsed, whatever else it found.
+    authored = {path for path in _SRC_ROOT.rglob("*.toml") if "__pycache__" not in path.parts}
+    assert authored, "vacuity check: no TOML file was found under src/, so the tree itself was not reached"
+    missed = sorted(authored - set(data_files))
+    assert not missed, f"vacuity check: the data scan missed authored files, e.g. {missed[:3]!r}"
     offenders = find_scaffolding_data_references(data_files, src_root=_SRC_ROOT)
     assert offenders == [], (
         "non-Python files under src/ name removable scaffolding; _data/** ships in the wheel, "

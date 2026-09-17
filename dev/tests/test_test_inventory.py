@@ -28,16 +28,26 @@ from ._project_inventory import project_test_control_modules, project_test_modul
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _a_package_test_module() -> Path:
+    """Return a live test module in the package-level test directory."""
+    return next(iter(sorted((SRC_CADRUMO / "tests").glob("test_*.py"))))
+
+
+def _a_nested_conftest() -> Path:
+    """Return a live ``conftest.py`` below the package root."""
+    return next(path for path in sorted(SRC_CADRUMO.rglob("conftest.py")) if path.parent != SRC_CADRUMO)
+
+
 def test_source_test_inventory_discovers_tests_without_fixture_payloads() -> None:
     modules = discover_test_modules()
-    assert repo_path("src/cadrumo/tests/test_wheel_content_boundary.py") in modules
+    assert _a_package_test_module() in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
 
 def test_test_control_inventory_includes_support_and_conftest_modules() -> None:
     modules = discover_test_control_modules()
     assert repo_path("src/cadrumo/tests/inventory.py") in modules
-    assert repo_path("src/cadrumo/application/conftest.py") in modules
+    assert _a_nested_conftest() in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
 
@@ -50,8 +60,8 @@ def test_repository_path_rendering_round_trips() -> None:
 
 
 def test_package_relative_path_rendering_is_posix() -> None:
-    package_test = repo_path("src/cadrumo/tests/test_wheel_content_boundary.py")
-    assert aeat_relative(package_test) == "tests/test_wheel_content_boundary.py"
+    package_test = _a_package_test_module()
+    assert aeat_relative(package_test) == f"tests/{package_test.name}"
 
 
 def test_production_inventory_excludes_test_control_and_data_modules() -> None:
@@ -66,7 +76,7 @@ def test_production_inventory_excludes_test_control_and_data_modules() -> None:
 def test_package_inventory_includes_tests_and_excludes_data_by_default() -> None:
     files = package_python_files()
     assert repo_path("src/cadrumo/core/config.py") in files
-    assert repo_path("src/cadrumo/tests/test_wheel_content_boundary.py") in files
+    assert _a_package_test_module() in files
     assert all("_data" not in path.relative_to(SRC_CADRUMO).parts for path in files)
 
 
@@ -82,7 +92,7 @@ def test_project_inventory_discovers_tests_outside_the_source_tree() -> None:
 def test_non_test_package_inventory_excludes_test_modules() -> None:
     files = non_test_package_python_files()
     assert repo_path("src/cadrumo/core/config.py") in files
-    assert repo_path("src/cadrumo/tests/test_wheel_content_boundary.py") not in files
+    assert _a_package_test_module() not in files
 
 
 def test_non_test_inventory_accepts_a_package_or_direct_module() -> None:
