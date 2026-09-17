@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3f11a5520d3a757fa1fe8fa694ba37fde9af7c7c342393391ce6ae0aaad1610'
+body_hash: 'sha256:ec9a8ff392becc9cee90a5c50f9e10e56f2f421505cf23b4000e1e40da8ae746'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -48,9 +48,46 @@ related:
 - `S02` `verify:` `pytest test_workspace test_workspace_models` -> `pass`
 - `S12` `M` `dev/registry/compiler/loader_materialisation.py`
 - `S12` `verify:` `pytest test_delta_minimality test_edition_delta_migration test_revision_label_inheritance test_isolated_edition_staging` -> `pass`
+- `S03` `M` `dev/registry/compiler/loader.py`
+- `S03` `M` `dev/locales/_registry_scanner.py`
+- `S03` `A` `dev/locales/_casilla_keys.py`
+- `S03` `M` `dev/locales/manager.py`
+- `S03` `M` `dev/locales/_revision_drift.py`
+- `S03` `verify:` `pytest dev/locales/tests/test_modelo_revision_locale_key_parity.py test_revision_drift_report.py test_modelo_schema_runtime_localization.py` -> `pass`
+- `S04` `A` `dev/locales/modelo_casilla_catalogue.py`
+- `S04` `M` `dev/locales/cli.py`
+- `S04` `M` `dev/locales/_paths.py`
+- `S04` `A` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
+- `S04` `verify:` `pytest dev/locales/tests/test_modelo_casilla_catalogue.py` -> `pass`
+- `S05` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S05` `D` `dev/locales/revision_label_restatement.py`
+- `S05` `D` `dev/locales/casilla_label_derivation.py`
+- `S05` `D` `dev/locales/translation_drift.py`
+- `S05` `D` `dev/locales/tests/test_revision_label_restatement.py`
+- `S05` `D` `dev/locales/tests/test_casilla_label_derivation.py`
+- `S05` `D` `dev/locales/tests/test_translation_drift.py`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `M` `src/cadrumo/locales`
+- `S09` `verify:` `dev.locales casilla-collapse --apply (post-write resolution diffs 0)` -> `pass`
+- `S10` `M` `src/cadrumo/locales`
+- `S10` `verify:` `dev.locales casilla-audit: derived_help 0, null_leaves 0` -> `pass`
+- `S11` `M` `src/cadrumo/locales`
+- `S11` `verify:` `dev.locales casilla-author placeholders.json (all changes attributed)` -> `pass`
+- `S08` `A` `var/test-iter/wording_review/worklist.json`
+- `S08` `by:` `sonnet-worklist`
+- `S06` `M` `src/cadrumo/locales/es/modelo/schema`
+- `S06` `verify:` `casilla-author spanish_review.json (443 ok, 73 fixed against official designs)` -> `pass`
+- `S06` `by:` `sonnet-spanish-review`
+- `S07` `M` `src/cadrumo/locales`
+- `S07` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S07` `A` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S07` `verify:` `casilla-audit: stale 0, stranded 0, drift 0, placeholders 0` -> `pass`
 
 ## Notes
 
 - `S01` barrier changes 19 shipped M303 strings whose Spanish occurrence holds placeholder text; repaired by S11
 - `S12` patched rows keep a separate text origin; minimality still judges them (131/2025 carries 8 no-op overrides)
+- `S04` first real apply was interrupted by a Windows file lock and re-planned from a partial state, losing 24,861 resolved translations; restored from the verified rehearsal copy, and apply now stages, verifies and installs from a persistent pending directory
+- `S07` identical cognates are classified in the honesty allowlist rather than stored as copies
 
