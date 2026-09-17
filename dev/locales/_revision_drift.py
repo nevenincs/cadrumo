@@ -29,8 +29,6 @@ from dataclasses import dataclass
 
 _REVISION_KEY = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.(?P<revision>[^.]+)\.(?P<tail>.+)$")
 
-_CASILLA_SEGMENT = "casilla."
-
 
 @dataclass(frozen=True)
 class RevisionMoveCandidate:
@@ -139,21 +137,6 @@ def revision_pairs(keys: Iterable[str]) -> frozenset[tuple[str, str]]:
     return frozenset(pairs)
 
 
-def casilla_revision_pairs(keys: Iterable[str]) -> frozenset[tuple[str, str]]:
-    """Return the ``(modelo, revision)`` pairs that declare at least one casilla key.
-
-    A revision declaring no casilla carries nothing an operator reads through a
-    casilla label, so demanding catalogue keys for it would fail a revision
-    that is legitimately title-only.
-    """
-    pairs: set[tuple[str, str]] = set()
-    for key in keys:
-        parsed = _REVISION_KEY.match(key)
-        if parsed is not None and parsed["tail"].startswith(_CASILLA_SEGMENT):
-            pairs.add((parsed["modelo"], parsed["revision"]))
-    return frozenset(pairs)
-
-
 @dataclass(frozen=True)
 class RevisionParityFindings:
     """The two directions in which catalogue and registry revision ids disagree."""
@@ -179,15 +162,16 @@ def classify_revision_parity(
 
     Returns:
         ``stale`` names the revision ids the catalogue references and the
-        registry does not declare; ``absent`` names the registry revisions that
-        carry casillas and for which the catalogue holds no key at all.
+        registry does not declare; ``absent`` names the registry revisions for
+        which the catalogue holds no key at all. Every revision declares its own
+        label key, so a revision whose casillas are all inherited is still
+        present; its casilla text is judged by the casilla catalogue, not here.
     """
     registry_pairs = revision_pairs(registry_keys)
     catalogue_pairs = revision_pairs(locale_keys)
-    required_pairs = casilla_revision_pairs(registry_keys)
     return RevisionParityFindings(
         stale=tuple(sorted(catalogue_pairs - registry_pairs)),
-        absent=tuple(sorted(required_pairs - catalogue_pairs)),
+        absent=tuple(sorted(registry_pairs - catalogue_pairs)),
     )
 
 
@@ -195,7 +179,6 @@ __all__ = [
     "RevisionMoveCandidate",
     "RevisionMoveReport",
     "RevisionParityFindings",
-    "casilla_revision_pairs",
     "classify_revision_moves",
     "classify_revision_parity",
     "revision_pairs",

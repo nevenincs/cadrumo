@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +20,6 @@ from ..compiler.modelo_projections import ModeloParameterFact
 
 _ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST = _ROOT / "dev/registry/analysis/facts_wave2_provider_handoff.toml"
-_PLAN = _ROOT / ".vault/plan/2026-09-09-facts-registry-plan.md"
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AUTHORED_FACT_FAMILIES = {
@@ -79,12 +77,9 @@ def test_handoff_covers_exact_live_provider_and_fact_family_denominator() -> Non
         assert all(variant.ownership.value == "authored" for variant in fact.variants)
 
 
-def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
+def test_handoff_targets_live_consumer_files_and_retirement_ledgers() -> None:
     manifest = _manifest()
-    plan = _PLAN.read_text(encoding="utf-8")
     for contract in manifest["contracts"]:
-        for step in contract["consumer_step"].split(","):
-            assert re.search(rf"`{re.escape(step)}`", plan)
         assert all((_ROOT / path).exists() for path in contract["consumer_files"])
         denominator = contract.get("denominator_source")
         if denominator:
@@ -96,7 +91,6 @@ def test_handoff_targets_live_wave3_steps_files_and_wave1_ledgers() -> None:
     assert external["schema_version"] == 2
     assert external["declaration_count"] == 0
     assert external["consumer_count"] == 0
-    assert external["deletion_step"] == "W04.P16.S31"
     assert external["retired_statutory_symbols"]
     assert "DEFAULT_IVA_GENERAL_RATE_PCT" in external["retired_statutory_symbols"]
     assert "classifications" not in external

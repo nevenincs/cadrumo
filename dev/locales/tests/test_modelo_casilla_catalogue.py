@@ -97,7 +97,7 @@ def test_an_edition_specific_text_is_kept_and_its_translation_is_not_lifted_past
 
 
 def test_null_leaves_orphans_and_derived_help_are_delete_targets() -> None:
-    orphan = "modelo.schema.999.revision.2019.casilla.99.label"
+    orphan = "modelo.schema.999.revision.2023.casilla.99.label"
     derived = "modelo.schema.999.revision.2023.casilla.01.help"
     catalogue = _catalogue(
         {
@@ -203,3 +203,35 @@ def test_authored_values_install_only_when_they_serve_every_change(tmp_path: Pat
     with pytest.raises(CollapseVerificationError, match="no casilla chain reads"):
         catalogue.author({"en": {"modelo.schema.999.revision.1999.casilla.77.label": "Nothing"}}, locales, pending)
     assert not pending.exists()
+
+
+def test_keys_under_an_undeclared_revision_are_a_rename_never_an_orphan() -> None:
+    renamed = "modelo.schema.999.revision.2019.casilla.01.label"
+    removed = "modelo.schema.999.revision.2023.casilla.02.label"
+    catalogue = _catalogue({"es": {_OCC_2023: "Base imponible", renamed: "Base imponible", removed: "Retirada"}})
+
+    findings = catalogue.findings()
+    plan = catalogue.collapse_plan().plan
+
+    assert findings.undeclared_revision_keys["es"] == (renamed,)
+    assert findings.orphan_keys["es"] == (removed,)
+    assert renamed not in plan.removals["es"]
+    assert plan.removals["es"][removed] == "orphan"
+
+
+def test_a_translation_that_ignored_a_spanish_change_is_stale() -> None:
+    catalogue = _catalogue(
+        {
+            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible ajustada"},
+            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+        }
+    )
+    faithful = _catalogue(
+        {
+            "es": {_OCC_2023: "Base imponible", _OCC_2024: "Base Imponible."},
+            "en": {_OCC_2023: "Tax base", _OCC_2024: "Tax base"},
+        }
+    )
+
+    assert catalogue.stale_translations("en") == ("999/base",)
+    assert faithful.stale_translations("en") == ()

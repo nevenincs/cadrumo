@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from hashlib import sha256
 
 import pytest
 
@@ -10,7 +11,8 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -22,8 +24,10 @@ _PERIOD = "1T"
 def _registry_subject(
     grade: RegistryAuthorityGrade | None,
 ) -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = bundled_registry_tree()
-    modelo = next(candidate for candidate in modelos if candidate.id == _MODEL)
+    authority = compiled_bundled_authority()
+    # The compiled catalogues carry the governed facts a filing-grade snapshot resolves.
+    catalogues = authority.catalogues
+    modelo = authority.modelo(_MODEL)
     revision = next(iter(modelo.revisions.values()))
     revised = revision.model_copy(update={"authority_grade": grade})
     return modelo.model_copy(update={"revisions": {revised.id: revised}}), catalogues
@@ -37,7 +41,7 @@ def _snapshot(
     authority = ValidatedRegistryAuthority.from_validated_components(
         modelos=(modelo,),
         catalogues=catalogues,
-        identity_digest="snapshot-authority-grade-test",
+        identity_digest=sha256(b"snapshot-authority-grade-test").hexdigest(),
     )
     return authority.snapshot(
         modelo.id,

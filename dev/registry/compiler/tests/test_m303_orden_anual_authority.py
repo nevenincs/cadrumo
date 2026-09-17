@@ -35,7 +35,7 @@ from ..authority import compiled_bundled_authority
 from ..loader import load_registry_tree
 from ..m303_orden_manifest import load_m303_annual_orden_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _not_claimed_scope() -> M303RegimenSimplificadoScope:
@@ -509,7 +509,7 @@ def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference()
     assert payload["lorca_reduction"] is not None
     payload["lorca_reduction"]["source_refs"] = ("boe-orden-unrelated",)
 
-    with pytest.raises(ValidationError, match="exact HFP/1335 source reference"):
+    with pytest.raises(ValidationError, match="annual Orden reduction does not match fact authority"):
         type(resolved.orden).model_validate(payload)
 
 
@@ -572,7 +572,7 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
         "3ba48312e1ae6b939de017dbcf9a34d25559594ccbc14a6da14492af87755abb"
     )
 
-    with pytest.raises(ValidationError, match="exact HFP/1335 legal reference"):
+    with pytest.raises(ValidationError, match="annual Orden reduction does not match fact authority"):
         type(resolved).model_validate(payload)
 
 

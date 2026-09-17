@@ -21,7 +21,7 @@ from cadrumo.core.i18n.render import extract_placeholders
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
 
-from ._casilla_keys import is_casilla_key
+from ._casilla_keys import is_delta_keyed_leaf
 from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
 from ._subtree_move import (
     LocaleMoveConflict,
@@ -1044,7 +1044,7 @@ def _audit_locale_file(
         locale_file=locale_file,
         codebase_missing=codebase_missing,
         codebase_extra=codebase_extra,
-        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not is_casilla_key(key))),
+        inter_locale_missing=tuple(sorted(key for key in all_locale_keys - keys if not is_delta_keyed_leaf(key))),
         scalar_violations=violations,
         revision_moves=moves.candidates,
         move_accounted_missing=moves.accounted_missing,
@@ -1259,7 +1259,7 @@ def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool
     Dynamic namespaces are one such family; delta-keyed casilla leaves are the
     other, and their presence is checked by the Modelo casilla catalogue.
     """
-    return is_casilla_key(key) or any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+    return is_delta_keyed_leaf(key) or any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
 
 
 def _is_test_module(path: Path) -> bool:

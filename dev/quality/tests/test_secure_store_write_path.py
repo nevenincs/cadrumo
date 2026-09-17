@@ -103,6 +103,17 @@ def test_reports_a_store_that_is_read_and_never_written(tmp_path: Path) -> None:
             "        self._drafts().save(1)\n",
             id="lazy-method-accessor",
         ),
+        pytest.param(
+            "class ExampleRepositoryProtocol:\n"
+            "    pass\n"
+            "def go(repo: ExampleRepositoryProtocol) -> None:\n"
+            "    repo.save(1)\n",
+            id="named-structural-port",
+        ),
+        pytest.param(
+            "class Ports:\n    store: ExampleRepository\ndef go(ports: Ports) -> None:\n    ports.store.save(1)\n",
+            id="port-field",
+        ),
     ],
 )
 def test_stays_silent_when_some_production_path_writes(tmp_path: Path, writer: str) -> None:
@@ -131,6 +142,27 @@ def test_mutation_is_recognised_by_token_not_by_prefix(tmp_path: Path, method: s
         },
     )
     assert evaluate(source, _declaration(tmp_path, "")) == ()
+
+
+def test_a_sibling_adapter_write_is_not_credited_to_another_store(tmp_path: Path) -> None:
+    """Two adapters holding ``_repository`` in one module each bind their own store."""
+    other = _REPOSITORY.replace("ExampleRepository", "OtherRepository")
+    adapters = (
+        "class ExampleAdapter:\n"
+        "    def __init__(self, *, repository: ExampleRepository) -> None:\n"
+        "        self._repository = repository\n"
+        "    def read(self):\n"
+        "        return self._repository.load()\n"
+        "class OtherAdapter:\n"
+        "    def __init__(self, *, repository: OtherRepository) -> None:\n"
+        "        self._repository = repository\n"
+        "    def write(self):\n"
+        "        self._repository.save(1)\n"
+    )
+    source = _tree(tmp_path, {"store.py": _REPOSITORY, "other.py": other, "adapters.py": adapters})
+    problems = evaluate(source, _declaration(tmp_path, ""))
+    assert len(problems) == 1
+    assert "ExampleRepository" in problems[0]
 
 
 def test_a_store_only_its_own_module_reads_is_not_reported(tmp_path: Path) -> None:

@@ -11,6 +11,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
+from .._casilla_keys import is_delta_keyed_leaf
 from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..errors import LocaleError
@@ -189,7 +190,12 @@ def _committed_catalogues(manager) -> dict[str, Path]:
 def locales_state(manager):
     codebase_keys = manager.get_codebase_keys()
     sources = _committed_catalogues(manager)
-    locale_keys_map = {code: manager.get_yaml_keys(manager.load_locale(path)) for code, path in sources.items()}
+    # Casilla leaves are stored only where a locale holds distinct text, so their key sets differ
+    # by design; their coverage is judged through resolution by the casilla catalogue.
+    locale_keys_map = {
+        code: {key for key in manager.get_yaml_keys(manager.load_locale(path)) if not is_delta_keyed_leaf(key)}
+        for code, path in sources.items()
+    }
     return codebase_keys, locale_keys_map, sources
 
 
@@ -1000,8 +1006,10 @@ def test_codebase_to_locale_parity(locales_state, manager):
     # locale, so a collapse makes the parity loop below trivially pass for all
     # of them. `> 0` caught only the total case, while a narrowed scan root or
     # a tightened extractor drops the set partially and silently. A floor,
-    # not a pinned count: live the codebase yields 67,421 keys.
-    assert len(codebase_keys) > 50000, (
+    # not a pinned count. Casilla label and help leaves are delta-keyed and
+    # judged by the casilla catalogue, so they are not part of this set; the
+    # remaining codebase surface is several thousand keys.
+    assert len(codebase_keys) > 5000, (
         f"only {len(codebase_keys)} translation keys found in the codebase, so locale "
         "parity below is measured against a fraction of the real surface"
     )

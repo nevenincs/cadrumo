@@ -295,7 +295,7 @@ def stage_generated_export_candidate(
     for sibling in (staged_modelo_root / "revisions").iterdir():
         if sibling.name != revision:
             shutil.rmtree(sibling)
-    if _DETACHMENT_DECLARATIONS.intersection(edition.table):
+    if edition_requires_detachment(edition):
         write_complete_edition(staged_modelo_root / "revisions" / revision, edition)
     drop_cross_edition_evolutions(staged_modelo_root / "revisions" / revision)
     if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
@@ -446,3 +446,8 @@ def drop_cross_edition_evolutions(revision_root: Path) -> None:
     evolutions = revision_root / "casilla_continuidad_evolutions"
     if evolutions.is_dir():
         shutil.rmtree(evolutions)
+
+
+def edition_requires_detachment(edition: MaterialisedEdition) -> bool:
+    """Whether an isolated edition must be written complete because it reaches pruned siblings."""
+    return bool(_DETACHMENT_DECLARATIONS.intersection(edition.table))

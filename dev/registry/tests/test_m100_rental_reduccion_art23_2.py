@@ -33,7 +33,7 @@ from ._modelo_100_registry_support import (
     _m100_2024_deduccion_maternidad_bindings,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _FILING_DATE = date(2024, 12, 31)
 _TIER_BINDING = "renta-rental-reduccion-art-23-2-tier"
@@ -150,7 +150,7 @@ def test_0150_uses_operator_selected_art23_2_tier(
     assert entry.legal_refs == ("ley-35-2006:art-23",)
     assert entry.source_refs == ("aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority")
     assert _TIER_BINDING in entry.operand_refs
-    assert f"renta-2024-rental-reduccion-rate-{tier}" in entry.operand_refs
+    assert f"renta-rental-reduccion-rate-{tier}" in entry.operand_refs
 
 
 def test_0150_unchecked_eligibility_does_not_require_or_apply_tier(

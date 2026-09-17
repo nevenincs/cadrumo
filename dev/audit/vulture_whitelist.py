@@ -41,22 +41,6 @@ def _execute(http: object, num_retries: object) -> tuple[object, object]:
     return http, num_retries
 
 
-def _api_name(value: object, name: str) -> object:
-    """Mark a contract keyword as used without reproducing its spelling as an argument."""
-    getattr(value, name, None)
-    return value
-
-
-def _get_media(file_id: object) -> object:
-    """Mirror ``_DriveFilesResource.get_media`` keyword contract."""
-    return _api_name(file_id, "fileId")
-
-
-def _list_files(q: object, page_size: object, page_token: object) -> tuple[object, ...]:
-    """Mirror ``_DriveFilesResource.list`` keyword contract."""
-    return (_api_name(q, "q"), _api_name(page_size, "pageSize"), _api_name(page_token, "pageToken"))
-
-
 def _reduce_ex(protocol: object) -> object:
     """Mirror ``__reduce_ex__`` pickle-protocol signature."""
     return protocol

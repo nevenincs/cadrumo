@@ -174,7 +174,10 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
             if layout_field.kind.value == "binding":
                 binding = bindings_by_id[str(layout_field.binding)]
                 assert tuple(binding.legal_refs) == tuple(layout_field.legal_refs)
-                assert tuple(binding.source_refs) == tuple(layout_field.source_refs)
+                # An inherited binding keeps the source that grounded it at its origin;
+                # the generated field cites this edition's design.
+                assert binding.source_refs
+                assert tuple(layout_field.source_refs) == (_SOURCE_REF,)
 
     assert covered_record_types == set(layout_records)
     published_fields = [field for record in revision.export_layouts[0].records for field in record.fields]

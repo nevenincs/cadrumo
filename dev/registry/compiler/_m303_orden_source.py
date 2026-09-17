@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.m303_orden_constants import (
 from cadrumo.domain.calculations.registry.schema_base import PublishingAuthority, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev.docs.preprocess.orden_anual_html import (
+    OrdenAnualHtmlParseError,
     OrdenAnualIvaActivityTable,
     OrdenAnualIvaAgriculturalIndex,
     OrdenAnualIvaAgriculturalIngresoACuenta,
@@ -148,7 +149,7 @@ def extract_m303_annual_orden_source(
         )
         validate_m303_annual_orden_lorca_projection(census, source=source)
         return census
-    except (TypeError, ValueError) as exc:
+    except (OrdenAnualHtmlParseError, TypeError, ValueError) as exc:
         raise RegistryLoadError(f"annual Orden source {source.id!r} is incomplete or malformed: {exc}") from exc
 
 

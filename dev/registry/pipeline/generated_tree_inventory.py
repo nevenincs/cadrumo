@@ -14,6 +14,7 @@ from .export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
+from .generated_tree_dispositions import below_floor_dispositions
 
 __all__ = ["GeneratedExportTree", "generated_export_trees"]
 
@@ -50,6 +51,7 @@ def generated_export_trees() -> tuple[GeneratedExportTree, ...]:
     authority = compiled_bundled_authority()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     assessment_floor = coverage_assessment_floor(authority.catalogues)
+    below_floor = {(row.modelo, row.revision) for row in below_floor_dispositions()}
     trees: list[GeneratedExportTree] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
@@ -76,6 +78,10 @@ def generated_export_trees() -> tuple[GeneratedExportTree, ...]:
                 assessment_horizon=assessment_horizon,
                 assessment_floor=assessment_floor,
             )
+            if not coordinates and (str(modelo.id), str(revision.id)) in below_floor:
+                # The ledger explains why a revision below the supported floor
+                # has no selectable coordinate to reproduce it at.
+                continue
             if not coordinates:
                 raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")
             filing_year, period = coordinates[0]

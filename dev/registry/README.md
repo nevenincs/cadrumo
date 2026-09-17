@@ -101,6 +101,8 @@ says which. What each one owns:
 | `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
 | `delta_minimality` | successor casilla rows stated identically to the row they would inherit, and rows it cannot judge for want of lineage |
 | `revision_name_window` | revision names that misstate the window they declare, or claim none |
+| `hand_authored_type_column` | hand-authored fields the official design types signed but the layout ships unsigned, with the reason when the schema cannot sign them |
+| `sign_position_coverage` | money fields starting on a byte the official design reserves for its SIGNO subdivision that declare no `sign_position` |
 | `temporal_site_agreement` | a revision's window, selector and deadline windows falling silent or disagreeing |
 | `wire_type_compatibility` | the distinct transitions from a casilla's declared type to its rendered wire type |
 | `monetary_scale` | monetary fields whose scale is missing, unusual, or unlike their siblings |

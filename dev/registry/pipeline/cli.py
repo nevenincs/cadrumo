@@ -47,6 +47,7 @@ from .authority_publication import publish_sqlite_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     drop_cross_edition_evolutions,
+    edition_requires_detachment,
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
@@ -332,11 +333,15 @@ def stage_isolated_edition(
     for entry in revisions_root.iterdir():
         if entry.name != revision:
             shutil.rmtree(entry)
-    if edition.inherits_from is None:
+    if not edition_requires_detachment(edition):
         drop_cross_edition_evolutions(revisions_root / revision)
         return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
     write_complete_edition(revisions_root / revision, edition)
     drop_cross_edition_evolutions(revisions_root / revision)
+    if edition.inherits_from is None:
+        # A storage-baseline edition restates rows under its own keys; only a
+        # predecessor chain moves label text onto inherited occurrences.
+        return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
     shutil.copytree(source_locales_root, staged_locales_root)
     manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
     for locale in sorted(discover_locale_codes(staged_locales_root)):

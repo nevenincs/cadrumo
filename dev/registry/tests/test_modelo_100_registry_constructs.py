@@ -48,6 +48,7 @@ from ._modelo_100_registry_support import (
     _modelo_100_with_revision,
     _source_root,
 )
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -695,6 +696,9 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
         resolved.layout,
         payload,
         sources=snapshot.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+        },
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
@@ -740,6 +744,9 @@ def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_expo
         resolved.layout,
         payload,
         sources=snapshot.sources,
+        source_payloads={
+            str(source.id): (_source_root() / source.corpus_path).read_bytes() for source in snapshot.sources.values()
+        },
     )
 
     assert {item.casilla_id: item.value for item in parsed.casillas} == {
@@ -762,7 +769,11 @@ def test_validator_rejects_construct_sources_without_official_guidance() -> None
         RegistryValidationError,
         match=r"construct .* requires official_source_guidance source evidence",
     ):
-        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+        RegistryValidator(
+            mutated_catalogues,
+            source_root=_source_root(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_legal_refs_without_legal_authority() -> None:
@@ -778,7 +789,11 @@ def test_validator_rejects_construct_legal_refs_without_legal_authority() -> Non
         RegistryValidationError,
         match=r"construct .* legal ref .* is not legal authority",
     ):
-        RegistryValidator(mutated_catalogues, source_root=_source_root()).validate_modelo(modelo)
+        RegistryValidator(
+            mutated_catalogues,
+            source_root=_source_root(),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(modelo)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
@@ -842,7 +857,10 @@ def test_validator_rejects_unclassified_relation_source() -> None:
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
     modelo, revision = _modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
-    mutated_classification = classification.model_copy(update={"binding_refs": classification.binding_refs[:1]})
+    # A foreign binding in place of the modelo 111 one leaves the 111 relation uncovered.
+    mutated_classification = classification.model_copy(
+        update={"binding_refs": ("renta-modelo-123-retenciones-periodicas",)},
+    )
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -862,8 +880,8 @@ def test_schema_accepts_direct_previous_filing_classification_without_binding_re
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
     assert classification.treatment == "direct_annual_settlement"
-    assert classification.binding_refs == ()
-    assert classification.__class__.model_validate(classification.model_dump(mode="python")) == classification
+    without_refs = classification.model_copy(update={"binding_refs": ()})
+    assert without_refs.__class__.model_validate(without_refs.model_dump(mode="python")) == without_refs
 
 
 def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
@@ -882,7 +900,7 @@ def test_validator_rejects_direct_dependency_classification_without_relation_or_
 
     _assert_registry_validation_error(
         mutated_modelo,
-        match="must declare binding refs or cover direct previous_filing bindings",
+        match="does not cover binding refs",
     )
 
 

@@ -26,7 +26,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _BUCKET_ID = "18181818-1818-4181-8181-181818181818"
 
@@ -53,7 +53,7 @@ def _invoice(
                 "quantity": Decimal("1"),
                 "unit_price": subtotal,
                 "subtotal": subtotal,
-                "iva_rate": IvaRate.from_registry("rate_21"),
+                "iva_rate": IvaRate.from_registry("RATE_21"),
                 "iva_amount": iva_amount,
             },
         )
@@ -282,6 +282,8 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
         bucket_id=_BUCKET_ID,
         invoice_id=invoice.invoice_id,
         transaction_id=transaction.transaction_id,
+        invoice_repository=InvoiceCatalogueRepository(),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID),
     )
     updated_invoices = result.invoices
     updated_transactions = result.transactions

@@ -8,7 +8,6 @@ conformance denominator.
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -50,14 +49,17 @@ __all__ = [
 
 
 _IVA_RETIREMENT_LEDGER = REPO_ROOT / "dev" / "registry" / "analysis" / "facts_iva_retirement.toml"
-_FACTS_REGISTRY_PLAN = REPO_ROOT / ".vault" / "plan" / "2026-09-09-facts-registry-plan.md"
-_S80_TEMPORARY_HOLD_STEPS = {
-    "src/cadrumo/_data/registry/aeat/iva/catalogues.toml": "W04.P15.S81",
-    "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml": "W04.P15.S82",
-    "src/cadrumo/_data/registry/aeat/iva/territories.toml": "W04.P15.S83",
-    "src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml": "W04.P15.S84",
-}
-_S85_TEMPORARY_HOLD_STEPS = {"iva-local-grounding": "W04.P17.S85"}
+#: The structured IVA tables allowed to remain until a lossless typed replacement lands.
+_TABLE_HOLDS = frozenset(
+    {
+        "src/cadrumo/_data/registry/aeat/iva/catalogues.toml",
+        "src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml",
+        "src/cadrumo/_data/registry/aeat/iva/territories.toml",
+        "src/cadrumo/_data/registry/aeat/iva/territory_carve_outs.toml",
+    }
+)
+#: The retirement lanes allowed to remain while a named blocker is pending.
+_LANE_HOLDS = frozenset({"iva-local-grounding"})
 _TECHNICAL_IVA_VOCABULARY = "src/cadrumo/_data/registry/aeat/iva/country_names.toml"
 
 
@@ -291,45 +293,31 @@ def _resolved_variants(
     return tuple(resolved)
 
 
-def _open_plan_steps(plan_text: str) -> frozenset[str]:
-    """Return the exact open step ids from the active facts-registry plan."""
-    step_ids: set[str] = set()
-    for match in re.finditer(r"^- \[ \] `([^`]+)`", plan_text, flags=re.MULTILINE):
-        step_id = match.group(1)
-        if isinstance(step_id, str):
-            step_ids.add(step_id)
-    return frozenset(step_ids)
-
-
 def migration_retirement_findings(
     iva_ledger: Mapping[str, object],
     *,
-    open_steps: Iterable[str],
+    repository_root: Path = REPO_ROOT,
 ) -> tuple[FactQualityFinding, ...]:
-    """Admit only complete, named S80/S85 temporary migration holds while their steps remain open."""
-    open_step_ids = frozenset(open_steps)
+    """Admit only complete, named temporary migration holds, and only while their subject exists.
+
+    A hold is stale once the table it retains no longer exists: the replacement
+    landed, and the ledger entry now describes nothing. A hold whose entry is
+    absent is simply retired.
+    """
     findings: list[FactQualityFinding] = []
     remaining_tables = iva_ledger.get("remaining_structured_tables")
     table_entries = remaining_tables if isinstance(remaining_tables, (list, tuple)) else ()
     tables = {str(table.get("data_path", "")): table for table in table_entries if isinstance(table, Mapping)}
-    for data_path, step_id in _S80_TEMPORARY_HOLD_STEPS.items():
+    for data_path in sorted(_TABLE_HOLDS):
         table = tables.pop(data_path, None)
         if table is None:
-            if step_id in open_step_ids:
-                findings.append(
-                    FactQualityFinding(
-                        FactQualityKind.STALE_MIGRATION_HOLD,
-                        "iva-retirement",
-                        detail=f"approved S80 hold {data_path!r} is absent while {step_id} remains open",
-                    )
-                )
             continue
-        if step_id not in open_step_ids:
+        if not (repository_root / data_path).is_file():
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.STALE_MIGRATION_HOLD,
                     "iva-retirement",
-                    detail=f"S80 hold {data_path!r} remains after {step_id} closed",
+                    detail=f"hold {data_path!r} remains after its table was retired",
                 )
             )
             continue
@@ -344,7 +332,7 @@ def migration_retirement_findings(
                 FactQualityFinding(
                     FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
                     "iva-retirement",
-                    detail=f"S80 hold {data_path!r} lacks its lossless-replacement contract",
+                    detail=f"hold {data_path!r} lacks its lossless-replacement contract",
                 )
             )
     technical = tables.pop(_TECHNICAL_IVA_VOCABULARY, None)
@@ -370,33 +358,16 @@ def migration_retirement_findings(
     lanes = {
         str(lane.get("lane_id", "")): lane for lane in lane_entries if isinstance(lane, Mapping) and "status" in lane
     }
-    for lane_id, step_id in _S85_TEMPORARY_HOLD_STEPS.items():
+    for lane_id in sorted(_LANE_HOLDS):
         lane = lanes.pop(lane_id, None)
         if lane is None:
-            if step_id in open_step_ids:
-                findings.append(
-                    FactQualityFinding(
-                        FactQualityKind.STALE_MIGRATION_HOLD,
-                        "iva-retirement",
-                        detail=f"approved S85 hold {lane_id!r} is absent while {step_id} remains open",
-                    )
-                )
-            continue
-        if step_id not in open_step_ids:
-            findings.append(
-                FactQualityFinding(
-                    FactQualityKind.STALE_MIGRATION_HOLD,
-                    "iva-retirement",
-                    detail=f"S85 hold {lane_id!r} remains after {step_id} closed",
-                )
-            )
             continue
         if not str(lane.get("status", "")).startswith("blocked_pending") or not lane.get("blocker"):
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
                     "iva-retirement",
-                    detail=f"S85 hold {lane_id!r} lacks a named pending blocker",
+                    detail=f"hold {lane_id!r} lacks a named pending blocker",
                 )
             )
     for lane_id in sorted(lanes):
@@ -467,10 +438,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))
     args = parser.parse_args(argv)
     iva_ledger = parse_toml(_IVA_RETIREMENT_LEDGER.read_text(encoding="utf-8"))
-    open_steps = _open_plan_steps(_FACTS_REGISTRY_PLAN.read_text(encoding="utf-8"))
     findings = (
         *live_facts_catalogue_findings(args.registry_root),
-        *migration_retirement_findings(iva_ledger, open_steps=open_steps),
+        *migration_retirement_findings(iva_ledger),
     )
     for finding in findings:
         sys.stdout.write(

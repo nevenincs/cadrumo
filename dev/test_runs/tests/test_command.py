@@ -41,10 +41,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class InterruptingOutput:
-        def __iter__(self) -> InterruptingOutput:
-            return self
-
-        def __next__(self) -> str:
+        async def readline(self) -> bytes:
             run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
@@ -53,20 +50,22 @@ def test_command_run_finalizes_metadata_when_interrupted(
 
     class InterruptingProcess:
         stdout = InterruptingOutput()
+        returncode: int | None = None
         terminated = False
-
-        def poll(self) -> None:
-            return None
 
         def terminate(self) -> None:
             self.terminated = True
 
-        def wait(self, timeout: float | None = None) -> int:
-            assert timeout == 5.0
+        async def wait(self) -> int:
+            self.returncode = 130
             return 130
 
     process = InterruptingProcess()
-    monkeypatch.setattr("dev.test_runs.command.subprocess.Popen", lambda *args, **kwargs: process)
+
+    async def create_process(*args: object, **kwargs: object) -> InterruptingProcess:
+        return process
+
+    monkeypatch.setattr("dev.test_runs.command.asyncio.create_subprocess_exec", create_process)
 
     status = run(
         (sys.executable, "-c", "print('never reached')"),
@@ -294,8 +293,11 @@ def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(
         signal="import-boundaries",
     )
 
-    assert status == 1
+    # No schema-v2 health payload reached the wrapper, so the run is an
+    # operational failure; the transcript deductions are still reported.
+    assert status == 7
     envelope = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert envelope["classification"] == "tool_failure"
     deductions = envelope["deductions"]
     assert deductions["schema_version"] == 1
     assert deductions["contract_paths"] == {

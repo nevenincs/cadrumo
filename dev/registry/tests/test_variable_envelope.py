@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation, FilingEnvelopePrefixRole
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.authority_state import source_root_for
 from ..compiler.loader import load_registry_tree
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediateField,
@@ -117,10 +118,11 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
     design_epoch: str,
 ) -> None:
     """All five hash-pinned DP30300 sources yield one source-bound static grammar."""
-    inspection = compiled_bundled_authority().inspect_revision("303", filing_year=filing_year, period=period)
-    assert inspection.source_root is not None
+    authority = compiled_bundled_authority()
+    inspection = authority.inspect_revision("303", filing_year=filing_year, period=period)
+    source_root = source_root_for(authority)
     intermediate = load_record_design_intermediate(
-        inspection.source_root,
+        source_root,
         inspection.sources,
         source_ref=source_ref,
         filing_year=filing_year,
@@ -173,10 +175,11 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
 
 def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definitions() -> None:
     """No later application authority can repair source or record-order drift."""
-    inspection = compiled_bundled_authority().inspect_revision("303", filing_year=2026, period="4T")
-    assert inspection.source_root is not None
+    authority = compiled_bundled_authority()
+    inspection = authority.inspect_revision("303", filing_year=2026, period="4T")
+    source_root = source_root_for(authority)
     intermediate = load_record_design_intermediate(
-        inspection.source_root,
+        source_root,
         inspection.sources,
         source_ref="aeat-dr-303-2026",
         filing_year=2026,

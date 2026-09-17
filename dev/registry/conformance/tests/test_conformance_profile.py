@@ -33,8 +33,14 @@ from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REG
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
+from ...compiler.authority import compiled_bundled_authority
 from ...compiler.authority_state import source_root_for
-from ...maintenance_support import load_bundled_external_oracle_inventory
+from ...maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    load_bundled_external_oracle_inventory,
+    revision_selection_coordinates,
+)
 from ..errors import RegistryApplicationInputError
 from ..external_grounding import (
     RegistryExternalGroundingAudit,
@@ -43,6 +49,7 @@ from ..external_grounding import (
 from ..profile import (
     AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
+    RevisionConformanceRow,
     build_registry_conformance_profile,
     compare_annual_casilla_population,
     compare_annual_casilla_population_for_revision,
@@ -346,14 +353,30 @@ def test_degraded_mode_stamps_every_row_and_withholds_the_authority_axes(
         assert row.has_required_coverage_gap is None
 
 
+def _rows_inside_the_support_envelope(profile: RegistryConformanceProfile) -> list[RevisionConformanceRow]:
+    """Return the rows whose revision has at least one coordinate the support envelope admits."""
+    authority = compiled_bundled_authority()
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
+    return [
+        row
+        for row in profile.rows
+        if revision_selection_coordinates(
+            authority.modelo(row.modelo).revisions[row.revision],
+            assessment_horizon=horizon,
+            assessment_floor=floor,
+        )
+    ]
+
+
 def test_validated_mode_carries_every_authority_dependent_axis(
     validated_profile: RegistryConformanceProfile,
 ) -> None:
-    """What the degraded read withholds, the validating read supplies on every row."""
+    """What the degraded read withholds, the validating read supplies on every supported row."""
     assert validated_profile.registry_validated is True
     assert validated_profile.rows
 
-    for row in validated_profile.rows:
+    for row in _rows_inside_the_support_envelope(validated_profile):
         assert row.registry_validated is True
         assert row.model_law_coverage is not None
         assert row.latest_revision_support is not None
@@ -452,7 +475,10 @@ def test_empty_coverage_gap_list_is_separable_from_unmeasured_coverage(
     assert degraded_profile.required_coverage_gap_rows == ()
     assert len(degraded_profile.coverage_unmeasured_rows) == degraded_profile.composed_revision_count
 
-    assert validated_profile.coverage_unmeasured_rows == ()
+    # Only a revision wholly below the supported floor goes unmeasured: it has
+    # no coordinate the product files, which is out of scope rather than unknown.
+    outside = [row for row in validated_profile.rows if row not in _rows_inside_the_support_envelope(validated_profile)]
+    assert list(validated_profile.coverage_unmeasured_rows) == outside
     assert set(validated_profile.required_coverage_gap_rows) <= set(validated_profile.rows)
 
 
@@ -475,12 +501,27 @@ def test_declared_axis_census_reaches_the_profile(degraded_profile: RegistryConf
         assert usage.status in {"exercised", "unused"}
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def _supported_authored_m100_years(authority: ValidatedRegistryAuthority) -> tuple[int, ...]:
+    """Return every authored M100 edition year the support envelope admits."""
+    support = authority.catalogues.require_supported_filing_years()
+    years = tuple(
+        int(revision_id)
+        for revision_id in authority.modelo("100").revisions
+        if str(revision_id).isdigit() and support.admits_filing_year(int(revision_id))
+    )
+    assert years, "no authored M100 edition falls inside the support envelope"
+    return years
+
+
 def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
     registry_authority: ValidatedRegistryAuthority,
-    filing_year: int,
 ) -> None:
     """The comparator measures each law-selected M100 dictionary independently."""
+    for filing_year in _supported_authored_m100_years(registry_authority):
+        _assert_annual_casilla_comparison(registry_authority, filing_year)
+
+
+def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAuthority, filing_year: int) -> None:
     snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
     comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
 
@@ -567,7 +608,7 @@ def test_annual_casilla_comparison_retains_unmeasured_when_source_root_is_unavai
     assert layout_comparison.extra_casilla_ids == ()
     assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
     assert layout_comparison.diagnostic is not None
-    assert "requires source_root" in layout_comparison.diagnostic
+    assert "requires published sources and source payloads" in layout_comparison.diagnostic
     assert comparison.printed_form_membership == "unsupported"
     assert comparison.xsd_only_attributes == "unsupported"
 

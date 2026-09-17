@@ -630,6 +630,9 @@ def audit_registry_construct_evidence(
             coordinates = revision_selection_coordinates(
                 revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
             )
+            if not coordinates:
+                # Wholly below the supported floor: no coordinate carries construct evidence.
+                continue
             inspections = tuple(
                 _inspect_declared_revision(
                     authority,

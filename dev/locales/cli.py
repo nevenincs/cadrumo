@@ -145,6 +145,15 @@ def casilla_collapse(
         typer.echo(f"refused: an install is pending at {PENDING_CASILLA_INSTALL_DIR}; run with --resume", err=True)
         raise typer.Exit(code=1)
     catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    undeclared = catalogue.findings().undeclared_revision_keys
+    if any(undeclared.values()):
+        sample = {locale: keys[:3] for locale, keys in undeclared.items() if keys}
+        typer.echo(
+            "refused: casilla keys sit under revision ids the registry does not declare; move them with "
+            f"`python -m dev.locales move-revision`: {sample}",
+            err=True,
+        )
+        raise typer.Exit(code=1)
     result = catalogue.collapse_plan()
     changed = sum(
         1 for coordinate, text in catalogue.resolution(result.working).items() if result.baseline[coordinate] != text

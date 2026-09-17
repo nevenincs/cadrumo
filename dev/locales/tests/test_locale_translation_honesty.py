@@ -13,10 +13,12 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
+    modelo_localization_source,
 )
 
 from .._paths import LOCALES_DIR, SRC_DIR
 from ..manager import LocaleManager, locale_catalogue_source
+from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -308,181 +310,357 @@ class IdenticalTranslation(NamedTuple):
     reason: str
 
 
-# Keyed per (locale, continuity label key). Never widened by modelo, prefix or count:
-# each entry is a translation a reviewer checked and found correct as written.
-_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS: dict[tuple[str, str], IdenticalTranslation] = {
-    ("ca", "modelo.schema.100.casilla.continuidad.irpf-deduccion-vehiculo-matricula.label"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD, "Catalan for a vehicle registration plate is also 'Matrícula'."
+# Keyed per (locale, Spanish label text): whether a translation may equal its source is a
+# property of the wording, not of the key that happens to store it. Never widened by modelo,
+# prefix or count: each entry is a translation a reviewer checked and found correct as written.
+_LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] = {
+    ("ca", "1. Divisa"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Divisa” (currency) is the established Catalan term, spelled identically to the Spanish "
+            "(used elsewhere in the same schema); the leading numbering is kept as in the Spanish."
+        ),
     ),
-    ("ca", "modelo.schema.131.casilla.continuidad.irpf-pf-modulos-total.label"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD, "Catalan 'Total' is the same word as the Spanish."
+    ("ca", "1. Indicador de simplificada"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Indicador de simplificada” is spelled identically in Catalan; the leading numbering is "
+            "kept as in the Spanish."
+        ),
     ),
-    ("en", "modelo.schema.131.casilla.continuidad.irpf-pf-modulos-total.label"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD, "English 'Total' is the same word as the Spanish."
-    ),
-    ("ca", "modelo.schema.190.casilla.continuidad.payee-nif.label"): IdenticalTranslation(
+    ("ca", "1. NIF del perceptor"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM,
-        "NIF stays untranslated and 'del perceptor' is the correct Catalan, as for Modelo 180.",
+        (
+            "NIF is a universal acronym and “del perceptor” is spelled identically in Catalan; the "
+            "leading numbering is kept as in the Spanish."
+        ),
     ),
-    ("ca", "modelo.schema.190.casilla.continuidad.payee-ceuta-melilla-clave.label"): IdenticalTranslation(
-        IdenticalTranslationClass.SHARED_WORD, "Catalan names both cities and joins them with 'o' exactly as Spanish."
+    ("ca", "1. Prorrata %"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Prorrata” is the established Catalan IVA term, spelled identically to the Spanish (e.g. "
+            "“IVA. Prorrata i sectors diferenciats”); the leading numbering and percent sign are kept "
+            "as in the Spanish."
+        ),
     ),
-    ("ca", "modelo.schema.180.casilla.continuidad.payee-nif.label"): IdenticalTranslation(
+    ("ca", "2. Divisa"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Divisa” (currency) is the established Catalan term, spelled identically to the Spanish; "
+            "the leading numbering is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "2. Indicador de simplificada"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Indicador de simplificada” is spelled identically in Catalan; the leading numbering is "
+            "kept as in the Spanish."
+        ),
+    ),
+    ("ca", "2. Prorrata %"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Prorrata” is the established Catalan IVA term, spelled identically to the Spanish; the "
+            "leading numbering and percent sign are kept as in the Spanish."
+        ),
+    ),
+    ("ca", "47 - Número de casa."): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Número de casa” is spelled identically in Catalan; the numbering and punctuation are kept as in the Spanish.",
+    ),
+    ("ca", "50 - Portal."): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Portal” (building entrance) is spelled identically in Catalan; the numbering and "
+            "punctuation are kept as in the Spanish."
+        ),
+    ),
+    ("ca", "52 - Planta."): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Planta” (floor) is spelled identically in Catalan; the numbering and punctuation are kept as in the Spanish.",
+    ),
+    ("ca", "Base liquidable general"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Base liquidable general” is the established Catalan AEAT term, spelled identically to the"
+            " Spanish (used throughout the Catalan schema, e.g. “base liquidable general negativa...”)."
+        ),
+    ),
+    ("ca", "Base total"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "“Base” and “total” are spelled identically in Catalan and Spanish."
+    ),
+    ("ca", "Ceuta o Melilla"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Ceuta o Melilla” (the place names and the conjunction “o”) is spelled identically in Catalan.",
+    ),
+    ("ca", "Cooperativa protegida [00017]"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Cooperativa protegida” is spelled identically in Catalan; the box suffix is kept as in the Spanish.",
+    ),
+    ("ca", "Gran empresa [00023]"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Gran empresa” is spelled identically in Catalan; the box suffix is kept as in the Spanish.",
+    ),
+    ("ca", "IBAN (10)"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM,
-        "NIF stays untranslated and 'del perceptor' is the correct Catalan, as the catalogue renders it elsewhere.",
+        (
+            "IBAN is a universal international banking acronym, unchanged across languages; the "
+            "footnote number is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "Matrícula"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "“Matrícula” is spelled identically in Catalan and Spanish."
+    ),
+    ("ca", "NIF"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
+    ),
+    ("ca", "NIF DEL PAGADOR ANTERIOR"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "NIF is a universal acronym and “del pagador anterior” is spelled identically in Catalan; "
+            "capitalisation is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "NIF DEL PERCEPTOR"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "NIF is a universal acronym and “del perceptor” is spelled identically in Catalan; "
+            "capitalisation is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "NIF del perceptor"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF is a universal acronym and “del perceptor” is spelled identically in Catalan.",
+    ),
+    ("ca", "NIF del productor 1"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF is a universal acronym and “del productor 1” is spelled identically in Catalan.",
+    ),
+    ("ca", "NIF del productor 2"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF is a universal acronym and “del productor 2” is spelled identically in Catalan.",
+    ),
+    ("ca", "NIF del productor 3"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF is a universal acronym and “del productor 3” is spelled identically in Catalan.",
+    ),
+    ("ca", "NIF del promotor o constructor:"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        "NIF is a universal acronym and “del promotor o constructor” is spelled identically in Catalan.",
+    ),
+    ("ca", "NIF/NIE 1"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF and NIE are universal AEAT acronyms, unchanged across languages."
+    ),
+    ("ca", "NIF/NIE 3"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF and NIE are universal AEAT acronyms, unchanged across languages."
+    ),
+    ("ca", "NIF/NIE 4"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF and NIE are universal AEAT acronyms, unchanged across languages."
+    ),
+    ("ca", "Número de casa [29]"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Número de casa” is spelled identically in Catalan; the box suffix is kept as in the Spanish.",
+    ),
+    ("ca", "PERCEPTOR MEDIADOR"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Perceptor” and “mediador” are spelled identically in Catalan; capitalisation is kept as in the Spanish.",
+    ),
+    ("ca", "Pagador. NIF [50]"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "“Pagador” is spelled identically in Catalan and NIF is a universal acronym; the box suffix"
+            " is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "Planta [34]"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Planta” is spelled identically in Catalan; the box suffix is kept as in the Spanish.",
+    ),
+    ("ca", "Portal [32]"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        "“Portal” is spelled identically in Catalan; the box suffix is kept as in the Spanish.",
+    ),
+    (
+        "ca",
+        (
+            "Suma ( [0181] a [0194] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + "
+            "[0227] + [0214] a [0217] )"
+        ),
+    ): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Suma” (sum) is spelled identically in Catalan and Spanish; the rest of the label is only "
+            "box-reference codes, kept unchanged."
+        ),
+    ),
+    ("ca", "Total"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "“Total” is spelled identically in Catalan and Spanish."
+    ),
+    ("en", "IBAN (10)"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "IBAN is a universal international banking acronym, unchanged across languages; the "
+            "footnote number is kept as in the Spanish."
+        ),
+    ),
+    ("en", "Modelo"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "The product keeps the AEAT form designation “Modelo” untranslated as an established domain"
+            " term, matching usage elsewhere in the English schema (e.g. “Modelo 190”)."
+        ),
+    ),
+    ("en", "SOCIMI [00012]"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "SOCIMI is a universal Spanish REIT-regime acronym, unchanged across languages; the box "
+            "suffix is kept as in the Spanish."
+        ),
+    ),
+    ("en", "Total"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD, "“Total” is spelled identically in English and Spanish."
+    ),
+    ("hu", "IBAN (10)"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM,
+        (
+            "IBAN is a universal international banking acronym, unchanged across languages; the "
+            "footnote number is kept as in the Spanish."
+        ),
+    ),
+    ("hu", "Modelo"): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "The product keeps the AEAT form designation “Modelo” untranslated as an established domain"
+            " term, matching usage elsewhere in the Hungarian schema (e.g. “Modelo 190 adóév 2024”)."
+        ),
     ),
 }
 
 
-def _is_continuity_label_key(key: str) -> bool:
-    """Return whether ``key`` is a casilla continuity LABEL key.
-
-    Structural rather than registry-derived so the gate also sees a continuity
-    entry no current casilla declares. Encoded segments never carry a dot, so
-    the split is exact: ``modelo.schema.<modelo>.casilla.continuidad.<id>.label``.
-    """
-    parts = key.split(".")
-    return (
-        len(parts) == 7
-        and parts[:2] == ["modelo", "schema"]
-        and parts[3:5] == ["casilla", "continuidad"]
-        and parts[6] == ModeloLocalizationFieldKind.LABEL
-    )
+@cache
+def _casilla_catalogue() -> ModeloCasillaCatalogue:
+    """The shipped casilla surface as the runtime resolves it."""
+    return ModeloCasillaCatalogue.published(LOCALES_DIR)
 
 
-def _continuity_label_offenders(
-    source_leaves: dict[str, str | None],
-    target_leaves: dict[str, str | None],
-    *,
+_NO_EXCUSES: dict[tuple[str, str], IdenticalTranslation] = {}
+"""No stored copy is excused: an identical term is represented by the Spanish fallback."""
+
+
+def _copied_offenders(
+    catalogue: ModeloCasillaCatalogue,
     locale_code: str,
-    backing: dict[str, str],
     allowlist: dict[tuple[str, str], IdenticalTranslation],
-) -> tuple[list[str], list[str]]:
-    """Return ``(copied, stranded)`` continuity label keys for one translated locale.
+) -> list[str]:
+    """Return the ``locale_code`` keys serving a label that merely repeats its Spanish text."""
+    return sorted(
+        key for key, text in catalogue.copied_translations(locale_code).items() if (locale_code, text) not in allowlist
+    )
 
-    A continuity label is the lineage-wide tier of the label chain: an inherited
-    casilla row with no occurrence text of its own lands on it. Two states make
-    that tier render Spanish to a non-Spanish reader:
 
-    * copied -- the value IS the Spanish source, which reads as translated to a
-      presence check while giving the reader nothing. Only a classified per-key
-      allowlist entry excuses it.
-    * stranded -- the value is unfilled although one of the lineage's occurrence
-      keys already carries a translation in this locale. The translation exists;
-      only the rows that fall through to the continuity tier miss it.
+def test_copied_translation_detector_discriminates() -> None:
+    """A planted Spanish copy fires and a classified one is excused, on real chains.
 
-    A lineage with no translation at ANY tier is a coverage gap of a different
-    kind and is not judged here.
+    The detector runs over the shipped catalogue with one served translation
+    replaced by the Spanish text it renders, so this proves teeth on real key
+    shapes and real resolution, not on a toy mapping.
     """
-    translated_lineages = {
-        continuity_key
-        for occurrence_key, continuity_key in backing.items()
-        if isinstance(value := target_leaves.get(occurrence_key), str) and value.strip()
+    shipped = _casilla_catalogue()
+    values = {locale: dict(leaves) for locale, leaves in shipped.values.items()}
+    lookup = shipped.lookup_for(values)
+    planted = next(
+        (source[0], spanish)
+        for index, occurrence in enumerate(shipped.occurrences)
+        if (spanish := shipped.resolve(index, "label", "es")) is not None
+        and (source := modelo_localization_source(occurrence.chain("label"), locale="en", lookup=lookup)) is not None
+        and source[1] == "en"
+        and values["en"][source[0]] != spanish
+    )
+    key, spanish = planted
+    values["en"][key] = spanish
+    catalogue = ModeloCasillaCatalogue(shipped.occurrences, values)
+
+    assert key not in _copied_offenders(shipped, "en", _LEGITIMATE_IDENTICAL_TRANSLATIONS)
+    assert key in _copied_offenders(catalogue, "en", _LEGITIMATE_IDENTICAL_TRANSLATIONS)
+    excused = {("en", spanish): IdenticalTranslation(IdenticalTranslationClass.SHARED_WORD, "planted")}
+    assert key not in _copied_offenders(catalogue, "en", excused)
+
+
+def test_casilla_labels_are_translated_not_copied() -> None:
+    """No translated locale stores a casilla label that is only its Spanish text.
+
+    A stored copy is never needed: the Spanish fallback renders the same text,
+    and an identical term is classified in the allowlist instead.
+    """
+    catalogue = _casilla_catalogue()
+    failures = [
+        f"{locale_code}: {len(copied)} served label(s) copy the Spanish source. Translate them with "
+        f"`python -m dev.locales casilla-author`, or classify a genuinely identical term. First five: {copied[:5]}"
+        for locale_code in _TRANSLATED_LOCALES
+        if (copied := _copied_offenders(catalogue, locale_code, _NO_EXCUSES))
+    ]
+    assert failures == [], "\n".join(failures)
+
+
+def test_no_translated_lineage_leaves_a_row_in_spanish() -> None:
+    """A row renders Spanish only when its lineage has no translation of that text at all."""
+    catalogue = _casilla_catalogue()
+    failures = [
+        f"{locale_code}: {len(stranded)} row(s) render Spanish although their lineage translates that text; "
+        f"run `python -m dev.locales casilla-collapse --apply` after carrying the translation. "
+        f"First five: {stranded[:5]}"
+        for locale_code in _TRANSLATED_LOCALES
+        if (stranded := catalogue.stranded_translations(locale_code))
+    ]
+    assert failures == [], "\n".join(failures)
+
+
+def _untranslated_texts(catalogue: ModeloCasillaCatalogue, locale_code: str) -> set[str]:
+    """Return every Spanish label a row renders untranslated in ``locale_code``."""
+    lookup = catalogue.lookup_for(catalogue.values)
+    return {
+        spanish
+        for index, occurrence in enumerate(catalogue.occurrences)
+        if (source := modelo_localization_source(occurrence.chain("label"), locale=locale_code, lookup=lookup))
+        is not None
+        and source[1] != locale_code
+        and (spanish := catalogue.values[source[1]][source[0]]) is not None
     }
-    copied: list[str] = []
-    stranded: list[str] = []
-    for key, source in source_leaves.items():
-        if not _is_continuity_label_key(key) or not isinstance(source, str) or not source.strip():
-            continue
-        target = target_leaves.get(key)
-        if isinstance(target, str) and target.strip():
-            if target.strip() == source.strip() and (locale_code, key) not in allowlist:
-                copied.append(key)
-        elif key in translated_lineages:
-            stranded.append(key)
-    return sorted(copied), sorted(stranded)
 
 
-def test_continuity_label_detector_discriminates() -> None:
-    """A planted copy and a planted stranded entry fire against the real catalogue.
+def test_every_untranslated_label_is_a_classified_identical_term() -> None:
+    """A translated locale renders Spanish only for a term reviewed as spelled identically.
 
-    The detector runs over the shipped ``en`` catalogue with one continuity
-    label replaced by its Spanish source and one reset to null, so this proves
-    teeth on real key shapes and a real registry backing, not on a toy mapping.
+    An identical translation is not stored: it resolves to the same text through
+    the Spanish fallback, so the catalogue keeps no copy. The review lives here.
     """
-    source = _catalogue_leaves("es")
-    target = _catalogue_leaves("en")
-    backing = _continuity_backing()
-    lineages = sorted(
-        {
-            continuity_key
-            for occurrence_key, continuity_key in backing.items()
-            if continuity_key.startswith("modelo.schema.303.")
-            and isinstance(target.get(occurrence_key), str)
-            and isinstance(target.get(continuity_key), str)
-            and isinstance(source.get(continuity_key), str)
-        }
-    )
-    assert len(lineages) >= 2, "modelo 303 carries no translated continuity lineage to plant a defect in"
-    planted_copy, planted_null = lineages[0], lineages[1]
-
-    clean_copied, clean_stranded = _continuity_label_offenders(
-        source, target, locale_code="en", backing=backing, allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS
-    )
-    assert planted_copy not in clean_copied
-    assert planted_null not in clean_stranded
-
-    target[planted_copy] = source[planted_copy]
-    target[planted_null] = None
-    copied, stranded = _continuity_label_offenders(
-        source, target, locale_code="en", backing=backing, allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS
-    )
-    assert planted_copy in copied
-    assert planted_null in stranded
-
-    excused, _ = _continuity_label_offenders(
-        source,
-        target,
-        locale_code="en",
-        backing=backing,
-        allowlist={("en", planted_copy): IdenticalTranslation(IdenticalTranslationClass.SHARED_WORD, "planted")},
-    )
-    assert planted_copy not in excused
-    assert _is_continuity_label_key("modelo.schema.303.casilla.continuidad.dr303-01.label")
-    assert not _is_continuity_label_key("modelo.schema.303.casilla.continuidad.dr303-01.help")
-    assert not _is_continuity_label_key("modelo.schema.303.revision.2024.casilla.01.label")
-
-
-def test_continuity_labels_are_translated_not_copied() -> None:
-    """No translated locale may render a continuity label as the Spanish source."""
-
-    source = _catalogue_leaves("es")
-    backing = _continuity_backing()
-    failures: list[str] = []
-    for locale_code in _TRANSLATED_LOCALES:
-        copied, stranded = _continuity_label_offenders(
-            source,
-            _catalogue_leaves(locale_code),
-            locale_code=locale_code,
-            backing=backing,
-            allowlist=_LEGITIMATE_IDENTICAL_CONTINUITY_LABELS,
+    catalogue = _casilla_catalogue()
+    failures = [
+        f"{locale_code}: {len(gaps)} Spanish label(s) render untranslated. Translate them with "
+        f"`python -m dev.locales casilla-author`, or classify a genuinely identical term. First five: {gaps[:5]}"
+        for locale_code in _TRANSLATED_LOCALES
+        if (
+            gaps := sorted(
+                text
+                for text in _untranslated_texts(catalogue, locale_code)
+                if (locale_code, text) not in _LEGITIMATE_IDENTICAL_TRANSLATIONS
+            )
         )
-        if copied:
-            failures.append(
-                f"{locale_code}: {len(copied)} continuity label(s) copy the Spanish source. Translate them via "
-                f"`python -m dev.locales set-batch`, or classify a genuinely identical term per key. "
-                f"First five: {copied[:5]}"
-            )
-        if stranded:
-            failures.append(
-                f"{locale_code}: {len(stranded)} continuity label(s) are unfilled although their lineage is "
-                f"translated, so inherited rows render Spanish. First five: {stranded[:5]}"
-            )
+    ]
     assert failures == [], "\n".join(failures)
 
 
 def test_identical_translation_allowlist_is_live() -> None:
-    """Every allowlist entry still names a continuity label that equals its Spanish source.
+    """Every allowlist entry still excuses a label some row renders untranslated.
 
-    An entry whose label was since retranslated, or whose key vanished, would
-    otherwise sit silently ready to excuse a future copy.
+    An entry whose label was since translated would otherwise sit silently
+    ready to excuse a future gap.
     """
-    source = _catalogue_leaves("es")
-    stale: list[str] = []
-    for (locale_code, key), entry in _LEGITIMATE_IDENTICAL_CONTINUITY_LABELS.items():
-        target = _catalogue_leaves(locale_code).get(key)
-        if not entry.reason.strip() or not _is_continuity_label_key(key):
-            stale.append(f"{locale_code}:{key} (malformed entry)")
-        elif not isinstance(target, str) or target != source.get(key):
-            stale.append(f"{locale_code}:{key} (no longer identical to the Spanish source)")
+    catalogue = _casilla_catalogue()
+    untranslated = {locale_code: _untranslated_texts(catalogue, locale_code) for locale_code in _TRANSLATED_LOCALES}
+    stale = [
+        f"{locale_code}:{spanish}"
+        for (locale_code, spanish), entry in _LEGITIMATE_IDENTICAL_TRANSLATIONS.items()
+        if not entry.reason.strip() or spanish not in untranslated.get(locale_code, set())
+    ]
     assert stale == [], f"remove stale identical-translation allowlist entries: {stale}"
