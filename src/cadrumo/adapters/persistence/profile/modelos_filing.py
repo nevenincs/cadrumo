@@ -2,9 +2,9 @@
 
 :class:`ModeloRecordCatalogueRepository` persists and loads
 :class:`ModeloRecord` entries in a :class:`ModeloRecordCatalogue` via
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`
-using an :class:`~adapters.persistence.storage.Envelope` wrapper. The
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`
+using an :class:`~adapters.persistence.storage.envelope.contract.Envelope` wrapper. The
 catalogue is stored as a single encrypted BLOB per profile bucket.
 
 This concrete repository is the persistence adapter behind the read-side
@@ -14,20 +14,20 @@ secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`ModeloRecordCatalogue` model and its pure mutators.
 
 See Also:
-    :mod:`~adapters.persistence.profile._modelo_runtime`
+    ``adapters.persistence.profile._modelo_runtime``
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
     :class:`~ModeloRecordCatalogue`
         Domain catalogue payload encrypted by this repository.
     :class:`~ModeloRecordCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :data:`~adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
         contract for these secure objects.
     :mod:`~adapters.persistence.profile.modelos_work_units`
         Sibling work-unit catalogue repository whose current/filed pointers
         reference filing records stored here.
-    :func:`~application.modelo.file_modelo_revision`
+    :func:`~application.modelo.filing_actions.file_modelo_revision`
         Application service that writes local/internal filing state through the
         modelo catalogue repositories.
 """
@@ -63,7 +63,7 @@ _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence
 class ModeloRecordCatalogueRepository:
     """Repository over encrypted SQL-backed filing-record catalogue storage.
 
-    :data:`~adapters.persistence.storage.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_FILING_RECORD_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`ModeloRecordCatalogue` row. The
     catalogue payload keeps member-scoped current/history lookups in the domain
@@ -73,7 +73,7 @@ class ModeloRecordCatalogueRepository:
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because this repository translates a classification or
     schema-version mismatch into :class:`ModeloRecordPersistenceError` via
-    :func:`~domain.modelos.raise_catalogue_integrity_error`, a translation the
+    :func:`~domain.modelos.errors.raise_catalogue_integrity_error`, a translation the
     shared kernel does not perform. This class exposes the concrete load/save
     implementation behind
     :class:`~ModeloRecordCatalogueRepositoryProtocol`.
@@ -108,7 +108,7 @@ class ModeloRecordCatalogueRepository:
         encrypted records from another's. Returns the resolved bucket
         identifier, or ``None`` when the repository was constructed against
         an injected
-        :class:`~adapters.persistence.storage.SecureObjectRepository`
+        :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         and no bucket id was supplied.
         """
         return self._bucket_id
@@ -262,7 +262,7 @@ class ModeloRecordCatalogueRepository:
         """Persist the filing-record catalogue as a single encrypted BLOB.
 
         Wraps ``catalogue`` in a ``FINANCIAL``-class
-        :class:`~adapters.persistence.storage.Envelope` stamped with the
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` stamped with the
         current schema version and write timestamp, then writes it through the
         secure object store. The entire catalogue is rewritten as one encrypted
         object per bucket, replacing any prior catalogue for this bucket.
@@ -313,9 +313,9 @@ class ModeloRecordCatalogueRepository:
     ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
 
-        The returned :class:`~adapters.persistence.storage.SecureObjectWrite`
-        carries the same :class:`~adapters.persistence.storage.Envelope`
-        and :class:`~adapters.persistence.storage.SensitivityClass`
+        The returned :class:`~core.secure_object_write.SecureObjectWrite`
+        carries the same :class:`~adapters.persistence.storage.envelope.contract.Envelope`
+        and :class:`~core.classification.policies.SensitivityClass`
         classification that :meth:`save` would persist directly.
 
         Pass ``expected_revision_id`` from :meth:`load_revisioned` whenever the
@@ -337,7 +337,7 @@ class ModeloRecordCatalogueRepository:
         Args:
             catalogue: The :class:`ModeloRecordCatalogue` to persist.
             extra_writes: Additional
-                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                :class:`~core.secure_object_write.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
             expected_revision_id: The revision :meth:`load_revisioned` reported
                 for the catalogue this one was derived from. Atomicity is what

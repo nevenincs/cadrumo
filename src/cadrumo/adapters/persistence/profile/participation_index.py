@@ -4,14 +4,14 @@ The participation index is a derived, rebuildable read-side cache linking one
 ledger transaction id to the finalized modelo revisions, filings, and
 justificantes that consumed it. This concrete repository is the persistence
 adapter behind the pure :mod:`~domain.modelos` index model: it stores one
-:class:`~adapters.persistence.storage.Envelope` per transaction at
-:class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under the
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` per transaction at
+:class:`~core.classification.policies.SensitivityClass` FINANCIAL under the
 active profile bucket, mirroring the :class:`~CalculationRevision`
 catalogue repository.
 
 Living in the persistence adapter (not in :mod:`~domain.modelos`) keeps the
-:class:`~adapters.persistence.storage.SecureObjectRepository` /
-:class:`~adapters.persistence.storage.Envelope` coupling out of the domain
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` /
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` coupling out of the domain
 layer; the domain package owns only the typed index model, its derivation, and
 the object-key grammar. The index is critically sensitive financial data; no
 plaintext index is ever written to disk.
@@ -57,8 +57,8 @@ class TransactionParticipationIndexRepository:
 
     Mirrors the :class:`~CalculationRevision` catalogue
     repository: persistence is delegated to
-    :class:`~adapters.persistence.storage.SecureObjectRepository` at
-    :class:`~adapters.persistence.storage.SensitivityClass` FINANCIAL under
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+    :class:`~core.classification.policies.SensitivityClass` FINANCIAL under
     the active profile bucket, one secure object per ``transaction_id``. The
     participation index is critically sensitive financial data (it links a
     ledger transaction to its filings); no plaintext index is ever written to
@@ -84,7 +84,7 @@ class TransactionParticipationIndexRepository:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the :class:`~adapters.persistence.storage.SecureObjectRepository` backend."""
+        """Return the :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` backend."""
         return self._objects
 
     def exists(self, transaction_id: str) -> bool:
@@ -192,13 +192,13 @@ class TransactionParticipationIndexRepository:
         participations the authoritative catalogue no longer records.
 
         Every upsert and every stale-row removal commits in one
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
         unit of work, so a crash mid-replace rolls back to the previous complete
         index rather than a half-pruned one.
 
         Stale rows are addressed by their stored HMAC digest: natural object keys
         are unrecoverable from the index (see
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.list_keys`),
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.list_keys`),
         so the retained set is digested with the same
         ``secure_object_key_digest`` the storage column binds with and the
         difference is deleted by digest. This keeps the prune decryption-free.

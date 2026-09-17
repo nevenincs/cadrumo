@@ -3,8 +3,8 @@
 :class:`ModeloEditReceiptRepository` persists one
 :class:`~application.modelo.edit_contract.ModeloEditMutationResultReceiptV1` per encrypted
 row, keyed by its own content-addressed ``receipt_id``, through
-:class:`~adapters.persistence.storage.SecureBoundRepository` at ``FINANCIAL``
-:class:`~adapters.persistence.storage.SensitivityClass`. Each receipt is its
+:class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` at ``FINANCIAL``
+:class:`~core.classification.policies.SensitivityClass`. Each receipt is its
 own row rather than one whole-catalogue singleton blob, so a lookup by
 ``receipt_id`` is one atomic encrypted-SQL read -- the domain proof a guarded
 compare-and-swap edit committed must be recoverable after a crash without
@@ -13,10 +13,10 @@ decrypting every receipt a bucket has ever produced.
 See Also:
     :class:`~application.modelo.edit_contract.ModeloEditMutationResultReceiptV1`
         The strict receipt payload this repository stores.
-    :data:`~adapters.persistence.storage.MODELO_EDIT_RECEIPT_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_EDIT_RECEIPT_NAMESPACE`
         Central namespace, sensitivity, and schema-version contract for these
         secure objects.
-    :class:`~adapters.persistence.storage.SecureBoundRepository`
+    :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`
         Shared per-record Envelope-wrapped encrypted repository kernel this
         class binds to one payload family; exposes ``to_secure_object_write``
         for the guarded co-commit the calculation-revision persistence writer

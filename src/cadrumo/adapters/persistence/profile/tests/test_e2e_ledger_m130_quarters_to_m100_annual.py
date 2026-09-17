@@ -52,8 +52,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -107,9 +105,12 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
+
+from .published_authority_support import published_authority_operation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -447,7 +448,7 @@ def _import_official_m130_result_observation(
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     bucket_events = BucketEventHistoryRepository(objects=secure_objects)
     observation_repo = CalculationObservationRepository(objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot("130", filing_year=_YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -633,7 +634,7 @@ def _autonomaworkflow_profile() -> TaxpayerProfile:
 
 def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -656,7 +657,7 @@ def _calculate_m100_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

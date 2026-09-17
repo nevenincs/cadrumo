@@ -10,7 +10,7 @@ for callers such as the prorrata filing path that co-commit the document with
 sibling writes.
 
 This is NOT the only singleton-document persistence kernel: a namespace whose
-on-disk rows are wrapped in :class:`~adapters.persistence.storage.Envelope`
+on-disk rows are wrapped in :class:`~adapters.persistence.storage.envelope.contract.Envelope`
 (classification/schema-version/written-at duplicated inside the JSON payload
 itself) is a different wire shape and belongs on
 :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
@@ -66,7 +66,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
     """Persist one strict Pydantic document, stored bare, through a governed secure object.
 
     "Stored bare" means ``document.model_dump_json()`` is written directly as
-    the row payload — no :class:`~adapters.persistence.storage.Envelope`
+    the row payload — no :class:`~adapters.persistence.storage.envelope.contract.Envelope`
     wrapper. Use this kernel only for a namespace whose on-disk rows are
     already in that shape, or a brand-new namespace with no format to
     preserve; an Envelope-wrapped namespace belongs on

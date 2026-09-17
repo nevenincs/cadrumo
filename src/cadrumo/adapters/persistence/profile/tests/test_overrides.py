@@ -22,7 +22,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -39,6 +38,8 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_KIND = "aeat_sede_justificante"
@@ -52,7 +53,7 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 
 
 def _prior_revision_id() -> str:
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -62,7 +63,7 @@ def _prior_revision_id() -> str:
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
     return (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot(
             Modelo("303").value,
             filing_year=_PRIOR_YEAR,

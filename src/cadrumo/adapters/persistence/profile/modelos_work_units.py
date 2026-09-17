@@ -2,10 +2,10 @@
 
 :class:`WorkUnitCatalogueRepository` persists :class:`WorkUnit` records in a
 :class:`WorkUnitCatalogue` at ``FINANCIAL``
-:class:`~adapters.persistence.storage.SensitivityClass` through
-:class:`~adapters.persistence.storage.SecureObjectRepository`. The
+:class:`~core.classification.policies.SensitivityClass` through
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`. The
 catalogue is serialised as a single
-:class:`~adapters.persistence.storage.Envelope`-wrapped JSON payload keyed
+:class:`~adapters.persistence.storage.envelope.contract.Envelope`-wrapped JSON payload keyed
 by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 
@@ -16,14 +16,14 @@ secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`WorkUnitCatalogue` model and its pure catalogue mutators.
 
 See Also:
-    :mod:`~adapters.persistence.profile._modelo_runtime`
+    ``adapters.persistence.profile._modelo_runtime``
         Bucket-id resolution and runtime secure-object factory shared by modelo
         persistence adapters.
     :class:`~WorkUnitCatalogue`
         Domain catalogue payload encrypted by this repository.
     :class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :data:`~adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
         contract for these secure objects.
     :mod:`~adapters.persistence.profile.modelos_calculation`
@@ -69,7 +69,7 @@ class WorkUnitCatalogueRepository:
     for the shared one-record decode and Envelope-construction mechanics;
     :meth:`load_revisioned` translates a classification or schema-version
     mismatch into :class:`WorkUnitPersistenceError` via
-    :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
+    :func:`~domain.modelos.errors.raise_catalogue_integrity_error`. This class is
     the concrete implementation behind
     :class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`.
     """
@@ -123,8 +123,8 @@ class WorkUnitCatalogueRepository:
         """Persist ``catalogue`` as the encrypted singleton object.
 
         The on-disk database value is an encrypted
-        :class:`~adapters.persistence.storage.Envelope` BLOB at the
-        :class:`~adapters.persistence.storage.SensitivityClass`
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` BLOB at the
+        :class:`~core.classification.policies.SensitivityClass`
         ``FINANCIAL`` classification.
 
         Args:
@@ -163,9 +163,9 @@ class WorkUnitCatalogueRepository:
         the calculation, filing, and event catalogues the pointer names, so a
         failure cannot leave an advanced pointer standing over state that never
         committed. The returned
-        :class:`~adapters.persistence.storage.SecureObjectWrite` carries the same
-        :class:`~adapters.persistence.storage.Envelope` and
-        :class:`~adapters.persistence.storage.SensitivityClass` classification
+        :class:`~core.secure_object_write.SecureObjectWrite` carries the same
+        :class:`~adapters.persistence.storage.envelope.contract.Envelope` and
+        :class:`~core.classification.policies.SensitivityClass` classification
         :meth:`save` would persist directly.
         """
         write = self._storage.to_secure_object_write(catalogue)
@@ -229,7 +229,7 @@ class WorkUnitCatalogueRepository:
         Args:
             catalogue: The :class:`WorkUnitCatalogue` to persist.
             extra_writes: Additional
-                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                :class:`~core.secure_object_write.SecureObjectWrite`
                 objects to commit atomically with the catalogue.
             expected_revision_id: The revision :meth:`load_revisioned` reported
                 for the catalogue this one was derived from. Atomicity is what

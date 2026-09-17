@@ -25,7 +25,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -51,6 +50,8 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 
 
@@ -69,7 +70,7 @@ _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _deduction_authority(provider_id: str) -> dict[str, object]:
@@ -224,7 +225,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A taxpayer recorded as no-prorrata keeps the previous full-deduction output."""
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -282,7 +283,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The active provisional percentage bites only on deducible IVA cuota fields."""
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -381,7 +382,7 @@ def test_general_regime_apportionment_is_byte_identical_to_pre_especial(
     (10.50 * 80% = 8.400): the regime-aware branch must not perturb a single
     Decimal on the general path. The base and devengado bindings are untouched.
     """
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -429,7 +430,7 @@ def test_especial_regime_routes_each_input_by_art_106_classification(
     = 18.90 — an art. 106 result, not the flat general 80% of the whole
     (which would be 25.20). Bases stay full; devengado is untouched.
     """
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -482,7 +483,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(
     percentage applied to the whole deducible cuota, proving especial is an
     extension of the single aggregation path rather than a fork.
     """
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -587,7 +588,7 @@ def test_single_sector_all_inputs_equals_whole_entity_general_byte_identical(
     the sector-aware path composes correctly and does not perturb the aggregate
     when the partition is trivial.
     """
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
@@ -679,7 +680,7 @@ def test_each_input_routes_to_its_own_sector_percentage(
     figure is an oracle claim proven in the verification test; here the
     structural claim is that the three percentages are applied independently.
     """
-    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
+    revision = published_authority_operation().revision_with_export_layouts("303", "2022")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)

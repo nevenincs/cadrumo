@@ -6,10 +6,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -23,8 +19,13 @@ from cadrumo.domain.calculations.registry.iva_schema_vocabulary import m303_regi
 from cadrumo.domain.deadlines.models import M303RegimeComposition
 from cadrumo.domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -91,7 +92,7 @@ def test_secure_profile_composition_derives_the_closed_m303_scope(
     composition = M303RegimeComposition.from_registry(composition_token)
     # The authority compiles inside the test, not at collection.
     expected_scope: M303RegimenSimplificadoScope = m303_regime_composition_simplified_scope(
-        composition_token, authority=compiled_bundled_authority()
+        composition_token, authority=published_authority_operation()
     )
     assert m303_regimen_simplificado_scope_for_composition(composition).scope == expected_scope
 

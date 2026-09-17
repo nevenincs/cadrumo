@@ -28,7 +28,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -53,6 +52,8 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -151,7 +152,7 @@ def _calculate_303(
     cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
-    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = published_authority_operation().snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = relation_prefill_values_as_binding_values(
         snapshot.revision,
         dict(relation_values),
@@ -248,7 +249,7 @@ def _carry_in_for_year_n_plus_1(
     obs_repo: CalculationObservationRepository, *, operation: PinnedAuthorityOperation
 ) -> Decimal | None:
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
-    snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+    snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     prefill = resolve_bindings_from_local_store(
         snapshot_n1,
         repository=obs_repo,

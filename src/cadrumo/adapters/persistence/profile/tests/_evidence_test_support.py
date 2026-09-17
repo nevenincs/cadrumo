@@ -7,9 +7,6 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
@@ -28,6 +25,9 @@ from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from cadrumo.core.config import Settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 

@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, cast, override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -46,6 +45,8 @@ from cadrumo.domain.calculations.registry.bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -116,7 +117,7 @@ def _context(
     *,
     bucket_id: str = _BUCKET_ID,
 ) -> CalculationSourceContext:
-    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -127,11 +128,11 @@ def _context(
 
 
 def _m303_revision() -> ModeloRevision:
-    return compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+    return published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
 
 
 def _canonical_bienes_target(*, modelo: str, period: str, output: BienesInversionRegularizacionOutput) -> str:
-    revision = compiled_bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period).revision
+    revision = published_authority_operation().snapshot(modelo, filing_year=_FILING_YEAR, period=period).revision
     binding = next(
         binding
         for binding in revision.bindings
@@ -163,7 +164,7 @@ def _save_current_year_m303_prorrata_observation(
     *,
     percentage: Decimal,
 ) -> None:
-    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     repository.save(
         repository.prepare_observation_envelope(
             RegistryModeloObservation(
@@ -381,10 +382,10 @@ def test_source_resolver_refuses_construction_without_an_explicit_observation_re
 
 def test_bienes_inversion_observation_repository_caller_ast_census_has_only_explicit_dependencies() -> None:
     """Every capital-goods resolver consumer names an observation store; no fallback survives."""
-    source_root = Path(__file__).parents[3]
+    source_root = Path(__file__).parents[4]
     intentional_refusals = {
         (
-            "application/calculations/tests/test_bienes_inversion_regularizacion.py",
+            "adapters/persistence/profile/tests/test_bienes_inversion_regularizacion.py",
             "test_source_resolver_refuses_construction_without_an_explicit_observation_repository",
         ),
     }
@@ -419,7 +420,7 @@ def test_bienes_inversion_observation_repository_caller_ast_census_has_only_expl
         census.visit(ast.parse(source))
 
     assert omitted == intentional_refusals
-    fallback_module = source_root / "application" / "calculations" / "_bienes_inversion_regularizacion.py"
+    fallback_module = source_root / "application" / "calculations" / "bienes_inversion_regularizacion.py"
     assert not [
         node.lineno
         for node in ast.walk(ast.parse(fallback_module.read_text(encoding="utf-8")))

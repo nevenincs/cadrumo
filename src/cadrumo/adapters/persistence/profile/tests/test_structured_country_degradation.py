@@ -854,11 +854,12 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         the guard's exemption. Before this row the token never arrived and the
         refusal named both slots.
 
-        The claim is still withheld here, and correctly: this fixture carries no
-        taxpayer profile, so the FILER's territory is unestablished too, and
-        that gap is an unfinished setup rather than a hole in our data. The
-        exemption has no warrant for it. That the reason narrowed to exactly the
-        filer's slot is the whole measurement.
+        The module's autouse fixture seeds the filer's profile, so the filer's
+        own territory is established and the counterparty's slot is the only
+        residency outstanding. Forgiving it therefore lets the declared relief
+        stand; without the token reaching the guard, the same document is
+        withheld with the counterparty's slot named, as the unassigned-code
+        cases below show.
         """
         confirmed = self._confirmed(
             _UNCATALOGUED_ALPHA2,
@@ -871,9 +872,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         )
 
         assert self._counterparty_unestablished(confirmed)
-        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert "issuer_residency" in confirmed.category.note
-        assert "customer_residency" not in confirmed.category.note
+        assert confirmed.category.outcome is IvaCategoryOutcome.DECLARED
+        assert confirmed.category.category == IvaCategory("export_third_country_zero_rated")
 
     def test_the_alpha3_spelling_of_the_same_country_is_forgiven_too(
         self,
@@ -902,9 +902,9 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             operation=operation,
         )
 
-        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert "issuer_residency" in confirmed.category.note
-        assert "customer_residency" not in confirmed.category.note
+        assert self._counterparty_unestablished(confirmed)
+        assert confirmed.category.outcome is IvaCategoryOutcome.DECLARED
+        assert confirmed.category.category == IvaCategory("export_third_country_zero_rated")
 
     def test_a_document_stating_no_country_has_both_slots_named(
         self,

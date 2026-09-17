@@ -3,20 +3,20 @@
 Justificante metadata captures AEAT verification identifiers, operator
 identity, timestamps, and verification URLs. The structured metadata is
 stored as encrypted byte objects in the primary SQL backend at
-:class:`~adapters.persistence.storage.SensitivityClass` ``AUDIT``
+:class:`~core.classification.policies.SensitivityClass` ``AUDIT``
 sensitivity; no plaintext metadata JSON or envelope file lands on disk.
 
 This concrete repository is the persistence adapter for the
-:class:`~domain.justificante.Justificante` audit-sink record. It lives in
+:class:`~domain.justificante.schema.Justificante` audit-sink record. It lives in
 the persistence adapter (not in :mod:`~domain.justificante`) because its
-base :class:`~adapters.persistence.storage.SecureBoundRepository` is
+base :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` is
 SQL/crypto-coupled; the domain package owns the pure record and the
-:class:`~domain.justificante.JustificanteRepositoryProtocol` port.
+:class:`~domain.justificante.protocols.JustificanteRepositoryProtocol` port.
 
 See Also:
-    :class:`~domain.justificante.Justificante`
+    :class:`~domain.justificante.schema.Justificante`
         Payload model encrypted by this repository.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         SQL object store underlying the bound repository.
 """
 
@@ -34,9 +34,9 @@ from ..storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE
 class JustificanteRepository(SecureBoundRepository[Justificante]):
     """Encrypted AUDIT repository for :class:`Justificante` metadata.
 
-    The :class:`~adapters.persistence.storage.SecureBoundRepository` base
+    The :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` base
     stores each :class:`Justificante` in a
-    :class:`~adapters.persistence.storage.Envelope` row under the AUDIT
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` row under the AUDIT
     justificante-metadata namespace. The AEAT CSV is the natural key, so list
     and iteration APIs expose persisted receipt metadata without reading
     plaintext metadata from disk.

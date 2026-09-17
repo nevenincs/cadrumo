@@ -7,8 +7,9 @@ percentage that has ever existed can arrive at the confirm boundary.
 
 Eight percent is the specific case, and it is real rather than hypothetical:
 Spain's reducido was 8% from July 2010 until September 2012, when it became the
-present 10%. A 2011 invoice therefore prints a percentage that is perfectly
-valid history and that :class:`~domain.invoices.IvaRate` does not carry.
+present 10%. That history lies below the supported filing floor, so a document
+dated inside the supported years that still prints 8% -- a supplier on a stale
+template -- states a percentage :class:`~domain.invoices.IvaRate` does not carry.
 
 The rate this module names has already had to change once, which is the better
 argument for the gate than any wording could be. It was originally the transient
@@ -42,6 +43,7 @@ from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draf
 from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.invoices.enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -79,15 +81,22 @@ def _authority_percentages(on_date: date) -> set[Decimal]:
     return percentages
 
 
-# A 2011 invoice at the then-current 8% reducido: base 100,00, cuota 8,00.
+_SUPPORT = published_supported_filing_years()
+assert _SUPPORT is not None, "the bundled registry declares no supported filing years"
+_DOCUMENT_DATE = date(_SUPPORT.horizon, 6, 14)
+_DOCUMENT_YEAR = _DOCUMENT_DATE.year
+_PRINTED_DATE = _DOCUMENT_DATE.strftime("%d/%m/%Y")
+
+# An invoice dated inside the supported span still printing the pre-September-2012
+# 8% reducido: base 100,00, cuota 8,00.
 # Every figure is internally coherent -- the document is not malformed, it is
 # simply expressed in a rate slot this taxonomy does not carry.
 _UNREPRESENTABLE_RATE = Decimal("8")
 _UNREPRESENTABLE_RATE_INVOICE_LINES = (
     "Factura de Energia Peninsular SL",
     f"NIF: {_SUPPLIER_CIF}",
-    "Numero de factura: 2011-0451",
-    "Fecha: 14/06/2011",
+    f"Numero de factura: {_DOCUMENT_YEAR}-0451",
+    f"Fecha: {_PRINTED_DATE}",
     "Base imponible: 100,00",
     "IVA 8%",
     "Cuota IVA: 8,00",
@@ -101,8 +110,8 @@ _UNREPRESENTABLE_RATE_INVOICE_LINES = (
 _KNOWN_RATE_INVOICE_LINES = (
     "Factura de Energia Peninsular SL",
     f"NIF: {_SUPPLIER_CIF}",
-    "Numero de factura: 2024-0452",
-    "Fecha: 14/06/2024",
+    f"Numero de factura: {_DOCUMENT_YEAR}-0452",
+    f"Fecha: {_PRINTED_DATE}",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
@@ -116,10 +125,10 @@ _KNOWN_RATE_INVOICE_LINES = (
 _UNREPRESENTABLE_RATE_FIELDS = {
     "supplier_tax_id": _SUPPLIER_CIF,
     "supplier_tax_id_anchor": _SUPPLIER_CIF,
-    "invoice_number": "2011-0451",
-    "invoice_number_anchor": "2011-0451",
-    "invoice_date": "2011-06-14",
-    "invoice_date_anchor": "14/06/2011",
+    "invoice_number": f"{_DOCUMENT_YEAR}-0451",
+    "invoice_number_anchor": f"{_DOCUMENT_YEAR}-0451",
+    "invoice_date": _DOCUMENT_DATE.isoformat(),
+    "invoice_date_anchor": _PRINTED_DATE,
     "taxable_base": "100,00",
     "taxable_base_anchor": "100,00",
     "iva_rate": "8",
@@ -132,10 +141,10 @@ _UNREPRESENTABLE_RATE_FIELDS = {
 
 _KNOWN_RATE_FIELDS = {
     **_UNREPRESENTABLE_RATE_FIELDS,
-    "invoice_number": "2024-0452",
-    "invoice_number_anchor": "2024-0452",
-    "invoice_date": "2024-06-14",
-    "invoice_date_anchor": "14/06/2024",
+    "invoice_number": f"{_DOCUMENT_YEAR}-0452",
+    "invoice_number_anchor": f"{_DOCUMENT_YEAR}-0452",
+    "invoice_date": _DOCUMENT_DATE.isoformat(),
+    "invoice_date_anchor": _PRINTED_DATE,
     "iva_rate": "21",
     "iva_rate_anchor": "21%",
     "iva_amount": "21,00",
@@ -149,7 +158,7 @@ _KNOWN_RATE_FIELDS = {
 def _loopback_reader() -> Iterator[None]:
     """Serve a real reading endpoint keyed on each document's own figures."""
     with serving_a_loopback_reader(
-        (("2024-0452", _KNOWN_RATE_FIELDS), ("2011-0451", _UNREPRESENTABLE_RATE_FIELDS)),
+        ((f"{_DOCUMENT_YEAR}-0452", _KNOWN_RATE_FIELDS), (f"{_DOCUMENT_YEAR}-0451", _UNREPRESENTABLE_RATE_FIELDS)),
     ):
         yield
 
@@ -225,7 +234,7 @@ def test_the_chosen_rate_is_genuinely_outside_the_taxonomy() -> None:
     percentage the taxonomy still does not carry -- and never in the resolver,
     which is behaving correctly by representing a rate it now has a slot for.
     """
-    slots = _authority_percentages(date(2024, 6, 14))
+    slots = _authority_percentages(_DOCUMENT_DATE)
 
     assert _UNREPRESENTABLE_RATE not in slots, (
         f"a slot for {_UNREPRESENTABLE_RATE}% now exists, so such a document is representable and "
@@ -262,7 +271,7 @@ def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
             isolated_settings=isolated_settings,
             secure_objects=secure_objects,
             tmp_path=tmp_path,
-            filename="factura_luz_2011.pdf",
+            filename="factura_luz_unrepresentable.pdf",
             authority=invoice_authority,
         )
 

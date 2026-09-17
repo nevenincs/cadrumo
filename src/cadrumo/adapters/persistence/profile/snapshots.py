@@ -314,7 +314,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         Args:
             snapshot: The snapshot payload to persist.
             extra_writes: Additional
-                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                :class:`~core.secure_object_write.SecureObjectWrite`
                 objects to commit atomically with the snapshot.
         """
         self._objects.save_many((self.to_secure_object_write(snapshot), *extra_writes))

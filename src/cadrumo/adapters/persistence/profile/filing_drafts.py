@@ -1,25 +1,25 @@
 """Governed-persistence repository for filing drafts.
 
-:class:`~domain.filing.ModeloDraft` records carry exact casilla
+:class:`~domain.filing.schema.ModeloDraft` records carry exact casilla
 arithmetic and tax due values. They are stored as encrypted byte objects via
-:class:`~adapters.persistence.storage.SecureObjectRepository` at
-``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass` and
-serialised through an :class:`~adapters.persistence.storage.Envelope` by
-:class:`~adapters.persistence.storage.SecureBoundRepository`; no plaintext
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass` and
+serialised through an :class:`~adapters.persistence.storage.envelope.contract.Envelope` by
+:class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`; no plaintext
 draft JSON or envelope file lands on disk.
 
 This concrete repository lives in the persistence adapter (not in
 :mod:`domain.filing`) because its
-:class:`~adapters.persistence.storage.SecureBoundRepository` base is
+:class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository` base is
 SQL/crypto-coupled; the domain package owns the typed
-:class:`~domain.filing.ModeloDraft` payload.
+:class:`~domain.filing.schema.ModeloDraft` payload.
 
 See Also:
-    :class:`~domain.filing.ModeloDraft`
+    :class:`~domain.filing.schema.ModeloDraft`
         Strict filing payload persisted by this repository.
-    :class:`~adapters.persistence.storage.SecureBoundRepository`
+    :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`
         Generic encrypted-envelope repository base used for the draft store.
-    :data:`adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`
+    :data:`adapters.persistence.storage.secure_object_namespaces.FILING_DRAFTS_NAMESPACE`
         Namespace, sensitivity, schema-version, object-key, and custody
         contract for draft secure objects.
     :mod:`application.filing`
@@ -45,16 +45,16 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 
 class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
-    """Encrypted FINANCIAL repository for :class:`~domain.filing.ModeloDraft` payloads.
+    """Encrypted FINANCIAL repository for :class:`~domain.filing.schema.ModeloDraft` payloads.
 
-    The :class:`~adapters.persistence.storage.SecureBoundRepository`
+    The :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`
     base wraps each draft in an
-    :class:`~adapters.persistence.storage.Envelope` and writes it under
-    :data:`adapters.persistence.storage.FILING_DRAFTS_NAMESPACE`. The
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` and writes it under
+    :data:`adapters.persistence.storage.secure_object_namespaces.FILING_DRAFTS_NAMESPACE`. The
     draft id is the natural key, so list and iteration APIs expose draft
     aggregates rather than submission or amendment records. The namespace
     definition supplies the ``FINANCIAL``
-    :class:`~adapters.persistence.storage.SensitivityClass`, schema
+    :class:`~core.classification.policies.SensitivityClass`, schema
     version, object-key grammar, and custody contract.
     """
 
@@ -74,7 +74,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     @override
     @classmethod
     def payload_model(cls) -> type[ModeloDraft]:
-        """Return the :class:`~domain.filing.ModeloDraft` encrypted payload model for filing drafts."""
+        """Return the :class:`~domain.filing.schema.ModeloDraft` encrypted payload model for filing drafts."""
         return ModeloDraft
 
     @property
@@ -90,10 +90,10 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     def save(self, payload: ModeloDraft) -> None:
         """Persist ``payload`` after confirming ``draft_id`` is its content address.
 
-        :attr:`~domain.filing.ModeloDraft.draft_id` is documented as a hash over
+        :attr:`~domain.filing.schema.ModeloDraft.draft_id` is documented as a hash over
         the draft's modelo, period, taxpayer, registry snapshot, casilla values,
         and binding values, and
-        :func:`~domain.filing.compute_modelo_draft_id` is its sole canonical
+        :func:`~domain.filing.schema.compute_modelo_draft_id` is its sole canonical
         derivation — but nothing recomputed it, so an arbitrary, blank,
         whitespace, or stale id was persisted and reloaded unchanged and a
         stored draft could claim an identity that was not its own content. Two
@@ -169,7 +169,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         )
 
     def iter_drafts(self) -> Iterator[ModeloDraft]:
-        """Yield every persisted :class:`~domain.filing.ModeloDraft`, in lexicographic id order."""
+        """Yield every persisted :class:`~domain.filing.schema.ModeloDraft`, in lexicographic id order."""
         return iter(sorted(self.iter_records(), key=self.extract_identifier))
 
 

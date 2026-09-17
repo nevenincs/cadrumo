@@ -19,7 +19,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -34,6 +33,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 
+from .published_authority_support import published_authority_operation
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
@@ -45,7 +46,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
-    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
+    return published_authority_operation().snapshot(Modelo("303").value, filing_year=2025, period="4T").snapshot_ref
 
 
 def test_declare_especial_transition_persists_typed_option(

@@ -25,6 +25,7 @@ from cadrumo.application.calculations.observations_repository import (
     observation_key,
 )
 from cadrumo.core.errors.error_codes import build_error_envelope
+from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.period import Period
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -183,14 +184,15 @@ def test_iva_wallet_decision_event_key_succeeds_for_valid_decision() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Type contract: ObservationKeyError is a subtype of ValueError
+# Type contract: ObservationKeyError is a registered core validation failure
 # ---------------------------------------------------------------------------
 
 
-def test_observation_key_error_is_value_error() -> None:
-    """ObservationKeyError inherits from CoreValidationError which inherits ValueError."""
+def test_observation_key_error_is_a_registered_validation_failure() -> None:
+    """ObservationKeyError stays in the registered hierarchy, not the builtin one."""
     err = ObservationKeyError("test")
-    assert isinstance(err, ValueError)
+    assert isinstance(err, CoreValidationError)
+    assert not isinstance(err, ValueError)
 
 
 # ---------------------------------------------------------------------------

@@ -10,8 +10,6 @@ from pathlib import Path
 from types import FrameType
 
 import pytest
-from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
@@ -22,14 +20,7 @@ from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censo_sync import bound_raw_afectacion_ratio
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
-from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority_artifact import (
-    GovernedFactComponentQuery,
-    ProfileSchemaComponentQuery,
-)
-from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -45,16 +36,8 @@ _Q2_2026 = Period.from_year_and_code(2026, "2T")
 
 @pytest.fixture(scope="module")
 def operation() -> Iterator[PinnedAuthorityOperation]:
-    """Expose canonical authored facts and profile schema through one pin."""
-    facts = compile_authored_fact_catalogue(bundled_path("registry", "aeat"))
-    reader = FakeAuthorityComponentReader(
-        {
-            **{GovernedFactComponentQuery(str(fact_id)): fact for fact_id, fact in facts.facts.items()},
-            ProfileSchemaComponentQuery(): load_user_profile_schema(),
-        },
-    )
-    pinned = PinnedAuthorityOperation(reader, reader.pin())
-    with validating_governed_facts(pinned):
+    """Expose the published facts and profile schema through one leased operation."""
+    with bundled_indexed_authority().operation() as pinned:
         yield pinned
 
 

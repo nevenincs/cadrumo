@@ -101,7 +101,7 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 product_software_identity=_product_software_identity(),
             ),
-            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
@@ -509,7 +509,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 product_software_identity=_product_software_identity(),
                 prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
             ),
-            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -659,10 +659,7 @@ def test_public_ingreso_export_omits_did_page(
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 product_software_identity=_product_software_identity(),
             ),
-            workflow_profile=TaxpayerProfile(
-                tax_id=taxpayer_nif,
-                iva_regime=IVARegime("GENERAL"),
-            ),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -707,7 +704,7 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     product_software_identity=_product_software_identity(),
                 ),
-                workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
@@ -744,7 +741,7 @@ def test_export_refuses_empty_output_path(
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     product_software_identity=_product_software_identity(),
                 ),
-                workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
@@ -767,7 +764,7 @@ def test_export_success_path_is_idempotent_overwrite(
             operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303.txt"
-        profile = TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL"))
+        profile = _typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None)
 
         first = export_modelo_revision(
             ModeloExportCommand(

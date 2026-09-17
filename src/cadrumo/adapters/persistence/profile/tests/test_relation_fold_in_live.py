@@ -36,10 +36,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
@@ -79,6 +75,9 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import (
@@ -86,6 +85,8 @@ from cadrumo.entrypoints.adapter_composition import (
     build_retencion_observation_ports,
     build_work_lifecycle_ports,
 )
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -173,7 +174,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
 
 def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
     """Calculate + persist the four 115 quarters; return the summed 01/02/03 totals."""
-    auth = compiled_bundled_authority()
+    auth = published_authority_operation()
     totals: dict[CasillaId, Decimal] = {
         _M115_PERCEPTORES_CASILLA: Decimal("0"),
         _M115_BASE_CASILLA: Decimal("0"),

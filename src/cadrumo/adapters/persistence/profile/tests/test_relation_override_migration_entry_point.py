@@ -29,7 +29,6 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -51,6 +50,7 @@ from ..calculation_revision_override_migration import rekey_calculation_revision
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..relation_binding_join import bundled_relation_binding_join, bundled_relation_binding_join_targets
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -60,7 +60,7 @@ _BUCKET_ID = "1d4f2a60-5c31-4b7e-8a2d-6e0f9c3b1a77"
 @cache
 def _snapshot() -> RegistrySnapshot:
     # Compiled on first use, not at import: collection must stay cheap.
-    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    return published_authority_operation().snapshot("303", filing_year=2026, period="1T")
 
 
 @cache

@@ -27,7 +27,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -55,6 +54,8 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -159,7 +160,7 @@ def _record() -> BienInversionIvaRecord:
 
 def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh projects the register value into Modelo 303 casilla 43."""
-    authority = compiled_bundled_authority()
+    authority = published_authority_operation()
     snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)

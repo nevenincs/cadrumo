@@ -15,7 +15,8 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
-from dev.registry.tests.profile_schema_support import (
+
+from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 

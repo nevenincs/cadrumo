@@ -2,12 +2,12 @@
 
 :class:`InventoryLedger` payloads are grouped in
 :class:`InventoryLedgerDocument` and stored as
-``FINANCIAL`` :class:`adapters.persistence.storage.SensitivityClass`
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`
 secure objects in the primary database through
-:class:`adapters.persistence.storage.SecureObjectRepository`. The
+:class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`. The
 singleton namespace, default object key, schema version, and custody contract
 come from
-:data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+:data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
 See Also:
     :mod:`domain.contribuyente.inventory`
@@ -73,9 +73,9 @@ class InventoryLedgerRepository:
     """Governed repository for the encrypted :class:`InventoryLedgerDocument` singleton.
 
     The singleton row is owned by
-    :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`
+    :data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_INVENTORY_LEDGER_NAMESPACE`
     and persisted through
-    :class:`adapters.persistence.storage.SecureObjectRepository`.
+    :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -85,7 +85,7 @@ class InventoryLedgerRepository:
             objects: Optional injected secure-object repository. When
                 supplied, every encrypted-store read and write is routed
                 through it instead of a
-                :class:`adapters.persistence.storage.SecureObjectRepository`
+                :class:`adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
                 resolved from the pydantic-settings :class:`Settings`
                 object. This is the dependency-injection seam
                 real-adapter tests use to bind a single explicit SQLite
@@ -142,7 +142,7 @@ class InventoryLedgerRepository:
 
         The classification, schema version, namespace, and object key are taken
         from
-        :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
+        :data:`adapters.persistence.storage.secure_object_namespaces.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
 
         Args:
             document: Ledger document to encrypt and write.

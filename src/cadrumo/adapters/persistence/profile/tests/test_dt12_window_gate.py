@@ -27,7 +27,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -42,6 +41,8 @@ from cadrumo.core.period import Period
 from cadrumo.core.rescate_type import RescateType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -64,7 +65,7 @@ def _create_m100_work_unit(*, operation: PinnedAuthorityOperation) -> tuple[str,
         ``(work_unit_id, reduccion_casilla_id)`` for the DT 12ª reducción slot.
     """
     period = Period.from_year_and_code(_FILING_YEAR, _ANNUAL_PERIOD)
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=period.registry_token)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period=period.registry_token)
     reduccion_casilla_id = casilla_id_for_unique_semantic_role(snapshot, _REDUCCION_SEMANTIC_ROLE)
     assert reduccion_casilla_id is not None
 

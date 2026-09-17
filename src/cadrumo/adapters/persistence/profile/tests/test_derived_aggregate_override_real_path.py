@@ -44,8 +44,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -65,11 +63,14 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -141,7 +142,7 @@ _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
 
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     values: dict[BindingId, Decimal] = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
@@ -189,7 +190,7 @@ def _calculate_estatal_minimo() -> Decimal:
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.
     """
-    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET,
@@ -230,7 +231,7 @@ def _store_sentinel_at_derived_path() -> None:
         resolve_active_bucket_id() or "",
         (UserProfileFact(path=_DERIVED_PATH, value=_SENTINEL),),
         require_complete=False,
-        schema=load_user_profile_schema(),
+        schema=published_profile_schema(),
     )
 
 

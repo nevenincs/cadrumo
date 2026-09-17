@@ -29,7 +29,7 @@ guess would not be.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -40,6 +40,8 @@ from cadrumo.application.ledger.confirmed_field_resolution import domestic_rate_
 from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft, InvoiceDraftRateBreakdown
 from cadrumo.core.config import Settings
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -182,33 +184,29 @@ def test_a_recargo_document_leaves_the_category_undeclared(
 def test_a_rate_unregistered_on_the_issue_date_resolves_to_nothing() -> None:
     """The refusal branch, observed refusing rather than assumed to.
 
-    Spain's general tier stood at 16 % until mid-2010 and reached 21 % only on
-    1 September 2012, so a 21 % document issued in 2010 states a rate that was
-    not a registered Spanish tier on its own issue date. The resolution must
-    decline rather than fall back to today's meaning of 21 %, which is the whole
-    reason the lookup takes a date.
-
-    The dates are keyed to the statute rather than to how far the shipped rate
-    records happen to reach. An earlier revision of this test asserted the
-    refusal at 2023 on the belief that the records began in 2024; they were
-    since extended backwards and the assertion became a claim about the fixture
-    instead of about the law.
+    A document printing a rate that was not a registered Spanish tier on its
+    own issue date must decline rather than fall back to today's meaning of that
+    rate, which is the whole reason the lookup takes a date. Two per cent is
+    registered only from October to December 2024 (RDL 4/2024), so a 2 %
+    document dated at the supported floor states no tier of its own day.
 
     Asserted on the TIER rather than on a category, because the resolution now
     stops at the tier: it hands that axis to the rule table's criteria, where
     ``R05`` applies the tier-to-category mapping this resolution used to copy.
-    The declines are unchanged; only what they decline to produce is.
 
     Exercised here rather than through a confirm because no document in the
-    bundled corpus predates the rate records, so the end-to-end route cannot
-    reach this branch. The draft and the lookup are both real; only the calling
-    layer is skipped.
+    bundled corpus carries such a rate. The draft and the lookup are both real;
+    only the calling layer is skipped. A date below the floor is not a decline
+    but a refusal at the support gate.
     """
-    draft = InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),))
+    with bundled_indexed_authority().operation() as operation:
+        floor = operation.supported_filing_years().date_envelope().floor
+    two_per_cent = InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("2")),))
+    general = InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),))
 
-    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2010, 11, 20)) is None
-    # The same draft on a date the rate WAS registered resolves, so the refusal
-    # above is attributable to the date and not to the draft being unusable.
-    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2015, 11, 20)) == require_iva_rate_kind(
-        "general"
-    )
+    assert domestic_rate_tier_from_the_document(two_per_cent, invoice_date=floor) is None
+    # The same lookup on a rate registered that day resolves, so the decline
+    # above is attributable to the rate's date and not to an unusable draft.
+    assert domestic_rate_tier_from_the_document(general, invoice_date=floor) == require_iva_rate_kind("general")
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        domestic_rate_tier_from_the_document(general, invoice_date=floor - timedelta(days=1))

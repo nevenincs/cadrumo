@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
@@ -74,6 +73,8 @@ from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+
+from .published_authority_support import published_authority_operation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -386,7 +387,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert wire[10:12] == expected_wire_period
     assert period_token.encode("ascii") not in wire
     layout = (
-        compiled_bundled_authority()
+        published_authority_operation()
         .snapshot("369", filing_year=_M369_YEAR, period=period_token, revision_id="esquema-exterior")
         .revision.export_layouts[0]
     )

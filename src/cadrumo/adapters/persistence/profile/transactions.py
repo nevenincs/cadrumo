@@ -4,45 +4,45 @@
 for the transaction catalogue. It stores **one encrypted secure-object row per
 transaction** — keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
 ``cadrumo.domain.transactions.bucket`` namespace at
-:class:`~adapters.persistence.storage.SensitivityClass` ``FINANCIAL`` — so a
+:class:`~core.classification.policies.SensitivityClass` ``FINANCIAL`` — so a
 single-transaction mutation rewrites only that row instead of re-encrypting the
 whole catalogue (the prior single-blob shape was O(n) write amplification per
 ledger edit). Each row wraps its
-:class:`~domain.transactions.Transaction` in an
-:class:`~adapters.persistence.storage.Envelope` before serialisation; no
+:class:`~domain.transactions.models.Transaction` in an
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` before serialisation; no
 plaintext transaction row, JSON catalogue, or envelope file lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`. It
+:class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`. It
 lives in the persistence adapter (not in :mod:`~domain.transactions`) because
 its secure-object coupling is SQL/crypto-bound; the domain package owns only the
-pure surface — the :class:`~domain.transactions.ImportSummary` record, the
-:func:`~domain.transactions.transaction_object_key` /
+pure surface — the :class:`~domain.transactions.repository.ImportSummary` record, the
+:func:`~domain.transactions.repository.transaction_object_key` /
 :func:`transaction_index_object_key` key-derivation helpers, and the
 :data:`~adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`,
 which names the persisted envelope contract.
 
 Writes go through the
-:class:`~adapters.persistence.storage.SecureObjectRepository` atomic
+:class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` atomic
 upsert+delete batch
-(:meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`)
+(:meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`)
 so a multi-transaction mutation — and any sibling-catalogue co-writes
 (bucket-event history, invoices) passed to ``save_with_secure_object_writes`` —
 commit all-or-nothing, preserving the co-write atomicity the single-blob
 ``save`` had. The diff that decides which rows to write or delete is driven by a
 decryption-free
-:meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+:meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.namespace_payload_hashes`
 scan, so an unchanged transaction is never rewritten.
 
 See Also:
-    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`
+    :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
-    :class:`~domain.transactions.Transaction`
+    :class:`~domain.transactions.models.Transaction`
         Domain transaction payload stored one encrypted row at a time.
-    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and object-key contract
         for transaction secure objects.
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Runtime-created encrypted storage boundary used for atomic batches.
     :mod:`~application.ledger`
         Application ledger workflows that consume this repository through the
@@ -324,26 +324,26 @@ class TransactionCatalogueRepository:
     Every instance is bound to one profile bucket via ``bucket_id``. The
     catalogue is stored as one secure-object row per transaction (keyed
     ``transaction:{bucket_id}:{transaction_id}``) inside the
-    :data:`~adapters.persistence.storage.TRANSACTION_CATALOGUE_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.TRANSACTION_CATALOGUE_NAMESPACE`
     namespace, so two operator profiles never share transaction storage and a
     single-transaction mutation touches a single row. Each
-    :class:`~domain.transactions.Transaction` payload and the bucket
+    :class:`~domain.transactions.models.Transaction` payload and the bucket
     membership index are wrapped in
-    :class:`~adapters.persistence.storage.Envelope` before
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` before
+    :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
     persists them. The class exposes the concrete load/save implementation
     behind
-    :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`.
+    :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`.
 
     ``_serialized_hash_cache`` is a write-path optimization: it memoizes the
     stored-envelope SHA-256 of each loaded frozen
-    :class:`~domain.transactions.Transaction`
+    :class:`~domain.transactions.models.Transaction`
     instance, populated once per row at :meth:`load` and consulted by
     :meth:`_reconcile` before re-serializing an untouched row.
 
     Keying is identity-based (``id(transaction)``), not value-based:
     ``Transaction``'s pydantic-generated ``__hash__`` is unusable as a dict key
-    because :attr:`~domain.transactions.RawTransaction.raw_fields` is stored as
+    because :attr:`~domain.transactions.raw_transaction.RawTransaction.raw_fields` is stored as
     a ``mappingproxy`` (unhashable), which rules out a plain
     :class:`~weakref.WeakKeyDictionary` (it hashes the key object itself). A
     bare ``id()`` integer key alone would risk a GC-recycle hazard -- a
@@ -420,10 +420,10 @@ class TransactionCatalogueRepository:
             instance when this bucket has no transactions.
 
         Raises:
-            :class:`~adapters.persistence.storage.ClassificationError`:
+            :class:`~adapters.persistence.storage.errors.ClassificationError`:
                 If a row's inner envelope class is not
                 ``TRANSACTION_CATALOGUE_NAMESPACE.sensitivity``.
-            :class:`~adapters.persistence.storage.EnvelopeVersionError`:
+            :class:`~adapters.persistence.storage.errors.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
             StoredTransactionDriftError: If a row payload fails pydantic schema
@@ -752,11 +752,11 @@ class TransactionCatalogueRepository:
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
 
-        Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`
         routing rows for this bucket to select the candidate transaction ids
         whose filing date (``value_date`` or ``booked_date``) falls in the
         window, then decrypts only those rows via one targeted batch
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many` --
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many` --
         never a full-namespace scan-and-decrypt of every row in the bucket.
 
         The index is a derived, rebuildable cache: correctness never depends
@@ -888,14 +888,14 @@ class TransactionCatalogueRepository:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
         The period-first partition runs a completeness gate against the plaintext
-        :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
+        :class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`
         rows for this bucket -- the index row count and id set must exactly
         match the encrypted membership index -- before trusting the index for
         a partition. On a completeness match, only the in-window transaction
         ids are decrypted through one targeted batch
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many`;
+        :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many`;
         out-of-window ids are reported as plaintext
-        :class:`~domain.transactions.OutOfWindowTransactionIndexEntry` rows (id +
+        :class:`~domain.transactions.models.OutOfWindowTransactionIndexEntry` rows (id +
         filing date only, never decrypted). On a completeness MISMATCH -- a
         stale or partially-synced index -- this falls back to a full
         :meth:`load` and partitions the result in memory, so correctness never
@@ -904,7 +904,7 @@ class TransactionCatalogueRepository:
         costs a slower read, never a silent drop from either half.
 
         Membership in the in-window half is decided by OVERLAP against each
-        row's :func:`~domain.transactions.transaction_eligible_date_span`, not
+        row's :func:`~domain.transactions.dates.transaction_eligible_date_span`, not
         by its filing date. A consuming aggregator applies its own tax-timing
         gate to the decrypted rows, so this half is a candidate superset: a row
         booked in one quarter that carries an IVA criterio-de-caja devengo or
@@ -917,7 +917,7 @@ class TransactionCatalogueRepository:
             end: Inclusive upper bound of the observation-date window.
 
         Returns:
-            The :class:`~domain.transactions.LedgerDatePartition` for ``[start, end]``.
+            The :class:`~domain.transactions.models.LedgerDatePartition` for ``[start, end]``.
         """
         index_ids = self._load_index_ids()
         if not index_ids:
@@ -1146,7 +1146,7 @@ class TransactionCatalogueRepository:
 
         Returns ``(changed writes, deletions)``. Changed-row detection is a
         decryption-free
-        :meth:`~adapters.persistence.storage.SecureObjectRepository.namespace_payload_hashes`
+        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.namespace_payload_hashes`
         lookup keyed by the bucket-qualified HMAC digest (so it is correct even
         when several buckets share one store): an incoming transaction whose
         freshly-serialised payload hash matches the stored one is left

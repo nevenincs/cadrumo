@@ -6,7 +6,6 @@ import importlib
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
@@ -40,7 +39,6 @@ from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.filing.schema import ModeloValueKind
 from cadrumo.domain.modelos.calculation_repository import (
@@ -66,6 +64,8 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
+
+from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
@@ -103,9 +103,9 @@ def _persist_work_unit(
 ) -> WorkUnit:
     work_repo, _, _, _, _ = repos
     period = Period.from_year_and_code(filing_year, period_code)
-    authority = compiled_bundled_authority()
-    selected_revision = select_revision(
-        authority.validate_modelo(modelo),
+    authority = published_authority_operation()
+    selected_revision = authority.revision_for_context(
+        modelo,
         filing_year=filing_year,
         period=period.registry_token,
     )
@@ -140,7 +140,7 @@ def _persist_work_unit(
 def test_review_projects_resolvable_work_without_a_calculation_from_real_storage(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, _ = repos
     work_unit = _persist_work_unit(repos)
-    authority = compiled_bundled_authority()
+    authority = published_authority_operation()
 
     with bundled_indexed_authority().operation() as operation:
         review = build_modelo_work_review(
@@ -251,7 +251,7 @@ def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) 
 def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, _ = repos
     work_unit = _persist_work_unit(repos)
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -576,7 +576,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         filing_year=2025,
         period_code="0A",
     )
-    snapshot = compiled_bundled_authority().snapshot(
+    snapshot = published_authority_operation().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,

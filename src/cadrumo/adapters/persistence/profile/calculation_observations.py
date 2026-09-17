@@ -80,10 +80,10 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
     and justificante repositories.
 
     The repository binds each
-    :class:`~adapters.persistence.storage.Envelope` payload to
-    :data:`~adapters.persistence.storage.CALCULATION_OBSERVATIONS_NAMESPACE`
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` payload to
+    :data:`~adapters.persistence.storage.secure_object_namespaces.CALCULATION_OBSERVATIONS_NAMESPACE`
     through
-    :class:`~adapters.persistence.storage.SecureBoundRepository`.
+    :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
@@ -356,12 +356,12 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     :class:`~.iva_wallet_reconciliation.IvaWalletDecisionSourceResolver`.
 
     Latest-state rows use
-    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
+    :data:`~adapters.persistence.storage.secure_object_namespaces.IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE`;
     immutable audit events use
-    :data:`~adapters.persistence.storage.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
+    :data:`~adapters.persistence.storage.secure_object_namespaces.IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE`.
     Both store :class:`IvaCompensationReconciliationDecision` payloads in
-    :class:`~adapters.persistence.storage.Envelope` records through
-    :class:`~adapters.persistence.storage.SecureBoundRepository`.
+    :class:`~adapters.persistence.storage.envelope.contract.Envelope` records through
+    :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`.
     """
 
     namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
