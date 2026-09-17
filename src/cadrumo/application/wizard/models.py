@@ -18,6 +18,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 
@@ -56,6 +57,7 @@ class WizardCondition(BaseModel):
     contains: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_exactly_one_clause(self) -> WizardCondition:
         """Exactly one of ``equals`` / ``contains`` must be declared."""
         declared = [name for name, value in (("equals", self.equals), ("contains", self.contains)) if value is not None]
@@ -131,6 +133,7 @@ class WizardFlow(BaseModel):
     answers_model: type[BaseModel]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_translatable_prefix(self) -> WizardFlow:
         """Every ``Translatable`` in the flow must start with ``wizard.<flow.id>.``."""
         expected = f"wizard.{self.id}."
@@ -146,6 +149,7 @@ class WizardFlow(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_unique_question_ids(self) -> WizardFlow:
         """Question ids must be unique across the entire flow."""
         seen: set[str] = set()
@@ -160,6 +164,7 @@ class WizardFlow(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_visible_when_targets(self) -> WizardFlow:
         """Every ``visible_when`` clause must name an earlier question.
 

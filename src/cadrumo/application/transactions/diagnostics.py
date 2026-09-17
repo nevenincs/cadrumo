@@ -35,6 +35,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -78,6 +79,7 @@ class LedgerImportDiagnostic(BaseModel):
 
     @field_validator("message")
     @classmethod
+    @pydantic_validation_boundary
     def _require_authoritative_message(cls, value: str) -> str:
         """Reject diagnostics without an authoritative Spanish message."""
         from ...core.i18n.render import tr
@@ -89,16 +91,14 @@ class LedgerImportDiagnostic(BaseModel):
         # unique sentinel default: a key with no Spanish catalogue entry
         # renders back the sentinel verbatim.
         sentinel = f"\x00no-translation\x00{value}"
-        rendered = tr(
-            str(value),
-            locale="es",
-        )
+        rendered = tr(str(value), locale="es", default=sentinel)
         if rendered == sentinel:
             raise ValueError(f"message key {value!r} has no authoritative Spanish translation")
         return value
 
     @field_validator("source_locator")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_source_locator(cls, value: str | None) -> str | None:
         """Trim the source locator while rejecting blank-but-not-None values."""
         if value is None:
