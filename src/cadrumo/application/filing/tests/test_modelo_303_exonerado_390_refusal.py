@@ -179,7 +179,7 @@ def _regimen_evidence(period: Period, *, operation: PinnedAuthorityOperation) ->
     )
 
 
-def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_override(
+def test_exonerado_complete_revision_evidence_exports_page_four_without_override(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Persisted A28 facts need no caller-authored export applicability envelope."""
@@ -279,24 +279,18 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
     )
     output = tmp_path / "modelo-303-exonerado.txt"
 
-    with pytest.raises(FilingExportError, match="local declaration export is unsupported"):
-        export_draft(
-            draft,
-            output_path=output,
-            producer_snapshot=producer_snapshot,
-            # Modelo 303's layout renders an envelope prefix, and an
-            # envelope-prefixed export REQUIRES an explicit product/software
-            # identity -- correctly, since the AEAT program identifier is
-            # assigned rather than guessable. Without one the export refuses on
-            # that guard and never reaches the withdrawn-layout refusal this
-            # test exists to prove. A synthetic identity is not fabrication: it
-            # never leaves the test, and the alternative is asserting the wrong
-            # refusal.
-            product_software_identity=_product_software_identity(),
-            schema_provider=provider,
-        )
+    export_draft(
+        draft,
+        output_path=output,
+        producer_snapshot=producer_snapshot,
+        # Modelo 303's layout renders an envelope prefix, which requires an
+        # explicit product/software identity; a synthetic one never leaves the test.
+        product_software_identity=_product_software_identity(),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
 
-    assert not output.exists()
+    assert b"<T30304000>" in output.read_bytes()
     assert not output.with_suffix(output.suffix + ".tmp").exists()
 
 
