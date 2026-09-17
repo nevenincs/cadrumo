@@ -263,7 +263,7 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
     # "Allemagne" -- so asking a reader for `DE` would be asking it to translate,
     # and translation is inference in the same sentence that forbids it. The
     # bounded registry vocabulary does the lookup downstream
-    # (:func:`~domain.iva.country_code_for_printed_country_name`), which is a
+    # (:func:`~domain.iva.establishment.country_code_for_printed_country_name`), which is a
     # deterministic match rather than a judgement, so the reader's whole job here
     # is transcription.
     InvoiceFieldContract(

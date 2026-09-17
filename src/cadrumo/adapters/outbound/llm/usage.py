@@ -1,10 +1,10 @@
 """Encrypted usage recorder for LLM calls.
 
 Persists :class:`llm.UsageRecord` payloads under
-:data:`adapters.persistence.storage.LLM_USAGE_NAMESPACE` in the encrypted
+:data:`adapters.persistence.storage.secure_object_namespaces.LLM_USAGE_NAMESPACE` in the encrypted
 SQL secure-object backend and exposes load and aggregate helpers. Records are
-routed through :func:`core.redaction.redact_structured` at
-:class:`core.classification.SensitivityClass` ``DIAGNOSTIC`` before they
+routed through :func:`core.redaction.rules.redact_structured` at
+:class:`core.classification.policies.SensitivityClass` ``DIAGNOSTIC`` before they
 are encrypted, so NIFs and bearer-shaped tokens are redacted before
 persistence.
 """
@@ -39,7 +39,7 @@ class UsageRecorder:
 
     Each call to :meth:`record` stores one redacted
     :class:`llm.UsageRecord` through
-    :func:`adapters.persistence.storage.secure_object_repository_for_active_bucket`
+    :func:`adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
     under the recorder's logical root.
 
     Attributes:
@@ -86,8 +86,8 @@ class UsageRecorder:
         """Append a redacted ``record`` to encrypted secure-object storage.
 
         The record is routed through
-        :func:`core.redaction.redact_structured` at
-        :class:`core.classification.SensitivityClass` ``DIAGNOSTIC``
+        :func:`core.redaction.rules.redact_structured` at
+        :class:`core.classification.policies.SensitivityClass` ``DIAGNOSTIC``
         class before encoding so NIFs are SHA-256 prefixed, URLs are reduced
         to host-only, and bearer-shaped tokens are fingerprinted.
 
@@ -185,7 +185,7 @@ class UsageRecorder:
         """Delete usage records older than the retention window or beyond the count cap.
 
         Applies the same two-stage bound as
-        :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.prune`: first every
+        :meth:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder.prune`: first every
         record older than ``retention_days`` (measured against the current time)
         is removed, then -- if more than ``max_records`` remain -- the oldest
         excess records beyond the cap are removed too. Both bounds default to the

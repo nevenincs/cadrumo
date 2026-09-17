@@ -23,9 +23,9 @@ because it carries the authority of a number.
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .....core.period import Period
 from ..invoice_extraction_prompt import (
@@ -160,17 +160,20 @@ def test_the_selector_returns_declaration_order_whatever_it_is_given() -> None:
 
 
 def test_a_subset_is_not_a_route_around_the_empty_rate_refusal(*, operation: PinnedAuthorityOperation) -> None:
-    """A period with no in-force rates must refuse whether or not fields are selected.
+    """A period the registry cannot price must refuse whether or not fields are selected.
 
     The fail-closed path guards a prompt that would enumerate no rate at all.
     A selection narrows which FIELDS are asked for and must not narrow the
-    regulatory values the prompt is required to carry.
+    regulatory values the prompt is required to carry. Every supported period
+    carries rates, so the unpriced period is the year below the supported
+    floor, which the support gate refuses before any rate is read.
     """
-    unpriced = Period.from_year_and_code(1990, "1T")
+    below_floor = operation.supported_filing_years().floor - 1
+    unpriced = Period.from_year_and_code(below_floor, "1T")
 
-    with pytest.raises(ValidationError) as full_refusal:
+    with pytest.raises(RegistryValidationError) as full_refusal:
         build_invoice_extraction_prompt(period=unpriced, operation=operation)
-    with pytest.raises(ValidationError) as subset_refusal:
+    with pytest.raises(RegistryValidationError) as subset_refusal:
         build_invoice_extraction_prompt(period=unpriced, fields=_DECLARED[:2], operation=operation)
 
     assert type(subset_refusal.value) is type(full_refusal.value)

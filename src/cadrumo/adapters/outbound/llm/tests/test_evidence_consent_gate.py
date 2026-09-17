@@ -465,9 +465,11 @@ def test_a_request_dump_carries_no_token() -> None:
 def test_a_token_bound_to_nothing_is_refused() -> None:
     """A whitespace surface or address binds the acknowledgement to everything."""
     for surface, address in ((" ", "d" * 64), ("aeat app ledger evidence extract", "  ")):
-        with pytest.raises(LLMConsentError) as raised:
+        with pytest.raises(ValidationError) as raised:
             EvidenceConsentToken(surface=surface, evidence_content_address=address)
-        verdict = raised.value.terminal_precondition_verdict
+        cause = raised.value.errors()[0]["ctx"]["error"].__cause__
+        assert isinstance(cause, LLMConsentError)
+        verdict = cause.terminal_precondition_verdict
         assert verdict is not None
         assert verdict.failed_condition_id == "llm.evidence.token_bound"
         assert verdict.action is None

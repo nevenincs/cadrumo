@@ -51,7 +51,7 @@ class MultimodalImageInput(BaseModel):
     Transient and in-memory only. Carries the base64-encoded image bytes the
     provider adapter forwards to a vision model and the content address
     (an attachment-store SHA-256) that
-    :class:`~adapters.outbound.llm.LLMCache` folds into
+    :class:`~adapters.outbound.llm.cache.LLMCache` folds into
     :class:`~llm.CacheKey`. The base64 payload is never
     persisted -- only its content address enters the cache key
     (``sensitive-financial-data-secure-storage-only``).
@@ -90,7 +90,7 @@ class MultimodalImageInput(BaseModel):
             base64_data: Base64-encoded image bytes.
             media_type: The type those bytes actually are -- from the producer's
                 own knowledge (the page rasteriser only ever emits PNG) or from
-                :func:`~core.detect_image_media_type` over the raw bytes.
+                :func:`~core.image_media_type.detect_image_media_type` over the raw bytes.
 
         Returns:
             The transient multimodal input carrying all three fields.
@@ -323,7 +323,7 @@ class PromptRegistry(BaseModel):
 
 
 class CachedEntry(BaseModel):
-    """Encrypted cache record persisted by :class:`~adapters.outbound.llm.LLMCache`."""
+    """Encrypted cache record persisted by :class:`~adapters.outbound.llm.cache.LLMCache`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -336,7 +336,7 @@ class CachedEntry(BaseModel):
 
 
 class UsageRecord(BaseModel):
-    """Append-only usage record persisted by :class:`~adapters.outbound.llm.UsageRecorder`."""
+    """Append-only usage record persisted by :class:`~adapters.outbound.llm.usage.UsageRecorder`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -356,7 +356,7 @@ class UsageRecord(BaseModel):
 
 
 class CacheKey(BaseModel):
-    """Derived cache key used by :class:`~adapters.outbound.llm.LLMCache`."""
+    """Derived cache key used by :class:`~adapters.outbound.llm.cache.LLMCache`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -367,7 +367,7 @@ class CacheKey(BaseModel):
 
 
 class CacheStats(BaseModel):
-    """Basic :class:`~adapters.outbound.llm.LLMCache` statistics for CLI reporting."""
+    """Basic :class:`~adapters.outbound.llm.cache.LLMCache` statistics for CLI reporting."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -376,7 +376,7 @@ class CacheStats(BaseModel):
 
 
 class UsageSummary(BaseModel):
-    """Aggregated :class:`~adapters.outbound.llm.UsageRecorder` statistics."""
+    """Aggregated :class:`~adapters.outbound.llm.usage.UsageRecorder` statistics."""
 
     model_config = STRICT_FROZEN_CONFIG
 

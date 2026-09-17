@@ -1,8 +1,8 @@
 """Async-first public LLM client.
 
 Coordinates :class:`~llm.LLMRequest` inputs,
-:class:`~adapters.outbound.llm.LLMCache` lookup/write-through,
-:class:`~adapters.outbound.llm.UsageRecorder` accounting, and concrete
+:class:`~adapters.outbound.llm.cache.LLMCache` lookup/write-through,
+:class:`~adapters.outbound.llm.usage.UsageRecorder` accounting, and concrete
 :class:`~llm.LLMProvider` adapters before returning an
 :class:`~llm.LLMResponse`.
 """
@@ -82,8 +82,8 @@ def transport_retry_permitted(exc: BaseException) -> bool:
     """Whether ``exc`` may be retried by re-sending the identical request.
 
     **Derived from the error taxonomy, never listed here.** Every
-    :class:`~core.errors.CadrumoError` subclass is required to carry a
-    registered :class:`~core.errors.ErrorCode`, and that record already declares
+    :class:`~core.errors.hierarchy.CadrumoError` subclass is required to carry a
+    registered :class:`~core.errors.error_codes.ErrorCode`, and that record already declares
     ``retryable`` for the operator-facing envelope. Reading the answer from
     there means a new failure class cannot be silently omitted from a retry set:
     it cannot exist at all without declaring the answer, because the registry
@@ -321,12 +321,12 @@ class LLMClient:
     Args:
         settings: Optional :class:`~core.config.Settings` override used
             for provider selection and defaults.
-        cache: Optional :class:`~adapters.outbound.llm.LLMCache`
+        cache: Optional :class:`~adapters.outbound.llm.cache.LLMCache`
             implementation override.
         usage_recorder: Optional
-            :class:`~adapters.outbound.llm.UsageRecorder` override.
+            :class:`~adapters.outbound.llm.usage.UsageRecorder` override.
         run_telemetry_recorder: Optional
-            :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` override.
+            :class:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
             :class:`~llm.PromptRegistry` override.
         retry_policy: Optional :class:`LLMRetryPolicy` override governing how
@@ -528,7 +528,7 @@ class LLMClient:
         """Refuse an on-host dispatch this machine has no measured room for.
 
         **A wiring job, not a second detector.** The verdict comes from
-        :func:`~application.provisioning.assess_model_load_contention`, which
+        :func:`~application.provisioning_runtime.assess_model_load_contention`, which
         already owns the comparison, the safety margin, the fail-closed arm and
         the attribution of a shortfall to the runtime's own residents versus a
         peer process's device usage. That authority was deliberately

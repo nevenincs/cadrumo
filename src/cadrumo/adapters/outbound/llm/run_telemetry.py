@@ -2,9 +2,9 @@
 
 Persists one :class:`LLMRunRecord` per completed (or failed) LLM
 classification/completion invocation to encrypted secure-object storage under
-:data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
-:class:`~adapters.outbound.llm.UsageRecorder`'s persistence shape. Every
-record is written at :class:`~core.classification.SensitivityClass`
+:data:`~adapters.persistence.storage.secure_object_namespaces.LLM_RUN_TELEMETRY_NAMESPACE`, mirroring
+:class:`~adapters.outbound.llm.usage.UsageRecorder`'s persistence shape. Every
+record is written at :class:`~core.classification.policies.SensitivityClass`
 ``DIAGNOSTIC`` and carries ONLY timing and outcome metadata (provider label,
 duration, success flag, optional error-kind string) -- never prompt text,
 response text, or any transaction/financial content, honouring
@@ -21,7 +21,7 @@ CLI invocation.
 retention window (:attr:`~core.config.Settings.cadrumo_llm_run_telemetry_retention_days`)
 and a maximum record count
 (:attr:`~core.config.Settings.cadrumo_llm_run_telemetry_max_records`),
-mirroring :meth:`~adapters.outbound.llm.LLMCache.prune`'s
+mirroring :meth:`~adapters.outbound.llm.cache.LLMCache.prune`'s
 list-then-delete-by-reconstructed-key shape. The object key each record was
 saved under embeds a random UUID4 suffix (so two runs starting in the same
 microsecond never collide); that suffix is persisted inside the record's own
@@ -29,16 +29,16 @@ payload alongside its natural fields so pruning can reconstruct the exact
 save-time key and issue a matching delete, without a parallel index.
 
 See Also:
-    :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`
+    :class:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder`
         Public recorder that appends and reads these local-only records.
-    :class:`~adapters.outbound.llm.LLMRunRecord`
+    :class:`~adapters.outbound.llm.run_telemetry.LLMRunRecord`
         Timing/outcome-only payload stored for each completed LLM run.
     :func:`~application.diagnostics_run_health.build_run_health_report`
         Application diagnostic that aggregates these records for operators.
     :mod:`~application.diagnostics_telemetry`
         Remote-telemetry preview/flush layer that aggregates only the same
         non-sensitive accounting signal through a separate consent gate.
-    :data:`~adapters.persistence.storage.LLM_RUN_TELEMETRY_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.LLM_RUN_TELEMETRY_NAMESPACE`
         Secure-object namespace used for the encrypted local store.
 """
 
@@ -158,11 +158,11 @@ def _summarize_records(records: tuple[LLMRunRecord, ...]) -> LLMRunTelemetrySumm
 class LLMRunTelemetryRecorder:
     """Append local LLM run-timing records to encrypted secure-object storage.
 
-    Mirrors :class:`~adapters.outbound.llm.UsageRecorder`'s persistence
+    Mirrors :class:`~adapters.outbound.llm.usage.UsageRecorder`'s persistence
     shape: each :meth:`record` call appends one redacted-free
     :class:`LLMRunRecord` (there is no free text to redact -- the model
     carries only accounting metadata) through
-    :func:`~adapters.persistence.storage.secure_object_repository_for_active_bucket`.
+    :func:`~adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`.
 
     Attributes:
         root_dir: Logical partition used for run-telemetry records.
@@ -305,7 +305,7 @@ class LLMRunTelemetryRecorder:
         """Delete records older than the retention window or beyond the count cap.
 
         Applies a two-stage bound, mirroring
-        :meth:`~adapters.outbound.llm.LLMCache.prune`'s
+        :meth:`~adapters.outbound.llm.cache.LLMCache.prune`'s
         list-then-delete-by-reconstructed-key shape: first every record
         older than ``retention_days`` (measured against the current time) is
         removed, then -- if more than ``max_records`` remain -- the oldest

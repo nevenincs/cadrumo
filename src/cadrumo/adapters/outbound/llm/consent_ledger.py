@@ -1,9 +1,9 @@
 """The off-host evidence-consent audit ledger.
 
-Persists one :class:`~domain.evidence_consent.EvidenceConsentLedgerEntry` per
+Persists one :class:`~domain.evidence_consent.record.EvidenceConsentLedgerEntry` per
 off-host evidence dispatch that a consent token permitted, to encrypted
 secure-object storage under
-:data:`~adapters.persistence.storage.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`.
+:data:`~adapters.persistence.storage.secure_object_namespaces.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`.
 The entry is appended by :class:`~llm.LLMClient` at the same
 choke point that HONOURS the token, before the cache read and before any
 adapter exists, so a dispatch that cannot append refuses rather than
@@ -32,7 +32,7 @@ See Also:
     :class:`~llm.EvidenceConsentToken`
         The per-invocation carrier proving the gate ran; never persisted
         itself, its two fields are copied into the entry.
-    :data:`~adapters.persistence.storage.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`
+    :data:`~adapters.persistence.storage.secure_object_namespaces.LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE`
         Secure-object namespace used for the encrypted local store.
     :mod:`~domain.evidence_consent`
         Owns the entry's record shape and its natural key grammar, so a
@@ -67,7 +67,7 @@ class EvidenceConsentLedger:
     :meth:`append` is called from the dispatch choke point and raises on ANY
     failure, so the caller's refusal is the only possible outcome of a failed
     write. That is the opposite of
-    :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.record`'s
+    :meth:`~adapters.outbound.llm.run_telemetry.LLMRunTelemetryRecorder.record`'s
     best-effort posture, and deliberately: run-telemetry losing a row costs a
     diagnostic, this losing a row costs the audit trail its completeness claim.
     """

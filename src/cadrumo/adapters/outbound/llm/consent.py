@@ -28,7 +28,7 @@ See Also:
     :class:`~core.config.Settings`
         Carries the deployment half of the posture (the gestor bar and the
         opt-in flag) that this gate reads.
-    :func:`~core.telemetry.telemetry_emit_permitted`
+    :func:`~core.telemetry.consent.telemetry_emit_permitted`
         The sibling off-host consent gate, deliberately the same shape.
 """
 
@@ -150,7 +150,7 @@ def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool,
        (``settings.cadrumo_evidence_cloud_upload_permitted`` is ``True``).
     3. The ACTIVE PROFILE carries the standing eligibility bar
        (``profile_eligible``), resolved by
-       :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
+       :func:`~application.user_profile.capabilities.cloud_evidence_upload_eligible_for_active_profile`.
        Deployment opt-in and profile eligibility are separate questions: one
        machine can serve several taxpayers, and one of them permitting an
        off-host read must not decide it for the others.
@@ -281,7 +281,7 @@ def mint_evidence_consent_token(
     Args:
         settings: Resolved deployment settings carrying the consent posture.
         profile_eligible: The active profile's standing eligibility bar, from
-            :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
+            :func:`~application.user_profile.capabilities.cloud_evidence_upload_eligible_for_active_profile`.
         acknowledged: Whether the operator acknowledged this specific read.
         surface: Operator surface that took the acknowledgement.
         evidence_content_address: SHA-256 content address of the evidence.

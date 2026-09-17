@@ -14,8 +14,8 @@ against an independent authority -- the AEAT checksum algorithm
 (:func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`),
 the EU VIES structural format
 table (:func:`~cadrumo.domain.calculations.registry.nif_iva_catalogue.nif_iva_format_for_country`), the date parser
-(:func:`~core.parsing.parse_date`), the finite European-decimal authority
-(:func:`~core.decimal.coerce_finite_european_decimal`) -- and a field that fails
+(:func:`~core.parsing.dates.parse_date`), the finite European-decimal authority
+(:func:`~core.decimal.coercion.coerce_finite_european_decimal`) -- and a field that fails
 its check becomes ``None``. ``None`` is safe because the confirm path treats a
 missing figure as a hard refusal naming the operator override; a guessed figure
 would instead be minted silently.
@@ -320,7 +320,7 @@ def _grounded_intra_community_tax_id(normalised: str) -> str | None:
 
     The country is read off the number's own two-character IVA prefix, because
     that is the only country signal a transcribed identifier carries -- unlike
-    :func:`~domain.invoices.validate_iva_number`, which validates against a
+    :func:`~domain.invoices.validators.validate_iva_number`, which validates against a
     country declared independently on the invoice record and can therefore fall
     back to a permissive generic body check for a non-EU counterparty. That
     fallback is unavailable here and would be circular if borrowed: with the
@@ -392,9 +392,9 @@ def _grounded_date(raw: str | None) -> str | None:
     form the document actually shows (mirroring the text-layer heuristic's
     ``_DATE_RE``); ISO-8601 is tried second in case the model normalises the
     printed value itself. Only these two real, registered
-    :data:`~core.parsing._dates._DateFmt` members are ever passed -- an invented
+    :data:`~core.parsing.dates._DateFmt` members are ever passed -- an invented
     format string silently degrades to one of the two delegates
-    (:func:`~core.parsing._dates._parse_date` has no third branch), which would
+    (:func:`~core.parsing.dates._parse_date` has no third branch), which would
     make a "fallback" attempt a silent no-op duplicate.
     """
     if raw is None:
@@ -591,7 +591,7 @@ def _read_provenance(
     describe. The absence is itself reviewable -- the draft's own contract says
     a missing envelope never means the value was exact.
 
-    The outcome is always :attr:`~core.FieldGroundingOutcome.UNANCHORED`, and
+    The outcome is always :attr:`~core.field_grounding.FieldGroundingOutcome.UNANCHORED`, and
     that is a deliberate under-claim rather than a placeholder. The model
     REPORTING an anchor is a claim about the document, not a check against it;
     the check belongs to :func:`~application.ledger.grounding_anchor.evaluate_anchor`, which
@@ -701,7 +701,7 @@ def ground_extracted_fields(
     ``None`` rather than trusted -- the same "never fabricate" discipline the
     text-layer heuristics apply. For an IDENTITY field the rejection is also
     RECORDED, as an
-    :attr:`~core.DraftDiscrepancyKind.IDENTITY_UNVERIFIED` finding: dropping the
+    :attr:`~core.draft_discrepancy.DraftDiscrepancyKind.IDENTITY_UNVERIFIED` finding: dropping the
     value is right, dropping the fact that the document printed one is not, and
     only this stage still holds that fact.
 
