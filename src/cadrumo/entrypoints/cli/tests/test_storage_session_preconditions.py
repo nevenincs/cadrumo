@@ -106,7 +106,12 @@ def test_s70_adapter_producers_cannot_author_actions_or_executable_recovery_pros
         constructed = {
             name for node in ast.walk(tree) if isinstance(node, ast.Call) if (name := _callee_name(node)) is not None
         }
-        assert "application" not in ".".join(imported_modules), relative
+        # An adapter may implement an application port protocol; any other
+        # application import would let it reach verdict authorities.
+        application_imports = [
+            module for module in imported_modules if "application" in module and not module.endswith("_ports")
+        ]
+        assert not application_imports, (relative, application_imports)
         assert not constructed & forbidden_constructors, (relative, constructed & forbidden_constructors)
         assert "aeat config login" not in source.casefold(), relative
         assert "aeat config profile list" not in source.casefold(), relative
