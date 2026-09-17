@@ -15,15 +15,12 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.application.calculations.errors import (
-    CalculationRefusalPrecondition,
-    ObservationEvidenceDisplacementError,
-    calculation_no_recovery_verdict,
-)
 from cadrumo.application.calculations.m303_carry_ingress import normalize_m303_carry_observation_envelope
 from cadrumo.application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     ObservationEnvelopePayload,
+    ObservationLayers,
+    ObservationOverride,
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
@@ -38,6 +35,7 @@ from cadrumo.application.calculations.observations_repository import (
 )
 from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.core.config import Settings
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.identity.tax_id import same_tax_identifier
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -59,6 +57,7 @@ from ..storage.secure_object_namespaces import (
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
 )
+from ..storage.sql.secure_objects import SecureObjectRepository
 
 
 def _translate_storage_failure[T](operation: str, callback: Callable[[], T]) -> T:
@@ -71,7 +70,30 @@ def _translate_storage_failure[T](operation: str, callback: Callable[[], T]) -> 
         raise PersistenceDegradationError(operation) from exc
 
 
-class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelopePayload]):
+class _ObservationLayerStore(SecureBoundRepository[ObservationLayers]):
+    """Encrypted rows holding both observation layers of one coordinate."""
+
+    namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
+    payload_type: ClassVar[type[BaseModel]] = ObservationLayers
+
+    @override
+    def extract_identifier(self, payload: ObservationLayers) -> str:
+        return member_observation_key_for_token(payload.modelo, payload.filing_year, payload.period, payload.member_nif)
+
+
+def _layers_for(payload: ObservationEnvelopePayload) -> ObservationLayers:
+    observation = payload.observation
+    return ObservationLayers(
+        modelo=str(observation.modelo),
+        filing_year=observation.filing_year,
+        period=observation.period,
+        member_nif=payload.member_nif,
+    )
+
+
+class CalculationObservationRepository:
     """Repository over encrypted SQL-backed past-filing observations.
 
     Stores :class:`RegistryModeloObservation` rows for
@@ -82,51 +104,90 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
     by the clean-state service from this repository plus filing, verification,
     and justificante repositories.
 
-    The repository binds each
-    :class:`~adapters.persistence.storage.envelope.contract.Envelope` payload to
+    Each ``(modelo, filing_year, period[, member])`` coordinate is one row
+    holding an :class:`ObservationLayers` payload: the official layer observed
+    from AEAT and the pending-local layer written by local filings and operator
+    figures. A write replaces only the layer its source kind selects, so a
+    local figure never destroys captured AEAT evidence. Envelope reads return
+    the effective layer, the pending-local one when present.
+
+    Rows are bound to
     :data:`~adapters.persistence.storage.secure_object_namespaces.CALCULATION_OBSERVATIONS_NAMESPACE`
     through
     :class:`~adapters.persistence.storage.envelope.secure_bound_repository.SecureBoundRepository`.
     """
 
-    namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = ObservationEnvelopePayload
+    namespace: ClassVar[str] = _ObservationLayerStore.namespace
+    sensitivity: ClassVar[SensitivityClass] = _ObservationLayerStore.sensitivity
+    schema_version: ClassVar[int] = _ObservationLayerStore.schema_version
+    payload_type: ClassVar[type[BaseModel]] = ObservationLayers
 
-    @override
-    def load(self, identifier: str) -> ObservationEnvelopePayload | None:
-        """Load one envelope while translating storage failures inward."""
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        settings: Settings | None = None,
+    ) -> None:
+        """Bind the repository to one secure-object store (see :class:`SecureBoundRepository`)."""
+        self._layers = _ObservationLayerStore(bucket_id=bucket_id, objects=objects, settings=settings)
+
+    @classmethod
+    def payload_model(cls) -> type[ObservationLayers]:
+        """Return the stored row payload model."""
+        return ObservationLayers
+
+    @property
+    def secure_object_repository(self) -> SecureObjectRepository:
+        """Return the concrete secure-object backend shared by co-committed writes."""
+        return self._layers.secure_object_repository
+
+    def extract_identifier(self, payload: ObservationLayers) -> str:
+        """Return the storage key of one stored layer row."""
+        return self._layers.extract_identifier(payload)
+
+    def envelope_identifier(self, payload: ObservationEnvelopePayload) -> str:
+        """Return the storage key of the coordinate ``payload`` belongs to."""
+        return self._layers.extract_identifier(_layers_for(payload))
+
+    def _load_layers(self, identifier: str) -> ObservationLayers | None:
         return _translate_storage_failure(
             "calculation_observation_load",
-            lambda: super(CalculationObservationRepository, self).load(identifier),
+            lambda: self._layers.load(identifier),
         )
 
-    @override
-    def extract_identifier(self, payload: ObservationEnvelopePayload) -> str:
-        observation = payload.observation
-        period = observation.filing_period
-        if period is None:
-            return member_observation_key_for_token(
-                observation.modelo,
-                observation.filing_year,
-                observation.period,
-                payload.member_nif,
-            )
-        return member_observation_key(
-            observation.modelo,
-            period,
-            payload.member_nif,
-        )
+    def load(self, identifier: str) -> ObservationEnvelopePayload | None:
+        """Return the effective envelope stored under ``identifier``."""
+        layers = self._load_layers(identifier)
+        return layers.effective if layers is not None else None
 
     def load_observation(
         self,
         modelo: str,
         period: Period,
     ) -> ObservationEnvelopePayload | None:
-        """Return the persisted observation for one (modelo, year, period token) or None."""
+        """Return the effective observation for one single-filer coordinate, or None."""
         filing_period = require_observation_period(period)
         return self.load(observation_key(modelo, filing_period))
+
+    def load_observation_layers(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+    ) -> ObservationLayers:
+        """Return both layers of one coordinate; a coordinate never written has neither."""
+        filing_period = require_observation_period(period)
+        stored = self._load_layers(member_observation_key(modelo, filing_period, member_nif))
+        if stored is not None:
+            return stored
+        return ObservationLayers(
+            modelo=modelo,
+            filing_year=filing_period.filing_year,
+            period=filing_period.registry_token,
+            member_nif=member_nif,
+        )
 
     def prepare_observation_envelope(
         self,
@@ -140,14 +201,12 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        replace_official_evidence: bool = False,
+        override: ObservationOverride | None = None,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
 
-        Every writer traverses this method, so it is where the official-evidence
-        guard lives -- see :meth:`_refuse_official_evidence_displacement`, which
-        also states which store that guard covers and which sibling observation
-        repositories it does not.
+        Every writer traverses this method, so the registry and Modelo 303
+        carry checks below run before any write is prepared.
 
         ``member_nif`` is an optional grupo-de-entidades member NIF. When
         supplied, the storage identifier is widened (see
@@ -170,9 +229,10 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         ``source_headers`` carries the filed fichero's typed diseño header facts.
         It is a SEPARATE parameter rather than more ``source_metadata`` keys
         because that mapping is assembled from a fixed key set by its producer,
-        so a fact not named there never reaches storage -- which is exactly how
-        the header projection was landing at capture and vanishing before
-        persistence.
+        so a fact not named there never reaches storage.
+
+        ``override`` records the audit of an operator figure; only a
+        non-official envelope can carry one.
 
         Every Modelo 303 envelope crosses the canonical disposition-aware
         normalization ingress. Incomplete or conflicting evidence is refused;
@@ -205,103 +265,27 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
                     "source_headers": source_headers,
                     "result_disposition": result_disposition,
                     "prior_domiciliation_election": prior_domiciliation_election,
+                    "override": override,
                 },
                 context={"canonical_m303_ingress_candidate": True},
             )
             # Keep the serialisable envelope model independent from the application
             # policy that normalizes it, while making this sole write door canonical.
             payload = normalize_m303_carry_observation_envelope(payload, operation=operation)
-        payload = ObservationEnvelopePayload.model_validate(payload.model_dump())
-        # Checked HERE, and here only, because every writer prepares its
-        # envelope through this method. The operator verb persists the returned
-        # payload through the inherited repository save; the live capture and
-        # local filing flows turn it into a prepared write batch so the
-        # observation and its IVA history land in one transaction. This runs
-        # before any write is prepared, so a refusal never has to reason about
-        # staged work inside a transaction.
-        if not replace_official_evidence:
-            self._refuse_official_evidence_displacement(payload)
-        return payload
-
-    def _refuse_official_evidence_displacement(self, payload: ObservationEnvelopePayload) -> None:
-        """Refuse a non-official write onto a slot already holding AEAT evidence.
-
-        Compares MEMBERSHIP only -- existing is official, incoming is not. The
-        provenance taxonomy has no ordering, so a general "downgrade" rule would
-        invent an axis the registry does not publish; official-to-official and
-        anything-to-non-official stay permitted.
-
-        The occupancy read uses :meth:`extract_identifier`, the same derivation
-        the write uses, so the slot inspected is the slot that would be written
-        rather than a re-derived approximation of it.
-
-        WHICH STORE THIS COVERS, stated here because the guard's name does not
-        say it and a reader will otherwise assume every observation write is
-        protected. It covers THIS repository only -- the ``(modelo, filing_year,
-        period[, member])`` slot. Two sibling repositories persist observations
-        at a finer key with their own save and their own set-replace path:
-        ``application/aggregation/_retencion_observations_repository.py`` keyed
-        by NIF and scheme, and ``_percepciones_observations_repository.py`` keyed
-        by NIF, clave and subclave. They are a different store, not writers that
-        slipped past this check, and nothing here refuses on their behalf.
-        """
-        if payload.source_kind.is_official_aeat:
-            return
-        existing = self.load(self.extract_identifier(payload))
-        if existing is None or not existing.source_kind.is_official_aeat:
-            return
-        observation = payload.observation
-        context = {
-            "modelo": observation.modelo,
-            "filing_year": str(observation.filing_year),
-            "period": str(observation.period),
-            "existing_source_kind": existing.source_kind.value,
-            "incoming_source_kind": payload.source_kind.value,
-        }
-        # Displacing captured AEAT evidence is unrecoverable through any path
-        # this repository exposes, so the refusal states that in typed form
-        # rather than leaving a boundary to project a retry of the same write.
-        verdict = calculation_no_recovery_verdict(
-            CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
-            facts={
-                "modelo": str(observation.modelo),
-                "filing_year": str(observation.filing_year),
-                "period": str(observation.period),
-                "existing_source_kind": existing.source_kind.value,
-                "incoming_source_kind": payload.source_kind.value,
-            },
-        )
-        # Two raises with LITERAL keys rather than one raise selecting a key by
-        # expression: the locale scaffold discovers keys by reading the literal
-        # argument, so a computed key is invisible to it and the parity gate
-        # would never learn the string exists. The duplication is the price of
-        # the key being discoverable.
-        if payload.source_kind is ObservationSourceKind.APP_FILING:
-            raise ObservationEvidenceDisplacementError(
-                translated_message="application.calculations.errors.observation_displaces_official_evidence_app_filing",
-                context=context,
-                precondition_verdict=verdict,
-            )
-        raise ObservationEvidenceDisplacementError(
-            translated_message="application.calculations.errors.observation_displaces_official_evidence_manual",
-            context=context,
-            precondition_verdict=verdict,
-        )
+        return ObservationEnvelopePayload.model_validate(payload.model_dump())
 
     def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
-        """Yield every persisted observation for ``modelo`` in unspecified order.
+        """Yield the effective observation of every stored coordinate of ``modelo``.
 
         Used by grouped previous-filing and clean-state readers to enumerate all
         known source rows for a modelo, including member-widened keys.
 
         The base scan verifies each row's key before yielding it, which this
-        filter depends on: the ``modelo`` test below
-        reads the payload's own coordinates, so a row filed under another
-        ``(modelo, filing_year, period, member)`` key would enter the window it
-        describes rather than the one it is stored in, and carry-forward and
-        aggregation readers would fold a foreign period's figures into this
-        modelo. The verified scan recomputes the natural key from each payload
-        and refuses a mismatch instead of yielding it.
+        filter depends on: the ``modelo`` test below reads the payload's own
+        coordinates, so a row filed under another key would enter the window it
+        describes rather than the one it is stored in. The verified scan
+        recomputes the natural key from each payload and refuses a mismatch
+        instead of yielding it.
         """
         try:
             safe_repository_id(modelo, context="modelo")
@@ -313,39 +297,100 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
             raise PersistenceDegradationError("calculation_observation_iter_modelo") from exc
 
-    @override
-    def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
-        """Iterate envelopes while translating storage failures inward."""
+    def iter_layers(self) -> Iterator[ObservationLayers]:
+        """Iterate every stored coordinate's layers while translating storage failures inward."""
         try:
-            yield from super().iter_records()
+            yield from self._layers.iter_records()
         except PersistenceDegradationError:
             raise
         except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
             raise PersistenceDegradationError("calculation_observation_iter_records") from exc
 
-    @override
+    def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
+        """Iterate the effective envelope of every stored coordinate."""
+        for layers in self.iter_layers():
+            effective = layers.effective
+            if effective is not None:
+                yield effective
+
+    def _placed(self, payload: ObservationEnvelopePayload) -> ObservationLayers:
+        """Return the stored layers with ``payload`` placed in the layer its source kind selects."""
+        stored = self._load_layers(self.envelope_identifier(payload)) or _layers_for(payload)
+        layer = "pending_local" if payload.is_pending_local else "official"
+        return ObservationLayers.model_validate({**dict(stored), layer: payload})
+
     def save(self, payload: ObservationEnvelopePayload) -> None:
-        """Persist one envelope while translating storage failures inward."""
+        """Persist one envelope into its layer while translating storage failures inward."""
         _translate_storage_failure(
             "calculation_observation_save",
-            lambda: super(CalculationObservationRepository, self).save(payload),
+            lambda: self._layers.save(self._placed(payload)),
         )
 
-    @override
     def to_secure_object_write(
         self,
         payload: ObservationEnvelopePayload,
         *,
         expected_revision_id: str | None = None,
     ) -> SecureObjectWrite:
-        """Prepare one envelope write while translating storage failures inward."""
+        """Prepare the write placing one envelope into its layer, for an outer transaction."""
+        return self._layers_write(self._placed(payload), expected_revision_id=expected_revision_id)
+
+    def _layers_write(
+        self,
+        layers: ObservationLayers,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         return _translate_storage_failure(
             "calculation_observation_prepare",
-            lambda: super(CalculationObservationRepository, self).to_secure_object_write(
-                payload,
-                expected_revision_id=expected_revision_id,
+            lambda: self._layers.to_secure_object_write(layers, expected_revision_id=expected_revision_id),
+        )
+
+    def promote_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        source_kind: ObservationSourceKind,
+        source_metadata: Mapping[str, str],
+        captured_at: datetime,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the write that makes the pending-local layer the official one.
+
+        An operator override is not AEAT's answer, so a pending layer carrying
+        one is left in place and nothing is written.
+        """
+        layers = self.load_observation_layers(modelo, period, member_nif=member_nif)
+        pending = layers.pending_local
+        if pending is None or pending.override is not None:
+            return ()
+        promoted = ObservationEnvelopePayload.model_validate(
+            {
+                **dict(pending),
+                "source_kind": source_kind,
+                "source_metadata": dict(source_metadata),
+                "captured_at": captured_at,
+            },
+        )
+        return (
+            self._layers_write(
+                ObservationLayers.model_validate({**dict(layers), "official": promoted, "pending_local": None}),
             ),
         )
+
+    def clear_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the write that removes the pending-local layer of one coordinate."""
+        layers = self.load_observation_layers(modelo, period, member_nif=member_nif)
+        if layers.pending_local is None:
+            return ()
+        return (self._layers_write(ObservationLayers.model_validate({**dict(layers), "pending_local": None})),)
 
 
 class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelopePayload]):
