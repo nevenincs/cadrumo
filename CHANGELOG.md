@@ -7,6 +7,21 @@ request is opened, not by hand — see [`RELEASING.md`](RELEASING.md).
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/nevenincs/cadrumo/compare/v0.5.1...v0.6.0) (2026-09-17)
+
+
+### Features
+
+* **modelo:** require requested Modelo 145 period ([4e7d8ef](https://github.com/nevenincs/cadrumo/commit/4e7d8efba6633559ac06b7c79871473de29c620f))
+* **registry:** publish Modelo 303 reduction authority ([d4ceb2a](https://github.com/nevenincs/cadrumo/commit/d4ceb2a5734f4a90ad78d9484b5dba020cf9783d))
+
+
+### Bug Fixes
+
+* **calculations:** confirm carried prior filings below the filing floor ([199b6c2](https://github.com/nevenincs/cadrumo/commit/199b6c2cb9ddd007556c3caa487a76bbeb9de6ae))
+* **modelo:** restore specific suffered-retencion advisory messages ([88139e0](https://github.com/nevenincs/cadrumo/commit/88139e08bc48912815f8bde706a0a808244c267e))
+* **registry:** keep modelo 145 out of obligation scope ([87eec7a](https://github.com/nevenincs/cadrumo/commit/87eec7af78589c371b292730e1fbd2a42cff075b))
+
 ## [0.5.1](https://github.com/nevenincs/cadrumo/compare/v0.5.0...v0.5.1) (2026-09-06)
 
 
