@@ -13,6 +13,7 @@ from ...calculations.registry.eu_member_state_catalogue import resolve_eu_member
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.nif_iva_catalogue import nif_iva_format_for_country, resolve_nif_iva_catalogue
 from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from ..errors import InvoiceValidationError
 from ..validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -204,7 +205,7 @@ def test_validate_iva_number_rejects_bad_shapes() -> None:
     )
 
     for value, country in cases:
-        with pytest.raises(ValueError, match=r"IVA number"):
+        with pytest.raises(InvoiceValidationError, match=r"IVA number"):
             validate_iva_number(value, country)
 
 
@@ -223,7 +224,7 @@ def test_validate_country_code_normalises() -> None:
 def test_validate_country_code_rejects_invalid_shapes() -> None:
     """Non-2-letter or non-alphabetic country codes are rejected."""
     for value in ("", "E", "ESP", "E3"):
-        with pytest.raises(ValueError, match=r"country code must be an ISO-3166 alpha-2 value"):
+        with pytest.raises(InvoiceValidationError, match=r"country code must be an ISO-3166 alpha-2 value"):
             validate_country_code(value)
 
 
@@ -260,7 +261,7 @@ def test_validate_iva_number_rejects_malformed_eu_with_instructive_message() -> 
     )
 
     for value, country, country_name in cases:
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(InvoiceValidationError) as excinfo:
             validate_iva_number(value, country)
         message = str(excinfo.value)
         assert "IVA number" in message, (value, country)
@@ -283,9 +284,9 @@ def test_validate_iva_number_non_eu_falls_back_to_generic_shape() -> None:
 
 def test_validate_iva_number_non_eu_generic_still_rejects_bad_shape() -> None:
     """The generic non-EU fallback still rejects a missing prefix or an out-of-range body."""
-    with pytest.raises(ValueError, match=r"IVA number"):
+    with pytest.raises(InvoiceValidationError, match=r"IVA number"):
         validate_iva_number("123456789", "US")  # no US prefix
-    with pytest.raises(ValueError, match=r"IVA number"):
+    with pytest.raises(InvoiceValidationError, match=r"IVA number"):
         validate_iva_number("USxx", "US")  # body too short
 
 

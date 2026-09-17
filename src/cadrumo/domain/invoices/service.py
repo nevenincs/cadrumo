@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.invoice_link import LinkInconsistencyDirection
@@ -69,6 +70,7 @@ class ReconciliationSuggestion(BaseModel):
 
     @field_validator("score")
     @classmethod
+    @pydantic_validation_boundary
     def _require_score_in_range(cls, value: Decimal) -> Decimal:
         if not (0 <= value <= 1):
             raise InvoiceValidationError("score must be in the inclusive 0..1 range")

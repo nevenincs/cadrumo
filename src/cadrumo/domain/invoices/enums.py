@@ -22,6 +22,7 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 from ...core.registry_token import StrictRegistryToken
+from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
@@ -32,7 +33,7 @@ from ..calculations.registry.iva_rate_kind_catalogue import (
 from ..calculations.registry.schema_base import DateAxis
 from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
-from ..iva.rates import iva_rate_record_from_fact
+from ..iva.rates import rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
 
 if TYPE_CHECKING:
@@ -69,11 +70,11 @@ class IvaRate(str):
             return value
         if isinstance(value, str):
             try:
-                resolved = resolve_iva_rate_token(value, date.today())
+                resolved = resolve_iva_rate_token(value, today_madrid())
                 return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("IvaRate token is not declared by the scoped facts registry") from exc
-        raise TypeError("IvaRate must be a registry-projected token or string")
+        raise ValueError("IvaRate must be a registry-projected token or string")
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -233,11 +234,11 @@ class InvoiceLegalMention(str):
             return value
         if isinstance(value, str):
             try:
-                resolved = resolve_invoice_legal_mention(value, date.today())
+                resolved = resolve_invoice_legal_mention(value, today_madrid())
                 return cls.from_registry(str(resolved))
             except RegistryValidationError as exc:
                 raise ValueError("InvoiceLegalMention is not declared by the scoped facts registry") from exc
-        raise TypeError("InvoiceLegalMention must be a registry-projected token or string")
+        raise ValueError("InvoiceLegalMention must be a registry-projected token or string")
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -519,7 +520,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
         resolved = resolve_iva_rate_slot_fact(rate, on_date)
         if resolved is None:
             raise RegistryValidationError("numeric IVA slot resolved without an authority fact")
-        return iva_rate_record_from_fact(resolved, authority=operation).pct / Decimal("100")
+        return rate_record_from_fact(resolved, authority=operation).pct / Decimal("100")
     except RegistryValidationError as exc:
         # Coverage and legality are different facts and must not share a
         # message. The registry's reach differs PER TIER -- the general and
@@ -565,10 +566,10 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
     skip or reject it explicitly. Numeric and exempt slots return their
     corresponding :class:`IvaRateKind`; nonnumeric slots return ``None``.
     """
-    declarations = _iva_rate_slot_registry_declarations(rate, date.today())
+    declarations = _iva_rate_slot_registry_declarations(rate, today_madrid())
     if declarations["numeric"] != "true":
         return None
-    return _iva_rate_slot_kind(declarations, date.today())
+    return _iva_rate_slot_kind(declarations, today_madrid())
 
 
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:

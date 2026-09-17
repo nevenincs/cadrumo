@@ -64,6 +64,7 @@ from .errors import InvoiceValidationError
 if TYPE_CHECKING:
     pass
 from ...core.parsing.codes import IsoCurrencyCode
+from ...core.time.clock import today_madrid
 from .validators import (
     is_eu_member_state_code,
 )
@@ -96,7 +97,7 @@ def _simplificada_mandatory_tax_id_categories(
         MappingFactQuery(
             fact_id=_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):
@@ -202,11 +203,11 @@ class InvoiceLine(BaseModel):
             if key in payload:
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
-            payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], date.today())
+            payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], today_madrid())
         if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
             stripped = payload["oss_rate_kind"].strip()
             payload["oss_rate_kind"] = (
-                require_iva_rate_kind(stripped, effective_date=date.today()) if stripped else None
+                require_iva_rate_kind(stripped, effective_date=today_madrid()) if stripped else None
             )
         return payload
 
@@ -217,7 +218,7 @@ class InvoiceLine(BaseModel):
         """Refuse an OSS/IOSS rate tier absent from the IVA facts catalogue."""
         if value is None:
             return None
-        return require_iva_rate_kind(value, effective_date=date.today())
+        return require_iva_rate_kind(value, effective_date=today_madrid())
 
     @field_validator("description")
     @classmethod
