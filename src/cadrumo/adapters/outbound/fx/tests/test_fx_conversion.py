@@ -48,7 +48,7 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
