@@ -49,7 +49,7 @@ def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
         path.name for path in _ROOT.iterdir() if path.is_dir() and path.name not in {"tests", "__pycache__"}
     )
 
-    assert root_files == frozenset({"__init__.py"})
+    assert root_files == frozenset({"__init__.py", "models.py"})
     assert candidate_directories == EXTERNAL_LAYOUT_MODELOS
     for modelo in sorted(EXTERNAL_LAYOUT_MODELOS):
         entries = frozenset(path.name for path in (_ROOT / modelo).iterdir())

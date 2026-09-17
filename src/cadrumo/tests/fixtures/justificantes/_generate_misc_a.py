@@ -719,6 +719,10 @@ class _Modelo036Fixture:
     ``ejercicio`` is included so the sidecar CSV token SANITIZED036{ejercicio} can be
     derived deterministically.  M036 has no calendar period (it uses event codes
     alta/modificacion/baja), so the justificante trailer does not print a Periodo label.
+
+    ``presented_at`` falls on the first day of the 2025 design the parser profile
+    reads: a census declaration is governed by its presentation date, and the
+    earlier design shares ejercicio 2025 with it.
     """
 
     filename: str
@@ -726,7 +730,7 @@ class _Modelo036Fixture:
     tax_id: str
     full_name: str
     event_kind: str
-    presented_at: str = "2025-01-01 10:00:00"
+    presented_at: str = "2025-02-03 10:00:00"
 
 
 _MODELO_036_FIXTURES: tuple[_Modelo036Fixture, ...] = (
