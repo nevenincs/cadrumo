@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from cadrumo.application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 
@@ -446,21 +446,11 @@ def _cross_period_evidence_findings(
         findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(evidence))
     if evidence.zero_value_previous_filing_advisory:
         findings.append(
-            _cross_period_target_advisory_finding(
-                verdict,
-                evidence,
-                message_locale_key="application.modelo.findings.cross_period_zero_value_previous_filing",
-                legal_refs=_ZERO_VALUE_PREVIOUS_FILING_LEGAL_REFS,
-            ),
+            _cross_period_target_advisory_finding(verdict, evidence, advisory="zero_value_previous_filing"),
         )
     if evidence.m111_no_retenciones_no_obligation_advisory:
         findings.append(
-            _cross_period_target_advisory_finding(
-                verdict,
-                evidence,
-                message_locale_key="application.modelo.findings.cross_period_m111_no_retenciones",
-                legal_refs=_M111_NO_RETENCIONES_LEGAL_REFS,
-            ),
+            _cross_period_target_advisory_finding(verdict, evidence, advisory="m111_no_retenciones"),
         )
     return tuple(findings), blocks_first_filer
 
@@ -515,27 +505,44 @@ def _cross_period_target_advisory_finding(
     verdict: CrossPeriodCleanStateVerdict,
     evidence: CrossPeriodDependencyEvidence,
     *,
-    message_locale_key: str,
-    legal_refs: tuple[LegalRefId, ...],
+    advisory: Literal["zero_value_previous_filing", "m111_no_retenciones"],
 ) -> ModeloVerificationFinding:
     """Disclose a dependency admitted on explicit no-carry evidence for the target."""
     requirement = evidence.requirement
+    facts: dict[str, str | int] = {
+        "source_modelo": str(requirement.source_modelo),
+        "source_filing_year": requirement.filing_year,
+        "source_period": requirement.period.registry_token,
+        "origin_ids": _join_cross_period_ids(requirement.origin_ids),
+        "target_modelo": str(verdict.target_modelo),
+        "target_filing_year": verdict.target_filing_year,
+        "target_period": verdict.target_period.registry_token,
+    }
+    source_refs = _cross_period_requirement_source_refs(requirement)
+    if advisory == "zero_value_previous_filing":
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            message_locale_key="application.modelo.findings.cross_period_zero_value_previous_filing",
+            message_facts=facts,
+            legal_refs=_merged_legal_refs(_ZERO_VALUE_PREVIOUS_FILING_LEGAL_REFS, requirement),
+            source_refs=source_refs,
+        )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message_locale_key=message_locale_key,
-        message_facts={
-            "source_modelo": str(requirement.source_modelo),
-            "source_filing_year": requirement.filing_year,
-            "source_period": requirement.period.registry_token,
-            "origin_ids": _join_cross_period_ids(requirement.origin_ids),
-            "target_modelo": str(verdict.target_modelo),
-            "target_filing_year": verdict.target_filing_year,
-            "target_period": verdict.target_period.registry_token,
-        },
-        legal_refs=tuple(dict.fromkeys((*legal_refs, *_cross_period_requirement_legal_refs(requirement)))),
-        source_refs=_cross_period_requirement_source_refs(requirement),
+        message_locale_key="application.modelo.findings.cross_period_m111_no_retenciones",
+        message_facts=facts,
+        legal_refs=_merged_legal_refs(_M111_NO_RETENCIONES_LEGAL_REFS, requirement),
+        source_refs=source_refs,
     )
+
+
+def _merged_legal_refs(
+    advisory_refs: tuple[LegalRefId, ...],
+    requirement: CrossPeriodDependencyRequirement,
+) -> tuple[LegalRefId, ...]:
+    return tuple(dict.fromkeys((*advisory_refs, *_cross_period_requirement_legal_refs(requirement))))
 
 
 def _cross_period_missing_activity_start_finding(verdict: CrossPeriodCleanStateVerdict) -> ModeloVerificationFinding:
