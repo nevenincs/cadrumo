@@ -6,22 +6,12 @@
 # from `broader` and must never be authored here.
 
 [concept]
-concept_id = "modelo-186"
-domain = "modelo"
-lifecycle = "retired"
-domain_refs = ["modelo:186"]
-replaced_by = "modelo"
-created_at = 2026-07-30
+concept_id = "iva-reagp-compensation"
+domain = "regimen"
+lifecycle = "draft"
+domain_refs = ["iva-category:reagp_compensation"]
+created_at = 2026-09-17
 updated_at = 2026-09-17
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
-
-[language.ca]
-short_description = "Model 186, declaració informativa de naixements i defuncions"
-
-[language.en]
-short_description = "Modelo 186, information return on births and deaths"
-
-[language.hu]
-short_description = "186-os modell: születések és halálesetek tájékoztató bevallása"

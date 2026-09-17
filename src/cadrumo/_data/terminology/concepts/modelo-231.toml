@@ -8,10 +8,10 @@
 [concept]
 concept_id = "modelo-231"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "deprecated"
 domain_refs = ["modelo:231"]
 created_at = 2026-07-30
-updated_at = 2026-07-30
+updated_at = 2026-09-17
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
@@ -24,4 +24,3 @@ short_description = "Modelo 231, country-by-country report"
 
 [language.hu]
 short_description = "231-es modell: országonkénti jelentés"
-

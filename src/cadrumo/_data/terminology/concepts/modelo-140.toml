@@ -8,10 +8,11 @@
 [concept]
 concept_id = "modelo-140"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "retired"
 domain_refs = ["modelo:140"]
+replaced_by = "modelo"
 created_at = 2026-07-30
-updated_at = 2026-07-30
+updated_at = 2026-09-17
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
@@ -24,4 +25,3 @@ short_description = "Modelo 140, request for advance payment of the maternity de
 
 [language.hu]
 short_description = "140-es modell: az anyasági adókedvezmény előlegének kérelme"
-
