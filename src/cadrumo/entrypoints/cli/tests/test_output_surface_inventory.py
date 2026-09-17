@@ -88,6 +88,12 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "Product identity and version string only. It is emitted on the "
         "--version short-circuit, before an app root or renderer context exists."
     ),
+    ("entrypoints/cli/main.py", "_emit_command_surface_manifest", "typer.echo"): (
+        "Machine-readable command-surface manifest built only from the static "
+        "command graph, policies and JSON schemas. It is emitted on the "
+        "--cadrumo-command-surface short-circuit, before an app root, profile or "
+        "renderer context exists, and carries no operator data to redact."
+    ),
     ("entrypoints/cli/_app_live_auth_preflight.py", "emit_live_auth_preflight", "typer.echo"): (
         "Already redacted: emits redact_for_cli_output(line) to stderr. Honours "
         "the redaction boundary, though it hand-calls the policy rather than "
