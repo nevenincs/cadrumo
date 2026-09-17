@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f3d73e125642b97f2f0bcdc518042489f95247421a35fc0e38439286ad21d1d'
+body_hash: 'sha256:f2d505d0f321e16302b44c50f79ad9add5b227e1579bb3dd018aae7dcab087fa'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
@@ -72,7 +72,11 @@ related:
 - `S20` `M` `dev/packaging/tests/test_release_cohort.py`
 - `S20` `verify:` `dev.actionlint` -> `pass`
 - `S20` `by:` `ci-fix`
+- `S04` `M` `dev/actionlint.py`
+- `S04` `verify:` `actionlint linux archive download and digest` -> `pass`
 
 ## Notes
 
 - `S20` phase-close review fixes: scoped exclusions, sigpipe, prove commit binding, docs gating, release-please permissions
+- `S04` probe PR 679 failed at setup: actionlint download did not follow the GitHub asset redirect
+
