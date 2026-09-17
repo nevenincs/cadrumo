@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.identity.digest import PrefixedContentDigest
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
@@ -71,6 +72,7 @@ class ProfileDeletionHoldOwnerProjection(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_assessed_at(self) -> ProfileDeletionHoldOwnerProjection:
         validate_utc_aware(self.assessed_at)
         return self

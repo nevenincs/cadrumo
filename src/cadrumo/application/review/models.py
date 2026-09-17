@@ -30,6 +30,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import validate_utc_aware
@@ -67,6 +68,7 @@ class _ReviewItemBase(BaseModel):
 
     @field_validator("since")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware(cls, value: datetime) -> datetime:
         """Reject naive timestamps so cross-source sorting is deterministic."""
         return validate_utc_aware(value)

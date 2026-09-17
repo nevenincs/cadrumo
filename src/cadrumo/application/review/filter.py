@@ -32,6 +32,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodError
 from ...domain.iva.classification import InvoiceKind
@@ -75,6 +76,7 @@ class FilterClause(BaseModel):
 
     @field_validator("value")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_value(cls, value: str) -> str:
         """Trim the value while rejecting blank-but-not-empty inputs."""
         trimmed = value.strip()
@@ -502,6 +504,7 @@ class LedgerReviewFilterSpec(BaseModel):
         )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_clause_consistency(self) -> LedgerReviewFilterSpec:
         """Resolved fields must agree with the clauses tuple.
 
@@ -595,6 +598,7 @@ class InvoiceReviewFilterSpec(BaseModel):
         return cls(clauses=clauses, status=status, kind=kind)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_clause_consistency(self) -> InvoiceReviewFilterSpec:
         """Resolved fields must agree with the clauses tuple."""
         present_keys = {clause.key for clause in self.clauses}
@@ -635,6 +639,7 @@ class DeclaracionReviewFilterSpec(BaseModel):
         return cls(clauses=clauses, status=status)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_clause_consistency(self) -> DeclaracionReviewFilterSpec:
         """Resolved fields must agree with the clauses tuple."""
         present_keys = {clause.key for clause in self.clauses}

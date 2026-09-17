@@ -33,7 +33,7 @@ from .test_adapters import (
     _draft,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _A = "a" * 64
 _B = "b" * 64

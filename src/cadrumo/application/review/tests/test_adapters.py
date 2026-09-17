@@ -44,7 +44,7 @@ from ..models import FindingReviewItem, InvoiceReviewItem, TransactionReviewItem
 from ..source_adapters import drafts_pending, invoices_pending, transactions_pending
 from .draft_review_test_support import draft_review_ports
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
