@@ -385,12 +385,18 @@ class CalculationObservationRepository:
         period: Period,
         *,
         member_nif: str | None = None,
+        replacement_official: ObservationEnvelopePayload | None = None,
     ) -> tuple[SecureObjectWrite, ...]:
-        """Prepare the write that removes the pending-local layer of one coordinate."""
+        """Prepare the write that removes the pending-local layer, optionally replacing the official one."""
         layers = self.load_observation_layers(modelo, period, member_nif=member_nif)
         if layers.pending_local is None:
             return ()
-        return (self._layers_write(ObservationLayers.model_validate({**dict(layers), "pending_local": None})),)
+        official = replacement_official if replacement_official is not None else layers.official
+        return (
+            self._layers_write(
+                ObservationLayers.model_validate({**dict(layers), "official": official, "pending_local": None}),
+            ),
+        )
 
 
 class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelopePayload]):
