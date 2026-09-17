@@ -36,6 +36,7 @@ from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.modelos.errors import ModeloError
 from ..operator_actions.models import PreconditionVerdict
+from ..workflow.abort import WorkflowAbortReason
 from ..workflow.run_models import WorkflowResult
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
@@ -258,8 +259,16 @@ class ModeloWorkflowGateError(ModeloError):
         """Initialize the error from the aborted workflow result, deriving its rendered context."""
         self._result = result
         reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
+        # An empty obligation window has its own registered copy, which says
+        # the verified revision can still be exported; every other abort
+        # renders the run's own summary.
+        translated_message = (
+            None
+            if result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
+            else str(result.summary_locale_key)
+        )
         super().__init__(
-            translated_message=str(result.summary_locale_key),
+            translated_message=translated_message,
             context={
                 "abort_code": reason,
                 "stage": result.final_stage.value,

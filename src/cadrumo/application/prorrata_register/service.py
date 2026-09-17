@@ -55,19 +55,32 @@ def require_prorrata_register_coordinates_current(
     operation: PinnedAuthorityOperation,
 ) -> ProrrataRegister:
     """Re-confirm every registry-derived coordinate before register values are read."""
+    for entry in register.entries:
+        require_prorrata_entry_coordinates_current(entry, operation=operation)
+    return register
+
+
+def require_prorrata_entry_coordinates_current(
+    entry: ProrrataRegisterEntry,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Re-confirm one entry's registry coordinates before it joins the register.
+
+    Checked on the entry alone: wrapping it in a one-entry register would run
+    the register's cross-year lifecycle rules without the stored prior years.
+    """
     # Lazy to keep the aggregation package's import spine acyclic: aggregation
     # consumes this prorrata service while calculations also consumes aggregation.
     from ..calculations.revision_carry_gate import revision_carry_outcome
 
-    for entry in register.entries:
-        for snapshot_ref in entry.source_registry_snapshot_refs:
-            outcome = revision_carry_outcome(snapshot_ref, operation=operation)
-            if outcome.refused:
-                raise ProrrataRegisterValidationError(
-                    "prorrata register source registry coordinate cannot be re-confirmed: "
-                    f"{snapshot_ref.revision_id}: {outcome.detail}"
-                )
-    return register
+    for snapshot_ref in entry.source_registry_snapshot_refs:
+        outcome = revision_carry_outcome(snapshot_ref, operation=operation)
+        if outcome.refused:
+            raise ProrrataRegisterValidationError(
+                "prorrata register source registry coordinate cannot be re-confirmed: "
+                f"{snapshot_ref.revision_id}: {outcome.detail}"
+            )
 
 
 class ProrrataRegisterService:
@@ -92,10 +105,7 @@ class ProrrataRegisterService:
         Returns:
             The updated :class:`ProrrataRegister`.
         """
-        require_prorrata_register_coordinates_current(
-            ProrrataRegister(entries=(entry,), sector_definitions=()),
-            operation=self._operation,
-        )
+        require_prorrata_entry_coordinates_current(entry, operation=self._operation)
         return self._repository.upsert_entry(entry)
 
     def declare_especial_transition(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
@@ -108,10 +118,7 @@ class ProrrataRegisterService:
         """
         if entry.especial_transition is None:
             raise ProrrataRegisterValidationError("prorrata especial transition declaration requires typed evidence")
-        require_prorrata_register_coordinates_current(
-            ProrrataRegister(entries=(entry,), sector_definitions=()),
-            operation=self._operation,
-        )
+        require_prorrata_entry_coordinates_current(entry, operation=self._operation)
         return self._repository.upsert_entry(entry)
 
     def record_aeat_autorizada(
@@ -222,4 +229,8 @@ class ProrrataRegisterService:
         return resolve_provisional_percentage((*persisted, *transient))
 
 
-__all__ = ["ProrrataRegisterService", "require_prorrata_register_coordinates_current"]
+__all__ = [
+    "ProrrataRegisterService",
+    "require_prorrata_entry_coordinates_current",
+    "require_prorrata_register_coordinates_current",
+]

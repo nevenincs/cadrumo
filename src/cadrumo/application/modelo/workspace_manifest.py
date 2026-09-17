@@ -22,7 +22,7 @@ from typing import (
     get_type_hints,
 )
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, Tag, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
@@ -48,6 +48,9 @@ _REGISTRY_ROOT_FIELDS = frozenset(
         "revision",
         "filing_period",
         "filing_year",
+        "authored_filing_year",
+        "supported_filing_years",
+        "revision_projection_direction",
         "period",
         "legal",
         "sources",
@@ -83,6 +86,7 @@ _INSPECTION_ROOT_FIELDS = frozenset(
         "legal_ref_ids",
         "casilla_ids",
         "casilla_sections",
+        "casilla_localization_keys",
         "binding_ids",
         "projection_endpoints",
         "formulas",
@@ -696,12 +700,27 @@ def _unwrap_annotated(annotation: object) -> object:
     return annotation
 
 
+#: Marks a union discriminated by a callable, whose arms name themselves with ``Tag``.
+_TAG_DISCRIMINATOR = "@tag"
+
+
 def _field_discriminator(discriminator: object) -> str | None:
     if discriminator is None:
         return None
     if isinstance(discriminator, str):
         return discriminator
-    raise ValueError("workspace field manifest supports only string discriminators")
+    if callable(discriminator):
+        return _TAG_DISCRIMINATOR
+    raise ValueError("workspace field manifest supports only string or tagged callable discriminators")
+
+
+def _arm_tag(annotation: object) -> str:
+    while get_origin(annotation) is Annotated:
+        for metadata in get_args(annotation)[1:]:
+            if isinstance(metadata, Tag):
+                return metadata.tag
+        annotation = get_args(annotation)[0]
+    raise ValueError("workspace tag-discriminated union arm must declare a Tag")
 
 
 def _annotation_discriminator(annotation: object) -> str | None:
@@ -717,6 +736,8 @@ def _annotation_discriminator(annotation: object) -> str | None:
 def _union_coordinate(annotation: object, discriminator: str | None) -> str:
     if discriminator is None:
         return f"union={_schema_type_label(annotation)}"
+    if discriminator == _TAG_DISCRIMINATOR:
+        return f"tag={_arm_tag(annotation)}"
     unwrapped = _unwrap_annotated(annotation)
     if not _is_model_type(unwrapped):
         raise ValueError("workspace discriminated union arm must be a Pydantic model")
@@ -767,6 +788,8 @@ def _schema_type_label(annotation: object) -> _SchemaType:
     origin = get_origin(unwrapped)
     if origin is Literal:
         return "Literal"
+    if origin in (Union, UnionType):
+        return "Union"
     if origin is not None:
         return _schema_type_label(origin)
     raise ValueError(f"workspace field manifest cannot name public schema type {unwrapped!r}")

@@ -213,3 +213,28 @@ def test_a_binding_the_resolution_produced_no_value_for_is_not_audited() -> None
     )
 
     assert diagnostics == ()
+
+
+def _ledger_resolution(value: Decimal) -> CalculationSourceResolution:
+    return CalculationSourceResolution(
+        resolver_id="ledger_iva_aggregation",
+        owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
+        binding_values={_LEDGER_BINDING_ID: value},
+    )
+
+
+def test_an_empty_fold_resolving_zero_is_not_a_route_violation() -> None:
+    """A fold that matched nothing states zero; no other route produced that value."""
+    diagnostics = collect_terminal_origin_diagnostics(_revision(_ledger_binding()), _ledger_resolution(Decimal("0")))
+
+    assert diagnostics == ()
+
+
+def test_a_fold_value_with_no_terminal_node_is_still_reported() -> None:
+    """Only the exact zero of an empty fold is exempt; any other value needs its nodes."""
+    diagnostics = collect_terminal_origin_diagnostics(
+        _revision(_ledger_binding()),
+        _ledger_resolution(Decimal("12.50")),
+    )
+
+    assert [diagnostic.reason for diagnostic in diagnostics] == ["terminal_origin_mismatch"]

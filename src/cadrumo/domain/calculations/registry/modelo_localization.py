@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from enum import StrEnum
 from typing import Final, Literal, cast
 
@@ -270,18 +270,59 @@ def resolve_modelo_localization(
     Restoring the override needs a way to say "blanked on purpose" in the data,
     not a stop that fires on every untranslated key.
 
-    This is invisible in Spanish, which is why it survived: the Spanish
-    backstop lives in the OUTER loop, so every casilla carrying Spanish text
-    resolved correctly no matter what the inner loop did.  Only a casilla
-    lacking a value in the requested locale ever reached the tier that was
-    broken.
+    A requested locale is read only down to the tier at which Spanish
+    resolves.  Catalogues store a value at the least specific key that yields
+    the same text, so a Spanish value on a more specific key marks text that
+    differs from the lineage-wide one; a translation stored below that tier
+    translates the other text, and serving it would render a different
+    meaning.  Past that barrier the Spanish value itself is returned.
     """
-    for candidate_locale in (locale, _SOURCE_LOCALE) if locale != _SOURCE_LOCALE else (_SOURCE_LOCALE,):
-        for key in keys:
-            value = lookup_translation(key, locale=candidate_locale)
-            if value is not None:
-                return value.format(year=year) if year is not None and "{year}" in value else value
-    return None
+    source = modelo_localization_source(keys, locale=locale)
+    if source is None:
+        return None
+    key, source_locale = source
+    value = lookup_translation(key, locale=source_locale)
+    return None if value is None else _format_year(value, year)
+
+
+def modelo_localization_source(
+    keys: tuple[str, ...],
+    *,
+    locale: str,
+    lookup: LocalizationLookup | None = None,
+) -> tuple[str, str] | None:
+    """Return the ``(key, locale)`` that serves a chain, or ``None`` when nothing does.
+
+    This is the selection :func:`resolve_modelo_localization` renders, exposed
+    for consumers that report which catalogue coordinate supplied a text.
+    ``lookup`` replaces the shared catalogue read, so catalogue tooling can
+    evaluate a proposed catalogue with exactly the runtime selection rule.
+    """
+    read = _catalogue_lookup if lookup is None else lookup
+    spanish_tier: int | None = None
+    for index, key in enumerate(keys):
+        if read(key, _SOURCE_LOCALE) is not None:
+            spanish_tier = index
+            break
+    if locale != _SOURCE_LOCALE:
+        reachable = keys if spanish_tier is None else keys[: spanish_tier + 1]
+        for key in reachable:
+            if read(key, locale) is not None:
+                return key, locale
+    return None if spanish_tier is None else (keys[spanish_tier], _SOURCE_LOCALE)
+
+
+type LocalizationLookup = Callable[[str, str], str | None]
+"""Read one authored value as ``lookup(key, locale)``; ``None`` means no text."""
+
+
+def _catalogue_lookup(key: str, locale: str) -> str | None:
+    return lookup_translation(key, locale=locale)
+
+
+def _format_year(value: str, year: int | None) -> str:
+    """Substitute the ``{year}`` placeholder when a year is supplied."""
+    return value.format(year=year) if year is not None and "{year}" in value else value
 
 
 def require_modelo_localization(
@@ -306,6 +347,7 @@ def require_modelo_localization(
 
 __all__ = [
     "CasillaLocalizationField",
+    "LocalizationLookup",
     "ModeloLocalizationFieldKind",
     "casilla_alias_locale_key",
     "casilla_continuity_locale_key",
@@ -313,6 +355,7 @@ __all__ = [
     "construct_locale_key",
     "encode_modelo_locale_segment",
     "modelo_locale_key",
+    "modelo_localization_source",
     "require_modelo_localization",
     "resolve_modelo_localization",
     "revision_locale_key",

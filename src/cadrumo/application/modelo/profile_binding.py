@@ -661,9 +661,7 @@ def _resolved_minimo_descendientes_tranches(
     the check stays defensive for any future partial revision).
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {
-        "filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)
-    }
+    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
@@ -717,9 +715,7 @@ def _resolved_minimo_descendientes_thresholds(
     a fabricated ceiling.
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {
-        "filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)
-    }
+    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
 
     def _resolve(suffix: str) -> Decimal | None:
         parameter = _minimo_descendientes_parameter(snapshot, suffix=suffix)

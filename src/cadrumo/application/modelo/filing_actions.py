@@ -397,6 +397,7 @@ def file_modelo_revision(
         result_disposition=result_disposition,
         prior_domiciliation_election=prior_domiciliation_provenance,
         taxpayer_nif=workflow_profile.tax_id,
+        justificante_repository=ports.justificante_repository,
     )
 
 

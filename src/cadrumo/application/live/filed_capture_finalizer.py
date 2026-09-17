@@ -127,13 +127,16 @@ def _filed_registry_enrollment_failure_row(
     observation: FiledObservationProtocol,
     error: BaseException,
 ) -> FiledDataCaptureFailureRow:
+    # The adapter boundary wraps each failure in a LiveApplicationError; the
+    # row reports the failure it wraps, which is what the operator acts on.
+    reported = error.__cause__ if isinstance(error, LiveApplicationError) and error.__cause__ is not None else error
     return FiledDataCaptureFailureRow(
         modelo=observation.modelo,
         year=observation.ejercicio,
         period=observation.period,
         expediente_id=observation.expediente_id,
-        error_type=error.__class__.__name__,
-        message=bounded_context_text(error),
+        error_type=reported.__class__.__name__,
+        message=bounded_context_text(reported),
     )
 
 

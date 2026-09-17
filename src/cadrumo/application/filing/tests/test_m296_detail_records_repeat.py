@@ -52,7 +52,7 @@ from ..producer_snapshot import (
     build_filing_producer_snapshot,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "296"
 _REVISION = "2024-y-siguientes"

@@ -72,9 +72,7 @@ def _unconsumed_row_bindings() -> dict[tuple[str, str], int]:
     for modelo in bundled_registry_tree()[0]:
         for revision_id, revision in modelo.revisions.items():
             row_bindings = [
-                binding
-                for binding in revision.bindings
-                if getattr(binding.provider, "fact", None) == "row_field"
+                binding for binding in revision.bindings if getattr(binding.provider, "fact", None) == "row_field"
             ]
             if not row_bindings:
                 continue
@@ -130,10 +128,6 @@ def test_both_consumption_shapes_are_present_in_the_corpus(modelo_id: str, revis
     232 consumes through explicit binding fields and declares no repeat.
     """
     revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
-    row_bindings = [
-        binding
-        for binding in revision.bindings
-        if getattr(binding.provider, "fact", None) == "row_field"
-    ]
+    row_bindings = [binding for binding in revision.bindings if getattr(binding.provider, "fact", None) == "row_field"]
     assert row_bindings, f"modelo {modelo_id} {revision_id} must declare row bindings for this control to mean anything"
     assert (str(modelo_id), str(revision_id)) not in _unconsumed_row_bindings()

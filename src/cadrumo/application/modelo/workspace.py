@@ -34,6 +34,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
+    modelo_localization_source,
     revision_locale_key,
 )
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
@@ -720,9 +721,13 @@ def static_inspection_casilla_schema_records(
     formulas = inspection.formulas
     records: list[ModeloWorkspaceSchemaRecordV1] = []
     for casilla_id in sorted(inspection.casilla_ids):
-        key = casilla_occurrence_locale_key(
-            target.modelo, target.law_selected_revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+        chain = inspection.casilla_localization_keys.get(casilla_id) or (
+            casilla_occurrence_locale_key(
+                target.modelo, target.law_selected_revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
+            ),
         )
+        source = modelo_localization_source(chain, locale=output_language.value)
+        key = chain[0] if source is None else source[0]
         locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
         records.append(
             ModeloWorkspaceSchemaRecordV1(

@@ -465,7 +465,9 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         )
         # Goods and services are placed differently from Canarias, so the
         # supply nature is declared to leave the counterparty as the only gap.
-        services = DeclaredFact[SupplyNature](value=SupplyNature.SERVICES, source=ClassifierInputSource.OPERATOR_ASSERTION)
+        services = DeclaredFact[SupplyNature](
+            value=SupplyNature.SERVICES, source=ClassifierInputSource.OPERATOR_ASSERTION
+        )
 
         blocked = assemble_classification_criteria(
             transaction_date=date(2026, 3, 10),

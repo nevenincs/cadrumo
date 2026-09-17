@@ -26,7 +26,7 @@ This is NOT the construction path for the general ledger-transaction
 pipeline. Bank-transaction-derived IVA observations (payment splits,
 expense-report lines, OSS / IOSS observations, recargo de equivalencia
 entries resolved from already-classified ledger rows) are built directly
-as :class:`~cadrumo.domain.calculations.registry.IvaLedgerObservation` in
+as :class:`~cadrumo.domain.calculations.registry.ledger_iva_bindings.IvaLedgerObservation` in
 :mod:`cadrumo.application.aggregation.iva_ledger`, whose category, rate,
 and flow axes are resolved upstream (manual or LLM classification) rather
 than re-derived from an :class:`IvaRate` + direction pair — that pipeline
@@ -154,7 +154,7 @@ def classify_invoice_line_for_iva(
     equivalencia, and OSS / IOSS cases, callers construct
     :class:`IvaInvoiceClassification` directly with the appropriate
     :class:`IvaCategory` from the substrate classifier
-    (:func:`cadrumo.domain.iva.classify_iva`).
+    (:func:`cadrumo.domain.iva.classification.classify_iva`).
 
     ``recargo_amount`` defaults to zero because most lines carry none. It is a
     parameter here rather than something a caller sets on the returned
@@ -222,7 +222,7 @@ def invoice_line_to_iva_observation(
 
     The runtime resolver for the substrate's ``ledger_iva_aggregation``
     binding source kind consumes
-    :class:`cadrumo.domain.calculations.registry.IvaLedgerObservation`
+    :class:`cadrumo.domain.calculations.registry.ledger_iva_bindings.IvaLedgerObservation`
     records. This helper turns invoice-line metadata into the
     observation shape the modelo registry expects, applying the
     standard-case classification (domestic IVA, REPERCUTIDO for issued

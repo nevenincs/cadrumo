@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Literal
 
 from ...core.authority_grade import RegistryAuthorityGrade
@@ -410,12 +410,37 @@ def _validated_string_casilla_override(
     *,
     key: CasillaId,
     casilla_def: CasillaDefinition,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, str | None]:
     """Validate one registry-declared string casilla and return its projection."""
     if casilla_def.semantic_role == "irnr_tipo_renta":
         official_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
         return _projected_m210_tipo_renta_code(official_code), official_code
+    declarante_selector_role = _registry_calculate_input_declaration(
+        "modelo.role.declarante_selector",
+        operation=operation,
+    )
+    if casilla_def.semantic_role == declarante_selector_role:
+        return _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def), None
     return _typed_text_value(raw_value, key=key, casilla_def=casilla_def), None
+
+
+def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
+    """Refuse a purely numeric value routed to a declarante-selector text casilla.
+
+    The selector names the member who obtains the income, never an amount. A
+    bare number is a mis-routed income figure: on the text channel it would be
+    stored silently and ignored by the formula chain, understating the base.
+    """
+    value = _text_value(raw_value, key=key)
+    try:
+        Decimal(value)
+    except (InvalidOperation, ValueError):
+        return _typed_text_value(value, key=key, casilla_def=casilla_def)
+    raise ModeloCalculateTextInputError(
+        context={"key": key, "label": casilla_def.label, "data_type": casilla_def.data_type},
+        translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+    )
 
 
 def _resolve_casilla_overrides(
@@ -438,6 +463,7 @@ def _resolve_casilla_overrides(
                 raw_value,
                 key=key,
                 casilla_def=casilla_def,
+                operation=operation,
             )
             text_casilla_inputs[key] = text_value
             if official_code is not None:

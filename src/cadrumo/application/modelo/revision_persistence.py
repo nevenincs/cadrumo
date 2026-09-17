@@ -67,6 +67,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -76,6 +77,8 @@ from ...domain.modelos.calculation_revision import (
     CalculationSourceRef,
     derive_calculation_revision_id,
 )
+from ...domain.modelos.calculation_revision_aggregate import CalculationRevisionAggregateContext
+from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
@@ -1030,6 +1033,39 @@ def _refresh_filing_retention_snapshot(
     )
 
 
+def _rectificativa_aggregate_context(
+    revision: CalculationRevision,
+    *,
+    work_unit: WorkUnit,
+    work_units: WorkUnitCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+    justificante_repository: JustificanteRepositoryProtocol | None,
+    taxpayer_nif: str | None,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevisionAggregateContext | None:
+    """Join the evidence a rectificativa revalidates against, or ``None`` for any other revision."""
+    identity = revision.amendment_identity
+    if identity is None or identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA:
+        return None
+    if justificante_repository is None:
+        raise ValueError("filing a rectificativa requires the justificante repository its evidence resolves against")
+    return CalculationRevisionAggregateContext(
+        work_units=work_units,
+        filing_records=filing_catalogue,
+        justificantes=tuple(justificante_repository.iter_justificantes()),
+        registry_snapshots={
+            work_unit.work_unit_id: operation.snapshot(
+                Modelo("303").value,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            )
+        }
+        if work_unit.modelo == Modelo("303").value
+        else {},
+        expected_taxpayer_tax_id=taxpayer_nif,
+    )
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -1050,6 +1086,7 @@ def persist_filed_revision(
     result_disposition: ResultDisposition | None = None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
     taxpayer_nif: str | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
 ) -> ModeloRecord:
     """Persist a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
@@ -1129,7 +1166,19 @@ def persist_filed_revision(
 
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
     filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
-    revisions = upsert_calculation_revision(revisions, filed_target)
+    revisions = upsert_calculation_revision(
+        revisions,
+        filed_target,
+        aggregate_context=_rectificativa_aggregate_context(
+            filed_target,
+            work_unit=work_unit,
+            work_units=work_units,
+            filing_catalogue=updated_filing_catalogue,
+            justificante_repository=justificante_repository,
+            taxpayer_nif=taxpayer_nif,
+            operation=operation,
+        ),
+    )
 
     participation_writes = _build_filed_participation_writes(
         filed_target=filed_target,

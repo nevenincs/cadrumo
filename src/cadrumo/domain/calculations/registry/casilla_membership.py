@@ -22,6 +22,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
+from .binding_value_contract import BindingValueChannel
 from .errors import RegistryValidationError
 from .schema_surfaces import CasillaDefinition
 
@@ -75,6 +76,24 @@ def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     is stronger than shape validation alone.
     """
     return frozenset(casillas_by_id(revision))
+
+
+def row_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return the casillas that are one field of a record a row-set binding emits.
+
+    Such a casilla is written once per emitted row, never typed once as a
+    scalar, so its completeness belongs to the row source. The record is named
+    by the casilla's leading section and by the row-set binding's provider.
+    """
+    records = {
+        str(record)
+        for binding in revision.bindings
+        if binding.value.channel is BindingValueChannel.ROW_SET
+        and (record := getattr(binding.provider, "record", None)) is not None
+    }
+    return frozenset(
+        casilla.id for casilla in revision.casillas if casilla.section and str(casilla.section[0]) in records
+    )
 
 
 def undeclared_casilla_ids(

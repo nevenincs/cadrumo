@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Sequence
+from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
@@ -109,10 +110,21 @@ def _cardinality_diagnostics(
     binding: BindingDefinition,
     primaries: Sequence[CalculationSourceProvenance],
     expectation: TerminalOriginExpectation,
+    *,
+    empty_fold: bool,
 ) -> list[CalculationSourceDiagnostic]:
-    """Report a terminal-node count the expectation's cardinality forbids."""
+    """Report a terminal-node count the expectation's cardinality forbids.
+
+    ``empty_fold`` marks a fold family that resolved exactly zero from no
+    source rows at all. That zero is the fold's statement that nothing
+    matched, not a value reached by another route; whether nothing SHOULD have
+    matched is the resolver's own absence screens' question, so it is not
+    reported a second time here as a route violation.
+    """
     matching = tuple(row for row in primaries if row.terminal_origin is expectation.source_class)
     if expectation.cardinality == "zero_or_more":
+        return []
+    if not matching and empty_fold and expectation.cardinality == "at_least_one":
         return []
     if not matching:
         return [
@@ -177,6 +189,7 @@ def collect_terminal_origin_diagnostics(
         if not expectations:
             continue
         binding_primaries = primaries.get(binding.source, ())
+        empty_fold = not binding_primaries and resolution.binding_values.get(binding.id) == Decimal("0")
         admitted = frozenset(expectation.source_class for expectation in expectations)
         diagnostics.extend(_class_diagnostics(binding, binding_primaries, admitted))
         produced = {row.terminal_origin for row in binding_primaries if row.terminal_origin is not None}
@@ -188,9 +201,9 @@ def collect_terminal_origin_diagnostics(
             # and the "none of them resolved" case is reported once, below.
             if len(expectations) > 1 and expectation.source_class not in produced:
                 continue
-            diagnostics.extend(_cardinality_diagnostics(binding, binding_primaries, expectation))
+            diagnostics.extend(_cardinality_diagnostics(binding, binding_primaries, expectation, empty_fold=empty_fold))
             diagnostics.extend(_fingerprint_diagnostics(binding, binding_primaries, expectation))
-        if len(expectations) > 1 and not produced:
+        if len(expectations) > 1 and not produced and not empty_fold:
             admitted_text = ", ".join(sorted(member.value for member in admitted))
             diagnostics.append(
                 _diagnostic(

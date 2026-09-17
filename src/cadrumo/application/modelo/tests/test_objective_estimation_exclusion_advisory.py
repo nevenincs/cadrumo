@@ -145,11 +145,13 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
     legal_refs_by_field = {
         str(finding.message_facts["profile_field_id"]): set(finding.legal_refs) for finding in findings
     }
+    # The DT 32 thresholds apply the LIRPF art. 31.1.3ª exclusion rule, so
+    # those findings cite both; the agrarian threshold is art. 31's own.
     assert legal_refs_by_field == {
-        "objective_estimation_prior_year_gross_income_eur": {"ley-35-2006:dt-32"},
-        "objective_estimation_prior_year_invoice_gross_income_eur": {"ley-35-2006:dt-32"},
+        "objective_estimation_prior_year_gross_income_eur": {"ley-35-2006:art-31", "ley-35-2006:dt-32"},
+        "objective_estimation_prior_year_invoice_gross_income_eur": {"ley-35-2006:art-31", "ley-35-2006:dt-32"},
         "objective_estimation_prior_year_agri_livestock_forest_gross_eur": {"ley-35-2006:art-31"},
-        "objective_estimation_prior_year_purchases_eur": {"ley-35-2006:dt-32"},
+        "objective_estimation_prior_year_purchases_eur": {"ley-35-2006:art-31", "ley-35-2006:dt-32"},
     }
     assert set(legal_refs_by_field) == {
         "objective_estimation_prior_year_gross_income_eur",

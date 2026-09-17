@@ -68,6 +68,9 @@ class CCAA(str, metaclass=_CCAAType):
     def _require_registry_token(cls, value: object) -> Self:
         if isinstance(value, cls):
             return value
+        if isinstance(value, str):
+            # A persisted token is projected back through the dated catalogue.
+            return cls(value)
         raise CoreValidationError("CCAA must be a registry-projected token")
 
     @classmethod

@@ -73,7 +73,12 @@ from .schema_base import filing_period_from_scope
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 from .support_matrix import build_support_matrix, build_support_matrix_from_directory_views
-from .temporal import ModeloRevisionDirectory, select_revision, select_revision_for_year
+from .temporal import (
+    ModeloRevisionDirectory,
+    select_revision,
+    select_revision_for_year,
+    select_revision_metadata_for_year,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -1103,16 +1108,9 @@ class PinnedRegistryQueryService:
         as_of: date | None,
     ) -> ResolvedRegistryQueryContext:
         directory = self._operation.modelo_directory(modelo.strip())
-        candidates = tuple(
-            item
-            for item in directory.revisions
-            if item.period_selector.periods_for_year(filing_year) and (as_of is None or item.contains_date(as_of))
-        )
-        if not candidates:
-            raise RegistryValidationError(
-                f"modelo {directory.modelo_id} has no revision for filing year {filing_year}",
-            )
-        metadata = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+        # The same canonical year selection every other consumer uses, so a
+        # year-scoped report names the revision a snapshot of that year selects.
+        metadata = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of)
         revision = self._operation.revision(directory.modelo_id, str(metadata.id))
         return self._context(
             directory,

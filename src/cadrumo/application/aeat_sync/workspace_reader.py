@@ -42,6 +42,7 @@ from .workspace import (
     AeatSyncWorkspaceFactV1,
     AeatSyncWorkspaceFiledDeclarationRowV1,
     AeatSyncWorkspaceOverviewRowV1,
+    AeatSyncWorkspaceProjectionError,
     AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceSource,
     AeatSyncWorkspaceSourceObservationV1,
@@ -444,6 +445,10 @@ def read_local_aeat_sync_workspace_projection(
     observed blanks. The two are different answers and the census zone shows
     them differently.
     """
+    # Refused before any fact is built: a row carrying a blank subject would
+    # otherwise fail as a bare ValueError instead of the projection refusal.
+    if not subject_key.strip():
+        raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
     return project_aeat_sync_workspace(
         bucket_id=bucket_id,
         subject_key=subject_key,

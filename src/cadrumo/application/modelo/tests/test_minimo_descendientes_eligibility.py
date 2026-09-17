@@ -32,7 +32,10 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.contribuyente.family_profile import RentaFamilyProfile
@@ -46,7 +49,26 @@ from ..profile_binding import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+
+def _engine_filing_years() -> tuple[int, ...]:
+    """Supported filing years whose Renta revision is authored for that year.
+
+    A year the envelope admits only by projecting an earlier revision forward
+    (a Renta campaign AEAT has not yet published) carries no dated thresholds.
+    """
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no supported filing years"
+    years = tuple(
+        year
+        for year in support.years
+        if (valid_to := published_snapshot("100", filing_year=year, period="0A").revision.valid_to) is None
+        or valid_to.year >= year
+    )
+    assert years, "no supported filing year has an authored Renta revision; every case would be vacuous"
+    return years
+
+
+_ENGINE_FILING_YEARS = _engine_filing_years()
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
@@ -57,7 +79,7 @@ def _parameter(snapshot: RegistrySnapshot, suffix: str) -> Decimal:
     year = snapshot.filing_year
     by_id = {p.id: p for p in snapshot.revision.parameters}
     return resolve_parameter(
-        by_id[f"renta-{year}-minimo-descendientes-{suffix}-{year}"],
+        by_id[f"renta-minimo-descendientes-{suffix}"],
         {"filing_period": date(year, 12, 31)},
     )
 
@@ -394,6 +416,7 @@ def test_anualidades_flag_still_reads_con_derecho_for_an_eligible_shared_custody
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.usefixtures("operation")
 def test_new_facts_survive_a_serialisation_round_trip() -> None:
     """The predicate can only see these values if they persist and reload."""
     from ....domain.contribuyente.descendant_facts import descendant_facts_from_list, descendant_list_from_facts

@@ -24,9 +24,10 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
+from types import MappingProxyType
 from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
@@ -49,6 +50,7 @@ from ...domain.calculations.registry.governed_fact_scope import governed_facts_i
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.calculations.registry.schema_references import SourceReference
+from ...domain.contribuyente.renta_codes import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloDraft
 from .runtime import RegistrySchemaAccessor
@@ -473,6 +475,17 @@ def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
+#: The value converters a registry XML declaration may name, by that name. An
+#: explicit table rather than a module-namespace lookup, so an import tidy-up
+#: cannot silently make a declared converter unavailable.
+_XML_VALUE_CONVERTERS: Mapping[str, Callable[[str], str]] = MappingProxyType(
+    {
+        "modelo100_ccaa_codigo": modelo100_ccaa_codigo,
+        "modelo100_ecivil_export_code": modelo100_ecivil_export_code,
+    },
+)
+
+
 def _xml_dictionary_rendered_value(
     entry: XmlDictionaryEntry,
     *,
@@ -494,8 +507,8 @@ def _xml_dictionary_rendered_value(
     rendered = format_xml_dictionary_value(entry.data_type, raw)
     converter_name = declarations.get(f"xml.converter.{entry.field_id}") if declarations is not None else None
     if converter_name is not None:
-        converter = globals().get(converter_name)
-        if not callable(converter):
+        converter = _XML_VALUE_CONVERTERS.get(converter_name)
+        if converter is None:
             raise FilingExportValidationError(f"registry-selected XML converter {converter_name!r} is not available")
         try:
             converted = converter(rendered)

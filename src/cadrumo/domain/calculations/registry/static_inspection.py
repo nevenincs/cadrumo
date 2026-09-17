@@ -199,6 +199,14 @@ class RegistryRevisionInspection(RegistryModel):
     casilla_sections: Annotated[Mapping[CasillaId, tuple[str, ...]], FROZEN_MAPPING] = Field(
         default_factory=lambda: FrozenMapping({})
     )
+    casilla_localization_keys: Annotated[Mapping[CasillaId, tuple[str, ...]], FROZEN_MAPPING] = Field(
+        default_factory=lambda: FrozenMapping({})
+    )
+    """Each casilla's ordered label key chain, as the loaded revision enrolled it.
+
+    A label is resolved through this chain, never through one derived key, so an
+    inherited or lineage-keyed casilla reads the text its catalogue home holds.
+    """
     """Each casilla's declared section path, as the revision itself declares it.
 
     Carried alongside the ids because the ids alone cannot say where a casilla
@@ -264,6 +272,9 @@ class RegistryRevisionInspection(RegistryModel):
             casilla_ids=frozenset(revision_casillas),
             casilla_sections=MappingProxyType(
                 {casilla_id: tuple(casilla.section) for casilla_id, casilla in revision_casillas.items()}
+            ),
+            casilla_localization_keys=MappingProxyType(
+                {casilla_id: tuple(casilla.localization_keys) for casilla_id, casilla in revision_casillas.items()}
             ),
             binding_ids=frozenset(binding.id for binding in revision.bindings),
             projection_endpoints=revision.projection_endpoints,

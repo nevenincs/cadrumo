@@ -27,6 +27,7 @@ from ...aggregation.source_mesh import CalculationSourceContext
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
     _intracommunity_clave,
+    _invoice_sources_for_revision,
 )
 from ..source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
@@ -124,17 +125,19 @@ def test_source_resolver_translates_reader_failure_to_diagnostic() -> None:
     modelo = next(candidate for candidate in _modelos if candidate.id == "349")
     revision = select_revision(modelo, filing_year=2026, period="1T")
 
-    resolution = resolver.resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=revision,
-        ),
+    context = CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="349",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision=revision,
     )
+    resolution = resolver.resolve(context)
 
-    assert tuple(d.reason for d in resolution.diagnostics) == ("storage_degraded",) * 3
+    # One diagnostic per invoice source the selected revision activates.
+    active_sources = _invoice_sources_for_revision(context)
+    assert active_sources
+    assert tuple(d.reason for d in resolution.diagnostics) == ("storage_degraded",) * len(set(active_sources))
 
 
 def test_source_resolver_projects_an_invoice_through_the_reader_port() -> None:
