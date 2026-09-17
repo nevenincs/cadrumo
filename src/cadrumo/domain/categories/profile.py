@@ -32,7 +32,7 @@ class IvaDeductibilityHint(str):
         """Expose the opaque token as a string to Pydantic without a catalogue."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+        return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
 
     @property
     def value(self) -> str:

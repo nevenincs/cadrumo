@@ -147,7 +147,7 @@ class TestDescendantInfoValidation:
         assert d.birth_date == date(2020, 3, 15)
 
     def test_inscripcion_date_must_be_gte_birth_date(self) -> None:
-        with pytest.raises(ProfileValidationError, match="inscripcion_registro_civil_date"):
+        with pytest.raises(ValidationError, match="inscripcion_registro_civil_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
                 relacion=DescendantRelacion.from_registry("adoptado"),
@@ -155,7 +155,7 @@ class TestDescendantInfoValidation:
             )
 
     def test_acogimiento_date_must_be_gte_birth_date(self) -> None:
-        with pytest.raises(ProfileValidationError, match="acogimiento_resolucion_date"):
+        with pytest.raises(ValidationError, match="acogimiento_resolucion_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
                 relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),
@@ -171,13 +171,13 @@ class TestDescendantInfoValidation:
         assert d.inscripcion_registro_civil_date == date(2020, 6, 1)
 
     def test_entry_dates_in_future_are_rejected(self) -> None:
-        with pytest.raises(ProfileValidationError, match="future"):
+        with pytest.raises(ValidationError, match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
                 relacion=DescendantRelacion.from_registry("adoptado"),
                 inscripcion_registro_civil_date=date(2099, 1, 1),
             )
-        with pytest.raises(ProfileValidationError, match="future"):
+        with pytest.raises(ValidationError, match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
                 relacion=DescendantRelacion.from_registry("acogimiento_preadoptivo_o_permanente"),

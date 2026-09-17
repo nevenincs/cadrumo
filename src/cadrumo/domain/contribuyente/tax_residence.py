@@ -12,6 +12,7 @@ from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.text_fold import fold_diacritics as _fold_diacritics
 from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
@@ -33,6 +34,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
 
     @field_validator("from_ccaa", "to_ccaa", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_ccaa(cls, value: object) -> object:
         if isinstance(value, str):
             return parse_tax_region(value)
@@ -40,6 +42,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
 
     @field_validator("effective_from", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_effective_from(cls, value: object) -> object:
         if isinstance(value, str):
             return _parse_iso8601_date(value)
@@ -58,6 +61,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
     @field_validator("ccaa", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_ccaa(cls, value: object) -> object:
         if isinstance(value, str):
             return parse_tax_region(value)
@@ -65,6 +69,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
     @field_validator("tax_residence_change_history", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_change_history(cls, value: object) -> object:
         if isinstance(value, list):
             # CAST-RATIONALE-TAX-RESIDENCE-CHANGE-HISTORY: isinstance narrows to
@@ -76,6 +81,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
     @field_validator("tax_residence_since", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_since(cls, value: object) -> object:
         if isinstance(value, str):
             return _parse_iso8601_date(value)

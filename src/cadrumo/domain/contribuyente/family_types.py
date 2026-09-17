@@ -154,6 +154,7 @@ class _RentaPersonProfileBase(BaseModel):
 
     @field_validator("birth_date", "death_date", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_date(cls, value: object) -> object:
         return coerce_iso_date_field(value)
 

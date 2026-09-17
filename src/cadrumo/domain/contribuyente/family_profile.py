@@ -8,6 +8,7 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CALENDAR_MONTH_MAX
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
@@ -92,6 +93,7 @@ class RentaFamilyProfile(BaseModel):
 
     @field_validator("descendants", "ascendants", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _tuple_from_list(cls, value: object) -> object:
         if isinstance(value, list):
             # CAST-RATIONALE-DESCENDANTS-ASCENDANTS-COERCION: isinstance narrows
@@ -104,6 +106,7 @@ class RentaFamilyProfile(BaseModel):
 
     @field_validator("descendientes", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _descendientes_from_list(cls, value: object) -> object:
         if isinstance(value, list):
             # CAST-RATIONALE-DESCENDIENTES-COERCION: isinstance narrows to list

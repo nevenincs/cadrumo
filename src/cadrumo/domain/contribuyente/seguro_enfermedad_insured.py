@@ -24,6 +24,7 @@ from ..calculations.registry.facts.resolution import (
 )
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
+from .renta_codes import RentaMaritalStatus
 
 if TYPE_CHECKING:
     from .descendant import DescendantInfo
@@ -244,7 +245,10 @@ def seguro_enfermedad_insured_counts_from_facts(
             fact_index,
             "renta_spouse.disability_grade",
         ),
-        has_spouse=any(str(path).startswith("renta_spouse.") for path in fact_index),
+        # The spouse limb is declared "included_when_marital_status_is_casado": a
+        # pareja de hecho is not the article's conyuge, and a married filer may
+        # have declared no other spouse fact.
+        has_spouse=str(fact_index.get("renta_taxpayer.marital_status", "")).strip() == RentaMaritalStatus.CASADO.value,
         authority=selected_authority,
     )
 

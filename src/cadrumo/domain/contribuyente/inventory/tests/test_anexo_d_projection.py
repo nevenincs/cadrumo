@@ -42,7 +42,7 @@ from ..records import (
 )
 from ..valuation import compute_inventory_anexo_d_projection
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _ref(value: str) -> FilingEvidenceReference:

@@ -24,10 +24,11 @@ import pytest
 
 from ....core.modelo import Modelo
 from ...calculations.registry.formula_runtime_ops import read_parameter
+from ...calculations.registry.tests.published_authority import published_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# (param-id stem, AEAT-confirmed euro amount). The stem is suffixed with the year.
+# (param-id stem, AEAT-confirmed euro amount). The id is resolved per revision.
 _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-contribuyente-base", "5550"),
     ("minimo-contribuyente-edad-65-74", "1150"),
@@ -52,21 +53,27 @@ _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-discapacidad-gastos-asistencia", "3000"),
 )
 
+#: Ejercicios whose amounts were checked against AEAT. Only those inside the
+#: published support envelope are resolvable; the floor is a hard gate.
 _GROUNDING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 
 
 def test_minimo_personal_familiar_amount_matches_aeat() -> None:
+    support = published_supported_filing_years()
+    assert support is not None
+    years = tuple(year for year in _GROUNDING_YEARS if support.admits_filing_year(year))
+    assert years, "no grounded ejercicio lies inside the supported filing-year envelope"
     failures: list[str] = []
-    for year in _GROUNDING_YEARS:
+    for year in years:
         for stem, expected in _MINIMO_AMOUNTS:
             value = read_parameter(
                 Modelo("100").value,
                 str(year),
-                f"renta-{year}-{stem}-{year}",
+                f"renta-{stem}",
                 date_context={"filing_period": date(year, 12, 31)},
             )
             expected_value = Decimal(expected)
             if value != expected_value:
-                failures.append(f"renta-{year}-{stem}: {value} != AEAT {expected_value}")
+                failures.append(f"{year} renta-{stem}: {value} != AEAT {expected_value}")
 
     assert not failures, "\n".join(failures)

@@ -6,12 +6,14 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from .errors import ProfileValidationError
 
 SUPPORTED_PROFILE_SCHEMA_VERSION = "1"
 """The only profile-record schema version this code reads or writes."""
 
 
+@pydantic_validation_boundary
 def _require_supported_profile_schema_version(value: str) -> str:
     if value != SUPPORTED_PROFILE_SCHEMA_VERSION:
         raise ProfileValidationError(

@@ -214,6 +214,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_quote(self) -> CategoryCitation:
         self._validate_grounding_matches_its_evidence()
         # Constructing the window is the validation: an inverted span refuses
@@ -637,6 +638,7 @@ class StatutoryCapAmount(_ProportionalityStrictFrozenModel):
         return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _span_is_coherent(self) -> StatutoryCapAmount:
         _ = self.window
         return self

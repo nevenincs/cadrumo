@@ -19,10 +19,9 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.categories.proportionality import ProportionalityKind
-
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..profile import CategoryProfile
+from ..proportionality_catalogue import require_proportionality_kind
 from ..registry import resolve_category_profiles
 from ..spending_category import SpendingCategory
 from ..spending_category_catalogue import spending_category_tokens
@@ -66,15 +65,15 @@ def test_proportionality_kinds_carry_kind_specific_fields(
     fixed_percentage_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
-        if profile.proportionality.kind == ProportionalityKind.from_registry("fixed_percentage")
+        if profile.proportionality.kind == require_proportionality_kind("fixed_percentage")
     ]
     usage_ratio_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
         if profile.proportionality.kind
         in {
-            ProportionalityKind.from_registry("usage_ratio_home_area"),
-            ProportionalityKind.from_registry("usage_ratio_personal"),
+            require_proportionality_kind("usage_ratio_home_area"),
+            require_proportionality_kind("usage_ratio_personal"),
         }
     ]
 

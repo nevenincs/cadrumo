@@ -17,7 +17,7 @@ import pytest
 from ..spending_category import SpendingCategory, SpendingCategoryFamily, family_for
 from ..spending_category_catalogue import resolve_spending_category_catalogue
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def test_spending_category_catalogue_is_large_enough() -> None:
