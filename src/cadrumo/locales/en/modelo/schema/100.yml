@@ -660,7 +660,7 @@ modelo:
           irpf-anexo-c-exencion-reinversion-importe-total-transmision:
             label: Total amount obtained as a result of the transfer of shares or
               holdings that is eligible for reinvestment for the purposes of the exemption
-              for reinvestment in a new company or one recently...
+              for reinvestment in a new company or one recently formed
           irpf-anexo-c-exencion-rv-ganancia-exenta:
             label: Capital gain exempt through reinvestment
           irpf-anexo-c-exencion-rv-ganancia-patrimonial:
@@ -1034,7 +1034,8 @@ modelo:
             label: For large families
           irpf-deduccion-asturias-formacion-autoempleados:
             label: For training expenses incurred by taxpayers carrying out specially
-              qualified work, directly and mainly related to research and develop...
+              qualified work, directly and mainly related to research and development,
+              scientific or technical activities
           irpf-deduccion-asturias-gastos-vitales-jovenes:
             help: Enter the essential living expenses incurred by taxpayers up to
               35 years old.
@@ -1238,7 +1239,9 @@ modelo:
           irpf-deduccion-c-valenciana-ayudas-publicas-generalitat-va30:
             label: For amounts arising from public aid granted by the Generalitat
               under Decreto Ley 3/2020, de 10 de abril, to workers affected by an
-              ERTE and to those who ha...
+              ERTE and to those who have reduced their working hours for family reconciliation
+              reasons due to the declaration of the state of alarm caused by the COVID-19
+              health crisis
           irpf-deduccion-c-valenciana-conciliacion:
             label: For balancing work and family life
           irpf-deduccion-c-valenciana-contratacion-indefinida:
@@ -1266,7 +1269,7 @@ modelo:
           irpf-deduccion-c-valenciana-donaciones-investigacion-sanitaria:
             label: For monetary donations aimed at financing research, innovation
               and scientific or technological development programmes in the field
-              of treatment and prevention of infections caused b...
+              of treatment and prevention of infections caused by COVID-19
           irpf-deduccion-c-valenciana-donaciones-lengua-valenciana:
             label: For donations aimed at promoting the Valencian language
           irpf-deduccion-c-valenciana-donaciones-otros-fines:
@@ -1463,7 +1466,8 @@ modelo:
           irpf-deduccion-castilla-la-mancha-donaciones-bienes-culturales:
             label: For donations of cultural assets and contributions towards the
               conservation, repair and restoration of assets belonging to the cultural
-              heritage of Castilla-La Mancha, and for cultural...
+              heritage of Castilla-La Mancha, and for cultural purposes, included
+              in the Castilla-La Mancha cultural patronage plan
           irpf-deduccion-castilla-la-mancha-donaciones-idi:
             label: For donations for research, development, and business innovation
               purposes
@@ -2028,7 +2032,7 @@ modelo:
           irpf-ed-derechos-imagen-cessation-flag:
             label: In the case of income arising from the assignment of the exploitation
               of copyright, if you choose to allocate the advance payment on account
-              of it as the rights accrue...
+              of it as the rights accrue, enter an "X"
           irpf-ed-dietas-viajes-personal:
             label: Employee subsistence and travel allowances
           irpf-ed-gastos-financieros:
@@ -2227,6 +2231,20 @@ modelo:
             label: Number of units
           irpf-eo-modulo-num-unidades-e4au7:
             label: Number of units
+          irpf-eo-modulo-rdto-antes-amort-e4arn1:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn2:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn3:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn4:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn5:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn6:
+            label: Income per module before depreciation
+          irpf-eo-modulo-rdto-antes-amort-e4arn7:
+            label: Income per module before depreciation
           irpf-eo-otras-percepciones:
             label: Other business receipts
           irpf-eo-rdto-neto-minorado:
@@ -2369,7 +2387,7 @@ modelo:
           irpf-g4-re-transmision-intervivos-flag:
             label: If this is a taxpayer who has transferred the shares or holdings
               inter vivos, tick this casilla (only taxpayers who have changed their
-              residence to another Member State of the...
+              residence to another Member State of the European Union)
           irpf-g4-re-valor-adquisicion-acciones:
             label: Acquisition value of the shares or units
           irpf-g4-re-valor-mercado-acciones:
@@ -2805,9 +2823,11 @@ modelo:
             label: 'Deductions under the general regime of the Corporate Income Tax
               Law: applied in this return'
           irpf-incremento-cuota-autonomica-perdida-nacimiento:
-            label: Increase in the net regional tax liability for loss of entitlement
+            label: 'Increase in the net regional tax liability for loss of entitlement
               to the birth deduction (repayment of the advance payment) under article
-              6 ter of Legislative Decree 1/2014, of 6...
+              6 ter of Legislative Decree 1/2014, of 6 June, approving the consolidated
+              text of the legal provisions of the Autonomous Community of the Balearic
+              Islands on taxes ceded by the State: Regional portion'
           irpf-inmueble-1-gasto-financiacion-importe-gfcimp1:
             label: 'Expense 1: Amount of the expense'
           irpf-inmueble-1-gasto-financiacion-importe-gfcimp2:
@@ -3050,7 +3070,7 @@ modelo:
           irpf-inmueble-valor-catastral-revisado-flag:
             label: State whether the cadastral value has been reviewed, modified or
               determined through a general collective valuation procedure that came
-              into force in the tax year or in the last...
+              into force in the tax year or in the last ten years (Yes/No)
           irpf-inmueble-vivienda-habitual-flag:
             help: Indicate whether it was the main residence in 2024.
             label: Primary residence in 2020
@@ -3181,10 +3201,6 @@ modelo:
             label: Taxpayer receiving the prizes
           irpf-premios-juegos-publicitarios-contribuyente-titular:
             label: Taxpayer receiving the prizes
-          irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag:
-            label: In the case of income arising from the assignment of the exploitation
-              of copyright, if you choose to allocate the advance payment on account
-              of it as the rights accrue...
           irpf-re-agrup-interes-economico-base-imponible-imputada:
             label: Imputed taxable base
           irpf-re-agrup-interes-economico-nif:
@@ -3469,7 +3485,7 @@ modelo:
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             label: In the case of income arising from the assignment of the exploitation
               of copyright, if you choose to allocate the advance payment on account
-              of it as the rights accrue...
+              of it as the rights accrue, enter an "X"
           irpf-rendimiento-trabajo-gasto-sindicato:
             label: Trade union dues paid
           irpf-rendimiento-trabajo-reduccion-gastos-generales:
@@ -3508,16 +3524,19 @@ modelo:
             label: Year in which the benefit in kind is received
           irpf-retrib-especie-importe-no-exenta-1:
             label: 'Benefit in kind (not exempt for exceeding the amount set in article
-              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Val...'
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Valuation'
           irpf-retrib-especie-importe-no-exenta-2:
             label: 'Benefit in kind (not exempt for exceeding the amount set in article
-              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...'
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Payments
+              on account'
           irpf-retrib-especie-importe-no-exenta-3:
             label: 'Benefit in kind (not exempt for exceeding the amount set in article
-              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...'
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Payments
+              on account passed on'
           irpf-retrib-especie-no-exenta-importe-integro-pendiente-imputacion:
             label: 'Benefit in kind (not exempt for exceeding the amount set in article
-              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Impo...'
+              42.3.f), pending imputation under article 14.2.m) of the Tax Law): Gross
+              amount ([1968] + [1969] - [1970])'
           irpf-retribucion-especie-empresas-emergentes-imputacion-diferida-contribuyente:
             label: Taxpayer holder
           irpf-rib-baleares-dotacion-anio-m24bem1ano:
@@ -3556,6 +3575,8 @@ modelo:
             label: Cadastral reference (property 1)
           irpf-vehiculo-electrico-vendedor-nif:
             label: Tax ID (NIF/NIE) of the selling person/entity
+          irpf-vivienda-habitual-obras-proveedor-nif-nifcant3:
+            label: Tax ID (NIF) of the person or entity that carried out the works
           irpf-vivienda-habitual-obras-proveedor-nif-nifval26b:
             label: 'Tax ID (NIF) of the person or entity that carried out the works:'
           irpf-vivienda-habitual-obras-proveedor-nif-nifval3:
@@ -3616,7 +3637,7 @@ modelo:
             0008:
               label: Employer contributions to pension schemes, employer social welfare
                 plans and social welfare mutual funds (except collective dependency
-                insurance). Amounts allocated to the...
+                insurance). Amounts allocated to the taxpayer
             0009:
               label: Employer contributions to group long-term care insurance. Amounts
                 allocated to the taxpayer
@@ -4007,7 +4028,9 @@ modelo:
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2016 to 2019 not derived from transfers, pending offset at 1 January
-                2020, to be included in the taxable base...
+                2020, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.2) (balance pending, not offset,
+                in box [0431])
             '0435':
               label: General taxable base
             '0436':
@@ -4155,7 +4178,8 @@ modelo:
             '0521':
               label: 'Amount of the personal and family minimum that forms part of
                 the general net taxable base for calculating state tax: the lower
-                of the amounts entered in boxes [0505] and [051...'
+                of the amounts entered in boxes [0505] and [0519] (if box [0505] is
+                negative or equal to zero, enter the number zero in box [0521])'
             '0522':
               label: 'Amount of the personal and family minimum forming part of the
                 savings net taxable base for the State-tax calculation: the lower
@@ -4414,7 +4438,7 @@ modelo:
             0729:
               label: Non-Resident Income Tax payments corresponding to income obtained
                 in Spain in 2020 by the other members of the family unit resident
-                in a Member State of the...
+                in a Member State of the European Union or the European Economic Area
             '0733':
               label: 'Reserva for Investments in Canarias 2016: Amount of the allocations'
             '0734':
@@ -4726,8 +4750,6 @@ modelo:
             0948:
               label: 'For improvement works: amounts generated in 2017 and/or 2018
                 pending application'
-            0949:
-              label: Tax ID (NIF) of the person or entity that carried out the works
             0950:
               label: Amount of the deduction
             0953:
@@ -4956,7 +4978,7 @@ modelo:
             '1171':
               label: For amounts arising from public aid granted by the Generalitat
                 under Orden 5/2020, de 8 de junio, for the purchase or electrification
-                of urban bicycles and electric vehic...
+                of urban bicycles and personal mobility electric vehicles
             '1178':
               label: Total amount of the amountis invertidas with right to a deduction
                 (sum of the boxes [1150] + [1152])
@@ -5322,32 +5344,18 @@ modelo:
                 work or service'
             '1445':
               label: Number of units
-            '1446':
-              label: Income per module before depreciation
             '1448':
               label: Number of units
-            '1449':
-              label: Income per module before depreciation
             '1451':
               label: Number of units
-            '1452':
-              label: Income per module before depreciation
             '1454':
               label: Number of units
-            '1455':
-              label: Income per module before depreciation
             '1457':
               label: Number of units
-            '1458':
-              label: Income per module before depreciation
             '1460':
               label: Number of units
-            '1461':
-              label: Income per module before depreciation
             '1463':
               label: Number of units
-            '1464':
-              label: Income per module before depreciation
             '1475':
               label: General reduction (20% or 35% of the amount in casilla [1474],
                 if it is greater than 0)
@@ -5531,12 +5539,6 @@ modelo:
             '0043':
               label: Total accumulated amount of deferred capital received in 2015,
                 2016, 2017, 2018, 2019 and 2020, whose yield was subject to DT 4.ª
-            '0055':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 26.2 y D.T 25ª de la Ley
-                del Impuesto)
-            '0065':
-              label: Location (code)
             '0070':
               label: Primary residence in 2021
             '0076':
@@ -5592,10 +5594,6 @@ modelo:
             '0213':
               label: For renting a primary residence by large families (transfer the
                 amount from box [1130] of Annex B.8)
-            '0225':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             0228:
               label: For renting a primary residence by single-parent families (transfer
                 the amount from box [1130] of Annex B.8)
@@ -5632,7 +5630,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2021 (complete An...
+                imputable to 2021 (complete Annex C.1) (*)
             '0301':
               label: Demás capital gains derived of aid públicas. (*)
             '0302':
@@ -5652,8 +5650,6 @@ modelo:
               label: Amount global of the transfers efectuadas in 2021
             '0322':
               label: Capital losses attributable to 2021
-            0358:
-              label: Nº total years of cobro
             0359:
               label: Último year of cobro
             '0365':
@@ -5695,9 +5691,6 @@ modelo:
               label: Sum of capital losses ([1607] + [0307])
             '0420':
               label: If the difference ([0418] - [0419]) is positive
-            '0423':
-              label: Sum of capital losses ( [1609] + [0325] + [0340] + [0355] + [0385]
-                + [0396] )
             '0426':
               label: Employer contributions (except those arising from employer contributions
                 to collective dependency insurance) (complete annex C.3)
@@ -5722,7 +5715,9 @@ modelo:
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2017 to 2020 not derived from transfers, pending offset at 1 January
-                2021, to be included in the taxable base...
+                2021, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.2) (balance pending, not offset,
+                in box [0431])
             '0436':
               label: Negative net balances of movable-capital income attributable
                 to 2021, included in the savings taxable base, limited to 25% of ([0424],
@@ -5849,7 +5844,8 @@ modelo:
             '0521':
               label: 'Amount of the personal and family minimum that forms part of
                 the general net taxable base for calculating state tax: the lower
-                of the amounts entered in boxes [0505] and [05...'
+                of the amounts entered in boxes [0505] and [0519] (if box [0505] is
+                negative or equal to zero, enter the number zero in box [0521])'
             '0522':
               label: 'Amount of the personal and family allowance forming part of
                 the savings net taxable base for the purposes of calculating state
@@ -5875,11 +5871,11 @@ modelo:
             '0565':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0566':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0567':
               label: 'For energy efficiency improvement works on housing (transfer
                 the amount from these same boxes in Annex A.2): State part'
@@ -5944,14 +5940,15 @@ modelo:
             0689:
               label: For taxpayers who move their tax domicile to the Principality
                 of Asturias for employment reasons in order to carry out specially
-                qualified work, directly and mainly relat...
+                qualified work, directly and mainly related to research and development,
+                scientific or technical activities
             0695:
               label: 'Remaining amount payable from the result of your return:: difference
                 ([0670] - [0693]) positive or equal to zero'
             0729:
               label: Non-Resident Income Tax liabilities corresponding to income obtained
                 in Spain in 2021 by the other members of the family unit resident
-                in a Member State of the Un...
+                in a Member State of the European Union or the European Economic Area
             '0733':
               label: 'Reserva for Investments in Canarias 2017 (2)(3): Amount of the
                 allocations'
@@ -6207,9 +6204,6 @@ modelo:
             '1048':
               label: For investments made in entities listed on the Alternative Stock
                 Market (this amount is transferred to box [1142] of Annex B.8)
-            '1053':
-              label: For donations for the protection of the cultural heritage of
-                the Region of Murcia or the promotion of cultural and sports activities.
             '1057':
               label: For investment in the purchase of shares and equity interests
                 in new or recently created entities (this amount is transferred to
@@ -6227,9 +6221,6 @@ modelo:
                 is transferred to box [1130] of Annex B.8)
             '1114':
               label: Total amount of the deduction ([1116] + [1119] + [1185] + [1207])
-            '1115':
-              label: Amount paid in 2017 and/or 2018 pending application (sólo for
-                investments in the primary residence or edificio dónde is ubique)
             '1116':
               label: Amount paid in 2017 and/or 2018 that is aplica in the tax year
             '1117':
@@ -6601,20 +6592,6 @@ modelo:
                 the following 4 tax years
             '1403':
               label: 'Expense 5: Tax ID (NIF) of whoever carried out the work or service'
-            '1476':
-              label: Reduction for economic activities carried out in the municipality
-                of Lorca (Murcia)
-            '1480':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (Artículo 32.1  y D.T 25ª de la Ley
-                del Impuesto)
-            '1551':
-              label: Reduction for young farmers (sixth additional provision of the
-                Tax Law)
-            '1554':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             '1556':
               label: For the purchase or renovation of a primary residence in rural
                 areas at risk of depopulation, for taxpayers up to 35 years old, large
@@ -6622,12 +6599,6 @@ modelo:
             '1563':
               label: Mark an "X" if you entered a Tax ID (NIF) from another country
                 in box [1562]
-            '1574':
-              label: Reductions applicable (artículos 23.3 and D.T. 25.ª of the Law
-                of the Impuesto)
-            '1579':
-              label: Deductible provisions and expenses that are difficult to justify
-                (simplified direct estimation only)(*)
             '1590':
               label: Gains exempt due to reinvestment in life annuities
             '1595':
@@ -6834,7 +6805,7 @@ modelo:
             '0024':
               label: Amounts contributed by the employer to pension schemes, employer
                 social welfare plans and social welfare mutual funds (except collective
-                dependency insurance), arising from a...
+                dependency insurance), arising from a decision of the employee
             0028:
               label: Interest from financial assets eligible for the Corporate Income
                 Tax transitional bonus
@@ -6850,12 +6821,6 @@ modelo:
             '0044':
               label: Total amount of deferred capital corresponding to life insurance
                 received in 2022, whose yield is subject to D.T.4.ª
-            '0055':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 26.2 y D.T 25ª de la Ley
-                del Impuesto)
-            '0065':
-              label: Location (code)
             '0070':
               label: Primary residence in 2022
             '0076':
@@ -6904,10 +6869,6 @@ modelo:
             '0205':
               label: Input VAT (for example, equivalence surcharge and/or compensation
                 for agriculture, livestock and fishing)
-            '0225':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             0229:
               label: For arrendamiento of primary residence for persons with disabilities
                 (traslade the amount of the box [1130] of the anexo B.8)
@@ -6934,7 +6895,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2022 (complete An...
+                imputable to 2022 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2022 from forestry
                 use of public woodlands
@@ -7008,7 +6969,9 @@ modelo:
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2018 to 2021 not derived from transfers, pending offset at 1 January
-                2022, to be included in the taxable base...
+                2022, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.2) (balance pending, not offset,
+                in box [0431])
             '0436':
               label: Negative net balances of movable-capital income attributable
                 to 2022, included in the savings taxable base, limited to 25% of ([0424],
@@ -7138,7 +7101,9 @@ modelo:
             0499:
               label: Contributions from sole traders to occupational pension schemes
                 or social welfare mutual funds, of which they are both promoter and
-                either a participant or a member, or to social welfare plans...
+                either a participant or a member, or to occupational social welfare
+                plans or collective dependency insurance of which they are the policyholder
+                and the insured person
             '0501':
               label: 'Offset (if box [0500] is positive and up to the maximum limit
                 of its amount): General negative net taxable bases from 2018 to 2021
@@ -7165,11 +7130,11 @@ modelo:
             '0565':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0566':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             0568:
               label: 'Increase in net tax liability due to loss of entitlement to
                 apply the tax incentive regulated in Article 33.3.a) of the Tax Law
@@ -7255,7 +7220,7 @@ modelo:
             0729:
               label: Non-Resident Income Tax liabilities corresponding to income obtained
                 in Spain in 2022 by the other members of the family unit resident
-                in a Member State of the Un...
+                in a Member State of the European Union or the European Economic Area
             '0733':
               label: 'Reserva for Investments in Canarias 2018 (2): Amount of the
                 allocations'
@@ -7441,8 +7406,6 @@ modelo:
             0948:
               label: 'For home improvement works: amounts generated in 2020 and/or
                 2021 pending application'
-            0949:
-              label: Tax ID (NIF) of the person or entity that carried out the works
             0953:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -7915,27 +7878,6 @@ modelo:
                 tax years
             '1403':
               label: 'Expense 5: Tax ID (NIF) of whoever carried out the work or service'
-            '1446':
-              label: Income per module before depreciation
-            '1449':
-              label: Income per module before depreciation
-            '1452':
-              label: Income per module before depreciation
-            '1455':
-              label: Income per module before depreciation
-            '1458':
-              label: Income per module before depreciation
-            '1461':
-              label: Income per module before depreciation
-            '1464':
-              label: Income per module before depreciation
-            '1476':
-              label: Reduction for economic activities carried out in the municipality
-                of Lorca (Murcia)
-            '1480':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (Artículo 32.1  y D.T 25ª de la Ley
-                del Impuesto)
             '1488':
               label: 'Meat pigs: Gross income'
             '1491':
@@ -7984,25 +7926,12 @@ modelo:
                 poultry): Gross income'
             '1550':
               label: Difference ([1548 - [1549] - [0160])
-            '1551':
-              label: Reduction for young farmers (sixth additional provision of the
-                Tax Law)
-            '1554':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             '1556':
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
             '1563':
               label: Mark an "X" if you entered a Tax ID (NIF) from another country
                 in box [1562]
-            '1574':
-              label: Reductions applicable (artículos 23.3 and D.T. 25.ª of the Law
-                of the Impuesto)
-            '1579':
-              label: Deductible provisions and expenses that are difficult to justify
-                (simplified direct estimation only)(*)
             '1590':
               label: Gains exempt due to reinvestment in life annuities
             '1595':
@@ -8206,15 +8135,9 @@ modelo:
             '0044':
               label: Total amount of deferred capital corresponding to life insurance
                 received in 2023, whose yield is subject to D.T.4.ª
-            '0055':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 26.2 y D.T 25ª de la Ley
-                del Impuesto)
             '0057':
               label: Reduction for income under the XXXVII America's Cup Barcelona
                 tax regime
-            '0065':
-              label: Location (code)
             '0070':
               label: Primary residence in 2023
             '0076':
@@ -8268,10 +8191,6 @@ modelo:
             0218:
               label: Sum ([0181] to [0195] + [0198] to [0200] + [0202] + [0203] +
                 [0205] + [0206] + [0208] + [0227] + [0214] to [0217])
-            '0225':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             '0226':
               label: Reduced net income ([0224] - [0225] - [0236])
             0229:
@@ -8304,7 +8223,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2023 (complete An...
+                imputable to 2023 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2023 from forestry
                 use of public woodlands
@@ -8353,7 +8272,8 @@ modelo:
             '0416':
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
-                governed by Chapter VII of Title VII...
+                governed by Chapter VII of Title VII of the Corporate Income Tax Act,
+                tick this box with an "X"
             '0417':
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
@@ -8386,7 +8306,9 @@ modelo:
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2019 to 2022 not derived from transfers, pending offset at 1 January
-                2023, to be included in the taxable base...
+                2023, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.3) (balance pending, not offset,
+                in box [0431])
             '0436':
               label: Negative net balances of movable-capital income attributable
                 to 2023, included in the savings taxable base, limited to 25% of ([0424],
@@ -8526,11 +8448,11 @@ modelo:
             '0565':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0566':
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0567':
               label: 'For works to improve the energy efficiency of dwellings (transfer
                 the amount from these same boxes in Annex A.3): State part'
@@ -8611,7 +8533,7 @@ modelo:
             0729:
               label: Non-Resident Income Tax liabilities corresponding to income obtained
                 in Spain in 2023 by the other members of the family unit resident
-                in a Member State of the Un...
+                in a Member State of the European Union or the European Economic Area
             '0733':
               label: 'Reserve for Investments in the Canary Islands 2019 (1): amount
                 of allocations'
@@ -8715,7 +8637,7 @@ modelo:
             0818:
               label: For renting homes in Cantabria areas with demographic challenge
                 that are or will become the tenant's habitual residence (tenant deduction)
-                (amount...
+                (amount from box [0646] of Annex B.9)
             0820:
               label: For nursery/childcare expenses for taxpayers whose habitual residence
                 is in areas with demographic challenge
@@ -8803,8 +8725,6 @@ modelo:
             0948:
               label: 'For home improvement works: amounts generated in 2021 and/or
                 2022 pending application'
-            0949:
-              label: Tax ID (NIF) of the person or entity that carried out the works
             0953:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -9256,27 +9176,6 @@ modelo:
                 the following 4 tax years
             '1403':
               label: 'Expense 5: Tax ID (NIF) of whoever carried out the work or service'
-            '1446':
-              label: Income per module before depreciation
-            '1449':
-              label: Income per module before depreciation
-            '1452':
-              label: Income per module before depreciation
-            '1455':
-              label: Income per module before depreciation
-            '1458':
-              label: Income per module before depreciation
-            '1461':
-              label: Income per module before depreciation
-            '1464':
-              label: Income per module before depreciation
-            '1476':
-              label: Reduction for economic activities carried out in the municipality
-                of Lorca (Murcia)
-            '1480':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (Artículo 32.1  y D.T 25ª de la Ley
-                del Impuesto)
             '1488':
               label: 'Meat pigs: Gross income'
             '1491':
@@ -9325,22 +9224,12 @@ modelo:
                 poultry): Gross income'
             '1550':
               label: Difference ([1548 - [1549] - [0160])
-            '1551':
-              label: Reduction for young farmers (sixth additional provision of the
-                Tax Law)
-            '1554':
-              label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
             '1556':
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
             '1563':
               label: Mark an "X" if you entered a Tax ID (NIF) from another country
                 in box [1562]
-            '1574':
-              label: Reductions applicable (artículos 23.3 and D.T. 25.ª of the Law
-                of the Impuesto)
             '1590':
               label: Gains exempt due to reinvestment in life annuities
             '1595':
@@ -9558,8 +9447,6 @@ modelo:
             '0055':
               label: Reductions for income generated over more than two years or obtained
                 in a clearly irregular manner
-            '0065':
-              label: Location (code)
             '0070':
               label: Main residence in 2024
             '0076':
@@ -10198,7 +10085,7 @@ modelo:
                 at An...
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2024 (complete An...
+                imputable to 2024 (complete Annex C.1) (*)
             '0301':
               help: Report other capital gains derived from public aid.
               label: Other capital gains arising from public aid.
@@ -10537,7 +10424,8 @@ modelo:
                 operations governed by Chapter VII of Title VII...
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
-                governed by Chapter VII of Title VII...
+                governed by Chapter VII of Title VII of the Corporate Income Tax Act,
+                tick this box with an "X"
             '0417':
               help: Mark this field when the taxpayer, as a member of entities not
                 resident in Spain, was affected in 2023 by merger, spin-off or securities-exchange
@@ -10611,14 +10499,16 @@ modelo:
                 self-assessment.
               label: Negative net balance of 2024 capital gains and losses to be included
                 in the general taxable base, limited to 25 percent of the amount in
-                box [0432] (*) (transfer the amount...
+                box [0432] (*) (transfer the amount of box [0421] if applicable)
             '0434':
               help: Report the remaining negative net balances of capital gains and
                 losses from 2020 to 2023 not derived from transfers, pending offset
                 at 1 January 2024, to be included in the taxable base.
               label: Remaining negative net balances of capital gains and losses from
                 2020 to 2023 not derived from transfers, pending offset at 1 January
-                2024, to be included in the taxable base...
+                2024, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.3) (balance pending, not offset,
+                in box [0431])
             '0435':
               help: This field calculates the general taxable base.
             '0436':
@@ -10687,7 +10577,7 @@ modelo:
                 self-assessment.
               label: Negative net balances of capital gains and losses attributable
                 to 2024, to be included in the savings taxable base, limited to 25
-                percent of [0429](*)(transfer the amount from the box...
+                percent of [0429](*)(transfer the amount from the box [0425] if applicable)
             '0447':
               help: Report the remaining negative net balances of 2023 movable-capital
                 income pending offset at 1 January 2024 to be included in the savings
@@ -11097,14 +10987,14 @@ modelo:
                 from the corresponding annex boxes.
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0566':
               help: Enter the autonomous-community part of the deduction applicable
                 to family units formed by tax residents in EU or EEA Member States,
                 using the amount transferred from the corresponding annex boxes.
               label: Deduction applicable to family units made up of tax residents
                 in Member States of the European Union or of the European Economic
-                Area  (transfer the amounts of these same boxes...
+                Area (transfer the amounts of these same boxes...
             '0567':
               help: This computed field records the state part for works to improve
                 the energy efficiency of dwellings transferred from Annex A.3.
@@ -11568,7 +11458,7 @@ modelo:
                 resident-EU case.
               label: Non-Resident Income Tax liabilities corresponding to income obtained
                 in Spain in 2024 by the other members of the family unit resident
-                in a Member State of the Un...
+                in a Member State of the European Union or the European Economic Area
             '0730':
               help: Enter the total net tax liability that would apply if all members
                 of the family unit had filed jointly.
@@ -11696,7 +11586,7 @@ modelo:
               label: 'For investment of profits (art. 37 of the TRLIS, transitional
                 provision 24 of the LIS) (only if there is a special investment plan
                 approved by the Administration that allows investment in this tax
-                year): applied in this d...'
+                year): applied in this declaration'
             0759:
               help: Indicate the amount applied in this return for investments in
                 West African territories under article 27.1.a) bis of Law 19/1994.
@@ -11866,7 +11756,7 @@ modelo:
                 areas that are or will become the tenant's habitual residence.
               label: For renting homes in Cantabria areas with demographic challenge
                 that are or will become the tenant's habitual residence (tenant deduction)
-                (amount...
+                (amount from box [0646] of Annex B.10)
             0819:
               help: Enter the Asturias deduction for aid or subsidies granted by the
                 Principality of Asturias to patients with amyotrophic lateral sclerosis.
@@ -12261,7 +12151,6 @@ modelo:
               help: Enter the deduction for care of relatives.
             0949:
               help: Enter the NIF of the person or entity carrying out the works.
-              label: Tax ID (NIF) of the person or entity that carried out the works
             0951:
               help: Enter the deduction for donations to foundations, the Cantabria
                 Coopera Fund or associations whose purposes include supporting persons
@@ -12330,8 +12219,9 @@ modelo:
                 state or regional housing plans aimed at improving energy efficiency,
                 sustainability and adaptation.
               label: For subsidised renovation works under State or regional housing
-                plans aimed at improving energy efficiency, sustainability, and adaptation
-                to the...
+                plans aimed at improving energy efficiency, sustainability and accessibility
+                for disability in the habitual residence (amount from box [2001] of
+                Annex B.10)
             0977:
               help: Enter the approval-stamp date for the execution project.
             0978:
@@ -12628,7 +12518,7 @@ modelo:
                 social or economic interest.
               label: For investment in the acquisition of shares or company units
                 in entities carrying out projects declared to be of special public,
-                social, or economic interest (amount from the...
+                social, or economic interest (amount from box [2083] of Annex B.11)
             '1078':
               help: Enter the amount paid in 2020 and still pending application.
               label: Amount paid in 2020 pending application
@@ -12970,19 +12860,17 @@ modelo:
             '1213':
               help: Enter the amount from tax year 2020 pending application at the
                 beginning of the period.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1214':
               help: Enter the amount from tax year 2020 applied in this return.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1215':
               help: Enter the amount from tax year 2021 pending application at the
                 beginning of the period.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1216':
               help: Enter the amount from tax year 2021 applied in this return.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1217':
               help: Enter the amount from tax year 2021 pending application in future
                 tax years.
@@ -12990,11 +12878,10 @@ modelo:
             '1218':
               help: Enter the amount from tax year 2022 pending application at the
                 beginning of the period.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1219':
               help: Enter the amount from tax year 2022 applied in this return.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1220':
               help: Enter the amount from tax year 2022 pending application in future
                 tax years.
@@ -13002,11 +12889,10 @@ modelo:
             '1221':
               help: Enter the amount from tax year 2023 pending application at the
                 beginning of the period.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1222':
               help: Enter the amount from tax year 2023 applied in this return.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1223':
               help: Enter the amount from tax year 2023 pending application in future
                 tax years.
@@ -13089,19 +12975,17 @@ modelo:
             '1246':
               help: Enter the amount from tax year 2020 pending application at the
                 beginning of the period.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1247':
               help: Enter the amount from tax year 2020 applied in this return.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1248':
               help: Enter the amount from tax year 2021 pending application at the
                 beginning of the period.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1249':
               help: Enter the amount from tax year 2021 applied in this return.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1250':
               help: Enter the amount from tax year 2021 pending application in future
                 tax years.
@@ -13109,11 +12993,10 @@ modelo:
             '1251':
               help: Enter the amount from tax year 2022 pending application at the
                 beginning of the period.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1252':
               help: Enter the amount from tax year 2022 applied in this return.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1253':
               help: Enter the amount from tax year 2022 pending application in future
                 tax years.
@@ -13121,11 +13004,10 @@ modelo:
             '1254':
               help: Enter the amount from tax year 2023 pending application at the
                 beginning of the period.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1255':
               help: Enter the amount from tax year 2023 applied in this return.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1256':
               help: Enter the amount from tax year 2023 pending application in future
                 tax years.
@@ -13142,19 +13024,17 @@ modelo:
             '1259':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1260':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1261':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1262':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1263':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13162,11 +13042,10 @@ modelo:
             '1264':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1265':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1266':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13174,11 +13053,10 @@ modelo:
             '1267':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1268':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1269':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13195,19 +13073,17 @@ modelo:
             '1272':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1273':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1274':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1275':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1276':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13215,11 +13091,10 @@ modelo:
             '1277':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1278':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1279':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13227,11 +13102,10 @@ modelo:
             '1280':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1281':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1282':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13247,19 +13121,17 @@ modelo:
             '1285':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2019.
-              label: 'Tax year 2019: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2019: pending application at the beginning of the period'
             '1286':
               help: Enter the amount applied in this return for tax year 2019.
-              label: 'Tax year 2019: applied in this  return'
+              label: 'Tax year 2019: applied in this return'
             '1287':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1288':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1289':
               help: Enter the amount pending application in future tax years for tax
                 year 2020.
@@ -13267,11 +13139,10 @@ modelo:
             '1290':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1291':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1292':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13279,11 +13150,10 @@ modelo:
             '1293':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1294':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1295':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13291,11 +13161,10 @@ modelo:
             '1296':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1297':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1298':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13312,19 +13181,17 @@ modelo:
             '1301':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2019.
-              label: 'Tax year 2019: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2019: pending application at the beginning of the period'
             '1302':
               help: Enter the amount applied in this return for tax year 2019.
-              label: 'Tax year 2019: applied in this  return'
+              label: 'Tax year 2019: applied in this return'
             '1303':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1304':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1305':
               help: Enter the amount pending application in future tax years for tax
                 year 2020.
@@ -13332,11 +13199,10 @@ modelo:
             '1306':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1307':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1308':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13344,11 +13210,10 @@ modelo:
             '1309':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1310':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1311':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13356,11 +13221,10 @@ modelo:
             '1312':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1313':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1314':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13376,19 +13240,17 @@ modelo:
             '1317':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2019.
-              label: 'Tax year 2019: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2019: pending application at the beginning of the period'
             '1318':
               help: Enter the amount applied in this return for tax year 2019.
-              label: 'Tax year 2019: applied in this  return'
+              label: 'Tax year 2019: applied in this return'
             '1319':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1320':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1321':
               help: Enter the amount pending application in future tax years for tax
                 year 2020.
@@ -13396,11 +13258,10 @@ modelo:
             '1322':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1323':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1324':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13408,11 +13269,10 @@ modelo:
             '1325':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1326':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1327':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13420,11 +13280,10 @@ modelo:
             '1328':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1329':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1330':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13442,19 +13301,17 @@ modelo:
             '1334':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2019.
-              label: 'Tax year 2019: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2019: pending application at the beginning of the period'
             '1335':
               help: Enter the amount applied in this return for tax year 2019.
-              label: 'Tax year 2019: applied in this  return'
+              label: 'Tax year 2019: applied in this return'
             '1336':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1337':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1338':
               help: Enter the amount pending application in future tax years for tax
                 year 2020.
@@ -13462,11 +13319,10 @@ modelo:
             '1339':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1340':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1341':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13474,11 +13330,10 @@ modelo:
             '1342':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1343':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1344':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13486,11 +13341,10 @@ modelo:
             '1345':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1346':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1347':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13508,19 +13362,17 @@ modelo:
             '1351':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1352':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1353':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1354':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1355':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13528,11 +13380,10 @@ modelo:
             '1356':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1357':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1358':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13540,11 +13391,10 @@ modelo:
             '1359':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1360':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1361':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13559,19 +13409,17 @@ modelo:
             '1364':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2019.
-              label: 'Tax year 2019: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2019: pending application at the beginning of the period'
             '1365':
               help: Enter the amount applied in this return for tax year 2019.
-              label: 'Tax year 2019: applied in this  return'
+              label: 'Tax year 2019: applied in this return'
             '1366':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1367':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1368':
               help: Enter the amount pending application in future tax years for tax
                 year 2020.
@@ -13579,11 +13427,10 @@ modelo:
             '1369':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1370':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1371':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13591,11 +13438,10 @@ modelo:
             '1372':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1373':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1374':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13603,11 +13449,10 @@ modelo:
             '1375':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1376':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1377':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13622,19 +13467,17 @@ modelo:
             '1380':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2020.
-              label: 'Tax year 2020: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2020: pending application at the beginning of the period'
             '1381':
               help: Enter the amount applied in this return for tax year 2020.
-              label: 'Tax year 2020: applied in this  return'
+              label: 'Tax year 2020: applied in this return'
             '1382':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2021.
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1383':
               help: Enter the amount applied in this return for tax year 2021.
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1384':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -13642,11 +13485,10 @@ modelo:
             '1385':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1386':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1387':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -13654,11 +13496,10 @@ modelo:
             '1388':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2023.
-              label: 'Tax year 2023: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2023: pending application at the beginning of the period'
             '1389':
               help: Enter the amount applied in this return for tax year 2023.
-              label: 'Tax year 2023: applied in this  return'
+              label: 'Tax year 2023: applied in this return'
             '1390':
               help: Enter the amount pending application in future tax years for tax
                 year 2023.
@@ -13787,49 +13628,42 @@ modelo:
               help: Enter the number of units.
             '1446':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1447':
               help: Enter the definition.
             '1448':
               help: Enter the number of units.
             '1449':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1450':
               help: Enter the definition.
             '1451':
               help: Enter the number of units.
             '1452':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1453':
               help: Enter the definition.
             '1454':
               help: Enter the number of units.
             '1455':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1456':
               help: Enter the definition.
             '1457':
               help: Enter the number of units.
             '1458':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1459':
               help: Enter the definition.
             '1460':
               help: Enter the number of units.
             '1461':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1462':
               help: Enter the definition.
             '1463':
               help: Enter the number of units.
             '1464':
               help: Enter the return per module before depreciation.
-              label: Income per module before depreciation
             '1465':
               help: Enter the prior net return.
             '1466':
@@ -13856,8 +13690,6 @@ modelo:
             '1476':
               help: Enter the reduction for economic activities carried out in the
                 municipality of Lorca (Murcia).
-              label: Reduction for economic activities carried out in the municipality
-                of Lorca (Murcia)
             '1477':
               help: Enter the extraordinary expenses due to exceptional circumstances.
             '1478':
@@ -14073,8 +13905,6 @@ modelo:
             '1551':
               help: Enter the reduction for young farmers under the sixth additional
                 provision of the Tax Law.
-              label: Reduction for young farmers (sixth additional provision of the
-                Tax Law)
             '1552':
               help: Enter the extraordinary expenses due to exceptional circumstances.
             '1553':
@@ -14484,10 +14314,9 @@ modelo:
             '1691':
               label: Amount generated in 2024 pending application
             '1692':
-              label: 'Tax year 2021: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2021: pending application at the beginning of the period'
             '1693':
-              label: 'Tax year 2021: applied in this  return'
+              label: 'Tax year 2021: applied in this return'
             '1694':
               help: Enter the amount pending application in future tax years for tax
                 year 2021.
@@ -14495,11 +14324,10 @@ modelo:
             '1695':
               help: Enter the amount pending application at the beginning of the period
                 for tax year 2022.
-              label: 'Tax year 2022: pending application  at the beginning of the
-                period'
+              label: 'Tax year 2022: pending application at the beginning of the period'
             '1696':
               help: Enter the amount applied in this return for tax year 2022.
-              label: 'Tax year 2022: applied in this  return'
+              label: 'Tax year 2022: applied in this return'
             '1697':
               help: Enter the amount pending application in future tax years for tax
                 year 2022.
@@ -15570,8 +15398,6 @@ modelo:
               label: Reduction for income from artistic activities obtained exceptionally
             '0060':
               label: Sum of reduced movable-capital income in the general base
-            '0065':
-              label: Location (code)
             '0070':
               label: Primary residence in 2025
             '0076':
@@ -15771,7 +15597,7 @@ modelo:
             '0300':
               label: Other grants or aid for the acquisition or renovation of the
                 primary residence, or for repairing structural defects in it. Amount
-                imputable to 2025 (complete An...
+                imputable to 2025 (complete Annex C.1) (*)
             '0301':
               label: Other capital gains arising from public aid.
             '0302':
@@ -15864,7 +15690,8 @@ modelo:
             '0416':
               label: If taxpayers who are members of entities not resident in Spain
                 were affected in 2024 by merger, spin-off, or share-exchange transactions
-                governed by Chapter VII, Title VII...
+                governed by Chapter VII, Title VII of the Corporate Income Tax Act,
+                tick this box with an "X"
             '0417':
               label: If taxpayers who are members of entities not resident in Spain
                 were affected in 2024 by merger, spin-off, or share-exchange transactions
@@ -15894,11 +15721,13 @@ modelo:
             '0433':
               label: Negative net balance of capital gains and losses for 2025 to
                 be included in the general taxable base, limited to 25% of the amount
-                in box [0432] (*) (carry the amount...
+                in box [0432] (*) (carry the amount of box [0421] if applicable)
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2021 to 2024 not arising from transfers, pending offset as of 1 January
-                2025, to be included in the...
+                2025, to be included in the taxable base, limited to 25% of the amount
+                in box [0432] (*) (complete Annex C.3) (balance pending, not offset,
+                in box [0431])
             '0436':
               label: Negative net balances of movable-capital income imputable to
                 2025, to be included in the savings base, limited to 25% of [0424]
@@ -15936,7 +15765,7 @@ modelo:
             '0446':
               label: Negative net balances of capital gains and losses imputable to
                 2025, to be included in the savings taxable base, limited to 25% of
-                [0429] (*) (carry the amount from the...
+                [0429] (*) (carry the amount from the box [0425] if applicable)
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2024, pending offset as of 1 January 2025, to be included in the savings
@@ -16188,7 +16017,7 @@ modelo:
             0729:
               label: Non-Resident Income Tax liabilities corresponding to income obtained
                 in Spain in 2025 by the other members of the family unit resident
-                in an EU/EEA Member St...
+                in an EU/EEA Member State
             '0733':
               label: 'Reserve for Investments in the Canary Islands 2021(1): Amount
                 of the allocations'
@@ -16265,7 +16094,7 @@ modelo:
               label: 'For investment of profits (art. 37 of the TRLIS, Transitional
                 Provision 24 of the LIS) (only if a special investment plan approved
                 by the Administration allows investment in this tax year): Applied
-                in this...'
+                in this return'
             0759:
               label: 'For investments in West African territories (art. 27.1.a) bis
                 of Law 19/1994): Applied in this return'
@@ -16482,8 +16311,6 @@ modelo:
             0946:
               label: For the lease of a primary residence by young people, the elderly,
                 and persons with a disability (amount from box [1130] of Annex B.11)
-            0949:
-              label: Tax ID (NIF) of the person or entity that carried out the works
             0953:
               label: For investment in the acquisition of shares or company units
                 of newly or recently created entities (amount from box [1136] of Annex
@@ -16500,8 +16327,9 @@ modelo:
                 from box [1130] of Annex B.11)
             0976:
               label: For subsidised renovation works under State or regional housing
-                plans aimed at improving energy efficiency, sustainability, and adaptation
-                to the...
+                plans aimed at improving energy efficiency, sustainability and accessibility
+                for disability in the habitual residence (amount from box [2001] of
+                Annex B.12)
             0979:
               label: To encourage entrepreneurship (amount from box [1136] of Annex
                 B.11)
@@ -16586,7 +16414,7 @@ modelo:
             '1077':
               label: For investment in the acquisition of shares or company units
                 in entities carrying out projects declared to be of special public,
-                social, or economic interest (amount from the...
+                social, or economic interest (amount from box [2083] of Annex B.13)
             '1078':
               label: For expenses arising from adapting an empty property for residential
                 lease (additional information in Annex B.15)
@@ -16599,7 +16427,8 @@ modelo:
             '1087':
               label: For amounts allocated to regular childcare at nurseries and first-cycle
                 early-education centres for children, adopted or fostered children,
-                or those under delegated guardianship for...
+                or those under delegated guardianship for adoption purposes, under
+                three years of age
             '1095':
               label: For the lease or payment for the assignment of use of the primary
                 residence (amount from box [1130] of Annex B.11)
@@ -16964,20 +16793,6 @@ modelo:
             '1391':
               label: Negative general net taxable base for 2025 pending offset over
                 the following 4 years
-            '1446':
-              label: Income per module before depreciation
-            '1449':
-              label: Income per module before depreciation
-            '1452':
-              label: Income per module before depreciation
-            '1455':
-              label: Income per module before depreciation
-            '1458':
-              label: Income per module before depreciation
-            '1461':
-              label: Income per module before depreciation
-            '1464':
-              label: Income per module before depreciation
             '1476':
               label: For families with a diagnosed coeliac condition
             '1480':
@@ -17055,9 +16870,6 @@ modelo:
                 [1538])'
             '1550':
               label: Difference ([1548] - [1549])
-            '1551':
-              label: Reduction for young farmers (sixth additional provision of the
-                Tax Law)
             '1554':
               label: Reductions for income generated over more than 2 years or obtained
                 in a markedly irregular manner (article 32.1 and Transitional Provision
@@ -17613,11 +17425,11 @@ modelo:
             '2235':
               label: Sum of capital gains arising from transfers or redemptions of
                 shares or units issued by collective-investment institutions, as referred
-                to in article 75.3.j) of the...
+                to in article 75.3.j) of the Tax Regulations (sum of boxes [2232])
             '2236':
               label: Sum of capital losses arising from transfers or redemptions of
                 shares or units issued by collective-investment institutions, as referred
-                to in article 75.3.j) of the...
+                to in article 75.3.j) of the Tax Regulations (sum of boxes [2234])
             '2237':
               label: To compensate for expenses arising from an illegally occupied
                 dwelling, or due to a suspended eviction (not applicable to taxpayers

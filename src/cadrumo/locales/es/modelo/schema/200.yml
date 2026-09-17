@@ -9894,7 +9894,7 @@ modelo:
               y HOSTELCO 2022 (AH) - Aplicado en esta liquidación [01268]
           public-interest-alimentaria-hostelco-credit-2024-generated:
             label: Deducc. para incentivar determ.actividades - 2024 ALIMENTARIA 2022
-              y HOSTELCO 2022 (AH) -  Deducción pendiente/generada [01267]
+              y HOSTELCO 2022 (AH) - Deducción pendiente/generada [01267]
           public-interest-alimentaria-hostelco-credit-2024-remaining:
             label: Deducc. para incentivar determ.actividades - 2024 ALIMENTARIA 2022
               y HOSTELCO 2022 (AH) - Pendiente de aplicación en periodos futuros [01269]
@@ -12231,11 +12231,13 @@ modelo:
             00091:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2024 - Pendiente aplicación en pe...'
+                de base imponible especial año 2024 - Pendiente aplicación en períodos
+                futuros'
             00092:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2024 - Pendiente aplicac...'
+                de base imponible resto actividades año 2024 - Pendiente aplicación
+                a principio del período/generada en el período'
             00097:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
@@ -12243,11 +12245,12 @@ modelo:
             00098:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2024 - Pendiente aplicac...'
+                de base imponible resto actividades año 2024 - Pendiente aplicación
+                en períodos futuros'
             '00370':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
-                de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Dismi...
+                de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones
             00482:
               label: Estado de cambios patrimonio neto (II) - Ingresos y gastos reconocidos
                 en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios
@@ -12255,7 +12258,7 @@ modelo:
             00496:
               label: Estado de cambios patrimonio neto (II) - Ingresos y gastos reconocidos
                 en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio
-                neto - Acciones y participaciones en patrimonio propias...
+                neto - Acciones y participaciones en patrimonio propias
             '00504':
               label: Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos
                 en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio
@@ -12267,25 +12270,25 @@ modelo:
             '00775':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Amortización acelerada de determinados vehículos y de
-                nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumento...
+                nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Aumentos
             '00776':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Amortización acelerada de determinados vehículos y de
-                nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Disminu...
+                nuevas infraestructuras de recarga (DA 18ª LIS RDL 5/2023) - Disminuciones
             00796:
               label: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas
                 - Intereses y retorno obligatorio de las aportaciones al capital social
-                y de otros fondos calificados con características de deuda (coo...
+                y de otros fondos calificados con características de deuda (cooperativas)
             00812:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025(*) - AID pendientes aplicación periodos
-                f...
+                futuros - Con derecho conversión crédito exigible exceso cuota
             00816:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025(*) - AID pendientes aplicación periodos
-                f...
+                futuros - Sin derecho conversión crédito exigible
             00817:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
@@ -12293,11 +12296,13 @@ modelo:
             00878:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025(*) - Exceso cuota líquida positiva aplicado periodos impo...
+                - 2025(*) - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015
             00879:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025(*) - Exceso cuota líquida positiva aplicado periodos impo...
+                - 2025(*) - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016
             00881:
               label: Deducc. para incentivar determ.actividades - 2023 Inversiones
                 en territ. África Occidental y gastos de propaganda y publicidad (art.
@@ -12305,95 +12310,119 @@ modelo:
             00882:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025(*) - Exceso cuota líquida positiva pendiente aplicación p...
+                - 2025(*) - Exceso cuota líquida positiva pendiente aplicación periodos
+                futuros
             00925:
               label: Liquidación III - Base imponible - Rentas que no limitan compensación
                 de bases imponibles - Rentas correspondientes a la reversión de las
-                pérdidas por deterioro de valores representativos de la par...
+                pérdidas por deterioro de valores representativos de la participación
+                en el capital o en los fondos propios (DT 16ª.3 LIS). - Disminuciones
             00932:
               label: Liquidación III - Base imponible - Sólo sociedades cooperativas
                 - Rentas correspondientes a la reversión de las pérdidas por deterioro
-                de valores representativos de la participación en el capital o...
+                de valores representativos de la participación en el capital o en
+                los fondos propios, cooperativas (a nivel de cuota) (DT 16ª.3 LIS)
+                -Disminuciones
             00933:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2015 Sin reiteración de donaciones a una misma e...
+                incrementada - 2015 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00934:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2015 Sin reiteración de donaciones a una misma e...
+                incrementada - 2015 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00943:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2015 - Con reiteración de donaciones a una misma...
+                incrementada - 2015 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00944:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2015 - Con reiteración de donaciones a una misma...
+                incrementada - 2015 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00949:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 Sin reiteración de donaciones a una misma e...
+                incrementada - 2016 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00950:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 Sin reiteración de donaciones a una misma e...
+                incrementada - 2016 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00951:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 Sin reiteración de donaciones a una misma e...
+                incrementada - 2016 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00952:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 - Con reiteración de donaciones a una misma...
+                incrementada - 2016 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00953:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 - Con reiteración de donaciones a una misma...
+                incrementada - 2016 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00954:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2016 - Con reiteración de donaciones a una misma...
+                incrementada - 2016 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00958:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 - Con reiteración de donaciones a una misma...
+                incrementada - 2017 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00959:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 - Con reiteración de donaciones a una misma...
+                incrementada - 2017 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00963:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 - Con reiteración de donaciones a una misma...
+                incrementada - 2017 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00964:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 Sin reiteración de donaciones a una misma e...
+                incrementada - 2018 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00965:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 Sin reiteración de donaciones a una misma e...
+                incrementada - 2018 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00969:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 Sin reiteración de donaciones a una misma e...
+                incrementada - 2018 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00970:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 - Con reiteración de donaciones a una misma...
+                incrementada - 2018 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00971:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 - Con reiteración de donaciones a una misma...
+                incrementada - 2018 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00972:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2018 - Con reiteración de donaciones a una misma...
+                incrementada - 2018 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00973:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 Sin reiteración de donaciones a una misma e...
+                incrementada - 2019 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00974:
               label: Deducción donativos entidades sin fines lucro - Base de la deducción
                 por donaciones a entidades sin fines de lucro del período impositivo
@@ -12401,51 +12430,62 @@ modelo:
             00975:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 Sin reiteración de donaciones a una misma e...
+                incrementada - 2019 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00979:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 Sin reiteración de donaciones a una misma e...
+                incrementada - 2019 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00980:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 - Con reiteración de donaciones a una misma...
+                incrementada - 2019 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00981:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 - Con reiteración de donaciones a una misma...
+                incrementada - 2019 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00982:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2019 - Con reiteración de donaciones a una misma...
+                incrementada - 2019 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00983:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2020 Sin reiteración de donaciones a una misma e...
+                incrementada - 2020 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             00984:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2020 Sin reiteración de donaciones a una misma e...
+                incrementada - 2020 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             00985:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2020 Sin reiteración de donaciones a una misma e...
+                incrementada - 2020 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             00987:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Pendiente aplicación a pri...'
+                de base imponible especial año 2023 - Pendiente aplicación a principio
+                del período/generada en el período'
             00988:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Aplicado en esta liquidaci...'
+                de base imponible especial año 2023 - Aplicado en esta liquidación'
             00989:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2023 - Pendiente aplicación en pe...'
+                de base imponible especial año 2023 - Pendiente aplicación en períodos
+                futuros'
             '01000':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2020 - Con reiteración de donaciones a una misma...
+                incrementada - 2020 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01005':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Amortización del inmovilizado intangible y fondo de
@@ -12454,127 +12494,151 @@ modelo:
             '01006':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Amortización del inmovilizado intangible y fondo de
-                comercio (art. 12.2 LIS) y amortización del art. DT 13ª.1 LIS - Diminu...
+                comercio (art. 12.2 LIS) y amortización del art. DT 13ª.1 LIS - Diminuciones
             '01007':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2020 - Con reiteración de donaciones a una misma...
+                incrementada - 2020 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             01008:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 Sin reiteración de donaciones a una misma e...
+                incrementada - 2021 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01010':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2023 - Pendiente aplicac...'
+                de base imponible resto actividades año 2023 - Pendiente aplicación
+                a principio del período/generada en el período'
             '01017':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 Sin reiteración de donaciones a una misma e...
+                incrementada - 2021 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '01020':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
-                de activos por impuesto diferido en crédito exigible fren...
+                de activos por impuesto diferido en crédito exigible frente a la admon.tribut.
+                (art. 130 LIS) - Estado
             '01021':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Compensación
-                por conversión de activos por impuesto diferido en crédito exigib...
+                por conversión de activos por impuesto diferido en crédito exigible
+                frente a la admon.tribut. (art. 130 LIS) - Estado
             '01022':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Unión temporal de empresas, ajustes por rentas exentas
-                por participar en el extranjero en formulas de colaboración análog...
+                por participar en el extranjero en formulas de colaboración análogas
+                a las UTE (art. 45.2 LIS) - Aumentos
             '01023':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Unión temporal de empresas, ajustes por rentas exentas
-                por participar en el extranjero en formulas de colaboración análog...
+                por participar en el extranjero en formulas de colaboración análogas
+                a las UTE (art. 45.2 LIS) - Disminuciones
             '01024':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 Sin reiteración de donaciones a una misma e...
+                incrementada - 2021 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '01025':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 - Con reiteración de donaciones a una misma...
+                incrementada - 2021 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01035':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 - Con reiteración de donaciones a una misma...
+                incrementada - 2021 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '01036':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2021 - Con reiteración de donaciones a una misma...
+                incrementada - 2021 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '01043':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Abono por conversión
-                de activos por impuesto diferido en crédito exigible fren...
+                de activos por impuesto diferido en crédito exigible frente a la admon.tribut.
+                (art. 130 LIS) - D. Forales/Navarra (Totales)
             '01044':
               label: Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Compensación
-                por conversión de activos por impuesto diferido en crédito exigib...
+                por conversión de activos por impuesto diferido en crédito exigible
+                frente a la admon.tribut. (art. 130 LIS) - D. Forales/Navarra (Totales)
             '01061':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 Sin reiteración de donaciones a una misma e...
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01062':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 Sin reiteración de donaciones a una misma e...
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '01072':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 Sin reiteración de donaciones a una misma e...
+                incrementada - 2022 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '01073':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 - Con reiteración de donaciones a una misma...
+                incrementada - 2022 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01074':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 - Con reiteración de donaciones a una misma...
+                incrementada - 2022 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             01078:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2022 - Con reiteración de donaciones a una misma...
+                incrementada - 2022 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             01081:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - Total - Pendiente de aplicación en periodos futu...
+                incrementada - Total - Pendiente de aplicación en periodos futuros
             '01117':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2022 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2022 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             01119:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '01120':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '01121':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             '01122':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2022 - AID convertidos en crédito exigible
-                per...
+                periodo
             '01131':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2022 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '01132':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2022 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '01133':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2022 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2022 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '01177':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
@@ -12582,7 +12646,8 @@ modelo:
             '01200':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2023 - Pendiente aplicac...'
+                de base imponible resto actividades año 2023 - Pendiente aplicación
+                en períodos futuros'
             '01240':
               label: Limitación deducibilidad gastos financieros - Límite art. 16.5
                 y/o 83 LIS - a) Gastos financieros del período impositivo derivados
@@ -12596,15 +12661,17 @@ modelo:
             '01244':
               label: Limitación deducibilidad gastos financieros - Límite art. 16.5
                 y/o 83 LIS - d) Gastos financieros pendientes de deducir en períodos
-                anteriores afectados por art. 16.5 y/o 83 LIS, deducibles tras es...
+                anteriores afectados por art. 16.5 y/o 83 LIS, deducibles tras este
+                límite ([b≥c1+d], ≥ 0]
             01258:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - m) Gastos financieros pendientes de deducir en períodos
-                impositivos anteriores afectados por art 16.5 y/o 83 LIS deducibl...
+                impositivos anteriores afectados por art 16.5 y/o 83 LIS deducibles
+                tras aplicar los 2 límites (≤ [d], ≥ 0)
             01259:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - n) Gastos financieros pendientes de deducir de períodos
-                impositivos anteriores no afectados por art 16.5 y/o 83 LIS aplic...
+                impositivos anteriores no afectados por art 16.5 y/o 83 LIS aplicados
             '01276':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - BI negativas generadas dentro del grupo fiscal por la
@@ -12612,19 +12679,19 @@ modelo:
             '01300':
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Abono por conversión activos - Ara...
+                tributaria (art. 130 LIS) - Abono por conversión activos - Araba/Álava
             '01301':
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Abono por conversión activos - Gip...
+                tributaria (art. 130 LIS) - Abono por conversión activos - Gipuzkoa
             '01302':
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Abono por conversión activos - Biz...
+                tributaria (art. 130 LIS) - Abono por conversión activos - Bizkaia
             '01303':
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Abono por conversión activos - Nav...
+                tributaria (art. 130 LIS) - Abono por conversión activos - Navarra
             '01305':
               label: Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
@@ -12644,27 +12711,33 @@ modelo:
             01329:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Sin reiteración de donaciones a una misma...
+                incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01372':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Sin reiteración de donaciones a una misma...
+                incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '01373':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Sin reiteración de donaciones a una misma...
+                incrementada - 2023 - Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '01374':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma...
+                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '01375':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma...
+                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '01376':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2023 - Con reiteración de donaciones a una misma...
+                incrementada - 2023 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             01408:
               label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
                 - 2007 y anteriores - Dotaciones pendientes integración a principio
@@ -12676,55 +12749,61 @@ modelo:
             '01414':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2023 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '01416':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '01417':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             01418:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2023 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             01419:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2023 - AID convertidos en crédito exigible
-                per...
+                periodo
             '01420':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '01421':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '01422':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2023 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2023 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '01423':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva pendiente a principio per...
+                - 2023 - Exceso cuota líquida positiva pendiente a principio periodo
             '01424':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015
             '01425':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2023 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2023 - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016
             '01473':
               label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
                 - 2007 y anteriores - Dotaciones pendientes integración a principio
-                periodo - Que no han cumplido condiciones deducibilidad fisc...
+                periodo - Que no han cumplido condiciones deducibilidad fiscal
             '01476':
               label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
                 - 2007 y anteriores - Dotaciones pendientes integración periodos futuros
@@ -12737,12 +12816,12 @@ modelo:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
                 LIS - Ejercicio generación - 2007 y anteriores - Importe total AID
-                p...
+                pendiente aplicación a principio periodo
             '01525':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
                 LIS - Ejercicio generación - 2007 y anteriores - AID aplicados en
-                el...
+                el periodo
             '01526':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
@@ -12751,40 +12830,47 @@ modelo:
             '01527':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - 2007 y anteriores - AID pendientes apli...
+                LIS - Ejercicio generación - 2007 y anteriores - AID pendientes aplicación
+                periodos futuros - Sin prestación patrimonial
             01528:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - 2007 y anteriores - AID pendientes apli...
+                LIS - Ejercicio generación - 2007 y anteriores - AID pendientes aplicación
+                periodos futuros - Importe total AID pendientes
             01529:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
                 LIS - Ejercicio generación - Total 2008 a 2015 - Importe total AID
-                p...
+                pendiente aplicación a principio periodo
             '01530':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total 2008 a 2015 - Cuota líquida posit...
+                LIS - Ejercicio generación - Total 2008 a 2015 - Cuota líquida positiva
             '01531':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total 2008 a 2015 - Con prestación patr...
+                LIS - Ejercicio generación - Total 2008 a 2015 - Con prestación patrimonial
             '01532':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes apli...
+                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes aplicación
+                periodos futuros - Sin prestación patrimonial
             '01533':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes apli...
+                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes aplicación
+                periodos futuros - Sin prestación patrimonial. Minoración prestación
+                exceso cuota
             '01534':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes apli...
+                LIS - Ejercicio generación - Total 2008 a 2015 - AID pendientes aplicación
+                periodos futuros - Importe total AID pendientes
             '01535':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total - Importe total AID pendiente apl...
+                LIS - Ejercicio generación - Total - Importe total AID pendiente aplicación
+                a principio periodo
             '01536':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
@@ -12792,91 +12878,104 @@ modelo:
             01539:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total - AID pendientes aplicación perio...
+                LIS - Ejercicio generación - Total - AID pendientes aplicación periodos
+                futuros - Sin prestación patrimonial
             '01540':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total - AID pendientes aplicación perio...
+                LIS - Ejercicio generación - Total - AID pendientes aplicación periodos
+                futuros - Sin prestación patrimonial. Minoración prestación exceso
+                cuota
             '01541':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
-                LIS - Ejercicio generación - Total - AID pendientes aplicación perio...
+                LIS - Ejercicio generación - Total - AID pendientes aplicación periodos
+                futuros - Importe total AID pendientes
             '01542':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2016 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2016 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '01544':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2016 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '01545':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2016 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '01546':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2016 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             01548:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2016 - AID convertidos en crédito exigible
-                per...
+                periodo
             01549:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2016 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2016 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '01550':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2016 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2016 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '01551':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2016 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2016 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '01552':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2017 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2017 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '01554':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2017 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '01555':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2017 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '01556':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2017 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             '01557':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2017 - AID convertidos en crédito exigible
-                per...
+                periodo
             01558:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2017 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2017 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             01559:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2017 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2017 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '01560':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2017 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2017 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '01561':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - Total - Importe total AID (art. 130.6 a) pendi...
+                Ejercicio generación - Total - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '01563':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
@@ -12896,22 +12995,22 @@ modelo:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - Total - AID convertidos en crédito exigible
-                pe...
+                periodo
             01568:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - Total - AID pendientes aplicación periodos
-                fut...
+                futuros - Con derecho conversión crédito exigible
             01569:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - Total - AID pendientes aplicación periodos
-                fut...
+                futuros - Con derecho conversión crédito exigible exceso cuota
             '01570':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - Total - AID pendientes aplicación periodos
-                fut...
+                futuros - Sin derecho conversión crédito exigible
             '01574':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
@@ -12920,56 +13019,64 @@ modelo:
             '01575':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Operaciones del art. 19 LIS distintas del cambio de
-                residencia a Estados miembros de la Unión Europea o EEE - Disminución...
+                residencia a Estados miembros de la Unión Europea o EEE - Disminuciónes
             '01576':
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Parte de la base imponible que proceda
-                de la realización de actividades a las que se aplica el régime...
+                de la realización de actividades a las que se aplica el régimen especial,
+                después de la reserva de nivelación - Disminuciones
             '01577':
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Parte de la base imponible que proceda
-                de la realización del resto de actividades, después de la rese...
+                de la realización del resto de actividades, después de la reserva
+                de nivelación -Disminuciones
             01578:
               label: Liquidación IV - Rectificativa - Resultado a ingresar como consecuencia
                 de la tramitación de autoliquidaciones anteriores o liquidaciones
-                administrativas correspondientes al periodo impositivo 2025...
+                administrativas correspondientes al periodo impositivo 2025 - Estado
             01579:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - Total - Exceso cuota líquida positiva pendiente a principio pe...
+                - Total - Exceso cuota líquida positiva pendiente a principio periodo
             01580:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - Total - Exceso cuota líquida positiva aplicado periodos imposi...
+                - Total - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015
             01581:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - Total - Exceso cuota líquida positiva aplicado periodos imposi...
+                - Total - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016
             01582:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - Total - Exceso cuota líquida positiva pendiente aplicación per...
+                - Total - Exceso cuota líquida positiva pendiente aplicación periodos
+                futuros
             01583:
               label: Liquidación IV - Rectificativa - Resultado a ingresar como consecuencia
                 de la tramitación de autoliquidaciones anteriores o liquidaciones
-                administrativas correspondientes al periodo impositivo 2025...
+                administrativas correspondientes al periodo impositivo 2025 - D. Forales/Navarra
+                (Totales)
             01584:
               label: Liquidación IV - Rectificativa - Devolución acordada por la Agencia
                 Tributaria como consecuencia de la tramitación de autoliquidaciones
-                anteriores o liquidaciones administrativas correspondientes a...
+                anteriores o liquidaciones administrativas correspondientes al periodo
+                impositivo 2025 - Estado
             01585:
               label: Liquidación IV - Rectificativa - Devolución acordada por la Agencia
                 Tributaria como consecuencia de la tramitación de autoliquidaciones
-                anteriores o liquidaciones administrativas correspondientes a...
+                anteriores o liquidaciones administrativas correspondientes al periodo
+                impositivo 2025 - D. Forales/Navarra (Totales)
             01589:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Impuesto extranjero soportado por el contribuyente,
-                no deducible por afectar a rentas con deducc. doble imp. - Disminucio...
+                no deducible por afectar a rentas con deducc. doble imp. - Disminuciones
             01590:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
                 LIS - Ejercicio generación - Total 2008 a 2015 - AID aplicados en
-                el...
+                el periodo
             01591:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). DT 33ª y DA 13ª
@@ -12994,35 +13101,43 @@ modelo:
             '01611':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
-                de autoliquidaciones anteriores o liquidaciones administ...'
+                de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
+                al periodo impositivo 2025 - Araba/Álava'
             '01612':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
-                de autoliquidaciones anteriores o liquidaciones administ...'
+                de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
+                al periodo impositivo 2025 - Gipuzkoa'
             '01613':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
-                de autoliquidaciones anteriores o liquidaciones administ...'
+                de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
+                al periodo impositivo 2025 - Bizkaia'
             '01623':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Devolución
                 acordada por la Agencia Tributaria como consecuencia de la tramitación
-                de autoliquidaciones anteriores o liquidaciones administ...'
+                de autoliquidaciones anteriores o liquidaciones administrativas correspondientes
+                al periodo impositivo 2025 - Navarra'
             '01650':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
-                LIS procedente de una autoliquidación anterior o liquidación...'
+                LIS procedente de una autoliquidación anterior o liquidación administrativa
+                corresponiente al período impositivo 2025 - Araba/Álava'
             '01651':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
-                LIS procedente de una autoliquidación anterior o liquidación...'
+                LIS procedente de una autoliquidación anterior o liquidación administrativa
+                corresponiente al período impositivo 2025 - Gipuzkoa'
             '01652':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
-                LIS procedente de una autoliquidación anterior o liquidación...'
+                LIS procedente de una autoliquidación anterior o liquidación administrativa
+                corresponiente al período impositivo 2025 - Bizkaia'
             '01653':
               label: 'Tributación conjunta Estado y Adm.Forales - Rectificativa: Resultado
                 de la autoliquidación incluido el 1er fraccionamiento del art. 19.1
-                LIS procedente de una autoliquidación anterior o liquidación...'
+                LIS procedente de una autoliquidación anterior o liquidación administrativa
+                corresponiente al período impositivo 2025 - Navarra'
             01658:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
@@ -13030,67 +13145,75 @@ modelo:
             01659:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Rectificativa: Devolución - Gipuzk...'
+                tributaria (art. 130 LIS) - Rectificativa: Devolución - Gipuzkoa'
             '01660':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Rectificativa: Devolución - Bizkai...'
+                tributaria (art. 130 LIS) - Rectificativa: Devolución - Bizkaia'
             '01661':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Rectificativa: Devolución - Navarr...'
+                tributaria (art. 130 LIS) - Rectificativa: Devolución - Navarra'
             '01662':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Abono - A...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Araba/Álava'
             '01663':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Abono - G...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Gipuzkoa'
             '01664':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Abono - B...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Bizkaia'
             '01665':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Abono - N...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Abono - Navarra'
             '01666':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Compensac...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Araba/Álava'
             '01667':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Compensac...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Gipuzkoa'
             01668:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Compensac...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Bizkaia'
             01669:
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: Compensac...'
+                tributaria (art. 130 LIS) - Resultado de conversión: Compensación
+                - Navarra'
             '01670':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa...'
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Araba/Álava'
             '01671':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa...'
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Gipuzkoa'
             '01672':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa...'
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Bizkaia'
             '01673':
               label: 'Tributación conjunta Estado y Adm.Forales - Conversión de activos
                 por impuesto diferido en crédito exigible frente a la Administración
-                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa...'
+                tributaria (art. 130 LIS) - Resultado de conversión: A Ingresar -
+                Navarra'
             01679:
               label: Operaciones del art. 19 LIS distintas del cambio de residencia
                 a Estados miembros de la Unión Europea o EEE - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios anteriores...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             01683:
               label: Deducc. para incentivar determ.actividades - 2026(****) Otras
                 deducciones relativas a programas de apoyo a acontecimientos de excepcional
@@ -13102,7 +13225,7 @@ modelo:
             01685:
               label: Deducc. para incentivar determ.actividades - 2026(****) Otras
                 deducciones relativas a programas de apoyo a acontecimientos de excepcional
-                interés público - Pendiente de aplicación en periodos futur...
+                interés público - Pendiente de aplicación en periodos futuros
             01686:
               label: Operaciones del art. 19 LIS distintas del cambio de residencia
                 a Estados miembros de la Unión Europea o EEE - Disminución - Correcciones
@@ -13110,7 +13233,7 @@ modelo:
             01687:
               label: Operaciones del art. 19 LIS distintas del cambio de residencia
                 a Estados miembros de la Unión Europea o EEE - Disminución - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios anteri...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             01692:
               label: Deducción donativos entidades sin fines lucro - Donaciones de
                 carácter general - Subtotal donaciones 2015 a 2025 sin reiteración
@@ -13124,7 +13247,8 @@ modelo:
             01694:
               label: Deducción donativos entidades sin fines lucro - Donaciones de
                 carácter general - Subtotal donaciones 2015 a 2025 sin reiteración
-                de donaciones a una misma entidad. - Pendiente de aplicación en peri...
+                de donaciones a una misma entidad. - Pendiente de aplicación en periodos
+                futuros
             01695:
               label: Deducción donativos entidades sin fines lucro - Donaciones de
                 carácter general - Subtotal donaciones 2015 a 2025 con reiteración
@@ -13136,7 +13260,8 @@ modelo:
             01697:
               label: Deducción donativos entidades sin fines lucro - Donaciones de
                 carácter general - Subtotal donaciones 2015 a 2025 con reiteración
-                de donaciones a una misma entidad - Pendiente de aplicación en perio...
+                de donaciones a una misma entidad - Pendiente de aplicación en periodos
+                futuros
             '01704':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -13160,39 +13285,43 @@ modelo:
             '01754':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2018 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2018 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '01756':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2018 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '01757':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2018 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             01758:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2018 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             01759:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2018 - AID convertidos en crédito exigible
-                per...
+                periodo
             '01760':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2018 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2018 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '01761':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2018 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2018 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '01762':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2018 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2018 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '01765':
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
@@ -13200,19 +13329,21 @@ modelo:
             01793:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Retenciones por otros conceptos diferentes a los rendimientos del
-                capital mobiliario o a los arrendamientos de inmuebles urbanos atrib...
+                capital mobiliario o a los arrendamientos de inmuebles urbanos atribuidas
+                por entidades en atribución de rentas - Efectuados a la entidad
             01794:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Retenciones por otros conceptos diferentes a los rendimientos del
-                capital mobiliario o a los arrendamientos de inmuebles urbanos atrib...
+                capital mobiliario o a los arrendamientos de inmuebles urbanos atribuidas
+                por entidades en atribución de rentas - Imputados por AIEs y UTEs
             01820:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios ant...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             01824:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Rentas procedentes de transmisión de inmovilizado obtenidas
-                por las Autoridades Portuarias (DA 68ª Ley 6/2018) - Disminuc...
+                por las Autoridades Portuarias (DA 68ª Ley 6/2018) - Disminuciones
             01868:
               label: Ajustes por deterioro de valores repr. de partic. en el capital
                 o fondos propios (DT 16ª.1 y 2 LIS) - Disminución - Correcciones del
@@ -13231,20 +13362,22 @@ modelo:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Subtotal
                 de compensación de base imponible especial - Pendiente aplicación
-                en...'
+                en períodos futuros'
             01889:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Subtotal
-                de compensación de base imponible resto actividades - Pendiente apli...'
+                de compensación de base imponible resto actividades - Pendiente aplicación
+                a principio del período/generada en el período'
             01890:
               label: Liquidación III - Base imponible - Régimen especial de buques
                 y empresas navieras en Canarias - Compensación de bases imponibles
                 negativas períodos anteriores de la parte de base imponible resto
-                de...
+                de actividades
             01891:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Subtotal
-                de compensación de base imponible resto actividades - Pendiente apli...'
+                de compensación de base imponible resto actividades - Pendiente aplicación
+                en períodos futuros'
             01899:
               label: Deducc. para incentivar determ.actividades - 2022 Inversiones
                 en territ. África Occidental y gastos de propaganda y publicidad (art.
@@ -13268,20 +13401,22 @@ modelo:
             01930:
               label: Deducc. para incentivar determ.actividades - 2025(*) Inversiones
                 en territ. África Occidental y gastos de propaganda y publicidad (art.
-                27 bis Ley 19/1994) (TAP) - Pendiente de aplicación en period...
+                27 bis Ley 19/1994) (TAP) - Pendiente de aplicación en periodos futuros
             01935:
               label: Deducciones I+D+i excluidas de límite - Información adicional
                 para el cálculo de límites de deducciones - Grupo mercantil (sólo
                 para entidades que hayan marcado la clave 00039 de caracteres de la
-                d...
+                declaración) - Importe anual de la deducción por gastos de investigación
+                y desarrollo aplicada o abonada por el resto del grupo
             01961:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en el ejercic...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             01962:
               label: Libertad de amortización de determinados vehículos y de nuevas
                 infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en ejercicios...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             02079:
               label: 'Información adicional para el cálculo de límites de deducciones
                 - 2025: Financiador: deducción por producciones cinematográficas españolas
@@ -13305,61 +13440,65 @@ modelo:
             '02100':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2019 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2019 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '02102':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2019 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '02103':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2019 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '02104':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2019 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             '02105':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2019 - AID convertidos en crédito exigible
-                per...
+                periodo
             '02106':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2019 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2019 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '02107':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2019 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2019 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             02108:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2019 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2019 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             02181:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre dividendos o participaciones en beneficios
-                de entidades no residentes (art. 21.1, 21.10 y DT 40ª LIS) - Di...
+                de entidades no residentes (art. 21.1, 21.10 y DT 40ª LIS) - Disminuciones
             02182:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
-                valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aume...
+                valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumentos
             02183:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
-                valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Dism...
+                valores entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminuciones
             02184:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
                 valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) -
-                A...
+                Aumentos
             02185:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre la renta obtenida en la transmisión de
                 valores entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) -
-                D...
+                Disminuciones
             02186:
               label: Liquidación II - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Exención sobre la renta obtenida en los supuestos del
@@ -13383,39 +13522,43 @@ modelo:
             02268:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2020 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2020 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '02270':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2020 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '02271':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2020 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '02272':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2020 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             '02273':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2020 - AID convertidos en crédito exigible
-                per...
+                periodo
             '02274':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2020 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2020 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '02275':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2020 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2020 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '02276':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2020 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2020 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             02287:
               label: 'Información adicional para el cálculo de límites de deducciones
                 - 2025: Deducción por investigación y desarrollo en Canarias generada
@@ -13427,36 +13570,39 @@ modelo:
             '02301':
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
-                Corrección permanente (excluidas las correcciones por IS y por I...
+                Corrección permanente (excluidas las correcciones por IS y por IC)
+                - Aumentos
             '02302':
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
-                Corrección permanente (excluidas las correcciones por IS y por I...
+                Corrección permanente (excluidas las correcciones por IS y por IC)
+                - Disminuciones
             '02304':
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
-                Corrección temporaria con origen en el ejercicio - Disminuciones...
+                Corrección temporaria con origen en el ejercicio - Disminuciones
             '02307':
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
-                Corrección temporaria con origen en ejerc. anteriores - Aumentos...
+                Corrección temporaria con origen en ejerc. anteriores - Aumentos
             02308:
               label: Detalle correcciones resultado pérdidas y ganancias - Correcciones
                 al resultado de la cuenta de pérdidas y ganancias del ejercicio -
-                Corrección temporaria con origen en ejerc. anteriores - Disminuc...
+                Corrección temporaria con origen en ejerc. anteriores - Disminuciones
             '02311':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Gastos que sean objeto de la deducción por inversiones
-                realizadas por las autoridades portuarias (art. 15 n) LIS) - Aument...
+                realizadas por las autoridades portuarias (art. 15 n) LIS) - Aumentos
             02369:
               label: Limitación deducibilidad gastos financieros - Límite art. 16.1
                 y 16.2 LIS - k) Límite total a la deducción de gastos financieros
                 netos, en todo caso, 1 millón de euros si el límite a la deducción
-                d...
+                de gastos financieros netos más la adición de límite consignado en
+                la letra j) es inferior a 1 millón
             02378:
               label: Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio
                 administrativo para determinados supuestos de autoliquidación rectificativa
-                que no deban incluirse en otras casillas - Araba/Ála...
+                que no deban incluirse en otras casillas - Araba/Álava
             02379:
               label: Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio
                 administrativo para determinados supuestos de autoliquidación rectificativa
@@ -13472,51 +13618,58 @@ modelo:
             02418:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2021 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2021 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '02420':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2021 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '02421':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2021 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             '02422':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2021 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             '02423':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2021 - AID convertidos en crédito exigible
-                per...
+                periodo
             '02424':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2021 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2021 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '02425':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2021 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2021 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '02426':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2021 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2021 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '02472':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 Sin reiteración de donaciones a una misma e...
+                incrementada - 2017 Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '02473':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 Sin reiteración de donaciones a una misma e...
+                incrementada - 2017 Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '02474':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2017 Sin reiteración de donaciones a una misma e...
+                incrementada - 2017 Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '02475':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
@@ -13528,7 +13681,7 @@ modelo:
             02486:
               label: Liquidación IV - Opción de fraccionamiento en supuestos de cambios
                 de residencia (art. 19.1 LIS) - Resultado de la autoliquidación incluido
-                el 1er fraccionamiento del art. 19.1 LIS - D. Forales/Nav...
+                el 1er fraccionamiento del art. 19.1 LIS - D. Forales/Navarra (Totales)
             02487:
               label: Liquidación IV - Opción de fraccionamiento en supuestos de cambios
                 de residencia (art. 19.1 LIS) - Rectificativa - Resultado de la autoliquidación
@@ -13540,23 +13693,28 @@ modelo:
             02490:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Compensaci...'
+                - Resultado de conversión de AID tras regularización: Compensación
+                - Estado'
             02491:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Compensaci...'
+                - Resultado de conversión de AID tras regularización: Compensación
+                - D. Forales/Navarra (Totales)'
             02492:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: A ingresar...'
+                - Resultado de conversión de AID tras regularización: A ingresar -
+                Total'
             02493:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: A ingresar...'
+                - Resultado de conversión de AID tras regularización: A ingresar -
+                Estado'
             02494:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: A ingresar...'
+                - Resultado de conversión de AID tras regularización: A ingresar -
+                D. Forales/Navarra (Totales)'
             02495:
               label: 'Información adicional para el cálculo de límites de deducciones
                 - 2025: Productor: deducción por producciones cinematográficas españolas
@@ -13568,11 +13726,11 @@ modelo:
             02578:
               label: Deducción del 30% importe gastos de amortiz. contable (excluidas
                 emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios ant...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             02583:
               label: Amortización del inmovilizado intangible y fondo de comercio
                 (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios anterio...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             02587:
               label: Amortización del inmovilizado intangible y fondo de comercio
                 (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución -
@@ -13582,7 +13740,7 @@ modelo:
               label: Amortización del inmovilizado intangible y fondo de comercio
                 (art. 12.2 LIS) y amortización de la DT 13ª.1 LIS - Disminución -
                 Correcciones del ejercicio - Temporarias (con origen en ejercicios
-                ant...
+                anteriores)
             02598:
               label: Amortización de inmovilizado afecto a actividades de investigación
                 y desarrollo (art. 12.3 b) LIS) - Disminución - Correcciones del ejercicio
@@ -13590,11 +13748,13 @@ modelo:
             '02662':
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
-                LIS. - Aumento - Correcciones del ejercicio - Temporarias (con o...
+                LIS. - Aumento - Correcciones del ejercicio - Temporarias (con origen
+                en el ejercicio)
             '02663':
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
-                LIS. - Aumento - Correcciones del ejercicio - Temporarias (con o...
+                LIS. - Aumento - Correcciones del ejercicio - Temporarias (con origen
+                en ejercicios anteriores)
             '02666':
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
@@ -13602,11 +13762,13 @@ modelo:
             '02667':
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
-                LIS. - Disminución - Correcciones del ejercicio - Temporarias (c...
+                LIS. - Disminución - Correcciones del ejercicio - Temporarias (con
+                origen en el ejercicio)
             02668:
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
-                LIS. - Disminución - Correcciones del ejercicio - Temporarias (c...
+                LIS. - Disminución - Correcciones del ejercicio - Temporarias (con
+                origen en ejercicios anteriores)
             02669:
               label: Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos
                 (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1
@@ -13614,19 +13776,21 @@ modelo:
             '02672':
               label: Pérdidas por deterioro de IM, inversiones inmobiliarias e II,
                 incluido el fondo de comercio (art. 13.2 a) y DT 15 LIS) - Aumento
-                - Correcciones del ejercicio - Temporarias (con origen en el ejercic...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             '02673':
               label: Pérdidas por deterioro de IM, inversiones inmobiliarias e II,
                 incluido el fondo de comercio (art. 13.2 a) y DT 15 LIS) - Aumento
-                - Correcciones del ejercicio - Temporarias (con origen en ejercicios...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '02677':
               label: Pérdidas por deterioro de IM, inversiones inmobiliarias e II,
                 incluido el fondo de comercio (art. 13.2 a) y DT 15 LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en el eje...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             02678:
               label: Pérdidas por deterioro de IM, inversiones inmobiliarias e II,
                 incluido el fondo de comercio (art. 13.2 a) y DT 15 LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en ejerci...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             02682:
               label: Ajustes por pérdidas por deterioro de valores representativos
                 de la participación en el capital o fondos propios (art. 13.2 b) LIS)
@@ -13638,27 +13802,33 @@ modelo:
             02687:
               label: Ajustes por pérdidas por deterioro de valores representativos
                 de la participación en el capital o fondos propios (art. 13.2 b) LIS)
-                - Disminución - Correcciones del ejercicio - Temporarias (con ori...
+                - Disminución - Correcciones del ejercicio - Temporarias (con origen
+                en el ejercicio)
             02688:
               label: Ajustes por pérdidas por deterioro de valores representativos
                 de la participación en el capital o fondos propios (art. 13.2 b) LIS)
-                - Disminución - Correcciones del ejercicio - Temporarias (con ori...
+                - Disminución - Correcciones del ejercicio - Temporarias (con origen
+                en ejercicios anteriores)
             '02722':
               label: Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
-                Aumento - Correcciones del ejercicio - Temporarias (con orige...
+                Aumento - Correcciones del ejercicio - Temporarias (con origen en
+                el ejercicio)
             '02723':
               label: Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
-                Aumento - Correcciones del ejercicio - Temporarias (con orige...
+                Aumento - Correcciones del ejercicio - Temporarias (con origen en
+                ejercicios anteriores)
             '02727':
               label: Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
-                Disminución - Correcciones del ejercicio - Temporarias (con o...
+                Disminución - Correcciones del ejercicio - Temporarias (con origen
+                en el ejercicio)
             02728:
               label: Aplicación del límite del art. 11.12 LIS a las pérdidas por deterioro
                 del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) -
-                Disminución - Correcciones del ejercicio - Temporarias (con o...
+                Disminución - Correcciones del ejercicio - Temporarias (con origen
+                en ejercicios anteriores)
             02738:
               label: Gastos y provisiones por pensiones no afectados por el art. 11.12
                 LIS (art. 14.1, 14.6 y 14.8 LIS) - Disminución - Correcciones del
@@ -13666,55 +13836,62 @@ modelo:
             02786:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2024 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2024 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             02788:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             02789:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             02790:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             02792:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2024 - AID convertidos en crédito exigible
-                per...
+                periodo
             02793:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2024 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2024 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             02794:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2024 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2024 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             02795:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2024 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2024 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             02796:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2024 - Exceso cuota líquida positiva pendiente a principio per...
+                - 2024 - Exceso cuota líquida positiva pendiente a principio periodo
             02797:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2024 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2024 - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015
             02798:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2024 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2024 - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016
             02799:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2024 - Exceso cuota líquida positiva pendiente aplicación peri...
+                - 2024 - Exceso cuota líquida positiva pendiente aplicación periodos
+                futuros
             02855:
               label: Pérdidas por deterioro de valores repr. de partic. en el capital
                 o fondos propios (art. 15 k) LIS) - Aumento - Saldo pendiente a fin
@@ -13730,19 +13907,20 @@ modelo:
             02983:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades residentes(art. 21.3, 21.10 y DT 40ª LIS) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios ante...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             02987:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en el ejercic...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             02988:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en ejercicios...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             02992:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumento
-                - Correcciones del ejercicio - Temporarias (con origen en el ejercici...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             02993:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Aumento
@@ -13751,11 +13929,12 @@ modelo:
             02997:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en el ejer...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             02998:
               label: Exención sobre la renta obtenida en la transmisión de valores
                 entidades no residentes (art. 21.3, 21.10 y DT 40ª LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en ejercic...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '03001':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
@@ -13763,11 +13942,13 @@ modelo:
             '03002':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Aumento - Correcciones del ejercicio - Temporarias (c...
+                residentes - Aumento - Correcciones del ejercicio - Temporarias (con
+                origen en el ejercicio)
             '03003':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Aumento - Correcciones del ejercicio - Temporarias (c...
+                residentes - Aumento - Correcciones del ejercicio - Temporarias (con
+                origen en ejercicios anteriores)
             '03004':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
@@ -13775,51 +13956,57 @@ modelo:
             '03006':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Disminución - Correcciones del ejercicio - Permanente...
+                residentes - Disminución - Correcciones del ejercicio - Permanentes
             '03007':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Disminución - Correcciones del ejercicio - Temporaria...
+                residentes - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en el ejercicio)
             03008:
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Disminución - Correcciones del ejercicio - Temporaria...
+                residentes - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en ejercicios anteriores)
             03009:
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                residentes - Disminución - Saldo pendiente a principio de ejercici...
+                residentes - Disminución - Saldo pendiente a principio de ejercicio
             '03011':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Aumento - Correcciones del ejercicio - Permanentes...
+                no residentes - Aumento - Correcciones del ejercicio - Permanentes
             '03012':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Aumento - Correcciones del ejercicio - Temporarias...
+                no residentes - Aumento - Correcciones del ejercicio - Temporarias
+                (con origen en el ejercicio)
             '03013':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Aumento - Correcciones del ejercicio - Temporarias...
+                no residentes - Aumento - Correcciones del ejercicio - Temporarias
+                (con origen en ejercicios anteriores)
             '03014':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Aumento - Saldo pendiente a principio de ejercicio...
+                no residentes - Aumento - Saldo pendiente a principio de ejercicio
             '03016':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Disminución - Correcciones del ejercicio - Permane...
+                no residentes - Disminución - Correcciones del ejercicio - Permanentes
             '03017':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Disminución - Correcciones del ejercicio - Tempora...
+                no residentes - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en el ejercicio)
             03018:
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Disminución - Correcciones del ejercicio - Tempora...
+                no residentes - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en ejercicios anteriores)
             03019:
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
-                no residentes - Disminución - Saldo pendiente a principio de ejerc...
+                no residentes - Disminución - Saldo pendiente a principio de ejercicio
             '03020':
               label: Exención sobre la renta obtenida en los supuestos del art. 21.3,
                 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades
@@ -13827,11 +14014,13 @@ modelo:
             '03052':
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
-                LIS) - Aumento - Correcciones del ejercicio - Temporarias (con or...
+                LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen
+                en el ejercicio)
             '03053':
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
-                LIS) - Aumento - Correcciones del ejercicio - Temporarias (con or...
+                LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen
+                en ejercicios anteriores)
             '03056':
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
@@ -13839,11 +14028,13 @@ modelo:
             '03057':
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
-                LIS) - Disminución - Correcciones del ejercicio - Temporarias (co...
+                LIS) - Disminución - Correcciones del ejercicio - Temporarias (con
+                origen en el ejercicio)
             03058:
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
-                LIS) - Disminución - Correcciones del ejercicio - Temporarias (co...
+                LIS) - Disminución - Correcciones del ejercicio - Temporarias (con
+                origen en ejercicios anteriores)
             03059:
               label: Impuesto extranjero soportado por el contribuyente, no deducible
                 por afectar a rentas con deducción por doble imposición (art. 31.2
@@ -13851,7 +14042,7 @@ modelo:
             '03061':
               label: Impuesto extranjero sobre los beneficios con cargo a los cuales
                 se pagan los dividendos objeto de deducción por doble imposición internacional
-                (art. 32.1 LIS) - Aumento - Correcciones del ejercicio...
+                (art. 32.1 LIS) - Aumento - Correcciones del ejercicio - Permanentes
             03093:
               label: Unión temporal de empresas, ajustes por rentas exentas de UTE
                 que opera en el extranjero (art. 45.2 LIS) - Aumento - Correcciones
@@ -13860,23 +14051,25 @@ modelo:
             03098:
               label: Unión temporal de empresas, ajustes por rentas exentas de UTE
                 que opera en el extranjero (art. 45.2 LIS) - Disminución - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios anteriore...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             '03101':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Aumento - Correcciones del ejercicio - Perman...
+                45.2 LIS) - Aumento - Correcciones del ejercicio - Permanentes
             '03102':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Aumento - Correcciones del ejercicio - Tempor...
+                45.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con
+                origen en el ejercicio)
             '03103':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Aumento - Correcciones del ejercicio - Tempor...
+                45.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con
+                origen en ejercicios anteriores)
             '03104':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Aumento - Saldo pendiente a principio de ejer...
+                45.2 LIS) - Aumento - Saldo pendiente a principio de ejercicio
             '03105':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
@@ -13884,15 +14077,17 @@ modelo:
             '03106':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Disminución - Correcciones del ejercicio - Pe...
+                45.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes
             '03107':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Disminución - Correcciones del ejercicio - Te...
+                45.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en el ejercicio)
             03108:
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Disminución - Correcciones del ejercicio - Te...
+                45.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias
+                (con origen en ejercicios anteriores)
             03109:
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
@@ -13900,27 +14095,29 @@ modelo:
             '03110':
               label: Unión temporal de empresas, ajustes por rentas exentas por participar
                 en el extranjero en fórmulas de colaboración análogas a las UTE (art.
-                45.2 LIS) - Disminución - Saldo pendiente a fin de ejerci...
+                45.2 LIS) - Disminución - Saldo pendiente a fin de ejercicio
             '03122':
               label: Bases imp. negativas generadas dentro del grupo fiscal por la
                 ent. transmitida y que hayan sido compensadas (art. 62.2 LIS) - Aumento
-                - Correcciones del ejercicio - Temporarias (con origen en el ej...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             '03123':
               label: Bases imp. negativas generadas dentro del grupo fiscal por la
                 ent. transmitida y que hayan sido compensadas (art. 62.2 LIS) - Aumento
-                - Correcciones del ejercicio - Temporarias (con origen en ejerc...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '03127':
               label: Bases imp. negativas generadas dentro del grupo fiscal por la
                 ent. transmitida y que hayan sido compensadas (art. 62.2 LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en e...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             03128:
               label: Bases imp. negativas generadas dentro del grupo fiscal por la
                 ent. transmitida y que hayan sido compensadas (art. 62.2 LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en e...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '03132':
               label: Sociedades y fondos de capital-riesgo y sociedades de desarrollo
                 industrial regional (capítulo IV del título VII LIS) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en el ejercici...
+                del ejercicio - Temporarias (con origen en el ejercicio)
             '03133':
               label: Sociedades y fondos de capital-riesgo y sociedades de desarrollo
                 industrial regional (capítulo IV del título VII LIS) - Aumento - Correcciones
@@ -13928,11 +14125,12 @@ modelo:
             '03137':
               label: Sociedades y fondos de capital-riesgo y sociedades de desarrollo
                 industrial regional (capítulo IV del título VII LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en el ejer...
+                - Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             03138:
               label: Sociedades y fondos de capital-riesgo y sociedades de desarrollo
                 industrial regional (capítulo IV del título VII LIS) - Disminución
-                - Correcciones del ejercicio - Temporarias (con origen en ejercic...
+                - Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '03142':
               label: Valoración de bienes y derechos. Régimen especial operaciones
                 reestructuración (capítulo VII del título VII LIS) - Aumento - Correcciones
@@ -13940,28 +14138,29 @@ modelo:
             '03143':
               label: Valoración de bienes y derechos. Régimen especial operaciones
                 reestructuración (capítulo VII del título VII LIS) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios anter...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             '03147':
               label: Valoración de bienes y derechos. Régimen especial operaciones
                 reestructuración (capítulo VII del título VII LIS) - Disminución -
-                Correcciones del ejercicio - Temporarias (con origen en el ejercicio...
+                Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             03148:
               label: Valoración de bienes y derechos. Régimen especial operaciones
                 reestructuración (capítulo VII del título VII LIS) - Disminución -
                 Correcciones del ejercicio - Temporarias (con origen en ejercicios
-                a...
+                anteriores)
             '03245':
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Rectificativa: Devolución acordada/compensada - D. Forales/Nav...'
+                - Rectificativa: Devolución acordada/compensada - D. Forales/Navarra
+                (Totales)'
             '03317':
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Abono - To...'
+                - Resultado de conversión de AID tras regularización: Abono - Total'
             03318:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Abono - Es...'
+                - Resultado de conversión de AID tras regularización: Abono - Estado'
             03319:
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
@@ -13969,7 +14168,8 @@ modelo:
             '03320':
               label: 'Conversión de activos por impuesto diferido en crédito exigible
                 frente a la Administración tributaria (art. 130 LIS) - Rectificativa
-                - Resultado de conversión de AID tras regularización: Compensaci...'
+                - Resultado de conversión de AID tras regularización: Compensación
+                - Total'
             '03362':
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Aumento - Correcciones
@@ -13977,19 +14177,21 @@ modelo:
             '03363':
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Aumento - Correcciones
-                del ejercicio - Temporarias (con origen en ejercicios ant...
+                del ejercicio - Temporarias (con origen en ejercicios anteriores)
             '03367':
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Disminución -
-                Correcciones del ejercicio - Temporarias (con origen en el ejercic...
+                Correcciones del ejercicio - Temporarias (con origen en el ejercicio)
             03368:
               label: Entidades en rég. de atribución de rentas const. en el extranj.
                 con presencia en territ. español (art. 38 TRLIRNR) - Disminución -
-                Correcciones del ejercicio - Temporarias (con origen en ejercicios...
+                Correcciones del ejercicio - Temporarias (con origen en ejercicios
+                anteriores)
             '03401':
               label: Liquidación I - Detalle correcciones resultado cta. pérdidas
                 y ganancias - Corrección por el Impuesto sobre el margen de intereses
-                y comisiones de determinadas entidades financieras (DF 9ª Ley 7/20...
+                y comisiones de determinadas entidades financieras (DF 9ª Ley 7/2024)
+                - Aumentos
             '03402':
               label: Detalle compensación bases imponibles negativas - 2024 - Pendiente
                 aplicación a principio del período/generada en el período [03402]
@@ -14006,23 +14208,27 @@ modelo:
             '03406':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2025(*) - Aplicado en esta liquid...'
+                de base imponible especial año 2025(*) - Aplicado en esta liquidación'
             '03407':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible especial año 2025(*) - Pendiente aplicación en...'
+                de base imponible especial año 2025(*) - Pendiente aplicación en períodos
+                futuros'
             03408:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2025(*) - Pendiente apli...'
+                de base imponible resto actividades año 2025(*) - Pendiente aplicación
+                a principio del período/generada en el período'
             03409:
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2025(*) - Aplicado en es...'
+                de base imponible resto actividades año 2025(*) - Aplicado en esta
+                liquidación'
             '03410':
               label: 'Régimen especial de buques y empresas navieras en Canarias:
                 desglose de la compensación de bases imponibles negativas - Compensación
-                de base imponible resto actividades año 2025(*) - Pendiente apli...'
+                de base imponible resto actividades año 2025(*) - Pendiente aplicación
+                en períodos futuros'
             '03411':
               label: Deducciones doble imposición interna (DT 23.1 LIS) - DI interna
                 2025(*) - Deducción pendiente [03411]
@@ -14595,51 +14801,63 @@ modelo:
             '03555':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Sin reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Sin reiteración de donaciones a una misma
+                entidad - Deducción pendiente/generada
             '03556':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Sin reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Sin reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación
             '03557':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Sin reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Sin reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros
             03558:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Con reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Con reiteración de donaciones a una misma
+                entidad - Deducción pendiente/generada
             03559:
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Con reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Con reiteración de donaciones a una misma
+                entidad - Aplicado en esta liquidación
             '03560':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025(*) - Con reiteración de donaciones a una mi...
+                incrementada - 2025(*) - Con reiteración de donaciones a una misma
+                entidad - Pendiente de aplicación en periodos futuros
             '03561':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Sin reiteración de donaciones a una misma...
+                incrementada - 2025 - Sin reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '03562':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Sin reiteración de donaciones a una misma...
+                incrementada - 2025 - Sin reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '03563':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Sin reiteración de donaciones a una misma...
+                incrementada - 2025 - Sin reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '03564':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Con reiteración de donaciones a una misma...
+                incrementada - 2025 - Con reiteración de donaciones a una misma entidad
+                - Deducción pendiente/generada
             '03565':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Con reiteración de donaciones a una misma...
+                incrementada - 2025 - Con reiteración de donaciones a una misma entidad
+                - Aplicado en esta liquidación
             '03566':
               label: Deducción donativos entidades sin fines lucro - Donaciones para
                 actividades prioritarias de mecenazgo y otras con derecho a deducción
-                incrementada - 2025 - Con reiteración de donaciones a una misma...
+                incrementada - 2025 - Con reiteración de donaciones a una misma entidad
+                - Pendiente de aplicación en periodos futuros
             '03567':
               label: Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS)
                 - 2025 - Base deducción [03567]
@@ -14765,7 +14983,8 @@ modelo:
             '03604':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2025 - Importe total AID (art. 130.6 a) pendie...
+                Ejercicio generación - 2025 - Importe total AID (art. 130.6 a) pendiente
+                aplicación a principio periodo
             '03605':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
@@ -14774,50 +14993,56 @@ modelo:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible
             '03607':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025 - AID pendientes aplicación a principio
-                p...
+                periodo - Con derecho conversión crédito exigible por exceso cuota
             03608:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025 - AID pendientes aplicación a principio
-                p...
+                periodo - Sin derecho conversión crédito exigible
             03609:
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
                 Ejercicio generación - 2025 - AID convertidos en crédito exigible
-                per...
+                periodo
             '03610':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2025 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2025 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible
             '03611':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2025 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2025 - AID pendientes aplicación periodos futuros
+                - Con derecho conversión crédito exigible exceso cuota
             '03612':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS -
-                Ejercicio generación - 2025 - AID pendientes aplicación periodos futu...
+                Ejercicio generación - 2025 - AID pendientes aplicación periodos futuros
+                - Sin derecho conversión crédito exigible
             '03613':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025 - Exceso cuota líquida positiva pendiente a principio per...
+                - 2025 - Exceso cuota líquida positiva pendiente a principio periodo
             '03614':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2025 - Exceso cuota líquida positiva aplicado periodos impositivos
+                2008 a 2015
             '03615':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025 - Exceso cuota líquida positiva aplicado periodos imposit...
+                - 2025 - Exceso cuota líquida positiva aplicado periodos impositivos
+                iniciados a partir 2016
             '03616':
               label: Conversión activos impuesto diferido crédito exigible frente
                 Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación
-                - 2025 - Exceso cuota líquida positiva pendiente aplicación peri...
+                - 2025 - Exceso cuota líquida positiva pendiente aplicación periodos
+                futuros
             '03617':
               label: Dotaciones deterioro créditos u otros activos - Ejercicio generación
                 - 2025(*) - Dotaciones pendientes integración a principio periodo

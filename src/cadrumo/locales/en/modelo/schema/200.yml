@@ -12211,11 +12211,12 @@ modelo:
             00091:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of offsetting negative tax bases - Offset of special
-                tax base year 2024 - Pending application in pe...'
+                tax base year 2024 - Pending application in future periods'
             00092:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of offsetting negative tax bases - Offset of tax
-                base for other activities year 2024 - Pending applic...'
+                base for other activities year 2024 - Pending application at the start
+                of the period/generated during the period'
             00097:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of offsetting negative tax bases - Offset of tax
@@ -12223,11 +12224,12 @@ modelo:
             00098:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of offsetting negative tax bases - Offset of tax
-                base for other activities year 2024 - Pending applic...'
+                base for other activities year 2024 - Pending application in future
+                periods'
             '00370':
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Exemption on dividends or profit shares of resident entities
-                (art. 21.1, 21.10 and DT 40 LIS) - Decre...
+                (art. 21.1, 21.10 and DT 40 LIS) - Decreases
             00482:
               label: Statement of changes in equity (II) - Income and expenses recognized
                 in equity - Tax income to be distributed over several periods - Own
@@ -12247,37 +12249,41 @@ modelo:
             '00775':
               label: Settlement I - Detail of corrections to profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
-                infrastructure (DA 18 LIS RDL 5/2023) - Increase...
+                infrastructure (DA 18 LIS RDL 5/2023) - Increases
             '00776':
               label: Settlement I - Detail of corrections to profit and loss account
                 result - Accelerated depreciation of certain vehicles and new charging
-                infrastructure (DA 18 LIS RDL 5/2023) - Decrea...
+                infrastructure (DA 18 LIS RDL 5/2023) - Decreases
             00796:
               label: Profit and loss account (II) - Continuing operations - Interest
                 and mandatory return on contributions to share capital and other funds
-                classified with debt characteristics (coo...
+                classified with debt characteristics (cooperatives)
             00812:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation period - 2025(*) - DTA pending application in future periods...
+                Generation period - 2025(*) - DTA pending application in future periods
+                - With the right to convert into receivable credit for excess tax
+                liability
             00816:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation period - 2025(*) - DTA pending application in future periods...
+                Generation period - 2025(*) - DTA pending application in future periods
+                - Without the right to convert into receivable credit
             00817:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Excess positive net tax liability - Generation
-                period - 2025(*) - Excess positive net tax liability pending at beginning...
+                period - 2025(*) - Excess positive net tax liability pending at the
+                beginning of the period
             00878:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Excess positive net tax liability - Generation
                 period - 2025(*) - Excess positive net tax liability applied in tax
-                periods...
+                periods 2008 to 2015
             00879:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Excess positive net tax liability - Generation
                 period - 2025(*) - Excess positive net tax liability applied in tax
-                periods...
+                periods starting from 2016
             00881:
               label: Deductions to incentivize certain activities - 2023 Investments
                 in West African territories and advertising and publicity expenses
@@ -12286,95 +12292,117 @@ modelo:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Excess positive net tax liability - Generation
                 period - 2025(*) - Excess positive net tax liability pending application
-                p...
+                for future periods
             00925:
               label: Settlement III - Tax base - Income that does not limit offsetting
                 of negative tax bases - Income corresponding to reversal of impairment
-                losses on securities representing the par...
+                losses on securities representing the participation in capital or
+                equity (Transitional Provision 16.3 LIS). - Decreases
             00932:
               label: Settlement III - Tax base - Only cooperative companies - Income
                 corresponding to reversal of impairment losses on securities representing
-                participation in capital or...
+                participation in capital or equity, for cooperatives (at the tax liability
+                level) (Transitional Provision 16.3 LIS) - Decreases
             00933:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2015 without repeated donations to the same e...
+                - 2015 without repeated donations to the same entity - Pending/generated
+                deduction
             00934:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2015 without repeated donations to the same e...
+                - 2015 without repeated donations to the same entity - Applied in
+                this settlement
             00943:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2015 - With repeated donations to the same...
+                - 2015 - With repeated donations to the same entity - Pending/generated
+                deduction
             00944:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2015 - With repeated donations to the same...
+                - 2015 - With repeated donations to the same entity - Applied in this
+                settlement
             00949:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 without repeated donations to the same e...
+                - 2016 without repeated donations to the same entity - Pending/generated
+                deduction
             00950:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 without repeated donations to the same e...
+                - 2016 without repeated donations to the same entity - Applied in
+                this settlement
             00951:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 without repeated donations to the same e...
+                - 2016 without repeated donations to the same entity - Pending application
+                in future periods
             00952:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 - With repeated donations to the same...
+                - 2016 - With repeated donations to the same entity - Pending/generated
+                deduction
             00953:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 - With repeated donations to the same...
+                - 2016 - With repeated donations to the same entity - Applied in this
+                settlement
             00954:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2016 - With repeated donations to the same...
+                - 2016 - With repeated donations to the same entity - Pending application
+                in future periods
             00958:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2017 - With repeated donations to the same...
+                - 2017 - With repeated donations to the same entity - Pending/generated
+                deduction
             00959:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2017 - With repeated donations to the same...
+                - 2017 - With repeated donations to the same entity - Applied in this
+                settlement
             00963:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2017 - With repeated donations to the same...
+                - 2017 - With repeated donations to the same entity - Pending application
+                in future periods
             00964:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 without repeated donations to the same e...
+                - 2018 without repeated donations to the same entity - Pending/generated
+                deduction
             00965:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 without repeated donations to the same e...
+                - 2018 without repeated donations to the same entity - Applied in
+                this settlement
             00969:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 without repeated donations to the same e...
+                - 2018 without repeated donations to the same entity - Pending application
+                in future periods
             00970:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 - With repeated donations to the same...
+                - 2018 - With repeated donations to the same entity - Pending/generated
+                deduction
             00971:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 - With repeated donations to the same...
+                - 2018 - With repeated donations to the same entity - Applied in this
+                settlement
             00972:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2018 - With repeated donations to the same...
+                - 2018 - With repeated donations to the same entity - Pending application
+                in future periods
             00973:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 without repeated donations to the same e...
+                - 2019 without repeated donations to the same entity - Pending/generated
+                deduction
             00974:
               label: Deduction for donations to non-profit entities - Deduction base
                 for donations to non-profit entities in the tax period - Donations
@@ -12382,51 +12410,61 @@ modelo:
             00975:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 without repeated donations to the same e...
+                - 2019 without repeated donations to the same entity - Applied in
+                this settlement
             00979:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 without repeated donations to the same e...
+                - 2019 without repeated donations to the same entity - Pending application
+                in future periods
             00980:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 - With repeated donations to the same...
+                - 2019 - With repeated donations to the same entity - Pending/generated
+                deduction
             00981:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 - With repeated donations to the same...
+                - 2019 - With repeated donations to the same entity - Applied in this
+                settlement
             00982:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2019 - With repeated donations to the same...
+                - 2019 - With repeated donations to the same entity - Pending application
+                in future periods
             00983:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2020 without repeated donations to the same e...
+                - 2020 without repeated donations to the same entity - Pending/generated
+                deduction
             00984:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2020 without repeated donations to the same e...
+                - 2020 without repeated donations to the same entity - Applied in
+                this settlement
             00985:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2020 without repeated donations to the same e...
+                - 2020 without repeated donations to the same entity - Pending application
+                in future periods
             00987:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Special tax
-                base compensation year 2023 - Pending application at pri...'
+                base compensation year 2023 - Pending application at the start of
+                the period/generated during the period'
             00988:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Special tax
-                base compensation year 2023 - Applied in this settlem...'
+                base compensation year 2023 - Applied in this settlement'
             00989:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Special tax
-                base compensation year 2023 - Pending application in pe...'
+                base compensation year 2023 - Pending application in future periods'
             '01000':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2020 - With repeated donations to the same...
+                - 2020 - With repeated donations to the same entity - Pending/generated
+                deduction
             '01005':
               label: Settlement I - Detail of corrections to profit and loss account
                 result - Amortization of intangible fixed assets and goodwill (art.
@@ -12434,123 +12472,153 @@ modelo:
             '01006':
               label: Settlement I - Detail of corrections to profit and loss account
                 result - Amortization of intangible fixed assets and goodwill (art.
-                12.2 LIS) and amortization under art. DT 13th.1 LIS - Decrea...
+                12.2 LIS) and amortization under art. DT 13th.1 LIS - Decreases
             '01007':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2020 - With repeated donations to the same...
+                - 2020 - With repeated donations to the same entity - Pending application
+                in future periods
             01008:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 without repeated donations to the same e...
+                - 2021 without repeated donations to the same entity - Pending/generated
+                deduction
             '01010':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Tax base compensation
-                for other activities year 2023 - Pending applic...'
+                for other activities year 2023 - Pending application at the start
+                of the period/generated during the period'
             '01017':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 without repeated donations to the same e...
+                - 2021 without repeated donations to the same entity - Applied in
+                this settlement
             '01020':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration (art. 130 LIS) - Payment for conversion of
-                deferred tax assets into receivable credit again...
+                deferred tax assets into receivable credit against the tax administration
+                (art. 130 LIS) - Estado
             '01021':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration (art. 130 LIS) - Compensation for conversion
-                of deferred tax assets into receivable credit...
+                of deferred tax assets into receivable credit against the tax administration
+                (art. 130 LIS) - Estado
             '01022':
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Temporary business association, adjustments for exempt income
-                from participating abroad in analogous collaboration formulas...
+                from participating abroad in analogous collaboration formulas to UTEs
+                (art. 45.2 LIS) - Increases
             '01023':
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Temporary business association, adjustments for exempt income
-                from participating abroad in analogous collaboration formulas...
+                from participating abroad in analogous collaboration formulas to UTEs
+                (art. 45.2 LIS) - Decreases
             '01024':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 without repeated donations to the same e...
+                - 2021 without repeated donations to the same entity - Pending application
+                in future periods
             '01025':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 - With repeated donations to the same...
+                - 2021 - With repeated donations to the same entity - Pending/generated
+                deduction
             '01035':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 - With repeated donations to the same...
+                - 2021 - With repeated donations to the same entity - Applied in this
+                settlement
             '01036':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2021 - With repeated donations to the same...
+                - 2021 - With repeated donations to the same entity - Pending application
+                in future periods
             '01043':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration (art. 130 LIS) - Payment for conversion of
-                deferred tax assets into receivable credit again...
+                deferred tax assets into receivable credit against the tax administration
+                (art. 130 LIS) - D. Forales/Navarra (Totals)
             '01044':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration (art. 130 LIS) - Compensation for conversion
-                of deferred tax assets into receivable credit...
+                of deferred tax assets into receivable credit against the tax administration
+                (art. 130 LIS) - D. Forales/Navarra (Totals)
             '01061':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same e...
+                - 2022 without repeated donations to the same entity - Pending/generated
+                deduction
             '01062':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same e...
+                - 2022 without repeated donations to the same entity - Applied in
+                this settlement
             '01072':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 without repeated donations to the same e...
+                - 2022 without repeated donations to the same entity - Pending application
+                in future periods
             '01073':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same...
+                - 2022 - With repeated donations to the same entity - Pending/generated
+                deduction
             '01074':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same...
+                - 2022 - With repeated donations to the same entity - Applied in this
+                settlement
             01078:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2022 - With repeated donations to the same...
+                - 2022 - With repeated donations to the same entity - Pending application
+                in future periods
             01081:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - Total - Pending application in future peri...
+                - Total - Pending application in future periods
             '01117':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - 2022 - Total DTA amount (art. 130.6 a) pending application
+                at the beginning of the period
             01119:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application at beginning p...
+                Generation year - 2022 - DTA pending application at the beginning
+                of the period - With the right to convert into receivable credit
             '01120':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application at beginning p...
+                Generation year - 2022 - DTA pending application at the beginning
+                of the period - With the right to convert into receivable credit for
+                excess tax liability
             '01121':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application at beginning p...
+                Generation year - 2022 - DTA pending application at the beginning
+                of the period - Without the right to convert into receivable credit
             '01122':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA converted into receivable credit per...
+                Generation year - 2022 - DTA converted into receivable credit for
+                the period
             '01131':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application in future peri...
+                Generation year - 2022 - DTA pending application in future periods
+                - With the right to convert into receivable credit
             '01132':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application in future peri...
+                Generation year - 2022 - DTA pending application in future periods
+                - With the right to convert into receivable credit for excess tax
+                liability
             '01133':
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2022 - DTA pending application in future peri...
+                Generation year - 2022 - DTA pending application in future periods
+                - Without the right to convert into receivable credit
             '01177':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Tax base compensation
@@ -12558,7 +12626,7 @@ modelo:
             '01200':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of negative tax base compensation - Tax base compensation
-                for other activities year 2023 - Pending applic...'
+                for other activities year 2023 - Pending application in future periods'
             '01240':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - a) Financial expenses of the tax period arising
@@ -12572,15 +12640,16 @@ modelo:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - d) Financial expenses pending deduction from
                 prior periods affected by art. 16.5 and/or 83 LIS, deductible after
-                this...
+                this limit ([b≥c1+d], ≥ 0]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Financial expenses pending deduction from prior
-                tax periods affected by art. 16.5 and/or 83 LIS deductibl...
+                tax periods affected by art. 16.5 and/or 83 LIS deductible after applying
+                the 2 limits (≤ [d], ≥ 0)
             01259:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - n) Financial expenses pending deduction from prior
-                tax periods not affected by art. 16.5 and/or 83 LIS applic...
+                tax periods not affected by art. 16.5 and/or 83 LIS applied
             '01276':
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Negative tax bases generated within the tax group by the
@@ -12589,22 +12658,22 @@ modelo:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Payment for conversion of assets
-                - Ara...
+                - Araba/Álava
             '01301':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Payment for conversion of assets
-                - Gip...
+                - Gipuzkoa
             '01302':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Payment for conversion of assets
-                - Biz...
+                - Bizkaia
             '01303':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
                 tax administration (art. 130 LIS) - Payment for conversion of assets
-                - Nav...
+                - Navarra
             '01305':
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into receivable credit against the
@@ -12628,27 +12697,33 @@ modelo:
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
-                - 2023 - Without repeated donations to the same...
+                - 2023 - Without repeated donations to the same entity - Pending/generated
+                deduction
             '01372':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - 2023 - Without repeat donations to the same...
+                deduction - 2023 - Without repeat donations to the same entity - Applied
+                in this settlement
             '01373':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - 2023 - Without repeat donations to the same...
+                deduction - 2023 - Without repeat donations to the same entity - Pending
+                application in future periods
             '01374':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - 2023 - With repeat donations to the same...
+                deduction - 2023 - With repeat donations to the same entity - Pending/generated
+                deduction
             '01375':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - 2023 - With repeat donations to the same...
+                deduction - 2023 - With repeat donations to the same entity - Applied
+                in this settlement
             '01376':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - 2023 - With repeat donations to the same...
+                deduction - 2023 - With repeat donations to the same entity - Pending
+                application in future periods
             01408:
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 and earlier - Allowances pending integration at start
@@ -12660,52 +12735,64 @@ modelo:
             '01414':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - 2023 - Total DTA amount (art. 130.6 a) pending application
+                at start of period
             '01416':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application at start of p...
+                Generation year - 2023 - DTA pending application at start of period
+                - With the right to convert into enforceable credit
             '01417':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application at start of p...
+                Generation year - 2023 - DTA pending application at start of period
+                - With the right to convert into enforceable credit for excess tax
+                liability
             01418:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application at start of p...
+                Generation year - 2023 - DTA pending application at start of period
+                - Without the right to convert into enforceable credit
             01419:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA converted into enforceable credit for...
+                Generation year - 2023 - DTA converted into enforceable credit for
+                the period
             '01420':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application in future peri...
+                Generation year - 2023 - DTA pending application in future periods
+                - With the right to convert into enforceable credit
             '01421':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application in future peri...
+                Generation year - 2023 - DTA pending application in future periods
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01422':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2023 - DTA pending application in future peri...
+                Generation year - 2023 - DTA pending application in future periods
+                - Without the right to convert into enforceable credit
             '01423':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - 2023 - Excess positive net tax liability pending at start of
-                per...
+                period
             '01424':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax liability applied in tax peri...
+                year - 2023 - Excess positive net tax liability applied in tax periods
+                2008 to 2015
             '01425':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - 2023 - Excess positive net tax liability applied in tax peri...
+                year - 2023 - Excess positive net tax liability applied in tax periods
+                starting from 2016
             '01473':
               label: Impairment allowances for receivables or other assets - Generation
-                year - 2007 i anteriors - Allowances pending integration at start
-                of period - That have not met tax deductibility condit...
+                year - 2007 and earlier - Allowances pending integration at start
+                of period - That have not met tax deductibility conditions
             '01476':
               label: Impairment allowances for receivables or other assets - Generation
                 year - 2007 i anteriors - Allowances pending integration in future
@@ -12717,13 +12804,13 @@ modelo:
             '01524':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
-                33 and Additional Provision 13 LIS - Generation year - 2007 i anteriors
-                - Total DTA amount p...
+                33 and Additional Provision 13 LIS - Generation year - 2007 and earlier
+                - Total DTA amount pending application at start of period
             '01525':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
-                33 and Additional Provision 13 LIS - Generation year - 2007 i anteriors
-                - DTA applied in the...
+                33 and Additional Provision 13 LIS - Generation year - 2007 and earlier
+                - DTA applied in the period
             '01526':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
@@ -12732,48 +12819,53 @@ modelo:
             '01527':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
-                33 and Additional Provision 13 LIS - Generation year - 2007 i anteriors
-                - DTA pending appli...
+                33 and Additional Provision 13 LIS - Generation year - 2007 and earlier
+                - DTA pending application in future periods - Without patrimonial
+                benefit
             01528:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
-                33 and Additional Provision 13 LIS - Generation year - 2007 i anteriors
-                - DTA pending appli...
+                33 and Additional Provision 13 LIS - Generation year - 2007 and earlier
+                - DTA pending application in future periods - Total amount of DTA
+                pending
             01529:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - Total DTA amount p...
+                to 2015 - Total DTA amount pending application at start of period
             '01530':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - Positive net tax liab...
+                to 2015 - Positive net tax liability
             '01531':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - With patrimonial benefit...
+                to 2015 - With patrimonial benefit
             '01532':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - DTA pending appli...
+                to 2015 - DTA pending application in future periods - Without patrimonial
+                benefit
             '01533':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - DTA pending appli...
+                to 2015 - DTA pending application in future periods - Without patrimonial
+                benefit. Benefit reduction for excess tax liability
             '01534':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                a 2015 - DTA pending appli...
+                to 2015 - DTA pending application in future periods - Total amount
+                of DTA pending
             '01535':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total - Total
-                DTA amount pending app...
+                DTA amount pending application at start of period
             '01536':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
@@ -12783,85 +12875,107 @@ modelo:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total - DTA
-                pending application in peri...
+                pending application in future periods - Without patrimonial benefit
             '01540':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total - DTA
-                pending application in peri...
+                pending application in future periods - Without patrimonial benefit.
+                Benefit reduction for excess tax liability
             '01541':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total - DTA
-                pending application in peri...
+                pending application in future periods - Total amount of DTA pending
             '01542':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - 2016 - Total DTA amount (art. 130.6 a) pending application
+                at start of period
             '01544':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application at start of p...
+                Generation year - 2016 - DTA pending application at start of period
+                - With the right to convert into enforceable credit
             '01545':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application at start of p...
+                Generation year - 2016 - DTA pending application at start of period
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01546':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application at start of p...
+                Generation year - 2016 - DTA pending application at start of period
+                - Without the right to convert into enforceable credit
             01548:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA converted into enforceable credit for...
+                Generation year - 2016 - DTA converted into enforceable credit for
+                the period
             01549:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application in future peri...
+                Generation year - 2016 - DTA pending application in future periods
+                - With the right to convert into enforceable credit
             '01550':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application in future peri...
+                Generation year - 2016 - DTA pending application in future periods
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01551':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2016 - DTA pending application in future peri...
+                Generation year - 2016 - DTA pending application in future periods
+                - Without the right to convert into enforceable credit
             '01552':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - 2017 - Total DTA amount (art. 130.6 a) pending application
+                at start of period
             '01554':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application at start of p...
+                Generation year - 2017 - DTA pending application at start of period
+                - With the right to convert into enforceable credit
             '01555':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application at start of p...
+                Generation year - 2017 - DTA pending application at start of period
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01556':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application at start of p...
+                Generation year - 2017 - DTA pending application at start of period
+                - Without the right to convert into enforceable credit
             '01557':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA converted into enforceable credit for...
+                Generation year - 2017 - DTA converted into enforceable credit for
+                the period
             01558:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application in future peri...
+                Generation year - 2017 - DTA pending application in future periods
+                - With the right to convert into enforceable credit
             01559:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application in future peri...
+                Generation year - 2017 - DTA pending application in future periods
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01560':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2017 - DTA pending application in future peri...
+                Generation year - 2017 - DTA pending application in future periods
+                - Without the right to convert into enforceable credit
             '01561':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - Total - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - Total - Total DTA amount (art. 130.6 a) pending
+                application at start of period
             '01563':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
@@ -12877,19 +12991,24 @@ modelo:
             '01567':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - Total - DTA converted into enforceable credit fo...
+                Generation year - Total - DTA converted into enforceable credit for
+                the period
             01568:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - Total - DTA pending application in future peri...
+                Generation year - Total - DTA pending application in future periods
+                - With the right to convert into enforceable credit
             01569:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - Total - DTA pending application in future peri...
+                Generation year - Total - DTA pending application in future periods
+                - With the right to convert into enforceable credit for excess tax
+                liability
             '01570':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - Total - DTA pending application in future peri...
+                Generation year - Total - DTA pending application in future periods
+                - Without the right to convert into enforceable credit
             '01574':
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Transactions under art. 19 LIS other than change of residence
@@ -12909,29 +13028,31 @@ modelo:
             01578:
               label: Settlement IV - Rectifying return - Amount payable as a result
                 of processing prior self-assessments or administrative assessments
-                corresponding to tax period 2025...
+                corresponding to tax period 2025 - Estado
             01579:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - Total - Excess positive net tax liability pending at start
-                of pe...
+                of period
             01580:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - Total - Excess positive net tax liability applied in tax peri...
+                year - Total - Excess positive net tax liability applied in tax periods
+                2008 to 2015
             01581:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
-                year - Total - Excess positive net tax liability applied in tax peri...
+                year - Total - Excess positive net tax liability applied in tax periods
+                starting from 2016
             01582:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - Total - Excess positive net tax liability pending application
-                for...
+                for future periods
             01583:
               label: Settlement IV - Rectifying return - Amount payable as a result
                 of processing prior self-assessments or administrative assessments
-                corresponding to tax period 2025...
+                corresponding to tax period 2025 - D. Forales/Navarra (Totals)
             01584:
               label: Settlement IV - Rectifying return - Refund agreed by the Tax
                 Agency as a result of processing prior self-assessments or administrative
@@ -12943,12 +13064,12 @@ modelo:
             01589:
               label: Settlement II - Detail of corrections to profit and loss account
                 result - Foreign tax borne by the taxpayer, not deductible because
-                it affects income with double-taxation deduct. - Decreas...
+                it affects income with double-taxation deduct. - Decreases
             01590:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
                 33 and Additional Provision 13 LIS - Generation year - Total 2008
-                to 2015 - DTA applied in the...
+                to 2015 - DTA applied in the period
             01591:
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Transitional Provision
@@ -13015,22 +13136,22 @@ modelo:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Rectifying return: Refund
-                - Gipuzk...'
+                - Gipuzkoa'
             '01660':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Rectifying return: Refund
-                - Bizkai...'
+                - Bizkaia'
             '01661':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Rectifying return: Refund
-                - Navarr...'
+                - Navarra'
             '01662':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Conversion result: Payment
-                - A...'
+                - Araba/Álava'
             '01663':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
@@ -13040,12 +13161,12 @@ modelo:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Conversion result: Payment
-                - B...'
+                - Bizkaia'
             '01665':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration (art. 130 LIS) - Conversion result: Payment
-                - N...'
+                - Navarra'
             '01666':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
@@ -13061,7 +13182,8 @@ modelo:
             01669:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration (art. 130 LIS) - Conversion result: Offset...'
+                the Tax Administration (art. 130 LIS) - Conversion result: Offset
+                - Navarra'
             '01670':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
@@ -13077,11 +13199,12 @@ modelo:
             '01673':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into enforceable credit against
-                the Tax Administration (art. 130 LIS) - Conversion result: Payable...'
+                the Tax Administration (art. 130 LIS) - Conversion result: Payable
+                - Navarra'
             01679:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Increase - Corrections for
-                the year - Temporary (originating in prior years...
+                the year - Temporary (originating in prior years)
             01683:
               label: Deductions to incentivize certain activities - 2026(****) Other
                 deductions relating to support programmes for events of exceptional
@@ -13093,7 +13216,7 @@ modelo:
             01685:
               label: Deductions to incentivize certain activities - 2026(****) Other
                 deductions relating to support programmes for events of exceptional
-                public interest - Pending application in future peri...
+                public interest - Pending application in future periods
             01686:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Decrease - Corrections for
@@ -13101,7 +13224,7 @@ modelo:
             01687:
               label: Transactions under art. 19 LIS other than change of residence
                 to European Union or EEA Member States - Decrease - Corrections for
-                the year - Temporary (originating in prior years...
+                the year - Temporary (originating in prior years)
             01692:
               label: Deduction for donations to non-profit entities - General donations
                 - Subtotal donations 2015 to 2025 without repeat donations to the
@@ -13113,7 +13236,7 @@ modelo:
             01694:
               label: Deduction for donations to non-profit entities - General donations
                 - Subtotal donations 2015 to 2025 without repeat donations to the
-                same entity. - Pending application in peri...
+                same entity. - Pending application in future periods
             01695:
               label: Deduction for donations to non-profit entities - General donations
                 - Subtotal donations 2015 to 2025 with repeat donations to the same
@@ -13125,22 +13248,22 @@ modelo:
             01697:
               label: Deduction for donations to non-profit entities - General donations
                 - Subtotal donations 2015 to 2025 with repeat donations to the same
-                entity - Pending application in perio...
+                entity - Pending application in future periods
             '01704':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - Subtotal donations 2015 to 2025 without repeat ... - Pending/generated
-                deduction...
+                deduction - Subtotal donations 2015 to 2025 without repeated donations
+                to the same entity - Pending/generated deduction
             '01705':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - Subtotal donations 2015 to 2025 without repeat ... - Applied
-                in this settlement...
+                deduction - Subtotal donations 2015 to 2025 without repeated donations
+                to the same entity - Applied in this settlement
             '01706':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
-                deduction - Subtotal donations 2015 to 2025 without repeat ... - Pending
-                application in future periods...
+                deduction - Subtotal donations 2015 to 2025 without repeated donations
+                to the same entity - Pending application in future periods
             01729:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and other donations eligible for increased
@@ -13152,41 +13275,48 @@ modelo:
             '01754':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2018 - Total DTA amount (art. 130.6 a) pendi...
+                Generation year - 2018 - Total DTA amount (art. 130.6 a) pending application
+                at start of period
             '01756':
               label: Conversion of deferred tax assets into enforceable credit against
                 the Tax Administration - Deferred tax assets (DTA). Art. 130 LIS -
-                Generation year - 2018 - DTA pending application at start of p...
+                Generation year - 2018 - DTA pending application at start of period
+                - With the right to convert into enforceable credit
             '01757':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             01758:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             01759:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             '01760':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             '01761':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             '01762':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2018 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             '01765':
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on dividends or profit-sharing income from
@@ -13194,19 +13324,21 @@ modelo:
             01793:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Withholdings on other items other than investment income or urban
-                property leases attrib...
+                property leases attributed by income-attribution entities - Made to
+                the entity
             01794:
               label: Settlement IV - Tax due for the year, payable or refundable -
                 Withholdings on other items other than investment income or urban
-                property leases attrib...
+                property leases attributed by income-attribution entities - Allocated
+                by AIEs and UTEs
             01820:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Increase - Adjustments
-                for the tax year - Temporary (with origen en tax years ant...
+                for the tax year - Temporary (originating in previous tax years)
             01824:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Income from the transfer of fixed assets obtained
-                by Port Authorities (Additional Provision 68, Law 6/2018) - Disminuc...
+                by Port Authorities (Additional Provision 68, Law 6/2018) - Decreases
             01868:
               label: Adjustments for impairment of securities representing holdings
                 in capital or equity (Transitional Provision 16.1 and 2 LIS) - Decrease
@@ -13225,23 +13357,23 @@ modelo:
             01888:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Subtotal
-                of offset of special taxable base - Carried forward for applicación
-                en...'
+                of offset of special taxable base - Pending application in future
+                periods'
             01889:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Subtotal
-                of offset of taxable base from other activities - Carried forward
-                for appli...'
+                of offset of taxable base from other activities - Pending application
+                at the start of the period/generated during the period'
             01890:
               label: Settlement III - Taxable base - Special regime for ships and
                 shipping companies in the Canary Islands - Offset of negative taxable
                 bases from prior periods relating to the remaining part of the taxable
-                base of...
+                base of other activities
             01891:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Subtotal
-                of offset of taxable base from other activities - Carried forward
-                for appli...'
+                of offset of taxable base from other activities - Pending application
+                in future periods'
             01899:
               label: Deductions to incentivise certain activities - 2022 Investments
                 in Western Africa territory and advertising and promotion expenses
@@ -13270,20 +13402,21 @@ modelo:
             01930:
               label: Deductions to incentivise certain activities - 2025(*) Investments
                 in Western Africa territory and advertising and promotion expenses
-                (art. 27 bis Law 19/1994) (TAP) - Carried forward de application en
-                period...
+                (art. 27 bis Law 19/1994) (TAP) - Pending application in future periods
             01935:
               label: R&D&i deductions excluded from the limit - Additional information
                 for calculating deduction limits - Corporate group (only for entities
-                that have marked code 00039 of the characteristics of the de...
+                that have marked code 00039 of the characteristics of the return)
+                - Annual amount of the deduction for research and development expenses
+                applied or paid by the rest of the group
             01961:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
-                for the tax year - Temporary (originating in this tax yecic...
+                for the tax year - Temporary (originating in the current tax year)
             01962:
               label: Free depreciation of certain vehicles and new charging infrastructure
                 (Additional Provision 18 LIS, RDL 4/2024) - Decrease - Adjustments
-                for the tax year - Temporary (with origen en tax years...
+                for the tax year - Temporary (originating in previous tax years)
             02079:
               label: 'Additional information for calculating deduction limits - 2025:
                 Financier: deduction for Spanish film productions in the Canary Islands
@@ -13311,67 +13444,73 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Total amount of deferred tax assets (art.
-                130.6 a) carried forward pending...
+                130.6 a) carried forward pending application at the start of the period
             '02102':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit
             '02103':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             '02104':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             '02105':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             '02106':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             '02107':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             02108:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2019 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             02181:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on dividends or profit-sharing income from
                 non-resident entities (art. 21.1, 21.10 and Transitional Provision
-                40 LIS) - Di...
+                40 LIS) - Decreases
             02182:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained from the transfer of
                 securities of resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Aume...
+                Provision 40 LIS) - Increases
             02183:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained from the transfer of
                 securities of resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - Dism...
+                Provision 40 LIS) - Decreases
             02184:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained from the transfer of
                 securities of non-resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - A...
+                Provision 40 LIS) - Increases
             02185:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained from the transfer of
                 securities of non-resident entities (art. 21.3, 21.10 and Transitional
-                Provision 40 LIS) - D...
+                Provision 40 LIS) - Decreases
             02186:
               label: Settlement II - Detail of adjustments to the profit and loss
                 account result - Exemption on income obtained in the cases of art.
@@ -13396,42 +13535,48 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Total amount of deferred tax assets (art.
-                130.6 a) carried forward pending...
+                130.6 a) carried forward pending application at the start of the period
             '02270':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit
             '02271':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             '02272':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             '02273':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             '02274':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             '02275':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             '02276':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2020 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             02287:
               label: 'Additional information for calculating deduction limits - 2025:
                 Deduction for research and development in the Canary Islands generated
@@ -13443,11 +13588,13 @@ modelo:
             '02301':
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
-                adjustment (excluding adjustments for corporate income tax and I...
+                adjustment (excluding adjustments for corporate income tax and Complementary
+                Tax) - Increases
             '02302':
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Permanent
-                adjustment (excluding adjustments for corporate income tax and I...
+                adjustment (excluding adjustments for corporate income tax and Complementary
+                Tax) - Decreases
             '02304':
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
@@ -13459,20 +13606,21 @@ modelo:
             02308:
               label: Detail of adjustments to the profit and loss result - Adjustments
                 to the profit and loss account result for the tax year - Temporary
-                adjustment originating in prior tax years - Disminuc...
+                adjustment originating in prior tax years - Decreases
             '02311':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Expenses subject to the deduction for investments made by
-                port authorities (art. 15 n) LIS) - Aument...
+                port authorities (art. 15 n) LIS) - Increases
             02369:
               label: Limitation on the deductibility of finance costs - Limit under
                 art. 16.1 and 16.2 LIS - k) Overall limit on the deduction of net
                 finance costs, in any case EUR 1 million if the limit on the deduction
-                o...
+                of net finance costs plus the addition of the limit stated in point
+                j) is less than EUR 1 million
             02378:
               label: Joint taxation, State and regional (foral) administrations -
                 Discrepancy in administrative criteria for certain cases of an amending
-                self-assessment that should not be included in other boxes - Araba/Ála...
+                self-assessment that should not be included in other boxes - Araba/Álava
             02379:
               label: Joint taxation, State and regional (foral) administrations -
                 Discrepancy in administrative criteria for certain cases of an amending
@@ -13492,54 +13640,63 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Total amount of deferred tax assets (art.
-                130.6 a) carried forward pending...
+                130.6 a) carried forward pending application at the start of the period
             '02420':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit
             '02421':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             '02422':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             '02423':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             '02424':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             '02425':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             '02426':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2021 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             '02472':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2017 Without repeated donations to the same e...
+                deduction - 2017 Without repeated donations to the same entity - Pending/generated
+                deduction
             '02473':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2017 Without repeated donations to the same e...
+                deduction - 2017 Without repeated donations to the same entity - Applied
+                in this settlement
             '02474':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2017 Without repeated donations to the same e...
+                deduction - 2017 Without repeated donations to the same entity - Pending
+                application in future periods
             '02475':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
@@ -13551,7 +13708,7 @@ modelo:
             02486:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Result of the self-assessment including the first
-                instalment under art. 19.1 LIS - D. Forales/Nav...
+                instalment under art. 19.1 LIS - D. Forales/Navarra (Totals)
             02487:
               label: Settlement IV - Instalment option in cases of change of residence
                 (art. 19.1 LIS) - Amending return - Result of the self-assessment
@@ -13563,23 +13720,28 @@ modelo:
             02490:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: offse...'
+                the conversion of deferred tax assets after regularisation: offset
+                - Estado'
             02491:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: offse...'
+                the conversion of deferred tax assets after regularisation: offset
+                - D. Forales/Navarra (Totals)'
             02492:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: payable...'
+                the conversion of deferred tax assets after regularisation: payable
+                - Total'
             02493:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: payable...'
+                the conversion of deferred tax assets after regularisation: payable
+                - Estado'
             02494:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: payable...'
+                the conversion of deferred tax assets after regularisation: payable
+                - D. Forales/Navarra (Totals)'
             02495:
               label: 'Additional information for calculating deduction limits - 2025:
                 Producer: deduction for Spanish film productions in the Canary Islands
@@ -13591,12 +13753,12 @@ modelo:
             02578:
               label: 30% deduction on the amount of accounting depreciation expense
                 (excluding small enterprises) (art. 7 Law 16/2012) - Decrease - Adjustments
-                for the tax year - Temporary (with origen en tax years ant...
+                for the tax year - Temporary (originating in previous tax years)
             02583:
               label: Depreciation of intangible fixed assets and goodwill (art. 12.2
                 LIS) and depreciation under Transitional Provision 13.1 LIS - Increase
-                - Adjustments for the tax year - Temporary (with origen en tax years
-                anterio...
+                - Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             02587:
               label: Depreciation of intangible fixed assets and goodwill (art. 12.2
                 LIS) and depreciation under Transitional Provision 13.1 LIS - Decrease
@@ -13605,8 +13767,8 @@ modelo:
             02588:
               label: Depreciation of intangible fixed assets and goodwill (art. 12.2
                 LIS) and depreciation under Transitional Provision 13.1 LIS - Decrease
-                - Adjustments for the tax year - Temporary (with origen en tax years
-                ant...
+                - Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             02598:
               label: Depreciation of fixed assets used in research and development
                 activities (art. 12.3 b) LIS) - Decrease - Adjustments for the tax
@@ -13615,12 +13777,12 @@ modelo:
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
                 Provision 33.1 LIS. - Increase - Adjustments for the tax year - Temporary
-                (with o...
+                (originating in the current tax year)
             '02663':
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
                 Provision 33.1 LIS. - Increase - Adjustments for the tax year - Temporary
-                (with o...
+                (originating in previous tax years)
             '02666':
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
@@ -13630,12 +13792,12 @@ modelo:
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
                 Provision 33.1 LIS. - Decrease - Adjustments for the tax year - Temporary
-                (c...
+                (originating in the current tax year)
             02668:
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
                 Provision 33.1 LIS. - Decrease - Adjustments for the tax year - Temporary
-                (c...
+                (originating in previous tax years)
             02669:
               label: Impairment losses under art. 13.1 LIS and provisions and expenses
                 (art. 14.1 and 14.2 LIS) referred to in art. 11.12 and Transitional
@@ -13645,22 +13807,22 @@ modelo:
               label: Impairment losses on fixed assets, investment property and intangible
                 assets, including goodwill (art. 13.2 a) and Transitional Provision
                 15 LIS) - Increase - Adjustments for the tax year - Temporary (originating
-                in this tax yecic...
+                in the current tax year)
             '02673':
               label: Impairment losses on fixed assets, investment property and intangible
                 assets, including goodwill (art. 13.2 a) and Transitional Provision
-                15 LIS) - Increase - Adjustments for the tax year - Temporary (with
-                origen en tax years...
+                15 LIS) - Increase - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             '02677':
               label: Impairment losses on fixed assets, investment property and intangible
                 assets, including goodwill (art. 13.2 a) and Transitional Provision
-                15 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                origen en el eje...
+                15 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in the current tax year)
             02678:
               label: Impairment losses on fixed assets, investment property and intangible
                 assets, including goodwill (art. 13.2 a) and Transitional Provision
-                15 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                origen en ejerci...
+                15 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             02682:
               label: Adjustments for impairment losses on securities representing
                 a holding in capital or equity (art. 13.2 b) LIS) - Increase - Adjustments
@@ -13672,31 +13834,31 @@ modelo:
             02687:
               label: Adjustments for impairment losses on securities representing
                 a holding in capital or equity (art. 13.2 b) LIS) - Decrease - Adjustments
-                for the tax year - Temporary (with ori...
+                for the tax year - Temporary (originating in the current tax year)
             02688:
               label: Adjustments for impairment losses on securities representing
                 a holding in capital or equity (art. 13.2 b) LIS) - Decrease - Adjustments
-                for the tax year - Temporary (with ori...
+                for the tax year - Temporary (originating in previous tax years)
             '02722':
               label: Application of the art. 11.12 LIS limit to impairment losses
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
-                14.2 LIS) - Increase - Adjustments for the tax year - Temporary (with
-                orige...
+                14.2 LIS) - Increase - Adjustments for the tax year - Temporary (originating
+                in the current tax year)
             '02723':
               label: Application of the art. 11.12 LIS limit to impairment losses
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
-                14.2 LIS) - Increase - Adjustments for the tax year - Temporary (with
-                orige...
+                14.2 LIS) - Increase - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             '02727':
               label: Application of the art. 11.12 LIS limit to impairment losses
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
-                14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                o...
+                14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in the current tax year)
             02728:
               label: Application of the art. 11.12 LIS limit to impairment losses
                 under art. 13.1 LIS and to provisions and expenses (art. 14.1 and
-                14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                o...
+                14.2 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             02738:
               label: Pension expenses and provisions not affected by art. 11.12 LIS
                 (art. 14.1, 14.6 and 14.8 LIS) - Decrease - Adjustments for the tax
@@ -13705,62 +13867,68 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Total amount of deferred tax assets (art.
-                130.6 a) carried forward pending...
+                130.6 a) carried forward pending application at the start of the period
             02788:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit
             02789:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             02790:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             02792:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             02793:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             02794:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             02795:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2024 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             02796:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2024 - Excess positive net tax liability carried forward
-                at start of per...
+                at start of period
             02797:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2024 - Excess positive net tax liability applied in
-                tax perio...
+                tax periods 2008 to 2015
             02798:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2024 - Excess positive net tax liability applied in
-                tax perio...
+                tax periods starting from 2016
             02799:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2024 - Excess positive net tax liability carried forward
-                for application in peri...
+                for application in future periods
             02855:
               label: Impairment losses on securities representing holdings in capital
                 or equity (art. 15 k) LIS) - Increase - Balance carried forward at
@@ -13777,23 +13945,23 @@ modelo:
             02983:
               label: Exemption on income obtained from the transfer of securities
                 of resident entities (art. 21.3, 21.10 and Transitional Provision
-                40 LIS) - Increase - Adjustments for the tax year - Temporary (with
-                origen en tax years ante...
+                40 LIS) - Increase - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             02987:
               label: Exemption on income obtained from the transfer of securities
                 of resident entities (art. 21.3, 21.10 and Transitional Provision
                 40 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
-                in this tax yecic...
+                in the current tax year)
             02988:
               label: Exemption on income obtained from the transfer of securities
                 of resident entities (art. 21.3, 21.10 and Transitional Provision
-                40 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                origen en tax years...
+                40 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             02992:
               label: Exemption on income obtained from the transfer of securities
                 of non-resident entities (art. 21.3, 21.10 and Transitional Provision
                 40 LIS) - Increase - Adjustments for the tax year - Temporary (originating
-                in this tax yecici...
+                in the current tax year)
             02993:
               label: Exemption on income obtained from the transfer of securities
                 of non-resident entities (art. 21.3, 21.10 and Transitional Provision
@@ -13803,12 +13971,12 @@ modelo:
               label: Exemption on income obtained from the transfer of securities
                 of non-resident entities (art. 21.3, 21.10 and Transitional Provision
                 40 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
-                in this tax ye...
+                in the current tax year)
             02998:
               label: Exemption on income obtained from the transfer of securities
                 of non-resident entities (art. 21.3, 21.10 and Transitional Provision
-                40 LIS) - Decrease - Adjustments for the tax year - Temporary (with
-                origen en ejercic...
+                40 LIS) - Decrease - Adjustments for the tax year - Temporary (originating
+                in previous tax years)
             '03001':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
@@ -13818,12 +13986,12 @@ modelo:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of resident entities - Increase - Adjustments for the tax year - Temporary
-                (c...
+                (originating in the current tax year)
             '03003':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of resident entities - Increase - Adjustments for the tax year - Temporary
-                (c...
+                (originating in previous tax years)
             '03004':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
@@ -13832,20 +14000,22 @@ modelo:
             '03006':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
-                of resident entities - Decrease - Adjustments for the tax year - Permanent...
+                of resident entities - Decrease - Adjustments for the tax year - Permanent
             '03007':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
-                of resident entities - Decrease - Adjustments for the tax year - Temporary...
+                of resident entities - Decrease - Adjustments for the tax year - Temporary
+                (originating in the current tax year)
             03008:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
-                of resident entities - Decrease - Adjustments for the tax year - Temporary...
+                of resident entities - Decrease - Adjustments for the tax year - Temporary
+                (originating in previous tax years)
             03009:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
-                of resident entities - Decrease - Saldo carried forward a principio
-                de ejercici...
+                of resident entities - Decrease - Balance carried forward at the start
+                of the tax year
             '03011':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
@@ -13855,12 +14025,12 @@ modelo:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of non-resident entities - Increase - Adjustments for the tax year
-                - Temporary...
+                - Temporary (originating in the current tax year)
             '03013':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of non-resident entities - Increase - Adjustments for the tax year
-                - Temporary...
+                - Temporary (originating in previous tax years)
             '03014':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
@@ -13870,22 +14040,22 @@ modelo:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of non-resident entities - Decrease - Adjustments for the tax year
-                - Permane...
+                - Permanent
             '03017':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of non-resident entities - Decrease - Adjustments for the tax year
-                - Tempora...
+                - Temporary (originating in the current tax year)
             03018:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
                 of non-resident entities - Decrease - Adjustments for the tax year
-                - Tempora...
+                - Temporary (originating in previous tax years)
             03019:
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
-                of non-resident entities - Decrease - Saldo carried forward a principio
-                de ejerc...
+                of non-resident entities - Decrease - Balance carried forward at the
+                start of the tax year
             '03020':
               label: Exemption on income obtained in the cases of art. 21.3, 21.10
                 and Transitional Provision 40 LIS other than transfers of securities
@@ -13894,11 +14064,13 @@ modelo:
             '03052':
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
-                Increase - Adjustments for the tax year - Temporary (with or...
+                Increase - Adjustments for the tax year - Temporary (originating in
+                the current tax year)
             '03053':
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
-                Increase - Adjustments for the tax year - Temporary (with or...
+                Increase - Adjustments for the tax year - Temporary (originating in
+                previous tax years)
             '03056':
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
@@ -13906,11 +14078,13 @@ modelo:
             '03057':
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
-                Decrease - Adjustments for the tax year - Temporary (o...
+                Decrease - Adjustments for the tax year - Temporary (originating in
+                the current tax year)
             03058:
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
-                Decrease - Adjustments for the tax year - Temporary (o...
+                Decrease - Adjustments for the tax year - Temporary (originating in
+                previous tax years)
             03059:
               label: Foreign tax borne by the taxpayer, non-deductible as it relates
                 to income subject to a double-taxation deduction (art. 31.2 LIS) -
@@ -13918,7 +14092,7 @@ modelo:
             '03061':
               label: Foreign tax on the profits from which the dividends subject to
                 the international double-taxation deduction are paid (art. 32.1 LIS)
-                - Increase - Adjustments for the tax year...
+                - Increase - Adjustments for the tax year... - Permanent
             03093:
               label: Temporary business consortium, adjustments for exempt income
                 of a consortium operating abroad (art. 45.2 LIS) - Increase - Adjustments
@@ -13926,27 +14100,27 @@ modelo:
             03098:
               label: Temporary business consortium, adjustments for exempt income
                 of a consortium operating abroad (art. 45.2 LIS) - Decrease - Adjustments
-                for the tax year - Temporary (with origen en tax years anteriore...
+                for the tax year - Temporary (originating in previous tax years)
             '03101':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Increase - Adjustments for the tax
-                year - Perman...
+                year - Permanent
             '03102':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Increase - Adjustments for the tax
-                year - Tempor...
+                year - Temporary (originating in the current tax year)
             '03103':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Increase - Adjustments for the tax
-                year - Tempor...
+                year - Temporary (originating in previous tax years)
             '03104':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
-                a consortium (art. 45.2 LIS) - Increase - Saldo carried forward a
-                principio de ejer...
+                a consortium (art. 45.2 LIS) - Increase - Balance carried forward
+                at the start of the tax year
             '03105':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
@@ -13956,17 +14130,17 @@ modelo:
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Decrease - Adjustments for the tax
-                year - Pe...
+                year - Permanent
             '03107':
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Decrease - Adjustments for the tax
-                year - Te...
+                year - Temporary (originating in the current tax year)
             03108:
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
                 a consortium (art. 45.2 LIS) - Decrease - Adjustments for the tax
-                year - Te...
+                year - Temporary (originating in previous tax years)
             03109:
               label: Temporary business consortium, adjustments for exempt income
                 from participating abroad in collaboration arrangements similar to
@@ -13980,23 +14154,27 @@ modelo:
             '03122':
               label: Negative taxable bases generated within the tax group by the
                 transferred entity and already offset (art. 62.2 LIS) - Increase -
-                Adjustments for the tax year - Temporary (with origen en el ej...
+                Adjustments for the tax year - Temporary (originating in the current
+                tax year)
             '03123':
               label: Negative taxable bases generated within the tax group by the
                 transferred entity and already offset (art. 62.2 LIS) - Increase -
-                Adjustments for the tax year - Temporary (with origen en ejerc...
+                Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             '03127':
               label: Negative taxable bases generated within the tax group by the
                 transferred entity and already offset (art. 62.2 LIS) - Decrease -
-                Adjustments for the tax year - Temporary (with origen en e...
+                Adjustments for the tax year - Temporary (originating in the current
+                tax year)
             03128:
               label: Negative taxable bases generated within the tax group by the
                 transferred entity and already offset (art. 62.2 LIS) - Decrease -
-                Adjustments for the tax year - Temporary (with origen en e...
+                Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             '03132':
               label: Venture capital companies and funds and regional industrial development
                 companies (chapter IV of title VII LIS) - Increase - Adjustments for
-                the tax year - Temporary (originating in this tax yecici...
+                the tax year - Temporary (originating in the current tax year)
             '03133':
               label: Venture capital companies and funds and regional industrial development
                 companies (chapter IV of title VII LIS) - Increase - Adjustments for
@@ -14004,11 +14182,11 @@ modelo:
             '03137':
               label: Venture capital companies and funds and regional industrial development
                 companies (chapter IV of title VII LIS) - Decrease - Adjustments for
-                the tax year - Temporary (originating in this tax ye...
+                the tax year - Temporary (originating in the current tax year)
             03138:
               label: Venture capital companies and funds and regional industrial development
                 companies (chapter IV of title VII LIS) - Decrease - Adjustments for
-                the tax year - Temporary (with origen en ejercic...
+                the tax year - Temporary (originating in previous tax years)
             '03142':
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Increase - Adjustments
@@ -14016,29 +14194,29 @@ modelo:
             '03143':
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Increase - Adjustments
-                for the tax year - Temporary (with origen en tax years anter...
+                for the tax year - Temporary (originating in previous tax years)
             '03147':
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Decrease - Adjustments
-                for the tax year - Temporary (originating in this tax yecicio...
+                for the tax year - Temporary (originating in the current tax year)
             03148:
               label: Valuation of assets and rights. Special regime for restructuring
                 transactions (chapter VII of title VII LIS) - Decrease - Adjustments
-                for the tax year - Temporary (with origen en tax years a...
+                for the tax year - Temporary (originating in previous tax years)
             '03245':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Amending
-                return: refund agreed/offset - D. Forales/Nav...'
+                return: refund agreed/offset - D. Forales/Navarra (Totals)'
             '03317':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
                 the conversion of deferred tax assets after regularisation: credit
-                - To...'
+                - Total'
             03318:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
                 the conversion of deferred tax assets after regularisation: credit
-                - Es...'
+                - Estado'
             03319:
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
@@ -14047,7 +14225,8 @@ modelo:
             '03320':
               label: 'Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration (art. 130 LIS) - Amending return - Result of
-                the conversion of deferred tax assets after regularisation: offse...'
+                the conversion of deferred tax assets after regularisation: offset
+                - Total'
             '03362':
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
@@ -14056,21 +14235,22 @@ modelo:
             '03363':
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Increase
-                - Adjustments for the tax year - Temporary (with origen en tax years
-                ant...
+                - Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             '03367':
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
-                - Adjustments for the tax year - Temporary (originating in this tax
-                yecic...
+                - Adjustments for the tax year - Temporary (originating in the current
+                tax year)
             03368:
               label: Entities under the income-attribution regime incorporated abroad
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
-                - Adjustments for the tax year - Temporary (with origen en tax years...
+                - Adjustments for the tax year - Temporary (originating in previous
+                tax years)
             '03401':
               label: Settlement I - Detail of adjustments to the profit and loss account
                 result - Adjustment for the tax on the interest and fee margin of
-                certain financial entities (Final Provision 9, Law 7/20...
+                certain financial entities (Final Provision 9, Law 7/2024) - Increases
             '03402':
               label: Detail of offset of negative taxable bases - 2024 - Carried forward
                 at the start of the period/generated in the period [03402]
@@ -14088,26 +14268,27 @@ modelo:
             '03406':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of special taxable base, tax year 2025(*) - Applied in this asses...'
+                of special taxable base, tax year 2025(*) - Applied in this settlement'
             '03407':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of special taxable base, year 2025(*) - Carried forward for applicación
-                en...'
+                of special taxable base, year 2025(*) - Pending application in future
+                periods'
             03408:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of taxable base from other activities, year 2025(*) - Carried forward
-                for appli...'
+                of taxable base from other activities, year 2025(*) - Pending application
+                at the start of the period/generated during the period'
             03409:
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of taxable base from other activities, year 2025(*) - Applied en es...'
+                of taxable base from other activities, year 2025(*) - Applied in this
+                settlement'
             '03410':
               label: 'Special regime for ships and shipping companies in the Canary
                 Islands: breakdown of the offset of negative taxable bases - Offset
-                of taxable base from other activities, year 2025(*) - Carried forward
-                for appli...'
+                of taxable base from other activities, year 2025(*) - Pending application
+                in future periods'
             '03411':
               label: Internal double taxation deductions (Transitional Provision 23.1
                 LIS) - Internal DT 2025(*) - Deduction carried forward [03411]
@@ -14693,51 +14874,63 @@ modelo:
             '03555':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - Without repeated donations to the sa...
+                deduction - 2025(*) - Without repeated donations to the same entity
+                - Pending/generated deduction
             '03556':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - Without repeated donations to the sa...
+                deduction - 2025(*) - Without repeated donations to the same entity
+                - Applied in this settlement
             '03557':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - Without repeated donations to the sa...
+                deduction - 2025(*) - Without repeated donations to the same entity
+                - Pending application in future periods
             03558:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - With repeated donations to the sa...
+                deduction - 2025(*) - With repeated donations to the same entity -
+                Pending/generated deduction
             03559:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - With repeated donations to the sa...
+                deduction - 2025(*) - With repeated donations to the same entity -
+                Applied in this settlement
             '03560':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025(*) - With repeated donations to the sa...
+                deduction - 2025(*) - With repeated donations to the same entity -
+                Pending application in future periods
             '03561':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - Without repeated donations to the same...
+                deduction - 2025 - Without repeated donations to the same entity -
+                Pending/generated deduction
             '03562':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - Without repeated donations to the same...
+                deduction - 2025 - Without repeated donations to the same entity -
+                Applied in this settlement
             '03563':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - Without repeated donations to the same...
+                deduction - 2025 - Without repeated donations to the same entity -
+                Pending application in future periods
             '03564':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - With repeated donations to the same...
+                deduction - 2025 - With repeated donations to the same entity - Pending/generated
+                deduction
             '03565':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - With repeated donations to the same...
+                deduction - 2025 - With repeated donations to the same entity - Applied
+                in this settlement
             '03566':
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others with entitlement to an increased
-                deduction - 2025 - With repeated donations to the same...
+                deduction - 2025 - With repeated donations to the same entity - Pending
+                application in future periods
             '03567':
               label: Deduction for reversal of temporary measures (Transitional Provision
                 37.1 LIS) - 2025 - Deduction base [03567]
@@ -14866,7 +15059,7 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Total amount of deferred tax assets (art.
-                130.6 a) carried forward pending...
+                130.6 a) carried forward pending application at the start of the period
             '03605':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
@@ -14875,57 +15068,63 @@ modelo:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit
             '03607':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - With entitlement to conversion into claimable
+                credit for excess tax liability
             03608:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward at
-                the start of the p...
+                the start of the period - Without entitlement to conversion into claimable
+                credit
             03609:
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets converted into a claimable
-                credit per...
+                credit for the period
             '03610':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit
             '03611':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - With entitlement to conversion into
+                claimable credit for excess tax liability
             '03612':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Deferred tax assets (AID). Art. 130 LIS -
                 Year of generation - 2025 - Deferred tax assets carried forward for
-                application in future perio...
+                application in future periods - Without entitlement to conversion
+                into claimable credit
             '03613':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2025 - Excess positive net tax liability carried forward
-                at start of per...
+                at start of period
             '03614':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2025 - Excess positive net tax liability applied in
-                tax perio...
+                tax periods 2008 to 2015
             '03615':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2025 - Excess positive net tax liability applied in
-                tax perio...
+                tax periods starting from 2016
             '03616':
               label: Conversion of deferred tax assets into a credit claimable from
                 the Tax Administration - Excess positive net tax liability - Year
                 of generation - 2025 - Excess positive net tax liability carried forward
-                for application in peri...
+                for application in future periods
             '03617':
               label: Provisions for impairment of receivables or other assets - Year
                 of generation - 2025(*) - Provisions carried forward for integration

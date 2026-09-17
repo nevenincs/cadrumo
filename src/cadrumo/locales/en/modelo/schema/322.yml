@@ -2007,31 +2007,31 @@ modelo:
               help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
               help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
               help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
               help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
               help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 5th
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 5th
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
               help: Tax information for casilla of Modelo 322.
@@ -2041,7 +2041,7 @@ modelo:
               label: Entitled to deduct the advance payment on supplies of petrol,
                 diesel and biofuels
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: Recipient of cash-basis scheme transactions
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax information for casilla of Modelo 322.
@@ -2056,31 +2056,31 @@ modelo:
               help: Tax information for casilla of Modelo 322.
               label: Group number
             x-chim6r1ectp7as3f5lp6ur0:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: Dominant or dependent entity
             x-chim6r1ee1in4qbfchng:
               help: Tax information for casilla of Modelo 322.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: 'Special pro rata: election or revocation'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
               help: Tax information for casilla of Modelo 322.
               label: Registered in the monthly refund register
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: Electing the regime under LIVA article 163 sexies.Five
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
               help: Tax information for casilla of Modelo 322.
               label: Taxed exclusively under a foral administration
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
               label: Annual turnover other than zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: 'Review the casilla information: Amount Output VAT al rate reduced
                 (10%).'
@@ -2091,6 +2091,6 @@ modelo:
               help: 'Review the casilla information: Result of the regime general
                 (amount accrued - amount deductible).'
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: Tax information about tax information in casilla  of Modelo 322.
+              help: Tax information about tax information in casilla of Modelo 322.
           field:
             label: Modelo 322, tax years 2026 onwards
