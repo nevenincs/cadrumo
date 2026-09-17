@@ -201,8 +201,12 @@ def test_resolve_filing_closes_on_m210_declares_no_quarter_window(quarter: str) 
     assert resolve_filing_closes_on("210", 2025, Period.from_year_and_code(2025, quarter)) is None
 
 
-def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_april() -> None:
-    """Arrendamiento a ingresar for 2025 devengos closes 2026-04-20 (Orden EHA/3316/2010 art 5)."""
+def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_january() -> None:
+    """Arrendamiento a ingresar for 2025 devengos closes 2026-01-20.
+
+    Orden EHA/3316/2010 art 5.c).1 as worded by Orden HAC/56/2024, which applies from
+    2024 devengos. The April window of Orden HAC/623/2026 applies only from 2026 devengos.
+    """
     window = resolve_filing_window(
         "210",
         2025,
@@ -211,7 +215,7 @@ def test_resolve_filing_window_m210_arrendamiento_a_ingresar_closes_on_20_april(
         tipo_renta_code="01",
     )
     assert window is not None
-    assert (window.opens_on, window.closes_on) == (date(2026, 4, 1), date(2026, 4, 20))
+    assert (window.opens_on, window.closes_on) == (date(2026, 1, 1), date(2026, 1, 20))
 
 
 def test_resolve_filing_closes_on_m210_annual_0a_without_resultado_returns_none() -> None:
