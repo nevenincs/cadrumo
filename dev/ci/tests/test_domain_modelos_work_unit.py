@@ -52,12 +52,12 @@ from cadrumo.domain.modelos.work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
     create_user_profile_record,
 )
-from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
