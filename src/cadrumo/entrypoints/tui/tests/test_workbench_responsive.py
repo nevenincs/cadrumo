@@ -257,6 +257,8 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
     happens to paint on that row -- which says nothing about the rhythm the
     operator sees in that column.
     """
+    from textual.widgets import Footer
+
     from .frame import screen_text
     from .workbench_fixtures import resolve_workbench_fixture
 
@@ -270,6 +272,8 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
             if str(node.render()).strip()
         ]
         painted = screen_text(app, width, height).splitlines()
+        # The first row the page body cannot paint: the docked footer's.
+        fold = min((footer.region.y for footer in app.screen.query(Footer) if footer.display), default=height)
         app.exit(None)
 
     assert headings, f"{surface} declares no .cadrumo-heading to check"
@@ -319,8 +323,12 @@ async def test_every_section_heading_is_separated_from_the_content_it_owns(surfa
             # overflow is ordinary and scrollable, and the horizontal gates own
             # what must never be pushed out of sight.
             continue
-        checked += 1
         row = rows[0]
+        if row + 1 >= fold and not leads:
+            # The heading is the page's last visible row, so the gap it owns
+            # below is past the fold like any other overflowing content.
+            continue
+        checked += 1
         below, above = blanks_after(row), blanks_before(row)
         assert below >= 1, f"{surface}: {heading!r} is fused to its content (0 blank rows below)"
         # A heading that OPENS its region has no previous group to be separated

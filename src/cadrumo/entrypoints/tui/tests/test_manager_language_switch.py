@@ -19,6 +19,8 @@ comparison that cannot fail.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
@@ -36,6 +38,7 @@ from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from ....tests.env_scope import output_language_scope
 from ..components.host import ScreenHostApp
 from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
@@ -51,12 +54,24 @@ _LABEL = "Language Subject"
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "es"
 
-_LANGUAGE_LABEL_KEY = "profile.schema.field.preferences.output_language.label"
-"""The catalogue leaf naming the language setting for the operator.
+_LANGUAGE_LABEL_KEY = "tui.root.account_key.language"
+"""The catalogue leaf the footer names the language setting by.
 
-The footer names the key with the same words its row does, so this is the
-one key both surfaces resolve.
+The short account name rather than the field's own label, so the footer
+keeps every key on an eighty-column terminal.
 """
+
+
+@pytest.fixture(autouse=True)
+def _page_language_follows_the_profile() -> Iterator[None]:
+    """Leave the language unpinned so the profile's own preference decides it.
+
+    An explicit output language outranks the profile's, so a developer's
+    local setting would otherwise decide what these pages open in.
+    """
+    with output_language_scope(None):
+        yield
+
 
 _FOOTER_DRAIN_LIMIT = 20
 """How many barriers the footer gets to settle within before the test gives up.
@@ -238,9 +253,9 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
                 f"the chooser must name languages, not stored tokens, but showed {rendered}"
             )
             assert rendered == [
-                tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=_STARTING_LANGUAGE)
+                tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=token)
                 for token in tokens
-            ], f"each row must name its own language, in the page's language, but showed {rendered}"
+            ], f"each row must name its language in that language, but showed {rendered}"
             app.app.exit(None)
 
 
