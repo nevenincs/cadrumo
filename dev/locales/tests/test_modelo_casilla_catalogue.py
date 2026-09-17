@@ -227,6 +227,22 @@ def test_authored_values_install_only_when_they_serve_every_change(tmp_path: Pat
     assert not pending.exists()
 
 
+def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path: Path) -> None:
+    locales = tmp_path / "locales"
+    pending = tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_LINEAGE: "Base imponible", _OCC_2024: "Base imponible del ejercicio"}, "en": {}})
+    catalogue = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
+
+    changed = catalogue.author({"es": {_OCC_2024: None, _LINEAGE: "Base imponible"}}, locales, pending)
+
+    assert changed == {"es": 1, "en": 1}
+    assert load_casilla_values(locales)["es"] == {_LINEAGE: "Base imponible"}
+    agreeing = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
+    with pytest.raises(CollapseVerificationError, match="continuity evolution"):
+        agreeing.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending)
+    assert not pending.exists()
+
+
 def test_keys_under_an_undeclared_revision_are_a_rename_never_an_orphan() -> None:
     renamed = "modelo.schema.999.revision.2019.casilla.01.label"
     removed = "modelo.schema.999.revision.2023.casilla.02.label"

@@ -46,6 +46,7 @@ from ._paths import LOCALES_DIR, PENDING_CASILLA_INSTALL_DIR
 from .manager import LocaleManager, _flatten_raw_locale_leaves, discover_locale_codes
 
 __all__ = [
+    "SOURCE_TRUNCATED_SPANISH",
     "CasillaOccurrence",
     "CatalogueFindings",
     "CollapsePlan",
@@ -79,9 +80,18 @@ _PLACEHOLDER: Final = re.compile(
 )
 
 #: A value that a length limit cut mid-text and closed with an ellipsis.
-_TRUNCATED: Final = re.compile(r"\w(?:\.\.\.|…)\s*$")
+_TRUNCATED: Final = re.compile(r"[\w,;:]\s?(?:\.\.\.|…)\s*$")
 #: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
 _IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
+#: Spanish texts whose official record design is itself cut short with an ellipsis;
+#: the catalogue mirrors the source, and a translation of them may end the same way.
+SOURCE_TRUNCATED_SPANISH: Final[frozenset[str]] = frozenset(
+    {
+        # Modelo 714 design, box [35].
+        "Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo ganancias y pérdidas "
+        "patrimoniales...",
+    }
+)
 #: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
 #: alternations standing alone, and Spanish function words left untranslated.
 _GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
@@ -434,8 +444,16 @@ class ModeloCasillaCatalogue:
                 if artifact is None
                 else tuple(sorted(key for key, value in leaves.items() if value and artifact.search(value)))
             )
+            sources = self.served_sources(locale) if locale != SOURCE_LOCALE else {}
             found.truncated_text[locale] = tuple(
-                sorted(key for key, value in leaves.items() if value and _TRUNCATED.search(value))
+                sorted(
+                    key
+                    for key, value in leaves.items()
+                    if value
+                    and _TRUNCATED.search(value)
+                    and value not in SOURCE_TRUNCATED_SPANISH
+                    and not (sources.get(key, frozenset()) & SOURCE_TRUNCATED_SPANISH)
+                )
             )
             found.irregular_whitespace[locale] = tuple(
                 sorted(key for key, value in leaves.items() if value and _IRREGULAR_WHITESPACE.search(value))
@@ -737,11 +755,14 @@ class ModeloCasillaCatalogue:
 
     def author(
         self,
-        manifest: Mapping[str, Mapping[str, str]],
+        manifest: Mapping[str, Mapping[str, str | None]],
         locales_dir: Path = LOCALES_DIR,
         pending_dir: Path = PENDING_CASILLA_INSTALL_DIR,
     ) -> dict[str, int]:
-        """Install authored casilla values, proving they are the only source of change.
+        """Install authored casilla values and removals, proving they are the only source of change.
+
+        A ``None`` value removes the key, so an edition falls back to the text a
+        less specific key provides; that text's key must be named in the manifest.
 
         Every coordinate whose resolved text differs afterwards must be served
         by one of the manifest's keys in its own locale, or, for a Spanish
@@ -769,8 +790,12 @@ class ModeloCasillaCatalogue:
         try:
             manager = LocaleManager(src_dir=staged, locales_dir=staged)
             for locale, values in sorted(manifest.items()):
-                if values:
-                    manager.set_locale_values(locale, dict(values))
+                settings = {key: text for key, text in values.items() if text is not None}
+                removals = sorted(key for key, text in values.items() if text is None)
+                if settings:
+                    manager.set_locale_values(locale, settings)
+                if removals:
+                    manager.remove_locale_values(locale, removals)
             proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
             after = proof.resolution()
             changed: dict[str, int] = defaultdict(int)
@@ -791,8 +816,39 @@ class ModeloCasillaCatalogue:
         if unattributed:
             _discard(pending_dir)
             raise CollapseVerificationError(f"{len(unattributed)} changed texts are not served by the manifest")
+        split = self._continuity_splits(before, after)
+        if split:
+            _discard(pending_dir)
+            raise CollapseVerificationError(
+                "Spanish text would diverge between editions that render one text today, which the registry "
+                f"refuses without a continuity evolution: {split[:5]}"
+            )
         resume_install(locales_dir, pending_dir)
         return dict(changed)
+
+    def _continuity_splits(
+        self,
+        before: Mapping[Coordinate, str | None],
+        after: Mapping[Coordinate, str | None],
+    ) -> tuple[str, ...]:
+        """Return the boxes whose editions agree on Spanish text before and disagree after.
+
+        The registry compares a casilla's label across the editions that declare
+        it and refuses an undeclared difference, so an authored edition-specific
+        Spanish text must come with a continuity evolution in the registry.
+        """
+        editions: dict[tuple[str, str], list[int]] = defaultdict(list)
+        for index, occurrence in enumerate(self.occurrences):
+            if not occurrence.casilla.startswith("construct:"):
+                editions[(occurrence.modelo, occurrence.casilla)].append(index)
+        split: list[str] = []
+        for (modelo, casilla), members in sorted(editions.items()):
+            old = defaultdict(set)
+            for index in members:
+                old[before.get((index, "label", SOURCE_LOCALE))].add(after.get((index, "label", SOURCE_LOCALE)))
+            if any(len(texts) > 1 for texts in old.values()):
+                split.append(f"{modelo}/{casilla}")
+        return tuple(split)
 
     def _write_plan(self, plan: CollapsePlan, locales_dir: Path) -> dict[str, int]:
         manager = LocaleManager(src_dir=locales_dir, locales_dir=locales_dir)
