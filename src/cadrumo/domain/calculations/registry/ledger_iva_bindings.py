@@ -48,7 +48,8 @@ from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .iva_category_catalogue import resolve_iva_category_catalogue
-from .iva_flow_catalogue import require_registry_declared_iva_flow_direction
+from .iva_deduction_catalogue import require_iva_deduction_fact_kind
+from .iva_flow_catalogue import require_iva_flow_direction, require_registry_declared_iva_flow_direction
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
@@ -198,6 +199,24 @@ class IvaLedgerObservation(BaseModel):
         if value is None or isinstance(value, InputClassification):
             return value
         return require_input_classification(value)
+
+    @field_validator("flow_direction", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _flow_direction_registry_declared(cls, value: object) -> object:
+        """Project raw flow tokens, such as a JSON round trip, through fact 0083."""
+        if isinstance(value, IvaFlowDirection):
+            return value
+        return require_iva_flow_direction(value, effective_date=today_madrid())
+
+    @field_validator("deduction_fact_kind", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _deduction_fact_kind_registry_declared(cls, value: object) -> object:
+        """Project raw deduction-kind tokens through fact 0085."""
+        if value is None or isinstance(value, IvaDeductionFactKind):
+            return value
+        return require_iva_deduction_fact_kind(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
