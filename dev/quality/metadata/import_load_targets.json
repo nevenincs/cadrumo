@@ -2737,7 +2737,7 @@
         "dev.registry.pipeline",
         "dev.registry.pipeline.__main__",
         "dev.registry.pipeline._export_tree",
-        "dev.registry.pipeline._generated_tree_test_support",
+        "dev.registry.pipeline.tests._generated_tree_test_support",
         "dev.registry.pipeline._tree_check",
         "dev.registry.pipeline._tree_publication",
         "dev.registry.pipeline._tree_validation",

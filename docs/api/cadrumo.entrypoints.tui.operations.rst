@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.entrypoints.tui.operations.controller
-   cadrumo.entrypoints.tui.operations.facade
    cadrumo.entrypoints.tui.operations.interactions
    cadrumo.entrypoints.tui.operations.logs
    cadrumo.entrypoints.tui.operations.modal

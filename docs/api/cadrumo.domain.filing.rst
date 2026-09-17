@@ -24,4 +24,5 @@ Submodules
    cadrumo.domain.filing.errors
    cadrumo.domain.filing.protocols
    cadrumo.domain.filing.schema
+   cadrumo.domain.filing.software_identity
    cadrumo.domain.filing.validator

@@ -45,18 +45,37 @@ modelo:
               tekintse meg az m131-modulos-coeficientes együttható paramétert.
           irpf-pf-modulos-indice-inicio-actividad:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2025-01-01
+              után kizárólagos helyiségben indított tevékenység). Az üzemeltető által
+              megadott index (0,80/0,90; 0,60/0,70 legalább 33%-os fogyatékosság esetén,
+              HAC/1425/2025 rendelet II. melléklet, 2.3.b.4 utasítás); a motor nem
+              modellezi az indítás évét vagy a fogyatékosságot. Összeegyeztethetetlen
+              a szezonális indexszel (b.2): ha mindkettőt megadják, a szezonális index
+              érvényesül.'
           irpf-pf-modulos-indice-pequena-dimension:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: Korrekciós index kisvállalkozások számára (b.1 pont - egy településen,
+              egyetlen helyiségben, alkalmazott nélkül vagy legfeljebb 2 alkalmazottal).
+              Az üzemeltető által megadott index (0,70/0,75/0,80/0,90, HAC/1425/2025
+              rendelet II. melléklet, 2.3.b.1 utasítás); a motor nem modellezi az
+              adózó tényeit. Soha nem alkalmazandó a különleges indexszel rendelkező
+              tevékenységekre (721.2, 722).
           irpf-pf-modulos-indice-temporada:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: 'Szezonális korrekciós index (b.2 pont - szezonális tevékenység,
+              évi legfeljebb 180 nap). Az üzemeltető által megadott index (1,50/1,35/1,25
+              az időtartamtól függően, HAC/1425/2025 rendelet II. melléklet, 2.3.b.2
+              utasítás); a motor nem modellezi az időtartamot mint adózói tényt. Összeegyeztethetetlen
+              az új tevékenység indítási indexével (b.4): ha mindkettőt megadják,
+              ez érvényesül.'
           irpf-pf-modulos-minoracion-inversion:
             help: A Modelo 131 . casilla adóügyi adatai.
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: 'Belső jelző (1/0): a bejelentett kisvállalkozási korrekciós index
+              (b.1) figyelmen kívül maradt a tevékenység különleges korrekciós indexével
+              való összeférhetetlenség miatt (HAC/1425/2025 rendelet II. melléklet,
+              2.3.a/b.1 utasítás).'
           irpf-pf-modulos-rendimiento-neto-actividad:
             help: A Modelo 131 . casilla adóügyi adatai.
             label: 'A tevékenység nettó jövedelme (4. szakasz: modulok − általános
@@ -82,7 +101,10 @@ modelo:
             label: Nettó jövedelmek összege
           irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
             help: A Modelo 131 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: 'Belső jelző (1/0): a szezonális korrekciós indexet (b.2) és az
+              új tevékenység indítási korrekciós indexét (b.4) egyidejűleg jelentették
+              be, amelyek kölcsönösen összeférhetetlenek (HAC/1425/2025 rendelet II.
+              melléklet, 2.3 utasítás).'
           irpf-pf-modulos-total:
             help: 'Tekintse át a casilla adatait: Total.'
             label: Összesen

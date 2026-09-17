@@ -4,19 +4,19 @@ modelo:
       casilla:
         continuidad:
           m345-anio-nacimiento:
-            label: Casilla — adóügyi mező
+            label: Születési év
           m345-beneficiario-nif:
-            label: Casilla— adóügyi információ
+            label: A fogyatékossággal élő kedvezményezett adószáma
           m345-clave:
             label: Kód
           m345-codigo-provincia:
             label: Tartománykód
           m345-datos-adicionales-clave-i:
-            label: Casilla— adóügyi információ
+            label: Kiegészítő adatok az I kódhoz
           m345-datos-adicionales-clave-m:
-            label: Casilla— adóügyi információ
+            label: Kiegészítő adatok az M kódhoz
           m345-datos-adicionales-claves-abc:
-            label: Casilla— adóügyi információ
+            label: Kiegészítő adatok az A, B és C kódokhoz
           m345-datos-identificativos-empleador:
             label: A szociális előtakarékossági rendszert alapító vagy szerződő munkáltató
               azonosító adatai
@@ -29,49 +29,49 @@ modelo:
           m345-declarante-nif:
             label: A bejelentő adószáma
           m345-declarante-razon-social:
-            label: Casilla — adóügyi mező
+            label: A bejelentő vezetékneve és utóneve, vagy cégneve
           m345-devoluciones-excesos:
-            label: Casilla— adóügyi információ
+            label: A többletbefizetések visszatérítése vagy visszafizetése
           m345-ejercicio-declaracion:
             label: A bevallás éve
           m345-empleador-nif:
-            label: Casilla— adóügyi információ
+            label: Az alapító vagy szerződő munkáltató adószáma
           m345-empleador-nombre:
-            label: Casilla — adóügyi mező
+            label: A munkáltató vezetékneve és utóneve, vagy cégneve
           m345-entidad-aseguradora-nif:
             label: NIF - szervezet aseguradora
           m345-fondo-pensiones-nif:
-            label: Casilla— adóügyi információ
+            label: A nyugdíjpénztár adószáma
           m345-fondo-pensiones-numero-registro:
-            label: Casilla — adóügyi mező
+            label: A nyugdíjpénztár nyilvántartási száma
           m345-importe:
             label: Összeg
           m345-importe-total-aportaciones:
-            label: Casilla— adóügyi információ
+            label: A befizetések teljes összege
           m345-numero-identificativo-anterior:
             label: A korábbi bevallás azonosító száma
           m345-numero-identificativo-declaracion:
             label: A bevallás azonosító száma
           m345-pepp-cuenta-subcuenta:
-            label: Casilla— adóügyi információ
+            label: Számla/alszámla
           m345-pepp-denominacion:
-            label: Casilla — adóügyi mező
+            label: A PEPP megnevezése
           m345-pepp-numero-inscripcion:
-            label: Casilla — adóügyi mező
+            label: A PEPP nyilvántartási száma
           m345-persona-relacion:
             label: Kapcsolattartó személy
           m345-pias-fecha-primera-prima:
-            label: Casilla— adóügyi információ
+            label: Az első díj befizetésének dátuma
           m345-pias-importe-acumulado:
             label: Összeg acumulado PIAS
           m345-plan-pensiones-denominacion:
-            label: Casilla — adóügyi mező
+            label: A nyugdíjprogram megnevezése
           m345-rendimientos-trabajo-no-superiores-60000:
             label: Bruttó munkajövedelem, amely nem haladja meg a 60.000 eurót
           m345-representante-legal-nif:
             label: A törvényes képviselő adószáma
           m345-subclave:
-            label: Casilla— adóügyi információ
+            label: Alkód
           m345-total-declarados:
             label: A bejelentett tagok száma összesen
       field:

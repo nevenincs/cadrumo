@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.adapters.inbound.einvoice.application_translation
    cadrumo.adapters.inbound.einvoice.parsers
    cadrumo.adapters.inbound.einvoice.shape
    cadrumo.adapters.inbound.einvoice.xml

@@ -51,6 +51,7 @@ from ....domain.calculations.registry.tests.published_authority import Published
 from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.justificante.schema import Justificante
+from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -68,7 +69,7 @@ from ....domain.modelos.calculation_revision_amendment import (
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
 )
-from ....domain.modelos.errors import ModeloExportError
+from ....domain.modelos.errors import ModeloExportError, ModeloValidationError
 from ....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -441,12 +442,13 @@ def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
 
         wrong_target = target.model_copy(update={"period": Period.from_year_and_code(2025, "2T")})
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: wrong_target}))
-        with pytest.raises(ValidationError, match="crosses its WorkUnit filing coordinate"):
+        with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid") as crossed:
             calculation_repo.load()
+        assert crossed.value.context == {"reason": "invalid_payload"}
 
         filing_repo.save(ModeloRecordCatalogue(records={target.filing_record_id: target}))
         without_taxpayer_authority = CalculationRevisionCatalogueRepository(objects=objects)
-        with pytest.raises(ValidationError, match="authoritative taxpayer tax id"):
+        with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
             without_taxpayer_authority.load()
 
 
@@ -733,6 +735,7 @@ def test_public_export_requires_injected_persisted_justificante_authority(
         assert raised.value.context["cause"] == "amendment export requires injected justificante repository authority"
 
 
+@pytest.mark.usefixtures("operation")
 def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="valid only for modelo 303"):
         build_filing_producer_snapshot(
@@ -764,7 +767,7 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
 
 
 def test_non_rectificativa_motive_state_refuses() -> None:
-    with pytest.raises(ValidationError, match="valid only for amendment kind rectificativa"):
+    with pytest.raises(ModeloValidationError, match="valid only for amendment kind rectificativa"):
         CalculationRevisionAmendmentIdentity(
             kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             amends_filing_record_id="f" * 64,

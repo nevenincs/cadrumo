@@ -1116,7 +1116,7 @@ application:
         deduction.
       missing_required_casilla: Required casilla %{casilla_id} carries no value.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
-        %{profile_field_id} declared %{declared} exceeds the %{parameter_id} threshold
+        %{profile_field_id} declared %{declared} exceeds the %{fact_id} threshold
         of %{threshold}.'
       oss_evidence_missing: This revision declares one-stop-shop activity but carries
         no persisted OSS evidence.

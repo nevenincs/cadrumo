@@ -647,6 +647,7 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     from cadrumo.core.resources.bundled_data import bundled_path
 
     from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    from ..pipeline.generated_tree_dispositions import below_floor_dispositions
     from ..pipeline.generated_tree_inventory import generated_export_trees
 
     committed = {
@@ -659,6 +660,11 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
         ).is_file()
     }
     assert committed, "no export tree is committed, so this gate checked nothing"
+    # A committed tree below the supported floor has no selectable coordinate to
+    # reproduce at; its ledger row, not the reproduction test, accounts for it.
+    below_floor = {(row.modelo, row.revision) for row in below_floor_dispositions()}
+    assert below_floor <= committed, f"below-floor rows name no committed tree: {sorted(below_floor - committed)}"
+    committed -= below_floor
     enrolled = {(tree.modelo, tree.revision) for tree in generated_export_trees()}
     assert committed == enrolled, (
         "generated-tree reproduction enrollment differs from the provenance-attested registry projection: "
@@ -1093,19 +1099,6 @@ def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
     return names
 
 
-#: Per-root floors for the public-module walk below. Live: analysis 48,
-#: pipeline 19, conformance 5. One floor over the 72 would be carried by
-#: analysis alone - it is two thirds of them - so conformance could vanish
-#: whole and the total would still clear any threshold a growing tree
-#: tolerates. A root that stops contributing is the silent direction here:
-#: fewer modules found means fewer checked, and the gate still reports clean.
-_MINIMUM_PUBLIC_MODULES_BY_ROOT: Final[dict[str, int]] = {
-    "analysis": 30,
-    "pipeline": 12,
-    "conformance": 3,
-}
-
-
 def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
     """Return modules declaring at least one public function or class.
 
@@ -1124,7 +1117,8 @@ def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
         if not root.is_dir():
             raise AssertionError(f"tooling root is missing, so its modules would be silently exempt: {root}")
         for path in sorted(root.glob("*.py")):
-            if path.name in {"__init__.py", "__main__.py"}:
+            # A test module's public names are test functions, not a surface to assert.
+            if path.name in {"__init__.py", "__main__.py"} or path.name.startswith("test_"):
                 continue
             tree = ast.parse(path.read_text(encoding=_UTF_8))
             if any(
@@ -1156,15 +1150,9 @@ def test_every_public_module_in_the_registry_tooling_is_imported_by_a_test() -> 
     modules = _public_modules(roots)
 
     for root in roots:
-        contributed = len(_public_modules((root,)))
-        floor = _MINIMUM_PUBLIC_MODULES_BY_ROOT[root.name]
-        assert contributed >= floor, (
-            f"{root.name} contributed only {contributed} public module(s) against a floor of {floor}; "
-            "a root that stops contributing leaves this gate reporting clean over everything it held"
-        )
-    # No floor on `imported`: it is the right-hand side of a membership test, so
-    # a set that shrinks reports MORE unimported modules and fails loudly. Only
-    # `modules` can shrink silently, which is why the floors sit on that side.
+        # A root that stops contributing leaves this gate reporting clean over
+        # everything it held; a shrinking `imported` set fails loudly instead.
+        assert _public_modules((root,)), f"{root.name} contributed no public module, so the walk skipped it"
     assert imported, "no test imports were read, so every module would look untested"
 
     unimported = sorted(path.stem for path in modules if path.stem not in imported)

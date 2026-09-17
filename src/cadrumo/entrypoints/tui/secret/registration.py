@@ -102,7 +102,7 @@ class RegistrationRefusal:
 #: operator. The door's classification is kept; only the rendered sentence is
 #: exchanged for one a full-screen operator can act on, because a TUI offers no
 #: prompt at which to run the command the shared message recommends.
-_SURFACE_REFUSAL_KEYS: dict[str, str] = {
+_SURFACE_REFUSAL_LOCALE_KEYS: dict[str, str] = {
     "application.user_profile.errors.profile_already_exists": ("flows.registration.refusal.profile_already_exists"),
 }
 
@@ -394,7 +394,7 @@ class RegistrationScreen(CredentialScreen["ProfileRegistrationOutcome"]):
         """Render structured registration refusals under this screen's locale."""
         if isinstance(attempt, RegistrationAttempt) and attempt.expected_refusal is not None:
             refusal = attempt.expected_refusal
-            surface_key = _SURFACE_REFUSAL_KEYS.get(refusal.message_key)
+            surface_key = _SURFACE_REFUSAL_LOCALE_KEYS.get(refusal.message_key)
             if surface_key is not None:
                 refusal = RegistrationRefusal(message_key=surface_key, context=refusal.context)
             return refusal.render(locale=self._active_language)

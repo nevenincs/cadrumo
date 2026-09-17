@@ -120,6 +120,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..aeat_sync.controller import AeatSyncWorkspaceController
+from ..aeat_sync.models import AeatSyncOperationRequestV1
 from ..aeat_sync.routes import resolve_aeat_sync_screen
 from ..aeat_sync.screens import (
     AeatSyncCensusScreen,
@@ -354,12 +355,18 @@ def _aeat_projection(scenario: WorkbenchFixtureScenario) -> AeatSyncWorkspacePro
     )
 
 
+async def _host_operation_handoff(request: AeatSyncOperationRequestV1) -> None:
+    """Stand in for the installed host's operation door; a fixture never runs the operation."""
+    del request
+
+
 def _aeat_app(surface_id: str, scenario: WorkbenchFixtureScenario) -> App[Any]:
     projection = _aeat_projection(scenario)
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
         operation_contracts=_operation_contracts(),
+        operation_handoff=_host_operation_handoff,
     )
     zone = next(route[2] for route in _AEAT_ROUTES if route[0] == surface_id)
     if scenario is WorkbenchFixtureScenario.UNAVAILABLE:

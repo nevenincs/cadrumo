@@ -54,15 +54,15 @@ modelo:
           payee-garantias:
             label: Garantías
           payee-mediador-flag:
-            label: Casilla 76 — información fiscal
+            label: Pago a un mediador
           payee-name:
-            label: Casilla 36-75 — nombre del perceptor
+            label: Apellidos y nombre, razón social o denominación del perceptor
           payee-naturaleza-declarante:
             label: NATURALEZA DEL DECLARANTE
           payee-naturaleza-percepcion:
             label: NATURALEZA
           payee-nif:
-            label: Casilla 18-26 — NIF del perceptor
+            label: NIF del perceptor
           payee-nif-pagador-anterior:
             label: NIF DEL PAGADOR ANTERIOR
           payee-numero-orden-193:
@@ -74,29 +74,33 @@ modelo:
           payee-pendiente-flag:
             label: PENDIENTE
           payee-percepciones-193:
-            label: Casilla 123-135 — información fiscal
+            label: Importe de percepciones/remuneración al prestamista
           payee-porcentaje-retencion:
             label: '% de retención'
           payee-province:
             label: CÓDIGO PROVINCIA
           payee-reducciones-193:
-            label: Casilla 139-151 — información fiscal
+            label: Importe de reducciones
           payee-retenciones-193:
             label: Retenciones e ingresos a cuenta
           payee-retenciones-forales-araba:
-            label: Casilla 275-287 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Araba/Álava
           payee-retenciones-forales-bizkaia:
-            label: Casilla 301-313 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Bizkaia
           payee-retenciones-forales-estatal:
-            label: Casilla 249-261 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Hacienda Estatal
           payee-retenciones-forales-gipuzkoa:
-            label: Casilla 288-300 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Gipuzkoa
           payee-retenciones-forales-navarra:
-            label: Casilla 262-274 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+              Navarra
           payee-tipo-codigo:
             label: TIPO CÓDIGO
           payee-tipo-percepcion:
-            label: Casilla 122 — información fiscal
+            label: Tipo de percepción
           perc-nif-representante:
             label: NIF del representante legal
           representante-legal-nif:
@@ -232,20 +236,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Importe de reducciones
             x-e1in4opee9in8pbecdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Araba/Álava
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 249-261 del modelo 193, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
@@ -253,13 +252,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Gipuzkoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
-                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: Casilla 96 del modelo 193, ejercicio 2024.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -379,20 +374,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Importe de reducciones
             x-e1in4opee9in8pbecdkmurj5ec:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Araba/Álava
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 249-261 del modelo 193, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
@@ -400,13 +390,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Gipuzkoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dato del perceptor declarado en el modelo 193. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
-                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: Casilla 96 del modelo 193, ejercicio 2025.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

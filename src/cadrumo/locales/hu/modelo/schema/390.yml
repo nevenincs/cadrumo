@@ -155,29 +155,31 @@ modelo:
             label: Felszámított áfa en Közösségen belüli beszerzések
           iva-anual-regimen-simplificado-cuota-resultante-agricola:
             help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 75 — adóügyi információ
+            label: Keletkezett ÁFA - Mezőgazdasági, állattenyésztési és erdészeti
+              tevékenységek összesített ÁFA-ja
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
             help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 74 — adóügyi információ
+            label: Keletkezett ÁFA - Nem mezőgazdasági, állattenyésztési és erdészeti
+              tevékenységek összesített ÁFA-ja
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
             help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 78 — adóügyi információ
+            label: Tárgyi eszközök értékesítése után keletkezett ÁFA
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
               adózás.'
             label: Felszámított áfa szerinti fordított adózás
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
             help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 80 — adóügyi információ
+            label: Levonások - Tárgyi eszközök beszerzésének levonható áfája
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 81 — adóügyi információ
+            label: Levonások - Beruházási javak korrekciója
           iva-anual-regimen-simplificado-resultado:
             help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
             label: Eredmény rendszer simplificado
           iva-anual-regimen-simplificado-suma-deducciones:
             help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 82 — adóügyi információ
+            label: Levonások - Levonások összege
           iva-anual-regularizacion-bienes-inversion:
             help: 'A Modelo 390 63. casilla adóügyi adatai: adóügyi információ.'
             label: Beruházási javak korrekciója

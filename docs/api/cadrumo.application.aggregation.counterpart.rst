@@ -1,5 +1,5 @@
 cadrumo.application.aggregation.counterpart module
-===================================================
+==================================================
 
 .. automodule:: cadrumo.application.aggregation.counterpart
    :members:

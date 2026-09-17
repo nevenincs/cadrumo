@@ -2777,8 +2777,11 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: Identificador de una proporción de uso ya configurada para
-        uso profesional proporcional; la categoría debe tener una proporción de uso.
+      usage_ratio_help: 'Identificador de una proporción de uso configurada. No es
+        texto libre: consulta los identificadores con aeat app ledger ratios list,
+        comprueba qué categorías la admiten con aeat app ledger ratios eligible y
+        créala con aeat app ledger ratios set; la --category-id del movimiento debe
+        tener ya esa proporción.'
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
@@ -2993,6 +2996,9 @@ cli:
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
+      irpf_category_unknown: 'Categoría IRPF desconocida ''%{value}''. Identificadores
+        aceptados: %{accepted}. Ejecuta aeat app ledger categories para ver el catálogo
+        completo.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).

@@ -13,10 +13,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.review._adapters
    cadrumo.application.review._aggregator
    cadrumo.application.review.enums
    cadrumo.application.review.errors
    cadrumo.application.review.filter
    cadrumo.application.review.models
    cadrumo.application.review.operator
+   cadrumo.application.review.source_adapters

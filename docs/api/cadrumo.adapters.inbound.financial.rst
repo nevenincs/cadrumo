@@ -14,3 +14,11 @@ Subpackages
    :maxdepth: 4
 
    cadrumo.adapters.inbound.financial.providers
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.adapters.inbound.financial.ledger_import

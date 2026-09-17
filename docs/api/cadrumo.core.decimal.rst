@@ -19,3 +19,4 @@ Submodules
    cadrumo.core.decimal.formatting
    cadrumo.core.decimal.grammar
    cadrumo.core.decimal.printed_money
+   cadrumo.core.decimal.printed_units

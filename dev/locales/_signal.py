@@ -1616,7 +1616,11 @@ def _translation_invariant_echo_reason(
     if normalized in normalized_platform_terms:
         return "platform_format"
     filtered, excluded = _filtered_translation_text(source)
-    if excluded and not any(character.isalpha() for character in filtered):
+    if (
+        excluded
+        and not any(character.isalpha() for character in filtered)
+        and any(character.isalnum() for character in _VERSION_TOKEN_RE.sub(" ", source))
+    ):
         return "inline_code"
     dictionary_words = _translation_words(filtered)
     lookup = getattr(dictionary, "lookup", None)

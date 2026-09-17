@@ -72,8 +72,8 @@ def _fold_accents(value: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", value) if unicodedata.category(c) != "Mn")
 
 
-def _excerpt_for(corpus_ref: str) -> Path | None:
-    target = _DATA / corpus_ref.split("#", 1)[0]
+def _excerpt_for(data_root: Path, corpus_ref: str) -> Path | None:
+    target = data_root / corpus_ref.split("#", 1)[0]
     extracted = target.with_name(target.name + ".extracted.md")
     for candidate in (extracted, target):
         if candidate.is_file():
@@ -81,16 +81,16 @@ def _excerpt_for(corpus_ref: str) -> Path | None:
     return None
 
 
-def scan() -> Iterator[Finding]:
+def scan(data_root: Path = _DATA, legal_root: Path = _LEGAL) -> Iterator[Finding]:
     """Yield every citation whose quote is not verbatim in its cited excerpt."""
     cache: dict[Path, tuple[str, str, str]] = {}
-    for catalogue in sorted(_LEGAL.glob("*.toml")):
+    for catalogue in sorted(legal_root.glob("*.toml")):
         document = parse_toml(catalogue.read_text(encoding="utf-8"))
         for legal_id, entry in document.get("legal", {}).items():
             corpus_ref, quotes = entry.get("corpus_ref"), entry.get("required_text")
             if not corpus_ref or not quotes:
                 continue
-            excerpt = _excerpt_for(corpus_ref)
+            excerpt = _excerpt_for(data_root, corpus_ref)
             if excerpt is None:
                 continue
             if excerpt not in cache:

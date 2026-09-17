@@ -21,7 +21,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.entrypoints._cli_main
    cadrumo.entrypoints.adapter_composition
    cadrumo.entrypoints.censal_review
+   cadrumo.entrypoints.diagnostics_run_health_composition
+   cadrumo.entrypoints.ledger_action_composition
+   cadrumo.entrypoints.ledger_evidence_extraction_composition
+   cadrumo.entrypoints.ledger_llm_diagnostics_composition
+   cadrumo.entrypoints.live_state_composition
    cadrumo.entrypoints.operation_composition

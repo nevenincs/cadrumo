@@ -16,14 +16,21 @@ Submodules
    cadrumo.core.errors.registry._adapters
    cadrumo.core.errors.registry._adapters_part1
    cadrumo.core.errors.registry._adapters_part2
+   cadrumo.core.errors.registry._adapters_part3
    cadrumo.core.errors.registry._application
    cadrumo.core.errors.registry._application_part1
    cadrumo.core.errors.registry._application_part2
+   cadrumo.core.errors.registry._application_part3a1
+   cadrumo.core.errors.registry._application_part3a2
+   cadrumo.core.errors.registry._application_part3b
    cadrumo.core.errors.registry._application_profile_bundle
    cadrumo.core.errors.registry._core
+   cadrumo.core.errors.registry._core_part2
    cadrumo.core.errors.registry._domain
    cadrumo.core.errors.registry._domain_part1
    cadrumo.core.errors.registry._domain_part2
    cadrumo.core.errors.registry._domain_part3
+   cadrumo.core.errors.registry._domain_part4
    cadrumo.core.errors.registry._entrypoints
+   cadrumo.core.errors.registry._entrypoints_part2
    cadrumo.core.errors.registry.declared_codes

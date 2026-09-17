@@ -8,7 +8,7 @@ modelo:
             label: A levonások és előlegfizetések alapja
           declaracion-anterior-numero:
             help: A Modelo 193 123-135. casilla adóügyi adatai.
-            label: Casilla 123-135 — adóügyi mező
+            label: A korábbi bevallás azonosító száma
           declaracion-complementaria:
             help: 'A casilla adatai: Casilla 121: bevallás kiegészítő.'
             label: KIEGÉSZÍTŐ VAGY HELYETTESÍTŐ BEVALLÁS
@@ -17,7 +17,7 @@ modelo:
             label: A BEVALLÁS AZONOSÍTÓ SZÁMA
           declaracion-sustitutiva:
             help: A Modelo 193 122. casilla adóügyi adatai.
-            label: Casilla 122 — adóügyi mező
+            label: Helyettesítő bevallás
           declarante-contacto-nombre:
             help: A Modelo 193 68-107. casilla adóügyi adatai.
             label: VEZETÉKNÉV ÉS UTÓNÉV
@@ -79,10 +79,10 @@ modelo:
             label: Garanciák
           payee-mediador-flag:
             help: 'A Modelo 193 76. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 76 — adóügyi információ
+            label: Kifizetés közvetítőnek
           payee-name:
             help: 'A Modelo 193 36-75. casilla adóügyi adatai: a kedvezményezett neve.'
-            label: Casilla 36-75 — a kedvezményezett neve
+            label: A kedvezményezett vezetékneve és keresztneve, cégneve vagy megnevezése
           payee-naturaleza-declarante:
             help: A Modelo 193 208. casilla adóügyi adatai.
             label: A BEVALLÓ JELLEGE
@@ -91,7 +91,7 @@ modelo:
             label: JELLEG
           payee-nif:
             help: 'A Modelo 193 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
-            label: Casilla 18-26 — a kedvezményezett NIF-je
+            label: A kedvezményezett adószáma
           payee-nif-pagador-anterior:
             label: AZ ELŐZŐ KIFIZETŐ NIF SZÁMA
           payee-numero-orden-193:
@@ -107,7 +107,7 @@ modelo:
             label: FÜGGŐBEN
           payee-percepciones-193:
             help: 'A Modelo 193 123-135. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 123-135 — adóügyi információ
+            label: Kifizetések összege / a kölcsönadó díjazása
           payee-porcentaje-retencion:
             help: 'A Modelo 193 165-168. casilla adóügyi adatai: adóügyi információ.'
             label: Levonási %
@@ -116,37 +116,38 @@ modelo:
             label: TARTOMÁNYKÓD
           payee-reducciones-193:
             help: 'A Modelo 193 139-151. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 139-151 — adóügyi információ
+            label: Csökkentések összege
           payee-retenciones-193:
             help: 'A Modelo 193 169-181. casilla adóügyi adatai: adóügyi információ.'
             label: Levonások és előlegfizetések
           payee-retenciones-forales-araba:
             help: 'A Modelo 193 275-287. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 275-287 — adóügyi információ
+            label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
+              Tanácsa
           payee-retenciones-forales-bizkaia:
             help: 'A Modelo 193 301-313. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 301-313 — adóügyi információ
+            label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
           payee-retenciones-forales-estatal:
             help: 'A Modelo 193 249-261. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 249-261 — adóügyi információ
+            label: Az államnak befizetett levonások és előlegfizetések
           payee-retenciones-forales-gipuzkoa:
             help: 'A Modelo 193 288-300. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 288-300 — adóügyi információ
+            label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi Tanácsa
           payee-retenciones-forales-navarra:
             help: 'A Modelo 193 262-274. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 262-274 — adóügyi információ
+            label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
           payee-tipo-codigo:
             help: A Modelo 193 96. casilla adóügyi adatai.
             label: KÓD TÍPUSA
           payee-tipo-percepcion:
             help: 'A Modelo 193 122. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 122 — adóügyi információ
+            label: A juttatás típusa
           perc-nif-representante:
             help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 27-35 — adóügyi információ
+            label: A törvényes képviselő adószáma
           representante-legal-nif:
             help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 27-35 — adóügyi információ
+            label: A törvényes képviselő adószáma
           retenciones-ingresadas-total:
             help: 'A casilla adatai: Casilla 175-189: adólevonások ingresadas total.'
             label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
@@ -281,19 +282,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Csökkentések összege
             x-e1in4opee9in8pbecdkmurj5ec:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
-                Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: A 193-es modelo 249-261. rovata, 2024. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
@@ -301,12 +298,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
-                Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: A 193-es modelo 96. rovata, 2024. adóév.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -426,19 +420,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Csökkentések összege
             x-e1in4opee9in8pbecdkmurj5ec:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
-                Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Bizkaia Tartományi Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: A 193-es modelo 249-261. rovata, 2025. adóév.
               label: AZ ÁLLAMNAK, BASZKFÖLD FORAL TANÁCSAINAK ÉS NAVARRA FORAL KÖZÖSSÉGÉNEK
@@ -446,12 +436,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Gipuzkoa Tartományi
-                Tanácsa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: A 193-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
-              label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: A 193-es modelo 96. rovata, 2025. adóév.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

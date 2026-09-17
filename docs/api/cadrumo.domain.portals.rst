@@ -23,7 +23,6 @@ Submodules
 
    cadrumo.domain.portals.categories
    cadrumo.domain.portals.codes
-   cadrumo.domain.portals.drift
    cadrumo.domain.portals.errors
    cadrumo.domain.portals.hosts
    cadrumo.domain.portals.metadata

@@ -80,17 +80,32 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
     assert set(accepted.split(", ")) == {provider.value for provider in LedgerProviderID}
 
 
-def test_missing_csv_preserves_the_typed_import_precondition(tmp_path: Path) -> None:
-    """A missing source reaches the shared boundary without refusal aggregation."""
+def test_missing_csv_is_refused_at_the_file_parameter(tmp_path: Path) -> None:
+    """A missing source is refused by the ``--file`` existence contract before any import runs."""
     missing = tmp_path / "missing.csv"
 
     result = _invoke(
-        ["--format", "json", "app", "ledger", "import", "--file", str(missing), "--provider", "csv"],
+        [
+            "--format",
+            "json",
+            "--language",
+            "en",
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(missing),
+            "--provider",
+            "csv",
+        ],
     )
 
     assert result.exit_code != 0, result.output
-    error = _assert_transaction_validation_error(result.output)
-    assert error["code"] != "REFUSED_CLI_BOUNDARY"
+    error = _json_object(_json_document(result.output)["error"])
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    message = str(error["message"])
+    assert "--file" in message
+    assert "missing.csv" in message
 
 
 def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_path: Path) -> None:

@@ -31,9 +31,11 @@ Submodules
    cadrumo.adapters.persistence.storage._kdf_salt
    cadrumo.adapters.persistence.storage._profile_custody_carry
    cadrumo.adapters.persistence.storage.attachment
+   cadrumo.adapters.persistence.storage.certificate_secret_backend
    cadrumo.adapters.persistence.storage.errors
    cadrumo.adapters.persistence.storage.namespace_registry
    cadrumo.adapters.persistence.storage.namespace_taxonomy
+   cadrumo.adapters.persistence.storage.operator_scope
    cadrumo.adapters.persistence.storage.path_safety
    cadrumo.adapters.persistence.storage.profile_custody
    cadrumo.adapters.persistence.storage.profile_login_session

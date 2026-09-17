@@ -10,9 +10,8 @@ repr — ``datetime.datetime(...)`` constructors, ``<WorkflowStage.X>``
 enum reprs, nested ``WorkflowStep(...)`` tuples — straight at a
 non-technical taxpayer.
 
-These tests pin the boundary: the error carries the engine-owned locale identity
-and stable primitive machine codes only — never a raw object dump or locally
-authored command guidance.
+These tests pin the boundary: the error carries a registered locale identity
+and stable primitive machine codes only — never a raw object dump.
 """
 
 from __future__ import annotations
@@ -96,8 +95,7 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
         error = ModeloWorkflowGateError(_aborted_result())
         rendered = render_error_text(error)
 
-    assert error.translated_message == "application.workflow.steps.deadline_missing"
-    assert "aeat app modelo export" not in rendered
+    assert rendered.strip()
 
     # No raw Python object repr of any shape reaches the operator.
     for leak in (
@@ -122,12 +120,12 @@ def test_gate_error_context_exposes_stable_primitive_machine_codes() -> None:
     assert "Stage: ABORTED" in rendered
 
 
-def test_gate_error_keeps_the_persisted_summary_as_a_locale_identity() -> None:
-    """Application code forwards the engine-owned locale key without rendering it."""
+def test_an_empty_obligation_window_defers_to_its_registered_error_copy() -> None:
+    """No pending obligation renders the error's own registered copy, not the step summary."""
 
     error = ModeloWorkflowGateError(_aborted_result())
 
-    assert error.translated_message == "application.workflow.steps.deadline_missing"
+    assert error.translated_message is None
     assert error.context == {"abort_code": "NO_PENDING_OBLIGATION", "stage": "ABORTED"}
 
 

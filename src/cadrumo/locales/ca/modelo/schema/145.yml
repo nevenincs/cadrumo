@@ -17,11 +17,11 @@ modelo:
             x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
               help: Informació fiscal sobre informació fiscal de la casella dr-56
                 del Modelo 145.
-              label: Casella dr-56 — informació fiscal
+              label: 7. Justificant de recepció, data, any
             x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
               help: Informació fiscal sobre informació fiscal de la casella dr-54
                 del Modelo 145.
-              label: Casella dr-54 — informació fiscal
+              label: 7. Justificant de recepció, data, dia
             x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
               help: 'Consulteu la informació de la casella: 7. Acuse de recibo, data,
                 més.'
@@ -72,11 +72,11 @@ modelo:
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
               help: Informació fiscal sobre informació fiscal de la casella dr-50
                 del Modelo 145.
-              label: Casella dr-50 — informació fiscal
+              label: 6. Data i signatura de la comunicació, any
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
               help: Informació fiscal sobre informació fiscal de la casella dr-48
                 del Modelo 145.
-              label: Casella dr-48 — informació fiscal
+              label: 6. Data i signatura de la comunicació, dia
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
               help: 'Consulteu la informació de la casella: 6. Data i firma de la
                 comunicacion, més.'
@@ -195,15 +195,15 @@ modelo:
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
               help: Informació fiscal sobre informació fiscal de la casella dr-14
                 del Modelo 145.
-              label: Casella dr-14 — informació fiscal
+              label: 1. Mobilitat geogràfica, data de trasllat, any
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
               help: Informació fiscal sobre informació fiscal de la casella dr-12
                 del Modelo 145.
-              label: Casella dr-12 — informació fiscal
+              label: 1. Mobilitat geogràfica, data de trasllat, dia
             x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
               help: Informació fiscal sobre informació fiscal de la casella dr-13
                 del Modelo 145.
-              label: Casella dr-13 — informació fiscal
+              label: 1. Mobilitat geogràfica, data de trasllat, mes
             x-e1in4or5e1q6ushedpkmc:
               help: 'Consulteu la informació de la casella: 1. NIF del perceptor.'
             x-e1in4or5e1q6ushedpnmqojick:

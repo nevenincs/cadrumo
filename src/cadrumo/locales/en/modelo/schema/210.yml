@@ -43,7 +43,7 @@ modelo:
               1,500)
           irnr-ganancia-diferencia:
             help: Tax information about tax information in casilla 11 of Modelo 210.
-            label: Casilla 11 — tax information
+            label: Acquisition. Difference (210 H)
           irnr-ganancia-importe:
             help: Tax information about tax information in casilla 12 of Modelo 210.
             label: Acquisition. Gain (210 H)
@@ -83,7 +83,7 @@ modelo:
             label: Limit under the tax treaty
           irnr-mejora-diferencia:
             help: 'Casilla information: Casilla 15: irnr mejora diferencia.'
-            label: Box 15 — tax information
+            label: Improvement or 2nd acquisition. Difference (210 H)
           irnr-mejora-ganancia:
             help: Tax information about tax information in casilla 16 of Modelo 210.
             label: Improvement or 2nd acquisition. Gain (210 H)
@@ -105,7 +105,7 @@ modelo:
             label: Gross income
           irnr-retencion-practicada:
             help: 'Casilla information: Casilla 29: irnr retencion practicada.'
-            label: Box 29 — tax information
+            label: Withholding applied
           irnr-tipo-gravamen:
             help: 'Casilla information: Casilla 21: irnr rate gravamen.'
             label: Tax rate
@@ -163,7 +163,6 @@ modelo:
             ganancia_diferencia:
               help: 'Review the casilla information: Acquisition. Diferencia (210
                 H).'
-              label: Acquisition. Difference (210 H)
             ingreso_devolucion_anterior:
               help: 'Review the casilla information: Payment/Refund previous (exclusivamente
                 self-assessment supplementary).'
@@ -173,7 +172,6 @@ modelo:
             mejora_diferencia:
               help: Tax information about tax information in casilla 15 of Modelo
                 210.
-              label: Improvement or 2nd acquisition. Difference (210 H)
             mejora_valor_adquisicion:
               help: Tax information about tax information in casilla 14 of Modelo
                 210.
@@ -189,7 +187,6 @@ modelo:
               help: 'Review the casilla information: Income íntegros.'
             retencion_practicada:
               help: 'Review the casilla information: Retención practicada.'
-              label: Withholding applied
             tipo_gravamen:
               help: Tax information about tax information in casilla 21 of Modelo
                 210.
@@ -241,7 +238,6 @@ modelo:
               help: Box 19 of modelo 210, tax year 2026.
             ganancia_diferencia:
               help: Box 11 of modelo 210, tax year 2026.
-              label: Acquisition. Difference (210 H)
             ganancia_importe:
               help: Box 12 of modelo 210, tax year 2026.
             ganancia_valor_adquisicion:
@@ -257,7 +253,6 @@ modelo:
               label: Tax treaty limit
             mejora_diferencia:
               help: Box 15 of modelo 210, tax year 2026.
-              label: Improvement or 2nd acquisition. Difference (210 H)
             mejora_ganancia:
               help: Box 16 of modelo 210, tax year 2026.
             mejora_valor_adquisicion:
@@ -273,7 +268,6 @@ modelo:
               help: Box 5 of modelo 210, tax year 2026.
             retencion_practicada:
               help: Box 29 of modelo 210, tax year 2026.
-              label: Withholding applied
             tipo_gravamen:
               help: Box 21 of modelo 210, tax year 2026.
             tipo_renta:

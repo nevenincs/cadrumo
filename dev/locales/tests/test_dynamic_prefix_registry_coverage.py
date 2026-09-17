@@ -94,7 +94,16 @@ def _catalogue_payload(locale: str) -> dict[str, LocaleNode]:
 #
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
-OPEN_ENDED_NAMESPACES: dict[str, str] = {}
+OPEN_ENDED_NAMESPACES: dict[str, str] = {
+    "tui.declarations.refusal.reason": (
+        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
+        "and the page falls back to its generic refusal line for an unauthored reason."
+    ),
+    "tui.home.availability.reason": (
+        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
+        "and the page falls back to its generic availability line for an unauthored reason."
+    ),
+}
 
 
 def _marker_prefix(marker: str) -> str:
@@ -396,6 +405,10 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Non-ctx-scoped (one ExitStack spanning the command body) - the
         # surface the wrong-language bound was proven against:
         ("application/wizard/commands.py", "_enter_requested_output_language"),
+        # Context manager around the terminal crash render only: the command
+        # context has already closed when a refusal escapes, and the override
+        # unwinds before the payload is written.
+        ("entrypoints/cli/_terminal_errors.py", "_requested_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/_root_cli.py", "root_command"),

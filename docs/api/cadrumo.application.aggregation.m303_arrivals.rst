@@ -1,5 +1,5 @@
 cadrumo.application.aggregation.m303_arrivals module
-=====================================================
+====================================================
 
 .. automodule:: cadrumo.application.aggregation.m303_arrivals
    :members:

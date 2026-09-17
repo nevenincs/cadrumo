@@ -622,10 +622,6 @@ modelo:
               label: Resultado - Importe atribuible Administración del Estado ([64]×[65]/100)
             '71':
               label: Resultado final ([69]-[70]+[109])
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla— ejercicio fiscal
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla— período de liquidación
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultado de la autoliquidación ([66]+[77]+[68]-[78])
           field:
@@ -638,10 +634,6 @@ modelo:
               label: Resultado - Importe atribuible Administración del Estado ([64]×[65]/100)
             '71':
               label: Resultado final ([69]-[70]+[109])
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla— ejercicio fiscal
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla— período de liquidación
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultado de la autoliquidación ([66]+[77]+[68]-[78])
           field:
@@ -654,10 +646,6 @@ modelo:
               label: Resultado - Importe atribuible Administración del Estado ([64]×[65]/100)
             '71':
               label: Resultado final ([69]-[70]+[109])
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla— ejercicio fiscal
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla— período de liquidación
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultado de la autoliquidación ([66]+[77]+[68]-[78])
           field:
@@ -670,10 +658,6 @@ modelo:
               label: Resultado - Importe atribuible Administración del Estado ([64]×[65]/100)
             '71':
               label: Resultado final ([69]-[70]+[109])
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla— ejercicio fiscal
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla— período de liquidación
             x-d5r62bjiclpnar3kc5i6u:
               label: Resultado de la autoliquidación ([66]+[77]+[68]-[78])
           field:

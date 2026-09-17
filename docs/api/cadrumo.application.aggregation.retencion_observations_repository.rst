@@ -1,5 +1,5 @@
 cadrumo.application.aggregation.retencion_observations_repository module
-=========================================================================
+========================================================================
 
 .. automodule:: cadrumo.application.aggregation.retencion_observations_repository
    :members:

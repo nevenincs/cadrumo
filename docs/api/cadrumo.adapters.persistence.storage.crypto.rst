@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage.crypto.aead
+   cadrumo.adapters.persistence.storage.crypto.aes_gcm
    cadrumo.adapters.persistence.storage.crypto.encrypted_columns

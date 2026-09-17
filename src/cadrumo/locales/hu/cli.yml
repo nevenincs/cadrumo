@@ -2731,8 +2731,11 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: Arányos üzleti használathoz már beállított használatiarány-azonosító;
-        a kategóriához használati aránynak kell tartoznia.
+      usage_ratio_help: 'Beállított használatiarány-azonosító. Nem tetszőleges szöveg:
+        a beállított azonosítókat az aeat app ledger ratios list listázza, az elfogadó
+        kategóriákat az aeat app ledger ratios eligible mutatja, újat az aeat app
+        ledger ratios set hoz létre; a tétel --category-id kategóriájához már tartoznia
+        kell ennek az aránynak.'
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen
@@ -2946,6 +2949,9 @@ cli:
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon
         tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
+      irpf_category_unknown: 'Ismeretlen IRPF-kategória: ''%{value}''. Elfogadott
+        azonosítók: %{accepted}. A teljes katalógust az aeat app ledger categories
+        mutatja.'
       negative_amount: Az --amount %{raw} értéknek nem negatív összegnek kell lennie.
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák

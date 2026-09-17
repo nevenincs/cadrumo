@@ -180,11 +180,13 @@ modelo:
           iva-anual-regimen-simplificado-cuota-resultante-agricola:
             help: Informació fiscal sobre informació fiscal de la casella 75 del Modelo
               390.
-            label: Casella 75 — informació fiscal
+            label: IVA meritat - Suma de quotes d'activitats agrícoles, ramaderes
+              i forestals
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
             help: Informació fiscal sobre informació fiscal de la casella 74 del Modelo
               390.
-            label: Casella 74 — informació fiscal
+            label: IVA meritat - Suma de quotes d'activitats no agrícoles, ramaderes
+              i forestals
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
             help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
               de activos fixos.'
@@ -207,7 +209,7 @@ modelo:
           iva-anual-regimen-simplificado-suma-deducciones:
             help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
               390.
-            label: Casella 82 — informació fiscal
+            label: Deduccions - Suma de deduccions
           iva-anual-regularizacion-bienes-inversion:
             help: 'Consulteu la informació de la casella: Regularització per béns
               de inversió (LIVA arts. 107-110).'

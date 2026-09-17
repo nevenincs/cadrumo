@@ -4,19 +4,19 @@ modelo:
       casilla:
         continuidad:
           m345-anio-nacimiento:
-            label: Casilla — tax field
+            label: Year of birth
           m345-beneficiario-nif:
-            label: Casilla— tax information
+            label: Tax ID of the beneficiary with a disability
           m345-clave:
             label: Key
           m345-codigo-provincia:
             label: Province code
           m345-datos-adicionales-clave-i:
-            label: Casilla— tax information
+            label: Additional data for key I
           m345-datos-adicionales-clave-m:
-            label: Casilla— tax information
+            label: Additional data for key M
           m345-datos-adicionales-claves-abc:
-            label: Casilla— tax information
+            label: Additional data for keys A, B and C
           m345-datos-identificativos-empleador:
             label: Identifying details of the employer promoting or holding the social
               welfare scheme
@@ -29,49 +29,49 @@ modelo:
           m345-declarante-nif:
             label: Tax ID of the filer
           m345-declarante-razon-social:
-            label: Casilla — tax field
+            label: Surname and first name or company name of the filer
           m345-devoluciones-excesos:
-            label: Casilla— tax information
+            label: Refunds or repayments for excess contributions
           m345-ejercicio-declaracion:
-            label: Casilla — tax field
+            label: Tax year of the return
           m345-empleador-nif:
-            label: Casilla— tax information
+            label: Tax ID of the promoting or holding employer
           m345-empleador-nombre:
-            label: Casilla — tax field
+            label: Surname and first name or company name of the employer
           m345-entidad-aseguradora-nif:
             label: NIF of the entity aseguradora
           m345-fondo-pensiones-nif:
-            label: Casilla— tax information
+            label: Tax ID of the pension fund
           m345-fondo-pensiones-numero-registro:
-            label: Casilla — tax field
+            label: Registration number of the pension fund
           m345-importe:
             label: Amount
           m345-importe-total-aportaciones:
-            label: Casilla— tax information
+            label: Total amount of contributions
           m345-numero-identificativo-anterior:
             label: Identifying number of the previous return
           m345-numero-identificativo-declaracion:
             label: Declaration identifying number
           m345-pepp-cuenta-subcuenta:
-            label: Casilla— tax information
+            label: Account/sub-account
           m345-pepp-denominacion:
-            label: Casilla — tax field
+            label: Name of the PEPP
           m345-pepp-numero-inscripcion:
-            label: Casilla — tax field
+            label: Registration number of the PEPP
           m345-persona-relacion:
             label: Contact person
           m345-pias-fecha-primera-prima:
-            label: Casilla— tax information
+            label: Date of payment of the first premium
           m345-pias-importe-acumulado:
             label: Amount acumulado PIAS
           m345-plan-pensiones-denominacion:
-            label: Casilla — tax field
+            label: Name of the pension plan
           m345-rendimientos-trabajo-no-superiores-60000:
             label: Gross employment income not exceeding 60,000 euros
           m345-representante-legal-nif:
             label: Tax ID of the legal representative
           m345-subclave:
-            label: Casilla— tax information
+            label: Sub-key
           m345-total-declarados:
             label: Total number of reported members
       field:

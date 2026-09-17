@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.adapters.outbound.aeat.browser._site_health_parsers
    cadrumo.adapters.outbound.aeat.browser._site_health_probe
+   cadrumo.adapters.outbound.aeat.browser.connectivity
    cadrumo.adapters.outbound.aeat.browser.errors
    cadrumo.adapters.outbound.aeat.browser.evasion
    cadrumo.adapters.outbound.aeat.browser.factory

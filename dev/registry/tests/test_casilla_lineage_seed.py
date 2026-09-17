@@ -261,6 +261,23 @@ def test_the_registry_gate_refuses_a_roleless_chain_unless_every_link_is_grounde
     assert any(f"casilla {successor.id!r} has no semantic_role" in failure for failure in regressions), regressions
 
 
+def _unstamped(modelo: ModeloDefinition, rows: set[tuple[str, str]]) -> ModeloDefinition:
+    """Return ``modelo`` with each ``(revision, casilla)`` row left without its lineage stamp."""
+    revisions = dict(modelo.revisions)
+    for revision_id in {revision for revision, _ in rows}:
+        revision = revisions[revision_id]
+        casillas = tuple(
+            casilla.model_copy(
+                update={"continuidad_id": None, "continuidad_origin": None, "continuidad_evidence": None}
+            )
+            if (revision_id, casilla.id) in rows
+            else casilla
+            for casilla in revision.casillas
+        )
+        revisions[revision_id] = revision.model_copy(update={"casillas": casillas})
+    return modelo.model_copy(update={"revisions": revisions})
+
+
 def test_an_excluded_modelo_is_refused_row_by_row_and_never_written(
     modelos: Mapping[str, ModeloDefinition],
 ) -> None:
@@ -272,10 +289,18 @@ def test_an_excluded_modelo_is_refused_row_by_row_and_never_written(
     test for the corpus getting BETTER. A fixture that has to be edited every
     time the adjudication campaign lands a row cannot tell a regression from
     progress, so the invariant is stated against whatever the rulings currently
-    say.
+    say. Once the corpus grounds every ruled row the live modelo has no residual
+    left, so each ruled row is planted back unstamped to keep the gate earned.
     """
     rulings = load_rulings()["309"]
-    plan = residual_plan("309", modelos["309"], rulings)
+    ruled_rows = {
+        (ruling.successor, successor_casilla)
+        for ruling in rulings
+        for pairs in (ruling.held, ruling.withheld)
+        for _, successor_casilla in pairs
+    }
+    modelo = _unstamped(modelos["309"], ruled_rows)
+    plan = residual_plan("309", modelo, rulings)
     categories = {(refusal.revision, refusal.casilla_id): refusal.category for refusal in plan.refusals}
     assert plan.edits == {}, "an excluded modelo is refused row by row and never written"
 
@@ -296,7 +321,7 @@ def test_an_excluded_modelo_is_refused_row_by_row_and_never_written(
     # that, a ruling that silently dropped rows from the plan would leave those
     # rows unrefused and unwritten, which is the one outcome an excluded modelo
     # must never produce.
-    unruled = residual_plan("309", modelos["309"], ())
+    unruled = residual_plan("309", modelo, ())
     assert {(refusal.revision, refusal.casilla_id) for refusal in unruled.refusals} == set(categories)
     assert {refusal.category for refusal in unruled.refusals} == {"absence_unclassified"}
 
@@ -324,6 +349,8 @@ def test_an_excluded_modelo_that_cannot_have_a_residual_row_refuses_to_record_on
 
 
 _LOADABLE = "303"
+#: A modelo whose successor editions still carry unresolved rows.
+_UNRESOLVED = "100"
 _PLANTED = "999"
 
 
@@ -363,24 +390,24 @@ def test_a_recorded_load_failure_never_names_a_machine_specific_path(tmp_path: P
 
 def test_a_load_failure_with_nothing_to_carry_names_no_row(tmp_path: Path) -> None:
     """The [[load_failed]] record itself names no row; what keeps the ledger whole is the carry below."""
-    loaded, _ = load_corpus((_bundled_source(_LOADABLE),))
-    modelo = loaded[_LOADABLE]
+    loaded, _ = load_corpus((_bundled_source(_UNRESOLVED),))
+    modelo = loaded[_UNRESOLVED]
     unresolved = unresolved_successor_rows(modelo)
-    assert unresolved, f"modelo {_LOADABLE} has no unresolved row left; this gate would be vacuous"
+    assert unresolved, f"modelo {_UNRESOLVED} has no unresolved row left; this gate would be vacuous"
 
-    plan = LineagePlan(_LOADABLE)
+    plan = LineagePlan(_UNRESOLVED)
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
     failure = ModeloLoadFailure(_PLANTED, f"registry/aeat/modelos/{_PLANTED}: no revisions found in revisions/")
     path = tmp_path / "ledger.toml"
-    path.write_text(render_ledger([plan], {_LOADABLE: []}, (failure,), ()) + "\n", encoding="utf-8")
+    path.write_text(render_ledger([plan], {_UNRESOLVED: []}, (failure,), ()) + "\n", encoding="utf-8")
 
     document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["load_failed"] == [{"modelo": failure.modelo, "reason": failure.reason}]
     assert all(entry["modelo"] != _PLANTED for entry in document["refusal"])
 
     keys = set(load_ledger_refusals(path))
-    assert {key.modelo for key in keys} == {_LOADABLE}
+    assert {key.modelo for key in keys} == {_UNRESOLVED}
     assert lineage_totality((modelo,), keys).is_total
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
     assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
@@ -455,12 +482,12 @@ def test_a_partly_stamped_modelo_is_recorded_and_stops_only_itself() -> None:
 
 def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Path) -> None:
     """The [[stamping_in_progress]] record itself names no row; its previous refusals are carried below."""
-    loaded, _ = load_corpus((_bundled_source(_LOADABLE),))
-    modelo = loaded[_LOADABLE]
+    loaded, _ = load_corpus((_bundled_source(_UNRESOLVED),))
+    modelo = loaded[_UNRESOLVED]
     unresolved = unresolved_successor_rows(modelo)
-    assert unresolved, f"modelo {_LOADABLE} has no unresolved row left; this gate would be vacuous"
+    assert unresolved, f"modelo {_UNRESOLVED} has no unresolved row left; this gate would be vacuous"
 
-    plan = LineagePlan(_LOADABLE)
+    plan = LineagePlan(_UNRESOLVED)
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
     record = PartialStamping(
@@ -471,7 +498,7 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
         unstamped=("2022",),
     )
     path = tmp_path / "ledger.toml"
-    path.write_text(render_ledger([plan], {_LOADABLE: []}, (), (record,)) + "\n", encoding="utf-8")
+    path.write_text(render_ledger([plan], {_UNRESOLVED: []}, (), (record,)) + "\n", encoding="utf-8")
 
     document = parse_toml(path.read_text(encoding="utf-8"))
     assert document["stamping_in_progress"] == [
@@ -486,7 +513,7 @@ def test_a_partly_stamped_modelo_with_nothing_to_carry_names_no_row(tmp_path: Pa
     assert all(entry["modelo"] != _PLANTED for entry in document["refusal"])
 
     keys = set(load_ledger_refusals(path))
-    assert {key.modelo for key in keys} == {_LOADABLE}
+    assert {key.modelo for key in keys} == {_UNRESOLVED}
     assert lineage_totality((modelo,), keys).is_total
     # The same ledger one row short is not total, so the assertion above is earned rather than vacuous.
     assert not lineage_totality((modelo,), keys - {min(keys)}).is_total
@@ -508,7 +535,7 @@ def _previous_ledger(tmp_path: Path, plan: LineagePlan, skipped_rows: tuple[tupl
     path.write_text(
         render_ledger(
             [plan, skipped],
-            {_LOADABLE: [], _PLANTED: []},
+            {plan.modelo: [], _PLANTED: []},
             (),
             (),
             carried=(),
@@ -522,11 +549,11 @@ def _previous_ledger(tmp_path: Path, plan: LineagePlan, skipped_rows: tuple[tupl
 
 def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dropped(tmp_path: Path) -> None:
     """Carrying keeps the ledger whole; the same run without it drops the modelo's rows outright."""
-    loaded, _ = load_corpus((_bundled_source(_LOADABLE),))
-    modelo = loaded[_LOADABLE]
+    loaded, _ = load_corpus((_bundled_source(_UNRESOLVED),))
+    modelo = loaded[_UNRESOLVED]
     unresolved = unresolved_successor_rows(modelo)
-    assert unresolved, f"modelo {_LOADABLE} has no unresolved row left; this gate would be vacuous"
-    plan = LineagePlan(_LOADABLE)
+    assert unresolved, f"modelo {_UNRESOLVED} has no unresolved row left; this gate would be vacuous"
+    plan = LineagePlan(_UNRESOLVED)
     for key in unresolved:
         plan.refuse(key.revision, key.casilla, LineageRefusalCategory.NOT_EXAMINED, "planted for this gate")
 
@@ -542,11 +569,11 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
     path = tmp_path / "carried.toml"
     now = run_identifier()
     path.write_text(
-        render_ledger([plan], {_LOADABLE: []}, (failure,), (), carried=carried, judged_at=now) + "\n",
+        render_ledger([plan], {_UNRESOLVED: []}, (failure,), (), carried=carried, judged_at=now) + "\n",
         encoding="utf-8",
     )
     entries = load_ledger_refusals(path)
-    assert {key.modelo for key in entries} == {_LOADABLE, _PLANTED}, "the skipped modelo must keep its rows"
+    assert {key.modelo for key in entries} == {_UNRESOLVED, _PLANTED}, "the skipped modelo must keep its rows"
     assert {(key.revision, key.casilla) for key in entries if key.modelo == _PLANTED} == set(rows)
     for key, entry in entries.items():
         if key.modelo != _PLANTED:
@@ -561,9 +588,9 @@ def test_a_skipped_modelos_previous_refusals_are_carried_forward_rather_than_dro
     # so the assertions above are earned rather than vacuous.
     dropped = tmp_path / "dropped.toml"
     dropped.write_text(
-        render_ledger([plan], {_LOADABLE: []}, (failure,), (), carried=(), judged_at=now) + "\n", encoding="utf-8"
+        render_ledger([plan], {_UNRESOLVED: []}, (failure,), (), carried=(), judged_at=now) + "\n", encoding="utf-8"
     )
-    assert {key.modelo for key in load_ledger_refusals(dropped)} == {_LOADABLE}
+    assert {key.modelo for key in load_ledger_refusals(dropped)} == {_UNRESOLVED}
 
 
 def test_a_carried_refusal_records_when_it_was_last_actually_judged(tmp_path: Path) -> None:

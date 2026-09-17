@@ -43,7 +43,7 @@ modelo:
               (éves korlát 1500 euró)
           irnr-ganancia-diferencia:
             help: 'A Modelo 210 11. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 11 — adóügyi információ
+            label: Megszerzés. Különbözet (210 H)
           irnr-ganancia-importe:
             help: 'A Modelo 210 12. casilla adóügyi adatai: adóügyi információ.'
             label: Megszerzés. Nyereség (210 H)
@@ -84,7 +84,7 @@ modelo:
             label: Egyezmény szerinti korlát
           irnr-mejora-diferencia:
             help: 'A casilla adatai: Casilla 15: irnr mejora diferencia.'
-            label: 15. rovat — adóadat
+            label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
           irnr-mejora-ganancia:
             help: 'A Modelo 210 16. casilla adóügyi adatai: adóügyi információ.'
             label: Felújítás vagy 2. megszerzés. Nyereség (210 H)
@@ -107,7 +107,7 @@ modelo:
             label: Bruttó jövedelem
           irnr-retencion-practicada:
             help: 'A casilla adatai: Casilla 29: irnr retencion practicada.'
-            label: 29. rovat — adóadat
+            label: Alkalmazott forrásadó
           irnr-tipo-gravamen:
             help: 'A casilla adatai: Casilla 21: irnr kulcs gravamen.'
             label: Adókulcs
@@ -165,7 +165,6 @@ modelo:
                 (límite éves 1.500 euros).'
             ganancia_diferencia:
               help: 'Tekintse át a casilla adatait: Beszerzés. Diferencia (210 H).'
-              label: Megszerzés. Különbözet (210 H)
             ingreso_devolucion_anterior:
               help: 'Tekintse át a casilla adatait: Befizetés/Visszatérítés korábbi
                 (exclusivamente önadózási bevallás kiegészítő).'
@@ -174,7 +173,6 @@ modelo:
               label: Egyezményes korlát
             mejora_diferencia:
               help: 'A Modelo 210 15. casilla adóügyi adatai: adóügyi információ.'
-              label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
             mejora_valor_adquisicion:
               help: 'A Modelo 210 14. casilla adóügyi adatai: adóügyi információ.'
             mejora_valor_transmision:
@@ -188,7 +186,6 @@ modelo:
               help: 'Tekintse át a casilla adatait: Jövedelmek íntegros.'
             retencion_practicada:
               help: 'Tekintse át a casilla adatait: Retención practicada.'
-              label: Alkalmazott forrásadó
             tipo_gravamen:
               help: 'A Modelo 210 21. casilla adóügyi adatai: adóügyi információ.'
             tipo_renta:
@@ -240,7 +237,6 @@ modelo:
               help: A 210-es modelo 19. rovata, 2026. adóév.
             ganancia_diferencia:
               help: A 210-es modelo 11. rovata, 2026. adóév.
-              label: Megszerzés. Különbözet (210 H)
             ganancia_importe:
               help: A 210-es modelo 12. rovata, 2026. adóév.
             ganancia_valor_adquisicion:
@@ -256,7 +252,6 @@ modelo:
               label: Egyezményes korlát
             mejora_diferencia:
               help: A 210-es modelo 15. rovata, 2026. adóév.
-              label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
             mejora_ganancia:
               help: A 210-es modelo 16. rovata, 2026. adóév.
             mejora_valor_adquisicion:
@@ -272,7 +267,6 @@ modelo:
               help: A 210-es modelo 5. rovata, 2026. adóév.
             retencion_practicada:
               help: A 210-es modelo 29. rovata, 2026. adóév.
-              label: Alkalmazott forrásadó
             tipo_gravamen:
               help: A 210-es modelo 21. rovata, 2026. adóév.
             tipo_renta:

@@ -18,33 +18,37 @@ modelo:
           m190-numero-identificativo:
             label: Número identificativo de la declaración
           m190-numero-identificativo-anterior:
-            label: Casilla 123-135 — información fiscal
+            label: Número identificativo de la declaración anterior
           m190-persona-contacto-nombre:
-            label: Casilla 68-107 — información fiscal
+            label: Apellidos y nombre de la persona con quien relacionarse
           m190-persona-contacto-telefono:
-            label: Casilla 59-67 — información fiscal
+            label: Teléfono de la persona con quien relacionarse
           payee-anualidades-alimentos:
             label: Anualidades por alimentos
           payee-ascendientes-75-mas-entero:
-            label: Casilla 244 — información fiscal
+            label: Ascendientes. De 75 años o más. Cómputo por entero
           payee-ascendientes-75-mas-total:
-            label: Casilla 243 — información fiscal
+            label: Ascendientes. De 75 años o más. N.º total
           payee-ascendientes-discapacidad-33-65-entero:
-            label: Casilla 246 — información fiscal
+            label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. Cómputo
+              por entero
           payee-ascendientes-discapacidad-33-65-total:
-            label: Casilla 245 — información fiscal
+            label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. N.º
+              total
           payee-ascendientes-discapacidad-65-entero:
-            label: Casilla 250 — información fiscal
+            label: Ascendientes con discapacidad. Discapacidad ≥ 65%. Cómputo por
+              entero
           payee-ascendientes-discapacidad-65-total:
-            label: Casilla 249 — información fiscal
+            label: Ascendientes con discapacidad. Discapacidad ≥ 65%. N.º total
           payee-ascendientes-discapacidad-movilidad-entero:
-            label: Casilla 248 — información fiscal
+            label: Ascendientes con discapacidad. Movilidad reducida. Cómputo por
+              entero
           payee-ascendientes-discapacidad-movilidad-total:
-            label: Casilla 247 — información fiscal
+            label: Ascendientes con discapacidad. Movilidad reducida. N.º total
           payee-ascendientes-menores-75-entero:
-            label: Casilla 242 — información fiscal
+            label: Ascendientes. Menores de 75 años. Cómputo por entero
           payee-ascendientes-menores-75-total:
-            label: Casilla 241 — información fiscal
+            label: Ascendientes. Menores de 75 años. N.º total
           payee-birth-year:
             label: Año de nacimiento
           payee-ceuta-melilla-clave:
@@ -54,33 +58,39 @@ modelo:
           payee-complemento-ayuda-infancia:
             label: Complemento de ayuda para la infancia
           payee-computo-hijo-1:
-            label: Casilla 251 — información fiscal
+            label: Cómputo de los 3 primeros hijos. Hijo 1.º
           payee-computo-hijo-2:
-            label: Casilla 252 — información fiscal
+            label: Cómputo de los 3 primeros hijos. Hijo 2.º
           payee-computo-hijo-3:
-            label: Casilla 253 — información fiscal
+            label: Cómputo de los 3 primeros hijos. Hijo 3.º
           payee-contract-relation-clave:
             label: Contrato o relación
           payee-descendientes-discapacidad-33-65-entero:
-            label: Casilla 231-232 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Discapacidad ≥ 33%
+              y < 65%. Cómputo por entero
           payee-descendientes-discapacidad-33-65-total:
-            label: Casilla 229-230 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Discapacidad ≥ 33%
+              y < 65%. N.º total
           payee-descendientes-discapacidad-65-entero:
-            label: Casilla 239-240 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Discapacidad ≥ 65%.
+              Cómputo por entero
           payee-descendientes-discapacidad-65-total:
-            label: Casilla 237-238 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Discapacidad ≥ 65%.
+              N.º total
           payee-descendientes-discapacidad-movilidad-entero:
-            label: Casilla 235-236 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+              Cómputo por entero
           payee-descendientes-discapacidad-movilidad-total:
-            label: Casilla 233-234 — información fiscal
+            label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
+              N.º total
           payee-descendientes-menores-3-entero:
-            label: Casilla 224 — información fiscal
+            label: Hijos y otros descendientes. Menores de 3 años. Cómputo por entero
           payee-descendientes-menores-3-total:
-            label: Casilla 223 — información fiscal
+            label: Hijos y otros descendientes. Menores de 3 años. N.º total
           payee-descendientes-resto-entero:
-            label: Casilla 227-228 — información fiscal
+            label: Hijos y otros descendientes. Resto. Cómputo por entero
           payee-descendientes-resto-total:
-            label: Casilla 225-226 — información fiscal
+            label: Hijos y otros descendientes. Resto. N.º total
           payee-disability-clave:
             label: Discapacidad
           payee-emerging-stock-excess-clave:
@@ -94,49 +104,59 @@ modelo:
           payee-geographic-mobility-clave:
             label: Movilidad geográfica
           payee-incapacidad-dineraria-percepcion:
-            label: Casilla 256-268 — información fiscal
+            label: Prestaciones derivadas de incapacidad laboral. Percepción íntegra
+              dineraria
           payee-incapacidad-dineraria-retenciones:
-            label: Casilla 269-281 — información fiscal
+            label: Prestaciones derivadas de incapacidad laboral. Retenciones practicadas
+              sobre la prestación dineraria
           payee-incapacidad-especie-ingresos-a-cuenta:
-            label: Casilla 296-308 — información fiscal
+            label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+              efectuados por prestaciones en especie
           payee-incapacidad-especie-repercutidos:
-            label: Casilla 309-321 — información fiscal
+            label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
+              repercutidos por prestaciones en especie
           payee-incapacidad-especie-valoracion:
-            label: Casilla 283-295 — información fiscal
+            label: Prestaciones derivadas de incapacidad laboral. Valoración de la
+              percepción en especie
           payee-name:
-            label: Casilla 36-75 — nombre del perceptor
+            label: Apellidos y nombre o denominación del perceptor
           payee-nif:
             label: NIF del perceptor
           payee-pension-compensatoria:
             label: Pensiones compensatorias
           payee-prestamos-vivienda-clave:
-            label: Casilla 254 — información fiscal
+            label: Comunicación de préstamos para vivienda habitual
           payee-province:
-            label: Casilla 76-77 — provincia del perceptor
+            label: Código de provincia
           payee-reducciones-aplicables:
-            label: Casilla 171-183 — información fiscal
+            label: Reducciones aplicables
           payee-retenciones-forales-araba:
-            label: Casilla 349-361 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Araba/Álava
           payee-retenciones-forales-bizkaia:
-            label: Casilla 375-387 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Bizkaia
           payee-retenciones-forales-estatal:
-            label: Casilla 323-335 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Hacienda estatal
           payee-retenciones-forales-gipuzkoa:
-            label: Casilla 362-374 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Diputación Foral de
+              Gipuzkoa
           payee-retenciones-forales-navarra:
-            label: Casilla 336-348 — información fiscal
+            label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
+              Navarra
           payee-spouse-or-unit-titular-nif:
-            label: Casilla 158-166 — NIF del cónyuge o de la unidad titular
+            label: NIF del cónyuge o del titular de la unidad de convivencia
           payee-subclave-percepcion:
-            label: Casilla 79-80 — información fiscal
+            label: Subclave de percepción
           payee-unit-convivencia-titular-clave:
-            label: Casilla 169 — información fiscal
+            label: Titular de la unidad de convivencia
           perc-retenciones-practicadas:
-            label: Casilla 95-107 — información fiscal
+            label: Retenciones practicadas sobre las percepciones dinerarias
           percepcion-integra-dineraria:
-            label: Casilla 82-94 — información fiscal
+            label: Percepción íntegra dineraria no derivada de incapacidad laboral
           percepcion-valoracion-especie:
-            label: Casilla 109-121 — información fiscal
+            label: Valoración de la percepción en especie no derivada de incapacidad
+              laboral
           prestacion-incapacidad:
             help: Indicativo 1 o 0 segun se haya satisfecho o no este tipo de prestacion
               de la clave B.01 en el ejercicio.
@@ -168,11 +188,11 @@ modelo:
           representante-legal-nif:
             label: NIF del representante legal
           retenciones-ingresos-a-cuenta:
-            label: Casilla 161-175 — información fiscal
+            label: Importe total de retenciones e ingresos a cuenta
           total-percepciones-amount:
-            label: Casilla 145-160 — información fiscal
+            label: Importe total de las percepciones
           total-percepciones-count:
-            label: Casilla 136-144 — información fiscal
+            label: Número total de percepciones
       construct:
         modelo-190-annual-summary:
           field:
@@ -193,18 +213,6 @@ modelo:
             label: Modelo 190, ejercicio 2023
         '2024':
           casilla:
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              label: Número identificativo de la declaración anterior
-            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              label: Importe total de las percepciones
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              label: Apellidos y nombre de la persona con quien relacionarse
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              label: Teléfono de la persona con quien relacionarse
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: Importe total de retenciones e ingresos a cuenta
-            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              label: Número total de percepciones
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -214,47 +222,33 @@ modelo:
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. De 75 años o más. Cómputo por entero
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. De 75 años o más. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. Cómputo
-                por entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. N.º
-                total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. Cómputo por
-                entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Movilidad reducida. Cómputo por
-                entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Movilidad reducida. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. Menores de 75 años. Cómputo por entero
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. Menores de 75 años. N.º total
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -264,64 +258,45 @@ modelo:
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 1.º
             x-e1in4opecdnmqs3lehniqq39d9niqcg:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 2.º
             x-e1in4opecdnmqs3lehniqq39d9niqco:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 3.º
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                33% y < 65%. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                33% y < 65%. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                65%. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                65%. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
-                Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
-                N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Menores de 3 años. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Menores de 3 años. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Resto. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Resto. N.º total
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -334,28 +309,18 @@ modelo:
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Percepción íntegra
-                dineraria
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Retenciones practicadas
-                sobre la prestación dineraria
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
-                efectuados por prestaciones en especie
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
-                repercutidos por prestaciones en especie
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Valoración de
-                la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -365,42 +330,27 @@ modelo:
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: NIF del cónyuge o del titular de la unidad de convivencia
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-            x-e1in4opedpnmqojick:
-              label: Apellidos y nombre o denominación del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
-            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              label: Percepción íntegra dineraria no derivada de incapacidad laboral
-            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              label: Valoración de la percepción en especie no derivada de incapacidad
-                laboral
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Comunicación de préstamos para vivienda habitual
             x-e1in4opee1p6utj9dphmio8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Código de provincia
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
-              label: Reducciones aplicables
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Araba/Álava
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 323-335 del modelo 190, ejercicio 2024.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
@@ -408,40 +358,19 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Gipuzkoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
-                Navarra
-            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              label: Retenciones practicadas sobre las percepciones dinerarias
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-            x-e1in4opeedqm4orcc5r6a:
-              label: Subclave de percepción
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Titular de la unidad de convivencia
           field:
             label: Modelo 190 ejercicio 2024 y siguientes
         2025-y-siguientes:
           casilla:
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              label: Número identificativo de la declaración anterior
-            x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              label: Importe total de las percepciones
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              label: Apellidos y nombre de la persona con quien relacionarse
-            x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              label: Teléfono de la persona con quien relacionarse
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              label: Importe total de retenciones e ingresos a cuenta
-            x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              label: Número total de percepciones
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -451,47 +380,33 @@ modelo:
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. De 75 años o más. Cómputo por entero
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. De 75 años o más. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. Cómputo
-                por entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 33% y < 65%. N.º
-                total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. Cómputo por
-                entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Discapacidad ≥ 65%. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Movilidad reducida. Cómputo por
-                entero
             x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes con discapacidad. Movilidad reducida. N.º total
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. Menores de 75 años. Cómputo por entero
             x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Ascendientes. Menores de 75 años. N.º total
             x-e1in4opecdinat315lmmar39dhm62:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -501,64 +416,45 @@ modelo:
             x-e1in4opecdnmqs3lehniqq39d9niqc8:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 1.º
             x-e1in4opecdnmqs3lehniqq39d9niqcg:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 2.º
             x-e1in4opecdnmqs3lehniqq39d9niqco:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Cómputo de los 3 primeros hijos. Hijo 3.º
             x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                33% y < 65%. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                33% y < 65%. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                65%. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Discapacidad ≥
-                65%. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
-                Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes con discapacidad. Movilidad reducida.
-                N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Menores de 3 años. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Menores de 3 años. N.º total
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Resto. Cómputo por entero
             x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
               help: Dato del perceptor declarado en el modelo 190, para el minimo
                 por descendientes o ascendientes.
-              label: Hijos y otros descendientes. Resto. N.º total
             x-e1in4opechkn6or1e1gm6qb4c5i0:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -571,28 +467,18 @@ modelo:
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Percepción íntegra
-                dineraria
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Retenciones practicadas
-                sobre la prestación dineraria
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
-                efectuados por prestaciones en especie
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Ingresos a cuenta
-                repercutidos por prestaciones en especie
             x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Prestaciones derivadas de incapacidad laboral. Valoración de
-                la percepción en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -602,42 +488,27 @@ modelo:
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: NIF del cónyuge o del titular de la unidad de convivencia
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-            x-e1in4opedpnmqojick:
-              label: Apellidos y nombre o denominación del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
-            x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              label: Percepción íntegra dineraria no derivada de incapacidad laboral
-            x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              label: Valoración de la percepción en especie no derivada de incapacidad
-                laboral
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Comunicación de préstamos para vivienda habitual
             x-e1in4opee1p6utj9dphmio8:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Código de provincia
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
               help: Importe declarado en el registro de perceptor del modelo 190.
                 El diseno lo divide en parte entera y parte decimal.
-              label: Reducciones aplicables
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Araba/Álava
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Bizkaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casilla 323-335 del modelo 190, ejercicio 2025.
               label: RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS
@@ -645,23 +516,14 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Diputación Foral
-                de Gipuzkoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dato del perceptor declarado en el modelo 190. El diseno divide
                 los importes en parte entera y parte decimal.
-              label: Retenciones e ingresos a cuenta ingresados. Comunidad Foral de
-                Navarra
-            x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              label: Retenciones practicadas sobre las percepciones dinerarias
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-            x-e1in4opeedqm4orcc5r6a:
-              label: Subclave de percepción
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Titular de la unidad de convivencia
           field:
             label: Modelo 190 ejercicio 2024 y siguientes

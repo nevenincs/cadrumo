@@ -25,6 +25,7 @@ from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -61,7 +62,9 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = "r" + "0" * 63
+    # The work unit must pin the law-determined revision, or every verb that
+    # re-checks the pin refuses it as stale.
+    revision_id = published_snapshot(modelo, filing_year=filing_year, period=period).revision.id
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

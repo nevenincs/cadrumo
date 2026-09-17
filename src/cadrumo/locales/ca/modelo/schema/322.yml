@@ -1832,8 +1832,7 @@ modelo:
             '70':
               help: 'Informació fiscal sobre informació fiscal de la casella 70 del
                 Modelo 322 Referències: [68], [69], [112], [70].'
-              label: 'Casella 70 — informació fiscal Referències: [68], [69], [112],
-                [70].'
+              label: Resultat de l'autoliquidació ([68] - [69] - [112]) [70]
             '700':
               help: 'Informació fiscal sobre informació fiscal de la casella 700 del
                 Modelo 322 Referències: [700].'

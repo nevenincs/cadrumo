@@ -1,5 +1,5 @@
 cadrumo.application.aggregation.impatriado_income_ledger module
-================================================================
+===============================================================
 
 .. automodule:: cadrumo.application.aggregation.impatriado_income_ledger
    :members:

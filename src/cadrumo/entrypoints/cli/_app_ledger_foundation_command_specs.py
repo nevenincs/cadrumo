@@ -22,6 +22,7 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_YEAR_OPTION,
     _blank_default_text_option,
     _boolean_flag_option,
+    _irpf_category_option,
     _option_from_application_contract,
     _optional_text_option,
     _repeatable_text_option,
@@ -139,7 +140,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.ledger.classify.counterparty_identification_state_help",
             ),
             _optional_text_option("recargo_amount", ("--recargo-amount",), "cli.ledger.add.recargo_amount_help"),
-            _optional_text_option("irpf_category", ("--irpf-category",), "cli.ledger.add.irpf_category_help"),
+            _irpf_category_option("cli.ledger.add.irpf_category_help"),
             _LEDGER_USAGE_RATIO_ID_OPTION,
             _optional_text_option(
                 "prorrata_reference", ("--prorrata-reference",), "cli.ledger.add.prorrata_reference_help"

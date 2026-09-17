@@ -17,6 +17,7 @@ to operators. Verifies the four observable contracts the verb must hold:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -109,11 +110,11 @@ class TestArt7pEnvelopeContract:
         # Strict pydantic round-trip: the envelope MUST satisfy
         # OutputSchema.model_validate or the schema-conformance gate
         # would catch the regression.
-        validated = WorkPreviewMaritimeExemptionResult.model_validate(payload)
+        validated = WorkPreviewMaritimeExemptionResult.model_validate_json(json.dumps(payload))
         assert validated.worker_class == "trabajador_del_mar"
         assert len(validated.observations) == 1
         observation = validated.observations[0]
-        assert observation.legal_refs == ["ley-35-2006:art-7"]
+        assert observation.legal_refs == ("ley-35-2006:art-7",)
         # Flat projection mirrors the typed observation.
         assert validated.casilla_values[observation.casilla_id] == observation.value
 
@@ -139,7 +140,7 @@ class TestRetmarMandatoryFilingWarningSurface:
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         payload = _unwrap(result.output)
-        validated = WorkPreviewMaritimeExemptionResult.model_validate(payload)
+        validated = WorkPreviewMaritimeExemptionResult.model_validate_json(json.dumps(payload))
         assert validated.retmar_mandatory_filing is True
         # The RETMAR warning rides the registered ProfileCompletenessError
         # translated through the error registry; the Spanish anchor must
@@ -150,7 +151,7 @@ class TestRetmarMandatoryFilingWarningSurface:
         # The observation payload is still produced (the warning is
         # non-blocking per service contract).
         assert len(validated.observations) == 1
-        assert validated.observations[0].legal_refs == ["ley-19-1994:art-75"]
+        assert validated.observations[0].legal_refs == ("ley-19-1994:art-75",)
 
 
 class TestDa41InactiveGuard:
@@ -282,7 +283,7 @@ class TestVerbWiringIntegration:
         )  # fmt: skip
         assert result.exit_code == 0, result.output
         payload = _unwrap(result.output)
-        validated = WorkPreviewMaritimeExemptionResult.model_validate(payload)
+        validated = WorkPreviewMaritimeExemptionResult.model_validate_json(json.dumps(payload))
         assert validated.worker_class is None
         assert validated.observations == []
         assert validated.retmar_mandatory_filing is False

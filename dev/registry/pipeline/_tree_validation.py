@@ -26,6 +26,7 @@ from ..compiler.authority import compile_registry_tree, compile_validated_author
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
+from ..compiler.profile_schema import capture_profile_schema_source
 from ..compiler.registry_scope import validate_registry_scope
 from ._export_tree import RenderedExportTree
 from .export_fragment_provenance import (
@@ -249,6 +250,20 @@ def _validated_target_snapshot(
     with validating_governed_facts(
         CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     ):
+        # The witness replaces only the registry-wide scope. Every loaded modelo
+        # and the compiled catalogues still pass the checks a full authority
+        # compile applies, so an absent governed fact is refused on this route too.
+        from ..compiler.validator import RegistryValidator
+
+        validator = RegistryValidator(
+            catalogues,
+            source_root=source_root,
+            user_profile_schema=capture_profile_schema_source(
+                source_root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+            ).schema,
+        )
+        for loaded_modelo in loaded_modelos:
+            validator.validate_modelo(loaded_modelo)
         continuity_failures = validate_registry_scope(scoped_modelos)
         if continuity_failures:
             raise RegistryValidationError(

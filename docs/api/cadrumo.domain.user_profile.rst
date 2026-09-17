@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.domain.user_profile.errors
    cadrumo.domain.user_profile.labels
-   cadrumo.domain.user_profile.loader
    cadrumo.domain.user_profile.portable_export
    cadrumo.domain.user_profile.registry_contract
    cadrumo.domain.user_profile.schema

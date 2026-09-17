@@ -614,7 +614,11 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
     if not _is_strict_output_schema(result):
         raise OutputSchemaError(f"operator JSON result for {command!r} is not a strict output schema")
     schema = type(result)
-    payload = result.model_dump(mode="python") if isinstance(result, BaseModel) else result
+    # Computed fields are derived on output and are not inputs the strict
+    # schema accepts, so the revalidated payload carries declared fields only.
+    payload = (
+        result.model_dump(mode="python", exclude_computed_fields=True) if isinstance(result, BaseModel) else result
+    )
     try:
         return schema.model_validate(payload)
     except ValidationError as error:

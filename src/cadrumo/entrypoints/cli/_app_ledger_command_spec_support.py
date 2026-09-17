@@ -33,6 +33,20 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 _NO_RESULT_SCHEMA: Final[ResultSchemaSpec] = ResultSchemaSpec(SchemaState.NOT_SUPPORTED)
 
 
+def _irpf_category_option(help_key: str) -> OptionSpec:
+    """Declare the optional ``--irpf-category`` token, resolved against the published taxonomy."""
+    return OptionSpec(
+        name="irpf_category",
+        declarations=("--irpf-category",),
+        value=ValueContract(
+            DeferredTarget("builtins", "str"),
+            click_type=DeferredTarget(".common", "IRPF_CATEGORY_CHOICE", __package__),
+        ),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+    )
+
+
 def _optional_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
     """Declare an optional free-text option defaulting to absent.
 

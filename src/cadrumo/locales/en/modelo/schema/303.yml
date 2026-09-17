@@ -6,11 +6,11 @@ modelo:
           dr303-01:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Tax base.'
-            label: Casilla 01 — tax information
+            label: Accrued VAT, general regime super-reduced 4% rate - Tax base
           dr303-02:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Rate percentage.'
-            label: Casilla 02 — tax information
+            label: Accrued VAT, general regime super-reduced 4% rate - Rate percentage
           dr303-03:
             help: 'Review the casilla information: Output VAT RG rate super-reduced
               4pct - Amount.'
@@ -18,11 +18,11 @@ modelo:
           dr303-04:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Tax base.'
-            label: Casilla 04 — tax information
+            label: Accrued VAT, general regime reduced 10% rate - Tax base
           dr303-05:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Rate percentage.'
-            label: Casilla 05 — tax information
+            label: Accrued VAT, general regime reduced 10% rate - Rate percentage
           dr303-06:
             help: 'Review the casilla information: Output VAT RG rate reduced 10pct
               - Amount.'
@@ -30,11 +30,11 @@ modelo:
           dr303-07:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Tax base.'
-            label: Casilla 07 — tax information
+            label: Accrued VAT, general regime standard 21% rate - Tax base
           dr303-08:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Rate percentage.'
-            label: Casilla 08 — tax information
+            label: Accrued VAT, general regime standard 21% rate - Rate percentage
           dr303-09:
             help: 'Review the casilla information: Output VAT RG rate general 21pct
               - Amount.'
@@ -50,7 +50,8 @@ modelo:
               with administrative criterion
           dr303-109:
             help: Tax information for casilla 109 of Modelo 303.
-            label: Casilla 109 — tax information
+            label: Result - Refunds agreed by the AEAT from previous self-assessments
+              of the tax year and period
           dr303-11:
             help: 'Review the casilla information: Output VAT intra-Community acquisitions
               goods and services - Amount.'
@@ -64,7 +65,8 @@ modelo:
               to the State
           dr303-12:
             help: Tax information about tax information in casilla 12 of Modelo 303.
-            label: Casilla 12 — tax information
+            label: Accrued VAT on other reverse-charge transactions excluding intra-Community
+              acquisitions - Tax base
           dr303-120:
             help: 'Review the casilla information: Informacion adicional - Ops no
               subject to tax reglas localizacion (excl casilla 123).'
@@ -76,11 +78,13 @@ modelo:
           dr303-123:
             help: 'Review the casilla information: Informacion adicional - Ops no
               subject to tax localizacion regimenes especiales ventanilla unica.'
-            label: Casilla 123 — tax information
+            label: Additional information - Transactions not subject to tax under
+              place-of-supply rules, special One-Stop Shop schemes
           dr303-124:
             help: 'Review the casilla information: Informacion adicional - Ops subject
               to tax regimenes especiales ventanilla unica.'
-            label: Casilla 124 — tax information
+            label: Additional information - Transactions subject to tax under special
+              One-Stop Shop schemes
           dr303-13:
             help: Tax information about tax information in casilla 13 of Modelo 303.
             label: Accrued VAT on other reverse-charge transactions excluding intra-Community
@@ -88,47 +92,47 @@ modelo:
           dr303-14:
             help: 'Review the casilla information: Modificacion bases and amounts
               Output VAT - Tax base.'
-            label: Casilla 14 — tax information
+            label: Adjustment of taxable bases and amounts, accrued VAT - Tax base
           dr303-15:
             help: 'Review the casilla information: Modificacion bases and amounts
               Output VAT - Amount.'
-            label: Casilla 15 — tax information
+            label: Adjustment of taxable bases and amounts, accrued VAT - VAT amount
           dr303-150:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Tax base.'
-            label: Casilla 150 — tax information
+            label: Accrued VAT, general regime new rate tier 1 - Tax base
           dr303-151:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Rate percentage.'
-            label: Casilla 151 — tax information
+            label: Accrued VAT, general regime new rate tier 1 - Rate percentage
           dr303-152:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 1 - Amount.'
-            label: Casilla 152 — tax information
+            label: Accrued VAT, general regime new rate tier 1 - VAT amount
           dr303-153:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Tax base.'
-            label: Casilla 153 — tax information
+            label: Accrued VAT, general regime new rate tier 2 - Tax base
           dr303-154:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Rate percentage.'
-            label: Casilla 154 — tax information
+            label: Accrued VAT, general regime new rate tier 2 - Rate percentage
           dr303-155:
             help: 'Review the casilla information: Output VAT regime general nuevo
               rate tier 2 - Amount.'
-            label: Casilla 155 — tax information
+            label: Accrued VAT, general regime new rate tier 2 - VAT amount
           dr303-156:
             help: Tax information for casilla 156 of Modelo 303.
-            label: Casilla 156 — tax information
+            label: Equivalence surcharge at 0.5% - Tax base
           dr303-157:
             help: Tax information for casilla 157 of Modelo 303.
-            label: Casilla 157 — tax information
+            label: Equivalence surcharge at 0.5% - Rate percentage
           dr303-158:
             help: Tax information for casilla 158 of Modelo 303.
-            label: Casilla 158 — tax information
+            label: Equivalence surcharge at 0.5% - Surcharge amount
           dr303-16:
             help: Tax information for casilla 16 of Modelo 303.
-            label: Casilla 16 — tax information
+            label: Equivalence surcharge at 1.0% - Tax base
           dr303-165:
             help: Tax information about tax information in casilla 165 of Modelo 303.
             label: Accrued VAT, general regime 2% rate from 2024 - taxable base
@@ -146,7 +150,7 @@ modelo:
             label: New equivalence surcharge rate from 2024 - rate percentage
           dr303-17:
             help: Tax information for casilla 17 of Modelo 303.
-            label: Casilla 17 — tax information
+            label: Equivalence surcharge at 1.0% - Rate percentage
           dr303-170:
             help: Tax information for casilla 170 of Modelo 303.
             label: New equivalence surcharge rate from 2024 - surcharge amount
@@ -155,35 +159,37 @@ modelo:
             label: Equivalence surcharge at 1.0% - surcharge amount
           dr303-19:
             help: Tax information for casilla 19 of Modelo 303.
-            label: Casilla 19 — tax information
+            label: Equivalence surcharge at 1.4% - Tax base
           dr303-20:
             help: Tax information for casilla 20 of Modelo 303.
-            label: Casilla 20 — tax information
+            label: Equivalence surcharge at 1.4% - Rate percentage
           dr303-21:
             help: Tax information for casilla 21 of Modelo 303.
-            label: Casilla 21 — tax information
+            label: Equivalence surcharge at 1.4% - Surcharge amount
           dr303-22:
             help: Tax information for casilla 22 of Modelo 303.
-            label: Casilla 22 — tax information
+            label: Equivalence surcharge at 5.2% - Tax base
           dr303-23:
             help: Tax information for casilla 23 of Modelo 303.
-            label: Casilla 23 — tax information
+            label: Equivalence surcharge at 5.2% - Rate percentage
           dr303-24:
             help: Tax information for casilla 24 of Modelo 303.
-            label: Casilla 24 — tax information
+            label: Equivalence surcharge at 5.2% - Surcharge amount
           dr303-25:
             help: Tax information for casilla 25 of Modelo 303.
-            label: Casilla 25 — tax information
+            label: Adjustment of taxable bases and amounts, equivalence surcharge
+              - Tax base
           dr303-26:
             help: Tax information for casilla 26 of Modelo 303.
-            label: Casilla 26 — tax information
+            label: Adjustment of taxable bases and amounts, equivalence surcharge
+              - Surcharge amount
           dr303-27:
             help: 'Review the casilla information: Total amount accrued.'
             label: Total accrued VAT amount
           dr303-28:
             help: 'Review the casilla information: IVA deductible ops interiores corrientes
               - Base.'
-            label: Casilla 28 — tax information
+            label: Deductible VAT on domestic current transactions - Tax base
           dr303-29:
             help: 'Review the casilla information: IVA deductible ops interiores corrientes
               - Amount.'
@@ -191,15 +197,17 @@ modelo:
           dr303-30:
             help: 'Review the casilla information: IVA deductible ops interiores goods
               investment - Base.'
-            label: Casilla 30 — tax information
+            label: Deductible VAT on domestic transactions involving capital goods
+              - Tax base
           dr303-31:
             help: 'Review the casilla information: IVA deductible ops interiores goods
               investment - Amount.'
-            label: Casilla 31 — tax information
+            label: Deductible VAT on domestic transactions involving capital goods
+              - VAT amount
           dr303-32:
             help: 'Review the casilla information: IVA deductible imports goods corrientes
               - Base.'
-            label: Casilla 32 — tax information
+            label: Deductible VAT on imports of current goods - Tax base
           dr303-33:
             help: 'Review the casilla information: IVA deductible imports goods corrientes
               - Amount.'
@@ -207,15 +215,16 @@ modelo:
           dr303-34:
             help: 'Review the casilla information: IVA deductible imports goods investment
               - Base.'
-            label: Casilla 34 — tax information
+            label: Deductible VAT on imports of capital goods - Tax base
           dr303-35:
             help: 'Review the casilla information: IVA deductible imports goods investment
               - Amount.'
-            label: Casilla 35 — tax information
+            label: Deductible VAT on imports of capital goods - VAT amount
           dr303-36:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions corrientes - Base.'
-            label: Casilla 36 — tax information
+            label: Deductible VAT on intra-Community acquisitions of current goods
+              - Tax base
           dr303-37:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions corrientes - Amount.'
@@ -224,121 +233,137 @@ modelo:
           dr303-38:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions goods investment - Base.'
-            label: Casilla 38 — tax information
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - Tax base
           dr303-39:
             help: 'Review the casilla information: IVA deductible intra-Community
               acquisitions goods investment - Amount.'
-            label: Casilla 39 — tax information
+            label: Deductible VAT on intra-Community acquisitions of capital goods
+              - VAT amount
           dr303-40:
             help: 'Review the casilla information: Correction deductions - Base.'
-            label: Casilla 40 — tax information
+            label: Correction of deductions - Tax base
           dr303-41:
             help: 'Review the casilla information: Correction deductions - Amount.'
-            label: Casilla 41 — tax information
+            label: Correction of deductions - VAT amount
           dr303-42:
             help: 'Review the casilla information: Compensaciones regime especial
               agricultura ganaderia and pesca - Amount.'
-            label: Casilla 42 — tax information
+            label: Flat-rate compensation under the special scheme for agriculture,
+              livestock farming and fishing - Amount
           dr303-43:
             help: Tax information about tax information in casilla 43 of Modelo 303.
-            label: Casilla 43 — tax information
+            label: Capital goods adjustment - Amount
           dr303-44:
             help: 'Review the casilla information: Adjustment prorrata by percentage
               definitivo - Amount.'
-            label: Casilla 44 — tax information
+            label: Final pro-rata percentage adjustment - Amount
           dr303-45:
             help: 'Review the casilla information: Total a deduct - Amount.'
             label: Total deductible amount
           dr303-47:
             help: Tax information for casilla 47 of Modelo 303.
-            label: Casilla 47 — tax information
+            label: 'Simplified regime - Q1-Q2-Q3: total payments on account for all
+              activities'
           dr303-48:
             help: Tax information for casilla 48 of Modelo 303.
-            label: Casilla 48 — tax information
+            label: 'Simplified regime - Q4: total VAT amounts under the simplified
+              regime for all activities'
           dr303-49:
             help: Tax information for casilla 49 of Modelo 303.
-            label: Casilla 49 — tax information
+            label: 'Simplified regime - Q4: total payments on account made during
+              the tax year'
           dr303-50:
             help: 'Review the casilla information: RS - 4T - Result ([48]-[49]).'
-            label: Casilla 50 — tax information
+            label: 'Simplified regime - Q4: result ([48]-[49])'
           dr303-51:
             help: 'Review the casilla information: RS - Amounts devengadas intra-Community
               acquisitions goods.'
-            label: Casilla 51 — tax information
+            label: Simplified regime - VAT accrued on intra-Community acquisitions
+              of goods
           dr303-52:
             help: 'Review the casilla information: RS - Amounts devengadas supplies
               activos fixed assets.'
-            label: Casilla 52 — tax information
+            label: Simplified regime - VAT accrued on disposals of fixed assets
           dr303-53:
             help: Tax information about tax information in casilla 53 of Modelo 303.
-            label: Casilla 53 — tax information
+            label: Simplified regime - VAT accrued under the reverse charge mechanism
           dr303-54:
             help: 'Review the casilla information: RS - Total amount resultante.'
-            label: Casilla 54 — tax information
+            label: Simplified regime - Total resulting VAT amount
           dr303-55:
             help: Tax information about tax information in casilla 55 of Modelo 303.
-            label: Casilla 55 — tax information
+            label: Simplified regime - Deductible VAT on the acquisition or import
+              of fixed assets
           dr303-56:
             help: 'Review the casilla information: RS - IVA deductible adjustment
               goods investment.'
-            label: Casilla 56 — tax information
+            label: Simplified regime - Deductible VAT from the capital goods adjustment
           dr303-57:
             help: 'Review the casilla information: RS - Total IVA deductible regime
               simplificado ([55]+[56]).'
-            label: Casilla 57 — tax information
+            label: Simplified regime - Total deductible VAT under the simplified regime
+              ([55]+[56])
           dr303-58:
             help: 'Review the casilla information: RS - Result regime simplificado
               ([54]-[57]).'
-            label: Casilla 58 — tax information
+            label: Simplified regime - Result under the simplified regime ([54]-[57])
           dr303-59:
             help: 'Review the casilla information: Informacion adicional - Supplies
               intracomunitarias goods and services.'
-            label: Casilla 59 — tax information
+            label: Additional information - Intra-Community supplies of goods and
+              services
           dr303-60:
             help: 'Review the casilla information: Informacion adicional - Exports
               and transactions asimiladas.'
-            label: Casilla 60 — tax information
+            label: Additional information - Exports and similar transactions
           dr303-62:
             help: 'Review the casilla information: Informacion adicional - Supplies
               criterio caja accrued art 75 LIVA - Tax base.'
-            label: Casilla 62 — tax information
+            label: Additional information - Supplies accrued under the cash accounting
+              scheme (Art. 75 LIVA) - Tax base
           dr303-63:
             help: 'Review the casilla information: Informacion adicional - Supplies
               criterio caja accrued art 75 LIVA - Amount.'
-            label: Casilla 63 — tax information
+            label: Additional information - Supplies accrued under the cash accounting
+              scheme (Art. 75 LIVA) - VAT amount
           dr303-65:
             help: Tax information for casilla 65 of Modelo 303.
             label: Result - percentage attributable to the State Tax Administration
           dr303-68:
             help: Tax information for casilla 68 of Modelo 303.
-            label: Casilla 68 — tax information
+            label: Result - Joint taxation, annual adjustment result
           dr303-70:
             help: Tax information for casilla 70 of Modelo 303.
-            label: Casilla 70 — tax information
+            label: Result - Amounts payable from previous self-assessments of the
+              tax year and period
           dr303-74:
             help: 'Review the casilla information: Informacion adicional - Acquisitions
               criterio caja - Tax base.'
-            label: Casilla 74 — tax information
+            label: Additional information - Acquisitions under the cash accounting
+              scheme - Tax base
           dr303-75:
             help: 'Review the casilla information: Informacion adicional - Acquisitions
               criterio caja - Amount.'
-            label: Casilla 75 — tax information
+            label: Additional information - Acquisitions under the cash accounting
+              scheme - VAT amount
           dr303-76:
             help: 'Review the casilla information: Result - Adjustment amounts art
               80 cinco 5a LIVA.'
-            label: Casilla 76 — tax information
+            label: Result - Adjustment of VAT amounts under Art. 80.Five.5a LIVA
           dr303-77:
             help: Tax information for casilla 77 of Modelo 303.
-            label: Casilla 77 — tax information
+            label: Result - Import VAT settled by Customs pending payment
           filing-period:
             help: Tax information for casilla of Modelo 303.
-            label: Quarterly period
+            label: Quarterly period (1T / 2T / 3T / 4T)
           filing-year:
             help: Tax information for casilla of Modelo 303.
             label: Self-assessment tax year
           iva-autoconsumo-promotor-base:
             help: Tax information about tax information in casilla  of Modelo 303.
-            label: Casilla— tax information
+            label: Tax base of the property developer's self-supply (construction
+              cost, Art. 9.1.c + Art. 79.4 LISIVA)
           iva-autoconsumo-promotor-cuota:
             help: 'Review the casilla information: Amount IVA of the autoconsumo of
               the promotor inmobiliario (21% sobre tax base, Art. 9.1.c + Art. 90
@@ -351,19 +376,19 @@ modelo:
             label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
           iva-compensacion-aplicada-periodo:
             help: Tax information for casilla 78 of Modelo 303.
-            label: Casilla 78 — tax field
+            label: VAT credit from previous periods applied in this period
           iva-compensacion-disponible-fin-periodo:
             help: Tax information about tax information in casilla  of Modelo 303.
-            label: Casilla — tax field
+            label: Offset balance available for later periods
           iva-compensacion-generada-periodo:
             help: Tax information for casilla of Modelo 303.
-            label: Casilla — tax field
+            label: Offset balance generated in this period
           iva-compensacion-pendiente-anteriores:
             help: Tax information about tax information in casilla 110 of Modelo 303.
-            label: Casilla 110 — tax field
+            label: VAT credit pending offset from previous periods
           iva-compensacion-pendiente-posteriores:
             help: Tax information about tax information in casilla 87 of Modelo 303.
-            label: Casilla 87 — tax field
+            label: VAT credit from previous periods carried forward to later periods
           iva-cuota-autorepercutida-interior-deducible:
             help: Tax information about tax information in casilla  of Modelo 303.
             label: Deductible reverse-charge VAT on domestic transactions
@@ -903,11 +928,12 @@ modelo:
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
-              label: 'Casilla 64 — tax information References: [46], [58], [76].'
+              label: Result - Sum of results ([46]+[58]+[76])
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
-              label: 'Casilla 66 — tax information References: [64], [65].'
+              label: Result - Amount attributable to the State Tax Administration
+                ([64]×[65]/100)
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
@@ -929,10 +955,6 @@ modelo:
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla — tax field
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
@@ -1157,14 +1179,15 @@ modelo:
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
-              label: 'Casilla 64 — tax information References: [46], [58], [76].'
+              label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
-              label: 'Casilla 66 — tax information References: [64], [65].'
+              label: Result - Amount attributable to the State Tax Administration
+                ([64]×[65]/100)
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
@@ -1186,10 +1209,6 @@ modelo:
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla — tax field
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
@@ -1417,14 +1436,15 @@ modelo:
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
-              label: 'Casilla 64 — tax information References: [46], [58], [76].'
+              label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
-              label: 'Casilla 66 — tax information References: [64], [65].'
+              label: Result - Amount attributable to the State Tax Administration
+                ([64]×[65]/100)
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
@@ -1446,10 +1466,6 @@ modelo:
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla — tax field
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
@@ -1689,14 +1705,15 @@ modelo:
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
-              label: 'Casilla 64 — tax information References: [46], [58], [76].'
+              label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: Tax information about tax information in casilla 65 of Modelo
                 303.
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
-              label: 'Casilla 66 — tax information References: [64], [65].'
+              label: Result - Amount attributable to the State Tax Administration
+                ([64]×[65]/100)
             '68':
               help: Tax information about tax information in casilla 68 of Modelo
                 303.
@@ -1718,10 +1735,6 @@ modelo:
             '77':
               help: Tax information about tax information in casilla 77 of Modelo
                 303.
-            x-chim6r1ecll6asj3d5hmiro:
-              label: Casilla — tax field
-            x-chim6r1ee1in4qbfchng:
-              label: Casilla — tax field
             x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
               help: Tax information for casilla of Modelo 303.
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
@@ -1963,14 +1976,15 @@ modelo:
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
-              label: 'Casilla 64 — tax information References: [46], [58], [76].'
+              label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Tax
                 Administration.'
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
-              label: 'Casilla 66 — tax information References: [64], [65].'
+              label: Result - Amount attributable to the State Tax Administration
+                ([64]×[65]/100)
             '68':
               help: 'Box 68: annual regularization result for joint taxation.'
             '70':
