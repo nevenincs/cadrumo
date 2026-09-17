@@ -273,7 +273,7 @@ def _load_blob_manifest(path: Path, *, expected_class: SensitivityClass, expecte
             violation="manifest_schema_version",
             object_kind="manifest",
         ) from exc
-    except (OSError, ValueError, ValidationError) as exc:
+    except (OSError, ValueError, ValidationError, StorageValidationError) as exc:
         raise _blob_integrity_error(
             "invalid blob manifest",
             violation="manifest_payload",
