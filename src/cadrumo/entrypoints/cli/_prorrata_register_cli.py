@@ -42,6 +42,7 @@ from ...application.prorrata_register.seed import (
 from ...application.prorrata_register.service import ProrrataRegisterService
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...core.modelo import Modelo
 from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
@@ -647,6 +648,10 @@ def prorrata_seed_sector(
     )
 
 
+#: The quarterly Modelo 303 liquidation that closes the year (RD 1624/1992 art. 71.3).
+_YEAR_END_LIQUIDATION_PERIOD = "4T"
+
+
 def prorrata_settle_sector(
     ctx: typer.Context,
     ejercicio: int,
@@ -665,9 +670,10 @@ def prorrata_settle_sector(
     bucket_id = _register_bucket_id()
     con_derecho = parse_decimal_amount(con_derecho_volume, label="con-derecho-volume", signed=False)
     sin_derecho = parse_decimal_amount(sin_derecho_volume, label="sin-derecho-volume", signed=False)
+    operation = authority_operation(ctx)
     service = ProrrataRegisterService(
         repository=prorrata_register_repository_factory(ctx)(bucket_id=bucket_id),
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     entry = service.get(ejercicio, sector_id=sector_id)
     if entry is None:
@@ -679,10 +685,17 @@ def prorrata_settle_sector(
             ),
         )
     try:
+        # The definitive is regularised in the year's last liquidation (LIVA
+        # art. 105.Cuatro), so that declaration's design is its producing coordinate.
         settled = settle_sector_definitive(
             entry,
             con_derecho_volume=con_derecho,
             sin_derecho_volume=sin_derecho,
+            producing_snapshot_ref=operation.snapshot(
+                Modelo("303").value,
+                filing_year=ejercicio,
+                period=_YEAR_END_LIQUIDATION_PERIOD,
+            ).snapshot_ref,
         )
         updated = service.declare(settled)
     except (ProrrataRegisterValidationError, ValidationError) as exc:

@@ -67,7 +67,6 @@ if TYPE_CHECKING:
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
     from ...application.modelo.calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos.calculation_revision import CalculationRevision
-    from ...domain.modelos.work_unit import WorkUnit
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,7 +189,7 @@ def _run_work_calculate(
     try:
         calculation_revision = calculation_result.revision
         unit_for_modality = calculation_result.work_unit
-        saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
+        saved_confirmation = _work_calculate_saved_confirmation(calculation_revision)
         modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
         source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
             calculation_result.source_diagnostics
@@ -236,14 +235,11 @@ def _run_work_calculate(
     )
 
 
-def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
+def _work_calculate_saved_confirmation(revision: CalculationRevision) -> str:
     return tr(
         "cli.app.modelo.work.calculate_saved",
         revision_id=revision.calculation_revision_id,
         state=calculation_revision_state_label(revision.state.value),
-        modelo=work_unit.modelo,
-        year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
     )
 
 

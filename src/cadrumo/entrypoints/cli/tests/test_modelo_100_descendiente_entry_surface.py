@@ -37,14 +37,15 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "0ac1e000-0000-4000-8000-000000515001"
 _ESTATAL_CASILLA_ID = "0513"
@@ -62,10 +63,8 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-family-minor-children-in-unit=0",
     "--binding", "renta-profile-guarderia-gastos-reales=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
-    "--binding", "renta-profile-marriage-full-year=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
@@ -101,12 +100,10 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
+    record = create_user_profile_record(
         # Sourced from the schema, never pinned: a literal here goes stale the
         # moment the profile schema is revised, and the record then refuses to
         # validate against its own canonical version.
-        schema_version=published_profile_schema().version,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -116,6 +113,9 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            # Boolean profile bindings are read from the profile, never overridden.
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="iva.m303_regime_composition", value="general"),
             UserProfileFact(path="iva.redeme_enrolled", value=False),
@@ -129,6 +129,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
         ),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Descendiente entry surface test profile")
 
@@ -137,7 +138,7 @@ def _registry_first_tranche(year: int) -> Decimal:
 
     snapshot: RegistrySnapshot = published_snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
-    param = by_id[f"renta-{year}-minimo-descendientes-primer-hijo-{year}"]
+    param = by_id["renta-minimo-descendientes-primer-hijo"]
     return resolve_parameter(param, {"filing_period": date(year, 12, 31)})
 
 
@@ -855,9 +856,7 @@ def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
 
     snapshot: RegistrySnapshot = published_snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
-    return resolve_parameter(
-        by_id[f"renta-{year}-guarderia-incremento-cap-anual"], {"filing_period": date(year, 12, 31)}
-    )
+    return resolve_parameter(by_id["renta-guarderia-incremento-cap-anual"], {"filing_period": date(year, 12, 31)})
 
 
 # ---------------------------------------------------------------------------

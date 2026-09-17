@@ -41,7 +41,7 @@ from ._modelo_cli_support import (
     selector_bad_parameter,
     unsupported_local_work_period_refusal,
     validate_calculation_revision_id,
-    validate_work_unit_id,
+    validate_work_unit_selector,
 )
 from .common import no_active_profile_refusal
 
@@ -69,7 +69,7 @@ def work_address_for_cli(
     revision: str | None,
     bucket_id: str | None = None,
 ) -> object:
-    exact_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
     typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:
         return modelo_work_address_from_operator_target(
@@ -93,7 +93,7 @@ def resolve_work_unit_for_cli(
     revision: str | None = None,
     bucket_id: str | None = None,
 ) -> WorkUnit:
-    exact_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
     typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     try:
@@ -135,7 +135,7 @@ def resolve_revision_for_cli(
     validated_revision_id = (
         validate_calculation_revision_id(calculation_revision_id) if calculation_revision_id is not None else None
     )
-    exact_work_id = validate_work_unit_id(work_unit_id) if work_unit_id is not None else None
+    exact_work_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
     typed_period = (
         period if isinstance(period, Period) else resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     )
@@ -189,7 +189,7 @@ def resolve_exportable_revision_for_cli(
     try:
         return resolve_revision_for_cli(
             calculation_revision_id=validate_calculation_revision_id(revision) if revision is not None else None,
-            work_unit_id=validate_work_unit_id(work_unit_id) if work_unit_id is not None else None,
+            work_unit_id=validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None,
             modelo=modelo,
             year=year,
             period=resolve_optional_cli_period(year=year, period=period, modelo=modelo),

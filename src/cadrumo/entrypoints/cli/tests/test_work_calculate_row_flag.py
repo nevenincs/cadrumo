@@ -36,7 +36,7 @@ from ....domain.modelos.row_models import (
 from ....tests.os_keychain_hook import require_os_credential_store
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _M347_EFFECTIVE_DATE = date(2025, 12, 31)
 
@@ -286,12 +286,16 @@ class TestParseRowSpecM349:
                 "operador codigo_pais=ZZ nif_comunitario=BADVAT razon_social=EntidadZZ clave_operacion=E importe=1000",
             )
 
-    def test_parse_operador_invalid_clave_raises(self) -> None:
-        """Invalid clave_operacion raises BadParameter."""
+    def test_parse_operador_malformed_clave_raises(self) -> None:
+        """A clave_operacion that is not one character is refused while parsing.
+
+        Which single-character keys exist belongs to the registry revision the
+        calculation selects, so membership is checked there, not here.
+        """
         with pytest.raises(typer.BadParameter):
             _parse_row_spec(
                 "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
-                "clave_operacion=Z importe=1000",
+                "clave_operacion=ZZ importe=1000",
             )
 
     def test_parse_operador_negative_importe_raises(self) -> None:
@@ -485,7 +489,7 @@ class TestRevisionViewSurfacesDetailRows:
             os.environ["CADRUMO_SECRET_STORE_DIR"] = {str(storage_root / "fallback-store")!r}
             os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = {_ROW_FLAG_CREDENTIAL_INPUT!r}
             sys.argv = ["cadrumo", *{argv!r}]
-            from ..main import main
+            from cadrumo.entrypoints.cli.main import main
 
             try:
                 main()
@@ -522,6 +526,7 @@ class TestRevisionViewSurfacesDetailRows:
         assert 'razon_social="DE Auto GmbH"' in flat
         assert "operador codigo_pais=DE" in flat
 
+    @pytest.mark.os_keychain
     def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
         """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""
         # Every later invocation resumes the profile session from the OS credential
@@ -639,6 +644,7 @@ class TestRevisionViewSurfacesDetailRows:
 
         assert revision_rows_by_nif == calc_rows_by_nif
 
+    @pytest.mark.os_keychain
     def test_m184_member_rows_surface_in_revision_view(self, tmp_path: Path) -> None:
         """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.
 
@@ -717,6 +723,7 @@ class TestRevisionViewSurfacesDetailRows:
         assert "porcentaje=60" in calc.stdout and "importe=10000" in calc.stdout, calc.stdout
         assert "porcentaje=40" in calc.stdout and "importe=5000" in calc.stdout, calc.stdout
 
+    @pytest.mark.os_keychain
     def test_m349_operador_rows_feed_summary_and_verify(self, tmp_path: Path) -> None:
         """Cold M349 operador rows produce Tipo-1 summary casillas and verify.
 
@@ -853,6 +860,7 @@ class TestRevisionViewSurfacesDetailRows:
         assert "DEDE123456789" not in text
         assert "FRFR12345678901" not in text
 
+    @pytest.mark.os_keychain
     def test_m349_post_transition_gb_operador_row_fails_before_calculation(self, tmp_path: Path) -> None:
         """Ordinary post-transition GB rows are refused at the CLI calculation boundary."""
         # Every later invocation resumes the profile session from the OS credential

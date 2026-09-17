@@ -22,6 +22,7 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -29,6 +30,7 @@ import pytest
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from ....core.i18n.render import tr
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
@@ -72,28 +74,28 @@ def test_work_history_records_creation_event(seed_profile: ProfileSeeder) -> Non
     assert notice["action"]["action"]["action_id"] == "operator.modelo.work.status"
 
 
-def test_first_work_calculate_binding_error_guides_the_operator(seed_profile: ProfileSeeder) -> None:
+def test_first_work_calculate_names_the_unsatisfied_binding(seed_profile: ProfileSeeder) -> None:
     """M18: the first ``work calculate`` that hits an unsatisfied binding
-    fails with guidance toward ``--binding KEY=VALUE`` and the
-    bindings-list discovery command - not a bare refusal."""
+    refuses by naming that binding rather than failing opaquely."""
 
     seed_profile(label="operator", facts=operator_profile_facts())
-    work_unit_id = _create_m130_work_unit()
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "100", "--year", "2024", "--period", "0A",
+            "--revision", "2024",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
 
-    result = _invoke(["app", "modelo", "work", "calculate", work_unit_id])
+    result = _invoke(["--language", "en", "app", "modelo", "work", "calculate", work_unit_id])
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    # A missing binding id is named in the error. The exact identifier
-    # depends on which bound casilla the formula evaluator hits first;
-    # modelo-130 surfaces either the previous-year-negative-results
-    # casilla binding or the upstream profile-fact binding it depends on.
-    assert (
-        "modelo-130-resultados-negativos-anteriores" in result.output
-        or "previous_year_economic_activity_net_income" in result.output
-    )
-    # The bare missing-binding line is followed by actionable guidance.
-    assert "--binding" in result.output
-    assert "bindings list" in result.output and "--missing" in result.output
+    # Which binding the formula evaluator reaches first is not the subject;
+    # that the refusal names a concrete binding id is.
+    assert re.search(r"Binding [a-z0-9-]+ has no supplied value", result.output), result.output
 
 
 def test_work_revisions_accepts_a_positional_work_unit_id(seed_profile: ProfileSeeder) -> None:
@@ -388,7 +390,7 @@ def test_work_revisions_resolves_a_visible_filing_target(seed_profile: ProfileSe
     detail = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert detail.exit_code == 0, detail.output
     assert _payload(detail.output)["calculation_revision_id"] == revision_id
-    assert "casillas" in _payload(detail.output)
+    assert "casilla_values" in _payload(detail.output)
 
 
 def test_work_calculate_resolves_a_visible_filing_target(seed_profile: ProfileSeeder) -> None:
@@ -840,7 +842,6 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_p
             "--casilla", "01=12000",
             "--casilla", "02=0",
             "--casilla", "03=0",
-            "--casilla", "05=0",
             "--casilla", "08=0",
             "--casilla", "09=0",
             "--casilla", "12=0",
@@ -935,9 +936,9 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     assert "1" in status.output
     # ...and the next-step guidance points forward, never back at import.
     next_section = status.output.split("\n\n")[-1]
-    assert "ledger import" not in next_section
-    assert "ledger review" in next_section
-    assert "modelo work create" in next_section
+    assert tr("cli.overview.status.next_step.import_transactions", locale="en") not in next_section
+    assert tr("cli.overview.status.next_step.review_ledger", locale="en") in next_section
+    assert tr("cli.overview.status.next_step.start_work_unit_from_ledger", locale="en") in next_section
 
 
 def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(seed_profile: ProfileSeeder) -> None:

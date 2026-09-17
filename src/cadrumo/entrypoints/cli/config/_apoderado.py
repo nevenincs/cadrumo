@@ -96,7 +96,7 @@ def apoderado_configure(
     When it is omitted the verb becomes a door hosting the paged apoderado
     flow: the operator answers the represented-party and scope pages on the
     best frontend the host supports, and the reviewed answers commit through
-    the same :class:`~cadrumo.application.auth.ApoderadoService`. Either way
+    the same :class:`~cadrumo.application.auth.apoderado_service.ApoderadoService`. Either way
     the write lands only in the apoderado encrypted namespace -- never as a
     profile fact.
     """

@@ -38,7 +38,6 @@ from ...core.prorrata_exclusions import Art104TresExclusion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
-from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -159,7 +158,7 @@ def _build_manual_add_command(
     usage_ratio_id: str | None,
     prorrata_reference: str | None,
     art_104_tres_exclusion: Art104TresExclusion | None,
-    input_classification: InputClassification | None,
+    input_classification: str | None,
     prorrata_sector: str | None,
     purchase_invoice_evidence_id: str | None,
     attachment_ids: tuple[str, ...],
@@ -287,7 +286,7 @@ def _prorrata_especial_inert_notice(
     *,
     bucket_id: str,
     ejercicio: int,
-    input_classification: InputClassification | None,
+    input_classification: str | None,
     sector_id: str | None,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
     operation: PinnedAuthorityOperation,
@@ -395,7 +394,7 @@ def ledger_add(
     usage_ratio_id: str | None = None,
     prorrata_reference: str | None = None,
     art_104_tres_exclusion: Art104TresExclusion | None = None,
-    input_classification: InputClassification | None = None,
+    input_classification: str | None = None,
     prorrata_sector: str | None = None,
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),

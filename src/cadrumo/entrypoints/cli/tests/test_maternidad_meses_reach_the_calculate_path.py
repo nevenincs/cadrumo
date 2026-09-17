@@ -126,6 +126,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
         ),
         context=_profile_creation_context_for_test(),
     )
