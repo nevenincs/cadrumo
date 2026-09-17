@@ -60,6 +60,10 @@ See Also:
     :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
         Registry authority snapshot used to resolve modelo-readiness preflight
         requirements.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`,
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

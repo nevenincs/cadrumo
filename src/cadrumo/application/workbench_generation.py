@@ -10,6 +10,14 @@ an empty projection.  ``LOCKED``, ``NEVER_CAPTURED`` and ``UNAVAILABLE`` are
 separate source outcomes and carry an explicit refusal.  The output contract
 does not retain the source-input models, so raw source facts cannot cross this
 assembly boundary accidentally.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

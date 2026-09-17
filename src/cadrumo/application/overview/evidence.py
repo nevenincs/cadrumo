@@ -4,6 +4,9 @@ The provider accepts source values that an entrypoint or composition root has
 already loaded.  It owns neither repositories nor remote reads; its only job is
 to preserve the authority/freshness of each evidence axis and delegate the
 actual reconciliation to :func:`calendar_filing_evidence_from_sources`.
+
+Core types:
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
 """
 
 from __future__ import annotations
