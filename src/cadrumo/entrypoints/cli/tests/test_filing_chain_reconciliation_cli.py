@@ -30,7 +30,6 @@ from ._recorded_sede_filed_port import (
     RecordedPresentation,
     RecordedSedeFiledDataPort,
     RecordedSedeRegister,
-    justificante_number,
     madrid_instant,
 )
 from .cli_runner import invoke_cached_cli
@@ -101,8 +100,7 @@ class _Scenario:
         presented_at = madrid_instant(self.year, month, 15, 10)
         return RecordedPresentation(
             period=self.period(code),
-            # The register row and its receipt share the Numero de justificante.
-            expediente_id=justificante_number("130", csv, presented_at),
+            expediente_id=f"{self.year}1300000{serial:05d}S",
             csv=csv,
             presented_at=presented_at,
             casilla_values=values,

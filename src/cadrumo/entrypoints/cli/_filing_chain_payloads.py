@@ -60,7 +60,7 @@ _RECONCILIATION_NOTICE_LOCALE_KEYS: Mapping[FilingReconciliationNoticeCode, str]
 class AeatRegisterRefPayload(OutputSchema):
     """JSON projection of :class:`AeatRegisterRef`."""
 
-    expediente_id: str
+    expediente_id: str | None = None
     csv: str | None = None
     justificante_number: str | None = None
     tipo_solicitud: str | None = None

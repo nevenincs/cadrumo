@@ -175,8 +175,6 @@ def _import_record(
             operation=authority_operation(ctx),
         )
         if file is not None:
-            if declared_kind is not None:
-                raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_declared_kind_file_error"))
             return import_external_filing_source(
                 ExternalFilingBaselineSource(
                     modelo=str(work_unit.modelo),
@@ -189,6 +187,7 @@ def _import_record(
                     casilla_lexicals=parse_casilla_lexical_spreadsheet(file),
                 ),
                 bucket_id=work_unit.bucket_id,
+                declared_kind=declared_kind,
                 actor=actor or _actor(),
                 work_lifecycle_ports=calculation_ports.work_lifecycle_ports,
                 operation=authority_operation(ctx),
@@ -250,7 +249,7 @@ def filing_record_list(
                 record.confirmation.value,
                 record.declaration_kind.value,
                 record.amends_filing_record_id or "",
-                record.aeat_register.expediente_id if record.aeat_register is not None else "",
+                (record.aeat_register.expediente_id or "") if record.aeat_register is not None else "",
                 record.filed_at.isoformat(),
                 record.filed_by,
             )
