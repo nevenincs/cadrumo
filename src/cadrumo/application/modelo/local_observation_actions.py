@@ -33,7 +33,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -101,7 +101,7 @@ class ModeloLocalObservationResult(BaseModel):
     revision_id: RevisionId
     observation_key: str
     source_kind: ObservationSourceKind
-    casilla_values: dict[CasillaId, Decimal]
+    casilla_values: dict[CasillaId, Decimal] = Field(min_length=1)
     captured_at: datetime
     captured_by: str
     override: ObservationOverride

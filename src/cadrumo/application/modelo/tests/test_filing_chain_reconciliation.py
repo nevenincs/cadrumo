@@ -58,6 +58,8 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
+from ....core.hashing import sha256_hex
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "13000000-0000-4000-8000-0000000000c1"
@@ -457,7 +459,10 @@ def test_entry_without_content_leaves_the_pending_entry_unstamped(
     assert _codes(result) == {FilingReconciliationNoticeCode.CONTENT_UNAVAILABLE}
     assert profile.filings.load() == catalogue_before
     [event] = _reconciled_events(profile)
-    assert event.payload["notices"] == "content_unavailable"
+    assert event.payload["notice_count"] == "1"
+    assert event.payload["notice_codes_sha256"] == sha256_hex(
+        FilingReconciliationNoticeCode.CONTENT_UNAVAILABLE.value.encode("utf-8")
+    )
 
 
 def test_receipt_without_a_declared_total_map_is_unverifiable(

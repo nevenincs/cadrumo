@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Literal
 
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.casilla_id import CasillaId
+from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
@@ -886,12 +887,20 @@ def _reconciliation_event(
             "filing_record_id": result.filing_record_id or "",
             "work_unit_id": record.work_unit_id if record is not None else "",
             "calculation_revision_id": record.calculation_revision_id if record is not None else "",
-            "affected_filing_record_ids": ",".join(result.affected_filing_record_ids),
-            "differing_casilla_ids": ",".join(result.differing_casilla_ids),
+            # The lists are unbounded while a payload slot is not, so the event
+            # records their size and a digest; the filing records and the
+            # reconciliation result carry the detail itself.
+            "affected_filing_record_count": str(len(result.affected_filing_record_ids)),
+            "affected_filing_record_ids_sha256": sha256_hex(
+                ",".join(result.affected_filing_record_ids).encode("utf-8")
+            ),
+            "differing_casilla_count": str(len(result.differing_casilla_ids)),
+            "differing_casilla_ids_sha256": sha256_hex(",".join(result.differing_casilla_ids).encode("utf-8")),
             "evidence_basis": result.evidence_basis or "",
             "evidence_kind": entry.evidence_kind.value,
             "aeat_expediente_id": entry.register.expediente_id or "",
-            "notices": ",".join(notice.code.value for notice in result.notices),
+            "notice_count": str(len(result.notices)),
+            "notice_codes_sha256": sha256_hex(",".join(notice.code.value for notice in result.notices).encode("utf-8")),
         },
     )
 
