@@ -158,7 +158,8 @@ def test_import_emits_single_modelo_filing_reconciled_event(
 _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
     ("outcome", "appended"),
     ("evidence_kind", "aeat_justificante_pdf"),
-    ("aeat_expediente_id", "JUST2026303Q1OPERATOR1"),
+    # A receipt import knows the CSV, never the register expediente.
+    ("aeat_expediente_id", ""),
     ("affected_filing_record_ids", ""),
 )
 
