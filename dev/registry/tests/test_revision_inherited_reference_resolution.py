@@ -239,6 +239,17 @@ def test_an_inherited_edition_free_reference_must_be_declared_by_the_successor_i
         encoding="utf-8",
         newline="\n",
     )
+    # Keyed families inherit, so the predecessor's member is removed explicitly
+    # to leave the successor without the edition-free identifier.
+    manifest = modelo_dir / "revisions" / "2025" / "revision.toml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + '\n[[revisions."2025".family_removals]]\n'
+        + 'family = "bindings"\n'
+        + f'selector = {{ revision = "2024", id = "{_SHARED_BINDING}" }}\n',
+        encoding="utf-8",
+        newline="\n",
+    )
 
     with pytest.raises(RegistryLoadError, match=re.escape(f"reference '{_SHARED_BINDING}', stated in revision '2024'")):
         load_modelo_directory(modelo_dir)
