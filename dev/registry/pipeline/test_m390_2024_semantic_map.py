@@ -57,44 +57,39 @@ _COMPLEMENTARIA_INDICATOR_ANCHORS = {
 }
 _LORCA_BINDING_IDS = {
     "A27": (
-        "modelo-390-2024.page_5.223-239.operaciones-reg-simplificado-actividad-1-"
+        "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-"
         "reduccion-aplicable-por-actividad-realizada-en-el-termin"
     ),
     "A51": (
-        "modelo-390-2024.page_5.543-559.operaciones-reg-simplificado-actividad-2-"
+        "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-"
         "reduccion-aplicable-por-actividad-realizada-en-el-termin"
     ),
 }
 _DANA_BINDING_IDS = {
     "A101": (
-        "modelo-390-2024.page_5.1205-1221.operaciones-reg-simplificado-actividad-1-"
+        "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-"
         "reduccion-aplicable-por-actividad-realizada-en-municip"
     ),
-    "A102": "modelo-390-2024.page_5.1222-1238.operaciones-reg-simplificado-actividad-1-reducciones-total",
+    "A102": "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-reducciones-total",
     "A103": (
-        "modelo-390-2024.page_5.1239-1255.operaciones-reg-simplificado-actividad-2-"
+        "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-"
         "reduccion-aplicable-por-actividad-realizada-en-municip"
     ),
-    "A104": "modelo-390-2024.page_5.1256-1272.operaciones-reg-simplificado-actividad-2-reducciones-total",
+    "A104": "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-reducciones-total",
     "A105": (
-        "modelo-390-2024.page_5.1273-1289.operaciones-reg-simplificado-act-agricolas-y-ganaderas-"
-        "actividad-1-reduccion-aplicable-por-1273"
+        "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por"
     ),
     "A106": (
-        "modelo-390-2024.page_5.1290-1306.operaciones-reg-simplificado-act-agricolas-y-ganaderas-"
-        "actividad-2-reduccion-aplicable-por-1290"
+        "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por"
     ),
     "A107": (
-        "modelo-390-2024.page_5.1307-1323.operaciones-reg-simplificado-act-agricolas-y-ganaderas-"
-        "actividad-3-reduccion-aplicable-por-1307"
+        "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por"
     ),
     "A108": (
-        "modelo-390-2024.page_5.1324-1340.operaciones-reg-simplificado-act-agricolas-y-ganaderas-"
-        "actividad-4-reduccion-aplicable-por-1324"
+        "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por"
     ),
     "A109": (
-        "modelo-390-2024.page_5.1341-1357.operaciones-reg-simplificado-act-agricolas-y-ganaderas-"
-        "actividad-5-reduccion-aplicable-por-1341"
+        "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por"
     ),
 }
 
@@ -210,7 +205,10 @@ def test_m390_2024_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
             if layout_field.kind.value == "binding":
                 binding = bindings_by_id[str(layout_field.binding)]
                 assert tuple(binding.legal_refs) == tuple(layout_field.legal_refs)
-                assert tuple(binding.source_refs) == tuple(layout_field.source_refs)
+                # An inherited binding keeps the source that grounded it at its origin;
+                # the generated field cites this edition's design.
+                assert binding.source_refs
+                assert tuple(layout_field.source_refs) == (_SOURCE_REF,)
 
     assert covered_record_types == set(layout_records)
     published_fields = [field for record in revision.export_layouts[0].records for field in record.fields]
