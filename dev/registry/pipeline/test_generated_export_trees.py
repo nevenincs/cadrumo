@@ -44,6 +44,7 @@ from ._tree_validation import GeneratedExportTreeValidationContext, validate_gen
 from .candidate_staging import (
     stage_continuity_metadata,
 )
+from .cli import stage_published_modelo
 from .export_fragment_provenance import (
     ExportFragmentTarget,
 )
@@ -350,21 +351,9 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         candidate_root,
         revision=tree.revision,
     )
-    published_modelo_root: Path | None = None
-    revisions_root = bundled_path("registry", "aeat", "modelos", tree.modelo, "revisions")
-    if len(tuple(revisions_root.iterdir())) > 1:
-        # The published layout load must see exactly the target revision, and
-        # a multi-revision modelo publishes several, so the test stages the
-        # published copy with siblings pruned -- check mode copies nothing.
-        published_modelo_root = candidate_root / "published-registry" / "aeat" / "modelos" / tree.modelo
-        shutil.copytree(
-            bundled_path("registry", "aeat", "modelos", tree.modelo),
-            published_modelo_root,
-            dirs_exist_ok=True,
-        )
-        for sibling in (published_modelo_root / "revisions").iterdir():
-            if sibling.name != tree.revision:
-                shutil.rmtree(sibling)
+    # The published layout load must see exactly the target revision, so a
+    # multi-revision modelo is staged through the same isolation the CLI uses.
+    published_modelo_root = stage_published_modelo(candidate_root, modelo=tree.modelo, revision=tree.revision)
     context = GeneratedExportTreeCheckContext(
         validation=GeneratedExportTreeValidationContext(
             registry_root=registry_root,
