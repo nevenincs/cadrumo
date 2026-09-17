@@ -101,6 +101,11 @@ async def _observe(
         app.theme = theme
         await pilot.pause()
         await app.push_screen(MODELO_WORKSPACE_DESTINATIONS[destination_id](session))
+        # Destinations mount their groups after the first refresh; comparing a
+        # half-mounted frame reports the mount race as a theme difference.
+        await app.workers.wait_for_complete()
+        await pilot.wait_for_scheduled_animations()
+        await pilot.pause()
         await pilot.pause()
         glyphs: tuple[str, ...] = tuple(str(match.group(1)) for match in _TEXT_NODE.finditer(app.export_screenshot()))
         focus_ids: list[str | None] = []

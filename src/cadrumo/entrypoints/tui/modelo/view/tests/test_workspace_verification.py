@@ -16,6 +16,7 @@ from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
+from ..models import disposition_label
 from ..verification import ModeloWorkspaceVerificationScreen
 from .conftest import resolve_real_result
 
@@ -93,10 +94,10 @@ async def test_the_screen_shows_only_its_own_capability_not_the_whole_denominato
 ) -> None:
     """The complete denominator belongs to overview; repeating it duplicates a closed set.
 
-    One capability line, and no table of all five. The line must actually
-    name this screen's own capability rather than merely existing, so the
-    producer attribution is asserted too -- an empty or generic line would
-    otherwise satisfy a presence-only check.
+    One capability line, and no table of the whole denominator. The line must
+    say this capability's own disposition rather than merely exist, and the
+    producer attribution must be kept -- in the collapsed technical details --
+    so an empty or generic line cannot satisfy a presence-only check.
     """
     from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 
@@ -112,9 +113,11 @@ async def test_the_screen_shows_only_its_own_capability_not_the_whole_denominato
     async with app.run_test() as pilot:
         await pilot.pause()
         rendered = str(app.screen.query_one("#workspace-verification-capability", Static).content)
-        assert verification.disposition.value in rendered
-        assert verification.producer in rendered
-        assert len(app.screen.query(ContentDataTable)) == 0
+        assert disposition_label(verification.disposition) in rendered
+        technical = app.screen.query_one("#workspace-verification-technical-table", ContentDataTable)
+        producer = technical.get_row(f"producer.{verification.capability.value}")
+        assert producer[1] == f"{verification.producer_owner}.{verification.producer}"
+        assert [table.id for table in app.screen.query(ContentDataTable)] == ["workspace-verification-technical-table"]
 
 
 @pytest.mark.asyncio

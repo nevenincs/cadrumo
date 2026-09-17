@@ -133,23 +133,17 @@ def test_the_requested_languages_resolution_is_reported_so_the_axis_is_not_assum
 ) -> None:
     """Record what each request RESOLVES to, because invariance is cheap when nothing varies.
 
-    This is the control, and it is deliberately a measurement rather than an
-    equality: if every request resolves to the same catalogue, the invariance
-    assertions above are comparing two copies of one input and prove far less
-    than they appear to. Asserting the resolution set makes that visible in the
-    suite instead of leaving a green that quietly means nothing.
-
-    The measured state today is that the modelo workspace content carries no
-    translations, so every request falls back to the source language. That is
-    a fact about the catalogues, not a defect in these screens, and it is
-    asserted here so the day a translation lands this test fails and tells
-    somebody the axis has become live.
+    This is the control: if every request resolved to the same catalogue, the
+    invariance assertions above would compare two copies of one input and
+    prove far less than they appear to. The modelo workspace content is
+    translated for every shipped language, so each request must resolve to its
+    own catalogue; a silent fallback would turn that green into one that means
+    nothing.
     """
     resolved = {
         language: session.projection.locale.resolved_language for language, session in sessions_by_language.items()
     }
     assert set(resolved) == set(_LANGUAGES), "a shipped language was not exercised"
-    assert len(set(resolved.values())) == 1, (
-        "a requested language now resolves to its own catalogue, so the locale axis has become "
-        f"live for these destinations and the invariance assertions above are finally load-bearing: {resolved}"
+    assert resolved == {language: language for language in _LANGUAGES}, (
+        f"a requested language no longer resolves to its own catalogue: {resolved}"
     )

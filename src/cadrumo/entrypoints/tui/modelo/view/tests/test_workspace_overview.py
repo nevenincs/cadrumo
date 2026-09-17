@@ -52,11 +52,12 @@ async def test_absent_recovery_actions_are_stated_not_rendered_as_an_empty_list(
 async def test_the_revision_block_shows_coordinates_and_no_chronology(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Four coordinate rows, none of them a sequence over time.
+    """Three coordinate rows, none of them a sequence over time.
 
-    Workspace V1 exposes one law-selected revision plus two point
-    assertions. A row count above that would mean the screen had
-    synthesised history the projection does not carry.
+    The page states the two point assertions and the review status; the
+    law-selected revision id is a technical detail. A row count above that
+    would mean the screen had synthesised history the projection does not
+    carry.
     """
     bucket_id, repository = bucket_and_repository
     app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
@@ -64,7 +65,7 @@ async def test_the_revision_block_shows_coordinates_and_no_chronology(
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.screen.query_one("#workspace-overview-revision-table", ContentDataTable)
-        assert table.row_count == 4
+        assert table.row_count == 3
 
 
 @pytest.mark.asyncio
@@ -90,14 +91,14 @@ async def test_every_capability_appears_exactly_once_with_a_distinguishing_glyph
 async def test_an_absent_work_unit_renders_its_own_value_rather_than_a_blank_cell(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """The address table always has five rows, present work unit or not."""
+    """The address table always has four rows, present work unit or not."""
     bucket_id, repository = bucket_and_repository
     app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_session(bucket_id, repository)))
 
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.screen.query_one("#workspace-overview-address-table", ContentDataTable)
-        assert table.row_count == 5
+        assert table.row_count == 4
 
 
 @pytest.mark.asyncio
