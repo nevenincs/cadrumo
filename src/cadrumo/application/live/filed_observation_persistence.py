@@ -39,6 +39,7 @@ from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
@@ -327,7 +328,7 @@ def _stamp_filing_with_filed_justificante(
                 reference_id=justificante.csv,
                 imported_at=artefact.captured_at,
             ),
-            "aeat_accepted": True,
+            "confirmation": AeatConfirmationState.CONFIRMADA,
         },
     )
     updated = upsert_filing_record(catalogue, stamped)
