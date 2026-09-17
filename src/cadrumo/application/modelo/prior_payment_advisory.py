@@ -153,7 +153,11 @@ def collect_prior_payment_not_deducted_diagnostics(
     observation_repository: CalculationObservationRepositoryProtocol,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return an advisory when a non-first trimestre deducts no prior payment despite a prior filing."""
+    """Return an advisory when a non-first trimestre deducts no prior payment despite a prior filing.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return collect_prior_payment_not_deducted_diagnostics(
@@ -215,7 +219,11 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
     observation_repository: CalculationObservationRepositoryProtocol,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return an advisory when a carried prior filing declares no minoración entry."""
+    """Return an advisory when a carried prior filing declares no minoración entry.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return collect_prior_payment_minoracion_not_captured_diagnostics(

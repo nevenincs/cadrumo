@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: something absent here fails loudly rather than being skipped.
 _FACTORY_ARGUMENTS: dict[str, Any] = {
     "actor": "operator",
-    "profile_resolver": lambda: None,
+    "profile_resolver": lambda operation: None,
     "command_builder": lambda revision, path: None,
     "operator_scope_ports": object(),
     "work_lifecycle_ports_factory": lambda: None,

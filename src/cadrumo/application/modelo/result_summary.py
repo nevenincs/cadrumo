@@ -24,6 +24,9 @@ See Also:
     :func:`application.modelo.result_disposition_resolution.resolve_modelo_result_disposition`
         Determines the filed result disposition that export and carry-forward
         persistence read.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

@@ -169,7 +169,12 @@ def resolve_m210_rate(
     devengo_date: date,
     casilla_id: CasillaId | None = None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
-    """Resolve the scalar rate or return a typed application finding."""
+    """Resolve the scalar rate or return a typed application finding.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     tipo_renta = require_tipo_renta_irnr(tipo_renta).value
     baseline, tariff = _selected_rate_parameters(snapshot, year=year)
     baseline_rate, parseable = _rate_from_parameter(baseline, tipo_renta=tipo_renta, year=year)

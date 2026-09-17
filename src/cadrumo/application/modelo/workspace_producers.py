@@ -1,4 +1,9 @@
-"""Stamped producer contracts and atomic capture ports for Modelo Workspace V1."""
+"""Stamped producer contracts and atomic capture ports for Modelo Workspace V1.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

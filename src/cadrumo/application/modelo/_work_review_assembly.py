@@ -1,4 +1,10 @@
-"""Private backend for assembling the canonical Modelo work review."""
+"""Private backend for assembling the canonical Modelo work review.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

@@ -29,6 +29,9 @@ See Also:
     ``irnr.convenio.override``
         Cross-cutting treaty-override governed fact whose typed query detects a
         matched treaty row.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

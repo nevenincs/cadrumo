@@ -41,6 +41,9 @@ capped at 500 characters and one grounded Modelo 100 casilla diff already
 encodes to a median 303 — two divergences were unpersistable for 99.6% of that
 modelo's casillas, and 175 overflowed on the first. ``reconcile list``
 reports which fields diverged by reading the record store.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

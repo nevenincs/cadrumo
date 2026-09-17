@@ -69,7 +69,11 @@ def taxpayer_profile_for_work(profile: ModeloWorkProfile | None) -> TaxpayerProf
 def m303_regimen_simplificado_scope_for_profile(
     profile: TaxpayerProfile,
 ) -> M303RegimenSimplificadoScopeDecision:
-    """Map the canonical secure IVA profile composition to the closed simplified-regime scope."""
+    """Map the canonical secure IVA profile composition to the closed simplified-regime scope.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     iva_profile = profile.iva
     if iva_profile is None:
         raise ModeloProfileReadinessError(
@@ -114,7 +118,11 @@ def m303_regimen_simplificado_annual_summary_applies(work_unit: WorkUnit) -> boo
 
 
 def m303_regimen_simplificado_annual_summary_applies_to_profile(profile: TaxpayerProfile) -> bool:
-    """The same derivation as :func:`m303_regimen_simplificado_annual_summary_applies`, on a loaded profile."""
+    """The same derivation as :func:`m303_regimen_simplificado_annual_summary_applies`, on a loaded profile.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     return not m303_regimen_simplificado_scope_for_profile(profile).is_not_claimed
 
 

@@ -305,6 +305,9 @@ def evaluate_predicate_expression(
     authoring-time validator in
     ``domain.calculations.registry._validate_surfaces`` is the gate
     against typos reaching this branch.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     predicate = parse_verification_predicate_expression(expression)
     if predicate is None:
@@ -573,7 +576,11 @@ def evaluate_advisory_predicate_fires(
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
     profile: TaxpayerProfile | None = None,
 ) -> bool:
-    """Return True when a registered ADVISORY predicate condition fires."""
+    """Return True when a registered ADVISORY predicate condition fires.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     expr = expression.strip()
     for evaluator in _ADVISORY_PREDICATE_EVALUATORS:
         result = evaluator(expr, casilla_values, text_values, profile)

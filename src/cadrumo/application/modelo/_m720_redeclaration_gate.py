@@ -54,6 +54,9 @@ def modelo_720_redeclaration_findings(
     holds no foreign-asset row evidence to judge the declaration against. There
     is nothing independent to compare in those cases, and a fabricated zero
     baseline would manufacture advisories on first-year filings.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     if str(work_unit.modelo) != Modelo("720").value:
         return ()

@@ -15,6 +15,9 @@ through.
 See Also:
     :func:`~cadrumo.application.modelo.work_lifecycle.rename_work_unit`
         The single writer this operation supervises.
+
+Core types:
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations
@@ -49,6 +52,7 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period
 from ...core.refund_election import RefundElection
 from ...core.time.clock import now as _utc_now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ...domain.modelos.codes import ModeloCode
@@ -418,10 +422,10 @@ def build_modelo_work_discard_registration(
     )
 
 
-type ModeloWorkVerifyProfileResolver = Callable[[], TaxpayerProfile]
+type ModeloWorkVerifyProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile]
 
 
-def resolve_active_workflow_profile() -> TaxpayerProfile:
+def resolve_active_workflow_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
     """Resolve the active taxpayer profile when an operation actually runs.
 
     Injected as a strategy rather than a value: a definition composed into the
@@ -431,7 +435,7 @@ def resolve_active_workflow_profile() -> TaxpayerProfile:
     from ..wizard.status import load_active_taxpayer_profile
     from ..workflow.persistence import workflow_state_repository
 
-    return load_active_taxpayer_profile(workflow_state_repository().load())
+    return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
 
 
 class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
@@ -540,9 +544,8 @@ class ModeloWorkVerifyExecutor:
         from ...core.bucket_pointer import require_active_bucket_id
 
         repositories = self._verification_repository_bundle_factory(require_active_bucket_id())
-        workflow_profile = self._profile_resolver()
-
         operation = context.authority_operation
+        workflow_profile = self._profile_resolver(operation)
 
         def verify_under_pinned_operation():
             return verify_modelo_revision(
@@ -741,7 +744,7 @@ class ModeloWorkFileExecutor:
                 file_modelo_revision,
                 payload.approval.calculation_revision_id,
                 actor=request.payload.actor,
-                workflow_profile=self._profile_resolver(),
+                workflow_profile=self._profile_resolver(context.authority_operation),
                 certificate_secret_backend_factory=self._certificate_secret_backend_factory,
                 operator_scope_ports=self._operator_scope_ports,
                 ports=filing_ports,
@@ -910,7 +913,7 @@ class ModeloExportExecutor:
         )
         from ...core.bucket_pointer import require_active_bucket_id
 
-        workflow_profile = self._profile_resolver()
+        workflow_profile = self._profile_resolver(context.authority_operation)
         result = export_modelo_revision(
             command,
             workflow_profile=workflow_profile,

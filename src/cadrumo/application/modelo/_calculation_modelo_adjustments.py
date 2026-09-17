@@ -370,7 +370,11 @@ def _calculated_decimal(value: object | None) -> Decimal:
 def reconciliation_relation_targets(
     snapshot: RegistrySnapshot,
 ) -> tuple[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId], ...]:
-    """Return selected annual-relation targets from the registry revision."""
+    """Return selected annual-relation targets from the registry revision.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     target_casillas_by_binding = casillas_by_binding(snapshot.revision)
     annual_by_reconciliation = _annual_casillas_by_reconciliation_slot(snapshot.revision)
     targets: list[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]] = []

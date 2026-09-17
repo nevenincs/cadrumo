@@ -114,7 +114,11 @@ class ReconciliationEvidenceParserPort(Protocol):
         period: str,
         registry_snapshot: RegistrySnapshot,
     ) -> ReconciliationDeclaracionObservation:
-        """Parse decrypted declaration bytes against a validated snapshot."""
+        """Parse decrypted declaration bytes against a validated snapshot.
+
+        Core types:
+        :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+        """
         ...
 
 

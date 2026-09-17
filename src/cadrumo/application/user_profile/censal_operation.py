@@ -123,7 +123,11 @@ class CensalProfileBaseline(BaseModel):
 
     @classmethod
     def from_record(cls, record: UserProfileRecord) -> CensalProfileBaseline:
-        """Capture the canonical revision and self-verifying content digest."""
+        """Capture the canonical revision and self-verifying content digest.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         return cls(
             profile_id=record.profile_id,
             record_revision=record.record_revision,
@@ -206,7 +210,11 @@ class CensalOperationRequest(BaseModel):
 
 
 def build_censal_operation_request(record: UserProfileRecord) -> CensalOperationRequest:
-    """Bind the exact baseline and safe per-field defaults for frontend review."""
+    """Bind the exact baseline and safe per-field defaults for frontend review.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     effective = record_to_effective_facts(record)
     return CensalOperationRequest(
         baseline=CensalProfileBaseline.from_record(record),

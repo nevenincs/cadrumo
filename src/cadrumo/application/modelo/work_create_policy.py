@@ -123,6 +123,9 @@ def modelo_work_create_applicability_refusal(
             Registry-owned applicability classifier used by this guard.
         :func:`cadrumo.application.user_profile.projections.projection_for_taxpayer`:
             Builds the taxpayer profile consumed by the classifier.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     if allow_not_applicable:
         return None
@@ -151,6 +154,9 @@ def guard_active_profile_foral_ccaa(record: UserProfileRecord | None) -> None:
     to :func:`cadrumo.domain.contribuyente.tax_residence.parse_tax_region`. Common-regime CCAA
     values pass through; foral values raise the domain refusal before work-unit
     creation reaches the generic unsupported-modelo checks.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     from ...application.user_profile.projections import fact_value
     from ...domain.contribuyente.tax_residence import parse_tax_region

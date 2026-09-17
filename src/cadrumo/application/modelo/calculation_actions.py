@@ -483,6 +483,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         iva_compensation_decision=iva_compensation_decision,
         observation_repository=ports.observation_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
+        iva_compensation_history_repository=ports.iva_compensation_history_repository,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         backend_binding_values=backend_binding_values,
@@ -682,6 +683,9 @@ def resolve_bucket_source_mesh(
     ``profile`` is the work profile the calculation already checked; when
     omitted, this entry loads it once. Every resolver reads that one record
     from :attr:`~application.aggregation.source_mesh.CalculationSourceContext.profile`.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile

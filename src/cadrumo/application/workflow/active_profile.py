@@ -4,6 +4,9 @@ Workflow state is an encrypted record and must not become a second import
 surface for the process-wide active-profile selector.  This module owns the
 translation from that core selector to a committed capsule and its authenticated
 profile record.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

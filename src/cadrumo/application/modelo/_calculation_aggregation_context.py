@@ -1,4 +1,8 @@
-"""Context loading for bucket-aggregation calculation actions."""
+"""Context loading for bucket-aggregation calculation actions.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 

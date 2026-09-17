@@ -17,6 +17,9 @@ from a path convention restated per caller.
 The application-owned row mutation below composes those two pure helpers with
 the canonical fact write door. Frontends collect values but never allocate a
 row or publish it themselves.
+
+Core types:
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
 """
 
 from __future__ import annotations

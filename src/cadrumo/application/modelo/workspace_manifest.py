@@ -233,6 +233,9 @@ def generate_modelo_workspace_field_manifest(snapshot: RegistrySnapshot) -> Mode
     The snapshot provides the selected revision for the sole export-layout authority;
     selector roots come exclusively from the public registry selector accessor.
     Neither raw authoring data nor Pydantic JSON Schema participates in this walk.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     return _generate_manifest_from_roots(_manifest_roots(snapshot))
 
@@ -948,7 +951,11 @@ def _capture_for_manifest(
 def read_modelo_workspace_manifest_current_coordinate(
     snapshot: RegistrySnapshot,
 ) -> ModeloWorkspaceManifestCurrentCoordinate:
-    """Return the typed current coordinate for same-domain capture validation."""
+    """Return the typed current coordinate for same-domain capture validation.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     manifest = generate_modelo_workspace_field_manifest(snapshot)
     return _current_coordinate_for_manifest(manifest, _manifest_comparison_domain(snapshot))
 
@@ -959,6 +966,9 @@ def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorks
     The walk is atomic by construction: the sole generating authority runs once
     and its own digest becomes the observation, so no second walk can pair a
     manifest with a coordinate derived from different schema state.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     manifest = generate_modelo_workspace_field_manifest(snapshot)
     return _capture_for_manifest(manifest, _manifest_comparison_domain(snapshot))

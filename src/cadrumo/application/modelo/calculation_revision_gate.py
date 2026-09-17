@@ -17,7 +17,11 @@ def require_calculation_revision_coordinates_current(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Refuse a persisted calculation whose producing registry coordinate diverges."""
+    """Refuse a persisted calculation whose producing registry coordinate diverges.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
     if not outcome.refused:
         return

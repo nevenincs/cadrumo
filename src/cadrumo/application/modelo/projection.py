@@ -12,6 +12,9 @@ The comparison path selects the best draft or verified
 :class:`CalculationRevision` for each requested year, grounds each delta row in
 the compared registry snapshots, and returns either a
 :class:`ModeloProjectServiceResult` or :class:`ModeloCompareServiceResult`.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`.
 """
 
 from __future__ import annotations

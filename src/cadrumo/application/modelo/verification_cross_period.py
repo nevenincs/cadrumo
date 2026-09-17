@@ -59,7 +59,11 @@ def cross_period_expected_member_sets_from_profile(
     profile: TaxpayerProfile,
     explicit_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
 ) -> tuple[CrossPeriodExpectedMemberSet, ...]:
-    """Project profile rosters into the generic registry gate contract."""
+    """Project profile rosters into the generic registry gate contract.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     profile_sets = tuple(
         CrossPeriodExpectedMemberSet(
             source_modelo=roster.source_modelo,
@@ -77,7 +81,11 @@ def registry_modality_finding(
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
 ) -> ModeloVerificationFinding | None:
-    """Leave model-specific modality findings to the selected registry."""
+    """Leave model-specific modality findings to the selected registry.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     del work_unit, profile
     return None
 
@@ -92,7 +100,11 @@ def cross_period_verification_declarations(
     as_of: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[object, ...]:
-    """Return relation and verification declarations for one selected revision."""
+    """Return relation and verification declarations for one selected revision.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     if snapshot is not None:
         revision = snapshot.revision
     elif operation is not None:
@@ -157,6 +169,9 @@ def cross_period_clean_state_verdict_for_work_unit(
     ``not_applicable_source_modelos`` but does supply ``workflow_profile``, the
     revision's economic-activity-conditional sources the profile positively
     excludes (Modelo 130 or 131, RIRPF art. 110) are scoped out.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
@@ -255,7 +270,11 @@ def _not_applicable_conditional_source_modelos(
 
 
 def zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -> frozenset[str]:
-    """Return zero-valued binding overrides for the selected revision."""
+    """Return zero-valued binding overrides for the selected revision.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     if target is None:
         return frozenset[str]()
     resolved: set[str] = set()
@@ -628,7 +647,12 @@ def require_cross_period_clean_state(
     subject_leaf_key: str = "modelo.work.verify",
     operation: PinnedAuthorityOperation | None = None,
 ) -> None:
-    """Refuse the action while a registry-declared prior period is not cleanly evidenced."""
+    """Refuse the action while a registry-declared prior period is not cleanly evidenced.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     verdict = cross_period_clean_state_verdict_for_work_unit(
         work_unit,
         observation_repository=observation_repository,

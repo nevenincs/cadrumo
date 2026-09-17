@@ -509,7 +509,8 @@ def formula_expression_operand_references(
         return (
             ModeloWorkspaceFormulaDispatchOperandReferenceV1(
                 formula_id=formula_id,
-                parameter_ids=tuple(sorted(expression.dispatch_table.values())),
+                # Several dispatch keys may select one parameter; the operand is the set read.
+                parameter_ids=tuple(sorted(set(expression.dispatch_table.values()))),
             ),
         )
     return ()

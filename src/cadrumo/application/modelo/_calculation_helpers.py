@@ -197,6 +197,9 @@ def build_typed_observations(
     :class:`cadrumo.application.modelo.action_errors.CasillaProvenanceMissingError` through
     :func:`cadrumo.application.modelo._calculation_helpers.casilla_observation_for`
     rather than emitting an ungrounded row.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     unknown = tuple(

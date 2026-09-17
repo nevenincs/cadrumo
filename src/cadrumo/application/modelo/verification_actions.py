@@ -41,6 +41,9 @@ See Also:
         Calculate-path diagnostics that feed advisory observations before verify.
     :mod:`~cadrumo.domain.modelos`:
         Finding kind, severity, and completeness-status authority.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
 """
 
 from __future__ import annotations
@@ -231,7 +234,12 @@ def m210_unresolved_outcome_findings(
     ]
     | None = None,
 ) -> list[ModeloVerificationFinding]:
-    """Convert typed M210 unresolved engine outcomes into verification findings."""
+    """Convert typed M210 unresolved engine outcomes into verification findings.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`,
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     findings: list[ModeloVerificationFinding] = []
     for outcome in unresolved_outcomes:
         if outcome.reason not in _M210_UNRESOLVED_RATE_REASONS:
@@ -1070,6 +1078,9 @@ def verify_modelo_revision(
     callers that want the report and none of the transport-recovery envelope.
     It takes the same required application-owned repository bundle the gates
     are evaluated against.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     return verify_modelo_revision_with_preconditions(
         calculation_revision_id,

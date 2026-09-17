@@ -169,7 +169,11 @@ class ProfileRecordSession:
         return ProfileCreateContext(schema=context.schema, generation=context.generation)
 
     def assert_initial_record(self, record: UserProfileRecord) -> None:
-        """Validate that a record is the first authenticated revision for this session."""
+        """Validate that a record is the first authenticated revision for this session.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         if UUID(str(record.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("initial profile record UUID differs from its custody session")
         if record.record_revision != 1 or record.previous_record_digest is not None:
@@ -178,7 +182,11 @@ class ProfileRecordSession:
             )
 
     def assert_replacement(self, current: UserProfileRecord, replacement: UserProfileRecord) -> None:
-        """Validate that a replacement advances the authenticated current record."""
+        """Validate that a replacement advances the authenticated current record.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         if UUID(str(replacement.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
         if (
@@ -188,7 +196,11 @@ class ProfileRecordSession:
             raise ProfileRecordIntegrityError("replacement record does not carry the authenticated predecessor")
 
     def write_provenance(self, record: UserProfileRecord) -> str:
-        """Return the strict row header cross-bound to the encrypted payload."""
+        """Return the strict row header cross-bound to the encrypted payload.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         binding = {
             "content_digest": record.content_digest,
             "dek_epoch": self.dek_epoch,
@@ -202,7 +214,11 @@ class ProfileRecordSession:
         return f"{_RECORD_WRITE_PROVENANCE_PREFIX}:{sha256_hex(canonical)}"
 
     def assert_row_binding(self, raw: ProfileCustodySecureObjectRawRowPort, record: UserProfileRecord) -> None:
-        """Authenticate the row header against the unlocked envelope and record."""
+        """Authenticate the row header against the unlocked envelope and record.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         _assert_record_profile_binding(self.profile_id, record)
         _assert_record_provenance(self, raw, record)
         if record.record_revision == 1:
@@ -303,7 +319,11 @@ class ProfileRecordStore:
             )
 
     def create_initial(self, record: UserProfileRecord, *, stage_path: Path) -> None:
-        """Write revision one and its creation event before the stage commit marker."""
+        """Write revision one and its creation event before the stage commit marker.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         self.session.assert_initial_record(record)
         database_file = stage_path / "db" / "cadrumo.db"
         (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)
@@ -336,7 +356,11 @@ class ProfileRecordStore:
         expected_revision: int,
         expected_content_digest: str,
     ) -> UserProfileRecord:
-        """CAS-replace the sole current row and append its event in one transaction."""
+        """CAS-replace the sole current row and append its event in one transaction.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         with _secure_objects_for_record(self.session, root=self._root) as objects:
             current = self._load_from_objects(objects)
             if (
@@ -574,7 +598,11 @@ def stage_initial_profile_record_database(
     session: ProfileRecordSession,
     record: UserProfileRecord,
 ) -> None:
-    """Materialise the canonical encrypted DB before the custody commit marker exists."""
+    """Materialise the canonical encrypted DB before the custody commit marker exists.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     ProfileRecordStore(session=session, root=root).create_initial(record, stage_path=stage_path)
 
 

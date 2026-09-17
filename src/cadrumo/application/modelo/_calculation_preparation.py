@@ -47,6 +47,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
@@ -118,6 +119,7 @@ def prepare_calculation(
     iva_compensation_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
     binding_values: Mapping[BindingId, Decimal] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
     backend_binding_values: Mapping[BindingId, Decimal] | None,
@@ -189,6 +191,7 @@ def prepare_calculation(
         supplied_decision=iva_compensation_decision,
         observation_repository=observation_repository,
         repository=iva_compensation_decision_repository,
+        history_repository=iva_compensation_history_repository,
         binding_values=binding_values,
         backend_binding_values=backend_binding_values,
         casilla_inputs=casilla_inputs,
