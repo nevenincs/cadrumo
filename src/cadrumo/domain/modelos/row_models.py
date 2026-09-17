@@ -39,7 +39,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -55,6 +55,7 @@ from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.irnr import M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
@@ -567,24 +568,18 @@ class Modelo349RectificacionRow(BaseModel):
         return value
 
 
-#: Post-Brexit UK has no entry in the EU NIF-IVA authority, but AEAT's Modelo 349
-#: instructions still admit a ``GB`` prefix for pre-2021 rectifications and the
-#: 2021 1M/1T transition, with a 5, 9 or 12 character number (the 5-character
-#: forms being the GD/HA government and health-authority numbers). The country
-#: context itself is gated by :func:`validate_m349_country_prefix_context`.
-_M349_GB_PREFIX: Final = "GB"
-_M349_NI_PREFIX: Final = "XI"
-_M349_GB_NIF_PATTERN: Final[re.Pattern[str]] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
-
-
 def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return whether ``nif`` has the NIF-IVA structure Modelo 349 accepts for ``pais``."""
     normalized_pais = pais.upper()
     normalized_nif = nif.upper()
     if not normalized_nif.startswith(normalized_pais):
         return False
-    if normalized_pais == _M349_GB_PREFIX:
-        return bool(_M349_GB_NIF_PATTERN.match(normalized_nif))
+    # Post-Brexit UK has no entry in the EU NIF-IVA authority; Modelo 349 keeps
+    # its own registry-declared shape for the transition prefix.
+    declarations, _ = _registry_detail_catalogue(effective_date=today_madrid())
+    if normalized_pais == _required_detail_declaration(declarations, "m349.transition.prefix"):
+        pattern = re.compile(_required_detail_declaration(declarations, "m349.transition.nif_pattern"))
+        return bool(pattern.match(normalized_nif))
     spec = nif_iva_format_for_country(normalized_pais)
     if spec is None:
         return False
@@ -638,7 +633,7 @@ def validate_m349_country_prefix_context(
             reason=reason,
         )
 
-    if country == _M349_NI_PREFIX:
+    if country == _required_detail_declaration(declarations, "m349.goods_only_prefix"):
         if clave in service_keys:
             refuse("Northern Ireland prefix XI is not accepted for service keys")
         if is_rectification and rectified_year is not None and rectified_year < transition_year:
@@ -646,7 +641,7 @@ def validate_m349_country_prefix_context(
         if not is_rectification and filing_year < transition_year:
             refuse("XI applies only from the transition year onward")
         return
-    if country != _M349_GB_PREFIX:
+    if country != _required_detail_declaration(declarations, "m349.transition.prefix"):
         return
     if is_rectification:
         if rectified_year is not None and rectified_year < transition_year:
