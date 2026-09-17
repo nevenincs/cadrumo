@@ -147,6 +147,7 @@ def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> d
         recargo_amount=Decimal("0"),
         base_amount_eur=base_amount_eur,
         iva_amount_eur=iva_amount_eur,
+        operation=operation,
     )
     if observation is None:
         return {}

@@ -38,6 +38,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
@@ -54,6 +55,13 @@ from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_c
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _pinned_operation() -> PinnedAuthorityOperation:
+    """The session lease this module scopes every test to."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation)
+    return scoped
 
 
 @pytest.fixture
@@ -119,6 +127,7 @@ def _observation_for(invoice: Invoice):
         base_amount_eur=base_amount_eur,
         iva_amount_eur=iva_amount_eur,
         deduction_authority=_received_reverse_charge_deduction_authority(),
+        operation=_pinned_operation(),
     )
 
 

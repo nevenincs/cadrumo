@@ -33,6 +33,7 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -41,6 +42,13 @@ from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _pinned_operation() -> PinnedAuthorityOperation:
+    """The session lease this module scopes every test to."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation)
+    return scoped
 
 
 @pytest.fixture
@@ -123,6 +131,7 @@ def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> d
         recargo_amount=Decimal("0"),
         base_amount_eur=base_amount_eur,
         iva_amount_eur=iva_amount_eur,
+        operation=operation,
     )
     if observation is None:
         return {}
@@ -305,6 +314,7 @@ def test_an_ordinary_rated_line_still_routes_through_the_standard_path() -> None
         recargo_amount=Decimal("0"),
         base_amount_eur=rated_base_amount_eur,
         iva_amount_eur=rated_iva_amount_eur,
+        operation=_pinned_operation(),
     )
 
     assert observation is not None

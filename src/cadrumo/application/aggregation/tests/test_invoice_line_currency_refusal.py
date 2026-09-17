@@ -36,6 +36,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind, TransactionKind
@@ -46,6 +48,14 @@ from ..errors import AggregationValidationError
 from ..oss_ioss import _candidate_for_invoice_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _pinned_operation() -> PinnedAuthorityOperation:
+    """The session lease this module scopes every test to."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation)
+    return scoped
+
 
 _DEVENGO = date(2025, 2, 10)
 
@@ -90,7 +100,9 @@ def test_modelo_bindings_refuses_on_an_unconverted_line() -> None:
     """FIXED: the M303 general IVA screen raises, it does not silently exclude."""
     invoice = _unconverted_gbp_invoice()
     with pytest.raises(AggregationValidationError) as exc_info:
-        _screened_invoice_line_observations(invoice, devengo_date=_DEVENGO, deduction_authority=None)
+        _screened_invoice_line_observations(
+            invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
+        )
     assert exc_info.value.translated_message == "aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
@@ -125,7 +137,9 @@ def test_modelo_bindings_does_not_refuse_a_converted_invoice() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    observations = _screened_invoice_line_observations(invoice, devengo_date=_DEVENGO, deduction_authority=None)
+    observations = _screened_invoice_line_observations(
+        invoice, devengo_date=_DEVENGO, deduction_authority=None, operation=_pinned_operation()
+    )
     assert len(observations) == 1
 
 

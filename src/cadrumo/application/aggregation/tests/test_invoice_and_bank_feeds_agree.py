@@ -38,11 +38,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.invoices.enums import IvaRate
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -53,6 +54,13 @@ from ..iva_ledger import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _pinned_operation() -> PinnedAuthorityOperation:
+    """The session lease this module scopes every test to."""
+    scoped = governed_facts_in_scope()
+    assert isinstance(scoped, PinnedAuthorityOperation)
+    return scoped
 
 
 @pytest.fixture
@@ -162,7 +170,8 @@ def _as_invoice(*, category: IvaCategory, country: str, tax_id: str) -> Invoice:
                     "quantity": "1",
                     "unit_price": format(_BASE, "f"),
                     "subtotal": format(_BASE, "f"),
-                    "iva_rate": resolve_iva_rate_token("EXEMPT", date.today()).value,
+                    # The same printed 0 % rate the bank row declares.
+                    "iva_rate": IvaRate.from_registry("RATE_0").value,
                     "iva_amount": "0.00",
                 },
             ],
@@ -196,6 +205,7 @@ def _invoice_side(*, category: IvaCategory, country: str, tax_id: str):
         recargo_amount=Decimal("0"),
         base_amount_eur=base_amount_eur,
         iva_amount_eur=iva_amount_eur,
+        operation=_pinned_operation(),
     )
     assert observation is not None, "the invoice feed produced no observation for a declarable operation"
     return (observation,)
