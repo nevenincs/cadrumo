@@ -9,7 +9,7 @@ from typing import override
 from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..compiler.authority import compiled_bundled_authority
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 from .export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
@@ -49,6 +49,7 @@ def generated_export_trees() -> tuple[GeneratedExportTree, ...]:
     """Project every provenance-attested generated tree from validated authority."""
     authority = compiled_bundled_authority()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     trees: list[GeneratedExportTree] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
@@ -73,6 +74,7 @@ def generated_export_trees() -> tuple[GeneratedExportTree, ...]:
             coordinates = revision_selection_coordinates(
                 revision,
                 assessment_horizon=assessment_horizon,
+                assessment_floor=assessment_floor,
             )
             if not coordinates:
                 raise AssertionError(f"generated tree {modelo.id}/{revision.id} has no law-selectable coordinate")

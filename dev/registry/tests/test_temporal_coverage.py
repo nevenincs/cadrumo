@@ -11,7 +11,12 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
 from ..compiler.authority import compiled_bundled_authority
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    declared_revision_selection_date,
+    revision_selection_coordinates,
+)
 from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverage,
@@ -32,6 +37,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
     )
     report = compose_temporal_coverage(authority=authority)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     expected_coordinates = {
         (modelo.id, revision.id, filing_year, period)
         for modelo in authority.modelos
@@ -39,6 +45,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
         for filing_year, period in revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
         )
     }
 
@@ -59,7 +66,8 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
         "against the error those rows actually raise"
     )
     for row in report.rows:
-        inspection = authority.inspect_revision(row.modelo, filing_year=row.filing_year, period=row.period)
+        on = declared_revision_selection_date(authority.modelo(row.modelo).revisions[row.revision], row.filing_year)
+        inspection = authority.inspect_revision(row.modelo, filing_year=row.filing_year, period=row.period, on=on)
         assert str(inspection.revision_id) == row.selected_revision
         if row.status == "validated":
             assert row.declared_authority_grade is not None
@@ -67,6 +75,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
                 row.modelo,
                 filing_year=row.filing_year,
                 period=row.period,
+                on=on,
                 grade=row.declared_authority_grade,
             )
             assert str(snapshot.revision.id) == row.revision
@@ -93,6 +102,7 @@ def test_temporal_coverage_derives_the_complete_registered_matrix_from_authority
 ) -> None:
     """Every selector cell through the registry horizon remains in the denominator."""
     assessment_horizon = coverage_assessment_horizon(registry_authority.catalogues)
+    assessment_floor = coverage_assessment_floor(registry_authority.catalogues)
     report = compose_temporal_coverage(authority=registry_authority)
     expected_coordinates = {
         (modelo.id, revision.id, filing_year, period)
@@ -101,6 +111,7 @@ def test_temporal_coverage_derives_the_complete_registered_matrix_from_authority
         for filing_year, period in revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
         )
     }
 
@@ -134,13 +145,15 @@ def test_temporal_coverage_expands_open_selectors_through_the_supported_horizon(
     open_only_modelo = modelo.model_copy(update={"revisions": {revision.id: revision}})
     authority = _authority_with_single_model(registry_authority, composed_modelo=open_only_modelo)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
-
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     report = compose_temporal_coverage(authority=authority)
-    expected_coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+    expected_coordinates = revision_selection_coordinates(
+        revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+    )
 
     assert {(row.filing_year, row.period) for row in report.rows} == set(expected_coordinates)
     assert {row.filing_year for row in report.rows} == set(
-        range(revision.period_selector.year_from, assessment_horizon + 1)
+        range(max(revision.period_selector.year_from, assessment_floor), assessment_horizon + 1)
     )
     assert len(report.rows) > len(revision.period_selector.periods)
 
@@ -164,7 +177,7 @@ def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
         catalogues=shortened_catalogues,
     )
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
-
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     report = compose_temporal_coverage(authority=authority)
 
     # Both sides of the equality below are DERIVED from the same shortened
@@ -180,7 +193,9 @@ def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
         "complete year the horizon claim below holds over almost nothing"
     )
     assert {(row.filing_year, row.period) for row in report.rows} == set(
-        revision_selection_coordinates(revision, assessment_horizon=assessment_horizon),
+        revision_selection_coordinates(
+            revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+        ),
     )
     assert all(row.filing_year <= assessment_horizon for row in report.rows)
 
@@ -192,6 +207,7 @@ def test_temporal_coverage_preserves_declared_period_alias_tokens_without_manufa
     modelo = registry_authority.modelo("210")
     authority = _authority_with_single_model(registry_authority, composed_modelo=modelo)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     report = compose_temporal_coverage(authority=authority)
     expected_coordinates = {
         (revision.id, filing_year, period)
@@ -199,6 +215,7 @@ def test_temporal_coverage_preserves_declared_period_alias_tokens_without_manufa
         for filing_year, period in revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
         )
     }
 
@@ -221,24 +238,33 @@ def test_revision_coordinate_derivation_fails_closed_when_no_declared_year_reach
         revision_selection_coordinates(
             revision,
             assessment_horizon=revision.period_selector.year_from - 1,
+            assessment_floor=coverage_assessment_floor(registry_authority.catalogues),
         )
 
 
 def test_temporal_coverage_retains_a_hidden_later_cell_refusal_from_an_authority_mutation(
     registry_authority,
 ) -> None:
-    """A first-year success cannot mask a later selector cell removed from lookup authority."""
-    modelo = registry_authority.modelo("036")
-    revision = next(iter(modelo.revisions.values()))
+    """A first-year success cannot mask a later selector cell the lookup authority cannot decide.
+
+    A selector truncated before the horizon no longer refuses: the resolver
+    projects the nearest authored year forward. The later cell is instead made
+    undecidable by two indistinguishable revisions that claim only that year.
+    """
     assessment_horizon = coverage_assessment_horizon(registry_authority.catalogues)
-    lookup_revision = revision.model_copy(
-        update={"period_selector": revision.period_selector.model_copy(update={"year_to": assessment_horizon - 1})},
+    modelo, revision = _open_whole_year_revision(registry_authority)
+    earlier_selector = revision.period_selector.model_copy(update={"year_to": assessment_horizon - 1})
+    horizon_selector = revision.period_selector.model_copy(
+        update={"year_from": assessment_horizon, "year_to": assessment_horizon}
     )
-    lookup_modelo = modelo.model_copy(update={"revisions": {lookup_revision.id: lookup_revision}})
+    lookup_revisions = (
+        revision.model_copy(update={"period_selector": earlier_selector}),
+        *_indistinguishable_twins(revision, period_selector=horizon_selector),
+    )
     authority = _authority_with_single_model(
         registry_authority,
-        composed_modelo=modelo,
-        lookup_modelo=lookup_modelo,
+        composed_modelo=modelo.model_copy(update={"revisions": {revision.id: revision}}),
+        lookup_modelo=modelo.model_copy(update={"revisions": {item.id: item for item in lookup_revisions}}),
     )
 
     report = compose_temporal_coverage(authority=authority)
@@ -461,10 +487,10 @@ def test_temporal_coverage_retains_law_selection_refusal_from_an_authority_mutat
     registry_authority,
 ) -> None:
     modelo = registry_authority.modelo("100")
-    target = modelo.revisions["2020"]
-    selected_elsewhere = modelo.revisions["2021"]
+    target, _later = _first_two_supported_revisions(registry_authority, modelo)
     composed_modelo = modelo.model_copy(update={"revisions": {target.id: target}})
-    lookup_modelo = modelo.model_copy(update={"revisions": {selected_elsewhere.id: selected_elsewhere}})
+    twins = _indistinguishable_twins(target, period_selector=target.period_selector)
+    lookup_modelo = modelo.model_copy(update={"revisions": {twin.id: twin for twin in twins}})
     authority = _authority_with_single_model(
         registry_authority,
         composed_modelo=composed_modelo,
@@ -473,15 +499,15 @@ def test_temporal_coverage_retains_law_selection_refusal_from_an_authority_mutat
 
     row = _refusals(compose_temporal_coverage(authority=authority), "law_selection_refused")[0]
 
-    assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", None)
+    assert (row.modelo, row.revision, row.selected_revision) == ("100", target.id, None)
 
 
 def test_temporal_coverage_retains_selection_identity_mismatch_from_an_authority_mutation(
     registry_authority,
 ) -> None:
     modelo = registry_authority.modelo("100")
-    target = modelo.revisions["2020"]
-    selected_elsewhere = modelo.revisions["2021"].model_copy(
+    target, later = _first_two_supported_revisions(registry_authority, modelo)
+    selected_elsewhere = later.model_copy(
         update={"period_selector": target.period_selector},
     )
     composed_modelo = modelo.model_copy(update={"revisions": {target.id: target}})
@@ -494,7 +520,7 @@ def test_temporal_coverage_retains_selection_identity_mismatch_from_an_authority
 
     row = _refusals(compose_temporal_coverage(authority=authority), "selected_revision_mismatch")[0]
 
-    assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", "2021")
+    assert (row.modelo, row.revision, row.selected_revision) == ("100", target.id, later.id)
 
 
 def test_temporal_coverage_retains_undeclared_grade_refusal_from_an_authority_mutation(
@@ -515,6 +541,7 @@ def test_temporal_coverage_retains_undeclared_grade_refusal_from_an_authority_mu
         revision_selection_coordinates(
             ungraded,
             assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+            assessment_floor=coverage_assessment_floor(authority.catalogues),
         )
     )
 
@@ -539,6 +566,7 @@ def test_temporal_coverage_retains_declared_grade_snapshot_refusal_from_an_autho
         revision_selection_coordinates(
             filing_grade,
             assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+            assessment_floor=coverage_assessment_floor(authority.catalogues),
         )
     )
 
@@ -549,21 +577,54 @@ def test_temporal_coverage_retains_snapshot_identity_mismatch_from_an_authority_
     registry_authority,
 ) -> None:
     modelo = registry_authority.modelo("100")
-    target = modelo.revisions["2020"]
-    cached_snapshot = registry_authority.snapshot("100", filing_year=2021, period="0A")
+    target, later = _first_two_supported_revisions(registry_authority, modelo)
+    cached_snapshot = registry_authority.snapshot("100", filing_year=later.valid_from.year, period="0A")
     assert target.authority_grade is not None
     composed_modelo = modelo.model_copy(update={"revisions": {target.id: target}})
     authority = _authority_with_single_model(
         registry_authority,
         composed_modelo=composed_modelo,
         snapshots={
-            ("100", 2020, "0A", None, None, target.authority_grade): cached_snapshot,
+            ("100", target.valid_from.year, "0A", None, None, target.authority_grade): cached_snapshot,
         },
     )
 
     row = _refusals(compose_temporal_coverage(authority=authority), "snapshot_revision_mismatch")[0]
 
-    assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", "2021")
+    assert (row.modelo, row.revision, row.selected_revision) == ("100", target.id, later.id)
+
+
+def _first_two_supported_revisions(authority, modelo):
+    """Return the first two revisions that open inside the supported filing years."""
+    floor = authority.catalogues.require_supported_filing_years().floor
+    ordered = sorted(
+        (revision for revision in modelo.revisions.values() if revision.valid_from.year >= floor),
+        key=lambda revision: revision.valid_from,
+    )
+    return ordered[0], ordered[1]
+
+
+def _open_whole_year_revision(authority):
+    """Return a revision that governs every supported year whole, with its modelo."""
+    floor = authority.catalogues.require_supported_filing_years().floor
+    return next(
+        (modelo, revision)
+        for modelo in sorted(authority.modelos, key=lambda item: item.id)
+        for revision in modelo.revisions.values()
+        if revision.valid_from.year < floor
+        and revision.valid_to is None
+        and revision.period_selector.year_to is None
+        and not revision.period_selector.years
+        and not revision.period_selector.period_overrides
+    )
+
+
+def _indistinguishable_twins(revision, *, period_selector):
+    """Return two revisions the law cannot tell apart on any coordinate they claim."""
+    return tuple(
+        revision.model_copy(update={"id": f"{revision.id}-twin-{index}", "period_selector": period_selector})
+        for index in (1, 2)
+    )
 
 
 def _authority_with_single_model(

@@ -30,7 +30,9 @@ from ...compiler.corpus_catalogue import verify_source_file
 from ...compiler.legal_grounding import verify_legal_catalogue_grounding
 from ...compiler.loader_fingerprints import clear_fingerprint_cache
 from ...maintenance_support import (
+    coverage_assessment_floor,
     coverage_assessment_horizon,
+    declared_revision_selection_date,
     resolve_record_design_binary,
     revision_selection_coordinates,
 )
@@ -45,6 +47,7 @@ from ..loader_directory_mode_support import (
     write_extracted_corpus_sidecar,
     write_fragmented_revision,
 )
+from ..registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -108,6 +111,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                         modelo,
                         filing_year=year,
                         period=period,
+                        on=declared_revision_selection_date(revision, year),
                     )
                     assert selected.id == revision.id
 
@@ -182,7 +186,9 @@ def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
 
 def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
     """M038's legal cutover and inspection receipt cannot select pre-June history."""
-    modelos, catalogues = registry_tree()
+    # The authored catalogue, because the receipt is cited by no revision and a
+    # published generation's closure carries only cited sources.
+    modelos, catalogues = committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "038")
     june_2024 = modelo.revisions["2024-desde-06"]
     current_source = catalogues.sources["aeat-dr-038-2024"]
@@ -301,6 +307,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     assert audit.ok
     assert audit.required_gate_failures == ()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     expected_coordinates = {
         (modelo.id, revision.id, filing_year, period)
         for modelo in authority.modelos
@@ -308,6 +315,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         for filing_year, period in revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
         )
     }
     actual_coordinates = {
@@ -486,6 +494,7 @@ def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_co
         revision_selection_coordinates(
             revision,
             assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+            assessment_floor=coverage_assessment_floor(authority.catalogues),
         ),
     )
     layout_gaps = [

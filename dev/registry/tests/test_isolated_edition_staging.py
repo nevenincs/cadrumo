@@ -161,8 +161,12 @@ _AUTHORED_LABELS: dict[str, dict[str, str]] = {
         "hu": "Adóalap",
     },
     "modelo.schema.999.revision.2023.casilla.0002.label": {"es": "Cuota íntegra", "en": "Gross tax due"},
-    "modelo.schema.999.revision.2024.casilla.0002.label": {"es": "Cuota íntegra ajustada", "hu": "Kiigazított adó"},
-    "modelo.schema.999.casilla.continuidad.cuota-integra.label": {"en": "Gross tax (lineage)", "ca": "Quota íntegra"},
+    "modelo.schema.999.revision.2024.casilla.0002.label": {"hu": "Kiigazított adó"},
+    "modelo.schema.999.casilla.continuidad.cuota-integra.label": {
+        "es": "Cuota íntegra",
+        "en": "Gross tax (lineage)",
+        "ca": "Quota íntegra",
+    },
     "modelo.schema.999.revision.2025.casilla.0001.label": {"ca": "Base imposable 2025"},
     "modelo.schema.999.revision.2025.casilla.0004.label": {
         "es": "Recargo",
@@ -256,7 +260,9 @@ def test_a_migrated_successor_stages_as_the_complete_edition_it_stands_for(tmp_p
         ("0002", "22", "cuota-integra"),
         ("0004", "4", "recargo-nuevo"),
     ]
-    assert staged.model_copy(update={"predecessor": live.predecessor}) == _without_label_origin_fallback(live)
+    # Isolation prunes the sibling editions, so the continuity evolutions naming them go too.
+    expected = _without_label_origin_fallback(live).model_copy(update={"casilla_continuidad_evolutions": ()})
+    assert staged.model_copy(update={"predecessor": live.predecessor}) == expected
 
 
 def test_a_staged_successor_resolves_every_label_the_live_edition_resolves(tmp_path: Path) -> None:
@@ -299,7 +305,9 @@ def test_a_staged_successor_equals_what_the_entry_point_materialises(tmp_path: P
     ).modelo_root
 
     assert edition.inherits_from == "2024"
-    assert materialise_edition(staged_root, "2025").table == edition.table
+    # Isolation prunes the sibling editions, so the continuity evolutions naming them go too.
+    expected = {key: value for key, value in edition.table.items() if key != "casilla_continuidad_evolutions"}
+    assert materialise_edition(staged_root, "2025").table == expected
     assert materialise_edition(staged_root, "2025").inherits_from is None
 
 

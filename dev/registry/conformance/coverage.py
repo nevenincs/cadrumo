@@ -87,7 +87,12 @@ from dev.registry.compiler.schema_family_coverage import (
 )
 
 from ..compiler.authority import admitted_revision_id
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    declared_revision_selection_date,
+    revision_selection_coordinates,
+)
 
 CoverageGateStatus = Literal["satisfied", "gap"]
 
@@ -468,6 +473,7 @@ def audit_registry_model_law_coverage(
     """
     authority.validate_registry()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     ledgers: list[ModelLawCoverageLedger] = []
     required_gate_failures: list[str] = []
     executable_parity_gaps: list[str] = []
@@ -476,6 +482,7 @@ def audit_registry_model_law_coverage(
             for filing_year, period in revision_selection_coordinates(
                 revision,
                 assessment_horizon=assessment_horizon,
+                assessment_floor=assessment_floor,
             ):
                 ledger = _model_law_coverage_for_coordinate(
                     authority=authority,
@@ -520,15 +527,9 @@ def _inspect_declared_revision(
     try:
         return authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
     except AmbiguousRevisionSelectionError:
-        year_start, year_end = date(filing_year, 1, 1), date(filing_year, 12, 31)
-        spans_whole_year = revision.valid_from <= year_start and (
-            revision.valid_to is None or revision.valid_to >= year_end
-        )
-        if spans_whole_year:
+        on = declared_revision_selection_date(revision, filing_year)
+        if on is None:
             raise
-        on = max(revision.valid_from, year_start)
-        if revision.valid_to is not None:
-            on = min(on, revision.valid_to)
         return authority.inspect_revision(
             modelo.id,
             filing_year=filing_year,
@@ -622,10 +623,13 @@ def audit_registry_construct_evidence(
     """
     authority.validate_registry()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     ledgers: list[ConstructEvidenceLedger] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+            coordinates = revision_selection_coordinates(
+                revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+            )
             inspections = tuple(
                 _inspect_declared_revision(
                     authority,

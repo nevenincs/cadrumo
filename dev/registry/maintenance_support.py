@@ -1097,8 +1097,34 @@ def coverage_assessment_horizon(catalogues: RegistryCatalogues) -> int:
     return catalogue.horizon
 
 
+def coverage_assessment_floor(catalogues: RegistryCatalogues) -> int:
+    """Return the registry-declared floor below which no coordinate resolves."""
+    catalogue = catalogues.supported_filing_years
+    if catalogue is None:
+        raise RegistryValidationError("registry has no supported_filing_years catalogue for coverage assessment")
+    return catalogue.floor
+
+
+def declared_revision_selection_date(revision: ModeloRevision, filing_year: int) -> date | None:
+    """Return a date inside ``filing_year`` that ``revision`` itself governs, when it shares that year.
+
+    A revision whose validity starts or ends inside a filing year shares that
+    year with its neighbour, and where both declare the same period token an
+    undated question has two right answers. An audit asking whether THIS
+    revision covers the coordinate re-asks on a date the revision owns. A
+    revision spanning the whole year has no such neighbour and returns ``None``.
+    """
+    year_start, year_end = date(filing_year, 1, 1), date(filing_year, 12, 31)
+    if revision.valid_from <= year_start and (revision.valid_to is None or revision.valid_to >= year_end):
+        return None
+    on = max(revision.valid_from, year_start)
+    if revision.valid_to is not None:
+        on = min(on, revision.valid_to)
+    return on
+
+
 def revision_selection_coordinates(
-    revision: ModeloRevision, *, assessment_horizon: int
+    revision: ModeloRevision, *, assessment_horizon: int, assessment_floor: int
 ) -> tuple[tuple[int, RegistrySelectorPeriodCode], ...]:
     """Derive every declared selection coordinate through the assessment horizon.
 
@@ -1113,18 +1139,21 @@ def revision_selection_coordinates(
         raise ValueError("assessment_horizon must be between 2000 and 2099")
     selector = revision.period_selector
     if selector.years:
-        years = tuple(year for year in sorted(selector.years) if year <= assessment_horizon)
+        declared = tuple(year for year in sorted(selector.years) if year <= assessment_horizon)
     else:
         if selector.year_from is None:
             raise RegistryValidationError(
                 f"revision {revision.id!r} declares no selector start for coverage assessment"
             )
         end = min(selector.year_to or assessment_horizon, assessment_horizon)
-        years = tuple(range(selector.year_from, end + 1))
-    if not years:
+        declared = tuple(range(selector.year_from, end + 1))
+    if not declared:
         raise RegistryValidationError(
             f"revision {revision.id!r} declares no filing year through coverage horizon {assessment_horizon}"
         )
+    # Nothing resolves below the supported floor, so a year there has no
+    # coordinate to assess; a revision entirely below it contributes none.
+    years = tuple(year for year in declared if year >= assessment_floor)
     return tuple((filing_year, period) for filing_year in years for period in selector.periods_for_year(filing_year))
 
 

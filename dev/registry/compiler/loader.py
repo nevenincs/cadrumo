@@ -6,7 +6,7 @@ sources into registry schema models; shipped runtime reads a published, digest-c
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import date
@@ -260,7 +260,8 @@ def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
         if not revisions:
             raise RegistryLoadError(f"{source.path}: no revisions found in revisions/")
         _validate_predecessor_references(source.path, revisions)
-        materialised = _materialise_revisions(source.path, modelo_id, revisions).revisions
+        materialisation = _materialise_revisions(source.path, modelo_id, revisions)
+        materialised = materialisation.revisions
 
         keys.add(modelo_locale_key(modelo_id, "title"))
         keys.add(modelo_locale_key(modelo_id, "official_name"))
@@ -275,7 +276,14 @@ def load_modelo_locale_key_projection(root: Path) -> frozenset[str]:
                     f"{source.path}: revision {revision_token!r} authored id {authored_revision_id!r} differs",
                 )
             keys.add(revision_locale_key(modelo_id, revision_token))
-            _project_revision_locale_keys(keys, modelo_id, revision_token, revision_table, source.path)
+            _project_revision_locale_keys(
+                keys,
+                modelo_id,
+                revision_token,
+                revision_table,
+                source.path,
+                label_origins=materialisation.text_origins.get(revision_id),
+            )
     return frozenset(keys)
 
 
@@ -335,8 +343,15 @@ def _project_revision_locale_keys(
     revision_id: str,
     revision: Mapping[str, object],
     source_path: Path,
+    *,
+    label_origins: Sequence[str | None] | None = None,
 ) -> None:
-    """Project construct, casilla, and alias identities from one raw revision."""
+    """Project construct, casilla, and alias identities from one raw revision.
+
+    An inherited casilla has no occurrence key of its own: its text lives
+    under the edition that stated it (``label_origins``) or its lineage key,
+    so emitting one would invite a restatement of inherited text.
+    """
     constructs = _raw_array(revision, "constructs", f"{source_path}: revision {revision_id!r}")
     seen_construct_ids: set[str] = set()
     for index, raw_construct in enumerate(constructs):
@@ -362,9 +377,12 @@ def _project_revision_locale_keys(
             raise RegistryLoadError(f"{subject}: duplicate casilla id {casilla_id!r}")
         seen_casilla_ids.add(casilla_id)
 
-        localization_keys = [
-            casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL),
-        ]
+        inherited = label_origins is not None and label_origins[index] is not None
+        localization_keys = (
+            []
+            if inherited
+            else [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL)]
+        )
         if "continuidad_id" in casilla:
             continuidad_id = _required_identity(casilla["continuidad_id"], f"{subject}.continuidad_id")
             localization_keys.append(

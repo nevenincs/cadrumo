@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 
 from .compiler.authority_state import source_root_for
-from .maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from .maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -88,6 +88,7 @@ def _derive_filing_revision_classifications(
 ) -> tuple[RegistryDiagnosticFilingRevision, ...]:
     """Classify structural data without constructing a validated authority."""
     assessment_horizon = coverage_assessment_horizon(catalogues)
+    assessment_floor = coverage_assessment_floor(catalogues)
     classified: list[RegistryDiagnosticFilingRevision] = []
     for modelo in sorted(modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
@@ -97,6 +98,7 @@ def _derive_filing_revision_classifications(
                 selection_coordinates = revision_selection_coordinates(
                     revision,
                     assessment_horizon=assessment_horizon,
+                    assessment_floor=assessment_floor,
                 )
             except ValueError as error:
                 classified.append(

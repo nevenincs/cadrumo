@@ -322,7 +322,11 @@ def test_render_profile_digest_is_order_independent_and_evidence_sensitive() -> 
 
 
 def test_wire_authority_profiles_have_one_unambiguous_class_home() -> None:
-    production_paths = scan_directory(Path(__file__).parents[1] / "pipeline", pattern="*.py")
+    production_paths = tuple(
+        path
+        for path in scan_directory(Path(__file__).parents[1] / "pipeline", pattern="*.py")
+        if not path.name.startswith("test_")
+    )
     class_homes: dict[str, list[str]] = {"RenderProfile": [], "ExportTreeTransportProfile": []}
     for path in production_paths:
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -1231,7 +1235,10 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         for node in ast.walk(eligibility_module)
         if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
     }
+    # ``compiler.record_design_pdf_rows`` supplies only the record design's own
+    # "No consta" type token, read from the same pinned source.
     assert eligibility_imports == {
+        "compiler.record_design_pdf_rows",
         "record_design_intermediate",
         "source_defects",
     }

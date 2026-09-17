@@ -538,8 +538,9 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
 def test_modelo_100_dependency_classifications_cover_registered_relation_sources() -> None:
     snapshot = _modelo_100_snapshot()
     bindings_by_source: dict[str, set[str]] = {}
+    # Both relation prefill and a prior year's filing make another filing a source.
     for binding in snapshot.revision.bindings:
-        if binding.source != "relation_prefill":
+        if binding.source not in {"relation_prefill", "previous_filing"}:
             continue
         source_modelo = selector_as_dict(binding)["source_modelo"]
         bindings_by_source.setdefault(str(source_modelo), set()).add(binding.id)

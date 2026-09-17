@@ -45,7 +45,7 @@ from ..filing_export_proof import (
     derive_filing_export_conformance_enrollment,
 )
 from ..filing_export_proof_contracts import FilingExportProofCoordinate, FilingExportSecureReplayEvidence
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -451,10 +451,14 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         for revision in modelo.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            filing_year, period = revision_selection_coordinates(
+            coordinates = revision_selection_coordinates(
                 revision,
                 assessment_horizon=coverage_assessment_horizon(registry.catalogues),
-            )[0]
+                assessment_floor=coverage_assessment_floor(registry.catalogues),
+            )
+            if not coordinates:
+                continue
+            filing_year, period = coordinates[0]
             coordinate = FilingExportProofCoordinate(
                 modelo=modelo.id,
                 revision=revision.id,

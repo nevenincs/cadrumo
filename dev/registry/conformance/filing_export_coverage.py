@@ -39,7 +39,7 @@ from ..export_proof import (
     FilingExportProofRefusalReason,
 )
 from ..filing_export_proof_contracts import FilingExportProof, FilingExportProofCoordinate
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
 from .closure_models import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
@@ -438,7 +438,10 @@ def _filing_layout_evidence(
 ) -> tuple[RegistrySnapshot, tuple[RegistryClosureEvidence, ...]] | _FilingLayoutFailure:
     """Admit each coordinate and collect byte evidence from its first snapshot."""
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
-    coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
+    coordinates = revision_selection_coordinates(
+        revision, assessment_horizon=assessment_horizon, assessment_floor=assessment_floor
+    )
     snapshots: list[RegistrySnapshot] = []
     evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
     for filing_year, period in coordinates:

@@ -19,6 +19,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
+    AmbiguousRevisionSelectionError,
     RegistrySnapshotError,
     RegistryValidationError,
 )
@@ -26,9 +27,15 @@ from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from .compiler.authority import admitted_revision_id
-from .maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
+from .maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    declared_revision_selection_date,
+    revision_selection_coordinates,
+)
 
 TemporalCoverageStatus = Literal["validated", "refused"]
 TemporalCoverageFailureCode = Literal[
@@ -212,6 +219,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
     """
     authority.validate_registry()
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
     rows: list[TemporalRevisionCoverage] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
@@ -219,7 +227,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
                 _compose_revision_temporal_coverage(
                     authority=authority,
                     modelo_id=modelo.id,
-                    revision_id=revision.id,
+                    revision=revision,
                     filing_year=filing_year,
                     period=period,
                     declared_authority_grade=revision.authority_grade,
@@ -227,6 +235,7 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
                 for filing_year, period in revision_selection_coordinates(
                     revision,
                     assessment_horizon=assessment_horizon,
+                    assessment_floor=assessment_floor,
                 )
             )
     return TemporalCoverageReport(rows=tuple(rows))
@@ -236,14 +245,24 @@ def _compose_revision_temporal_coverage(
     *,
     authority: ValidatedRegistryAuthority,
     modelo_id: ModeloId,
-    revision_id: RevisionId,
+    revision: ModeloRevision,
     filing_year: int,
     period: RegistrySelectorPeriodCode,
     declared_authority_grade: RegistryAuthorityGrade | None,
 ) -> TemporalRevisionCoverage:
     """Build one row, preserving an explicit refusal at each authority boundary."""
+    revision_id = revision.id
+    on = None
     try:
-        inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period)
+        try:
+            inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period)
+        except AmbiguousRevisionSelectionError:
+            # A year shared with a neighbouring design is re-asked on a date this
+            # revision itself governs; a whole-year revision keeps the refusal.
+            on = declared_revision_selection_date(revision, filing_year)
+            if on is None:
+                raise
+            inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period, on=on)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         return TemporalRevisionCoverage(
             modelo=modelo_id,
@@ -289,6 +308,7 @@ def _compose_revision_temporal_coverage(
             modelo_id,
             filing_year=filing_year,
             period=period,
+            on=on,
             grade=declared_authority_grade,
         )
     except RegistryValidationError as exc:
