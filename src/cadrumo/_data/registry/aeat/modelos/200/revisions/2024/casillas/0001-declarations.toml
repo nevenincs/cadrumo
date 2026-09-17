@@ -25866,7 +25866,6 @@ segmento = "DP200018"
 semantic_role = 'is_liquidacion_iv_importe'
 section = [
     'deducciones_incentivos',
-    'DP200018',
     'total_aplicado',
 ]
 legal_refs = [

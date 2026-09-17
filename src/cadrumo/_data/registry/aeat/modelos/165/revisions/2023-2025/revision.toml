@@ -2,9 +2,8 @@
 predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (lower grade).", cause = "lower_grade", legal_refs = ["orden-hap-2455-2013:art-1"], source_refs = ["enrolled-modelo-165-procedure"] } }
 casilla_source_refs = ["enrolled-modelo-165-procedure"]
 authority_grade = "applicability"
-# The next bundled positional artefact is headed Ejercicio 2026. Its filename
-# says it was updated in 2023, but that is not an applicability declaration for
-# 2023-2025, so this interval stays legal/applicability-only.
+# The positional design is AEAT's DR_Mod_165_2023, the Orden HAP/2455/2013
+# anexo as updated by Orden HFP/1284/2023, which applies first to ejercicio 2023.
 valid_from = 2023-01-01
 valid_to = 2025-12-31
 period_selector = { year_from = 2023, year_to = 2025, periods = ["0A"] }
@@ -14,7 +13,7 @@ legal_refs = [
     "orden-hap-2455-2013:art-4",
     "ley-58-2003:art-93",
 ]
-source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout"]
+source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout", "aeat-dr-165-2026"]
 review_status = "agent_reviewed"
 reviewed_by = "agent: 2023-2025 legal selection retained; no positional source whose own heading covers this interval is bundled"
 reviewed_at = 2026-08-26

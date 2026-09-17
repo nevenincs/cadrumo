@@ -19300,7 +19300,7 @@ restate_provenance = true
 
 [[revisions."2025-y-siguientes".casilla_overrides]]
 selector = { revision = "2024", id = "DP200018:00588" }
-fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 DP200018 campo172 y aeat-dr-200-2025 DP200018B campo22: Deducc. para incentivar determ.actividades - Total - Aplicado en esta liquidacion [00588], Num17 con dos decimales. El cierre del cuadro de deducciones se desplaza a la pagina18bis. Se conserva su identidad de total del detalle, distinta de la instancia de liquidacion DP200014B y de las celdas contables homonimas.", continuidad_origin = "grounded", id = "DP200018B:00588", legal_refs = ["ley-27-2014:art-39"], section = ["deducciones_incentivos", "DP200018B", "total_aplicado"], segmento = "DP200018B" }
+fields = { continuidad_evidence = "AEAT aeat-dr-200-2024 DP200018 campo172 y aeat-dr-200-2025 DP200018B campo22: Deducc. para incentivar determ.actividades - Total - Aplicado en esta liquidacion [00588], Num17 con dos decimales. El cierre del cuadro de deducciones se desplaza a la pagina18bis. Se conserva su identidad de total del detalle, distinta de la instancia de liquidacion DP200014B y de las celdas contables homonimas.", continuidad_origin = "grounded", id = "DP200018B:00588", legal_refs = ["ley-27-2014:art-39"], section = ["deducciones_incentivos", "total_aplicado"], segmento = "DP200018B" }
 removed_fields = ["source_refs"]
 restate_provenance = true
 
