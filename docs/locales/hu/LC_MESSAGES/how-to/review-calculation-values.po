@@ -329,7 +329,7 @@ msgstr ""
 #: ../../how-to/review-calculation-values.md:131
 msgid "Régimen de atribución de rentas (socios)"
 msgstr ""
-"Régimen de atribución de rentas – a jövedelem-hozzárendelési rendszer "
+"Régimen de atribución de rentas: a jövedelem-hozzárendelési rendszer "
 "tagjai"
 
 #: ../../how-to/review-calculation-values.md:133

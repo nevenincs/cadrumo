@@ -344,7 +344,7 @@ msgstr ""
 
 #: ../../reference/import-export-and-evidence.md:86
 msgid "**AEAT justificantes:**"
-msgstr "**AEAT justificantes:** – hivatalos bizonylatok"
+msgstr "**AEAT justificantes:** hivatalos bizonylatok"
 
 #: ../../reference/import-export-and-evidence.md:88
 msgid "Justificante PDF or a receipt read from AEAT"
