@@ -4,13 +4,13 @@
 tabs and passes these payloads to the shared
 :func:`adapters.outbound.google.api.execute_request` boundary for a
 Sheets ``values.batchUpdate`` call. This module stays pure: it maps
-:class:`application.storage.calc_sheets.SheetExportPlan` facets into A1
+:class:`application.storage.calc_sheets.records.SheetExportPlan` facets into A1
 ranges plus row values and never opens a Google service object itself.
 
 See Also:
     :func:`build_value_data` and :func:`build_formula_data` emit the main
     workbook grid, while :func:`build_evidence_value_data` mirrors
-    :func:`application.storage.calc_sheets.evidence_table` so the online
+    :func:`application.storage.calc_sheets.export_tables.evidence_table` so the online
     Evidencia tab is derived from the live export plan.
 """
 
@@ -44,7 +44,7 @@ _ANCHOR_PATTERN = re.compile(r"^'(?P<tab>(?:[^']|'')+)'!(?P<letters>[A-Z]{1,3})(
 
 
 def coerce_cell_value(value: Decimal | str | bool | None) -> object:
-    """Convert a :class:`application.storage.calc_sheets.SheetValueCell` value.
+    """Convert a :class:`application.storage.calc_sheets.records.SheetValueCell` value.
 
     ``None`` becomes an empty cell, booleans stay native, and
     :class:`~decimal.Decimal` values are rendered with fixed-point text so
@@ -62,7 +62,7 @@ def coerce_cell_value(value: Decimal | str | bool | None) -> object:
 
 
 def build_value_data(value_cells: Iterable[SheetValueCell]) -> list[ValueRange]:
-    """Build ``values.batchUpdate`` entries for :class:`application.storage.calc_sheets.SheetValueCell`."""
+    """Build ``values.batchUpdate`` entries for :class:`application.storage.calc_sheets.records.SheetValueCell`."""
     data: list[ValueRange] = []
     for cell in value_cells:
         data.append(
@@ -75,7 +75,7 @@ def build_value_data(value_cells: Iterable[SheetValueCell]) -> list[ValueRange]:
 
 
 def build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[ValueRange]:
-    """Build entries for :class:`application.storage.calc_sheets.SheetFormulaCell` records.
+    """Build entries for :class:`application.storage.calc_sheets.records.SheetFormulaCell` records.
 
     Formula text is prefixed with ``=`` because
     :mod:`application.storage.calc_sheets` stores formula bodies without
@@ -93,7 +93,7 @@ def build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[ValueR
 
 
 def build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[ValueRange]:
-    """Emit Detalle-tab header cells for :class:`application.storage.calc_sheets.SheetRowSet`."""
+    """Emit Detalle-tab header cells for :class:`application.storage.calc_sheets.records.SheetRowSet`."""
     data: list[ValueRange] = []
     for row_set in row_sets:
         for column in row_set.columns:
@@ -109,7 +109,7 @@ def build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[ValueRang
 def build_evidence_value_data(plan: SheetExportPlan) -> list[ValueRange]:
     """Build Evidencia-tab value writes for ``plan``.
 
-    Uses :func:`application.storage.calc_sheets.evidence_table`, the same
+    Uses :func:`application.storage.calc_sheets.export_tables.evidence_table`, the same
     source owned by the live export-plan boundary.
     """
     fingerprint, header, body = evidence_table(plan)
@@ -238,7 +238,7 @@ def changed_cell_addresses(
     content. An address absent from ``current`` reads as blank, matching how
     a value cell's coerced blank (``""``) compares against nothing having been
     read there before. Both sides are normalised through
-    :func:`~core.decimal.coerce_decimal` where possible so a Decimal written as
+    :func:`~core.decimal.coercion.coerce_decimal` where possible so a Decimal written as
     fixed-point text (``"1234.50"``) is compared against the number Sheets
     already stores (``1234.5``) rather than failing every numeric cell on
     string shape alone.

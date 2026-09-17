@@ -3,15 +3,15 @@
 A gestor operating for several represented entities may want one shared
 Google identity backing the Sheets/Drive export mirror instead of every team
 member running the interactive per-profile OAuth Desktop consent flow
-(:func:`~adapters.outbound.google.run_login_flow`). Google's supported mechanism for
+(:func:`~adapters.outbound.google.oauth_flow.run_login_flow`). Google's supported mechanism for
 this is service-account (SA) impersonation: a locally-discoverable identity —
 Application Default Credentials (ADC) — is granted IAM
 ``roles/iam.serviceAccountTokenCreator`` on a target SA, and every API call mints
 a short-lived, scoped access token for that SA rather than presenting the ADC
 identity's own token directly.
 
-:class:`~adapters.outbound.google.GoogleImpersonationConfig` is the typed,
-frozen configuration record; :func:`~adapters.outbound.google.resolve_impersonated_credentials`
+:class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig` is the typed,
+frozen configuration record; :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`
 performs the two-step resolution (ADC discovery, then impersonation wrapping)
 and eagerly validates the grant with one real token refresh so a misconfigured
 SA fails loudly at resolution time rather than deep inside a later Sheets write.
@@ -24,19 +24,19 @@ calls ``source_credentials.refresh(request)`` whenever
 ``source_credentials.token_state`` is ``STALE`` or ``INVALID``), so a
 merely-stale (but still refreshable) ADC user credential is transparently
 renewed with no operator action.
-:func:`~adapters.outbound.google.resolve_impersonated_credentials` additionally
+:func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials` additionally
 distinguishes the two ways that refresh can still fail: a
 genuinely revoked/expired ADC SOURCE credential (the operator's local
 ``gcloud auth application-default login`` grant itself is dead) raises
-:class:`~adapters.outbound.google.GoogleAuthAdcStaleError` naming the
+:class:`~adapters.outbound.google.impersonation.GoogleAuthAdcStaleError` naming the
 ``gcloud`` re-login remediation, while every other refresh failure (a real IAM
 Token Creator grant problem on ``target_principal``) raises
-:class:`~adapters.outbound.google.GoogleAuthImpersonationRefusedError` naming
+:class:`~adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError` naming
 the IAM role-grant remediation instead. Per
 ``no-silent-under-declaration``, a stale token is never silently reused or
 misreported as an unrelated IAM refusal.
 
-Unlike :func:`~adapters.outbound.storage.build_google_credentials` (the
+Unlike :func:`~adapters.outbound.storage.factory.build_google_credentials` (the
 existing OAuth-Desktop path), the resolved credential itself persists
 NOTHING: ADC is discovered fresh from the host environment on every call
 (``GOOGLE_APPLICATION_CREDENTIALS``, ``gcloud`` user credentials, or an
@@ -44,27 +44,27 @@ attached workload identity), and the impersonated access token is held only
 in memory for the process lifetime, never written to secure storage or
 workflow state (``sensitive-financial-data-secure-storage-only``: there is
 no long-lived secret here to protect because none is stored).
-:class:`~adapters.outbound.google.GoogleCredentialSourceSelection` persists only
+:class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` persists only
 the non-secret CONFIGURATION (which kind a profile has chosen, and the target SA
 email / scopes) — never a credential.
 
 The CLI verb and locale strings for configuring this source are still
 deferred; the
 per-profile persistence and
-:func:`~adapters.outbound.storage.build_google_credentials` dispatch wiring
+:func:`~adapters.outbound.storage.factory.build_google_credentials` dispatch wiring
 described there are implemented by
-:class:`~adapters.outbound.google.GoogleCredentialSourceSelection` and its
+:class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` and its
 session-store persistence functions, consumed by the factory.
 
 See Also:
-    :class:`~core.GoogleCredentialSourceKind`
+    :class:`~core.google_credential_source.GoogleCredentialSourceKind`
         The closed taxonomy this module implements one member of.
-    :func:`~adapters.outbound.storage.build_google_credentials`
+    :func:`~adapters.outbound.storage.factory.build_google_credentials`
         The existing default (interactive OAuth Desktop) credential source
         this module is an alternative to, never a replacement for; also the
         dispatch point that reads
-        :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`.
-    :data:`~adapters.outbound.google.REQUIRED_SCOPES`
+        :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`.
+    :data:`~adapters.outbound.google.records.REQUIRED_SCOPES`
         The OAuth-Desktop scope bundle; this module's default
         ``target_scopes`` excludes the identity scopes (``openid``,
         ``email``) that only apply to a human OAuth consent grant.
@@ -113,11 +113,11 @@ class GoogleAuthAdcStaleError(GoogleAuthError):
     """Raised when a discovered ADC source credential can no longer be refreshed.
 
     ADC was discovered (unlike
-    :class:`~adapters.outbound.google.GoogleAuthAdcUnavailableError`, where
+    :class:`~adapters.outbound.google.impersonation.GoogleAuthAdcUnavailableError`, where
     discovery itself fails), but the source credential's own refresh failed —
     the common case is a ``gcloud auth application-default login`` grant that was
     revoked or expired since it was issued. This is distinct from
-    :class:`~adapters.outbound.google.GoogleAuthImpersonationRefusedError`: here
+    :class:`~adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError`: here
     the ADC identity itself is the problem (re-authenticate it), not the IAM
     grant on ``target_principal`` (grant Token Creator).
     """
@@ -142,8 +142,8 @@ class GoogleImpersonationConfig(BaseModel):
             (e.g. ``"aeat-export@my-project.iam.gserviceaccount.com"``).
         target_scopes: OAuth scopes requested for the minted token. Defaults
             to the Sheets/Drive data-access scopes
-            (:data:`~adapters.outbound.google.DRIVE_FILE_SCOPE`,
-            :data:`~adapters.outbound.google.SHEETS_SCOPE`); the identity
+            (:data:`~adapters.outbound.google.records.DRIVE_FILE_SCOPE`,
+            :data:`~adapters.outbound.google.records.SHEETS_SCOPE`); the identity
             scopes (``openid``, ``email``) do not apply to a service account
             and are intentionally excluded from the default.
         delegates: Optional chained impersonation sequence. When set, each
@@ -186,20 +186,20 @@ class GoogleImpersonationConfig(BaseModel):
 
 
 class GoogleCredentialSourceSelection(BaseModel):
-    """Per-profile persisted choice of :class:`~core.GoogleCredentialSourceKind`.
+    """Per-profile persisted choice of :class:`~core.google_credential_source.GoogleCredentialSourceKind`.
 
     Persisted via
-    :func:`~adapters.outbound.google.save_credential_source_selection` /
-    :func:`~adapters.outbound.google.load_credential_source_selection` and read
-    by :func:`~adapters.outbound.storage.build_google_credentials` to decide
+    :func:`~adapters.outbound.google.session_store.save_credential_source_selection` /
+    :func:`~adapters.outbound.google.session_store.load_credential_source_selection` and read
+    by :func:`~adapters.outbound.storage.factory.build_google_credentials` to decide
     whether to hydrate the default per-profile OAuth-Desktop credential or
     dispatch to
-    :func:`~adapters.outbound.google.resolve_impersonated_credentials`.
+    :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`.
 
     Carries no long-lived secret: ``kind = OAUTH_DESKTOP`` needs no
     additional field (the existing
-    :class:`~adapters.outbound.google.OAuthClient` /
-    :class:`~adapters.outbound.google.OAuthToken` records already hold that
+    :class:`~adapters.outbound.google.records.OAuthClient` /
+    :class:`~adapters.outbound.google.records.OAuthToken` records already hold that
     path's credential); ``kind = SERVICE_ACCOUNT_IMPERSONATION`` requires
     ``impersonation`` to be populated with the target SA email and scopes, which
     are configuration, not a secret — the actual access token is re-derived from
@@ -261,7 +261,7 @@ def resolve_impersonated_credentials(config: GoogleImpersonationConfig) -> Crede
        a long-running process reusing a ``gcloud auth application-default
        login`` grant. A genuinely dead grant (revoked, expired refresh
        token) raises
-       :class:`~adapters.outbound.google.GoogleAuthAdcStaleError` naming the
+       :class:`~adapters.outbound.google.impersonation.GoogleAuthAdcStaleError` naming the
        exact ``gcloud`` re-authentication remediation, distinct from an IAM
        grant problem on the impersonation target.
     3. Wrap the (now-fresh) source credentials in
@@ -372,7 +372,7 @@ def _ensure_source_credential_is_fresh(
     (``GoogleAuthAdcStaleError``: "re-run ``gcloud auth application-default
     login``") the moment the SOURCE credential itself cannot be renewed,
     rather than letting that failure surface, unattributed, as an
-    :class:`~adapters.outbound.google.GoogleAuthImpersonationRefusedError`
+    :class:`~adapters.outbound.google.impersonation.GoogleAuthImpersonationRefusedError`
     naming an unrelated IAM role-grant remedy once it is wrapped for
     impersonation.
 

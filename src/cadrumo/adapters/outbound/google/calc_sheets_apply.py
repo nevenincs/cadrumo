@@ -1,8 +1,8 @@
-"""Live Google Sheets adapter that materialises a :class:`~application.storage.calc_sheets.SheetExportPlan`.
+"""Live Google Sheets adapter that materialises a :class:`~application.storage.calc_sheets.records.SheetExportPlan`.
 
 The adapter is the outbound boundary for
 :mod:`application.storage.calc_sheets`: the engine produces a pure
-:class:`~application.storage.calc_sheets.SheetExportPlan`, and this
+:class:`~application.storage.calc_sheets.records.SheetExportPlan`, and this
 module turns the plan into a real spreadsheet inside the operator's
 ``cadrumo-vault/`` Drive folder. Every Drive folder and Sheets spreadsheet the
 adapter touches carries the
@@ -20,9 +20,9 @@ Composition:
 
 All Google calls route through
 :func:`~adapters.outbound.google.api.execute_request`, which raises
-typed :exc:`~adapters.outbound.storage.OutboundStorageError`
+typed :exc:`~adapters.outbound.storage.errors.OutboundStorageError`
 subclasses on Drive / Sheets failures. This adapter adds
-:exc:`~adapters.outbound.storage.OutboundStorageConflictError` when it
+:exc:`~adapters.outbound.storage.errors.OutboundStorageConflictError` when it
 refuses foreign Drive content.
 
 One-way contract: this adapter is an export *mirror* only. Google
@@ -179,8 +179,8 @@ _MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
 class CalcSheetsApplyResult(BaseModel):
     """Outcome of one apply cycle.
 
-    Returned by :func:`~adapters.outbound.google.apply_export_plan` after
-    a :class:`~application.storage.calc_sheets.SheetExportPlan` has been
+    Returned by :func:`~adapters.outbound.google.calc_sheets_apply.apply_export_plan` after
+    a :class:`~application.storage.calc_sheets.records.SheetExportPlan` has been
     materialised. Carries the spreadsheet's Drive file id, its Sheets URL, the
     ``cadrumo-vault/calc-sheets/<...>/`` Drive folder id, and the counts of value
     cells, formula cells, row-set headers, protected ranges, and tabs written
@@ -933,7 +933,7 @@ def apply_export_plan(
     credentials: Credentials,
     root_folder_id: str,
 ) -> CalcSheetsApplyResult:
-    """Materialise a :class:`~application.storage.calc_sheets.SheetExportPlan` as a Google Sheets workbook.
+    """Materialise a :class:`~application.storage.calc_sheets.records.SheetExportPlan` as a Google Sheets workbook.
 
     The adapter is idempotent at the spreadsheet level: applying the
     same plan twice updates the same spreadsheet rather than creating
@@ -942,9 +942,9 @@ def apply_export_plan(
 
     Args:
         plan: The pure
-            :class:`~application.storage.calc_sheets.SheetExportPlan`
+            :class:`~application.storage.calc_sheets.records.SheetExportPlan`
             produced by
-            :func:`~application.storage.calc_sheets.build_export_plan`.
+            :func:`~application.storage.calc_sheets.engine.build_export_plan`.
         credentials: A ``google.oauth2.credentials.Credentials``-shaped
             object carrying refresh + access tokens with at least the
             ``drive.file`` + ``spreadsheets`` scopes.
@@ -954,14 +954,14 @@ def apply_export_plan(
             uses for the ciphertext mirror).
 
     Returns:
-        A :class:`~adapters.outbound.google.CalcSheetsApplyResult` with
+        A :class:`~adapters.outbound.google.calc_sheets_apply.CalcSheetsApplyResult` with
         the spreadsheet location and write counts surfaced by
         ``aeat config google sync calc export``.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
             When the supplied ``root_folder_id`` is blank.
-        :exc:`~adapters.outbound.storage.OutboundStorageError`: When
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: When
             Drive or Sheets rejects the request, quota is exhausted, the target
             is missing, or the adapter refuses foreign Drive content.
     """
@@ -1073,7 +1073,7 @@ def preview_export_plan(
     be exactly the write a preview exists to avoid.
 
     Args:
-        plan: The pure :class:`~application.storage.calc_sheets.SheetExportPlan`
+        plan: The pure :class:`~application.storage.calc_sheets.records.SheetExportPlan`
             a real apply would materialise.
         credentials: Same shape :func:`apply_export_plan` accepts.
         root_folder_id: The operator's Drive root folder id.
@@ -1083,10 +1083,10 @@ def preview_export_plan(
         touch.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
             When ``root_folder_id`` is blank, or an app-owned Drive entry
             carries no usable id.
-        :exc:`~adapters.outbound.storage.OutboundStorageError`: When Drive or
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: When Drive or
             Sheets rejects a read request, or the adapter finds a same-named
             Drive entry that is not app-owned — the same refusal a real apply
             would raise at the same lookup.

@@ -5,7 +5,7 @@ Both :mod:`adapters.outbound.google.calc_sheets_apply` and
 ``google-api-python-client`` requests. This module provides the single
 :func:`~adapters.outbound.google.api.execute_request` boundary they route
 through so transport failures, HTTP failures, and quota responses become the typed
-:class:`~adapters.outbound.storage.OutboundStorageError` hierarchy
+:class:`~adapters.outbound.storage.errors.OutboundStorageError` hierarchy
 instead of endpoint-specific ``HttpError`` strings.
 """
 
@@ -85,14 +85,14 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
 
     Runs ``request.execute(num_retries=3)`` and returns the decoded JSON
     payload unchanged. HTTP 401/403 responses become
-    :exc:`~adapters.outbound.storage.OutboundStoragePermissionError`, HTTP
+    :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`, HTTP
     404 responses become
-    :exc:`~adapters.outbound.storage.OutboundStorageNotFoundError`, HTTP
+    :exc:`~adapters.outbound.storage.errors.OutboundStorageNotFoundError`, HTTP
     429 responses and recognised Google quota markers become
-    :exc:`~adapters.outbound.storage.OutboundStorageQuotaError`, and every
+    :exc:`~adapters.outbound.storage.errors.OutboundStorageQuotaError`, and every
     other transport or unmapped HTTP failure becomes
-    :exc:`~adapters.outbound.storage.OutboundStorageNetworkError`. A typed
-    :exc:`~adapters.outbound.storage.OutboundStorageError` raised by a
+    :exc:`~adapters.outbound.storage.errors.OutboundStorageNetworkError`. A typed
+    :exc:`~adapters.outbound.storage.errors.OutboundStorageError` raised by a
     nested call is re-raised unchanged so ownership and validation refusals are
     never re-wrapped as network errors.
 
@@ -105,17 +105,17 @@ def execute_request[ResponseBodyT](request: _ExecutableRequest[ResponseBodyT], *
         The deserialised API response payload.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStorageError`: Re-raised
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageError`: Re-raised
             unchanged when a nested call already raised a typed
             outbound-storage error.
-        :exc:`~adapters.outbound.storage.OutboundStoragePermissionError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`:
             On HTTP 401 or 403 responses that are not quota refusals.
-        :exc:`~adapters.outbound.storage.OutboundStorageQuotaError`: On
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageQuotaError`: On
             HTTP 429 responses or HTTP 403 responses carrying a recognised
             Google quota marker.
-        :exc:`~adapters.outbound.storage.OutboundStorageNotFoundError`: On
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageNotFoundError`: On
             HTTP 404 responses.
-        :exc:`~adapters.outbound.storage.OutboundStorageNetworkError`: On
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageNetworkError`: On
             any other transport or unmapped HTTP failure.
     """
     try:
@@ -220,7 +220,7 @@ def _quota_marker(error: Exception) -> str | None:
     ``rateLimitExceeded``.
     :func:`~adapters.outbound.google.api.execute_request` uses this helper
     to route those 403 responses to
-    :exc:`~adapters.outbound.storage.OutboundStorageQuotaError` instead of
+    :exc:`~adapters.outbound.storage.errors.OutboundStorageQuotaError` instead of
     the generic permission refusal.
     """
     content = getattr(error, "content", b"")

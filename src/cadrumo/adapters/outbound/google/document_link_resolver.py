@@ -1,13 +1,13 @@
 """Scope-compatible resolution of recorded document links.
 
 Ledger evidence may start from a recorded
-:class:`~domain.attachments.AttachmentSource` link, but the link is not
+:class:`~domain.attachments.enums.AttachmentSource` link, but the link is not
 stored as evidence by itself.
-:func:`~adapters.outbound.google.resolve_document_link` fetches reachable
+:func:`~adapters.outbound.google.document_link_resolver.resolve_document_link` fetches reachable
 Drive content as bytes so the caller can persist those bytes through
-:func:`~domain.attachments.add_attachment`; the original link remains
+:func:`~domain.attachments.service.add_attachment`; the original link remains
 provenance metadata on that byte-bearing attachment.
-:func:`~adapters.outbound.google.list_drive_folder_documents` extends the
+:func:`~adapters.outbound.google.document_link_resolver.list_drive_folder_documents` extends the
 same minimal-scope posture to a *folder*: it lists the PDF/image children of a
 ``drive.file``-reachable folder so a caller can bulk-fetch every invoice in one
 sweep instead of resolving one document link at a time.
@@ -17,7 +17,7 @@ The resolver stays inside the integration's deliberate minimal-scope posture:
 so a ``GOOGLE_DRIVE`` reference to such a file resolves. Operator-external
 documents, arbitrary Drive files that require ``drive.readonly``, and Gmail
 messages that require ``gmail.readonly`` are refused with
-:exc:`~adapters.outbound.storage.OutboundStoragePermissionError` instead
+:exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError` instead
 of being silently stored as links.
 """
 
@@ -164,7 +164,7 @@ class DriveFolderListing:
 
 
 def parse_drive_file_id(reference: str) -> str | None:
-    """Extract the Drive file id consumed by :func:`~adapters.outbound.google.resolve_document_link`.
+    """Extract the Drive file id consumed by :func:`~adapters.outbound.google.document_link_resolver.resolve_document_link`.
 
     Args:
         reference: A Drive URL, ``?id=...`` link, bare Drive file id, or
@@ -227,7 +227,7 @@ def resolve_document_link(
     credentials: Credentials | None = None,
     service: _DriveService | None = None,
 ) -> bytes:
-    """Resolve a recorded :class:`~domain.attachments.AttachmentSource` link to bytes.
+    """Resolve a recorded :class:`~domain.attachments.enums.AttachmentSource` link to bytes.
 
     Args:
         source: The recorded link source.
@@ -245,11 +245,11 @@ def resolve_document_link(
         scope can reach.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStoragePermissionError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`:
             For Gmail links, arbitrary URLs, and Drive files outside the
             ``drive.file`` scope. The required sensitive scope is named in
             ``context["required_scope"]``.
-        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageValidationError`:
             For sources that are not remote documents, or a Drive reference
             with no recognisable file id.
     """
@@ -367,7 +367,7 @@ def list_drive_folder_documents(
     not shared with the app (or does not own under this scope) surfaces no
     children rather than a permission escalation. A non-existent or
     unreachable ``folder_id`` maps Google's 403/404 to the same
-    :exc:`~adapters.outbound.storage.OutboundStoragePermissionError`
+    :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`
     scope-named refusal :func:`resolve_document_link` uses, so the two
     fetch surfaces read the same way.
 
@@ -384,9 +384,9 @@ def list_drive_folder_documents(
         count of filtered-out non-document children.
 
     Raises:
-        :exc:`~adapters.outbound.storage.OutboundStoragePermissionError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStoragePermissionError`:
             When the folder is not reachable under the ``drive.file`` scope.
-        :exc:`~adapters.outbound.storage.OutboundStorageNetworkError`:
+        :exc:`~adapters.outbound.storage.errors.OutboundStorageNetworkError`:
             On any other transport or unmapped Drive failure.
     """
     drive_service = _resolved_drive_service(credentials, service)
