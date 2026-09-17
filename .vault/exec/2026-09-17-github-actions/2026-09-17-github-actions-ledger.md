@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:c003f7ed789a101b56f206d5c9782583ddfeccc24a4bb76d1c4195bdbf436502'
+body_hash: 'sha256:f999a0f7da13e18f0a99c37ce9c44509aa451d53c5b80d12108e474436fc69b9'
 related:
   - "[[2026-09-17-github-actions-plan]]"
 ---
@@ -44,4 +44,10 @@ related:
 - `S12` `M` `pyproject.toml`
 - `S12` `verify:` `pytest dev/ci/tests/test_change_scope.py` -> `pass`
 - `S12` `by:` `ci-scope`
+- `S01` `A` `.github/actions/setup/action.yml`
+- `S01` `verify:` `just check-workflows` -> `pass`
+- `S01` `by:` `ci-setup`
+- `S02` `M` `justfile`
+- `S02` `verify:` `just --list` -> `pass`
+- `S02` `by:` `ci-setup`
 

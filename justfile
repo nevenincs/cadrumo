@@ -275,6 +275,44 @@ check-bindings:
 check-registry-target-current MODELO REVISION SOURCE_REF FILING_YEAR PERIOD:
     @uv run --no-sync python -m dev.registry.pipeline target-current {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}}
 
+# Validity and runtime-load are cheap and always run. Integrity walks the full
+# registry, legal-corpus and authority-artifact fail-closed surface, so it only
+# runs when the diff since BASE actually touches registry source or tooling.
+[doc('Run registry validity and runtime-load gates; also run integrity when the diff touches registry sources.')]
+[group('check')]
+[unix]
+check-registry-gate base="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --no-sync python -m dev.registry.conformance valid
+    uv run --no-sync python -m dev.registry.conformance runtime-load
+    if git diff --name-only {{base}}...HEAD | grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)'; then
+        echo "check-registry-gate: registry sources changed since {{base}} -- running integrity"
+        uv run --no-sync python -m dev.registry.conformance integrity
+    else
+        echo "check-registry-gate: no registry sources changed since {{base}} -- skipping integrity"
+    fi
+
+[doc('Run registry validity and runtime-load gates; also run integrity when the diff touches registry sources.')]
+[group('check')]
+[windows]
+check-registry-gate base="origin/main":
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    uv run --no-sync python -m dev.registry.conformance valid
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uv run --no-sync python -m dev.registry.conformance runtime-load
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $changed = git diff --name-only {{base}}...HEAD
+    $touchesRegistry = $changed | Where-Object { $_ -match '^(src/cadrumo/_data/registry/|dev/registry/)' }
+    if ($touchesRegistry) {
+        Write-Host "check-registry-gate: registry sources changed since {{base}} -- running integrity"
+        uv run --no-sync python -m dev.registry.conformance integrity
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    } else {
+        Write-Host "check-registry-gate: no registry sources changed since {{base}} -- skipping integrity"
+    }
+
 # Verify every Sphinx cross-reference in a docstring names a symbol that
 # still exists; a dangling target fails the build.
 [doc('Verify every docstring cross-reference resolves to a real symbol.')]
@@ -366,6 +404,19 @@ check-hooks:
 [group('check')]
 check-dependency-vulnerabilities:
     @uv run --no-sync python -m dev.audit.dependency_audit
+
+# Same semgrep invocation as the correctness workflow's blocking scan
+# (`--error` fails on any finding), scoped to what changed since BASE via
+# `--baseline-commit`.
+[doc('Run the blocking semgrep scan scoped to the diff since BASE; read-only.')]
+[group('check')]
+check-security-diff base="origin/main":
+    @uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/ --baseline-commit $(git merge-base {{base}} HEAD)
+
+[doc('Run the blocking semgrep scan against the full source tree; read-only.')]
+[group('check')]
+check-security-full:
+    @uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
@@ -917,6 +968,73 @@ test-ci-contracts:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
     @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_ty_fix_boundary.py
+
+# Change-scoped merge gate: `dev.ci.change_scope` selects the pytest targets a
+# diff since BASE can affect. A selection it cannot narrow honestly comes back
+# `too_broad`, with `targets` already collapsed to the fixed contract set --
+# this recipe prints that as a visible advisory rather than silently narrowing
+# further. `ci_contracts` additionally gates the tooling/workflow contract
+# population, and the harness verdict `pr.yml` uses always runs.
+[doc('Run the change-scoped merge gate: targeted or contract-only tests, optional CI contracts, and the harness verdict.')]
+[group('test')]
+[unix]
+test-gate base="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    scope_json=$(uv run --no-sync python -m dev.ci.change_scope --base {{base}} --json)
+    parsed=$(printf '%s' "$scope_json" | uv run --no-sync python -c '
+    import json, sys
+    data = json.load(sys.stdin)
+    print("true" if data["too_broad"] else "false")
+    print("true" if data["ci_contracts"] else "false")
+    print(data["reason"] or "")
+    for target in data["targets"]:
+        print(target)
+    ')
+    mapfile -t lines <<< "$parsed"
+    too_broad="${lines[0]}"
+    ci_contracts="${lines[1]}"
+    reason="${lines[2]}"
+    targets=()
+    for target in "${lines[@]:3}"; do
+        [ -n "$target" ] && targets+=("$target")
+    done
+    if [ "$too_broad" = "true" ]; then
+        echo "############################################################"
+        echo "# CHANGE SCOPE TOO BROAD -- running the fixed contract set only"
+        echo "# reason: $reason"
+        echo "############################################################"
+    fi
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} "${targets[@]}"
+    if [ "$ci_contracts" = "true" ]; then
+        just test-ci-contracts
+    fi
+    just test-pytest-harness
+
+[doc('Run the change-scoped merge gate: targeted or contract-only tests, optional CI contracts, and the harness verdict.')]
+[group('test')]
+[windows]
+test-gate base="origin/main":
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $scopeJson = uv run --no-sync python -m dev.ci.change_scope --base {{base}} --json
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $scope = $scopeJson | ConvertFrom-Json
+    if ($scope.too_broad) {
+        Write-Host "############################################################"
+        Write-Host "# CHANGE SCOPE TOO BROAD -- running the fixed contract set only"
+        Write-Host "# reason: $($scope.reason)"
+        Write-Host "############################################################"
+    }
+    $targets = @($scope.targets)
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} @targets
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    if ($scope.ci_contracts) {
+        just test-ci-contracts
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
+    just test-pytest-harness
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Run the same registry conformance population exposed inside `test-registry`
 # as a directly addressable recipe. The registry aggregate guards it with

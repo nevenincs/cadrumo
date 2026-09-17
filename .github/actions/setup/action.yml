@@ -1,0 +1,36 @@
+name: Setup
+description: Provision uv, just, and the repository worktree; optionally provision the browser toolchain.
+
+inputs:
+  python-version:
+    description: Python version to provision via astral-sh/setup-uv.
+    required: false
+    default: "3.13"
+  browser:
+    description: When true, also provision the Playwright browser channels.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up just
+      uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+      with:
+        tool: just@1.38.0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+      with:
+        version: "0.11.29"
+        enable-cache: false
+        python-version: ${{ inputs.python-version }}
+
+    - name: Initialize the worktree
+      shell: bash
+      run: just setup
+
+    - name: Provision Playwright Chromium
+      if: inputs.browser == 'true'
+      shell: bash
+      run: just setup-browser
