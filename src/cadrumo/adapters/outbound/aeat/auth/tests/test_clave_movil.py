@@ -30,7 +30,7 @@ from ..clave_movil_support import classify_identity as _classify_identity
 from ..clave_movil_support import render_progress_banner as _render_progress_banner
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _run, _settings_for
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture(autouse=True)

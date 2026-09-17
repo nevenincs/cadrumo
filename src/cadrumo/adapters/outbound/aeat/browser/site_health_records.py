@@ -35,7 +35,7 @@ from pydantic import (
     field_validator,
 )
 
-from .....core.errors.hierarchy import SiteHealthState
+from .....core.errors.hierarchy import SiteHealthState, pydantic_validation_boundary
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.redaction.rules import redact_for_log
 from .....core.url_validation import ANY_HTTP_URL_ADAPTER
@@ -85,12 +85,14 @@ class SiteHealthEvidence(_SiteHealthRecord):
 
     @field_validator("html_fragment")
     @classmethod
+    @pydantic_validation_boundary
     def _redact_html_fragment(cls, value: str) -> str:
         """Apply the central log redaction policy to diagnostic HTML."""
         return redact_for_log(value)[:_MAX_HTML_FRAGMENT_CHARS]
 
     @field_validator("detected_markers")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_markers(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Enforce per-item length bounds on every detected marker."""
         for marker in value:

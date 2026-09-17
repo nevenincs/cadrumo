@@ -41,7 +41,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRev
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
@@ -447,7 +447,7 @@ def test_codec_has_one_owner_and_active_consumers_import_its_defining_module() -
     root = Path("src/cadrumo")
     owner = root / "domain/calculations/registry/fixed_width_codec.py"
     consumers = (
-        root / "application/filing/export.py",
+        root / "application/filing/_record_field_renderer.py",
         root / "domain/calculations/registry/export_parse.py",
         root / "adapters/outbound/aeat/export/registry_record_renderer.py",
     )

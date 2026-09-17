@@ -30,7 +30,7 @@ from ..certificate import (
     load_certificate,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _SECRET = "correct-horse-battery-staple"
 _WARN_DAYS = 60

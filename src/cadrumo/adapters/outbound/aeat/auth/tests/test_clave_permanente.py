@@ -27,7 +27,7 @@ from ._clave_permanente_support import (
     _settings_for,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture(autouse=True)

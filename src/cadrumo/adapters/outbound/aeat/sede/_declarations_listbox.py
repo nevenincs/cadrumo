@@ -160,10 +160,16 @@ def _parse_listbox_row(
         log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
         return None
 
+    # A shifted grid can put taxpayer text in this column, so neither refusal
+    # carries the cell: only its length and the filing coordinates it belongs to.
     try:
         presented_at = _parse_presented_at(cell_texts[6])
-    except ValueError as exc:
-        raise SedeParseError(f"failed to parse presented_at {cell_texts[6]!r}: {exc}") from exc
+    except (ValueError, SedeValidationError) as exc:
+        raise SedeParseError(
+            "failed to parse the presented_at cell of a declarations row",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"modelo": modelo, "ejercicio": ejercicio, "cell_length": len(cell_texts[6])},
+        ) from exc
 
     return Declaracion(
         modelo=modelo,
@@ -267,7 +273,10 @@ def _parse_presented_at(value: str) -> datetime:
     """Parse ``"01/02/2024 19:15:34"`` as the observed AEAT row timestamp."""
     match = _PRESENTED_AT_RE.match(value)
     if match is None:
-        raise SedeValidationError(f"unexpected presented_at shape: {value!r}")
+        raise SedeValidationError(
+            "unexpected presented_at shape",
+            context={"cell_length": len(value)},
+        )
     return datetime(
         year=int(match["year"]),
         month=int(match["month"]),

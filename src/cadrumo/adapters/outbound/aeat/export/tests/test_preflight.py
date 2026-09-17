@@ -14,7 +14,7 @@ from ......domain.submission.models import ModeloDraftStatus
 from ......domain.submission.preflight import Preflight
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _OPEN_DAY = date(2026, 4, 10)
 _CLOSED_DAY = date(2026, 6, 10)

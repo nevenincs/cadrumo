@@ -17,7 +17,7 @@ from ......core.config import Settings
 from ..authenticator import AeatAuthenticator
 from . import _authenticator_support as _support
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.asyncio

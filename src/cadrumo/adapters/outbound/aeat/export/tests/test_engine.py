@@ -15,7 +15,7 @@ from ......domain.submission.engine import SubmissionEngine
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 _SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
