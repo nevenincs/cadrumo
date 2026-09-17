@@ -17,7 +17,6 @@ from cadrumo.domain.iva.schema import require_eu_member_state
 
 from ....core.corpus_text import normalise_corpus_text
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..errors import IvaRateNotFoundError
 from ..lookup import lookup_rate
 from ..rates import load_iva_rate_table
@@ -129,12 +128,10 @@ def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
         referenced_source_ids = {
             source_id for member_rates in table.values() for rate in member_rates for source_id in rate.source_refs
         }
-        _, catalogues = bundled_registry_tree()
-
         violations = [
             identity
             for source_id in sorted(referenced_source_ids)
-            for identity in (source_id, catalogues.sources[source_id].corpus_path)
+            for identity in (source_id, _authority_operation_for_test.source_reference(source_id).corpus_path)
             if _RETIRED_IDENTITY_STEM.search(identity)
         ]
         assert violations == []

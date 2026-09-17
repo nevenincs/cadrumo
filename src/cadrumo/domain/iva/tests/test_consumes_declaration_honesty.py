@@ -17,7 +17,9 @@ nobody was asked to supply.
 declaration.** A gate comparing one declaration against another proves only that
 the two agree and says nothing about the code. The extractor walks each
 predicate's AST for reads of its own criteria parameter, following module-local
-helpers the predicate hands criteria or a criteria attribute to. The
+helpers the predicate hands criteria or a criteria attribute to. Registry rows
+compile to closures, so for those it reads the executed bytecode and the reader
+functions each closure holds instead. The
 attribute-to-fact mapping is checked exhaustive against the criteria model's own
 fields, so adding a field to the model forces a decision here rather than
 defaulting to "no fact".
@@ -50,7 +52,7 @@ import inspect
 import sys
 from collections.abc import Callable
 from datetime import date
-from types import CodeType, ModuleType
+from types import CodeType, FunctionType, ModuleType
 from typing import Any
 
 import pytest
@@ -191,6 +193,8 @@ def _compiled_predicate_attributes_read(predicate: Callable[..., Any], *, module
     function objects reachable from the closure are followed, so the result is
     still derived from executable code rather than from a declaration.
     """
+    if not isinstance(predicate, FunctionType):
+        raise _PredicateUnreadableError(f"{predicate!r} is not a plain function, so its bytecode cannot be read")
     code = predicate.__code__
     if code.co_argcount < 1:
         raise _PredicateUnreadableError("a compiled predicate takes no criteria parameter")

@@ -124,7 +124,7 @@ def flow_direction_for_invoice_kind(invoice_kind: InvoiceKind) -> IvaFlowDirecti
     ISSUED charges output IVA onward (:attr:`IvaFlowDirection.REPERCUTIDO`);
     one it RECEIVED bears input IVA (:attr:`IvaFlowDirection.SOPORTADO`).
     :func:`derive_flow_for_classification` and
-    :func:`~cadrumo.domain.iva.classify_invoice_line_for_iva` both call this
+    :func:`~cadrumo.domain.iva.invoice_classification.classify_invoice_line_for_iva` both call this
     for their standard-case resolution and OVERRIDE it for the special
     regimes (reverse charge, intra-community) that route the same members
     differently.

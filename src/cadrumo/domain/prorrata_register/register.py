@@ -12,7 +12,7 @@ actual operations and regularises the provisional deductions (art. 105.Cuatro).
 This module is the CARRY HOME for that lifecycle: a durable per-ejercicio
 :class:`ProrrataRegister`, one :class:`ProrrataRegisterEntry` per
 ``(ejercicio, sector)`` carrying the regime, the provisional percentage in force
-with its regulated :class:`~core.ProrrataProvisionalProvenance`, and — once
+with its regulated :class:`~core.prorrata_register.ProrrataProvisionalProvenance`, and — once
 settled — the definitive percentage with the annual volume inputs it derived
 from. The pure precedence-ladder resolver
 (:func:`resolve_provisional_percentage`) selects the in-force provisional
@@ -177,7 +177,7 @@ class SectorDefinition(BaseModel):
     by more than 50 percentage points, whether a special-regime activity is
     present), so it is operator-declared: each sector carries a stable
     ``sector_id`` (the key the register entries and the ledger rows reference),
-    the member activity codes it groups, and the :class:`~core.SectorDiferenciadoLetra`
+    the member activity codes it groups, and the :class:`~core.prorrata_register.SectorDiferenciadoLetra`
     that makes it differentiated. Fail-closed: a register with no sector
     definitions is a whole-entity register (``sector_id = None`` throughout), the
     landed cross-period behaviour, never a silently inferred partition.
@@ -186,7 +186,7 @@ class SectorDefinition(BaseModel):
         sector_id: Stable identifier the register entries and ledger rows
             reference. Must match the ``sector_id`` on the per-sector
             :class:`ProrrataRegisterEntry` rows.
-        letra: The :class:`~core.SectorDiferenciadoLetra` (art. 9.1.c letra
+        letra: The :class:`~core.prorrata_register.SectorDiferenciadoLetra` (art. 9.1.c letra
             a'/b'/c'/d') on which this sector is differentiated.
         member_activity_codes: The CNAE / IAE-epígrafe activity codes grouped
             into this sector. Non-empty: a declared sector groups at least one
@@ -265,7 +265,7 @@ class ProrrataRegisterEntry(BaseModel):
 
     Attributes:
         ejercicio: Filing year the entry covers.
-        regime: :class:`~core.ProrrataRegisterRegime` in force for the ejercicio.
+        regime: :class:`~core.prorrata_register.ProrrataRegisterRegime` in force for the ejercicio.
         especial_transition: The :class:`ProrrataEspecialTransitionEvidence` for
             an art. 103.Dos option or its revocation evidenced *in this*
             ejercicio, or ``None`` when the regime merely continues. Required
@@ -285,7 +285,7 @@ class ProrrataRegisterEntry(BaseModel):
             force during the year's liquidations (art. 104.Uno + 105.Uno), or
             ``None`` when no percentage has resolved yet (never a fabricated
             default).
-        provisional_provenance: The :class:`~core.ProrrataProvisionalProvenance`
+        provisional_provenance: The :class:`~core.prorrata_register.ProrrataProvisionalProvenance`
             the provisional percentage came from. Present iff
             ``provisional_percentage`` is present.
         authorisation_reference: The AEAT authorisation (art. 105.Dos) or
@@ -448,7 +448,7 @@ class ProrrataProvisionalResolution(BaseModel):
         percentage: The in-force provisional deduction percentage (0-100), or
             ``None`` when the ladder resolved no value (the visible unresolved
             state — the caller surfaces an advisory, never a silent default).
-        provenance: The winning :class:`~core.ProrrataProvisionalProvenance`, or
+        provenance: The winning :class:`~core.prorrata_register.ProrrataProvisionalProvenance`, or
             ``None`` when unresolved.
     """
 

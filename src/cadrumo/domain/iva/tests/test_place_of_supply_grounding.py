@@ -326,8 +326,8 @@ def test_the_statute_itself_shows_the_union_scheme_article_reaching_both_limbs()
     assert "ventas a distancia intracomunitarias de bienes" in scope
 
 
-def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article() -> None:
-    """The docstring is a source readers trust, so it is gated like the data.
+def test_the_kind_prose_does_not_attribute_a_nature_to_the_union_scheme_article() -> None:
+    """The kind vocabulary's prose is a source readers trust, so it is gated like the data.
 
     Two readers derived the wrong nature from this prose before going to the
     statute, and one nearly shipped a row establishing GOODS from it. The check is
@@ -335,10 +335,11 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
     that misled -- a member described as a goods-or-services kind whose stated
     authority is the article that establishes neither.
     """
-    from ..classification import TransactionKind
+    from ..classification import resolve_transaction_kind_catalogue
 
-    doc = TransactionKind.__doc__ or ""
-    assert doc, "the enum lost its docstring; this guard would pass vacuously"
+    with _indexed_authority_for_test().operation() as operation:
+        doc = resolve_transaction_kind_catalogue(_ON, operation=operation).union_scheme_semantics
+    assert doc, "the kind vocabulary lost its Union scheme prose; this guard would pass vacuously"
 
     # The defect is an attribution, so the check is an attribution: no sentence
     # may say the operation is LOCATED by art. 163 unvicies. Naming the article
@@ -351,11 +352,11 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
     if offender is None:
         message = ""
     else:
-        message = f"the enum prose attributes placement to art. 163 unvicies: {offender.group(0)!r}"
+        message = f"the kind prose attributes placement to art. 163 unvicies: {offender.group(0)!r}"
     assert offender is None, message
 
-    assert "Admitted to the scheme by" in doc or "Admitted by" in doc, (
-        "the enum no longer distinguishes admission to the Union scheme from placement, "
+    assert re.search(r"163\s+unvicies\s+admits", flattened, re.IGNORECASE), (
+        "the kind prose no longer distinguishes admission to the Union scheme from placement, "
         "which is the distinction two readers previously missed"
     )
 

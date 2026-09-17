@@ -86,12 +86,12 @@ def rate_record_from_fact(
     return IvaRateRecord(
         member_state=require_eu_member_state(
             str(selectors["member_state"]),
-            effective_date=resolved.valid_from,
+            effective_date=resolved.effective_date,
             authority=authority,
         ),
         kind=require_iva_rate_kind(
             str(selectors["kind"]),
-            effective_date=resolved.valid_from,
+            effective_date=resolved.effective_date,
             authority=authority,
         ),
         pct=Decimal(str(payload["pct"])),

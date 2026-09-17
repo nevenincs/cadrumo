@@ -76,7 +76,7 @@ line figures that were themselves already rounded to the cent. A retención
 amount is not a sum: it is a rate applied to the base, so the recorded figure
 legitimately differs from the recomputed product in the last cent depending on
 where the issuer rounded. One cent is the same slack
-:data:`~core.money.CENT` grants the line-level ``subtotal * iva_rate``
+:data:`~core.money.rounding.CENT` grants the line-level ``subtotal * iva_rate``
 product, for the same reason.
 """
 
@@ -331,7 +331,7 @@ class Invoice(BaseModel):
     operation_type: IntracomOperationType | None = None
     # RD 1619/2012 disposición adicional cuarta: set when this invoice
     # documents a travel-agency mediation service (see
-    # :class:`~core.TravelAgencyMediationType`). Feeds Modelo 347 claves F/G
+    # :class:`~core.aggregation.TravelAgencyMediationType`). Feeds Modelo 347 claves F/G
     # -- never inferred from `iva_category`, which carries no mediation axis.
     travel_agency_mediation: TravelAgencyMediationType | None = None
     # RD 1065/2007 art. 34.g: when the filer collects this amount on behalf
@@ -688,7 +688,7 @@ class Invoice(BaseModel):
         expected withholding by the whole cuota.
 
         :attr:`retention_rate` is a **fraction**, matching
-        :func:`~cadrumo.domain.invoices.iva_rate_percentage` and the registry
+        :func:`~cadrumo.domain.invoices.enums.iva_rate_percentage` and the registry
         RIRPF art. 95 rates, both of which express a rate as ``pct / 100``. The
         upper bound is what catches a percentage written into a fractional
         field: ``15`` for "15 %" is refused rather than silently read as

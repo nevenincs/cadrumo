@@ -182,7 +182,7 @@ def classify_invoice_line_for_iva(
     """
     from ..invoices.enums import iva_rate_kind
 
-    rate_kind = iva_rate_kind(iva_rate)
+    rate_kind = iva_rate_kind(iva_rate, on_date)
     if rate_kind is None:
         raise _invoice_validation_error(
             "classify_invoice_line_for_iva does not handle an out-of-scope IVA slot — "

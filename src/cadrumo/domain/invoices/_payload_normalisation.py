@@ -1,6 +1,6 @@
 """Deserialisation-boundary coercion for raw invoice payloads.
 
-:class:`~domain.invoices.Invoice` is strict and frozen, so a payload arriving
+:class:`~domain.invoices.models.Invoice` is strict and frozen, so a payload arriving
 from storage or a CLI boundary carries plain strings where the model declares
 enums, and untrimmed text where it declares canonical values. These helpers are
 the one place that gap is closed, before pydantic sees the mapping.

@@ -147,7 +147,7 @@ def lookup_rate(
     *,
     operation: PinnedAuthorityOperation,
 ) -> IvaRateRecord:
-    """Return the :class:`cadrumo.domain.iva.IvaRateRecord` matching the supplied query.
+    """Return the :class:`cadrumo.domain.iva.schema.IvaRateRecord` matching the supplied query.
 
     Resolves the ordinary governed-fact variant for the exact member-state,
     tier, and devengo-date coordinates, then projects it onto the established
@@ -161,7 +161,7 @@ def lookup_rate(
             lookup.
 
     Returns:
-        The matching :class:`cadrumo.domain.iva.IvaRateRecord`.
+        The matching :class:`cadrumo.domain.iva.schema.IvaRateRecord`.
 
     Raises:
         IvaRateNotFoundError: If no registered rate satisfies the query.
@@ -310,7 +310,7 @@ def coexisting_tier_rates(
     """Return the rates coexisting with ``kind``'s ordinary rate on ``on_date``.
 
     Exactly the records :func:`lookup_rate` skips: those carrying
-    :attr:`~cadrumo.domain.iva.IvaRateRecord.supersedes_tier_default`, which a
+    :attr:`~cadrumo.domain.iva.schema.IvaRateRecord.supersedes_tier_default`, which a
     statute put on PART of a tier's supplies while the rest stayed on the
     ordinary rate. :func:`lookup_rate` is right to skip them -- it answers "what
     is this tier's rate" and must answer with one number -- but skipping them

@@ -9,7 +9,7 @@ a reading stage may do; concluding what that phrase declares is something
 deterministic code may do. Neither step guesses.
 
 **Why this axis rather than the full rule table.**
-:func:`~domain.iva.classify_iva` already exists and is the single classifier for
+:func:`~domain.iva.classification.classify_iva` already exists and is the single classifier for
 this domain; nothing here duplicates or competes with it. That table resolves the
 categories that depend on WHO the counterparty is -- their tax status and
 residency -- and ``customer_tax_status`` is a profile fact rather than a document
@@ -38,14 +38,14 @@ because an absent category asks the operator and a wrong one does not.
 an exempt operation; it requires a reference to the provision granting the
 exemption, so an exempt invoice prints whichever article applies and no canonical
 string exists to match. That absence is load-bearing and is documented on
-:func:`~domain.iva.resolve_regime_legends`.
+:func:`~domain.iva.regime_legend.resolve_regime_legends`.
 
 See Also:
-    :class:`~domain.iva.RegimeLegend`
+    :class:`~domain.iva.regime_legend.RegimeLegend`
         The statutory mention this module reads, and its declared expectations.
-    :class:`~domain.iva.IvaCategory`
+    :class:`~domain.iva.schema.IvaCategory`
         The closed catalogue a legend resolves into.
-    :func:`~domain.iva.classify_iva`
+    :func:`~domain.iva.classification.classify_iva`
         The counterparty-dependent rule table this axis deliberately stays out of.
 """
 
@@ -245,7 +245,7 @@ def match_regime_legend(
             operation.
 
     Returns:
-        The matching :class:`~domain.iva.RegimeLegend`, or ``None`` when the text
+        The matching :class:`~domain.iva.regime_legend.RegimeLegend`, or ``None`` when the text
         is absent, blank, or contains no mandated mention.
     """
     if printed is None:
@@ -271,7 +271,7 @@ def derive_category_from_regime_legend(
     if it declares a category, the declaration is checked against the tax evidence
     the page actually carries, and only an agreeing pair derives a value.
 
-    The check is possible because :class:`~domain.iva.RegimeLegend` already states
+    The check is possible because :class:`~domain.iva.regime_legend.RegimeLegend` already states
     per mention whether an invoice printing it should carry a repercutido rate and
     cuota. A "inversión del sujeto pasivo" invoice charges no Spanish IVA, so a
     repercutido line beside that mention means one of the two is wrong -- and

@@ -182,7 +182,7 @@ def regime_legend_phrases(legends: tuple[RegimeLegend, ...]) -> tuple[str, ...]:
     declarations the deterministic classifier receives, rather than restating
     them at an adapter boundary.
 
-    Returns:
+    Args:
         legends: The dated declarations already resolved by the caller.
 
     Returns:

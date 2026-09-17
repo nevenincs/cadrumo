@@ -1,7 +1,7 @@
 """Service helpers for invoice catalogues.
 
 Exposes pure-function service operations over an
-:class:`~cadrumo.domain.invoices.InvoiceCatalogue`: lookup
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`: lookup
 (:func:`suggest_reconciliations`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
@@ -36,7 +36,7 @@ from .models import Invoice, InvoiceCatalogue
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.
 #:
-#: DELIBERATELY NOT :data:`~core.money.CENT`, despite carrying the same value.
+#: DELIBERATELY NOT :data:`~core.money.rounding.CENT`, despite carrying the same value.
 #: CENT bounds rounding noise: it answers "could these two figures be the same
 #: number, differently rounded". This answers something else -- "are these two
 #: figures close enough that a human should be offered the link" -- which is a
