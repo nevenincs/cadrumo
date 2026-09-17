@@ -2324,9 +2324,9 @@ cli:
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
       browser:
-        help: Descarga la versión de Chromium que abre la automatización del navegador
-          de la AEAT. No hace nada si ya está instalada.
-      help: 'Gestiona lo que Cadrumo ejecuta en este equipo: el navegador de la automatización
+        help: Descarga la versión del navegador que abre la automatización de la AEAT.
+          No hace nada si ya está instalada.
+      help: 'Gestiona lo que se ejecuta en este equipo: el navegador de la automatización
         de la AEAT y el lector local de documentos (estado del runtime, instalación,
         arranque, descarga, carga, verificación y eliminación de modelos, o prepáralo
         todo de una vez).'

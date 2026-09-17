@@ -2142,9 +2142,9 @@ cli:
       browser:
         help: Download the Chromium build that AEAT browser automation launches. Does
           nothing when it is already installed.
-      help: 'Manage what Cadrumo runs on this computer: the browser build for AEAT
-        automation, and the local document reader''s runtime status, install, start,
-        model pull, load, verify and remove, or set everything up in one run.'
+      help: 'Manage what runs on this computer: the browser build for AEAT automation,
+        and the local document reader''s runtime status, install, start, model pull,
+        load, verify and remove, or set everything up in one run.'
       install:
         confirm_help: Agree to download and run the package-manager install. Without
           it nothing is installed.

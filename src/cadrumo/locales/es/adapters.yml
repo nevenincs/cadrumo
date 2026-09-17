@@ -47,8 +47,8 @@ adapters:
           de navegador activo; llame a authenticate() primero.
   browser:
     errors:
-      not_provisioned: El navegador Chromium que abre la automatización de la AEAT
-        no está instalado en este equipo. Aprovisiónalo y vuelve a intentarlo.
+      not_provisioned: El navegador que abre la automatización de la AEAT no está
+        instalado en este equipo. Descarga el navegador y vuelve a intentarlo.
   google:
     calc_sheets:
       errors:
