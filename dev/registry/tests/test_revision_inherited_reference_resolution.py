@@ -74,9 +74,9 @@ def _binding(revision_id: str, binding_id: str, *, offset: int) -> str:
     return (
         f'[[revisions."{revision_id}".bindings]]\n'
         f'id = "{binding_id}"\n'
-        'source = "manual_input"\n'
-        f'selector = {{ record = "page_1", field = "campo-{offset}", offset = {offset}, length = 1, '
-        'data_type = "text" }\n'
+        f'provider = {{ kind = "manual_input", record = "page_1", field = "campo-{offset}", offset = {offset}, '
+        'length = 1, data_type = "text", signed = false }\n'
+        'value = { data_type = "text", channel = "text" }\n'
         f'legal_refs = ["{_LEGAL_REF}"]\n'
         f'source_refs = ["{_SOURCE_REF}"]\n\n'
     )
