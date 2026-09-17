@@ -29,8 +29,11 @@ from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -227,7 +230,9 @@ def modelo_record(
         period=period,
         filed_at=filed_at,
         filed_by=filed_by,
-        aeat_accepted=aeat_accepted,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.CONFIRMADA if aeat_accepted else AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=external_evidence,
     )
