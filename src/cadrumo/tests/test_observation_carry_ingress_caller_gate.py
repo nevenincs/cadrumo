@@ -36,7 +36,7 @@ _CANONICAL_WRITE_DOOR_CALLERS = {
     ),
     _Caller(
         "application/modelo/filed_revision_observation.py",
-        "persist_filed_revision_observation",
+        "prepare_filed_revision_observation",
     ),
     _Caller(
         "application/modelo/local_observation_actions.py",
