@@ -487,9 +487,7 @@ def test_a_watchdog_whose_invocation_is_commented_out_is_not_invoking_it() -> No
     the substring reading this replaced still finds the module name in it.
     """
     job = next(
-        document["jobs"][_watchdog_ids(document)[0]]
-        for _, document in _workflow_documents()
-        if _watchdog_ids(document)
+        document["jobs"][_watchdog_ids(document)[0]] for _, document in _workflow_documents() if _watchdog_ids(document)
     )
 
     assert _watchdog_invokes_the_module(job)

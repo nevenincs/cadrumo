@@ -286,7 +286,8 @@ check-registry-gate base="origin/main":
     set -euo pipefail
     uv run --no-sync python -m dev.registry.conformance valid
     uv run --no-sync python -m dev.registry.conformance runtime-load
-    if git diff --name-only {{base}}...HEAD | grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)'; then
+    changed=$(git diff --name-only {{base}}...HEAD)
+    if grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)' <<< "$changed"; then
         echo "check-registry-gate: registry sources changed since {{base}} -- running integrity"
         uv run --no-sync python -m dev.registry.conformance integrity
     else
@@ -952,13 +953,13 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, and capability populations.')]
 [group('test')]
 test-repository-contracts:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
 
-[doc('Run the packaging and runner-image tooling contracts the release proof relies on, parallel then serial.')]
+[doc('Run the packaging and runner-image tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
 test-release-tooling:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests --ignore=dev/packaging/tests/test_installed_oracles.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests
 
 [doc('Run CI, repair-safety, deployment, release, and benchmark contracts with independent scheduler verdicts.')]
 [group('test')]
@@ -1003,7 +1004,13 @@ test-gate base="origin/main":
         echo "# reason: $reason"
         echo "############################################################"
     fi
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} "${targets[@]}"
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' "${targets[@]}"
+    serial_status=0
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' "${targets[@]}" || serial_status=$?
+    # Exit 5 means the scoped targets hold no serial tests.
+    if [ "$serial_status" -ne 0 ] && [ "$serial_status" -ne 5 ]; then
+        exit "$serial_status"
+    fi
     if [ "$ci_contracts" = "true" ]; then
         just test-ci-contracts
     fi
@@ -1025,8 +1032,11 @@ test-gate base="origin/main":
         Write-Host "############################################################"
     }
     $targets = @($scope.targets)
-    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' {{harness_exclusions}} {{calculation_exclusions}} @targets
+    uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m '(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' @targets
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    uv run --no-sync pytest -v -n0 -m '(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' @targets
+    # Exit 5 means the scoped targets hold no serial tests.
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
     if ($scope.ci_contracts) {
         just test-ci-contracts
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -1075,10 +1085,10 @@ test-integration-serial:
 # expression is what scopes the directory, so a future `os_keychain` case added
 # beside them is selected the moment it lands rather than silently reading as
 # coverage.
-[doc('Run the Windows-only packaging capability tests.')]
+[doc('Run the Windows-only packaging and registry publication tests.')]
 [group('test')]
 test-windows:
-    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests
+    uv run --no-sync pytest -v -n0 -m windows_only dev/packaging/tests dev/registry/tests/test_authority_generation_publication.py
 
 # Render the visual inventory, then assert on it. The render is the point: these
 # tests read real Textual exports, and a measured full render takes over ten

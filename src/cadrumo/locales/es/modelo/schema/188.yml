@@ -1,6 +1,28 @@
 modelo:
   schema:
     '188':
+      casilla:
+        continuidad:
+          capitalizacion-seguros-resumen-base-negativa:
+            help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+              los registros de perceptor con base negativa.
+            label: Base de retenciones e ingresos a cuenta negativa
+          capitalizacion-seguros-resumen-base-positiva:
+            help: Suma de las bases de retención e ingreso a cuenta reflejadas en
+              los registros de perceptor con base positiva.
+            label: Base de retenciones e ingresos a cuenta
+          capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Número de perceptores (registros) cuya base de retenciones e ingresos
+              a cuenta es negativa.
+            label: Número total de perceptores con base negativa
+          capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Número de perceptores (registros) cuya base de retenciones e ingresos
+              a cuenta es positiva.
+            label: Número total de perceptores con base positiva
+          capitalizacion-seguros-resumen-retenciones:
+            help: Suma de las retenciones e ingresos a cuenta practicados sobre las
+              rentas declaradas.
+            label: Retenciones e ingresos a cuenta
       field:
         official_name: Modelo 188. Retenciones e ingresos a cuenta. Rentas del capital
           mobiliario de operaciones de capitalización y contratos de seguro de vida

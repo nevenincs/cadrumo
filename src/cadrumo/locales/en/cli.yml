@@ -383,6 +383,10 @@ cli:
         provenance_not_electable: 'Provenance {provenance!r} is not operator-declarable;
           accepted: {accepted}. The art. 105.Cinco interrupted percentage is computed
           from the register.'
+        provenance_requires_evidence: A manually entered percentage needs --provenance
+          {accepted} with its --reference. The prior year's definitive percentage
+          (LIVA art. 105.Dos) is recorded from its filed evidence by 'aeat app ledger
+          prorrata seed'.
         reference_help: AEAT authorisation (art. 105.Dos) or inicio proposal (art.
           105.Tres) reference.
         reference_not_permitted: --reference is permitted only with an aeat_autorizada

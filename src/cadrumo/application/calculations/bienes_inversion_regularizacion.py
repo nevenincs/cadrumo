@@ -337,6 +337,7 @@ def _pending_prorrata_resolution(
     *,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
+    prorrata_id: CasillaId | None,
 ) -> CalculationSourceResolution:
     """Refuse projected rows while any in-window good lacks definitive prorrata."""
     return CalculationSourceResolution(
@@ -348,7 +349,8 @@ def _pending_prorrata_resolution(
             resolver_id=resolver_id,
             message=(
                 "bienes_inversion_regularizacion requires current-year definitive prorrata "
-                "casilla declared by the selected revision for every in-window non-disposed good"
+                f"casilla {prorrata_id or 'declared by the selected revision'!r} "
+                "for every in-window non-disposed good"
             ),
         ),
     )
@@ -395,6 +397,7 @@ def _project_regularizaciones(
             binding_ids,
             resolver_id=resolver_id,
             owned_sources=owned_sources,
+            prorrata_id=prorrata_id,
         )
     return _RegularizacionProjections(annual=annual_projection, disposal=disposal_projection)
 
@@ -647,15 +650,6 @@ class BienesInversionRegularizacionSourceResolver:
             period=context.period.registry_token,
             operation=self._operation,
         )
-        parameters = _resolve_regularizacion_parameters(
-            context,
-            binding_ids=declared_binding_ids,
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-        )
-        if isinstance(parameters, CalculationSourceResolution):
-            return parameters
-
         register = _load_register(
             self._register_repository,
             bucket_id=context.bucket_id,
@@ -665,6 +659,8 @@ class BienesInversionRegularizacionSourceResolver:
         if isinstance(register, CalculationSourceResolution):
             return register
 
+        # With no capital goods nothing is regularised, so the zero needs no
+        # statutory window or divisor from the active revision.
         if not register.records:
             zero_values = _resolve_binding_values(context.revision, projected_value=MONEY_ZERO)
             return CalculationSourceResolution(
@@ -677,6 +673,15 @@ class BienesInversionRegularizacionSourceResolver:
                     modelo=context.modelo,
                 ),
             )
+
+        parameters = _resolve_regularizacion_parameters(
+            context,
+            binding_ids=declared_binding_ids,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+        if isinstance(parameters, CalculationSourceResolution):
+            return parameters
 
         current_year_values = _current_year_values_for_context(
             self._current_year_values,

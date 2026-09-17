@@ -1,6 +1,123 @@
 modelo:
   schema:
     '200':
+      casilla:
+        continuidad:
+          is-ecpn-total-cambios-ajuste-criterio-resultados-ejercicios-anteriores:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Ajustes
+              por cambio de criterio de ejercicios anteriores - Resultados ejercicios
+              anteriores [00399]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Ajustes por cambio de
+              criterio de ejercicios anteriores - Resultados ejercicios anteriores
+              [00399]
+          is-ecpn-total-cambios-combinacion-negocios-capital-escriturado:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Incremento (reducción) de patr. neto de
+              combinación de negocios - Capital - Escriturado [00590]» para completar
+              esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Incremento (reducción) de patr. neto de combinación
+              de negocios - Capital - Escriturado [00590]
+          is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Conversión de pasivos en patrim. neto -
+              Acciones y participaciones en patrimonio propias [00552]» para completar
+              esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Conversión de pasivos en patrim. neto - Acciones y
+              participaciones en patrimonio propias [00552]
+          is-ecpn-total-cambios-conversion-pasivos-prima-emision:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Conversión de pasivos en patrim. neto -
+              Prima de emisión [00550]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Conversión de pasivos en patrim. neto - Prima de emisión
+              [00550]
+          is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Acciones
+              y participaciones en patrimonio propias [00566]» para completar esta
+              autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Acciones y participaciones
+              en patrimonio propias [00566]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Capital
+              - Escriturado [00562]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Capital - Escriturado
+              [00562]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Capital
+              - No exigido [00563]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Capital - No exigido
+              [00563]
+          is-ecpn-total-cambios-distribucion-dividendos-otras-aportaciones-socios:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Otras aportaciones
+              de socios [00568]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Otras aportaciones
+              de socios [00568]
+          is-ecpn-total-cambios-distribucion-dividendos-reservas:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Reservas
+              [00565]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Reservas [00565]
+          is-ecpn-total-cambios-distribucion-dividendos-resultados-ejercicios-anteriores:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - (-) Distribución de dividendos - Resultados
+              ejercicios anteriores [00567]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - (-) Distribución de dividendos - Resultados ejercicios
+              anteriores [00567]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Operaciones con acciones o participaciones
+              propias - Capital - Escriturado [00576]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Capital - Escriturado [00576]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-no-exigido:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Operaciones con acciones o participaciones
+              propias - Capital - No exigido [00577]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Capital - No exigido [00577]
+          is-ecpn-total-cambios-operaciones-acciones-propias-otras-aportaciones-socios:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Operaciones con acciones o participaciones
+              propias - Otras aportaciones de socios [00582]» para completar esta
+              autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Otras aportaciones de socios [00582]
+          is-ecpn-total-cambios-operaciones-acciones-propias-resultados-ejercicios-anteriores:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Operaciones con acciones o participaciones
+              propias - Resultados ejercicios anteriores [00581]» para completar esta
+              autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Operaciones con acciones o participaciones propias
+              - Resultados ejercicios anteriores [00581]
+          is-ecpn-total-cambios-otras-operaciones-socios-capital-no-exigido:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Operaciones
+              con socios o propietarios - Otras operaciones con socios o propietarios
+              - Capital - No exigido [00605]» para completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Operaciones con socios
+              o propietarios - Otras operaciones con socios o propietarios - Capital
+              - No exigido [00605]
+          is-ecpn-total-cambios-otras-variaciones-capital-no-exigido:
+            help: Indique o revise «Estado de cambios patrimonio neto (II) - Otras
+              variaciones del patrimonio neto - Capital - No exigido [00619]» para
+              completar esta autoliquidación.
+            label: Estado de cambios patrimonio neto (II) - Otras variaciones del
+              patrimonio neto - Capital - No exigido [00619]
       field:
         official_name: Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes
           (establecimientos permanentes y entidades en régimen de atribución de rentas

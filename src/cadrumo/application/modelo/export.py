@@ -965,7 +965,7 @@ def _persist_exported_draft(
             profile_export_bindings=export_subview.profile_export_bindings,
         )
         if export_layout is not None and export_layout.format is ExportLayoutFormat.XML_DICTIONARY
-        else {}
+        else None
     )
     # The fichero-BOE bytes are staged, the MODELO_EXPORTED event is committed,
     # and only then does the artefact become operator-visible: a crash between
@@ -1079,7 +1079,7 @@ def _write_export_staging(
     command: ModeloExportCommand,
     approved: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
-    dictionary_values: Mapping[str, object],
+    dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,

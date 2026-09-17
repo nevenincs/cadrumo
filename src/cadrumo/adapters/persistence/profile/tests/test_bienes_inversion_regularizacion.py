@@ -46,6 +46,7 @@ from cadrumo.domain.calculations.registry.bindings import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -165,23 +166,36 @@ def _save_current_year_m303_prorrata_observation(
     percentage: Decimal,
 ) -> None:
     snapshot = published_authority_operation().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    # Every stored Modelo 303 carries a filed disposition, so the seed is the
+    # official justificante that declared the prorrata.
+    values, headers = modelo_303_filed_disposition(
+        {_CURRENT_YEAR_PRORRATA_ID: percentage},
+        source_locator="justificante:303-4T",
+    )
     repository.save(
         repository.prepare_observation_envelope(
             RegistryModeloObservation(
                 modelo="303",
                 filing_year=_FILING_YEAR,
                 period="4T",
-                observations=(
+                observations=tuple(
                     CasillaObservation(
-                        casilla_id=_CURRENT_YEAR_PRORRATA_ID,
-                        value=percentage,
+                        casilla_id=casilla_id,
+                        value=value,
                         legal_refs=("ley-37-1992:art-104",),
                         source_refs=("aeat-dr-303-2025",),
-                    ),
+                    )
+                    for casilla_id, value in values.items()
                 ),
             ),
-            source_kind="operator_manual",
+            source_kind="aeat_sede_justificante",
+            source_headers=headers,
             stamped_revision_id=snapshot.revision.id,
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "EXP-303-4T",
+                "authenticated_identity": "12345678Z",
+            },
         )
     )
 
@@ -457,7 +471,7 @@ def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata
     )
     assert resolution.diagnostics
     assert resolution.diagnostics[0].binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
-    assert "iva.prorrata-porcentaje" in resolution.diagnostics[0].message
+    assert resolution.diagnostics[0].reason == "unresolved_binding"
 
 
 def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> None:

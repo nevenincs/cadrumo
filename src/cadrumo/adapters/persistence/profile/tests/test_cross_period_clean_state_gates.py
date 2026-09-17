@@ -23,6 +23,7 @@ from .....application.calculations.cross_period_models import (
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.external_import_actions import import_external_filing_evidence
 from .....application.modelo.verification_actions import verify_modelo_revision
 from .....application.modelo.verification_cross_period import cross_period_clean_state_findings
@@ -250,7 +251,7 @@ def _seed_303_cross_period_sources(
             if period in csv_periods
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
-        evidence_reference_id = f"AEAT-{period}"
+        evidence_reference_id = f"AEATCSV{period}"
         source_snapshot = published_authority_operation().snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
@@ -285,6 +286,11 @@ def _seed_303_cross_period_sources(
                 casilla_values=values,
                 evidence_kind=evidence_kind,
                 evidence_reference_id=evidence_reference_id,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period,
+                    reference=f"test:cross-period-gates:{period}",
+                    operation=operation,
+                ),
                 work_unit_repository=work_unit_repository,
                 calculation_repository=calculation_repository,
                 filing_repository=filing_repository,

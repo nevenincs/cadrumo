@@ -8,6 +8,7 @@ import importlib
 import json
 import os
 import platform
+import re
 import shutil
 import sys
 import tempfile
@@ -194,6 +195,20 @@ def _source_tag(*, version: str, requested: str | None) -> str | None:
     return requested
 
 
+def _source_commit(requested: str | None) -> str | None:
+    """Return the caller-supplied commit the cohort source was checked out at.
+
+    Like the tag, the commit is not read from history: the release workflow
+    names the exact commit it checked out, and a malformed identifier is
+    refused rather than stamped.
+    """
+    if requested is None:
+        return None
+    if re.fullmatch(r"[0-9a-f]{40}", requested) is None:
+        raise SystemExit(f"source commit {requested!r} is not a full lowercase commit identifier")
+    return requested
+
+
 def _build_identity(clean_root: Path) -> BuildIdentity:
     uv = shutil.which("uv")
     if uv is None:
@@ -240,9 +255,11 @@ def build_from_clean_source(
     output_dir: Path,
     expected_source_digest: str,
     requested_tag: str | None,
+    requested_commit: str | None = None,
 ) -> LoadedReleaseCohort:
     """Assemble every member in one clean process without rebuilding a lane."""
     root = clean_root.resolve(strict=True)
+    commit = _source_commit(requested_commit)
     observed_digest = content_digest(root, repository_files(root))
     if observed_digest != expected_source_digest:
         raise SystemExit(
@@ -280,7 +297,7 @@ def build_from_clean_source(
     manifest = create_manifest(
         root=output,
         version=cohort.version,
-        source=SourceIdentity(source_digest=expected_source_digest, tag=tag),
+        source=SourceIdentity(source_digest=expected_source_digest, tag=tag, commit=commit),
         created_at=datetime.now(UTC),
         builder=builder,
         artifacts=(
@@ -343,9 +360,11 @@ def build_release_cohort(
     repo_root: Path,
     output_dir: Path,
     source_tag: str | None = None,
+    source_commit: str | None = None,
 ) -> LoadedReleaseCohort:
     """Snapshot the current source tree and execute that clean copy's builder once."""
     root = repo_root.resolve(strict=True)
+    _source_commit(source_commit)
     output = _safe_new_output(output_dir, repo_root=root)
     source_files = repository_files(root)
     digest = content_digest(root, source_files)
@@ -385,6 +404,8 @@ def build_release_cohort(
         ]
         if source_tag is not None:
             argv.extend(("--source-tag", source_tag))
+        if source_commit is not None:
+            argv.extend(("--source-commit", source_commit))
         try:
             _run(argv, cwd=clean_root, env=env)
             staging.replace(output)
@@ -397,6 +418,8 @@ def build_release_cohort(
     cohort = load_release_cohort(output)
     if cohort.manifest.source.source_digest != digest:
         raise SystemExit("completed release cohort lost its requested source digest")
+    if cohort.manifest.source.commit != source_commit:
+        raise SystemExit("completed release cohort lost its requested source commit")
     return cohort
 
 
@@ -406,12 +429,14 @@ def _parser() -> argparse.ArgumentParser:
     build = subparsers.add_parser("build")
     build.add_argument("--output", required=True, type=Path)
     build.add_argument("--source-tag")
+    build.add_argument("--source-commit")
     verify = subparsers.add_parser("verify")
     verify.add_argument("--cohort-dir", required=True, type=Path)
     clean = subparsers.add_parser("build-clean", help=argparse.SUPPRESS)
     clean.add_argument("--output", required=True, type=Path)
     clean.add_argument("--expected-source-digest", required=True)
     clean.add_argument("--source-tag")
+    clean.add_argument("--source-commit")
     return parser
 
 
@@ -423,6 +448,7 @@ def main() -> int:
             repo_root=_REPO_ROOT,
             output_dir=args.output,
             source_tag=args.source_tag,
+            source_commit=args.source_commit,
         )
     elif args.command == "build-clean":
         cohort = build_from_clean_source(
@@ -430,6 +456,7 @@ def main() -> int:
             output_dir=args.output,
             expected_source_digest=args.expected_source_digest,
             requested_tag=args.source_tag,
+            requested_commit=args.source_commit,
         )
     else:
         cohort = load_release_cohort(args.cohort_dir)
@@ -438,6 +465,7 @@ def main() -> int:
             {
                 "cohort_id": cohort.manifest.cohort_id,
                 "directory": str(cohort.directory),
+                "source_commit": cohort.manifest.source.commit,
                 "source_digest": cohort.manifest.source.source_digest,
                 "source_tag": cohort.manifest.source.tag,
                 "version": cohort.manifest.version,

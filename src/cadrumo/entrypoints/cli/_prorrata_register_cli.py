@@ -141,6 +141,22 @@ def _sector_payload(definition: SectorDefinition) -> SectorDefinitionPayload:
     )
 
 
+def _declared_provenance(provenance: ProrrataProvisionalProvenance | None) -> ProrrataProvisionalProvenance:
+    """Require a provenance a manual election can evidence.
+
+    The carried prior-year definitive percentage must cite the filed
+    observation it comes from, which only ``seed`` can supply; a typed-in
+    percentage has to name its authorisation or proposal instead.
+    """
+    carried = carried_prior_definitiva_prorrata_provenance()
+    if provenance is None or provenance == carried:
+        accepted = "|".join(
+            member.value for member in prorrata_electable_provenances() if member != carried
+        )
+        raise bad(tr("cli.app.ledger.prorrata.provenance_requires_evidence", accepted=accepted))
+    return provenance
+
+
 def _resolve_provenance(
     raw: object, reference: str | None
 ) -> tuple[
@@ -255,8 +271,7 @@ def prorrata_elect_especial(
     # The regime, transition and provenance vocabularies are registry facts,
     # so the invocation's authority lease is taken before any of them is read.
     authority_operation(ctx)
-    if provenance is None:
-        provenance = carried_prior_definitiva_prorrata_provenance()
+    provenance = _declared_provenance(provenance)
     _elect(
         ctx,
         regime=especial_prorrata_register_regime(),
@@ -295,8 +310,7 @@ def prorrata_elect_general(
     # The regime, transition and provenance vocabularies are registry facts,
     # so the invocation's authority lease is taken before any of them is read.
     authority_operation(ctx)
-    if provenance is None:
-        provenance = carried_prior_definitiva_prorrata_provenance()
+    provenance = _declared_provenance(provenance)
     _elect(
         ctx,
         regime=general_prorrata_register_regime(),
@@ -324,8 +338,7 @@ def prorrata_revoke_especial(
     # The regime, transition and provenance vocabularies are registry facts,
     # so the invocation's authority lease is taken before any of them is read.
     authority_operation(ctx)
-    if provenance is None:
-        provenance = carried_prior_definitiva_prorrata_provenance()
+    provenance = _declared_provenance(provenance)
     _elect(
         ctx,
         regime=general_prorrata_register_regime(),

@@ -434,6 +434,10 @@ modelo:
             help: Información fiscal sobre información fiscal de la casilla 927 del
               Modelo 151.
             label: Casilla 927 — información fiscal
+          p01-devengo-periodo:
+            help: 'Consulte la información correspondiente a la casilla: Devengo -
+              Período.'
+            label: Devengo - Periodo
           p01-numero-de-justificante:
             help: Información fiscal sobre información fiscal de la casilla 928-940
               del Modelo 151.
@@ -1746,6 +1750,14 @@ modelo:
             help: Información fiscal sobre información fiscal de la casilla 1354-1370
               del Modelo 151.
             label: Casilla 1354-1370 — información fiscal
+          p08-base-liquidable-del-ahorro-18:
+            help: 'Consulte la información correspondiente a la casilla: Base liquidable
+              del ahorro [18].'
+            label: Base liquidable del ahorro [18]
+          p08-cuota-correspondiente-e-general-del-ahorro-20:
+            help: 'Consulte la información correspondiente a la casilla: Cuota correspondiente
+              a la base liquidable general del ahorro [20].'
+            label: Cuota correspondiente a la base liquidable general del ahorro [20]
           p08-cuota-integra-total-21:
             help: Información fiscal sobre información fiscal de la casilla 859-875
               del Modelo 151.
@@ -1890,6 +1902,10 @@ modelo:
             help: Información fiscal sobre información fiscal de la casilla 757-773
               del Modelo 151.
             label: Casilla 757-773 — información fiscal
+          p08-resultado-de-la-declaracion-43:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la declaración [43].'
+            label: Resultado de la declaración [43]
           p08-resultados-a-ingresar-cion-administrativas-41:
             help: Información fiscal sobre información fiscal de la casilla 1199-1215
               del Modelo 151.

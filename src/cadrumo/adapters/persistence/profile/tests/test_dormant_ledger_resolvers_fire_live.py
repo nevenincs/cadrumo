@@ -172,7 +172,7 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
     wu_repo = WorkUnitCatalogueRepository(objects=m130_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m130_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=m130_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
 
     transactions = tuple(
         _income_transaction(pid, value_date=value_date, amount=amount)
@@ -280,7 +280,7 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
     wu_repo = WorkUnitCatalogueRepository(objects=m130_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=m130_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=m130_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M130_BUCKET, objects=m130_objects)
 
     tx = _income_transaction(
         "m130-net-paid",

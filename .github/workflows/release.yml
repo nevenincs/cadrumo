@@ -31,8 +31,25 @@ concurrency:
 jobs:
   # ---------------------------------------------------------------- prove ----
 
+  check-prove-ref:
+    name: "Check: Prove ref commit (Linux)"
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Require the prove ref to be the dispatched commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.ref }}
+        # gh exits non-zero when the jq program raises, so a ref that has moved
+        # past (or never was) the dispatched commit fails the whole prove run.
+        run: >-
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${INPUT_REF}"
+          --jq "if .sha == \"${GITHUB_SHA}\" then .sha else error(\"prove ref resolves to \" + .sha + \", not ${GITHUB_SHA}\") end"
+
   merge-gate:
     name: "Check: Merge gate (Linux)"
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
     uses: ./.github/workflows/merge-gate.yml
     with:
@@ -40,6 +57,7 @@ jobs:
 
   runtime-inventory:
     name: "Check: Runtime inventory (Linux)"
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
@@ -50,7 +68,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -84,6 +102,7 @@ jobs:
 
   test-full:
     name: "Test: Full suites (Linux, ${{ matrix.python }})"
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 240
@@ -97,7 +116,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -143,7 +162,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -178,6 +197,7 @@ jobs:
 
   check-conformance:
     name: "Check: Release conformance (Linux)"
+    needs: check-prove-ref
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 120
@@ -185,7 +205,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -227,6 +247,14 @@ jobs:
           CADRUMO_PYTEST_WORKERS: "8"
         run: just test-release-tooling
 
+      - name: Channel artifact contracts
+        if: ${{ !cancelled() }}
+        run: just test-channel-artifacts
+
+      - name: TUI rendered inventory
+        if: ${{ !cancelled() }}
+        run: just test-tui-render
+
       - name: Packaging performance contracts
         if: ${{ !cancelled() }}
         run: uv run --no-sync pytest -v -n0 -m "perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
@@ -250,7 +278,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Read the interpreter pin
@@ -285,7 +313,7 @@ jobs:
           set -euo pipefail
           uv run --no-sync python -m dev.packaging.release_cohort build \
             --output var/release-cohort \
-            --source-tag "v${INPUT_VERSION#v}"
+            --source-tag "v${INPUT_VERSION#v}"             --source-commit "$GITHUB_SHA"
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
 
       - name: Refuse a distribution over the index file cap
@@ -328,7 +356,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Fail fast on a lane no online runner can serve
@@ -361,7 +389,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -428,7 +456,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -524,7 +552,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -673,7 +701,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -792,7 +820,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -825,9 +853,29 @@ jobs:
             --with "cadrumo==${INPUT_VERSION#v}" \
             dev/smoke/smoke_check.py
 
+  test-windows-only:
+    name: "Test: Windows-only contracts (Windows)"
+    needs: check-prove-ref
+    if: inputs.phase == 'prove'
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up toolchain
+        uses: ./.github/actions/setup
+
+      - name: Windows-only contracts
+        run: just test-windows
+
   check-proven:
     name: "Check: Release proven (Linux)"
     needs:
+      - check-prove-ref
       - merge-gate
       - runtime-inventory
       - test-full
@@ -838,6 +886,7 @@ jobs:
       - test-installer-campaign
       - test-homebrew
       - test-scoop
+      - test-windows-only
       - test-runtime-smoke
     if: ${{ !cancelled() && inputs.phase == 'prove' }}
     runs-on: [self-hosted, Linux, X64]
@@ -931,6 +980,7 @@ jobs:
 
       - name: Verify the seal, version and tag
         env:
+          GH_TOKEN: ${{ github.token }}
           INPUT_VERSION: ${{ inputs.version }}
           TAG_COMMIT: ${{ steps.locate.outputs.tag-commit }}
         run: |
@@ -943,6 +993,11 @@ jobs:
           uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort
           test "$(jq -r .version var/release-cohort/release-cohort.json)" = "$version"
           test "$(jq -r .source.tag var/release-cohort/release-cohort.json)" = "v${version}"
+          cohort_commit="$(jq -r .source.commit var/release-cohort/release-cohort.json)"
+          if [ "$cohort_commit" != "$TAG_COMMIT" ] &&              [ "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${cohort_commit}" --jq .tree.sha)" !=                "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/${TAG_COMMIT}" --jq .tree.sha)" ]; then
+            echo "::error::cohort was built from ${cohort_commit}, which is neither ${TAG_COMMIT} nor its tree"
+            exit 1
+          fi
           uv run --no-sync python -m dev.release.version_identity --version "$version" --scope seal
 
   publish-pypi:
@@ -1332,7 +1387,7 @@ jobs:
   publish-docs:
     name: "Build: Documentation site (Linux)"
     needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
-    if: ${{ !cancelled() && inputs.phase == 'publish' && needs.publish-pypi.result == 'success' }}
+    if: ${{ !cancelled() && inputs.phase == 'publish' && needs.publish-pypi.result == 'success' && needs.acquire-pypi.result == 'success' && needs.acquire-homebrew.result == 'success' && needs.acquire-scoop.result == 'success' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 45
     environment: docs

@@ -114,7 +114,7 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
                 direction=TransactionDirection.OUTGOING,
                 description="ready row",
                 business_classification=BusinessClassification.BUSINESS,
-                category_id="office-supplies",
+                category_id="material_oficina",
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("0.21"),
                 iva_amount=Decimal("21.00"),

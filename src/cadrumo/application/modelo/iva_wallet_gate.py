@@ -838,22 +838,31 @@ def _decision_is_missing_local_authority(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "missing" and getattr(decision, "selected_amount", None) is None
 
 
-def _source_proves_concrete_zero_authority(source: object) -> bool:
+def _source_proves_concrete_zero_authority(source: object, *, target_start: date | None) -> bool:
     amount = getattr(source, "amount", None)
     if amount is None or Decimal(amount) != Decimal("0"):
         return False
     source_kind = str(getattr(source, "source_kind", ""))
     if source_kind == "aeat_wallet":
         return getattr(source, "captured_at", None) is not None
-    return source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and bool(tuple(getattr(source, "source_periods", ()) or ()))
+    if source_kind not in _LOCAL_EVIDENCE_SOURCE_KINDS:
+        return False
+    periods = tuple(getattr(source, "source_periods", ()) or ())
+    # Local evidence proves a zero only from periods before the target; a
+    # source naming the target period itself is the first-period placeholder,
+    # which only the activity start can ground.
+    return bool(periods) and (target_start is None or all(period.start_date < target_start for period in periods))
 
 
 def _decision_has_concrete_zero_authority(decision: object) -> bool:
     selected_amount = getattr(decision, "selected_amount", None)
     if selected_amount is None or Decimal(selected_amount) != Decimal("0"):
         return False
+    target_period = getattr(decision, "target_period", None)
+    target_start = target_period.start_date if target_period is not None else None
     return any(
-        _source_proves_concrete_zero_authority(source) for source in getattr(decision, "authority_sources", ()) or ()
+        _source_proves_concrete_zero_authority(source, target_start=target_start)
+        for source in getattr(decision, "authority_sources", ()) or ()
     )
 
 
