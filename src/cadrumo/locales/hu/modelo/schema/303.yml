@@ -6,11 +6,13 @@ modelo:
           dr303-01:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs szupercsökkentett
               4pct - Adóalap.'
-            label: Casilla 01 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+              - adóalap
           dr303-02:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs szupercsökkentett
               4pct - Kulcs százalék.'
-            label: Casilla 02 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer szupercsökkentett 4%-os kulcs
+              - kulcs százaléka
           dr303-03:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs szupercsökkentett
               4pct - Adóösszeg.'
@@ -19,11 +21,13 @@ modelo:
           dr303-04:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs csökkentett
               10pct - Adóalap.'
-            label: Casilla 04 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs -
+              adóalap
           dr303-05:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs csökkentett
               10pct - Kulcs százalék.'
-            label: Casilla 05 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer csökkentett 10%-os kulcs -
+              kulcs százaléka
           dr303-06:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs csökkentett
               10pct - Adóösszeg.'
@@ -32,11 +36,12 @@ modelo:
           dr303-07:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs general
               21pct - Adóalap.'
-            label: Casilla 07 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - adóalap
           dr303-08:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs general
               21pct - Kulcs százalék.'
-            label: Casilla 08 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer 21%-os általános kulcs - kulcs
+              százaléka
           dr303-09:
             help: 'Tekintse át a casilla adatait: Felszámított áfa RG kulcs general
               21pct - Adóösszeg.'
@@ -53,7 +58,8 @@ modelo:
           dr303-109:
             help: 'Tekintse át a casilla adatait: Eredmény - Devoluciones acordadas
               AEAT korábbi önadózási bevallások - adóév és időszak.'
-            label: Casilla 109 — adóügyi információ
+            label: Eredmény - az AEAT által jóváhagyott visszatérítések, ugyanazon
+              adóév és időszak korábbi önbevallásaiból
           dr303-11:
             help: 'Tekintse át a casilla adatait: Felszámított áfa Közösségen belüli
               beszerzések termékek és szolgáltatások - Adóösszeg.'
@@ -67,7 +73,8 @@ modelo:
               előlege
           dr303-12:
             help: 'A Modelo 303 12. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 12 — adóügyi információ
+            label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
+              belüliek nélkül - alap
           dr303-120:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Ops no adóztatás
               alá eső reglas localizacion (excl casilla 123).'
@@ -79,11 +86,13 @@ modelo:
           dr303-123:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Ops no adóztatás
               alá eső localizacion regimenes especiales ventanilla unica.'
-            label: Casilla 123 — adóügyi információ
+            label: Kiegészítő információ - egyablakos különös rendszerek teljesítési
+              hely szabályai szerint nem adóköteles ügyletei
           dr303-124:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Ops adóztatás
               alá eső regimenes especiales ventanilla unica.'
-            label: Casilla 124 — adóügyi információ
+            label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
+              adóköteles ügyletei
           dr303-13:
             help: 'A Modelo 303 13. casilla adóügyi adatai: adóügyi információ.'
             label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
@@ -91,47 +100,49 @@ modelo:
           dr303-14:
             help: 'Tekintse át a casilla adatait: Modificacion bases és adóösszegek
               Felszámított áfa - Adóalap.'
-            label: Casilla 14 — adóügyi információ
+            label: A keletkezett ÁFA alapjainak és összegeinek módosításához tartozó
+              adóalap
           dr303-15:
             help: 'Tekintse át a casilla adatait: Modificacion bases és adóösszegek
               Felszámított áfa - Adóösszeg.'
-            label: Casilla 15 — adóügyi információ
+            label: A keletkezett ÁFA alapjainak és összegeinek módosításához tartozó
+              ÁFA összege
           dr303-150:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 1 - Adóalap.'
-            label: Casilla 150 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 1. sáv - adóalap
           dr303-151:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 1 - Kulcs százalék.'
-            label: Casilla 151 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 1. sáv - kulcs százaléka
           dr303-152:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 1 - Adóösszeg.'
-            label: Casilla 152 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 1. sáv - ÁFA összeg
           dr303-153:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 2 - Adóalap.'
-            label: Casilla 153 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 2. sáv - adóalap
           dr303-154:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 2 - Kulcs százalék.'
-            label: Casilla 154 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 2. sáv - kulcs százaléka
           dr303-155:
             help: 'Tekintse át a casilla adatait: Felszámított áfa rendszer general
               nuevo kulcs tier 2 - Adóösszeg.'
-            label: Casilla 155 — adóügyi információ
+            label: Keletkezett ÁFA, általános rendszer új kulcs, 2. sáv - ÁFA összeg
           dr303-156:
             help: A Modelo 303 156. casilla adóügyi adatai.
-            label: Casilla 156 — adóügyi információ
+            label: Egyenértékűségi felár 0,5% - adóalap
           dr303-157:
             help: A Modelo 303 157. casilla adóügyi adatai.
-            label: Casilla 157 — adóügyi információ
+            label: Egyenértékűségi felár 0,5% - kulcs százaléka
           dr303-158:
             help: A Modelo 303 158. casilla adóügyi adatai.
-            label: Casilla 158 — adóügyi információ
+            label: Egyenértékűségi felár 0,5% - felár összege
           dr303-16:
             help: A Modelo 303 16. casilla adóügyi adatai.
-            label: Casilla 16 — adóügyi információ
+            label: Egyenértékűségi felár 1,0% - adóalap
           dr303-165:
             help: 'A Modelo 303 165. casilla adóügyi adatai: adóügyi információ.'
             label: Keletkezett ÁFA, általános rendszer 2%-os kulcs 2024-től - adóalap
@@ -151,7 +162,7 @@ modelo:
             label: Új egyenértékűségi felárkulcs 2024-től - kulcs százaléka
           dr303-17:
             help: A Modelo 303 17. casilla adóügyi adatai.
-            label: Casilla 17 — adóügyi információ
+            label: Egyenértékűségi felár 1,0% - kulcs százaléka
           dr303-170:
             help: A Modelo 303 170. casilla adóügyi adatai.
             label: Új egyenértékűségi felárkulcs 2024-től - felár összege
@@ -160,184 +171,204 @@ modelo:
             label: Egyenértékűségi felár 1,0% - felár összege
           dr303-19:
             help: A Modelo 303 19. casilla adóügyi adatai.
-            label: Casilla 19 — adóügyi információ
+            label: Egyenértékűségi felár 1,4% - adóalap
           dr303-20:
             help: A Modelo 303 20. casilla adóügyi adatai.
-            label: Casilla 20 — adóügyi információ
+            label: Egyenértékűségi felár 1,4% - kulcs százaléka
           dr303-21:
             help: A Modelo 303 21. casilla adóügyi adatai.
-            label: Casilla 21 — adóügyi információ
+            label: Egyenértékűségi felár 1,4% - felár összege
           dr303-22:
             help: A Modelo 303 22. casilla adóügyi adatai.
-            label: Casilla 22 — adóügyi információ
+            label: Egyenértékűségi felár 5,2% - adóalap
           dr303-23:
             help: A Modelo 303 23. casilla adóügyi adatai.
-            label: Casilla 23 — adóügyi információ
+            label: Egyenértékűségi felár 5,2% - kulcs százaléka
           dr303-24:
             help: A Modelo 303 24. casilla adóügyi adatai.
-            label: Casilla 24 — adóügyi információ
+            label: Egyenértékűségi felár 5,2% - felár összege
           dr303-25:
             help: A Modelo 303 25. casilla adóügyi adatai.
-            label: Casilla 25 — adóügyi információ
+            label: Az egyenértékűségi felár alapjainak és összegeinek módosításához
+              tartozó adóalap
           dr303-26:
             help: A Modelo 303 26. casilla adóügyi adatai.
-            label: Casilla 26 — adóügyi információ
+            label: Az egyenértékűségi felár alapjainak és összegeinek módosításához
+              tartozó felár összege
           dr303-27:
             help: 'Tekintse át a casilla adatait: Total adóösszeg felszámított.'
             label: Összes keletkezett ÁFA összeg
           dr303-28:
             help: 'A Modelo 303 28. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 28 — adóügyi információ
+            label: Levonható ÁFA belföldi folyó ügyleteken - alap
           dr303-29:
             help: 'Tekintse át a casilla adatait: IVA levonható ops interiores corrientes
               - Adóösszeg.'
             label: Levonható ÁFA belföldi folyó ügyleteken - összeg
           dr303-30:
             help: 'A Modelo 303 30. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 30 — adóügyi információ
+            label: Levonható ÁFA belföldi beruházási javakon - alap
           dr303-31:
             help: 'Tekintse át a casilla adatait: IVA levonható ops interiores termékek
               beruházás - Adóösszeg.'
-            label: Casilla 31 — adóügyi információ
+            label: Levonható ÁFA belföldi beruházási javakon - összeg
           dr303-32:
             help: 'A Modelo 303 32. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 32 — adóügyi információ
+            label: Levonható ÁFA folyó áruk importán - alap
           dr303-33:
             help: 'Tekintse át a casilla adatait: IVA levonható importok termékek
               corrientes - Adóösszeg.'
             label: Levonható ÁFA folyó áruk importján - összeg
           dr303-34:
             help: 'A Modelo 303 34. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 34 — adóügyi információ
+            label: Levonható ÁFA beruházási javak importán - alap
           dr303-35:
             help: 'Tekintse át a casilla adatait: IVA levonható importok termékek
               beruházás - Adóösszeg.'
-            label: Casilla 35 — adóügyi információ
+            label: Levonható ÁFA beruházási javak importán - összeg
           dr303-36:
             help: 'A Modelo 303 36. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 36 — adóügyi információ
+            label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - alap
           dr303-37:
             help: 'Tekintse át a casilla adatait: IVA levonható Közösségen belüli
               beszerzések corrientes - Adóösszeg.'
             label: Levonható ÁFA Közösségen belüli folyó beszerzéseken - összeg
           dr303-38:
             help: 'A Modelo 303 38. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 38 — adóügyi információ
+            label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén -
+              alap
           dr303-39:
             help: 'Tekintse át a casilla adatait: IVA levonható Közösségen belüli
               beszerzések termékek beruházás - Adóösszeg.'
-            label: Casilla 39 — adóügyi információ
+            label: Levonható ÁFA Közösségen belüli beruházási javak beszerzésén -
+              összeg
           dr303-40:
             help: 'A Modelo 303 40. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 40 — adóügyi információ
+            label: Levonások helyesbítésének alapja
           dr303-41:
             help: 'Tekintse át a casilla adatait: Helyesbítés levonások - Adóösszeg.'
-            label: Casilla 41 — adóügyi információ
+            label: Levonások helyesbítésének ÁFA összege
           dr303-42:
             help: 'Tekintse át a casilla adatait: Compensaciones rendszer especial
               agricultura ganaderia és pesca - Adóösszeg.'
-            label: Casilla 42 — adóügyi információ
+            label: Kompenzáció, mezőgazdasági, állattenyésztési és halászati különszabályozás
+              - összeg
           dr303-43:
             help: 'A Modelo 303 43. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 43 — adóügyi információ
+            label: Beruházási javak korrekciójának ÁFA összege
           dr303-44:
             help: 'Tekintse át a casilla adatait: Korrekció prorrata szerinti százalék
               definitivo - Adóösszeg.'
-            label: Casilla 44 — adóügyi információ
+            label: Levonási hányad végleges százalék alapján végzett korrekciójának
+              ÁFA összege
           dr303-45:
             help: 'Tekintse át a casilla adatait: Total a levonni - Adóösszeg.'
             label: Összes levonható összeg
           dr303-47:
             help: A Modelo 303 47. casilla adóügyi adatai.
-            label: Casilla 47 — adóügyi információ
+            label: Egyszerűsített rendszerben az összes tevékenység előlegfizetéseinek
+              összege az 1T, 2T vagy 3T időszakban
           dr303-48:
             help: A Modelo 303 48. casilla adóügyi adatai.
-            label: Casilla 48 — adóügyi információ
+            label: Egyszerűsített rendszerben az összes tevékenységből származó összegek
+              összege a 4T időszakban
           dr303-49:
             help: 'A Modelo 303 49. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 49 — adóügyi információ
+            label: Egyszerűsített rendszerben az év során teljesített előlegfizetések
+              összege a 4T időszakban
           dr303-50:
             help: 'Tekintse át a casilla adatait: RS - 4T - Eredmény ([48]-[49]).'
-            label: Casilla 50 — adóügyi információ
+            label: Egyszerűsített rendszer 4T-eredménye ([48]-[49])
           dr303-51:
             help: 'Tekintse át a casilla adatait: RS - Adóösszegek devengadas Közösségen
               belüli beszerzések termékek.'
-            label: Casilla 51 — adóügyi információ
+            label: Egyszerűsített rendszerben Közösségen belüli termékbeszerzések
+              után keletkezett ÁFA
           dr303-52:
             help: 'Tekintse át a casilla adatait: RS - Adóösszegek devengadas értékesítések
               activos állóeszközök.'
-            label: Casilla 52 — adóügyi információ
+            label: Egyszerűsített rendszerben tárgyi eszközök értékesítése után keletkezett
+              ÁFA
           dr303-53:
             help: 'A Modelo 303 53. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 53 — adóügyi információ
+            label: Egyszerűsített rendszerben fordított adózás alá tartozó ügyletekből
+              keletkezett ÁFA
           dr303-54:
             help: 'Tekintse át a casilla adatait: RS - Total adóösszeg resultante.'
-            label: Casilla 54 — adóügyi információ
+            label: Egyszerűsített rendszer szerinti teljes eredményösszeg
           dr303-55:
             help: 'A Modelo 303 55. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 55 — adóügyi információ
+            label: Egyszerűsített rendszerben tárgyi eszköz beszerzésén vagy importán
+              levonható ÁFA
           dr303-56:
             help: 'Tekintse át a casilla adatait: RS - IVA levonható korrekció termékek
               beruházás.'
-            label: Casilla 56 — adóügyi információ
+            label: Egyszerűsített rendszerben beruházási javak korrekciójából levonható
+              ÁFA
           dr303-57:
             help: 'Tekintse át a casilla adatait: RS - Total IVA levonható rendszer
               simplificado ([55]+[56]).'
-            label: Casilla 57 — adóügyi információ
+            label: Egyszerűsített rendszerben az összes levonható ÁFA ([55]+[56])
           dr303-58:
             help: 'Tekintse át a casilla adatait: RS - Eredmény rendszer simplificado
               ([54]-[57]).'
-            label: Casilla 58 — adóügyi információ
+            label: Egyszerűsített rendszer eredménye ([54]-[57])
           dr303-59:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Értékesítések
               intracomunitarias termékek és szolgáltatások.'
-            label: Casilla 59 — adóügyi információ
+            label: Kiegészítő információ - Közösségen belüli termék- és szolgáltatásértékesítések
           dr303-60:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Exportok
               és ügyletek asimiladas.'
-            label: Casilla 60 — adóügyi információ
+            label: Kiegészítő információ - exportok és azokkal egy tekintet alá eső
+              ügyletek
           dr303-62:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Értékesítések
               criterio caja felszámított art 75 LIVA - Adóalap.'
-            label: Casilla 62 — adóügyi információ
+            label: Kiegészítő információ - a LIVA 75. cikke szerint keletkezett pénzforgalmi
+              szemléletű teljesítések adóalapja
           dr303-63:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Értékesítések
               criterio caja felszámított art 75 LIVA - Adóösszeg.'
-            label: Casilla 63 — adóügyi információ
+            label: Kiegészítő információ - a LIVA 75. cikke szerint keletkezett pénzforgalmi
+              szemléletű teljesítések ÁFA összege
           dr303-65:
             help: A Modelo 303 65. casilla adóügyi adatai.
             label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
           dr303-68:
             help: A Modelo 303 68. casilla adóügyi adatai.
-            label: Casilla 68 — adóügyi információ
+            label: Közös adózás éves korrekciós eredménye
           dr303-70:
             help: 'A Modelo 303 70. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 70 — adóügyi információ
+            label: Ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek
           dr303-74:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Beszerzések
               criterio caja - Adóalap.'
-            label: Casilla 74 — adóügyi információ
+            label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések adóalapja
           dr303-75:
             help: 'Tekintse át a casilla adatait: Informacion adicional - Beszerzések
               criterio caja - Adóösszeg.'
-            label: Casilla 75 — adóügyi információ
+            label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések ÁFA
+              összege
           dr303-76:
             help: 'Tekintse át a casilla adatait: Eredmény - Korrekció adóösszegek
               art 80 cinco 5a LIVA.'
-            label: Casilla 76 — adóügyi információ
+            label: Eredménykorrekció a LIVA 80. cikk ötödik bekezdés 5a) pontja szerint
           dr303-77:
             help: A Modelo 303 77. casilla adóügyi adatai.
-            label: Casilla 77 — adóügyi információ
+            label: Eredmény - a Vámhatóság által megállapított, befizetésre váró import
+              ÁFA
           filing-period:
             help: 'Tekintse át a casilla adatait: Időszak negyedéves (1T / 2T / 3T
               / 4T).'
-            label: Negyedéves időszak
+            label: Negyedéves időszak (1T / 2T / 3T / 4T)
           filing-year:
             help: 'A Modelo 303 . casilla adóügyi adatai: adóév.'
             label: Az önbevallás adóéve
           iva-autoconsumo-promotor-base:
             help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla— adóügyi információ
+            label: Az ingatlanfejlesztő önfogyasztásának adóalapja (építési költség,
+              LISIVA 9.1.c + 79.4 cikk)
           iva-autoconsumo-promotor-cuota:
             help: 'Tekintse át a casilla adatait: Adóösszeg IVA - autoconsumo - promotor
               inmobiliario (21% sobre adóalap, Art. 9.1.c + Art. 90 LISIVA).'
@@ -346,10 +377,12 @@ modelo:
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
               adóalapot.
-            label: Casilla— adóügyi információ
+            label: Önszámlázott, Közösségen belüli beszerzéseknél keletkezett adóalap
+              (LIVA 13. cikk + 15. cikk + 84. cikk Uno.2; hivatalos 10/11. mező)
           iva-compensacion-aplicada-periodo:
             help: 'A Modelo 303 78. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 78 — adóügyi mező
+            label: Korábbi időszakokból fennmaradó ÁFA-összegek, amelyeket ebben az
+              időszakban alkalmaznak
           iva-compensacion-disponible-fin-periodo:
             help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             label: Időszak végén rendelkezésre álló beszámítási egyenleg
@@ -359,10 +392,11 @@ modelo:
             label: Ebben az időszakban keletkezett beszámítási egyenleg
           iva-compensacion-pendiente-anteriores:
             help: 'A Modelo 303 110. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 110 — adóügyi mező
+            label: Korábbi időszakokból fennmaradó, beszámításra váró ÁFA-összegek
           iva-compensacion-pendiente-posteriores:
             help: 'A Modelo 303 87. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 87 — adóügyi mező
+            label: Korábbi időszaki ÁFA-beszámítások, amelyek későbbi időszakokra
+              fennmaradnak
           iva-cuota-autorepercutida-interior-deducible:
             help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             label: Levonható fordított adózású ÁFA belföldi ügyleteknél
@@ -847,11 +881,11 @@ modelo:
             '64':
               help: 'A Modelo 303 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [46], [58], [76].'
-              label: 'Casilla 64 — adóügyi információ Hivatkozások: [46], [58], [76].'
+              label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '66':
               help: 'A Modelo 303 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [64], [65].'
-              label: 'Casilla 66 — adóügyi információ Hivatkozások: [64], [65].'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: 'A Modelo 303 68. casilla adóügyi adatai: adóügyi információ.'
             '71':
@@ -867,10 +901,8 @@ modelo:
               help: 'A Modelo 303 77. casilla adóügyi adatai: adóügyi információ.'
             x-chim6r1ecll6asj3d5hmiro:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-chim6r1ee1in4qbfchng:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: A Modelo 303 78. casilla adóügyi adatai.
             x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
@@ -1009,13 +1041,13 @@ modelo:
             '64':
               help: 'A Modelo 303 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [46], [58], [76].'
-              label: 'Casilla 64 — adóügyi információ Hivatkozások: [46], [58], [76].'
+              label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '65':
               help: 'A Modelo 303 65. casilla adóügyi adatai: adóügyi információ.'
             '66':
               help: 'A Modelo 303 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [64], [65].'
-              label: 'Casilla 66 — adóügyi információ Hivatkozások: [64], [65].'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: 'A Modelo 303 68. casilla adóügyi adatai: adóügyi információ.'
             '71':
@@ -1031,10 +1063,8 @@ modelo:
               help: 'A Modelo 303 77. casilla adóügyi adatai: adóügyi információ.'
             x-chim6r1ecll6asj3d5hmiro:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-chim6r1ee1in4qbfchng:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -1177,13 +1207,13 @@ modelo:
             '64':
               help: 'A Modelo 303 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [46], [58], [76].'
-              label: 'Casilla 64 — adóügyi információ Hivatkozások: [46], [58], [76].'
+              label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '65':
               help: 'A Modelo 303 65. casilla adóügyi adatai: adóügyi információ.'
             '66':
               help: 'A Modelo 303 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [64], [65].'
-              label: 'Casilla 66 — adóügyi információ Hivatkozások: [64], [65].'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: 'A Modelo 303 68. casilla adóügyi adatai: adóügyi információ.'
             '71':
@@ -1199,10 +1229,8 @@ modelo:
               help: 'A Modelo 303 77. casilla adóügyi adatai: adóügyi információ.'
             x-chim6r1ecll6asj3d5hmiro:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-chim6r1ee1in4qbfchng:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -1353,13 +1381,13 @@ modelo:
             '64':
               help: 'A Modelo 303 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [46], [58], [76].'
-              label: 'Casilla 64 — adóügyi információ Hivatkozások: [46], [58], [76].'
+              label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '65':
               help: 'A Modelo 303 65. casilla adóügyi adatai: adóügyi információ.'
             '66':
               help: 'A Modelo 303 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [64], [65].'
-              label: 'Casilla 66 — adóügyi információ Hivatkozások: [64], [65].'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: 'A Modelo 303 68. casilla adóügyi adatai: adóügyi információ.'
             '71':
@@ -1375,10 +1403,8 @@ modelo:
               help: 'A Modelo 303 77. casilla adóügyi adatai: adóügyi információ.'
             x-chim6r1ecll6asj3d5hmiro:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-chim6r1ee1in4qbfchng:
               help: A Modelo 303 . casilla adóügyi adatai.
-              label: Casilla — adóügyi mező
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -1622,13 +1648,13 @@ modelo:
             '64':
               help: 'A Modelo 303 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [46], [58], [76].'
-              label: 'Casilla 64 — adóügyi információ Hivatkozások: [46], [58], [76].'
+              label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '65':
               help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
             '66':
               help: 'A Modelo 303 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [64], [65].'
-              label: 'Casilla 66 — adóügyi információ Hivatkozások: [64], [65].'
+              label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: '68. mező: közös adózás éves korrekciós eredménye.'
             '70':

@@ -9,7 +9,7 @@ modelo:
             label: Base de retencions i ingressos a compte
           declaracion-anterior-numero:
             help: Informació fiscal de la casella 123-135 del Modelo 193.
-            label: Casella 123-135 — informació fiscal
+            label: Número identificatiu de la declaració anterior
           declaracion-complementaria:
             help: Informació fiscal sobre informació fiscal de la casella 121 del
               Modelo 193.
@@ -19,7 +19,7 @@ modelo:
             label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
           declaracion-sustitutiva:
             help: Informació fiscal de la casella 122 del Modelo 193.
-            label: Casella 122 — informació fiscal
+            label: Declaració substitutiva
           declarante-contacto-nombre:
             help: Informació fiscal de la casella 68-107 del Modelo 193.
             label: COGNOMS I NOM
@@ -38,7 +38,7 @@ modelo:
           gasto-contributor-nombre:
             help: Informació fiscal sobre informació fiscal de la casella 36-75 del
               Modelo 193.
-            label: Casella 36-75 — informació fiscal
+            label: Cognoms i nom del contribuent o denominació
           gasto-importe-anual:
             help: Informació fiscal sobre informació fiscal de la casella 195-207
               del Modelo 193.
@@ -90,11 +90,11 @@ modelo:
           payee-mediador-flag:
             help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
               193.
-            label: Casella 76 — informació fiscal
+            label: Pagament a un mediador
           payee-name:
             help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
               Modelo 193.
-            label: Casella 36-75 — nom del perceptor
+            label: Cognoms i nom, raó social o denominació del perceptor
           payee-naturaleza-declarante:
             help: Informació fiscal de la casella 208 del Modelo 193.
             label: NATURALESA DEL DECLARANT
@@ -105,7 +105,6 @@ modelo:
           payee-nif:
             help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
               Modelo 193.
-            label: Casella 18-26 — NIF del perceptor
           payee-numero-orden-193:
             label: NÚMERO D'ORDRE
           payee-pago:
@@ -122,7 +121,7 @@ modelo:
           payee-percepciones-193:
             help: Informació fiscal sobre informació fiscal de la casella 123-135
               del Modelo 193.
-            label: Casella 123-135 — informació fiscal
+            label: Import de les percepcions/remuneració al prestador
           payee-porcentaje-retencion:
             help: Informació fiscal sobre informació fiscal de la casella 165-168
               del Modelo 193.
@@ -134,7 +133,7 @@ modelo:
           payee-reducciones-193:
             help: Informació fiscal sobre informació fiscal de la casella 139-151
               del Modelo 193.
-            label: Casella 139-151 — informació fiscal
+            label: Import de reduccions
           payee-retenciones-193:
             help: Informació fiscal sobre informació fiscal de la casella 169-181
               del Modelo 193.
@@ -142,38 +141,41 @@ modelo:
           payee-retenciones-forales-araba:
             help: Informació fiscal sobre informació fiscal de la casella 275-287
               del Modelo 193.
-            label: Casella 275-287 — informació fiscal
+            label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
           payee-retenciones-forales-bizkaia:
             help: Informació fiscal sobre informació fiscal de la casella 301-313
               del Modelo 193.
-            label: Casella 301-313 — informació fiscal
+            label: Retencions i ingressos a compte ingressats. Diputació Foral de
+              Biscaia
           payee-retenciones-forales-estatal:
             help: Informació fiscal sobre informació fiscal de la casella 249-261
               del Modelo 193.
-            label: Casella 249-261 — informació fiscal
+            label: Retencions i ingressos a compte ingressats. Hisenda de l'Estat
           payee-retenciones-forales-gipuzkoa:
             help: Informació fiscal sobre informació fiscal de la casella 288-300
               del Modelo 193.
-            label: Casella 288-300 — informació fiscal
+            label: Retencions i ingressos a compte ingressats. Diputació Foral de
+              Guipúscoa
           payee-retenciones-forales-navarra:
             help: Informació fiscal sobre informació fiscal de la casella 262-274
               del Modelo 193.
-            label: Casella 262-274 — informació fiscal
+            label: Retencions i ingressos a compte ingressats. Comunitat Foral de
+              Navarra
           payee-tipo-codigo:
             help: Informació fiscal de la casella 96 del Modelo 193.
             label: TIPUS DE CODI
           payee-tipo-percepcion:
             help: Informació fiscal sobre informació fiscal de la casella 122 del
               Modelo 193.
-            label: Casella 122 — informació fiscal
+            label: Tipus de percepció
           perc-nif-representante:
             help: Informació fiscal sobre informació fiscal de la casella 27-35 del
               Modelo 193.
-            label: Casella 27-35 — informació fiscal
+            label: NIF del representant legal
           representante-legal-nif:
             help: Informació fiscal sobre informació fiscal de la casella 27-35 del
               Modelo 193.
-            label: Casella 27-35 — informació fiscal
+            label: NIF del representant legal
           retenciones-ingresadas-total:
             help: Informació fiscal sobre informació fiscal de la casella 175-189
               del Modelo 193.
@@ -309,19 +311,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Import de reduccions
             x-e1in4opee9in8pbecdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral de
-                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casella 249-261 del model 193, exercici 2024.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
@@ -329,13 +327,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral de
-                Guipúscoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
-                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: Casella 96 del model 193, exercici 2024.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
@@ -453,19 +447,15 @@ modelo:
             x-e1in4opee9im8tb3cdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Import de reduccions
             x-e1in4opee9in8pbecdkmurj5ec:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral de
-                Biscaia
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
               help: Casella 249-261 del model 193, exercici 2025.
               label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS A L'ESTAT, A LES DIPUTACIONS
@@ -473,13 +463,9 @@ modelo:
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Diputació Foral de
-                Guipúscoa
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
               help: Dada del perceptor declarada al model 193. El disseny divideix
                 els imports en part entera i part decimal.
-              label: Retencions i ingressos a compte ingressats. Comunitat Foral de
-                Navarra
             x-e1in4opeehkn0rpdcdnm8qb7ds:
               help: Casella 96 del model 193, exercici 2025.
             x-e1in4opeehkn0rpde1in4or5e1hmirre:

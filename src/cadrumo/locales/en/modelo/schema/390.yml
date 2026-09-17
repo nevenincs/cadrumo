@@ -145,31 +145,33 @@ modelo:
             label: Annual reconciliation - result declared on Form 303 returns
           iva-anual-regimen-simplificado-aic-bienes-cuota-devengada:
             help: Tax information about tax information in casilla 76 of Modelo 390.
-            label: Casilla 76 — tax information
+            label: Accrued VAT on intra-Community acquisitions
           iva-anual-regimen-simplificado-cuota-resultante-agricola:
             help: Tax information about tax information in casilla 75 of Modelo 390.
-            label: Casilla 75 — tax information
+            label: Accrued VAT - Sum of amounts for agricultural, livestock and forestry
+              activities
           iva-anual-regimen-simplificado-cuota-resultante-no-agricola:
             help: Tax information about tax information in casilla 74 of Modelo 390.
-            label: Casilla 74 — tax information
+            label: Accrued VAT - Sum of amounts for non-agricultural, livestock and
+              forestry activities
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
             help: Tax information about tax information in casilla 78 of Modelo 390.
-            label: Casilla 78 — tax information
+            label: Accrued VAT on supplies of fixed assets
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             help: 'Review the casilla information: Output VAT by reverse charge.'
             label: Output VAT by reverse charge
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
             help: Tax information about tax information in casilla 80 of Modelo 390.
-            label: Casilla 80 — tax information
+            label: Deductions - Input VAT on the acquisition of fixed assets
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             help: Tax information about tax information in casilla 81 of Modelo 390.
-            label: Casilla 81 — tax information
+            label: Deductions - Capital goods adjustment
           iva-anual-regimen-simplificado-resultado:
             help: 'Review the casilla information: Result regime simplificado.'
             label: Result regime simplificado
           iva-anual-regimen-simplificado-suma-deducciones:
             help: Tax information about tax information in casilla 82 of Modelo 390.
-            label: Casilla 82 — tax information
+            label: Deductions - Sum of deductions
           iva-anual-regularizacion-bienes-inversion:
             help: Tax information about tax information in casilla 63 of Modelo 390.
             label: Capital goods adjustment

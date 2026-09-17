@@ -53,7 +53,7 @@ modelo:
           irnr-ganancia-diferencia:
             help: Informació fiscal sobre informació fiscal de la casella 11 del Modelo
               210.
-            label: Casella 11 — informació fiscal
+            label: Adquisició. Diferència (210 H)
           irnr-ganancia-importe:
             help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
               210.
@@ -98,7 +98,7 @@ modelo:
           irnr-mejora-diferencia:
             help: Informació fiscal sobre informació fiscal de la casella 15 del Modelo
               210.
-            label: Casella 15 — informació fiscal
+            label: Millora o 2a adquisició. Diferència (210 H)
           irnr-mejora-ganancia:
             help: Informació fiscal sobre informació fiscal de la casella 16 del Modelo
               210.
@@ -127,7 +127,7 @@ modelo:
           irnr-retencion-practicada:
             help: Informació fiscal sobre informació fiscal de la casella 29 del Modelo
               210.
-            label: Casella 29 — informació fiscal
+            label: Retenció practicada
           irnr-tipo-gravamen:
             help: Informació fiscal sobre informació fiscal de la casella 21 del Modelo
               210.
@@ -181,7 +181,6 @@ modelo:
             ganancia_diferencia:
               help: 'Consulteu la informació de la casella: Adquisició. Diferència
                 (210 H).'
-              label: Adquisició. Diferència (210 H)
             ganancia_valor_adquisicion:
               help: 'Consulteu la informació de la casella: Adquisició. Valor de adquisició
                 (actualizado) (210 H).'
@@ -197,7 +196,6 @@ modelo:
             mejora_diferencia:
               help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.
                 Diferència (210 H).'
-              label: Millora o 2a adquisició. Diferència (210 H)
             mejora_valor_adquisicion:
               help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.
                 Valor de adquisició (actualizado) (210 H).'
@@ -214,7 +212,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Rendiments íntegros.'
             retencion_practicada:
               help: 'Consulteu la informació de la casella: Retención practicada.'
-              label: Retenció practicada
             tipo_gravamen:
               help: 'Consulteu la informació de la casella: Tipus de gravamen.'
             tipo_renta:
@@ -265,7 +262,6 @@ modelo:
               help: Casella 19 del model 210, exercici 2026.
             ganancia_diferencia:
               help: Casella 11 del model 210, exercici 2026.
-              label: Adquisició. Diferència (210 H)
             ganancia_importe:
               help: Casella 12 del model 210, exercici 2026.
             ganancia_valor_adquisicion:
@@ -281,7 +277,6 @@ modelo:
               label: Límit Conveni
             mejora_diferencia:
               help: Casella 15 del model 210, exercici 2026.
-              label: Millora o 2a adquisició. Diferència (210 H)
             mejora_ganancia:
               help: Casella 16 del model 210, exercici 2026.
             mejora_valor_adquisicion:
@@ -297,7 +292,6 @@ modelo:
               help: Casella 5 del model 210, exercici 2026.
             retencion_practicada:
               help: Casella 29 del model 210, exercici 2026.
-              label: Retenció practicada
             tipo_gravamen:
               help: Casella 21 del model 210, exercici 2026.
             tipo_renta:

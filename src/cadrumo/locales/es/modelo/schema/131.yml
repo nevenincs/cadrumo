@@ -54,7 +54,10 @@ modelo:
               con el índice de inicio de nuevas actividades (b.4): si ambos se declaran,
               prevalece este.'
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
-            label: Casilla— información fiscal
+            label: 'Indicador interno (1/0): el índice corrector para empresas de
+              pequeña dimensión (b.1) declarado fue ignorado por incompatibilidad
+              con el índice corrector especial de la actividad (Orden HAC/1425/2025
+              Anexo II, instrucción 2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
             label: 'Rendimiento neto de la actividad (Fase 4ª: módulos − reducción
               general 5 por 100)'
@@ -71,7 +74,10 @@ modelo:
           irpf-pf-modulos-suma-rendimientos:
             label: Suma de rendimientos netos
           irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
-            label: Casilla— información fiscal
+            label: 'Indicador interno (1/0): se declararon simultáneamente el índice
+              corrector de temporada (b.2) y el índice corrector por inicio de nuevas
+              actividades (b.4), incompatibles entre sí (Orden HAC/1425/2025 Anexo
+              II, instrucción 2.3).'
           irpf-pf-modulos-total:
             label: Total
           irpf-pf-modulos-volumen-agrario:

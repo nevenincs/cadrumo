@@ -1230,8 +1230,7 @@ application:
         por nacimiento o adopción.
       missing_required_casilla: La casilla obligatoria %{casilla_id} no tiene valor.
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
-        %{profile_field_id} declarado %{declared} supera el umbral %{parameter_id}
-        de %{threshold}.'
+        %{profile_field_id} declarado %{declared} supera el umbral %{fact_id} de %{threshold}.'
       oss_evidence_missing: Esta revisión declara actividad de ventanilla única pero
         no conserva evidencia de la OSS.
       oss_source_unrouted: 'Ninguna vinculación de agregación consume estas fuentes

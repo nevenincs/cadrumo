@@ -1868,7 +1868,8 @@ tui:
       placeholder: Területek, bejegyzések és műveletek keresése…
     system:
       quit: Kilépés
-      quit_help: Kilépés a Cadrumóból; a profil munkamenete változatlan marad
+      quit_help: Kilépés a Cadrumo alkalmazásból; a profil munkamenete változatlan
+        marad
     title: Cadrumo terminálmunkamenet
     updating: A munkaterület frissítése…
   search:

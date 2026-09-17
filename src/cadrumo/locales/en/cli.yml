@@ -2551,8 +2551,10 @@ cli:
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
-      usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use; the category must already have a usage ratio.
+      usage_ratio_help: 'Configured usage-ratio id. Not arbitrary prose: list configured
+        ids with aeat app ledger ratios list, check which categories accept one with
+        aeat app ledger ratios eligible, and create one with aeat app ledger ratios
+        set; the row''s --category-id must already carry that ratio.'
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       business_pct_help: Business-use share from 0 to 1 for MIXED/proportional rows;
@@ -2755,6 +2757,8 @@ cli:
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
         separator with no thousands grouping, e.g. 1234.56.'
+      irpf_category_unknown: 'Unknown IRPF category ''%{value}''. Accepted ids: %{accepted}.
+        Run aeat app ledger categories for the full catalogue.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
