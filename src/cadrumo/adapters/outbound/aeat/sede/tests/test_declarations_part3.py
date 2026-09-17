@@ -48,7 +48,11 @@ class TestFiledObservationRelations:
                 (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_ids[0])
                 for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
                 for period in requirement.periods
-                if (
+                # A source declared over alternative cadences is filed under
+                # one of them; the fixture files the first declared cadence.
+                if Period.from_year_and_code(2025, period).kind
+                == Period.from_year_and_code(2025, requirement.periods[0]).kind
+                and (
                     requirement.source_modelo,
                     requirement.filing_year,
                     period,

@@ -400,28 +400,6 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
     )
     observations.extend(
         _filed_observation(
-            modelo="111",
-            ejercicio=2025,
-            period=period,
-            casilla_values={_M111_RETENCIONES_CASILLA: value},
-        )
-        for period, value in {
-            "01": Decimal("1"),
-            "02": Decimal("2"),
-            "03": Decimal("3"),
-            "04": Decimal("4"),
-            "05": Decimal("5"),
-            "06": Decimal("6"),
-            "07": Decimal("7"),
-            "08": Decimal("8"),
-            "09": Decimal("9"),
-            "10": Decimal("10"),
-            "11": Decimal("11"),
-            "12": Decimal("12"),
-        }.items()
-    )
-    observations.extend(
-        _filed_observation(
             modelo="115",
             ejercicio=2025,
             period=period,

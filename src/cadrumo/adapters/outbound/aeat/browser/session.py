@@ -40,6 +40,7 @@ from .....application.auth.protocols import BrowserContextProvisioner
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors.hierarchy import SiteHealthError, SiteHealthState
+from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.time.clock import now
@@ -60,6 +61,9 @@ from .site_health_records import (
 )
 
 logger = get_logger(__name__)
+
+#: Channels served by the Playwright-managed Chromium build rather than a system browser.
+_BUNDLED_CHROMIUM_CHANNELS = frozenset({"", "chromium", "chromium-headless-shell"})
 
 
 class BrowserSession:
@@ -203,8 +207,36 @@ class BrowserSession:
             proxy["bypass"] = self.settings.cadrumo_proxy_bypass
         return proxy
 
+    def _require_bundled_browser_provisioned(self) -> None:
+        """Refuse a bundled-Chromium launch before Playwright reports a missing executable.
+
+        A system channel such as ``chrome`` or ``msedge`` is the operator's own
+        installation, so only the Playwright-managed build is checked here.
+        """
+        if self.settings.cadrumo_browser_channel not in _BUNDLED_CHROMIUM_CHANNELS:
+            return
+        from .....application.provisioning_browser import probe_playwright_browser
+
+        status = probe_playwright_browser()
+        if status.available:
+            return
+        logger.error(
+            "browser launch refused failure_mode=%s profile=%s channel=%s",
+            BrowserFailureMode.BROWSER_NOT_PROVISIONED,
+            self.profile.name,
+            self.settings.cadrumo_browser_channel,
+        )
+        raise BrowserError(
+            "Chromium browser build is not provisioned",
+            failure_mode=BrowserFailureMode.BROWSER_NOT_PROVISIONED,
+            context={"profile": self.profile.name, "channel": self.settings.cadrumo_browser_channel},
+            translated_message=tr("adapters.browser.errors.not_provisioned"),
+            precondition_verdict=status.precondition_verdict,
+        )
+
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's channel/headless/proxy config; raise BrowserError on failure."""
+        self._require_bundled_browser_provisioned()
         try:
             return await self.playwright.chromium.launch(
                 channel=self.settings.cadrumo_browser_channel,
