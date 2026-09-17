@@ -179,24 +179,17 @@ def _expediente_reference_blockers(
     register: AeatRegisterRef | None,
     observation_source_metadata: Mapping[str, str],
 ) -> list[CrossPeriodCleanStateBlocker]:
-    """Tie the observation's register expediente to the receipt through a same-namespace identifier.
+    """Compare the observation's register expediente with the chain entry's own expediente.
 
     An expediente id is a register identifier, never a receipt one, so it is
-    compared only with the chain entry's own register expediente. Without that
-    reference the observation must name the receipt CSV instead.
+    compared only with the chain entry's register expediente, when both are
+    known. The receipt itself is tied to the entry by its CSV.
     """
     metadata_expediente_id = _clean_metadata_value(observation_source_metadata.get("aeat_expediente_id"))
-    if metadata_expediente_id is None:
+    register_expediente_id = _clean_metadata_value(register.expediente_id if register is not None else None)
+    if metadata_expediente_id is None or register_expediente_id is None:
         return []
-    if register is not None:
-        if register.expediente_id.strip().casefold() != metadata_expediente_id.casefold():
-            return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
-        return []
-    metadata_csv = _clean_metadata_csv(
-        observation_source_metadata.get("aeat_justificante_csv") or observation_source_metadata.get("justificante_csv"),
-    )
-    metadata_csvs = _clean_metadata_csvs(observation_source_metadata.get("aeat_justificante_csvs"))
-    if metadata_csv is None and not metadata_csvs:
+    if register_expediente_id.casefold() != metadata_expediente_id.casefold():
         return [CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD]
     return []
 
