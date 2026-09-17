@@ -17,6 +17,17 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
     "actor": "operator",
     "profile_resolver": lambda: None,
     "command_builder": lambda revision, path: None,
+    # Port collaborators are consumed only when an executor is built, which this
+    # suite never does; it proves composition, not execution.
+    "calculation_action_ports_factory": lambda *args, **kwargs: None,
+    "receipt_repository_factory": lambda *args, **kwargs: None,
+    "export_ports_factory": lambda *args, **kwargs: None,
+    "amendment_action_ports_factory": lambda *args, **kwargs: None,
+    "work_lifecycle_ports_factory": lambda *args, **kwargs: None,
+    "filing_action_ports_factory": lambda *args, **kwargs: None,
+    "verification_repository_bundle_factory": lambda *args, **kwargs: None,
+    "certificate_secret_backend_factory": lambda *args, **kwargs: None,
+    "operator_scope_ports": object(),
 }
 
 
