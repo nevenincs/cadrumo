@@ -2296,9 +2296,13 @@ cli:
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
     provision:
-      help: 'Gestiona el lector local de documents: estat del runtime, instal·lació,
-        arrencada, descàrrega, càrrega, verificació i eliminació de models, o prepara-ho
-        tot d''una vegada.'
+      browser:
+        help: Descarrega la versió de Chromium que obre l'automatització del navegador
+          de l'AEAT. No fa res si ja està instal·lada.
+      help: 'Gestiona el que Cadrumo executa en aquest ordinador: el navegador de
+        l''automatització de l''AEAT i el lector local de documents (estat del runtime,
+        instal·lació, arrencada, descàrrega, càrrega, verificació i eliminació de
+        models, o prepara-ho tot d''una vegada).'
       install:
         confirm_help: Accepta descarregar i executar la instal·lació del gestor de
           paquets. Sense aquesta opció no s'instal·la res.

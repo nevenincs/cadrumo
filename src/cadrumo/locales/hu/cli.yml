@@ -2293,9 +2293,13 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     provision:
-      help: 'A helyi dokumentumolvasó kezelése: futtatókörnyezet állapota, telepítés,
-        indítás, modellletöltés, -betöltés, -ellenőrzés és -eltávolítás, vagy az egész
-        beállítása egy lépésben.'
+      browser:
+        help: Letölti az AEAT böngészőautomatizálás által indított Chromium-változatot.
+          Ha már telepítve van, nem tesz semmit.
+      help: 'A Cadrumo által ezen a gépen futtatott összetevők kezelése: az AEAT-automatizálás
+        böngészője, valamint a helyi dokumentumolvasó (futtatókörnyezet állapota,
+        telepítés, indítás, modellletöltés, -betöltés, -ellenőrzés és -eltávolítás,
+        vagy az egész beállítása egy lépésben).'
       install:
         confirm_help: Hozzájárulás a csomagkezelős telepítés letöltéséhez és futtatásához.
           Enélkül semmi sem települ.

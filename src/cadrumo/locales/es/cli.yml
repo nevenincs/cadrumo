@@ -2323,9 +2323,13 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     provision:
-      help: 'Gestiona el lector local de documentos: estado del runtime, instalación,
+      browser:
+        help: Descarga la versión de Chromium que abre la automatización del navegador
+          de la AEAT. No hace nada si ya está instalada.
+      help: 'Gestiona lo que Cadrumo ejecuta en este equipo: el navegador de la automatización
+        de la AEAT y el lector local de documentos (estado del runtime, instalación,
         arranque, descarga, carga, verificación y eliminación de modelos, o prepáralo
-        todo de una vez.'
+        todo de una vez).'
       install:
         confirm_help: Acepta descargar y ejecutar la instalación del gestor de paquetes.
           Sin esta opción no se instala nada.

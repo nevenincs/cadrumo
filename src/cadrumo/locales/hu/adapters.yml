@@ -45,6 +45,10 @@ adapters:
           a munkamenet adatai sérülhetnek.
         verify_requires_active_context: A Cl@ve Móvil verify() aktív böngészőkontextust
           igényel; először hívja meg az authenticate() metódust.
+  browser:
+    errors:
+      not_provisioned: Az AEAT-automatizálás által indított Chromium böngésző nincs
+        telepítve ezen a gépen. Telepítse, majd próbálja újra.
   google:
     calc_sheets:
       errors:
