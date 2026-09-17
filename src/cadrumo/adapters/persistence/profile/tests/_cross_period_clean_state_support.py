@@ -68,8 +68,11 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -351,7 +354,9 @@ def _seed_member_322_filing(
                     member_nif=member_nif,
                     filed_at=_CLOCK,
                     filed_by="aeat-import-test",
-                    aeat_accepted=True,
+                    origin=FilingOrigin.AEAT,
+                    confirmation=AeatConfirmationState.CONFIRMADA,
+                    declaration_kind=FilingDeclarationKind.ORIGINAL,
                     external_evidence=ExternalEvidence(
                         kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                         reference_id=evidence_reference_id,
@@ -418,7 +423,9 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
         period=Period.from_year_and_code(2026, "1T"),
         filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(kind=kind, reference_id=csv, imported_at=_CLOCK),
     )
@@ -721,7 +728,9 @@ def _seed_source_filing_record_without_import_flow(
                     period=work_unit.period,
                     filed_at=_CLOCK,
                     filed_by="aeat-import-test",
-                    aeat_accepted=True,
+                    origin=FilingOrigin.AEAT,
+                    confirmation=AeatConfirmationState.CONFIRMADA,
+                    declaration_kind=FilingDeclarationKind.ORIGINAL,
                     status=ModeloRecordStatus.VIGENTE,
                     external_evidence=ExternalEvidence(
                         kind=evidence_kind,

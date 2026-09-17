@@ -32,8 +32,11 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -367,7 +370,9 @@ def _seed_modelo_303_1t_clean_state(
                 filed_at=filed_at,
                 filed_by=filed_by,
                 notes=None,
-                aeat_accepted=True,
+                origin=FilingOrigin.AEAT,
+                confirmation=AeatConfirmationState.CONFIRMADA,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
                 status=ModeloRecordStatus.VIGENTE,
                 external_evidence=ExternalEvidence(
                     kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,

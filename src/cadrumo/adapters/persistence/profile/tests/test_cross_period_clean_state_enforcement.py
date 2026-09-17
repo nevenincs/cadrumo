@@ -72,8 +72,11 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -787,7 +790,9 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                             period=Period.from_year_and_code(filing_year, period),
                             filed_at=_CLOCK,
                             filed_by="aeat-import-test",
-                            aeat_accepted=True,
+                            origin=FilingOrigin.AEAT,
+                            confirmation=AeatConfirmationState.CONFIRMADA,
+                            declaration_kind=FilingDeclarationKind.ORIGINAL,
                             external_evidence=ExternalEvidence(
                                 kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                                 reference_id=evidence_reference_id,

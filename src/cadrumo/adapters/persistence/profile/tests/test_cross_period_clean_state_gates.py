@@ -46,8 +46,11 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -394,7 +397,9 @@ def _seed_source_filing_record_without_import_flow(
                 period=work_unit.period,
                 filed_at=_CLOCK,
                 filed_by="aeat-import-test",
-                aeat_accepted=True,
+                origin=FilingOrigin.AEAT,
+                confirmation=AeatConfirmationState.CONFIRMADA,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
                 status=ModeloRecordStatus.VIGENTE,
                 external_evidence=ExternalEvidence(
                     kind=evidence_kind,

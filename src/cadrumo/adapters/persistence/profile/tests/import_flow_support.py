@@ -29,7 +29,14 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord, derive_filing_record_id
+from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
+    ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    derive_filing_record_id,
+)
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
@@ -258,6 +265,9 @@ def _seed_local_filing_record(
         filed_at=filed_at,
         filed_by=filed_by,
         external_evidence=None,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     filing_repository.save(upsert_filing_record(filing_repository.load(), filing))
     return filing

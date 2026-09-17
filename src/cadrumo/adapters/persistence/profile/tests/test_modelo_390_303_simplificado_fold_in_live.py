@@ -93,6 +93,9 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -380,6 +383,9 @@ def _persist_presentado_source(
         filed_at=_T2,
         filed_by="operator",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), source_revision))
     filing_repo.save(ModeloRecordCatalogue(records={filing.filing_record_id: filing}))
@@ -460,6 +466,9 @@ def _replace_source_with_new_filed_revision(
         filed_at=_T2,
         filed_by="operator-replacement",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     previous_filing = filings.load().get(previous_filing_id)
     assert previous_filing is not None
@@ -770,6 +779,9 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
             filed_at=_T2,
             filed_by="operator-successor",
             status=ModeloRecordStatus.VIGENTE,
+            origin=FilingOrigin.LOCAL,
+            confirmation=AeatConfirmationState.PENDIENTE,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
         filings.save(
             ModeloRecordCatalogue(

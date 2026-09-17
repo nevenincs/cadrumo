@@ -71,8 +71,11 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     M303RectificativaMotive,
 )
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -311,7 +314,9 @@ def _persist_rectificativa_with_nota_three(
         period=work_unit.period,
         filed_at=filed_at,
         filed_by="aeat-import",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -546,7 +551,9 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
         period=work_unit.period,
         filed_at=datetime(2026, 5, 21, 11, 58, tzinfo=UTC),
         filed_by="aeat-import",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,

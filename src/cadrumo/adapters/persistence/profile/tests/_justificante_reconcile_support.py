@@ -16,7 +16,10 @@ from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -128,7 +131,9 @@ def _seed_unverified_filing(
         member_nif=member_nif,
         filed_at=datetime(2026, 4, 18, 9, 0, tzinfo=UTC),
         filed_by="operator",
-        aeat_accepted=aeat_accepted,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.CONFIRMADA if aeat_accepted else AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=external_evidence,
     )

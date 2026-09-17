@@ -33,8 +33,11 @@ from .....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
 )
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -213,7 +216,9 @@ def _baseline_filing(work_unit: WorkUnit) -> ModeloRecord:
         period=work_unit.period,
         filed_at=_WHEN,
         filed_by="aeat-import",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,

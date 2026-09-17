@@ -32,8 +32,11 @@ from cadrumo.application.calculations.cross_period_models import CrossPeriodClea
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -72,7 +75,9 @@ def _filing() -> ModeloRecord:
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         filed_at=_CLOCK,
         filed_by="identity-blocker-test",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,

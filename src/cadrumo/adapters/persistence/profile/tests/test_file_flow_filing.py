@@ -47,7 +47,12 @@ from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetai
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
+from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecordStatus,
+)
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -680,6 +685,9 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         period=q1,
         filed_at=T1,
         filed_by="operator-A",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     record_2 = ModeloRecord(
         filing_record_id=derive_filing_record_id(
@@ -695,6 +703,9 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         period=q2,
         filed_at=T2,
         filed_by="operator-A",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     fr_repo.save(
         ModeloRecordCatalogue(
@@ -735,6 +746,9 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         period=period,
         filed_at=T1,
         filed_by="operator-A",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     record_130 = ModeloRecord(
         filing_record_id=derive_filing_record_id(
@@ -750,6 +764,9 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
         period=period,
         filed_at=T2,
         filed_by="operator-A",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     fr_repo.save(
         ModeloRecordCatalogue(

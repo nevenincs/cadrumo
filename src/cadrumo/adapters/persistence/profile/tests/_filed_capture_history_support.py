@@ -36,7 +36,10 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -385,7 +388,9 @@ def _seed_current_filing(
         period=period,
         filed_at=_CAPTURED_AT,
         filed_by="operator",
-        aeat_accepted=aeat_accepted,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.CONFIRMADA if aeat_accepted else AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=external_evidence,
     )
