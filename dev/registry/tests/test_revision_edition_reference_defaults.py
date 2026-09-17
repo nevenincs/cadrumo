@@ -482,6 +482,10 @@ def _declare_in_manifest(edition_dir: Path, declaration: str) -> None:
     name = re.escape(edition_dir.name)
     header = re.compile(rf'^\[revisions\.(?:"{name}"|{name})\]\n', re.MULTILINE)
     text = manifest.read_text(encoding="utf-8")
+    # The declaration replaces any the edition already states, so the manifest
+    # carries exactly one value for the key.
+    key = declaration.split("=", 1)[0].strip()
+    text = re.sub(rf"^{re.escape(key)}\s*=.*\n", "", text, flags=re.MULTILINE)
     (match,) = header.finditer(text)
     manifest.write_text(text[: match.end()] + declaration + text[match.end() :], encoding="utf-8", newline="\n")
 

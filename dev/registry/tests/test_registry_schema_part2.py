@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
@@ -55,6 +55,17 @@ from ..conformance.registry_schema_support import (
 from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+def _filing_and_workflow_revision(modelo: ModeloDefinition) -> ModeloRevision:
+    """Return an edition carrying both the filing and workflow links the mutations rewrite."""
+    return next(
+        revision
+        for revision in modelo.revisions.values()
+        if all(
+            any(link.surface == surface for link in revision.application_links) for surface in ("filing", "workflow")
+        )
+    )
 
 
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
@@ -215,7 +226,7 @@ def test_validator_requires_application_link_for_formulas() -> None:
 
 def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = next(iter(modelo.revisions.values()))
+    revision = _filing_and_workflow_revision(modelo)
     communication = _as_communication_revision(revision)
     # A pure communication-only modelo does not file declarations and
     # therefore has no PDF-extraction surface; strip extraction_profiles
@@ -246,7 +257,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
 
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
 
     with pytest.raises(RegistryValidationError, match="communication application links are only valid for Modelo 145"):
         committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, revision))
@@ -254,7 +265,7 @@ def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
 
 def test_validator_rejects_communication_link_combined_with_filing() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = next(iter(modelo.revisions.values()))
+    revision = _filing_and_workflow_revision(modelo)
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
         update={"id": f"{filing_link.id}-communication", "surface": "communication"},
@@ -270,7 +281,7 @@ def test_validator_rejects_communication_link_combined_with_filing() -> None:
 
 def test_validator_rejects_modelo_145_without_communication_link() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = next(iter(modelo.revisions.values()))
+    revision = _filing_and_workflow_revision(modelo)
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
     with pytest.raises(RegistryValidationError, match="Modelo 145 requires a communication application link"):
@@ -279,7 +290,7 @@ def test_validator_rejects_modelo_145_without_communication_link() -> None:
 
 def test_validator_rejects_communication_link_with_deadline_surface() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
     workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
     deadline_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-deadline", "surface": "deadline"})
     mutated = revision.model_copy(update={"application_links": (*revision.application_links, deadline_link)})
@@ -290,7 +301,7 @@ def test_validator_rejects_communication_link_with_deadline_surface() -> None:
 
 def test_validator_rejects_communication_link_with_portal_surface() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+    revision = _as_communication_revision(_filing_and_workflow_revision(modelo))
     workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
     portal_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-portal", "surface": "portal"})
     mutated = revision.model_copy(update={"application_links": (*revision.application_links, portal_link)})
@@ -304,7 +315,7 @@ def test_validator_rejects_communication_link_with_portal_surface() -> None:
 
 def test_validator_rejects_communication_link_with_filing_schedule() -> None:
     modelo, catalogues = _committed_modelo("036")
-    revision = next(iter(modelo.revisions.values()))
+    revision = _filing_and_workflow_revision(modelo)
     filing_link = next(link for link in revision.application_links if link.surface == "filing")
     communication_link = filing_link.model_copy(
         update={

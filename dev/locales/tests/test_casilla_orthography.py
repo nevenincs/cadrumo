@@ -60,3 +60,11 @@ def test_a_reviewed_word_is_not_reported() -> None:
     found = {item.word for item in unaccented_words(values, reviewed={"es": frozenset({"Regimen"})})}
 
     assert found == set()
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_quoted_identifiers_and_truncated_words_are_not_prose() -> None:
+    values = {"es": {_KEY: "Ver contraparte.pais-codigo y m131-modulos-coeficientes; ejerci... Codigo"}}
+
+    assert {item.word for item in unaccented_words(values)} == {"Codigo"}
