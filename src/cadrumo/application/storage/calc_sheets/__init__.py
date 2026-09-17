@@ -1,7 +1,7 @@
 """Workbook export planning engine for modelo registry snapshots.
 
 Translates a
-:class:`domain.calculations.registry.RegistrySnapshot` into a
+:class:`domain.calculations.registry.schema.RegistrySnapshot` into a
 :class:`application.storage.calc_sheets.records.SheetExportPlan` whose formulas
 produce the same per-casilla rounded values as the local registry runtime. The
 plan is consumed by the Google Sheets apply adapter, so layout, formulas,
@@ -15,12 +15,12 @@ The package exposes three layers:
   apply adapter, the parity oracle, and the pull adapter.
 - Translator (:mod:`application.storage.calc_sheets._translator`) — pure
   function that walks a registry
-  :class:`domain.calculations.registry.FormulaExpression` AST and emits a
+  :class:`domain.calculations.registry.schema_formula.FormulaExpression` AST and emits a
   Sheets A1 formula string, resolving casilla references through the layout
   planner.
 - Engine driver (:mod:`application.storage.calc_sheets.engine`) —
   consumes a
-  :class:`domain.calculations.registry.RegistrySnapshot` plus a
+  :class:`domain.calculations.registry.schema.RegistrySnapshot` plus a
   caller-supplied
   :class:`application.storage.calc_sheets.records.OperatorInputs` payload and
   assembles a
@@ -34,7 +34,7 @@ Operator-facing CLI surface lives under
 domain and application logic only.
 
 See Also:
-    :class:`domain.calculations.registry.RegistrySnapshot`
+    :class:`domain.calculations.registry.schema.RegistrySnapshot`
         Registry-authored calculation surface compiled by the engine.
     :class:`application.storage.calc_sheets.records.SheetExportPlan`
         Shared workbook plan consumed by online and offline renderers.

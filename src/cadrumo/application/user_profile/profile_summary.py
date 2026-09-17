@@ -16,7 +16,7 @@ projection.  Those all remain with the commands that own them.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import UTC, datetime
@@ -87,7 +87,7 @@ _INVENTORY_SNAPSHOT: ContextVar[dict[Path, ProfileSummaryInventory] | None] = Co
 
 
 @contextmanager
-def summary_inventory_snapshot() -> Iterator[None]:
+def summary_inventory_snapshot() -> Generator[None]:
     """Let everything inside one read-only command share one listing observation.
 
     A single command asks which profiles exist from several layers -- the

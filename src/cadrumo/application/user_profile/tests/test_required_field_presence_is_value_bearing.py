@@ -15,8 +15,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema, profile_creation_context_for_test
 
+from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
@@ -120,7 +120,7 @@ def test_the_enforcing_check_agrees_with_the_overview_the_operator_is_shown(valu
         updated_at=_STAMP,
         context=profile_creation_context_for_test(),
     )
-    overview = build_profile_overview(record, schema=load_user_profile_schema())
+    overview = build_profile_overview(record, schema=published_profile_schema())
 
     assert TAX_ID in overview.missing_required
     assert TAX_ID in _missing(*facts)

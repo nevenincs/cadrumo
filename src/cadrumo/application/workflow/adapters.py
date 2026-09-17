@@ -1,9 +1,9 @@
 """Adapter wiring the deadline engine to the workflow protocol.
 
 See Also:
-    :class:`~application.workflow.WorkflowEngine`
+    :class:`~application.workflow.engine.WorkflowEngine`
         Consumes the adapted deadline collaborator.
-    :mod:`application.modelo._workflow_gate`
+    :mod:`application.modelo.workflow_gate`
         Builds revision-scoped workflow engines with the same adapter
         boundaries for verification and local mark-as-filed paths.
 """
@@ -17,7 +17,7 @@ from ...domain.deadlines.models import Schedule, TaxpayerProfile
 
 
 class DeadlineEngineAdapter:
-    """Wrap :class:`~domain.deadlines.DeadlineEngine` as a workflow Protocol."""
+    """Wrap :class:`~domain.deadlines.engine.DeadlineEngine` as a workflow Protocol."""
 
     def __init__(self, engine: DeadlineEngine) -> None:
         """Store the wrapped :class:`DeadlineEngine`."""

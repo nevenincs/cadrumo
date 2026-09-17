@@ -7,15 +7,15 @@ workflow state, declaration pointers, and active-profile helpers live in the sep
 ``_state_models`` owner.
 
 See Also:
-    :class:`~cadrumo.application.workflow.WorkflowEngine`
+    :class:`~cadrumo.application.workflow.engine.WorkflowEngine`
         Produces :class:`WorkflowResult` records and advances
         :class:`WorkflowStage` values.
-    :class:`~cadrumo.application.workflow.WorkflowPurpose`
+    :class:`~cadrumo.application.workflow.run_models.WorkflowPurpose`
         Selects the local FILE or VERIFY policy that controls deadline and
         preflight treatment.
-    :class:`~cadrumo.application.workflow.WorkflowRunRepository`
+    :class:`~cadrumo.application.workflow.persistence.WorkflowRunRepository`
         Persists terminal :class:`WorkflowResult` records in secure storage.
-    :class:`~cadrumo.application.workflow.WorkflowStateRepository`
+    :class:`~cadrumo.application.workflow.persistence.WorkflowStateRepository`
         Persists the encrypted :class:`WorkflowState` envelope.
     :mod:`cadrumo.application.modelo.workflow_gate`
         Drives calculation revisions through the workflow and persists the

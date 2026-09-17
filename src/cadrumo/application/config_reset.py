@@ -825,7 +825,7 @@ def _refuse_erase_inside_the_retention_floor(target: ConfigResetTarget) -> None:
     and it is proven by forging the state the earlier phase prevents.
 
     The count and the date come from the recorded decision, which
-    :meth:`~application.filing.FilingRetentionAuthority.assess` computed from
+    :meth:`~application.filing.retention.FilingRetentionAuthority.assess` computed from
     the filing snapshot -- so the message and the computation cannot drift.
     ``latest_safe_erase_date`` is the instant the WHOLE set clears, which is
     exactly the EARLIEST date erasing all of it is safe; the two names describe

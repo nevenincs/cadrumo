@@ -28,7 +28,7 @@ class FilingWindowState(StrEnum):
 
 
 def registry_filing_year(period: Period) -> int:
-    """Return the filing year from a typed :class:`~core.Period`."""
+    """Return the filing year from a typed :class:`~core.period.Period`."""
     return period.filing_year
 
 

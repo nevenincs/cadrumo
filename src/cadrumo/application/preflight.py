@@ -11,11 +11,11 @@ data (an ``error`` severity row with typed facts and a precondition verdict), no
 path, so the doctor reports status rather than crashing on a red row.
 
 The certificate / Cl@ve Móvil rows reuse
-:func:`~application.auth.probe_provider_configuration` (the pure-local
+:func:`~application.auth.operator_probes.probe_provider_configuration` (the pure-local
 per-provider probe that opens the ``.p12`` and classifies expiry via
-:func:`~adapters.outbound.aeat.auth.evaluate_loaded_certificate_health`, or
+:func:`~adapters.outbound.aeat.auth.certificate.evaluate_loaded_certificate_health`, or
 classifies the configured DNI/NIE). ``aeat config check`` renders these rows through
-:class:`~entrypoints.cli.config._check_payloads.CheckPreflightPayload`
+:class:`~entrypoints.cli.config.check_payloads.CheckPreflightPayload`
 beside the capability posture and dependency probes.
 """
 
@@ -193,7 +193,7 @@ def grade_provider_probe_result(
     """Grade one ``ProviderProbeResult`` value into a doctor verdict.
 
     The four declared bands partition
-    :class:`~application.auth.ProviderProbeResult`: a real misconfiguration is
+    :class:`~application.auth.probes.ProviderProbeResult`: a real misconfiguration is
     ``ERROR``, a pre-expiry certificate is ``WARN``, and a sound or
     not-configured-optional provider is ``OK``.
 
@@ -203,8 +203,8 @@ def grade_provider_probe_result(
     an ungraded state green gives the one answer an operator cannot act on.
 
     Args:
-        provider: The :class:`~core.AuthProviderKind` member being graded.
-        result: The probe's typed :class:`~application.auth.ProviderProbeResult`
+        provider: The :class:`~core.auth_provider.AuthProviderKind` member being graded.
+        result: The probe's typed :class:`~application.auth.probes.ProviderProbeResult`
             member.
 
     Returns:
@@ -228,9 +228,9 @@ def probe_auth_providers(
     """Probe each auth provider's local certificate / Cl@ve Móvil configuration.
 
     Runs the pure-local per-provider probe for every
-    :class:`~core.AuthProviderKind` (no network, no
+    :class:`~core.auth_provider.AuthProviderKind` (no network, no
     active-profile session) and maps its typed
-    :class:`~application.auth.ProviderProbeResult` onto a
+    :class:`~application.auth.probes.ProviderProbeResult` onto a
     :class:`PreflightCheck`. A not-configured optional provider is ``OK``
     (not a fault); an expired / corrupt / unreadable certificate or an
     invalid Cl@ve identity is ``ERROR``; a certificate inside its
@@ -435,7 +435,7 @@ def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_l
     (``<root>\buckets\<uuid>\blobs\<namespace>\<hmac>--<label>.meta.json``)
     would meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. The
     ``<namespace>`` budget comes from
-    :func:`~adapters.outbound.storage.windows_worst_case_object_path_suffix_length`,
+    :func:`~adapters.outbound.storage.path_budget.windows_worst_case_object_path_suffix_length`,
     which measures the longest namespace this build actually registers
     rather than a hand-picked sample. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
@@ -507,8 +507,8 @@ def probe_portal_registry_health() -> PreflightCheck:
     """Report portal-registry assembly health.
 
     Read-only and offline: this probe never contacts AEAT. It confirms the
-    bundled :data:`~domain.portals.PORTAL_REGISTRY` assembled (a
-    :class:`~domain.portals.PortalIntegrityError` at import is caught and
+    bundled :data:`~domain.portals.registry.PORTAL_REGISTRY` assembled (a
+    :class:`~domain.portals.errors.PortalIntegrityError` at import is caught and
     reported as an ``error`` row). It performs no network access and makes no
     claim about live portal availability or drift.
 

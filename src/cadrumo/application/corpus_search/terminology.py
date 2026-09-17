@@ -10,7 +10,7 @@ Per the ``aeat-documentation`` rule the shipped search
 surfaces only ``approved``-lifecycle concepts — the ratified taxpayer/operator
 vocabulary — excluding ``draft`` (unreviewed) and ``deprecated`` (internal
 machinery) concepts, which the taxpayer glossary also excludes. The lifecycle
-axis itself is the core-owned :class:`~core.ConceptLifecycle` closed set, the
+axis itself is the core-owned :class:`~core.concept_lifecycle.ConceptLifecycle` closed set, the
 one home reachable from both this shipped reader and the unshipped authoring
 tooling; a stored token that names no member is refused here rather than
 silently filtered out of every result.
@@ -201,10 +201,10 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
 
     Raises:
         CorpusSearchInputError: If ``token`` names no
-            :class:`~core.ConceptLifecycle` member.
+            :class:`~core.concept_lifecycle.ConceptLifecycle` member.
 
     Returns:
-        A :class:`~core.ConceptLifecycle`.
+        A :class:`~core.concept_lifecycle.ConceptLifecycle`.
     """
     try:
         return ConceptLifecycle(token)
@@ -325,7 +325,7 @@ def search_terminology(
     """Search the Handbook for ``query``, returning ranked hits.
 
     Only concepts whose lifecycle is in ``lifecycles``
-    (:attr:`~core.ConceptLifecycle.APPROVED` by default, the taxpayer-facing
+    (:attr:`~core.concept_lifecycle.ConceptLifecycle.APPROVED` by default, the taxpayer-facing
     set) are considered.
 
     Raises:

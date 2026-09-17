@@ -7,16 +7,16 @@ revision stamp re-confirms against the law-determined revision for the source
 period.
 
 See Also:
-    :class:`~domain.prorrata_register.ProrrataRegisterEntry`
+    :class:`~domain.prorrata_register.register.ProrrataRegisterEntry`
         Register record populated with the carried-prior-definitive percentage,
         provenance, and source-observation identity.
-    :class:`~core.ProrrataProvisionalProvenance`
+    :class:`~core.prorrata_register.ProrrataProvisionalProvenance`
         Closed provenance axis whose ``CARRIED_PRIOR_DEFINITIVA`` member marks
         the normal LIVA art. 105.Uno seed path.
-    :class:`~application.calculations.CalculationObservationRepositoryProtocol`
+    :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
         Local observation catalogue scanned for prior Modelo 303 settlement
         observations.
-    :func:`~application.calculations.revision_carry_outcome`
+    :func:`~application.calculations.revision_carry_gate.revision_carry_outcome`
         Shared law-determined gate used to re-confirm the stored
         ``stamped_revision_id`` before trusting the carry.
     :class:`~application.calculations.cross_period_models.CrossPeriodCleanStateBlocker`

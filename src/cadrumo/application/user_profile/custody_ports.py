@@ -473,10 +473,10 @@ def default_profile_custody_local_record_store() -> ProfileCustodyLocalRecordSto
 class ProfileRecordCryptoError(CoreError):
     """The configured profile-record crypto provider rejected an operation.
 
-    Roots at :class:`~core.errors.CoreError` so the refusal binds to the error
+    Roots at :class:`~core.errors.hierarchy.CoreError` so the refusal binds to the error
     registry rather than reaching an operator as an unregistered builtin. The
     port deliberately does not root at the persistence layer's own
-    :exc:`~adapters.persistence.storage.EncryptionError`: this package exists
+    :exc:`~adapters.persistence.storage.errors.EncryptionError`: this package exists
     to keep the adapter's crypto types off the application port, and adopting
     that family would make the port's refusal catchable by every storage-family
     handler — a broadening, not a re-root. :exc:`RuntimeError` is retained so

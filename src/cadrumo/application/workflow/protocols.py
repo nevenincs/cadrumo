@@ -18,15 +18,15 @@ deadline engine's ``compute`` method that returns a :class:`Schedule`
 for a given :class:`TaxpayerProfile`.
 
 See Also:
-    :class:`~application.workflow.WorkflowEngine`
+    :class:`~application.workflow.engine.WorkflowEngine`
         Orchestrates these contracts stage by stage.
     :mod:`application.workflow.adapters`
         Adapts production deadline, draft-building, submission, and live-read
         components to these contracts.
-    :class:`~domain.submission.SubmissionEngine`
+    :class:`~domain.submission.engine.SubmissionEngine`
         Implements the read-only preflight surface described by
         :class:`SubmissionEngineProtocol`.
-    :class:`~application.workflow.WorkflowPurpose`
+    :class:`~application.workflow.run_models.WorkflowPurpose`
         Decides when workflow callers skip the AEAT filing-window preflight
         gate for local verification or local mark-as-filed paths.
 """
@@ -53,11 +53,11 @@ from ...domain.submission.protocols import ModeloDraftLike
 class WorkflowFindingLike(Protocol):
     """Narrow structural port over one registry-backed draft finding.
 
-    Wider than :class:`domain.submission.ModeloFindingLike`, which declares
+    Wider than :class:`domain.submission.protocols.ModeloFindingLike`, which declares
     only ``severity`` -- the preflight gate reads severity alone and needs no
     ``code``. Every
     finding a :class:`RegistryModeloDraftProtocol` draft actually carries is
-    a :class:`domain.filing.ModeloValidationFinding`, which declares both
+    a :class:`domain.filing.schema.ModeloValidationFinding`, which declares both
     ``severity`` and ``code`` as required fields with no default. Typing
     :attr:`RegistryModeloDraftProtocol.findings` through this Protocol lets
     workflow-layer readers use ``finding.severity`` / ``finding.code``
@@ -79,7 +79,7 @@ class WorkflowFindingLike(Protocol):
 
 @runtime_checkable
 class DeadlineEngineProtocol(Protocol):
-    """Narrow surface over :class:`domain.deadlines.DeadlineEngine`."""
+    """Narrow surface over :class:`domain.deadlines.engine.DeadlineEngine`."""
 
     def compute(
         self,
@@ -111,7 +111,7 @@ class RegistryModeloDraftProtocol(ModeloDraftLike, Protocol):
 
 @runtime_checkable
 class ModeloDraftBuilderProtocol(Protocol):
-    """Narrow surface over :func:`application.filing.build_draft`."""
+    """Narrow surface over :func:`application.filing.draft_construction.build_draft`."""
 
     def build(
         self,
@@ -131,7 +131,7 @@ class ModeloDraftBuilderProtocol(Protocol):
 
 @runtime_checkable
 class SubmissionEngineProtocol(Protocol):
-    """Read-only preflight surface over :class:`~domain.submission.SubmissionEngine`."""
+    """Read-only preflight surface over :class:`~domain.submission.engine.SubmissionEngine`."""
 
     def preflight(
         self,
@@ -165,14 +165,14 @@ class CertificateBundleProtocol(Protocol):
     The workflow engine calls :meth:`describe` once during the
     preflight stage to prove the configured auth provider is present
     and healthy. Any exception raised here is translated into
-    :attr:`application.workflow.WorkflowAbortReason.CERT_INVALID` to preserve
+    :attr:`application.workflow.abort.WorkflowAbortReason.CERT_INVALID` to preserve
     the existing workflow abort taxonomy.
     """
 
     def describe(self) -> AuthProviderDescription:
         """Return the current auth-provider description; raise on failure.
 
-        Returns a :class:`core.AuthProviderDescription` with the provider's
+        Returns a :class:`core.auth_provider.AuthProviderDescription` with the provider's
         configured and available state.
         """
         ...

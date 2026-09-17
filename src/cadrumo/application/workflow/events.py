@@ -8,15 +8,15 @@ envelope content is never recorded. Events are appended to the
 composed bucket-event history port via :func:`emit_workflow_state_reset`.
 
 See Also:
-    :class:`~cadrumo.application.workflow.WorkflowStateRepository`
+    :class:`~cadrumo.application.workflow.persistence.WorkflowStateRepository`
         Computes :class:`WorkflowStateResetFingerprint` records and calls this
         module before deleting the workflow-state envelope.
     :func:`cadrumo.application.workflow.persistence.reset_workflow_state`
         Public helper used by the ``config repair reset-progress`` command to
         execute the emit-before-delete recovery route.
-    :class:`~cadrumo.domain.buckets.BucketEvent`
+    :class:`~cadrumo.domain.buckets.event.BucketEvent`
         Immutable audit event emitted for ``workflow_state.reset``.
-    :func:`~cadrumo.application.user_profile.default_profile_bucket_event_history_repository`
+    :func:`~cadrumo.application.user_profile.custody_ports.default_profile_bucket_event_history_repository`
         Composed append-only repository port that stores the reset event.
 """
 

@@ -191,10 +191,10 @@ class WorkflowEngine:
         """Construct a :class:`WorkflowEngine`.
 
         Args:
-            deadline_engine: Protocol over :class:`domain.deadlines.DeadlineEngine`.
-            filing_draft_builder: Protocol over :func:`application.filing.build_draft`.
-            submission_engine: Protocol over :class:`~domain.submission.SubmissionEngine`.
-            session: Optional authenticated :class:`adapters.outbound.aeat.auth.AeatSession`
+            deadline_engine: Protocol over :class:`domain.deadlines.engine.DeadlineEngine`.
+            filing_draft_builder: Protocol over :func:`application.filing.draft_construction.build_draft`.
+            submission_engine: Protocol over :class:`~domain.submission.engine.SubmissionEngine`.
+            session: Optional authenticated :class:`~application.auth.session_types.AeatSession`
                 used to drive the live :mod:`adapters.outbound.aeat.sede` reader. ``None``
                 skips both the inbox probe and the already-filed probe.
             certificate_bundle: Optional Protocol over the certificate
@@ -203,7 +203,7 @@ class WorkflowEngine:
                 the draft stage.
             settings: Application :class:`Settings` instance.
             expedientes_source: Test seam over
-                :func:`adapters.outbound.aeat.sede.walk_expedientes_tree`. Defaults to the
+                :func:`adapters.outbound.aeat.sede.walker.walk_expedientes_tree`. Defaults to the
                 live walker.
             notifications_source: Test seam over
                 a bucket-scoped application capture. ``None`` leaves the
@@ -1188,7 +1188,7 @@ class WorkflowEngine:
 
         Aborts with ``CERT_INVALID`` if the auth-provider Protocol
         raises, and with ``PREFLIGHT_FAILED`` on any
-        :class:`~domain.submission.SubmissionPreflightError`.
+        :class:`~domain.submission.errors.SubmissionPreflightError`.
 
         For local :attr:`WorkflowPurpose.VERIFY` and
         :attr:`WorkflowPurpose.FILE`, the AEAT filing-window preflight

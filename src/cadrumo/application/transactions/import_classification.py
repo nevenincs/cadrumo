@@ -24,7 +24,7 @@ diagnostics path was missing entirely:
   must say so.
 
 See Also:
-    :class:`~cadrumo.application.transactions.LedgerImportDiagnosticKind`
+    :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnosticKind`
         The category an unimported verdict is reported under.
 """
 

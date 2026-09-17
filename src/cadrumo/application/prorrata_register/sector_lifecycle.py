@@ -18,9 +18,9 @@ definitive lives in the register's own ``(ejercicio-1, sector_id)`` entry
 the register, not the observation catalogue.
 
 See Also:
-    :func:`~application.prorrata_register.evaluate_carried_prior_definitiva_seed`
+    :func:`~application.prorrata_register.seed.evaluate_carried_prior_definitiva_seed`
         Whole-entity carried seed sourced from the prior Modelo 303 observation.
-    :func:`~domain.iva.compute_prorrata_definitiva_anual`
+    :func:`~domain.iva.prorrata.compute_prorrata_definitiva_anual`
         Pure substrate that computes the year-end definitive percentage from the
         sector's full-year operation volumes.
 """
@@ -97,7 +97,7 @@ def settle_sector_definitive(
     LIVA art. 105.Cuatro applied per differentiated sector: the definitive
     percentage is derived from the sector's OWN full-year operation volumes
     (con-derecho / sin-derecho, art. 104 exclusions already applied) via
-    :func:`~domain.iva.compute_prorrata_definitiva_anual`, then written back onto
+    :func:`~domain.iva.prorrata.compute_prorrata_definitiva_anual`, then written back onto
     the sector's register entry. The provisional fields are preserved so the
     annual regularización can compare the provisional applied in-year against the
     definitive.

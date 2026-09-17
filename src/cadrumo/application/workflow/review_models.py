@@ -19,7 +19,7 @@ from ...domain.contribuyente.normalise import normalise_key
 class WorkflowEvent(BaseModel):
     """One operator-visible event emitted by a mutating workflow verb.
 
-    Events are appended to :attr:`~application.workflow.WorkflowState.bucket_events`
+    Events are appended to :attr:`~application.workflow.state_models.WorkflowState.bucket_events`
     so the operator can audit which actions ran, when, and against which
     object. ``action`` names the verb (e.g. ``"profile.created"``); ``reason``
     carries a free-form human-readable annotation; ``bucket_id`` and

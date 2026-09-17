@@ -15,10 +15,10 @@ than returns, and a partial failure is exactly the state a reader most needs
 to see.
 
 See Also:
-    :func:`~application.storage.sync_runs.record_sync_run`
+    :func:`~application.storage.sync_runs.persist.record_sync_run`
         The shared co-write primitive this module calls on both completion
         paths.
-    :func:`~adapters.outbound.google.apply_export_plan`
+    :func:`~adapters.outbound.google.calc_sheets_apply.apply_export_plan`
         The outbound write this module wraps with provenance.
 """
 
@@ -115,7 +115,7 @@ def export_modelo_to_sheets(
             entrypoint.
 
     Returns:
-        The adapter's :class:`~adapters.outbound.google.CalcSheetsApplyResult`.
+        The adapter's :class:`~adapters.outbound.google.calc_sheets_apply.CalcSheetsApplyResult`.
 
     Raises:
         Whatever ``apply_export_plan`` raises,

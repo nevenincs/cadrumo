@@ -5,8 +5,8 @@ from :mod:`domain.transactions`. This application package hosts the
 diagnostic preview helper the ledger import path consumes before persistence.
 
 :func:`import_ledger_with_diagnostics` evaluates provider-emitted
-:class:`domain.transactions.RawTransaction` rows against an existing
-:class:`domain.transactions.TransactionCatalogue`, returns an immutable
+:class:`domain.transactions.raw_transaction.RawTransaction` rows against an existing
+:class:`domain.transactions.models.TransactionCatalogue`, returns an immutable
 :class:`LedgerImportResult`, and leaves catalogue mutation, FX normalization,
 and bucket-event emission to :mod:`application.ledger`. Duplicate diagnostics
 route through :func:`classify_import_row`, the single verdict the persisting
@@ -19,7 +19,7 @@ See Also:
     :class:`LedgerImportDiagnostic`
         Typed import finding grouped by
         :class:`LedgerImportDiagnosticKind` and
-        :class:`core.errors.BaseSeverity`.
+        :class:`core.errors.severity.BaseSeverity`.
     :class:`LedgerImportResult`
         Immutable preview summary containing imported/skipped counts and
         diagnostics.

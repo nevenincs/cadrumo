@@ -11,7 +11,7 @@ copying an encrypted store is neither, and a copy that succeeds for the records
 while failing for the key material that opens them is unrecoverable.
 
 See Also:
-    :func:`~cadrumo.core.storage_path`
+    :func:`~cadrumo.core.storage_taxonomy_locations.storage_path`
         The resolver every row is built from.
     :func:`~cadrumo.core.storage_materialization.ensure_storage_tree`
         The materialiser ``init`` delegates to rather than re-implementing.
@@ -197,7 +197,7 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     """Report where the materialised tree disagrees with its declaration.
 
     Read-only by contract: it names missing directories, nodes whose kind
-    contradicts the declared :class:`~cadrumo.core.StorageNodeKind`, and root
+    contradicts the declared :class:`~cadrumo.core.storage_taxonomy.StorageNodeKind`, and root
     permission drift, and repairs none of them. ``init`` is the verb that acts.
 
     Only members the settings actually resolve are checked. A member whose

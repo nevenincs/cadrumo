@@ -80,7 +80,7 @@ def resolve_effective_usage_ratios(
 
     Returns:
         Category-to-effective-ratio mapping, ready for
-        :class:`~domain.renta.RentaDeductibilityContext`. Empty when the operator has
+        :class:`~domain.renta.ledger_expenses.RentaDeductibilityContext`. Empty when the operator has
         stored nothing and declared no dwelling m².
     """
     stored = dict(usage_ratio_profile_loader(bucket_id=bucket_id, operation=operation).ratios)

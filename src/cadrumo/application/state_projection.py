@@ -19,27 +19,27 @@ The projection is pure read: building it mutates no store.
 
 Background: ``overview status`` once reconstructed workspace
 counters from a different store subset than ``modelo work`` writes:
-it read the :class:`~cadrumo.domain.filing.ModeloDraft` store but never the
+it read the :class:`~cadrumo.domain.filing.schema.ModeloDraft` store but never the
 :class:`~WorkUnitCatalogue` or
 :class:`~CalculationRevisionCatalogue` stores, so an
 operator who used
 ``modelo work create`` / ``calculate`` saw ``drafts: 0``. This
 projection carries ``drafts`` (the declaration-draft
-:class:`~cadrumo.domain.filing.ModeloDraft` store) and ``work_units`` (the
+:class:`~cadrumo.domain.filing.schema.ModeloDraft` store) and ``work_units`` (the
 :class:`~WorkUnitCatalogue` store) as distinct counters, so
 neither is silently zero.
 
 See Also:
-    :class:`~cadrumo.application.overview.OverviewStatusReport`
+    :class:`~cadrumo.application.overview.calendar_models.OverviewStatusReport`
         Overview emit shape derived from this projection, rather than from a
         second store assembly path.
-    :func:`~cadrumo.application.overview.build_overview_status_report`
+    :func:`~cadrumo.application.overview.status_report.build_overview_status_report`
         Overview producer that consumes this projection instead of rebuilding
         workspace, auth, and deadline readiness.
-    :class:`~cadrumo.application.auth.AuthStatusResult`
+    :class:`~cadrumo.application.auth.operator_results.AuthStatusResult`
         Auth emit shape that reads the same canonical configured/authenticated
         readiness values carried here.
-    :func:`~cadrumo.application.auth.inspect_operator_auth`
+    :func:`~cadrumo.application.auth.operator.inspect_operator_auth`
         Auth status producer that reads
         :class:`ProjectionAuthReadiness` and
         :class:`ProjectionActiveProfile` from this projection.
@@ -54,10 +54,10 @@ See Also:
     :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`
         Filing workflow selector that filters a schedule for the workflow gate;
         it does not consume ``pending_obligations`` directly.
-    :func:`~cadrumo.domain.deadlines.compute_obligation_schedule`
+    :func:`~cadrumo.domain.deadlines.engine.compute_obligation_schedule`
         Single deadline schedule producer used for projection obligations and
         workflow deadline-stage checks.
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`
         Registry authority snapshot used to resolve modelo-readiness preflight
         requirements.
 """
@@ -123,7 +123,7 @@ class ProjectionActiveProfile(BaseModel):
     """Active-profile identity and health, computed once for every surface.
 
     This record is the projection-side form of
-    :class:`~cadrumo.application.workflow.ActiveProfileHealth`. Auth and overview
+    :class:`~cadrumo.application.workflow.profile_health.ActiveProfileHealth`. Auth and overview
     surfaces read these fields instead of re-running profile pointer or bucket
     manifest checks.
 
@@ -140,7 +140,7 @@ class ProjectionActiveProfile(BaseModel):
             to a registered bucket.
         record_present: Whether the encrypted profile record loaded.
         precondition_verdict: The application-owned recovery verdict carried
-            from :func:`~cadrumo.application.workflow.assess_active_profile_health`.
+            from :func:`~cadrumo.application.workflow.profile_health.assess_active_profile_health`.
     """
 
     model_config = _STRICT_FROZEN
@@ -158,7 +158,7 @@ class ProjectionWorkspaceSummary(BaseModel):
 
     ``drafts`` and ``work_units`` are deliberately distinct counters:
     ``modelo file`` writes the declaration-draft
-    :class:`~cadrumo.domain.filing.ModeloDraft` store while
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft` store while
     ``modelo work create`` / ``calculate`` write the
     :class:`~WorkUnitCatalogue` store. Calculation output is
     counted separately through
@@ -169,7 +169,7 @@ class ProjectionWorkspaceSummary(BaseModel):
     Attributes:
         transactions: Count of imported transactions.
         invoices: Count of imported invoices.
-        drafts: Count of declaration-draft :class:`~cadrumo.domain.filing.ModeloDraft`
+        drafts: Count of declaration-draft :class:`~cadrumo.domain.filing.schema.ModeloDraft`
             entries.
         work_units: Count of *active* (``BORRADOR``)
             :class:`~WorkUnitCatalogue` entries written by
@@ -200,10 +200,10 @@ class ProjectionWorkspaceSummary(BaseModel):
 class ProjectionObligation(BaseModel):
     """One pending filing obligation carried in the projection.
 
-    Rows are copied from the :class:`~cadrumo.domain.deadlines.Schedule`
+    Rows are copied from the :class:`~cadrumo.domain.deadlines.models.Schedule`
     obligations produced for the active :class:`TaxpayerProfile`. Workflow
     filing gates later select a narrower
-    :class:`~cadrumo.domain.deadlines.ModeloDeadline` from the same schedule
+    :class:`~cadrumo.domain.deadlines.models.ModeloDeadline` from the same schedule
     producer.
 
     Attributes:
@@ -242,7 +242,7 @@ class OperatorStateProjection(BaseModel):
         pending_obligations: The full, unfiltered deadline obligations
             for the active profile's current year, as
             :class:`ProjectionObligation` records. They are computed through
-            :func:`~cadrumo.domain.deadlines.compute_obligation_schedule`, the
+            :func:`~cadrumo.domain.deadlines.engine.compute_obligation_schedule`, the
             same schedule producer that the workflow deadline stage filters
             through
             :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
@@ -303,7 +303,7 @@ def _taxpayer_profile_from_state(
 ) -> TaxpayerProfile:
     """Project the active profile record into an :class:`TaxpayerProfile`.
 
-    Delegates to :func:`~cadrumo.application.user_profile.projection_for_taxpayer`,
+    Delegates to :func:`~cadrumo.application.user_profile.projections.projection_for_taxpayer`,
     the single fact-to-taxpayer projection authority, so the deadline engine
     receives exactly the profile shape every other surface computes. A live
     record projects against the schema pinned by ``operation``; an absent one
@@ -324,11 +324,11 @@ def build_pending_obligations(
 ) -> tuple[ProjectionObligation, ...]:
     """Compute the deadline obligations for the active profile.
 
-    Routes through :func:`~cadrumo.domain.deadlines.compute_obligation_schedule`,
+    Routes through :func:`~cadrumo.domain.deadlines.engine.compute_obligation_schedule`,
     the single producer of the pending-obligation datum also used by the
     workflow deadline stage. This function projects the full
-    :class:`~cadrumo.domain.deadlines.Schedule`; the workflow gate separately
-    filters its target :class:`~cadrumo.domain.deadlines.ModeloDeadline` through
+    :class:`~cadrumo.domain.deadlines.models.Schedule`; the workflow gate separately
+    filters its target :class:`~cadrumo.domain.deadlines.models.ModeloDeadline` through
     :func:`~cadrumo.application.workflow._deadline_stage.resolve_deadline_stage_obligation`.
     A failure to compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
@@ -390,7 +390,7 @@ class ProjectionModeloBindingRequirement(BaseModel):
     """One registry calculation binding readiness cannot currently satisfy.
 
     These are non-constant binding declarations from the resolved
-    :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` that are not
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot` that are not
     supplied by profile binding resolution, enum/date helpers, or a successful
     ledger preflight. The parent :class:`ProjectionModeloReadiness` carries
     these rows as operator-facing missing input requirements.
@@ -591,14 +591,14 @@ class ProjectionModeloReadiness(BaseModel):
     bindings.
 
     Attributes:
-        profile_id: Active :data:`~cadrumo.core.identity.ProfileId` used for the
+        profile_id: Active :data:`~cadrumo.core.identity.profile.ProfileId` used for the
             readiness report.
         modelo: Modelo identifier from the :class:`ModeloReadinessRequest`.
         revision_id: Registry revision requested or resolved for this target.
         filing_year: Filing year used to resolve registry and profile
             requirements.
         missing: Profile fields still required by the
-            :class:`~cadrumo.application.user_profile.ProfilePreflightReport`.
+            :class:`~cadrumo.application.user_profile.commands.ProfilePreflightReport`.
         profile_refusal: Operator-facing refusal when profile facts are
             present but disqualify the target period.
         registry_ready: Whether the requested modelo/year/period/revision
@@ -620,7 +620,7 @@ class ProjectionModeloReadiness(BaseModel):
         ledger_issues: Blocking :class:`LedgerPreflightIssue` rows.
         per_operation_requirements_assessed: Whether the per-modelo
             schema-required axis (see
-            :attr:`~cadrumo.application.user_profile.ProfilePreflightReport.per_operation_requirements_assessed`)
+            :attr:`~cadrumo.application.user_profile.commands.ProfilePreflightReport.per_operation_requirements_assessed`)
             actually examined any field for this modelo. ``False`` means no
             schema-required field was checked and ``profile_ready`` reflects
             only the export-identity and conditional checks; it MUST NOT be
@@ -1016,7 +1016,7 @@ def _missing_calculation_bindings_for_readiness(
     """Return registry bindings not available to calculation readiness.
 
     Ledger aggregation bindings are the source kinds declared by
-    :data:`~cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS`;
+    :data:`~cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`;
     they are available only through the ledger preflight path. Once that
     preflight passes, the calculation mesh can resolve them from the bucket
     ledger and readiness must not report them as missing operator inputs.

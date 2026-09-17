@@ -169,7 +169,7 @@ def cloud_evidence_upload_eligible_for_active_profile(*, settings: Settings | No
     The standing per-profile bar, distinct from the per-invocation
     acknowledgement it sits above: eligibility asks "may this profile ever be
     asked", the acknowledgement asks "does the operator agree to this one read".
-    Default off (:attr:`~core.ServiceCapability.CLOUD_EVIDENCE_UPLOAD` is the one
+    Default off (:attr:`~core.capabilities.ServiceCapability.CLOUD_EVIDENCE_UPLOAD` is the one
     capability defaulting off) and gestor-barred outright, so the answer here is
     ``False`` on an untouched deployment.
 

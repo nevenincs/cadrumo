@@ -17,15 +17,15 @@ diagnostic kinds emitted by ``aeat app ledger import PATH --provider PROVIDER --
   unknown column, encoding hint mismatch) without aborting the
   import outright.
 
-The CLI consumes :class:`~cadrumo.application.transactions.LedgerImportDiagnostic`
+The CLI consumes :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnostic`
 records via
-:func:`~cadrumo.application.transactions.build_ledger_import_diagnostic` and renders
+:func:`~cadrumo.application.transactions.diagnostics.build_ledger_import_diagnostic` and renders
 them grouped by ``severity`` and ``kind``.
 
 See Also:
-    :class:`~cadrumo.application.transactions.LedgerImportDiagnosticKind`,
-    :class:`~cadrumo.application.transactions.LedgerImportDiagnostic`, and
-    :func:`~cadrumo.application.transactions.build_ledger_import_diagnostic`.
+    :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnosticKind`,
+    :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnostic`, and
+    :func:`~cadrumo.application.transactions.diagnostics.build_ledger_import_diagnostic`.
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ class LedgerImportDiagnostic(BaseModel):
 
     Attributes:
         kind: Closed
-            :class:`~cadrumo.application.transactions.LedgerImportDiagnosticKind`.
-        severity: :class:`~cadrumo.core.errors.BaseSeverity`.
+            :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnosticKind`.
+        severity: :class:`~cadrumo.core.errors.severity.BaseSeverity`.
         message: A strictly-typed :class:`~cadrumo.core.i18n.Translatable` key.
         source_path: Optional pointer at the source artefact the
             diagnostic refers to (input file, provider name, etc.).
@@ -122,9 +122,9 @@ def build_ledger_import_diagnostic(
 
     Centralised factory so adding new optional metadata later means
     extending this helper rather than every emit site. The returned
-    :class:`~cadrumo.application.transactions.LedgerImportDiagnostic` preserves the
-    closed :class:`~cadrumo.application.transactions.LedgerImportDiagnosticKind`
-    and :class:`~cadrumo.core.errors.BaseSeverity` values the CLI groups by.
+    :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnostic` preserves the
+    closed :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnosticKind`
+    and :class:`~cadrumo.core.errors.severity.BaseSeverity` values the CLI groups by.
     """
     return LedgerImportDiagnostic(
         kind=kind,

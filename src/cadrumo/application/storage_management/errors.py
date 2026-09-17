@@ -4,7 +4,7 @@
 guard. It names only the public area and the failed preflight property.
 
 See Also:
-    :func:`~cadrumo.application.storage_management.reclaim_storage_area`
+    :func:`~cadrumo.application.storage_management.service.reclaim_storage_area`
         The guarded operation that raises it.
 """
 

@@ -275,7 +275,7 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
     accepts exactly what the ``--descendiente`` flag and the fact index do.
     Surfacing the refusal as a verdict keeps a malformed value out of the answer
     map entirely, so it never reaches the persistence-boundary construction of
-    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose own month
+    :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` (whose own month
     validator stays as defence-in-depth).
     """
     if not canonical:
@@ -327,7 +327,7 @@ def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     Blank (optional) passes and leaves the figure UNDECLARED, which the
     eligibility predicate reads as non-excluding. Unlike ``gastos_guarderia``,
     this field is genuinely ``Decimal`` on the domain model
-    (:class:`~cadrumo.domain.contribuyente.DescendantInfo`), and the Art. 58.1
+    (:class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo`), and the Art. 58.1
     ceiling comparison is strict (``>``), so a cents figure genuinely at the
     boundary (e.g. ``8000.01``) is legally significant, not cosmetic
     precision. The DECIMAL widget's own shape validation already confirmed
@@ -358,14 +358,14 @@ def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> Valida
 
     Blank (optional) passes and leaves the map UNDECLARED. Anything else is
     parsed by the one shared grammar
-    (:func:`~domain.contribuyente.parse_guarderia_mensual`) rather than a
+    (:func:`~domain.contribuyente.guarderia_mensual.parse_guarderia_mensual`) rather than a
     wizard-local reader, so this page, the ``--descendiente`` flag and the fact
     index accept and refuse exactly the same shapes. A page-local parser is how
     a surface starts accepting a value another door rejects.
 
     Refusing as a verdict keeps a bad map out of the answer map entirely, so it
     never reaches the persistence-boundary construction of
-    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose own duplicate-month
+    :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo` (whose own duplicate-month
     refusal stays as defence-in-depth). The raw answer never enters the
     diagnostic; the operator is pointed at the accepted form instead.
     """

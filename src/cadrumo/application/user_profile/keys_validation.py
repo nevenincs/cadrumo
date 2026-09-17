@@ -12,7 +12,7 @@ summary.
 These helpers are intentionally projection-only: they do not read or write
 secure storage, do not touch :class:`WorkflowState`, and do not depend on any
 CLI state. The flat-dict input is produced by
-:func:`application.user_profile.record_to_values` or by the wizard runner's
+:func:`application.user_profile.projections.record_to_values` or by the wizard runner's
 canonical projection.
 """
 

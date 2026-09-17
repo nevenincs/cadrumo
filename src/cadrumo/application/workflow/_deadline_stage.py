@@ -3,14 +3,14 @@
 The deadline stage projects the active :class:`TaxpayerProfile` through the
 domain deadline engine and selects one :class:`ModeloDeadline` from the computed
 :class:`Schedule`. It keeps workflow verification and filing gates aligned with
-the shared :func:`~domain.deadlines.compute_obligation_schedule` producer
+the shared :func:`~domain.deadlines.engine.compute_obligation_schedule` producer
 used by state projections.
 
 See Also:
-    :class:`~application.workflow.WorkflowEngine`
+    :class:`~application.workflow.engine.WorkflowEngine`
         Composition root that calls these helpers from the
         ``COMPUTING_DEADLINES`` stage.
-    :class:`~application.workflow.WorkflowPurpose`
+    :class:`~application.workflow.run_models.WorkflowPurpose`
         Purpose enum that decides whether a missing or late filing-window
         obligation aborts the run or remains informational context.
     :func:`~application.state_projection.build_pending_obligations`

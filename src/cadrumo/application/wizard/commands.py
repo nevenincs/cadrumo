@@ -1620,7 +1620,7 @@ def profile_next_step_modelo(
     Args:
         profile_values: Dotted-path fact values as the wizard's canonical
             question-id keys, or the equivalent
-            :func:`~cadrumo.application.user_profile.record_to_path_values`
+            :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
             projection of a :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`
             — the two share the same ``taxpayer_type.fiscal_residency`` key.
         operation: Caller-owned pinned authority operation used to classify the

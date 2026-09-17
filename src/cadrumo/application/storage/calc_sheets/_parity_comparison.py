@@ -2,7 +2,7 @@
 
 Extracted from the parity harness so the comparison can be reached without the
 harness's write path. That separation is load-bearing rather than tidy:
-:func:`~application.storage.calc_sheets.verify_modelo_parity` acquires its
+:func:`~application.storage.calc_sheets.parity_harness.verify_modelo_parity` acquires its
 spreadsheet side by CREATING or updating the workbook, seeding operator inputs
 into ``Entradas`` and relations into ``Tarifas``, and reading ``Cálculos`` back —
 so any caller that must not write cannot go through it. The export preview is
@@ -43,9 +43,9 @@ formula, the fix is to quantize both sides to the modelo's money scale before
 comparison, not to widen the comparison.
 
 See Also:
-    :func:`~application.storage.calc_sheets.verify_modelo_parity`
+    :func:`~application.storage.calc_sheets.parity_harness.verify_modelo_parity`
         The three-way harness that acquires the values and calls this.
-    :class:`~domain.calculations.registry.RegistrySnapshot`
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         Authority the caller resolves casilla definitions from.
 """
 
@@ -119,7 +119,7 @@ def collect_parity_rows(
 
     Args:
         casillas: The revision's casilla definitions. Only
-            :attr:`~domain.calculations.registry.InputKind.COMPUTED` members are
+            :attr:`~domain.calculations.registry.schema_input_kind.InputKind.COMPUTED` members are
             compared; an operator-input cell holds whatever was written into it
             and comparing it against itself proves nothing.
         local_values: What the local Decimal runtime produced, or — on the

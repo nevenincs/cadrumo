@@ -1,13 +1,13 @@
 """Orchestration layer for ledger imports with diagnostics.
 
-:func:`~cadrumo.application.transactions.import_ledger_with_diagnostics` accepts an
+:func:`~cadrumo.application.transactions.import_diagnostics.import_ledger_with_diagnostics` accepts an
 existing :class:`TransactionCatalogue` and an iterable of
-:class:`~cadrumo.domain.transactions.RawTransaction` rows. It emits structured
+:class:`~cadrumo.domain.transactions.raw_transaction.RawTransaction` rows. It emits structured
 diagnostics for parser-empty, duplicate, calendar-gap, and original-file checks
 during import verification.
 
 Duplicate detection routes through
-:func:`~cadrumo.application.transactions.classify_import_row`, the same verdict
+:func:`~cadrumo.application.transactions.import_classification.classify_import_row`, the same verdict
 the persisting ledger import path consumes, so the diagnostics and the
 persistence path cannot disagree about what a row is. They did: this module once
 counted a fingerprint repeated within one file as skipped while the persisting
@@ -44,9 +44,9 @@ class LedgerImportResult(BaseModel):
     """Return value of an orchestrated ledger import with diagnostics.
 
     ``imported_count`` and ``skipped_count`` reflect the previewed outcome for
-    the supplied :class:`~cadrumo.domain.transactions.RawTransaction` rows;
+    the supplied :class:`~cadrumo.domain.transactions.raw_transaction.RawTransaction` rows;
     ``diagnostics`` carries the structured
-    :class:`~cadrumo.application.transactions.LedgerImportDiagnostic` records
+    :class:`~cadrumo.application.transactions.diagnostics.LedgerImportDiagnostic` records
     explaining parser, duplicate, gap, or original-file findings.
     """
 
@@ -75,7 +75,7 @@ def import_ledger_with_diagnostics(
             caller with the flow direction the provider read at the parse
             boundary. Required rather than defaulted: a fingerprint derived
             here would carry no direction, and
-            :func:`~cadrumo.domain.transactions.derive_import_fingerprint`
+            :func:`~cadrumo.domain.transactions.models.derive_import_fingerprint`
             substitutes the literal ``UNSPECIFIED`` discriminator for a missing
             one, which can never equal a stored direction-qualified fingerprint.
             Dedup would then fail open and read every row as new.
@@ -83,7 +83,7 @@ def import_ledger_with_diagnostics(
             present on disk.
 
     Returns:
-        An immutable :class:`~cadrumo.application.transactions.LedgerImportResult`
+        An immutable :class:`~cadrumo.application.transactions.import_diagnostics.LedgerImportResult`
         with finding diagnostics.
     """
     diagnostics: list[LedgerImportDiagnostic] = []
