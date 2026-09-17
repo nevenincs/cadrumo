@@ -866,8 +866,8 @@ def _require_annual_agrupacion_code(code: str, *, effective_date: date) -> None:
     declarations, _ = _registry_detail_catalogue(effective_date=effective_date)
     if code not in _detail_values(declarations, "m210.annual_grouping_codes"):
         raise Modelo210AgrupacionRentaRowsError(
-            reason="unknown_grouping_code",
-            detail="M210 grouping code is not declared by the selected registry",
+            reason="annual_code_not_lease_or_sublease",
+            detail=f"period 0A groups only the registry-declared lease/sublease codes, got {code}",
         )
 
 
@@ -908,10 +908,23 @@ def _validate_agrupacion_payer_grouping(
         if key.startswith("m210.code") and key.endswith(".payer_mode")
     }
     required_mode = payer_mode_declarations.get(code)
-    if required_mode is not None and any(row.pagador_mode.value != required_mode for row in rows):
+    if required_mode is not None:
+        if any(row.pagador_mode.value != required_mode for row in rows):
+            raise Modelo210AgrupacionRentaRowsError(
+                reason="payer_mode_not_declared",
+                detail="M210 payer mode does not match the selected registry declaration",
+            )
+        return
+    if any(row.pagador_mode.value in payer_mode_declarations.values() for row in rows):
         raise Modelo210AgrupacionRentaRowsError(
             reason="payer_mode_not_declared",
-            detail="M210 payer mode does not match the selected registry declaration",
+            detail=f"M210 code {code} declares no multiple-payer exception",
+        )
+    payer_ids = {row.pagador_id for row in rows}
+    if None in payer_ids or len(payer_ids) != 1:
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="mixed_pagador",
+            detail="an annual group without a multiple-payer exception must share one identified payer",
         )
 
 

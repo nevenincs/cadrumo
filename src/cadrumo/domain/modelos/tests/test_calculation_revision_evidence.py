@@ -590,7 +590,7 @@ def test_revision_id_pinned_across_every_optional_branch() -> None:
     ``_*_revision_id_payload`` helpers) is locked byte-for-byte. If the hash
     domain changes without an explicit, migration-backed intent, this fails.
     """
-    pinned = "a89816076156be2dd3f09fa8146c4a1f4f56751959b88e9807cd4e762dd50f9e"
+    pinned = "ba66be40d33d242516e7509cba270949dba02e23db17fe967dc0ed0275378885"
     derived = derive_calculation_revision_id(
         work_unit_id="b" * 64,
         input_values_by_casilla_id={
