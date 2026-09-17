@@ -166,6 +166,33 @@ def _repository_classes(trees: dict[Path, ast.Module], root: Path) -> dict[str, 
     return owners
 
 
+def _protocol_aliases(trees: dict[Path, ast.Module], repositories: frozenset[str]) -> dict[str, str]:
+    """Return each port protocol mapped to the one secure repository it stands for.
+
+    Application services hold a repository through its protocol, so a write
+    made through ``ports.observation_repository.save(...)`` names only the
+    protocol. A protocol two repositories implement names neither, and is left
+    unresolved rather than credited to one of them.
+    """
+    implementers: dict[str, set[str]] = {}
+    for tree in trees.values():
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            # A structural port named after its repository is that repository's
+            # port even when the class does not list it as a base.
+            named_for = node.name.removesuffix("Protocol")
+            if node.name != named_for and named_for in repositories:
+                implementers.setdefault(node.name, set()).add(named_for)
+            if node.name not in repositories:
+                continue
+            for base in node.bases:
+                name = _called_name(base) if isinstance(base, ast.Name | ast.Attribute) else None
+                if name is not None and name.endswith("Protocol"):
+                    implementers.setdefault(name, set()).add(node.name)
+    return {protocol: next(iter(names)) for protocol, names in implementers.items() if len(names) == 1}
+
+
 def _annotated_repositories(annotation: ast.expr | None, repositories: frozenset[str]) -> set[str]:
     """Return the repository names an annotation mentions."""
     if annotation is None:
@@ -201,7 +228,7 @@ def _construction_source(value: ast.expr, repositories: frozenset[str], bound: d
 
 
 def _bindings(
-    tree: ast.Module,
+    tree: ast.AST,
     repositories: frozenset[str],
 ) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     """Return the local names, instance attributes, and accessors bound to a repository.
@@ -227,6 +254,8 @@ def _bindings(
             for repository in _annotated_repositories(node.annotation, repositories):
                 if isinstance(node.target, ast.Name):
                     names[node.target.id] = repository
+                    # A class-body field is reached as ``holder.field``.
+                    attributes[node.target.id] = repository
                 elif isinstance(node.target, ast.Attribute):
                     attributes[node.target.attr] = repository
         elif isinstance(node, ast.Assign):
@@ -268,26 +297,38 @@ def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
     """Return read and write sites for every secure repository in the tree."""
     trees = _production_modules(root)
     owners = _repository_classes(trees, root)
-    repositories = frozenset(owners)
-    reads: dict[str, set[str]] = {name: set() for name in repositories}
-    writes: dict[str, set[str]] = {name: set() for name in repositories}
+    aliases = _protocol_aliases(trees, frozenset(owners))
+    repositories = frozenset(owners) | frozenset(aliases)
+    reads: dict[str, set[str]] = {name: set() for name in owners}
+    writes: dict[str, set[str]] = {name: set() for name in owners}
     for path, tree in trees.items():
-        names, attributes, accessors = _bindings(tree, repositories)
+        module_names, module_attributes, module_accessors = _bindings(tree, repositories)
         module = path.relative_to(root).as_posix()
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                continue
-            repository = _receiver_repository(
-                node.func.value,
-                repositories=repositories,
-                names=names,
-                attributes=attributes,
-                accessors=accessors,
-            )
-            if repository is None:
-                continue
-            target = writes if _is_mutator(node.func.attr) else reads
-            target[repository].add(module)
+        # Each top-level class or function binds its own names over the
+        # module's, so two adapters in one module that both hold a
+        # ``_repository`` resolve to their own stores rather than the last one.
+        for unit in tree.body:
+            names, attributes, accessors = module_names, module_attributes, module_accessors
+            if isinstance(unit, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+                unit_names, unit_attributes, unit_accessors = _bindings(unit, repositories)
+                names = {**module_names, **unit_names}
+                attributes = {**module_attributes, **unit_attributes}
+                accessors = {**module_accessors, **unit_accessors}
+            for node in ast.walk(unit):
+                if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                    continue
+                repository = _receiver_repository(
+                    node.func.value,
+                    repositories=repositories,
+                    names=names,
+                    attributes=attributes,
+                    accessors=accessors,
+                )
+                if repository is None:
+                    continue
+                repository = aliases.get(repository, repository)
+                target = writes if _is_mutator(node.func.attr) else reads
+                target[repository].add(module)
     return tuple(
         StoreUsage(
             name=name,
@@ -298,7 +339,7 @@ def collect_store_usage(root: Path = _SOURCE_ROOT) -> tuple[StoreUsage, ...]:
             read_by=tuple(sorted(reads[name] - {owners[name]})),
             written_by=tuple(sorted(writes[name])),
         )
-        for name in sorted(repositories)
+        for name in sorted(owners)
     )
 
 

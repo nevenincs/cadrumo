@@ -19,4 +19,7 @@
 # the gap is known and where it bites, so a reader of a zero can tell an empty
 # store from an unfilled one.
 
-# No entries: every secure store the application reads has a production writer.
+[[read_only]]
+name = "SubmissionRepository"
+kind = "custody_carry_only"
+rationale = "Historical Modelo presentation attempts: the application exposes no live submission capability, so these records only arrive through the custody carry, and the workflow gate reads whatever was carried."
