@@ -28,18 +28,16 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
+    AeatRegisterRef,
     ExternalEvidence,
     ExternalEvidenceKind,
     FilingDeclarationKind,
@@ -48,13 +46,9 @@ from ....domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from ..filed_observation_persistence import (
-    _existing_justificante_evidence_matches,
-    filed_observation_source_metadata,
-)
+from ...modelo.filing_chain_reconciliation import recorded_chain_entry
+from ..filed_observation_persistence import filed_observation_source_metadata
 from ..filed_observation_ports import FiledObservationArtefactProtocol, FiledObservedCasillaProtocol
-from ..justificante import _existing_capture_evidence_matches_current_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -119,26 +113,6 @@ def _prior_303_observation(
     )
 
 
-def _receipt(csv: str) -> Justificante:
-    pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
-    digest = hashlib.sha256(pdf_bytes).hexdigest()
-    return Justificante(
-        csv=csv,
-        modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
-        ejercicio="2026",
-        presentation_id=None,
-        presented_at=_CLOCK,
-        tax_id="X1234567L",
-        total_a_ingresar=None,
-        total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=Path(".secure-source") / f"{digest}.pdf",
-        source_pdf_sha256=digest,
-        parsed_at=_CLOCK,
-    )
-
-
 def _filing_pointing_at(reference_id: str, *, kind: ExternalEvidenceKind) -> ModeloRecord:
     work_unit_id = hashlib.sha256(f"130:2026:1T:{reference_id}".encode()).hexdigest()
     revision_id = hashlib.sha256(f"rev:{reference_id}".encode()).hexdigest()
@@ -184,34 +158,28 @@ def test_the_alias_does_not_already_answer_this() -> None:
     )
 
 
+@pytest.mark.parametrize("kind", [ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF, ExternalEvidenceKind.AEAT_LIVE_CAPTURE])
 @pytest.mark.parametrize("spelling", [_CANONICAL_CSV, _LOWERCASE_CSV, _PADDED_MIXED_CSV])
-def test_filed_history_evidence_matches_a_receipt_however_the_reference_is_spelled(spelling: str) -> None:
+def test_a_recorded_receipt_matches_its_register_entry_however_the_reference_is_spelled(
+    spelling: str,
+    kind: ExternalEvidenceKind,
+) -> None:
     """A justificante-backed reference is the same evidence in any spelling."""
-    filing = _filing_pointing_at(spelling, kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
+    filing = _filing_pointing_at(spelling, kind=kind)
 
-    assert _existing_justificante_evidence_matches(filing, _receipt(_CANONICAL_CSV)) is True
+    assert recorded_chain_entry((filing,), _register(_CANONICAL_CSV)) == filing
 
 
-def test_filed_history_evidence_still_refuses_a_different_receipt() -> None:
+@pytest.mark.parametrize("kind", [ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF, ExternalEvidenceKind.AEAT_LIVE_CAPTURE])
+def test_a_recorded_receipt_still_refuses_a_different_csv(kind: ExternalEvidenceKind) -> None:
     """The discriminating half: normalising must not collapse two identifiers into one."""
-    filing = _filing_pointing_at(_OTHER_CSV, kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
+    filing = _filing_pointing_at(_OTHER_CSV, kind=kind)
 
-    assert _existing_justificante_evidence_matches(filing, _receipt(_CANONICAL_CSV)) is False
-
-
-@pytest.mark.parametrize("spelling", [_CANONICAL_CSV, _LOWERCASE_CSV, _PADDED_MIXED_CSV])
-def test_capture_evidence_matches_the_current_csv_however_it_is_spelled(spelling: str) -> None:
-    """The capture stamping path reads the same identity as the filed-history path."""
-    filing = _filing_pointing_at(spelling, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
-
-    assert _existing_capture_evidence_matches_current_csv(filing, _CANONICAL_CSV) is True
+    assert recorded_chain_entry((filing,), _register(_CANONICAL_CSV)) is None
 
 
-def test_capture_evidence_still_refuses_a_different_csv() -> None:
-    """The discriminating half for the capture path."""
-    filing = _filing_pointing_at(_OTHER_CSV, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
-
-    assert _existing_capture_evidence_matches_current_csv(filing, _CANONICAL_CSV) is False
+def _register(csv: str) -> AeatRegisterRef:
+    return AeatRegisterRef(expediente_id="200013000000000Z", csv=csv)
 
 
 def test_persisted_register_metadata_carries_one_entry_per_identifier() -> None:
