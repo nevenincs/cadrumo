@@ -37,7 +37,7 @@ from .._overview_rendering import (
 )
 from ..common import _action_text_lines
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture(autouse=True)

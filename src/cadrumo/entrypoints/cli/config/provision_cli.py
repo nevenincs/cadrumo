@@ -550,7 +550,7 @@ def _emit_provision_status(ctx: typer.Context, *, probe: bool) -> None:
 
 #: The fitness conditions a status row can fail on, with the sentence that says
 #: what each means. "Not verified" and "timed out" must never read as "unfit".
-_FITNESS_CONDITION_TEXT_KEYS: dict[str, str] = {
+_FITNESS_CONDITION_LOCALE_KEYS: dict[str, str] = {
     ProvisioningPreconditionCondition.ROLE_MODEL_FITNESS_VERIFIED.value: (
         "provisioning.condition.role_model_fitness_verified"
     ),
@@ -566,9 +566,9 @@ def _fitness_condition_lines(rows: tuple[LocalReaderRoleStatus, ...]) -> tuple[s
     from ....core.i18n.render import tr
 
     return tuple(
-        f"{row.role.value}\t{tr(_FITNESS_CONDITION_TEXT_KEYS[row.failed_condition_id], model=row.model or '-')}"
+        f"{row.role.value}\t{tr(_FITNESS_CONDITION_LOCALE_KEYS[row.failed_condition_id], model=row.model or '-')}"
         for row in rows
-        if row.failed_condition_id in _FITNESS_CONDITION_TEXT_KEYS
+        if row.failed_condition_id in _FITNESS_CONDITION_LOCALE_KEYS
     )
 
 

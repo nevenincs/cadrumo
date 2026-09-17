@@ -72,7 +72,7 @@ _FITNESS_LOCALE_KEYS: Final[dict[RoleFitnessState, str]] = {
     RoleFitnessState.NOT_VERIFIED: "tui.local_reader.fitness.not_verified",
 }
 #: What each state that is not a pass means, in the same words `config provision status` uses.
-_FITNESS_EXPLANATION_KEYS: Final[dict[RoleFitnessState, str]] = {
+_FITNESS_LOCALE_KEYS: Final[dict[RoleFitnessState, str]] = {
     RoleFitnessState.UNFIT: "provisioning.condition.role_model_fit_for_role",
     RoleFitnessState.TIMED_OUT: "provisioning.condition.role_model_fitness_within_timeout",
     RoleFitnessState.NOT_VERIFIED: "provisioning.condition.role_model_fitness_verified",
@@ -113,9 +113,9 @@ def local_reader_role_cells(row: LocalReaderRoleStatus) -> tuple[str, str, str, 
 def local_reader_fitness_lines(status: LocalReaderStatus) -> tuple[str, ...]:
     """Explain every role whose model check did not pass; "not verified" never reads as "unfit"."""
     return tuple(
-        f"{tr(_ROLE_LOCALE_KEYS[row.role])}: {tr(_FITNESS_EXPLANATION_KEYS[row.fitness], model=row.model or '-')}"
+        f"{tr(_ROLE_LOCALE_KEYS[row.role])}: {tr(_FITNESS_LOCALE_KEYS[row.fitness], model=row.model or '-')}"
         for row in status.roles
-        if row.fitness is not None and row.fitness in _FITNESS_EXPLANATION_KEYS
+        if row.fitness is not None and row.fitness in _FITNESS_LOCALE_KEYS
     )
 
 
