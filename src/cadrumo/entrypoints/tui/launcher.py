@@ -128,6 +128,9 @@ def compose_secure_profile_workbench_generation_provider(
         # they carry the evidence records as read at composition, so a bundle
         # held across captures would keep reporting the evidence the session
         # started with after the operator had added more.
+        # The session is checked before composing them: composition opens the
+        # bucket's storage, and a closed session must refuse as itself.
+        account_session()
         return ApplicationGenerationProviderV1(read_door())()
 
     def read_door() -> SecureProfileWorkbenchGenerationReadDoorV1:
@@ -190,16 +193,14 @@ def live_account_session_reader(*, profile_id: str, profile_label: str) -> Calla
     def account_session() -> HomeAccountSession:
         """Recheck custody and return the current non-secret account facts."""
         current_session = profile_current_bucket_session()
-        if (
-            current_session is None
-            or current_session.sealed
-            or not profile_session_serves_bucket(current_session, profile_id)
-        ):
+        # A session closed elsewhere (sign-out, seal) is the same operator
+        # outcome as an expired one: the workbench must be recomposed.
+        if current_session is None or current_session.sealed or current_session.is_expired(now()):
+            raise AccountSessionExpiredError()
+        if not profile_session_serves_bucket(current_session, profile_id):
             raise InternalInvariantError(
                 "installed workbench requires the live secure session for its selected profile"
             )
-        if current_session.is_expired(now()):
-            raise AccountSessionExpiredError()
         return HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
             profile_label=profile_label,
@@ -935,12 +936,11 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     scope has bound them; neither needs to know which concrete adapter serves
     the session.
     """
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.config import load_settings, override_settings
     from ...core.storage_taxonomy import StorageCategory
     from ...core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
     from ..adapter_composition import profile_adapter_composition
+    from ..exchange_rate_composition import live_exchange_rate_composition
 
     storage_root = root / "cadrumo-storage"
     secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
@@ -958,7 +958,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
                 **{secret_field: secret_path},
             )
         )
-        composition.enter_context(bind_exchange_rate_provider_factory(default_ecb_rate_provider))
+        composition.enter_context(live_exchange_rate_composition())
         composition.enter_context(profile_adapter_composition())
         yield storage_root
 
@@ -1235,9 +1235,8 @@ def main(
     generation the root shell consumes. A caller that injects a provider has
     already made those choices, so its session is run exactly as given.
     """
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-    from ...application.exchange_rate_provider import bind_exchange_rate_provider_factory
     from ...core.logging import configure_logging
+    from ..exchange_rate_composition import live_exchange_rate_composition
 
     # Importing a module no longer configures logging, so the host does it
     # before anything records; earlier INFO records would otherwise be lost.
@@ -1247,7 +1246,7 @@ def main(
 
         return run_installed_workbench_session(headless=headless, auto_pilot=auto_pilot)
     # Bound before the loop starts, because asyncio.run copies the current context.
-    with bind_exchange_rate_provider_factory(default_ecb_rate_provider):
+    with live_exchange_rate_composition():
         asyncio.run(
             run_authenticated_workbench_sessions(
                 headless=headless,

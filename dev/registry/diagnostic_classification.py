@@ -114,6 +114,20 @@ def _derive_filing_revision_classifications(
                     )
                 )
                 continue
+            if not selection_coordinates:
+                classified.append(
+                    RegistryDiagnosticFilingRevision(
+                        modelo=modelo.id,
+                        revision=revision.id,
+                        selection_coordinates=(),
+                        layout_ids=(),
+                        layout_json=None,
+                        inspection=None,
+                        refusal_reason="law_selection_failed",
+                        refusal_detail="the revision has no coordinate inside the supported filing-years envelope",
+                    )
+                )
+                continue
             try:
                 inspection = RegistryRevisionInspection.from_revision(
                     modelo=modelo,

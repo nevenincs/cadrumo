@@ -213,12 +213,15 @@ _LIFECYCLE_KIND_BY_EVENT: Final[Mapping[BucketEventType, DeclarationsLifecycleKi
     BucketEventType.MODELO_VERIFICATION_PASSED: DeclarationsLifecycleKind.VERIFIED,
     BucketEventType.MODELO_VERIFICATION_REFUSED: DeclarationsLifecycleKind.VERIFICATION_REFUSED,
     BucketEventType.MODELO_FILED: DeclarationsLifecycleKind.FILED,
+    BucketEventType.MODELO_FILING_RECONCILED: DeclarationsLifecycleKind.RECONCILED,
+    BucketEventType.MODELO_OBSERVATION_OVERRIDDEN: DeclarationsLifecycleKind.OBSERVATION_OVERRIDDEN,
+    BucketEventType.MODELO_OBSERVATION_OVERRIDE_CLEARED: DeclarationsLifecycleKind.OBSERVATION_OVERRIDE_CLEARED,
 }
 """The bucket events the filing history reports, by the lifecycle meaning they carry.
 
 Every other ``MODELO_*`` event is outside this history's closed vocabulary --
-exports, reconciliations, wallet corrections -- and is left to the per-modelo
-history view that renders raw events.
+exports, revision reconciliations, wallet corrections -- and is left to the
+per-modelo history view that renders raw events.
 """
 
 
@@ -229,7 +232,15 @@ def _lifecycle_work_unit_id(
     verification: VerificationReportCatalogue | None,
     filings: ModeloRecordCatalogue,
 ) -> str | None:
-    """Resolve the declaration an event belongs to through its own object."""
+    """Resolve the declaration an event belongs to.
+
+    An event about an observation has no declaration object of its own, so it
+    names its work unit in the payload; every other event resolves through the
+    object it references.
+    """
+    payload_work_unit_id = event.payload.get("work_unit_id")
+    if payload_work_unit_id:
+        return payload_work_unit_id
     object_id = event.object_id
     if event.object_type is BucketEventObjectType.WORK_UNIT:
         return object_id

@@ -816,11 +816,11 @@ modelo:
             label: 'Reparto entre Administraciones forales. Complementaria: Resultado
               de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
               procedente de autoliquidaciones anteriores correspondientes al período
-              impositivo 2024. quinta columna, territorio no nombrado en el diseno'
+              impositivo 2024. quinta columna, territorio no nombrado en el diseño'
           t22016000-02801:
             label: Reparto entre Administraciones forales. Líquido a ingresar incluido
               el 1er fraccionamiento del art 19 1 LIS. quinta columna, territorio
-              no nombrado en el diseno
+              no nombrado en el diseño
           t22016000-03192:
             label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
               Araba
@@ -6751,33 +6751,33 @@ modelo:
               label: Deducción por inversión de beneficios (DT 24.5 LIS y art. 37
                 TRLIS). Deducción pendiente de aplicación
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 1
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 1
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0cg:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 2
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 2
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0co:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 3
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 3
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0d0:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 4
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 4
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0d8:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 5
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 5
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0dg:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 6
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 6
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0do:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 7
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 7
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0e0:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 8
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 8
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0e8:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 9
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 9
             x-c5hn8qbmd5i62p35ecn66rj1ckmj2c0:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 10
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 10
             x-c5hn8qbmd5i62p35ecn66rj1ckmj2c8:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 11
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 11
             x-c5hn8qbmd5i62p35ecn66rj1ckmj2cg:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 12
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 12
             x-c5hn8qbmd5i62p35ecn66rj1ckmj2co:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 13
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 13
             x-c5hn8qbmd5i62p35ecn66rj1ckmj2d0:
-              label: Actividades del grupo. Epigrafe CNAE de la actividad 14
+              label: Actividades del grupo. Epígrafe CNAE de la actividad 14
             x-c5hn8qbmd5i62p35ecn66rj1ckmm8pbjcdp6is33d5nmsb9g64:
               label: Actividades del grupo. Descripción CNAE (2009) de la actividad
                 1
@@ -6875,7 +6875,7 @@ modelo:
             x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
               label: Persona de contacto para incidencias. Teléfono fijo
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
-              label: Persona de contacto para incidencias. Teléfono movil
+              label: Persona de contacto para incidencias. Teléfono móvil
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Entidad dominante. Apellidos o razón social
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:

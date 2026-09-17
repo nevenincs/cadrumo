@@ -276,26 +276,26 @@ modelo:
             label: Valoració de la percepció en espècie no derivada d'incapacitat
               laboral
           prestacion-incapacidad:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 03. Incapacitat permanent total
               o parcial
           prestacion-jubilacion:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 01. Jubilació
           prestacion-no-contributiva:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 04. Pensions no contributives
               per invalidesa o jubilació
           prestacion-resto:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 05. Resta de prestacions de
               l'art. 17.2.a).1a de la Llei 35/2006
           prestacion-viudedad:
-            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestacio
+            help: Indicatiu 1 o 0 segons si s'ha satisfet o no aquest tipus de prestació
               de la clau B.01 en l'exercici.
             label: Tipus de prestació de la clau B.01. 02. Viduïtat
           rendimientos-trabajo-fondos-emprendimiento:

@@ -84,6 +84,9 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
 from ...domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -112,7 +115,7 @@ from ..filing.retention import try_record_filing_retention_snapshot
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .action_errors import M303FilingEvidenceError
 from .filed_revision_observation import (
-    persist_filed_revision_observation,
+    filed_revision_observation_writes,
     prepare_filed_revision_observation,
     require_filing_result_disposition,
 )
@@ -929,7 +932,9 @@ def _new_local_filing_record(
         filed_at=now,
         filed_by=actor.strip(),
         notes=notes.strip() if notes else None,
-        aeat_accepted=False,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,
     )
@@ -963,15 +968,18 @@ def _supersede_prior_current_filing(
 
     Marks ``prior_current`` SUPERSEDIDO (stamped with ``new_filing_id``) and, when
     its calculation revision is still PRESENTADO, advances that revision to
-    PRESENTADO_SUPERSEDIDO. Returns the updated ``(filing_catalogue, revisions)``.
+    PRESENTADO_SUPERSEDIDO. A prior entry AEAT never confirmed was never
+    presented, so it is also marked DESCARTADA. Returns the updated
+    ``(filing_catalogue, revisions)``.
     """
-    superseded_prior = prior_current.model_copy(
-        update={
-            "status": ModeloRecordStatus.SUPERSEDIDO,
-            "superseded_at": now,
-            "superseded_by_filing_record_id": new_filing_id,
-        },
-    )
+    update: dict[str, object] = {
+        "status": ModeloRecordStatus.SUPERSEDIDO,
+        "superseded_at": now,
+        "superseded_by_filing_record_id": new_filing_id,
+    }
+    if prior_current.confirmation is AeatConfirmationState.PENDIENTE:
+        update["confirmation"] = AeatConfirmationState.DESCARTADA
+    superseded_prior = prior_current.model_copy(update=update)
     updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_prior)
     prior_revision = revisions.get(prior_current.calculation_revision_id)
     if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
@@ -1104,9 +1112,9 @@ def persist_filed_revision(
     The parent :class:`WorkUnit` is advanced to the new current filing record
     after the calculation and filing catalogues are saved.
 
-    The filed revision's observations are co-emitted with ``MODELO_FILED`` through
-    :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`,
-    so later calculations can carry them through the ``previous_filing`` resolver.
+    The filed revision's observations are written to the pending-local
+    observation layer in the same unit of work as ``MODELO_FILED``, so later
+    calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
     cross-period clean-state filing gate; use
     :func:`~application.modelo.external_import_actions.import_external_filing_evidence` when the
@@ -1274,12 +1282,19 @@ def persist_filed_revision(
         *extra_writes,
         work_unit_repository.to_secure_object_write(advanced_work_units),
         bucket_event_history_write(bucket_event_repository, tuple(filed_events)),
+        *filed_revision_observation_writes(
+            prepared_observation,
+            repository=calculation_observation_repository,
+            taxpayer_nif=taxpayer_nif,
+            filing_record_id=new_filing_id,
+        ),
     )
 
     # One unit of work for the whole local filing transition: the filed revision,
     # the filing catalogue, the per-transaction participation index, any prorrata
-    # settlement writeback, the advanced WorkUnit filing pointer, and the
-    # supersession + mandatory MODELO_FILED events. The participation rows gain
+    # settlement writeback, the advanced WorkUnit filing pointer, the
+    # supersession + mandatory MODELO_FILED events, and the pending-local
+    # observation layer with its IVA history projection. The participation rows gain
     # filing_record_id in the same SQL transaction as the filing catalogue, so
     # transaction->filing cross-reference cannot drift from the receipt it names;
     # folding the pointer and the events in closes the seam that previously let a
@@ -1294,24 +1309,6 @@ def persist_filed_revision(
         bucket_id=work_unit.bucket_id,
         catalogue=updated_filing_catalogue,
         observed_at=now,
-    )
-
-    # Cross-period carry projection (co-emitted with MODELO_FILED above): record
-    # the filed casilla observations under the NON-official app_filing source so
-    # a later period's calculate carries them forward through the previous_filing
-    # resolver. Runs after the catalogue saves succeed so a failed filing never
-    # leaves a carry row behind.
-    persist_filed_revision_observation(
-        revision=filed_target,
-        work_unit=work_unit,
-        repository=calculation_observation_repository,
-        iva_compensation_history_repository=iva_compensation_history_repository,
-        captured_at=now,
-        result_disposition=result_disposition,
-        prior_domiciliation_election=prior_domiciliation_election,
-        taxpayer_nif=taxpayer_nif,
-        filing_record_id=new_filing_id,
-        prepared=prepared_observation,
     )
 
     return new_filing

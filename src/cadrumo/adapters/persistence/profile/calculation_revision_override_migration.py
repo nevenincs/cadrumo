@@ -324,7 +324,9 @@ def rekey_calculation_revision_overrides(
         )
         moves.extend(revision_moves)
     return CalculationRevisionOverrideMigrationResult(
-        catalogue=CalculationRevisionCatalogue(revisions=dict(sorted(migrated.items()))),
+        # The loaded catalogue was validated against its joined authorities; a
+        # fresh constructor would re-run rectificativa validation without them.
+        catalogue=catalogue.model_copy(update={"revisions": dict(sorted(migrated.items()))}),
         rekeyed_revisions=tuple(remaps),
         rekeyed_override_keys=tuple(moves),
         unchanged_revision_ids=tuple(sorted(unchanged)),
@@ -359,7 +361,7 @@ def migrate_stored_relation_overrides_to_binding_ids(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
-    catalogue, expected_revision_id = repository.load_revisioned(operation=operation)
+    catalogue, expected_revision_id = repository.load_revisioned()
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:
         return result

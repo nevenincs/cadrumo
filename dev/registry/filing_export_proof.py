@@ -50,7 +50,7 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.payment_election import PaymentElection
-from cadrumo.core.period import Period
+from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
@@ -864,7 +864,7 @@ def _derive_static_filing_export_conformance_enrollment(
         filing_year, period_code = selected.selection_coordinates[0]
         try:
             period = Period.from_year_and_code(filing_year, period_code)
-        except ValueError as error:
+        except (ValueError, PeriodError) as error:
             residues.append(
                 _conformance_residue(
                     modelo=selected.modelo,

@@ -85,7 +85,7 @@ def extract_record_design_pdf_stream(
         raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
         return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
-    except ValueError as pdfium_exc:
+    except (ValueError, RegistryValidationError) as pdfium_exc:
         recovered = _recover_after_pdf_text_failure(
             pdf_bytes,
             source_label=source_label,
@@ -141,7 +141,7 @@ def _recover_after_pdf_text_failure(
     *,
     source_label: str,
     corrections: CorrectionIndex,
-    pdfium_error: ValueError,
+    pdfium_error: Exception,
 ) -> RecordDesignExtraction | None:
     text_fallback = _try_pdf_text_fallback(
         pdf_bytes,
@@ -159,12 +159,12 @@ def _try_pdf_text_fallback(
     *,
     source_label: str,
     corrections: CorrectionIndex,
-    pdfium_error: ValueError,
+    pdfium_error: Exception,
 ) -> RecordDesignExtraction | None:
     try:
         fallback_lines = extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
         return extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
-    except ValueError as fallback_error:
+    except (ValueError, RegistryValidationError) as fallback_error:
         if "did not contain parseable field rows" not in str(fallback_error):
             raise fallback_error from pdfium_error
     return None
@@ -332,7 +332,7 @@ def _read_with_reversed_column_repair(
             corrections=corrections,
             repair_glued_rows=True,
         )
-    except ValueError:
+    except (ValueError, RegistryValidationError):
         return first
     if len(repaired.skipped) > len(first.skipped):
         return first

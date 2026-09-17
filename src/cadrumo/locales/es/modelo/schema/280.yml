@@ -22,13 +22,13 @@ modelo:
           m280-declarado-nombre:
             label: Apellidos y nombre del declarado
           m280-declarante-razon-social:
-            label: Razon social del declarante
+            label: Razón social del declarante
           m280-extincion-plan:
-            label: Extincion del Plan de Ahorro a Largo Plazo
+            label: Extinción del Plan de Ahorro a Largo Plazo
           m280-fecha-apertura:
             label: Fecha de apertura
           m280-fecha-extincion:
-            label: Fecha de extincion
+            label: Fecha de extinción
           m280-identificador-producto:
             label: Identificador del producto contratado
           m280-importe-total-aportaciones:

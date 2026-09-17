@@ -873,21 +873,57 @@ cli:
         import_help: Persistir una declaración presentada externamente como filing
           record base con evidencia oficial importada de la AEAT
         import_set_required: --set es obligatorio al menos una vez para una importación.
+        import_unverifiable: 'Modelo {modelo} {period} {filing_year}: la entrada importada
+          de la AEAT no se pudo comparar con la presentación local pendiente, así
+          que no se ha registrado nada.'
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
         list_help: Listar los filing records registrados
         modelo_help: Filtrar por código de modelo (p. ej. 303, 130, 100)
+        observe_local_clear_help: Elimina la sustitución del operador para que se
+          vuelva a usar la observación oficial de la AEAT
+        observe_local_clear_values_error: --clear elimina una sustitución y no admite
+          valores --set ni --file.
+        observe_local_cleared_notice: Sustitución del operador eliminada; los cálculos
+          vuelven a leer la observación oficial de la AEAT cuando existe.
         observe_local_file_help: Ruta a una hoja de cálculo local CSV o XLSX de filas
           casilla_code,value (una reconstrucción sin certificado de una presentación
           pasada). Se combina con --set; un valor de --set para la misma casilla sobrescribe
           la fila de la hoja de cálculo
         observe_local_help: Registrar una observación local aportada por el operador
           para el prellenado del cálculo
-        observe_local_replace_official_evidence_help: Permite que esta observación
-          aportada por el operador sustituya las pruebas oficiales de la AEAT existentes
-          para el mismo modelo y periodo.
+        observe_local_reason_help: Motivo por el que el operador sustituye la observación
+          de este periodo; se guarda en la auditoría de la sustitución
+        observe_local_recorded_notice: Sustitución del operador registrada como observación
+          local pendiente solo para el prellenado del cálculo; no es evidencia de
+          la AEAT, se conserva cualquier observación oficial y no se ha creado ningún
+          registro de presentación.
         observe_local_set_help: Id de casilla canónico y valor Decimal a registrar,
           p. ej. --set 1391=0
+        reconciliation_contradicted: 'Modelo {modelo} {period} {filing_year}: la AEAT
+          tiene un contenido distinto del de la presentación local pendiente (casillas
+          {casillas}). La declaración de la AEAT pasa a estar vigente y la presentación
+          local queda marcada como discrepante.'
+        reconciliation_notice:
+          content_unavailable: 'Modelo {modelo} {period} {filing_year}: la entrada
+            de la AEAT no contiene valores de casillas ni un justificante comparable,
+            por lo que no se pudo conciliar.'
+          correction_without_confirmed_baseline: 'Modelo {modelo} {period} {filing_year}:
+            la AEAT indica una corrección, pero no consta ninguna declaración confirmada
+            a la que corrija.'
+          declaration_kind_mismatch: 'Modelo {modelo} {period} {filing_year}: la AEAT
+            indica un tipo de declaración distinto del de la presentación local pendiente.'
+          declaration_kind_undetermined: 'Modelo {modelo} {period} {filing_year}:
+            la AEAT registra una presentación posterior sin indicar si es una corrección.'
+          receipt_totals_mismatch: 'Modelo {modelo} {period} {filing_year}: el importe
+            del justificante difiere de la presentación local pendiente, pero sin
+            valores de casillas no se pudo registrar el contenido de la AEAT.'
+          receipt_totals_not_reconciled: 'Modelo {modelo} {period} {filing_year}:
+            no se pudo comparar el importe del justificante con la presentación local
+            pendiente.'
+          receipt_totals_only: 'Modelo {modelo} {period} {filing_year}: la confirmación
+            se basa en los importes del justificante, no en la igualdad casilla a
+            casilla.'
         view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada

@@ -4,9 +4,9 @@ modelo:
       casilla:
         continuidad:
           custodio-nombre:
-            label: Nombre o razon social del custodio de la moneda virtual en el extranjero
+            label: Nombre o razón social del custodio de la moneda virtual en el extranjero
           custodio-pais:
-            label: Codigo de pais del custodio (ISO 3166-1 alfa-2)
+            label: Código de país del custodio (ISO 3166-1 alfa-2)
           filing-year:
             label: Ejercicio al que se refiere la declaración de monedas virtuales
               en el extranjero

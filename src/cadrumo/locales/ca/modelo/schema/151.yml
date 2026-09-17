@@ -2087,11 +2087,11 @@ modelo:
                 - IBAN.'
               label: Ingrés / Domiciliació / Devolució. IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
                 del model 151.
               label: Annex. Transmissió d'accions o participacions d'IIC. Guany patrimonial
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
                 del model 151.
               label: Annex. Transmissió d'accions o participacions d'IIC. NIF de la
                 societat o fons d'inversió
@@ -2102,12 +2102,12 @@ modelo:
               help: Casella 01 del model 151, exercici 2025.
               label: Inici de l'identificador de model i pàgina
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
                 del model 151.
               label: Annex. Transmissió d'accions o participacions d'IIC. Total de
                 guanys patrimonials
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              help: Dada de l'annex de transmissio d'accions o participacions d'IIC
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
                 del model 151.
               label: Annex. Transmissió d'accions o participacions d'IIC. Total de
                 retencions o ingressos a compte
@@ -2212,7 +2212,7 @@ modelo:
               label: Contribuent Domicili Estranger. Correu electrònic [46]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgc5kn6b9l60:
               help: 'Consulteu la informació de la casella: Contribuent Domicili Estranger.
-                Pais [50].'
+                País [50].'
               label: Contribuent Domicili Estranger. País [50]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgdth6oob3d5nmsbb3d5qm8ob45kq3a:
               help: 'Consulteu la informació de la casella: Contribuent Domicili Estranger.

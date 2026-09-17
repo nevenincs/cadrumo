@@ -293,10 +293,10 @@ modelo:
               játékokra": ebben a bevallásban alkalmazva'
           irpf-aeip-programa-de-preparacion-de-los-deportistas-espanoles-de-los-juegos-de-tokio-2020-aplicado:
             help: 'Adja meg vagy ellenőrizze a(z) „"Programa szerinti preparación
-              szerinti a deportistas españoles szerinti a Juegos szerinti Tokio 2020":
+              szerinti a deportistas españoles szerinti a Juegos szerinti Tokió 2020":
               Aplicado -ban/-ben esta bevallás” értékét ehhez az önadózáshoz.'
             label: '"Programa szerinti preparación szerinti a deportistas españoles
-              szerinti a Juegos szerinti Tokio 2020": Aplicado -ban/-ben esta bevallás'
+              szerinti a Juegos szerinti Tokió 2020": Aplicado -ban/-ben esta bevallás'
           irpf-aeip-programa-deporte-lnclusivo-aplicado:
             help: 'Adja meg vagy ellenőrizze a(z) „"Programa Deporte lnclusivo": Aplicado
               -ban/-ben esta bevallás” értékét ehhez az önadózáshoz.'
@@ -2171,9 +2171,9 @@ modelo:
               után” értékét ehhez az önadózáshoz.
             label: Gyermek születése vagy örökbefogadása után
           irpf-deduccion-galicia-nuevas-tecnologias:
-            help: Adja meg vagy ellenőrizze a(z) „A galiciai háztartásokban új technológiák
+            help: Adja meg vagy ellenőrizze a(z) „A galíciai háztartásokban új technológiák
               használatára irányuló kiadások után” értékét ehhez az önadózáshoz.
-            label: A galiciai háztartásokban új technológiák használatára irányuló
+            label: A galíciai háztartásokban új technológiák használatára irányuló
               kiadások után
           irpf-deduccion-galicia-otras:
             help: Adja meg az egyéb kedvezményeket.
@@ -4639,6 +4639,10 @@ modelo:
           irpf-rendimiento-act-eco-eo-resto-rdto-neto:
             label: Objektív becslés szerinti gazdasági tevékenységek nettó jövedelme,
               a mezőgazdasági, állattenyésztési és erdészeti tevékenységek kivételével
+          irpf-rendimiento-capital-inmobiliario-amortizacion-bienes-muebles:
+            label: Ingó vagyontárgyak értékcsökkenése
+          irpf-rendimiento-capital-inmobiliario-amortizacion-casos-especiales:
+            label: Értékcsökkenés különleges esetekben
           irpf-rendimiento-capital-inmobiliario-gasto-comunidad:
             label: Közös költség
           irpf-rendimiento-capital-inmobiliario-gasto-otros:
@@ -4655,6 +4659,8 @@ modelo:
             label: Az űrlap adóadata
           irpf-rendimiento-trabajo-gasto-sindicato:
             label: Szakszervezeteknek fizetett tagdíjak
+          irpf-rendimiento-trabajo-reduccion-gastos-generales:
+            label: Általánosan alkalmazandó összeg
           irpf-rendimientos-trabajo-contribuyente-titular:
             label: A jövedelmet szerző adózó
           irpf-rentas-exentas-base-ahorro:
@@ -4883,7 +4889,6 @@ modelo:
             '0023':
               help: Adja meg vagy ellenőrizze a(z) „Általánosan alkalmazandó összeg”
                 értékét ehhez az önadózáshoz.
-              label: Általánosan alkalmazandó összeg
             '0025':
               help: Adja meg vagy ellenőrizze a(z) „Csökkentett nettó jövedelem” értékét
                 ehhez az önadózáshoz.
@@ -5120,7 +5125,6 @@ modelo:
             '0117':
               help: Adja meg vagy ellenőrizze a(z) „Ingó vagyontárgyak értékcsökkenése”
                 értékét ehhez az önadózáshoz.
-              label: Ingó vagyontárgyak értékcsökkenése
             0118:
               help: Adja meg vagy ellenőrizze a(z) „Visszterhes (adásvétel, csere
                 stb.)” értékét ehhez az önadózáshoz.
@@ -5170,7 +5174,6 @@ modelo:
             '0132':
               help: Adja meg vagy ellenőrizze a(z) „Értékcsökkenés különleges esetekben”
                 értékét ehhez az önadózáshoz.
-              label: Értékcsökkenés különleges esetekben
             '0133':
               help: Adja meg vagy ellenőrizze a(z) „Visszterhes (adásvétel, csere
                 stb.)” értékét ehhez az önadózáshoz.
@@ -12824,8 +12827,6 @@ modelo:
                 -nak/-nek a Patrimonio Histórico Español destinadas a(z) su conservación
                 vagy rehabilitación. Összeg elszámolható a(z) 2022 (cumplimente a
                 Anexo C.1)
-            0279:
-              label: Az űrlap adóadata
             0280:
               help: Adja meg vagy ellenőrizze a(z) „Adóparadicsomokban létrehozott
                 kollektív befektetési intézményekben való részesedésből eredő jövedelem-hozzárendelések
@@ -15973,8 +15974,6 @@ modelo:
                 -nak/-nek a Patrimonio Histórico Español destinadas a(z) su conservación
                 vagy rehabilitación. Összeg elszámolható a(z) 2023 (cumplimente a
                 Anexo C.1)
-            0279:
-              label: Az űrlap adóadata
             0280:
               help: Adja meg vagy ellenőrizze a(z) „Adóparadicsomokban létrehozott
                 kollektív befektetési intézményekben való részesedésből eredő jövedelem-hozzárendelések
@@ -19508,7 +19507,6 @@ modelo:
               help: Tüntesse fel a fiatal mezőgazdasági termelők első letelepedéséhez
                 a Nemzeti Vidékfejlesztési Keret alapján nyújtott állami támogatást,
                 amely agr... vállalatok tőkéjében való részesedés megszerzésére irányul.
-              label: Az űrlap adóadata
             0280:
               help: Ez a mező a [0278] mezők összegzésével adja meg az adóparadicsomokban
                 létrehozott kollektív befektetési intézményekben való részvételből
@@ -25498,8 +25496,6 @@ modelo:
               help: Adja meg vagy ellenőrizze a(z) „Munkaviszonyból származó nettó
                 jövedelem” értékét ehhez az önadózáshoz.
               label: Munkaviszonyból származó nettó jövedelem
-            '0023':
-              label: Általánosan alkalmazandó összeg
             '0024':
               help: Adja meg vagy ellenőrizze a(z) „A vállalat által, a munkavállaló
                 döntése alapján a szociális előrelátási rendszerekbe fizetett összegek”
@@ -25709,8 +25705,6 @@ modelo:
               label: Szolgáltatások és közművek
             '0115':
               label: Adók, pótlékok és díjak
-            '0117':
-              label: Ingó vagyontárgyak értékcsökkenése
             '0121':
               help: Adja meg vagy ellenőrizze a(z) „Az ingatlan átruházásának dátuma,
                 adott esetben, a 2025-ös adóévben (nap, hónap, év)” értékét ehhez
@@ -25727,8 +25721,6 @@ modelo:
               help: Adja meg vagy ellenőrizze a(z) „Az ingatlan és a felújítás értékcsökkenése”
                 értékét ehhez az önadózáshoz.
               label: Az ingatlan és a felújítás értékcsökkenése
-            '0132':
-              label: Értékcsökkenés különleges esetekben
             '0134':
               help: Adja meg vagy ellenőrizze a(z) „Ingyenes (öröklés, hagyomány,
                 ajándékozás stb.)” értékét ehhez az önadózáshoz.
@@ -26042,8 +26034,6 @@ modelo:
               label: A Spanyol Történelmi Örökség részét képező vagyontárgyak tulajdonosainak
                 nyújtott, azok megőrzésére vagy helyreállítására szánt állami támogatások.
                 2025-re hozzárendelhető összeg (töltse ki a C.1 mellékletet)(*)
-            0279:
-              label: Az űrlap adóadata
             0280:
               help: Adja meg vagy ellenőrizze a(z) „Adóparadicsomokban létrehozott
                 kollektív befektetési intézményekben való részesedésből eredő jövedelem-hozzárendelések

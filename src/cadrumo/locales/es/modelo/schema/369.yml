@@ -23,7 +23,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Exterior (regimen especial servicios prestados
+                title: Modelo 369 - Esquema Exterior (régimen especial servicios prestados
                   por no establecidos)
           field:
             label: Modelo 369 - Esquema Exterior - regimen especial servicios prestados
@@ -44,7 +44,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Importacion (regimen especial IOSS)
+                title: Modelo 369 - Esquema Importación (régimen especial IOSS)
           field:
             label: Modelo 369 - Esquema Importacion (IOSS) - regimen especial ventas
               a distancia de bienes importados (LIVA art 163 quinvicies a octovicies).
@@ -70,7 +70,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Union (regimen especial OSS Union)
+                title: Modelo 369 - Esquema Unión (régimen especial OSS Unión)
           field:
             label: Modelo 369 - Esquema Union - regimen especial ventas intracomunitarias
               a distancia, interfaces electronicas y servicios establecidos en la

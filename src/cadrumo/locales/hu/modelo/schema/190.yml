@@ -204,7 +204,7 @@ modelo:
             label: Befizetett levonások és előlegfizetések. Navarrai Foral Közösség
           payee-spouse-or-unit-titular-nif:
             help: 'A Modelo 190 158-166. casilla adóügyi adatai: a házastárs vagy
-              a titularis egység NIF-je.'
+              a tituláris egység NIF-je.'
             label: A házastárs vagy az együttélési egység jogosultjának NIF száma
           payee-subclave-percepcion:
             help: 'A Modelo 190 79-80. casilla adóügyi adatai: adóügyi információ.'
@@ -222,27 +222,27 @@ modelo:
             help: 'A Modelo 190 109-121. casilla adóügyi adatai: adóügyi információ.'
             label: Nem keresőképtelenségből származó természetbeni juttatás értéke
           prestacion-incapacidad:
-            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-              az evben.
+            help: 1 vagy 0 jelzés aszerint, hogy az adott B.01 ellátástípust kifizették-e
+              az évben.
             label: A B.01 kód szerinti ellátás típusa. 03. Teljes vagy részleges tartós
               rokkantság
           prestacion-jubilacion:
-            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-              az evben.
+            help: 1 vagy 0 jelzés aszerint, hogy az adott B.01 ellátástípust kifizették-e
+              az évben.
             label: A B.01 kód szerinti ellátás típusa. 01. Nyugdíj
           prestacion-no-contributiva:
-            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-              az evben.
+            help: 1 vagy 0 jelzés aszerint, hogy az adott B.01 ellátástípust kifizették-e
+              az évben.
             label: A B.01 kód szerinti ellátás típusa. 04. Nem járulékalapú rokkantsági
               vagy nyugdíjellátás
           prestacion-resto:
-            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-              az evben.
+            help: 1 vagy 0 jelzés aszerint, hogy az adott B.01 ellátástípust kifizették-e
+              az évben.
             label: A B.01 kód szerinti ellátás típusa. 05. A 35/2006 törvény 17.2.a).1
               cikke szerinti egyéb ellátások
           prestacion-viudedad:
-            help: 1 vagy 0 jelzes aszerint, hogy az adott B.01 ellatastipust kifizettek-e
-              az evben.
+            help: 1 vagy 0 jelzés aszerint, hogy az adott B.01 ellátástípust kifizették-e
+              az évben.
             label: A B.01 kód szerinti ellátás típusa. 02. Özvegyi ellátás
           rendimientos-trabajo-fondos-emprendimiento:
             help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
@@ -297,8 +297,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -384,8 +384,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -418,8 +418,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -427,8 +427,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -472,8 +472,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
               help: A 190-es modelón bevallott kedvezményezetti adat a leszármazotti
                 vagy felmenői minimumhoz.
@@ -559,8 +559,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.
@@ -593,8 +593,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -602,8 +602,8 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
             x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
-              help: A 190-es modelo kedvezmenyezetti rekordjaban bevallott osszeg.
-                A nyomtatvany egesz es tizedes reszre bontja.
+              help: A 190-es modelo kedvezményezetti rekordjában bevallott összeg.
+                A nyomtatvány egész és tizedes részre bontja.
             x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
               help: A 190-es modelón bevallott kedvezményezetti adat. A nyomtatvány
                 az összegeket egész és tizedes részre bontja.

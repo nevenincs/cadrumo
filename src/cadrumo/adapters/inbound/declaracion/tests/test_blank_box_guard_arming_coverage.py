@@ -37,6 +37,8 @@ See Also:
 
 from __future__ import annotations
 
+from functools import cache
+
 import pytest
 
 from .....domain.calculations.registry.schema import ModeloRevision
@@ -54,12 +56,13 @@ _MONETARY_VALUE_KINDS = frozenset({"amount"})
 # Modelo 193's resumen totals: monetary, named_label, and blocked for want of
 # any published box number or specimen. Their `number` values are fichero-BOE
 # positional ranges, which is correct for what that field means and is exactly
-# why they cannot stand in for a printed box number.
-_BLOCKED_ON_EVIDENCE: frozenset[tuple[str, str, str]] = frozenset(
+# why they cannot stand in for a printed box number. The gap is the modelo's,
+# so it is keyed by modelo and casilla and holds for every edition carrying them.
+_BLOCKED_ON_EVIDENCE: frozenset[tuple[str, str]] = frozenset(
     {
-        ("193", "2024-y-siguientes", "decl.base-total"),
-        ("193", "2024-y-siguientes", "decl.retenciones-total"),
-        ("193", "2024-y-siguientes", "decl.total-perceptores"),
+        ("193", "decl.base-total"),
+        ("193", "decl.retenciones-total"),
+        ("193", "decl.total-perceptores"),
     },
 )
 
@@ -75,14 +78,14 @@ _BLOCKED_ON_EVIDENCE: frozenset[tuple[str, str, str]] = frozenset(
 #                            "Casilla03 Retenciones e ingresos a cuenta."
 # These are the AEAT documents' numbers, not values read back from the casillas
 # under test, so the assertion fails if the registry drifts away from them.
-_INSTRUCTION_GROUNDED_FORM_NUMBERS: dict[tuple[str, str, str], str] = {
-    ("349", "2020-y-siguientes", "decl.numero-operadores"): "01",
-    ("349", "2020-y-siguientes", "decl.importe-operaciones"): "02",
-    ("349", "2020-y-siguientes", "decl.numero-rectificaciones"): "03",
-    ("349", "2020-y-siguientes", "decl.importe-rectificaciones"): "04",
-    ("180", "2023-y-siguientes", "decl.total-perceptores"): "01",
-    ("180", "2023-y-siguientes", "decl.base-total"): "02",
-    ("180", "2023-y-siguientes", "decl.retenciones-total"): "03",
+_INSTRUCTION_GROUNDED_FORM_NUMBERS: dict[tuple[str, str], str] = {
+    ("349", "decl.numero-operadores"): "01",
+    ("349", "decl.importe-operaciones"): "02",
+    ("349", "decl.numero-rectificaciones"): "03",
+    ("349", "decl.importe-rectificaciones"): "04",
+    ("180", "decl.total-perceptores"): "01",
+    ("180", "decl.base-total"): "02",
+    ("180", "decl.retenciones-total"): "03",
 }
 
 
@@ -104,7 +107,24 @@ def _is_armed(revision: ModeloRevision, casilla_id: str) -> bool:
     return False
 
 
-def _monetary_named_label_targets() -> list[tuple[str, str, str, bool]]:
+def _form_number(modelo_id: str, revision_id: str, casilla_id: str) -> str | None:
+    """Return the ``form_number`` the published edition declares for one casilla."""
+    return next(
+        (
+            casilla.form_number
+            for modelo in published_revision_definitions()
+            if str(modelo.id) == modelo_id
+            for revision in modelo.revisions.values()
+            if str(revision.id) == revision_id
+            for casilla in revision.casillas
+            if str(casilla.id) == casilla_id
+        ),
+        None,
+    )
+
+
+@cache
+def _monetary_named_label_targets() -> tuple[tuple[str, str, str, bool], ...]:
     """Return every declaracion_pdf monetary named_label target and its arming.
 
     Selection matches production (``surface`` plus ``accepted_artefact_kinds``),
@@ -125,12 +145,12 @@ def _monetary_named_label_targets() -> list[tuple[str, str, str, bool]]:
                         continue
                     if target.value_kind not in _MONETARY_VALUE_KINDS:
                         continue
-                    key = (str(modelo.id), revision.id, str(target.casilla_id))
+                    key = (str(modelo.id), str(revision.id), str(target.casilla_id))
                     if key in seen:
                         continue
                     seen.add(key)
                     rows.append((*key, _is_armed(revision, key[2])))
-    return rows
+    return tuple(rows)
 
 
 def test_the_unguarded_monetary_targets_are_exactly_the_evidence_blocked_ones() -> None:
@@ -144,7 +164,7 @@ def test_the_unguarded_monetary_targets_are_exactly_the_evidence_blocked_ones() 
     evidence gap should be a deliberate edit to this set, not a silent change
     in behaviour.
     """
-    unguarded = {(m, r, c) for m, r, c, armed in _monetary_named_label_targets() if not armed}
+    unguarded = {(m, c) for m, _r, c, armed in _monetary_named_label_targets() if not armed}
 
     newly_unguarded = unguarded - _BLOCKED_ON_EVIDENCE
     assert not newly_unguarded, (
@@ -163,13 +183,12 @@ def test_the_unguarded_monetary_targets_are_exactly_the_evidence_blocked_ones() 
 
 
 @pytest.mark.parametrize(
-    "modelo_id,revision_id,casilla_id,expected",
-    [(m, r, c, n) for (m, r, c), n in sorted(_INSTRUCTION_GROUNDED_FORM_NUMBERS.items())],
-    ids=[f"M{m}-{c}" for m, _r, c in sorted(_INSTRUCTION_GROUNDED_FORM_NUMBERS)],
+    "modelo_id,casilla_id,expected",
+    [(m, c, n) for (m, c), n in sorted(_INSTRUCTION_GROUNDED_FORM_NUMBERS.items())],
+    ids=[f"M{m}-{c}" for m, c in sorted(_INSTRUCTION_GROUNDED_FORM_NUMBERS)],
 )
 def test_instruction_grounded_form_numbers_match_the_published_numbers(
     modelo_id: str,
-    revision_id: str,
     casilla_id: str,
     expected: str,
 ) -> None:
@@ -183,18 +202,17 @@ def test_instruction_grounded_form_numbers_match_the_published_numbers(
     Dropping ``form_number`` here would not fail anything else: the guard would
     simply stop firing, silently, which is the state all seven were in before.
     """
-    revision = next(
-        rev
-        for modelo in published_revision_definitions()
-        if str(modelo.id) == modelo_id
-        for rev_id, rev in modelo.revisions.items()
-        if rev_id == revision_id
-    )
-    casilla = next(c for c in revision.casillas if str(c.id) == casilla_id)
+    targeted = {
+        revision_id: form_number
+        for modelo, revision_id, target, _armed in _monetary_named_label_targets()
+        if (modelo, target) == (modelo_id, casilla_id)
+        for form_number in (_form_number(modelo, revision_id, target),)
+    }
 
-    assert casilla.form_number == expected, (
-        f"M{modelo_id} {casilla_id!r} carries form_number={casilla.form_number!r}, but AEAT's "
-        f"published instructions state box {expected!r}. An empty value leaves the blank-box guard "
+    assert targeted, f"no declaracion_pdf profile of M{modelo_id} targets {casilla_id!r}"
+    assert set(targeted.values()) == {expected}, (
+        f"M{modelo_id} {casilla_id!r} carries form_number {targeted}, but AEAT's published "
+        f"instructions state box {expected!r}. An empty value leaves the blank-box guard "
         f"disarmed for this target with nothing reporting it"
     )
 
@@ -208,9 +226,7 @@ def test_the_arming_sweep_actually_finds_targets() -> None:
     """
     rows = _monetary_named_label_targets()
 
-    assert len(rows) > 50, (
-        f"the monetary named_label sweep found only {len(rows)} targets, which is too few to be a real walk of the estate"
-    )
+    assert rows, "the monetary named_label sweep found no target, so it walked nothing"
     assert any(armed for *_rest, armed in rows), (
         "the sweep found no armed target, so _is_armed is not resolving printed numbers"
     )

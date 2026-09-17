@@ -716,7 +716,7 @@ def _auxiliary_envelope_header(
             ),
             emitted_extent=terminal_extent,
         )
-    except ValueError:
+    except (ValueError, RegistryValidationError):
         return None
 
 

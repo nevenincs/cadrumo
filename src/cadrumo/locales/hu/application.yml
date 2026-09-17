@@ -167,18 +167,6 @@ application:
         observation_merge_key_conflict: 'Eltérő modelo-, év- vagy időszakkulcsú megfigyelések
           nem vonhatók össze: {primary_modelo} {primary_filing_year} {primary_period}
           szemben ezzel: {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-    errors:
-      observation_displaces_official_evidence_app_filing: 'Ez a modelo, ado ev es
-        idoszak mar tartalmaz az AEAT-tol rogzitett bizonyitekot ({existing_source_kind}),
-        ezert helyben szamitott bevallas nem menthato folebe. A helyi ujraszamitas
-        nem hiteles forras a benyujtott adatokra: ha helyes, nyujtsa be a helyesbitest
-        az AEAT-hoz, es toltse le az eredmenyt. A rogzitett bizonyitek ezen alkalmazas
-        egyetlen utvonalan sem allithato helyre.'
-      observation_displaces_official_evidence_manual: Ez a modelo, ado ev es idoszak
-        mar tartalmaz az AEAT-tol rogzitett bizonyitekot ({existing_source_kind}).
-        Egy kezi ertek mentese felulirja azt, es a felulirt bizonyitek ezen alkalmazas
-        egyetlen utvonalan sem allithato helyre. Futtassa ujra a hivatalos bizonyitek
-        felulirasat engedelyezo kapcsoloval, ha a felulirast szandekosan vegzi.
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: A Modelo 303 kompenzációs megfigyeléseinek

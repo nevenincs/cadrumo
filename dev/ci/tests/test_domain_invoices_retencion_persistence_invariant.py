@@ -50,7 +50,7 @@ from cadrumo.domain.invoices.enums import PaymentStatus, iva_rate_percentage, re
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # The persistence contract is read from its canonical namespace definition,
 # not restated. A literal copy here would keep passing after

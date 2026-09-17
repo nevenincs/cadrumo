@@ -270,6 +270,7 @@ class VerificationReport(BaseModel):
         return validate_utc_aware(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_invariants(self) -> VerificationReport:
         derived = derive_verification_report_id(
             calculation_revision_id=self.calculation_revision_id,

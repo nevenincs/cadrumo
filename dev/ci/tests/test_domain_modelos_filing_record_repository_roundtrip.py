@@ -29,8 +29,11 @@ from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -95,7 +98,9 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         filed_at=superseded_filed_at,
         filed_by="aeat.cli.modelo.file",
         notes="initial 2T filing - withheld import IVA at 21%",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.SUPERSEDIDO,
         superseded_at=current_filed_at,
         superseded_by_filing_record_id=current_id,
@@ -118,6 +123,9 @@ def _populated_catalogue() -> ModeloRecordCatalogue:
         notes="rectifying amendment - missing input IVA on invoice INV-2024-0145",
         status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=superseded_id,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
     return ModeloRecordCatalogue(records={superseded_id: superseded, current_id: current})
 
@@ -187,6 +195,9 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 member_nif="A00000000",
                 filed_at=filed_at,
                 filed_by="aeat.cli.modelo.file",
+                origin=FilingOrigin.LOCAL,
+                confirmation=AeatConfirmationState.PENDIENTE,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
             ),
             member_b_id: ModeloRecord(
                 filing_record_id=member_b_id,
@@ -199,6 +210,9 @@ def test_filing_record_catalogue_allows_distinct_current_group_members() -> None
                 member_nif="B00000001",
                 filed_at=filed_at + timedelta(minutes=5),
                 filed_by="aeat.cli.modelo.file",
+                origin=FilingOrigin.LOCAL,
+                confirmation=AeatConfirmationState.PENDIENTE,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
             ),
         },
     )
@@ -242,7 +256,7 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
         filed_by="aeat.cli.modelo.file",
     )
 
-    with pytest.raises(ValidationError, match="AEAT-accepted filing record must carry external evidence"):
+    with pytest.raises(ValidationError, match="confirmed filing record must carry external evidence"):
         ModeloRecord(
             filing_record_id=filing_id,
             work_unit_id=_hex("9"),
@@ -253,7 +267,9 @@ def test_filing_record_rejects_aeat_acceptance_without_external_evidence() -> No
             period=_P_2024_2T,
             filed_at=filed_at,
             filed_by="aeat.cli.modelo.file",
-            aeat_accepted=True,
+            origin=FilingOrigin.AEAT,
+            confirmation=AeatConfirmationState.CONFIRMADA,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
 
 
@@ -275,10 +291,13 @@ def test_filing_record_model_copy_revalidates_aeat_acceptance_invariant() -> Non
         period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
-    with pytest.raises(ValidationError, match="AEAT-accepted filing record must carry external evidence"):
-        record.model_copy(update={"aeat_accepted": True})
+    with pytest.raises(ValidationError, match="confirmed filing record must carry external evidence"):
+        record.model_copy(update={"confirmation": AeatConfirmationState.CONFIRMADA})
 
 
 def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> None:
@@ -295,7 +314,7 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
         imported_at=filed_at,
     )
 
-    with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
+    with pytest.raises(ValidationError, match="pendiente filing record must not carry external evidence"):
         ModeloRecord(
             filing_record_id=filing_id,
             work_unit_id=_hex("d"),
@@ -307,6 +326,9 @@ def test_filing_record_rejects_external_evidence_without_aeat_acceptance() -> No
             filed_at=filed_at,
             filed_by="aeat.cli.modelo.file",
             external_evidence=evidence,
+            origin=FilingOrigin.LOCAL,
+            confirmation=AeatConfirmationState.PENDIENTE,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
 
 
@@ -328,6 +350,9 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
         period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     evidence = ExternalEvidence(
         kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -335,7 +360,7 @@ def test_filing_record_model_copy_revalidates_external_evidence_acceptance_invar
         imported_at=filed_at,
     )
 
-    with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
+    with pytest.raises(ValidationError, match="pendiente filing record must not carry external evidence"):
         record.model_copy(update={"external_evidence": evidence})
 
 
@@ -370,6 +395,9 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     member_nif="A00000000",
                     filed_at=filed_at,
                     filed_by="aeat.cli.modelo.file",
+                    origin=FilingOrigin.LOCAL,
+                    confirmation=AeatConfirmationState.PENDIENTE,
+                    declaration_kind=FilingDeclarationKind.ORIGINAL,
                 ),
                 second_id: ModeloRecord(
                     filing_record_id=second_id,
@@ -382,6 +410,9 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
                     member_nif="A00000000",
                     filed_at=filed_at + timedelta(minutes=5),
                     filed_by="aeat.cli.modelo.file",
+                    origin=FilingOrigin.LOCAL,
+                    confirmation=AeatConfirmationState.PENDIENTE,
+                    declaration_kind=FilingDeclarationKind.ORIGINAL,
                 ),
             },
         )
@@ -430,6 +461,9 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
                     status=ModeloRecordStatus.SUPERSEDIDO,
                     superseded_at=filed_at + timedelta(minutes=5),
                     superseded_by_filing_record_id=amendment_id,
+                    origin=FilingOrigin.LOCAL,
+                    confirmation=AeatConfirmationState.PENDIENTE,
+                    declaration_kind=FilingDeclarationKind.ORIGINAL,
                 ),
                 amendment_id: ModeloRecord(
                     filing_record_id=amendment_id,
@@ -444,6 +478,9 @@ def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
                     filed_by="aeat.cli.modelo.amend",
                     status=ModeloRecordStatus.VIGENTE,
                     amends_filing_record_id=baseline_id,
+                    origin=FilingOrigin.LOCAL,
+                    confirmation=AeatConfirmationState.PENDIENTE,
+                    declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
                 ),
             },
         )
@@ -597,6 +634,9 @@ def test_filing_record_source_transaction_ids_survive_roundtrip(tmp_path: Path) 
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         source_transaction_ids=_source_transaction_ids(),
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     original = ModeloRecordCatalogue(records={filing_id: record})
 
@@ -631,6 +671,9 @@ def test_derive_filing_record_id_is_stable_regardless_of_source_transaction_ids(
         period=_P_2024_2T,
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     full_footprint = empty_footprint.model_copy(update={"source_transaction_ids": _source_transaction_ids()})
 
@@ -662,6 +705,9 @@ def test_filing_record_absent_source_transaction_ids_defaults_to_empty(tmp_path:
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
         source_transaction_ids=_source_transaction_ids(),
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     original = ModeloRecordCatalogue(records={filing_id: record})
 
@@ -724,6 +770,9 @@ def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
         filed_at=datetime(2026, 1, 31, 9, 0, 0, tzinfo=UTC),
         filed_by="operator-A",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     late = ModeloRecord(
         filing_record_id=record_id,
@@ -736,6 +785,9 @@ def test_filing_record_id_is_clock_free_and_outcome_pinned() -> None:
         filed_at=datetime(2026, 1, 31, 23, 59, 0, tzinfo=UTC),
         filed_by="operator-A",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     assert early.filing_record_id == late.filing_record_id == record_id
     assert early.filed_at != late.filed_at
@@ -774,6 +826,9 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
             filed_at=datetime(2026, 1, 31, 12, 0, 0, tzinfo=UTC),
             filed_by="operator-A",
             status=ModeloRecordStatus.VIGENTE,
+            origin=FilingOrigin.LOCAL,
+            confirmation=AeatConfirmationState.PENDIENTE,
+            declaration_kind=FilingDeclarationKind.ORIGINAL,
         )
 
 
@@ -815,6 +870,9 @@ def _amendment_pair(
         status=ModeloRecordStatus.SUPERSEDIDO,
         superseded_at=amendment_filed_at,
         superseded_by_filing_record_id=baseline_successor_override or amendment_id,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     period = amendment_period or _P_2024_2T
     amendment = ModeloRecord(
@@ -829,6 +887,9 @@ def _amendment_pair(
         filed_by="aeat.cli.modelo.amend",
         status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=target_id_override or baseline_id,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
     return ModeloRecordCatalogue(records={baseline_id: baseline, amendment_id: amendment})
 
@@ -861,6 +922,9 @@ def test_amendment_link_to_itself_is_refused() -> None:
         filed_by="aeat.cli.modelo.amend",
         status=ModeloRecordStatus.VIGENTE,
         amends_filing_record_id=record_id,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
     with pytest.raises(ValidationError, match="cannot amend itself"):
@@ -924,6 +988,9 @@ def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) ->
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=source_transaction_ids,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
 
@@ -984,6 +1051,9 @@ def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
         filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     return ModeloRecordCatalogue(records={record.filing_record_id: record})
 
@@ -1088,6 +1158,9 @@ def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
         filed_at=baseline_filed_at,
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     amendment = ModeloRecord(
         filing_record_id=amendment_id,
@@ -1103,6 +1176,9 @@ def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
         superseded_at=baseline_filed_at + timedelta(days=90),
         superseded_by_filing_record_id=_hex("e"),
         amends_filing_record_id=baseline_id,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
     with pytest.raises(ValidationError, match="one-sided amendment link"):
@@ -1159,6 +1235,9 @@ def test_amendment_chain_of_three_agrees_at_every_hop() -> None:
             superseded_at=None if is_last else filed_at + timedelta(days=45),
             superseded_by_filing_record_id=None if is_last else ids[index + 1],
             amends_filing_record_id=None if index == 0 else ids[index - 1],
+            origin=FilingOrigin.LOCAL,
+            confirmation=AeatConfirmationState.PENDIENTE,
+            declaration_kind=FilingDeclarationKind.COMPLEMENTARIA,
         )
 
     catalogue = ModeloRecordCatalogue(records=records)

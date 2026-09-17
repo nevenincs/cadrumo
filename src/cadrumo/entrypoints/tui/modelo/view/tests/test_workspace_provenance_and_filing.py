@@ -19,6 +19,7 @@ from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..filing import ModeloWorkspaceFilingScreen
+from ..models import capability_label
 from ..provenance import ModeloWorkspaceProvenanceScreen
 from .conftest import resolve_real_result
 
@@ -48,35 +49,35 @@ async def test_provenance_refuses_when_the_admission_carries_no_facet(
 
 
 @pytest.mark.asyncio
-async def test_filing_distinguishes_a_permanent_unknown_from_a_pending_one(
+async def test_filing_states_why_draft_readiness_reads_as_it_does(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Two capabilities, one disposition, TWO different reasons.
+    """Draft readiness is unmeasurable by design, and the page says so in words.
 
-    Draft readiness is unmeasurable by design; export readiness is merely
-    unbuilt. Rendering both as one uniform "unmeasured" would give an
-    operator one remedy where there are two -- and one of them does not
-    exist.
+    A bare "unmeasured" would leave the operator looking for a remedy that
+    does not exist, so the structural reason is written beside the capability
+    it belongs to.
     """
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository)
+    draft = ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS
 
     app = ScreenHostApp(ModeloWorkspaceFilingScreen(session))
     async with app.run_test() as pilot:
         await pilot.pause()
-        table = app.screen.query_one("#workspace-filing-table", ContentDataTable)
-        assert table.row_count == 2
-
-    structural = tr("flows.modelo_workspace_filing.why.draft_structural")
-    pending = tr("flows.modelo_workspace_filing.why.export_pending_port")
-    assert structural != pending, "the two filing unknowns must not share one explanation"
+        why = app.screen.query_one(f"#workspace-filing-why-{draft.value}", Static)
+        assert str(why.content) == tr(
+            "flows.modelo_workspace_filing.why_line",
+            capability=capability_label(draft),
+            why=tr("flows.modelo_workspace_filing.why.draft_structural"),
+        )
 
 
 @pytest.mark.asyncio
-async def test_filing_shows_only_its_own_two_capabilities(
+async def test_filing_shows_only_its_own_capability(
     bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
 ) -> None:
-    """Two of the five, selected by identity from the closed denominator."""
+    """Draft readiness alone, selected by identity from the closed denominator."""
     bucket_id, repository = bucket_and_repository
     session = _session(bucket_id, repository)
     assert len(session.projection.capabilities) == len(ModeloWorkspaceCapabilityName)
@@ -85,7 +86,8 @@ async def test_filing_shows_only_its_own_two_capabilities(
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.screen.query_one("#workspace-filing-table", ContentDataTable)
-        assert table.row_count == 2
+        assert table.row_count == 1
+        assert table.get_row(ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS.value)
         assert table.row_count < len(ModeloWorkspaceCapabilityName)
 
 

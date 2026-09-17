@@ -68,8 +68,11 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -324,7 +327,9 @@ def _seed_external_baseline(
         filed_at=_T1,
         filed_by="aeat-import",
         notes=None,
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
@@ -371,6 +376,9 @@ def _seed_local_filing_record(
         filed_at=filed_at,
         filed_by=filed_by,
         external_evidence=None,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     filing_repository.save(upsert_filing_record(filing_repository.load(), filing))
     return filing
@@ -667,6 +675,9 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
         filed_at=_T1,
         filed_by="aeat-import",
         status=ModeloRecordStatus.VIGENTE,
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     fr_repo.save(upsert_filing_record(fr_repo.load(), single_filer_filing))
 

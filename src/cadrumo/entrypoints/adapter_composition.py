@@ -997,6 +997,9 @@ def build_calculation_action_ports(
         calculation_repository=CalculationRevisionCatalogueRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
+            m303_rectificativa_taxpayer_tax_id=_export_taxpayer_tax_id(
+                bucket_id=normalized_bucket_id, operation=operation
+            ),
         ),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
@@ -1066,6 +1069,8 @@ def build_amendment_action_ports(
 ) -> AmendmentActionPorts:
     """Compose every persisted authority required by one Modelo amendment."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from ..adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -1073,15 +1078,10 @@ def build_amendment_action_ports(
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.amendment_action_ports import AmendmentActionPorts
-    from ..application.modelo.profile_export_binding import resolve_export_identity
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
-    export_identity = resolve_export_identity(
-        bucket_id=normalized_bucket_id,
-        operation=operation,
-    )
-    taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None
+    taxpayer_tax_id = _export_taxpayer_tax_id(bucket_id=normalized_bucket_id, operation=operation)
     return AmendmentActionPorts(
         work_unit_repository=WorkUnitCatalogueRepository(
             bucket_id=normalized_bucket_id,
@@ -1102,7 +1102,20 @@ def build_amendment_action_ports(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),
+        observation_repository=CalculationObservationRepository(bucket_id=normalized_bucket_id, objects=objects),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
     )
+
+
+def _export_taxpayer_tax_id(*, bucket_id: str, operation: PinnedAuthorityOperation) -> SubjectTaxId | None:
+    """Return the profile tax id a stored M303 rectificativa revalidates against, when one is declared."""
+    from ..application.modelo.profile_export_binding import resolve_export_identity
+
+    export_identity = resolve_export_identity(bucket_id=bucket_id, operation=operation)
+    return export_identity[0].tax_id if export_identity is not None else None
 
 
 def build_filing_action_ports(*, bucket_id: str) -> FilingActionPorts:

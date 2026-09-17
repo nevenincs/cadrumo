@@ -2408,6 +2408,8 @@ modelo:
             help: 'Enter or review “Type of activity/activities carried out: indicative
               code” for this self-assessment.'
             label: 'Type of activity/activities carried out: indicative code'
+          irpf-ed-arrendamientos-canones:
+            label: Leases and royalties
           irpf-ed-autoconsumo:
             label: Self-consumption of goods and services
           irpf-ed-cobros-pagos-flag:
@@ -2427,6 +2429,8 @@ modelo:
             label: Financial expenses
           irpf-ed-indemnizaciones:
             label: Compensation payments
+          irpf-ed-ingresos-explotacion:
+            label: Operating income
           irpf-ed-ingresos-subvenciones-corrientes:
             label: Income from current grants
           irpf-ed-modalidad-clave:
@@ -2452,6 +2456,8 @@ modelo:
             label: Tax-deductible provisions
           irpf-ed-rdto-neto-previo-reduccion:
             label: Net income from economic activities under direct assessment
+          irpf-ed-reparaciones-conservacion:
+            label: Repairs and maintenance
           irpf-ed-seguridad-social-empresa:
             label: Employer's Social Security contributions
           irpf-ed-seguridad-social-titular:
@@ -4278,6 +4284,10 @@ modelo:
           irpf-rendimiento-act-eco-eo-resto-rdto-neto:
             label: Net income from economic activities under objective estimation,
               excluding agricultural, livestock, and forestry activities
+          irpf-rendimiento-capital-inmobiliario-amortizacion-casos-especiales:
+            label: Depreciation in special cases
+          irpf-rendimiento-capital-inmobiliario-amortizacion-inmueble:
+            label: Depreciation of the property and the improvement
           irpf-rendimiento-capital-inmobiliario-gasto-comunidad:
             label: Community fees
           irpf-rendimiento-capital-inmobiliario-gasto-otros:
@@ -4739,10 +4749,8 @@ modelo:
             '0131':
               help: Enter or review “Depreciation of the property and the improvement”
                 for this self-assessment.
-              label: Depreciation of the property and the improvement
             '0132':
               help: Enter or review “Depreciation in special cases” for this self-assessment.
-              label: Depreciation in special cases
             '0133':
               help: Enter or review “For consideration (sale, exchange, etc.)” for
                 this self-assessment.
@@ -4840,7 +4848,6 @@ modelo:
                 for this self-assessment.
             '0171':
               help: Enter or review “Operating income” for this self-assessment.
-              label: Operating income
             '0172':
               help: Enter or review “Financial income derived from deferred or installment
                 payment for transactions carried out in the activity” for this self-assessment.
@@ -4917,10 +4924,8 @@ modelo:
                 Income Tax Law)
             0192:
               help: Enter or review “Leases and royalties” for this self-assessment.
-              label: Leases and royalties
             0193:
               help: Enter or review “Repairs and maintenance” for this self-assessment.
-              label: Repairs and maintenance
             0194:
               help: Enter or review “Suministros (luz, agua, gas, telefonía e internet)”
                 for this self-assessment.
@@ -11454,8 +11459,6 @@ modelo:
               label: Aid públicas to the titulares of bienes integrantes of the Patrimonio
                 Histórico Español destinadas to su conservación or rehabilitación.
                 Amount attributable to 2022 (cumplimente the Anexo C.1)
-            0279:
-              label: Tax information for this field
             0280:
               help: Enter or review “Sum of income imputations from participation
                 in collective investment institutions established in tax havens (sum
@@ -14258,8 +14261,6 @@ modelo:
               label: Aid públicas to the titulares of bienes integrantes of the Patrimonio
                 Histórico Español destinadas to su conservación or rehabilitación.
                 Amount attributable to 2023 (cumplimente the Anexo C.1)
-            0279:
-              label: Tax information for this field
             0280:
               help: Enter or review “Sum of income imputations from participation
                 in collective investment institutions established in tax havens (sum
@@ -17517,7 +17518,6 @@ modelo:
               help: Report public aid for first establishment of young farmers under
                 the National Rural Development Framework, intended to acquire a stake
                 in the capital of agr... companies.
-              label: Tax information for this field
             0280:
               help: This field totals income imputations from participation in collective
                 investment institutions established in tax havens by summing boxes
@@ -23567,10 +23567,6 @@ modelo:
                 in Annex D, optional to complete)” for this self-assessment.
               label: Amount of improvements made in 2025 (itemised in Annex D, optional
                 to complete)
-            '0131':
-              label: Depreciation of the property and the improvement
-            '0132':
-              label: Depreciation in special cases
             '0134':
               help: Enter or review “Gratuitous (inheritance, legacy, donation, etc.)”
                 for this self-assessment.
@@ -23651,8 +23647,6 @@ modelo:
             '0164':
               help: Enter or review “Remainder” for this self-assessment.
               label: Remainder
-            '0171':
-              label: Operating income
             '0172':
               help: Enter or review “Financial income arising from deferred or instalment
                 payment terms” for this self-assessment.
@@ -23690,10 +23684,6 @@ modelo:
             0191:
               help: Enter or review “Taxpayer's subsistence expenses” for this self-assessment.
               label: Taxpayer's subsistence expenses
-            0192:
-              label: Leases and royalties
-            0193:
-              label: Repairs and maintenance
             0194:
               help: Enter or review “Utility supplies” for this self-assessment.
               label: Utility supplies
@@ -23852,8 +23842,6 @@ modelo:
               label: Public aid to owners of assets forming part of the Spanish Historical
                 Heritage for their conservation or restoration. Amount imputable to
                 2025 (complete Annex C.1) (*)
-            0279:
-              label: Tax information for this field
             0280:
               help: Enter or review “Sum of income imputations from participation
                 in collective investment institutions established in tax havens (sum

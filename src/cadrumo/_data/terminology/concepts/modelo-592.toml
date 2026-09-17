@@ -8,10 +8,10 @@
 [concept]
 concept_id = "modelo-592"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "deprecated"
 domain_refs = ["modelo:592"]
 created_at = 2026-07-30
-updated_at = 2026-07-30
+updated_at = 2026-09-17
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
@@ -24,4 +24,3 @@ short_description = "Modelo 592, self-assessment of the special tax on non-reusa
 
 [language.hu]
 short_description = "592-es modell: az újra nem használható műanyag csomagolások különadójának önadózása"
-

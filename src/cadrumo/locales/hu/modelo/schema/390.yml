@@ -188,26 +188,26 @@ modelo:
               definitivo - Adóösszeg.'
             label: Levonási hányad korrekciója végleges százalék alapján - összeg
           iva-anual-repercutido-recargo-tipo-0-26-base:
-            help: A 390-es eves IVA-osszesiton bevallott osszeg a megadott kulcsu
-              egyenertekusegi felarhoz.
+            help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
+              egyenértékűségi felárhoz.
             label: Általános rendszerű ügyletek. Egyenértékűségi felár. Tipo 0,26%.
               Adóalap
           iva-anual-repercutido-recargo-tipo-0-62-base:
-            help: A 390-es eves IVA-osszesiton bevallott osszeg a megadott kulcsu
-              egyenertekusegi felarhoz.
+            help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
+              egyenértékűségi felárhoz.
             label: Általános rendszerű ügyletek. Egyenértékűségi felár. Tipo 0,62%.
               Adóalap
           iva-anual-repercutido-recargo-tipo-0-base:
-            help: A 390-es eves IVA-osszesiton bevallott osszeg a megadott kulcsu
-              egyenertekusegi felarhoz.
+            help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
+              egyenértékűségi felárhoz.
             label: Általános rendszerű ügyletek. Egyenértékűségi felár. Tipo 0%. Adóalap
           iva-anual-repercutido-recargo-tipo-0-cuota:
-            help: A 390-es eves IVA-osszesiton bevallott osszeg a megadott kulcsu
-              egyenertekusegi felarhoz.
+            help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
+              egyenértékűségi felárhoz.
             label: Általános rendszerű ügyletek. Egyenértékűségi felár. Tipo 0%. Adóösszeg
           iva-anual-repercutido-recargo-tipo-1-base:
-            help: A 390-es eves IVA-osszesiton bevallott osszeg a megadott kulcsu
-              egyenertekusegi felarhoz.
+            help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
+              egyenértékűségi felárhoz.
             label: Általános rendszerű ügyletek. Egyenértékűségi felár. Tipo 1%. Adóalap
           iva-anual-resultado-regimen-general:
             help: 'Tekintse át a casilla adatait: Eredmény - rendszer general (adóösszeg

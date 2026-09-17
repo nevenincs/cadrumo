@@ -39,8 +39,11 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -153,7 +156,9 @@ def _filing_pointing_at(reference_id: str, *, kind: ExternalEvidenceKind) -> Mod
         period=Period.from_year_and_code(2026, "1T"),
         filed_at=_CLOCK,
         filed_by="aeat-live-capture-test",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(kind=kind, reference_id=reference_id, imported_at=_CLOCK),
     )

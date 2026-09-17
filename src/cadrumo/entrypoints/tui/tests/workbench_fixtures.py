@@ -117,7 +117,14 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..aeat_sync.controller import AeatSyncWorkspaceController
 from ..aeat_sync.models import AeatSyncOperationRequestV1
@@ -492,6 +499,9 @@ def _declaration_catalogues(
         period=period,
         filed_at=_AT,
         filed_by="fixture",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     lifecycle = DeclarationsSanitizedLifecycleFactV1(
         fact_id="fixture.filed",

@@ -46,6 +46,20 @@ def _hit(
     return ChunkHit(path=path, line_start=line_start, line_end=line_end, score=score)
 
 
+def _declaration_span(path: str, id_line: str) -> tuple[int, int]:
+    """Return the 1-based line span of the one table declaring ``id_line``.
+
+    The span stops before the next table header so the hit names exactly one
+    casilla, which is what makes the source evidence unambiguous.
+    """
+    lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+    id_index = lines.index(id_line)
+    start = max(index for index in range(id_index) if lines[index].startswith("[["))
+    following = [index for index in range(id_index + 1, len(lines)) if lines[index].startswith("[[")]
+    end = following[0] if following else len(lines)
+    return start + 1, end
+
+
 # ---------------------------------------------------------------------------
 # Each grounding surface resolves correctly
 # ---------------------------------------------------------------------------
@@ -55,10 +69,9 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from ..resolution import GroundingSurface, ResolvedTarget
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/civa.repercutido.general__c22.toml"
-    # The first declaration occupies lines 1–13; stopping before the next
-    # header keeps the source evidence unambiguous for this individual casilla.
-    out = resolver.resolve(_hit(path, line_end=13))
+    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml"
+    line_start, line_end = _declaration_span(path, 'id = "iva.repercutido.general"')
+    out = resolver.resolve(_hit(path, line_start=line_start, line_end=line_end))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CASILLA
     assert out.record.metadata.modelo == "303"

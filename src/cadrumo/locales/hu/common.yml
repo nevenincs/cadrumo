@@ -1248,7 +1248,7 @@ tui:
         late: Késedelmes
         unknown: Ismeretlen
     column:
-      aeat_accepted: Megfigyelt AEAT-elfogadás
+      aeat_confirmation: AEAT-megerősítés
       aeat_evidence: AEAT-bizonyíték
       availability: Elérhetőség
       calculation: Aktuális számítás
@@ -1261,6 +1261,16 @@ tui:
       result: Eredmény
       updated: Frissítve
       when: Dátum
+    confirmation:
+      confirmada: Megerősítve
+      descartada: Elvetve
+      discrepante: Eltérő
+      pendiente: Függőben
+    declaration_kind:
+      complementaria: Kiegészítő
+      original: Eredeti
+      rectificativa: Helyesbítő
+      sustitutiva: Helyettesítő
     destination:
       calendar: Bevallási naptár
       filing_history: Benyújtási előzmények
@@ -1269,11 +1279,15 @@ tui:
       revisions: Számítási változatok
     empty: Itt még nincs rögzítve semmi.
     evidence:
+      aeat_csv_register: AEAT CSV-nyilvántartás észlelve
       aeat_justificante_pdf: Megfigyelt AEAT PDF-nyugta
       aeat_live_capture: Élő AEAT-megfigyelés
       none: Nincs megfigyelt AEAT-bizonyíték
     filing_history:
-      axes: A helyi benyújtási állapot és a megfigyelt AEAT-bizonyíték külön tény.
+      axes: A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-bizonyíték
+        külön tények.
+      chain_detail: 'Eredet: {origin} · Fajta: {kind} · AEAT: {confirmation} · Korábbi
+        bevallást helyesbít: {amends}'
       title: Benyújtási előzmények
     filing_state:
       supersedido: Felváltott helyi rekord
@@ -1286,10 +1300,16 @@ tui:
       exported: Bevallás exportálva
       external_evidence_imported: Külső AEAT-bizonyíték importálva
       filed: Benyújtás helyben rögzítve
+      observation_overridden: A megfigyelést a kezelő felülírta
+      observation_override_cleared: A kezelő felülírása törölve
+      reconciled: Egyeztetve az AEAT-tal
       renamed: Bevallás átnevezve
       superseded: Benyújtás helyben felváltva
       verification_refused: Ellenőrzés elutasítva
       verified: Ellenőrzés elkészült
+    origin:
+      aeat: AEAT
+      local: Helyi
     overview:
       areas: Bevallási területek
       declarations: Bevallások

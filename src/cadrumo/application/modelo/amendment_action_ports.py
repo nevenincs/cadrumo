@@ -21,6 +21,8 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +35,8 @@ class AmendmentActionPorts:
     justificante_repository: JustificanteRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     transaction_repository: TransactionCatalogueRepositoryProtocol
+    observation_repository: CalculationObservationRepositoryProtocol
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol
 
 
 class AmendmentActionPortsFactory(Protocol):

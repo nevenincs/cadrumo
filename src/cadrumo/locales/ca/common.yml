@@ -1258,7 +1258,7 @@ tui:
         late: Endarrerida
         unknown: Desconeguda
     column:
-      aeat_accepted: Acceptació de l'AEAT observada
+      aeat_confirmation: Confirmació AEAT
       aeat_evidence: Evidència de l'AEAT
       availability: Disponibilitat
       calculation: Càlcul actual
@@ -1271,6 +1271,16 @@ tui:
       result: Resultat
       updated: Actualitzada
       when: Data
+    confirmation:
+      confirmada: Confirmada
+      descartada: Descartada
+      discrepante: Discrepant
+      pendiente: Pendent
+    declaration_kind:
+      complementaria: Complementària
+      original: Original
+      rectificativa: Rectificativa
+      sustitutiva: Substitutiva
     destination:
       calendar: Calendari fiscal
       filing_history: Historial de presentacions
@@ -1279,12 +1289,15 @@ tui:
       revisions: Revisions de càlcul
     empty: Encara no hi ha res registrat aquí.
     evidence:
+      aeat_csv_register: Registre CSV de l'AEAT observat
       aeat_justificante_pdf: Justificant PDF de l'AEAT observat
       aeat_live_capture: Observació en directe de l'AEAT
       none: Sense evidència observada de l'AEAT
     filing_history:
-      axes: L'estat local de presentació i l'evidència observada de l'AEAT són fets
-        separats.
+      axes: L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada
+        de l'AEAT són fets separats.
+      chain_detail: 'Origen: {origin} · Tipus: {kind} · AEAT: {confirmation} · Corregeix
+        una declaració anterior: {amends}'
       title: Historial de presentacions
     filing_state:
       supersedido: Registre local substituït
@@ -1297,10 +1310,16 @@ tui:
       exported: Declaració exportada
       external_evidence_imported: Evidència externa de l'AEAT importada
       filed: Presentació registrada localment
+      observation_overridden: Observació substituïda per l'operador
+      observation_override_cleared: Substitució de l'operador eliminada
+      reconciled: Conciliada amb l'AEAT
       renamed: Declaració reanomenada
       superseded: Presentació substituïda localment
       verification_refused: Verificació rebutjada
       verified: Verificació completada
+    origin:
+      aeat: AEAT
+      local: Local
     overview:
       areas: Àrees de declaracions
       declarations: Declaracions

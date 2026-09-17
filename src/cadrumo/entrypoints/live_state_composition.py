@@ -275,6 +275,25 @@ def compose_filed_observation_persistence_ports(
     )
 
 
+def build_filed_data_capture_port(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+) -> FiledDataCapturePort:
+    """Build the AEAT Sede transport that reads filed declarations.
+
+    This is the only place the live composition constructs that transport, so a
+    recorded in-memory port can stand in for AEAT while every capture,
+    finalization and reconciliation step downstream stays real.
+    """
+    return SedeFiledDataCapturePort(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operator_scope_ports=operator_scope_ports,
+    )
+
+
 def compose_live_state(
     output_root: Path | None = None,
     *,
@@ -300,7 +319,7 @@ def compose_live_state(
     certificate_secret_backend_factory = build_certificate_secret_backend
     browser_session_factory = default_browser_session_factory
     operator_scope_ports = build_operator_scope_ports()
-    filed_data_port = SedeFiledDataCapturePort(
+    filed_data_port = build_filed_data_capture_port(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         operator_scope_ports=operator_scope_ports,

@@ -169,7 +169,14 @@ def _persist_filing(
     from cadrumo.application.filing.retention import try_record_filing_retention_snapshot
     from cadrumo.core.period import Period
     from cadrumo.domain.modelos.codes import ModeloCode
-    from cadrumo.domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+    from cadrumo.domain.modelos.filing_record import (
+        AeatConfirmationState,
+        FilingDeclarationKind,
+        FilingOrigin,
+        ModeloRecord,
+        ModeloRecordCatalogue,
+        derive_filing_record_id,
+    )
 
     work_unit_id = (seed * 64)[:64]
     revision_id = ((chr(ord(seed) + 1)) * 64)[:64]
@@ -188,6 +195,9 @@ def _persist_filing(
         period=Period.from_year_and_code(filing_year, "2T"),
         filed_at=datetime(filing_year, 7, 1, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     with open_test_profile_session(bucket_id):
         repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id)

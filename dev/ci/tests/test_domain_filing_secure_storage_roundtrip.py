@@ -42,7 +42,7 @@ from cadrumo.domain.filing.schema import (
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _BUCKET_ID = "d4c9ced7-e9c3-4ca7-87f7-4659a32d49e3"  # was 'filing-runtime'
 _DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)

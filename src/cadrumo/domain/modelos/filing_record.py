@@ -4,7 +4,8 @@ A :class:`ModeloRecord` is the durable receipt of an
 internal filing event: at time T, actor A marked calculation revision R of work
 unit W as the current filed answer for (bucket, modelo, year, period). The
 filing record holds filing-event state (filed timestamp, actor, notes,
-AEAT-acceptance bit, supersession link); the filed calculation revision holds
+origin, AEAT confirmation state, declaration kind, supersession and amendment
+links); the filed calculation revision holds
 the immutable calculation result. The two are paired so the calculation revision
 never accretes filing-side concerns.
 
@@ -16,11 +17,9 @@ it pointed at moves from ``FILED`` to ``FILED_SUPERSEDED``, and the
 new filing record becomes current. Both records remain in the
 catalogue for audit.
 
-The ``aeat_accepted`` flag defaults to ``False`` and is independent
-of internal filing. It exists only to record an externally-observed
-AEAT acceptance imported into the bucket through evidence channels such as
-justificante/CSV imports or read-only live capture. When true,
-``external_evidence`` must carry :class:`ExternalEvidence`;
+The records of one tuple form a linear chain. A local filing is only an
+intention (``PENDIENTE``) until an AEAT register entry proves it was presented
+(``CONFIRMADA``); only confirmed records carry :class:`ExternalEvidence`, and
 the filing record itself never initiates a live submission.
 """
 
@@ -35,6 +34,8 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.aeat_presentation import AeatPresentationId
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
@@ -130,6 +131,61 @@ class ExternalEvidence(BaseModel):
     imported_at: UtcInstant
 
 
+class FilingOrigin(StrEnum):
+    """Who authored a chain entry: this application, or AEAT's own register."""
+
+    LOCAL = "local"
+    AEAT = "aeat"
+
+
+class AeatConfirmationState(StrEnum):
+    """Whether AEAT has been seen to hold a chain entry.
+
+    * ``PENDIENTE`` -- filed locally, not yet observed at AEAT.
+    * ``CONFIRMADA`` -- backed by an AEAT register entry and its evidence.
+    * ``DISCREPANTE`` -- AEAT holds different content for the presentation; the
+      entry is superseded by the AEAT entry.
+    * ``DESCARTADA`` -- a pending entry replaced before it was ever presented.
+    """
+
+    PENDIENTE = "pendiente"
+    CONFIRMADA = "confirmada"
+    DISCREPANTE = "discrepante"
+    DESCARTADA = "descartada"
+
+
+_RETIRED_CONFIRMATION_STATES = frozenset({AeatConfirmationState.DISCREPANTE, AeatConfirmationState.DESCARTADA})
+
+
+class FilingDeclarationKind(StrEnum):
+    """Legal kind of a declaration in a period's chain."""
+
+    ORIGINAL = "original"
+    COMPLEMENTARIA = "complementaria"
+    SUSTITUTIVA = "sustitutiva"
+    RECTIFICATIVA = "rectificativa"
+
+
+_TipoSolicitud = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
+
+
+class AeatRegisterRef(BaseModel):
+    """AEAT's own identifiers for one presented declaration.
+
+    ``presented_at`` is optional because a printed justificante states a
+    Europe/Madrid wall-clock time without an offset, and no instant may be
+    invented from it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    expediente_id: EvidenceReference
+    csv: AeatCsv | None = None
+    justificante_number: AeatPresentationId | None = None
+    tipo_solicitud: _TipoSolicitud | None = None
+    presented_at: UtcInstant | None = None
+
+
 def derive_filing_record_id(
     *,
     work_unit_id: str,
@@ -162,8 +218,8 @@ class ModeloRecord(BaseModel):
     """Durable receipt of one internal filing event for an AEAT modelo (tax form).
 
     Pairs a filed :obj:`CalculationRevisionId` with the
-    filing event metadata (actor, timestamp, notes, AEAT-acceptance bit,
-    supersession link). The id is content-addressed by the filing outcome -
+    filing event metadata (actor, timestamp, notes, origin, confirmation state,
+    declaration kind, supersession and amendment links). The id is content-addressed by the filing outcome -
     ``work_unit_id``, ``calculation_revision_id``, ``filed_by``, and (for
     member-scoped group filings) ``member_nif`` - via
     :func:`derive_filing_record_id`; ``filed_at`` is a non-identity last-seen
@@ -171,11 +227,11 @@ class ModeloRecord(BaseModel):
     idempotent no-op rather than a new record. A ``model_validator`` enforces
     the derivation on construction.
 
-    ``aeat_accepted`` records externally-observed AEAT acceptance imported
-    through evidence channels; it does not imply that the application submitted
-    anything. It must travel with
-    :class:`ExternalEvidence`, while locally filed records
-    created by :func:`~cadrumo.application.modelo.filing_actions.file_modelo_revision` carry neither.
+    ``confirmation`` records externally-observed AEAT acceptance; it does not
+    imply that the application submitted anything. ``CONFIRMADA`` travels with
+    :class:`ExternalEvidence` and no other state carries it. An ``AEAT``-origin
+    record is always ``CONFIRMADA``; the retired states (``DISCREPANTE``,
+    ``DESCARTADA``) are local entries that are no longer in force.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -191,7 +247,10 @@ class ModeloRecord(BaseModel):
     filed_at: UtcInstant
     filed_by: ModeloActorLabel
     notes: FilingNotes | None = None
-    aeat_accepted: bool = False
+    origin: FilingOrigin
+    confirmation: AeatConfirmationState
+    declaration_kind: FilingDeclarationKind
+    aeat_register: AeatRegisterRef | None = None
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: UtcInstant | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
@@ -244,6 +303,16 @@ class ModeloRecord(BaseModel):
         _require_filing_record_status(self)
         return self
 
+    @property
+    def aeat_accepted(self) -> bool:
+        """Return whether AEAT has been observed to hold this entry."""
+        return self.confirmation is AeatConfirmationState.CONFIRMADA
+
+    @property
+    def is_retired(self) -> bool:
+        """Return whether the entry left the chain without being the presented declaration."""
+        return self.confirmation in _RETIRED_CONFIRMATION_STATES
+
     @override
     def model_copy(self, *, update: Mapping[str, object] | None = None, deep: bool = False) -> Self:
         copied = super().model_copy(update=update, deep=deep)
@@ -271,11 +340,22 @@ def _require_filing_record_identity(record: ModeloRecord) -> None:
 
 
 def _require_external_evidence_state(record: ModeloRecord) -> None:
-    """Require AEAT acceptance and external evidence to travel together."""
-    if record.aeat_accepted and record.external_evidence is None:
-        raise ModeloValidationError("AEAT-accepted filing record must carry external evidence")
-    if record.external_evidence is not None and not record.aeat_accepted:
-        raise ModeloValidationError("external filing evidence must carry AEAT acceptance")
+    """Require origin, confirmation, evidence and register reference to agree."""
+    confirmed = record.confirmation is AeatConfirmationState.CONFIRMADA
+    if record.origin is FilingOrigin.AEAT and not confirmed:
+        raise ModeloValidationError("AEAT-origin filing record must be confirmed")
+    if confirmed and record.external_evidence is None:
+        raise ModeloValidationError("confirmed filing record must carry external evidence")
+    if record.external_evidence is not None and not confirmed:
+        raise ModeloValidationError(
+            f"{record.confirmation.value} filing record must not carry external evidence",
+        )
+    if record.aeat_register is not None and not confirmed:
+        raise ModeloValidationError(
+            f"{record.confirmation.value} filing record must not carry an AEAT register reference",
+        )
+    if record.is_retired and record.status is ModeloRecordStatus.VIGENTE:
+        raise ModeloValidationError(f"{record.confirmation.value} filing record cannot be in force")
 
 
 def _require_filing_record_status(record: ModeloRecord) -> None:
@@ -377,6 +457,11 @@ class ModeloRecordCatalogue(BaseModel):
         colliding with an unrelated current record in
         :meth:`ModeloRecordCatalogue._enforce_keys_match`.
 
+        Retired entries (``DESCARTADA``, ``DISCREPANTE``) keep their forward
+        link as history, but the chain has since moved on: the baseline they
+        named now points at the entry that replaced them, so their links are
+        not checked.
+
         One deliberate exclusion: the target's ``status`` is not asserted to be
         ``SUPERSEDIDO``. :meth:`ModeloRecord._enforce_invariants` already
         refuses a ``VIGENTE`` record that carries supersession metadata, so a
@@ -385,7 +470,7 @@ class ModeloRecordCatalogue(BaseModel):
         """
         for record in self.records.values():
             target_id = record.amends_filing_record_id
-            if target_id is None:
+            if target_id is None or record.is_retired:
                 continue
             if target_id == record.filing_record_id:
                 raise ModeloValidationError(
@@ -452,6 +537,38 @@ class ModeloRecordCatalogue(BaseModel):
                 return record
         return None
 
+    def latest_confirmed_for(
+        self,
+        *,
+        bucket_id: str,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        member_nif: str | None = None,
+    ) -> ModeloRecord | None:
+        """Return the most recent AEAT-confirmed record for a filing tuple.
+
+        This is the declaration a correction must reference. It differs from
+        :meth:`current_for` while a local entry is pending.
+        """
+        current = self.current_for(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            member_nif=member_nif,
+        )
+        if current is not None and current.aeat_accepted:
+            return current
+        history = self.history_for(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            member_nif=member_nif,
+        )
+        return next((record for record in reversed(history) if record.aeat_accepted), None)
+
     def history_for(
         self,
         *,
@@ -501,8 +618,12 @@ class ModeloRecordCatalogue(BaseModel):
 
 
 __all__ = [
+    "AeatConfirmationState",
+    "AeatRegisterRef",
     "ExternalEvidence",
     "ExternalEvidenceKind",
+    "FilingDeclarationKind",
+    "FilingOrigin",
     "ModeloRecord",
     "ModeloRecordCatalogue",
     "ModeloRecordStatus",

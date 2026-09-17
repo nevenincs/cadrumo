@@ -22,6 +22,7 @@ def persist_justificante_metadata(
     period: str,
     captured_at: datetime,
     tax_id: str = "X1234567L",
+    presentation_id: str | None = None,
 ) -> None:
     """Persist a justificante record through the concrete profile repository."""
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
@@ -32,7 +33,7 @@ def persist_justificante_metadata(
             modelo=modelo,
             period=Period.from_year_and_code(filing_year, period),
             ejercicio=str(filing_year),
-            presentation_id=None,
+            presentation_id=presentation_id,
             presented_at=captured_at,
             tax_id=tax_id,
             total_a_ingresar=None,

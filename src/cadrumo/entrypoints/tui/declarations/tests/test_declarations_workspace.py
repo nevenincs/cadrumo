@@ -39,8 +39,11 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
@@ -72,28 +75,28 @@ _EXPECTED = {
         "Resumen de declaraciones",
         "Revisiones de cálculo",
         "Historial de presentaciones",
-        "El estado local de presentación y la evidencia observada de la AEAT son hechos distintos.",
+        "El estado local de presentación, la confirmación de la AEAT y la evidencia observada de la AEAT son hechos distintos.",
         "Presentación registrada localmente",
     ),
     OutputLanguage.EN: (
         "Declarations overview",
         "Calculation revisions",
         "Filing history",
-        "Local filing status and externally observed AEAT evidence are separate facts.",
+        "Local filing status, AEAT confirmation and externally observed AEAT evidence are separate facts.",
         "Filing recorded locally",
     ),
     OutputLanguage.CA: (
         "Resum de declaracions",
         "Revisions de càlcul",
         "Historial de presentacions",
-        "L'estat local de presentació i l'evidència observada de l'AEAT són fets separats.",
+        "L'estat local de presentació, la confirmació de l'AEAT i l'evidència observada de l'AEAT són fets separats.",
         "Presentació registrada localment",
     ),
     OutputLanguage.HU: (
         "Bevallások áttekintése",
         "Számítási változatok",
         "Benyújtási előzmények",
-        "A helyi benyújtási állapot és a megfigyelt AEAT-bizonyíték külön tény.",
+        "A helyi benyújtási állapot, az AEAT-megerősítés és a megfigyelt AEAT-bizonyíték külön tények.",
         "Benyújtás helyben rögzítve",
     ),
 }
@@ -236,7 +239,9 @@ def _projection(
         filed_at=_NOW,
         filed_by="operator",
         notes="private notes",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id="private-reference",
@@ -540,7 +545,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         row = tuple(str(cell) for cell in table.get_row(filing_key))
         assert row[1] == "03/09/2026 10:00 UTC"
         assert row[2] == declarations_copy("tui.declarations.filing_state.vigente")
-        assert row[3] == declarations_copy("tui.declarations.value.yes")
+        assert row[3] == declarations_copy("tui.declarations.confirmation.confirmada")
         assert row[4] == declarations_copy("tui.declarations.evidence.aeat_justificante_pdf")
 
 

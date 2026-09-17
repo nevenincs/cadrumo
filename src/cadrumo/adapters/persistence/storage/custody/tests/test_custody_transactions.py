@@ -62,7 +62,13 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.core.profile_publication import ProfilePublicationKind
 from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
+from cadrumo.domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    derive_filing_record_id,
+)
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -182,6 +188,9 @@ def _filed_record(*, filed_at: datetime) -> ModeloRecord:
         period=Period.from_year_and_code(filed_at.year, "2T"),
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
 
 

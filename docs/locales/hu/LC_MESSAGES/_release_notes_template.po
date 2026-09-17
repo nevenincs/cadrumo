@@ -19,7 +19,7 @@ msgstr ""
 
 #: ../../_release_notes_template.md:15
 msgid "Cadrumo vX.Y.Z"
-msgstr "Cadrumo vX.Y.Z – kiadási jegyzetek"
+msgstr "Cadrumo vX.Y.Z: kiadási jegyzetek"
 
 #: ../../_release_notes_template.md:17
 msgid ""

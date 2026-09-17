@@ -726,7 +726,7 @@ def register_capture_as_filing_evidence(
             the period before attaching live-capture evidence to it.
     """
     from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
-    from ...domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
+    from ...domain.modelos.filing_record import AeatConfirmationState, ExternalEvidence, ExternalEvidenceKind
     from ...domain.modelos.filing_repository import upsert_filing_record
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
@@ -815,7 +815,7 @@ def register_capture_as_filing_evidence(
                 reference_id=snapshot.csv,
                 imported_at=stamped_at,
             ),
-            "aeat_accepted": True,
+            "confirmation": AeatConfirmationState.CONFIRMADA,
         },
     )
     ports.filing.save(upsert_filing_record(catalogue, stamped))

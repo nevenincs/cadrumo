@@ -31,13 +31,13 @@ modelo:
             x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
               label: Número total de operadores intracomunitarios con rectificaciones
             x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre o razon social del operador intracomunitario
+              label: Apellidos y nombre o razón social del operador intracomunitario
             x-dto2soj1ediiqqbde1nmsqb2dhig:
-              label: Base imponible o importe de la operacion intracomunitaria
+              label: Base imponible o importe de la operación intracomunitaria
             x-dto2sorcc5r6abbfe1in4ob3d5nms:
-              label: Clave de operacion intracomunitaria
+              label: Clave de operación intracomunitaria
             x-dto2sorfchkmerpde1gmiso:
-              label: Codigo pais del operador comunitario
+              label: Código país del operador comunitario
             x-dto2srj9comm6rrdeln6it31e9kmu:
               label: NIF del operador comunitario
             x-e9im6t1ec9gn6p9dc5n78pbid5nn4:

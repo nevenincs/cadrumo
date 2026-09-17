@@ -6,7 +6,7 @@ modelo:
           act-actividad-descripcion:
             label: Actividad. Descripción de la actividad
           act-actividad-iae-seccion-grupo:
-            label: Actividad. Seccion del I.A.E. y grupo o epigrafe
+            label: Actividad. Sección del I.A.E. y grupo o epígrafe
           act-actividad-tipo-actividad:
             label: Actividad. Tipo de actividad
           act-indicadores-local-directo-1:
@@ -30,11 +30,11 @@ modelo:
           act-local-directo-1-baja-fecha:
             label: Local directamente afecto (primero). Fecha de baja
           act-local-directo-1-codigo-postal:
-            label: Local directamente afecto (primero). Codigo postal
+            label: Local directamente afecto (primero). Código postal
           act-local-directo-1-codigo-provincia:
-            label: Local directamente afecto (primero). Codigo de provincia
+            label: Local directamente afecto (primero). Código de provincia
           act-local-directo-1-grado-afectacion:
-            label: Local directamente afecto (primero). Grado de afectacion
+            label: Local directamente afecto (primero). Grado de afectación
           act-local-directo-1-municipio:
             label: Local directamente afecto (primero). Municipio
           act-local-directo-1-nombre-via:
@@ -50,16 +50,16 @@ modelo:
           act-local-directo-1-referencia-catastral:
             label: Local directamente afecto (primero). Referencia catastral
           act-local-directo-1-seccion-grafica:
-            label: Local directamente afecto (primero). Seccion grafica catastral
+            label: Local directamente afecto (primero). Sección gráfica catastral
           act-local-directo-1-superficie:
             label: Local directamente afecto (primero). Superficie en metros cuadrados
           act-local-directo-1-variacion:
-            label: Local directamente afecto (primero). Variacion
+            label: Local directamente afecto (primero). Variación
           act-local-directo-1-variacion-fecha:
-            label: Local directamente afecto (primero). Fecha de variacion
+            label: Local directamente afecto (primero). Fecha de variación
           act-local-directo-1-variacion-numero-referencia:
             label: Local directamente afecto (primero). Número de referencia de la
-              variacion
+              variación
           act-local-directo-2-alta:
             label: Local directamente afecto (segundo). Alta
           act-local-directo-2-alta-fecha:
@@ -69,11 +69,11 @@ modelo:
           act-local-directo-2-baja-fecha:
             label: Local directamente afecto (segundo). Fecha de baja
           act-local-directo-2-codigo-postal:
-            label: Local directamente afecto (segundo). Codigo postal
+            label: Local directamente afecto (segundo). Código postal
           act-local-directo-2-codigo-provincia:
-            label: Local directamente afecto (segundo). Codigo de provincia
+            label: Local directamente afecto (segundo). Código de provincia
           act-local-directo-2-grado-afectacion:
-            label: Local directamente afecto (segundo). Grado de afectacion
+            label: Local directamente afecto (segundo). Grado de afectación
           act-local-directo-2-municipio:
             label: Local directamente afecto (segundo). Municipio
           act-local-directo-2-nombre-via:
@@ -89,16 +89,16 @@ modelo:
           act-local-directo-2-referencia-catastral:
             label: Local directamente afecto (segundo). Referencia catastral
           act-local-directo-2-seccion-grafica:
-            label: Local directamente afecto (segundo). Seccion grafica catastral
+            label: Local directamente afecto (segundo). Sección gráfica catastral
           act-local-directo-2-superficie:
             label: Local directamente afecto (segundo). Superficie en metros cuadrados
           act-local-directo-2-variacion:
-            label: Local directamente afecto (segundo). Variacion
+            label: Local directamente afecto (segundo). Variación
           act-local-directo-2-variacion-fecha:
-            label: Local directamente afecto (segundo). Fecha de variacion
+            label: Local directamente afecto (segundo). Fecha de variación
           act-local-directo-2-variacion-numero-referencia:
             label: Local directamente afecto (segundo). Número de referencia de la
-              variacion
+              variación
           act-local-indirecto-1-alta:
             label: Local indirectamente afecto (primero). Alta
           act-local-indirecto-1-alta-fecha:
@@ -108,11 +108,11 @@ modelo:
           act-local-indirecto-1-baja-fecha:
             label: Local indirectamente afecto (primero). Fecha de baja
           act-local-indirecto-1-codigo-postal:
-            label: Local indirectamente afecto (primero). Codigo postal
+            label: Local indirectamente afecto (primero). Código postal
           act-local-indirecto-1-codigo-provincia:
-            label: Local indirectamente afecto (primero). Codigo de provincia
+            label: Local indirectamente afecto (primero). Código de provincia
           act-local-indirecto-1-grado-afectacion:
-            label: Local indirectamente afecto (primero). Grado de afectacion
+            label: Local indirectamente afecto (primero). Grado de afectación
           act-local-indirecto-1-municipio:
             label: Local indirectamente afecto (primero). Municipio
           act-local-indirecto-1-nombre-via:
@@ -129,18 +129,18 @@ modelo:
           act-local-indirecto-1-referencia-catastral:
             label: Local indirectamente afecto (primero). Referencia catastral
           act-local-indirecto-1-seccion-grafica:
-            label: Local indirectamente afecto (primero). Seccion grafica catastral
+            label: Local indirectamente afecto (primero). Sección gráfica catastral
           act-local-indirecto-1-superficie:
             label: Local indirectamente afecto (primero). Superficie en metros cuadrados
           act-local-indirecto-1-uso-destino:
             label: Local indirectamente afecto (primero). Uso o destino
           act-local-indirecto-1-variacion:
-            label: Local indirectamente afecto (primero). Variacion
+            label: Local indirectamente afecto (primero). Variación
           act-local-indirecto-1-variacion-fecha:
-            label: Local indirectamente afecto (primero). Fecha de variacion
+            label: Local indirectamente afecto (primero). Fecha de variación
           act-local-indirecto-1-variacion-numero-referencia:
             label: Local indirectamente afecto (primero). Número de referencia de
-              la variacion
+              la variación
           act-local-indirecto-2-alta:
             label: Local indirectamente afecto (segundo). Alta
           act-local-indirecto-2-alta-fecha:
@@ -150,11 +150,11 @@ modelo:
           act-local-indirecto-2-baja-fecha:
             label: Local indirectamente afecto (segundo). Fecha de baja
           act-local-indirecto-2-codigo-postal:
-            label: Local indirectamente afecto (segundo). Codigo postal
+            label: Local indirectamente afecto (segundo). Código postal
           act-local-indirecto-2-codigo-provincia:
-            label: Local indirectamente afecto (segundo). Codigo de provincia
+            label: Local indirectamente afecto (segundo). Código de provincia
           act-local-indirecto-2-grado-afectacion:
-            label: Local indirectamente afecto (segundo). Grado de afectacion
+            label: Local indirectamente afecto (segundo). Grado de afectación
           act-local-indirecto-2-municipio:
             label: Local indirectamente afecto (segundo). Municipio
           act-local-indirecto-2-nombre-via:
@@ -171,18 +171,18 @@ modelo:
           act-local-indirecto-2-referencia-catastral:
             label: Local indirectamente afecto (segundo). Referencia catastral
           act-local-indirecto-2-seccion-grafica:
-            label: Local indirectamente afecto (segundo). Seccion grafica catastral
+            label: Local indirectamente afecto (segundo). Sección gráfica catastral
           act-local-indirecto-2-superficie:
             label: Local indirectamente afecto (segundo). Superficie en metros cuadrados
           act-local-indirecto-2-uso-destino:
             label: Local indirectamente afecto (segundo). Uso o destino
           act-local-indirecto-2-variacion:
-            label: Local indirectamente afecto (segundo). Variacion
+            label: Local indirectamente afecto (segundo). Variación
           act-local-indirecto-2-variacion-fecha:
-            label: Local indirectamente afecto (segundo). Fecha de variacion
+            label: Local indirectamente afecto (segundo). Fecha de variación
           act-local-indirecto-2-variacion-numero-referencia:
             label: Local indirectamente afecto (segundo). Número de referencia de
-              la variacion
+              la variación
           act-sin-local-alta:
             label: Actividad fuera de local determinado. Alta
           act-sin-local-alta-fecha:
@@ -196,8 +196,8 @@ modelo:
           act-sin-local-numero-referencia:
             label: Actividad fuera de local determinado. Número de referencia
           decl-apellidos-razon-social:
-            label: Apellidos si es persona fisica, o razon social o denominacion si
-              es persona juridica
+            label: Apellidos si es persona física, o razón social o denominación si
+              es persona jurídica
           decl-causa-110:
             label: Solicitud de Número de Identificación Fiscal (NIF)
           decl-causa-111:
@@ -279,71 +279,71 @@ modelo:
             label: Fecha efectiva del cese de todas las actividades empresariales
               o profesionales
           decl-nif:
-            label: Número de identificacion fiscal (NIF) del declarante
+            label: Número de identificación fiscal (NIF) del declarante
           decl-nombre:
-            label: Nombre, en el caso de personas fisicas
+            label: Nombre, en el caso de personas físicas
           ep-avisos-email:
             label: Establecimiento permanente. Avisos. E-mail
           ep-avisos-prefijo-pais-movil:
-            label: Establecimiento permanente. Avisos. Prefijo de pais del teléfono
-              movil
+            label: Establecimiento permanente. Avisos. Prefijo de país del teléfono
+              móvil
           ep-avisos-telefono-movil:
-            label: Establecimiento permanente. Avisos. Teléfono movil
+            label: Establecimiento permanente. Avisos. Teléfono móvil
           ep-domicilio-fiscal-bloque:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Bloque
+            label: Establecimiento permanente. Domicilio fiscal en España. Bloque
           ep-domicilio-fiscal-calificador-numero:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Calificador
+            label: Establecimiento permanente. Domicilio fiscal en España. Calificador
               del número
           ep-domicilio-fiscal-codigo-postal:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Codigo
+            label: Establecimiento permanente. Domicilio fiscal en España. Código
               postal
           ep-domicilio-fiscal-codigo-provincia:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Codigo
+            label: Establecimiento permanente. Domicilio fiscal en España. Código
               de provincia
           ep-domicilio-fiscal-complemento-domicilio:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Complemento
+            label: Establecimiento permanente. Domicilio fiscal en España. Complemento
               de domicilio
           ep-domicilio-fiscal-escalera:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Escalera
+            label: Establecimiento permanente. Domicilio fiscal en España. Escalera
           ep-domicilio-fiscal-indicador-referencia-catastral:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Indicador
+            label: Establecimiento permanente. Domicilio fiscal en España. Indicador
               de referencia catastral del domicilio fiscal
           ep-domicilio-fiscal-localidad:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Localidad
-              o poblacion
+            label: Establecimiento permanente. Domicilio fiscal en España. Localidad
+              o población
           ep-domicilio-fiscal-municipio:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Nombre
+            label: Establecimiento permanente. Domicilio fiscal en España. Nombre
               del municipio
           ep-domicilio-fiscal-nombre-via:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Nombre
-              de la via publica
+            label: Establecimiento permanente. Domicilio fiscal en España. Nombre
+              de la vía pública
           ep-domicilio-fiscal-numero-casa:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Número
+            label: Establecimiento permanente. Domicilio fiscal en España. Número
               de casa
           ep-domicilio-fiscal-planta:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Planta
+            label: Establecimiento permanente. Domicilio fiscal en España. Planta
           ep-domicilio-fiscal-portal:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Portal
+            label: Establecimiento permanente. Domicilio fiscal en España. Portal
           ep-domicilio-fiscal-puerta:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Puerta
+            label: Establecimiento permanente. Domicilio fiscal en España. Puerta
           ep-domicilio-fiscal-referencia-catastral:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Referencia
+            label: Establecimiento permanente. Domicilio fiscal en España. Referencia
               catastral
           ep-domicilio-fiscal-tipo-numero:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Tipo de
+            label: Establecimiento permanente. Domicilio fiscal en España. Tipo de
               número
           ep-domicilio-fiscal-tipo-via:
-            label: Establecimiento permanente. Domicilio fiscal en Espana. Tipo de
-              via
+            label: Establecimiento permanente. Domicilio fiscal en España. Tipo de
+              vía
           ep-domicilio-notificaciones-apartado-calidad:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               En calidad de, para el apartado de correos
           ep-domicilio-notificaciones-apartado-codigo-postal:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Codigo postal del apartado de correos
+              Código postal del apartado de correos
           ep-domicilio-notificaciones-apartado-codigo-provincia:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Codigo de provincia del apartado de correos
+              Código de provincia del apartado de correos
           ep-domicilio-notificaciones-apartado-correos:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               Número de apartado de correos
@@ -352,7 +352,7 @@ modelo:
               Destinatario del apartado de correos, si es distinto del declarante
           ep-domicilio-notificaciones-apartado-poblacion:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Poblacion o ciudad del apartado de correos
+              Población o ciudad del apartado de correos
           ep-domicilio-notificaciones-baja-domicilio:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               Indicador de baja del domicilio de notificaciones
@@ -367,10 +367,10 @@ modelo:
               Calificador del número (domicilio 1)
           ep-domicilio-notificaciones-codigo-postal:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Codigo postal (domicilio 1)
+              Código postal (domicilio 1)
           ep-domicilio-notificaciones-codigo-provincia:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Codigo de provincia (domicilio 1)
+              Código de provincia (domicilio 1)
           ep-domicilio-notificaciones-complemento-domicilio:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               Complemento de domicilio (domicilio 1)
@@ -382,7 +382,7 @@ modelo:
               Escalera (domicilio 1)
           ep-domicilio-notificaciones-localidad:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-              Localidad o poblacion (domicilio 1)
+              Localidad o población (domicilio 1)
           ep-domicilio-notificaciones-municipio:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               Nombre del municipio (domicilio 1)
@@ -408,77 +408,77 @@ modelo:
             label: Establecimiento permanente. Domicilio a efectos de notificaciones.
               Tipo de via (domicilio 1)
           ep-identificacion-anagrama:
-            label: Establecimiento permanente. Identificacion. Anagrama
+            label: Establecimiento permanente. Identificación. Anagrama
           ep-identificacion-dominio-internet:
-            label: Establecimiento permanente. Identificacion. Dominio o direccion
+            label: Establecimiento permanente. Identificación. Dominio o dirección
               de internet
           ep-identificacion-dominio-internet-secundario:
-            label: Establecimiento permanente. Identificacion. Dominio o direccion
+            label: Establecimiento permanente. Identificación. Dominio o dirección
               de internet (segundo)
           ep-identificacion-es-sucursal:
-            label: Establecimiento permanente. Identificacion. Es una sucursal de
+            label: Establecimiento permanente. Identificación. Es una sucursal de
               la entidad no residente
           ep-identificacion-fecha-constitucion:
-            label: Establecimiento permanente. Identificacion. Fecha de constitucion
+            label: Establecimiento permanente. Identificación. Fecha de constitución
           ep-identificacion-fecha-inscripcion-registro-mercantil:
-            label: Establecimiento permanente. Identificacion. Fecha de inscripcion
+            label: Establecimiento permanente. Identificación. Fecha de inscripción
               en el registro mercantil
           ep-identificacion-matriz-estado-residencia:
-            label: Establecimiento permanente. Identificacion. Estado de residencia
+            label: Establecimiento permanente. Identificación. Estado de residencia
               de la persona o entidad no residente de la que depende
           ep-identificacion-matriz-nif:
-            label: Establecimiento permanente. Identificacion. N.I.F. de la persona
+            label: Establecimiento permanente. Identificación. N.I.F. de la persona
               o entidad no residente de la que depende, si dispone de el
           ep-identificacion-matriz-razon-social:
-            label: Establecimiento permanente. Identificacion. Razon o denominacion
+            label: Establecimiento permanente. Identificación. Razón o denominación
               social de la persona o entidad no residente de la que depende
           ep-identificacion-nif:
-            label: Establecimiento permanente. Identificacion. N.I.F.
+            label: Establecimiento permanente. Identificación. N.I.F.
           ep-identificacion-nif-estado-residencia:
-            label: Establecimiento permanente. Identificacion. Codigo de identificacion
+            label: Establecimiento permanente. Identificación. Código de identificación
               fiscal del Estado de residencia o NVAT
           ep-identificacion-razon-social:
-            label: Establecimiento permanente. Identificacion. Razon o denominacion
+            label: Establecimiento permanente. Identificación. Razón o denominación
               social
           ep-identificacion-tipo-establecimiento:
-            label: Establecimiento permanente. Identificacion. Tipo de establecimiento
+            label: Establecimiento permanente. Identificación. Tipo de establecimiento
               permanente
           extractores-depositos-alcohol-fecha:
-            label: Registro de extractores de depositos fiscales. Fecha de la solicitud
+            label: Registro de extractores de depósitos fiscales. Fecha de la solicitud
               para alcohol y bebidas derivadas
           extractores-depositos-hidrocarburos-fecha:
-            label: Registro de extractores de depositos fiscales. Fecha de la solicitud
+            label: Registro de extractores de depósitos fiscales. Fecha de la solicitud
               para hidrocarburos
           iva-facturacion-factura-por-destinatarios:
-            label: IVA. Facturacion. La obligacion de expedir factura se cumple por
+            label: IVA. Facturación. La obligación de expedir factura se cumple por
               los destinatarios o por terceros
           iva-facturacion-factura-por-destinatarios-fecha:
-            label: IVA. Facturacion. Facturacion por destinatarios o terceros. Fecha
+            label: IVA. Facturación. Facturación por destinatarios o terceros. Fecha
           iva-gran-empresa-es-admon-publica-presupuesto:
             label: Gran empresa y administraciones publicas. Es administración publica
               cuyo ultimo presupuesto anual aprobado supera 6 millones de euros
           iva-gran-empresa-es-gran-empresa:
-            label: Gran empresa y administraciones publicas. Tiene la condicion de
+            label: Gran empresa y administraciones públicas. Tiene la condición de
               gran empresa
           iva-gran-empresa-fecha-admon-publica-presupuesto:
-            label: Gran empresa y administraciones publicas. Fecha de la condicion
-              de administración publica con presupuesto superior a 6 millones de euros
+            label: Gran empresa y administraciones públicas. Fecha de la condición
+              de administración pública con presupuesto superior a 6 millones de euros
           iva-gran-empresa-fecha-gran-empresa:
-            label: Gran empresa y administraciones publicas. Fecha de la condicion
+            label: Gran empresa y administraciones públicas. Fecha de la condición
               de gran empresa
           iva-importacion-forales-iva-importacion-fecha:
-            label: IVA. Importacion. Forales. Ingreso del IVA a la importacion. Fecha
+            label: IVA. Importación. Forales. Ingreso del IVA a la importación. Fecha
           iva-importacion-ingreso-iva-importacion-fecha:
-            label: IVA. Importacion. Ingreso del IVA a la importacion. Fecha
+            label: IVA. Importación. Ingreso del IVA a la importación. Fecha
           iva-inicio-actividad-comienzo-habitual:
             label: IVA. Inicio de actividad. Comienzo habitual de entregas de bienes
               o prestaciones de servicios
           iva-inicio-actividad-entregas-posterior:
             label: IVA. Inicio de actividad. Entregas de bienes o prestaciones de
-              servicios posterior a la adquisicion
+              servicios posterior a la adquisición
           iva-inicio-actividad-entregas-previa-o-simultanea:
             label: IVA. Inicio de actividad. Entregas de bienes o prestaciones de
-              servicios previa o simultanea a la adquisicion
+              servicios previa o simultanea a la adquisición
           iva-inicio-actividad-fecha-comienzo-habitual:
             label: IVA. Inicio de actividad. Fecha del comienzo habitual de entregas
               o prestaciones
@@ -493,263 +493,263 @@ modelo:
             label: IVA. Inicio de actividad. Inicio de nueva actividad que constituya
               un sector diferenciado
           iva-libros-registro-llevanza-sede-electronica-fecha:
-            label: IVA. Libros de registro. Llevanza de los libros de registro a traves
-              de la sede electronica. Fecha
+            label: IVA. Libros de registro. Llevanza de los libros de registro a través
+              de la sede electrónica. Fecha
           iva-obligaciones-establecido-en-tai:
-            label: IVA. Obligaciones. Esta establecido en el territorio de aplicacion
+            label: IVA. Obligaciones. Esta establecido en el territorio de aplicación
               del impuesto o tiene en el un establecimiento permanente
           iva-obligaciones-revendedor-dispositivos:
-            label: IVA. Obligaciones. Tiene la condicion de revendedor de telefonos
-              moviles, consolas, ordenadores portatiles y tabletas
+            label: IVA. Obligaciones. Tiene la condición de revendedor de teléfonos
+              móviles, consolas, ordenadores portátiles y tabletas
           iva-obligaciones-solo-operaciones-sin-autoliquidacion:
             label: IVA. Obligaciones. Realiza exclusivamente operaciones no sujetas
-              o exentas que no obligan a presentar autoliquidación periodica
+              o exentas que no obligan a presentar autoliquidación periódica
           iva-prorrata-porcentaje-provisional:
             label: IVA. Prorrata y sectores diferenciados. Propone porcentaje provisional
               de deducción
           iva-prorrata-sector-1-cnae-1:
-            label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector I. Código C.N.A.E.
               (primero)
           iva-prorrata-sector-1-cnae-2:
-            label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector I. Código C.N.A.E.
               (segundo)
           iva-prorrata-sector-1-cnae-3:
-            label: IVA. Prorrata y sectores diferenciados. Sector I. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector I. Código C.N.A.E.
               (tercero)
           iva-prorrata-sector-1-prorrata-especial:
-            label: IVA. Prorrata y sectores diferenciados. Sector I. Opcion por la
+            label: IVA. Prorrata y sectores diferenciados. Sector I. Opción por la
               prorrata especial
           iva-prorrata-sector-2-cnae-1:
-            label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector II. Código C.N.A.E.
               (primero)
           iva-prorrata-sector-2-cnae-2:
-            label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector II. Código C.N.A.E.
               (segundo)
           iva-prorrata-sector-2-cnae-3:
-            label: IVA. Prorrata y sectores diferenciados. Sector II. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector II. Código C.N.A.E.
               (tercero)
           iva-prorrata-sector-2-prorrata-especial:
-            label: IVA. Prorrata y sectores diferenciados. Sector II. Opcion por la
+            label: IVA. Prorrata y sectores diferenciados. Sector II. Opción por la
               prorrata especial
           iva-prorrata-sector-3-cnae-1:
-            label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector III. Código C.N.A.E.
               (primero)
           iva-prorrata-sector-3-cnae-2:
-            label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector III. Código C.N.A.E.
               (segundo)
           iva-prorrata-sector-3-cnae-3:
-            label: IVA. Prorrata y sectores diferenciados. Sector III. Codigo C.N.A.E.
+            label: IVA. Prorrata y sectores diferenciados. Sector III. Código C.N.A.E.
               (tercero)
           iva-prorrata-sector-3-prorrata-especial:
-            label: IVA. Prorrata y sectores diferenciados. Sector III. Opcion por
+            label: IVA. Prorrata y sectores diferenciados. Sector III. Opción por
               la prorrata especial
           iva-prorrata-sin-sectores-diferenciados:
             label: IVA. Prorrata y sectores diferenciados. No tiene sectores diferenciados
           iva-regimenes-agencias-viajes:
-            label: IVA. Regimenes. Regimen especial de agencias de viajes, operacion
-              por operacion
+            label: IVA. Regímenes. Régimen especial de agencias de viajes, operación
+              por operación
           iva-regimenes-agencias-viajes-fecha:
-            label: IVA. Regimenes. Agencias de viajes. Fecha
+            label: IVA. Regímenes. Agencias de viajes. Fecha
           iva-regimenes-agencias-viajes-iae:
-            label: IVA. Regimenes. Agencias de viajes. Grupo o epigrafe del I.A.E.
-              o codigo de actividad
+            label: IVA. Regímenes. Agencias de viajes. Grupo o epígrafe del I.A.E.
+              o código de actividad
           iva-regimenes-bienes-usados-margen-global:
-            label: IVA. Regimenes. Regimen especial de bienes usados, margen de beneficio
+            label: IVA. Regímenes. Régimen especial de bienes usados, margen de beneficio
               global
           iva-regimenes-bienes-usados-margen-global-fecha:
-            label: IVA. Regimenes. Bienes usados margen de beneficio global. Fecha
+            label: IVA. Regímenes. Bienes usados margen de beneficio global. Fecha
           iva-regimenes-bienes-usados-margen-global-iae:
-            label: IVA. Regimenes. Bienes usados margen de beneficio global. Grupo
-              o epigrafe del I.A.E. o codigo de actividad
+            label: IVA. Regímenes. Bienes usados margen de beneficio global. Grupo
+              o epígrafe del I.A.E. o código de actividad
           iva-regimenes-bienes-usados-operacion:
-            label: IVA. Regimenes. Regimen especial de bienes usados, operacion por
-              operacion
+            label: IVA. Regímenes. Régimen especial de bienes usados, operación por
+              operación
           iva-regimenes-bienes-usados-operacion-fecha:
-            label: IVA. Regimenes. Bienes usados operacion por operacion. Fecha
+            label: IVA. Regímenes. Bienes usados operación por operación. Fecha
           iva-regimenes-bienes-usados-operacion-iae:
-            label: IVA. Regimenes. Bienes usados operacion por operacion. Grupo o
-              epigrafe del I.A.E. o codigo de actividad
+            label: IVA. Regímenes. Bienes usados operación por operación. Grupo o
+              epígrafe del I.A.E. o código de actividad
           iva-regimenes-general:
-            label: IVA. Regimenes. Regimen general
+            label: IVA. Regímenes. Régimen general
           iva-regimenes-general-fecha:
-            label: IVA. Regimenes. Regimen general. Fecha
+            label: IVA. Regímenes. Régimen general. Fecha
           iva-regimenes-general-iae:
-            label: IVA. Regimenes. Regimen general. Grupo o epigrafe del I.A.E. o
-              codigo de actividad
+            label: IVA. Regímenes. Régimen general. Grupo o epígrafe del I.A.E. o
+              código de actividad
           iva-regimenes-oro-inversion:
-            label: IVA. Regimenes. Regimen especial del oro de inversion
+            label: IVA. Regímenes. Régimen especial del oro de inversión
           iva-regimenes-oro-inversion-fecha:
-            label: IVA. Regimenes. Oro de inversion. Fecha
+            label: IVA. Regímenes. Oro de inversión. Fecha
           iva-regimenes-oro-inversion-iae:
-            label: IVA. Regimenes. Oro de inversion. Grupo o epigrafe del I.A.E. o
-              codigo de actividad
+            label: IVA. Regímenes. Oro de inversión. Grupo o epígrafe del I.A.E. o
+              código de actividad
           iva-regimenes-recargo-equivalencia:
-            label: IVA. Regimenes. Regimen especial del recargo de equivalencia
+            label: IVA. Regímenes. Régimen especial del recargo de equivalencia
           iva-regimenes-recargo-equivalencia-fecha:
-            label: IVA. Regimenes. Recargo de equivalencia. Fecha
+            label: IVA. Regímenes. Recargo de equivalencia. Fecha
           iva-regimenes-recargo-equivalencia-iae:
-            label: IVA. Regimenes. Recargo de equivalencia. Grupo o epigrafe del I.A.E.
-              o codigo de actividad
+            label: IVA. Regímenes. Recargo de equivalencia. Grupo o epígrafe del I.A.E.
+              o código de actividad
           iva-registros-operadores-intracomunitarios-fecha:
             label: IVA. Registros. Registro de operadores intracomunitarios. Fecha
           iva-revendedores-alta-baja-fecha:
             label: IVA. Revendedores de dispositivos. Alta o baja de revendedores.
               Fecha
           obl-irnr-obligacion-declarar:
-            label: IRNR. Establecimiento permanente. Obligacion de presentar declaración
+            label: IRNR. Establecimiento permanente. Obligación de presentar declaración
           obl-irnr-obligacion-declarar-fecha:
-            label: IRNR. Establecimiento permanente. Fecha de la obligacion de presentar
+            label: IRNR. Establecimiento permanente. Fecha de la obligación de presentar
               declaración
           obl-irnr-opcion-art-40-3:
-            label: IRNR. Establecimiento permanente. Opcion por el sistema de calculo
+            label: IRNR. Establecimiento permanente. Opción por el sistema de calculo
               del art. 40.3
           obl-irnr-opcion-art-40-3-fecha:
-            label: IRNR. Establecimiento permanente. Fecha de la opcion por el sistema
+            label: IRNR. Establecimiento permanente. Fecha de la opción por el sistema
               de calculo del art. 40.3
           obl-irnr-opcion-regimen-general:
-            label: IRNR. Establecimiento permanente. Opcion por el regimen general
+            label: IRNR. Establecimiento permanente. Opción por el régimen general
           obl-irnr-opcion-regimen-general-fecha:
-            label: IRNR. Establecimiento permanente. Fecha de la opcion por el regimen
+            label: IRNR. Establecimiento permanente. Fecha de la opción por el régimen
               general
           obl-irpf-estimacion-directa-normal-fecha:
-            label: IRPF. Estimacion directa normal. Fecha
+            label: IRPF. Estimación directa normal. Fecha
           obl-irpf-estimacion-directa-simplificada-fecha:
-            label: IRPF. Estimacion directa simplificada. Fecha
+            label: IRPF. Estimación directa simplificada. Fecha
           obl-irpf-estimacion-objetiva-fecha:
-            label: IRPF. Estimacion objetiva. Fecha
+            label: IRPF. Estimación objetiva. Fecha
           obl-irpf-pagos-fraccionados-actividad:
-            label: IRPF. Obligacion de realizar pagos fraccionados por actividades
-              economicas
+            label: IRPF. Obligación de realizar pagos fraccionados por actividades
+              económicas
           obl-irpf-pagos-fraccionados-actividad-fecha:
-            label: IRPF. Fecha de la obligacion de pagos fraccionados por actividades
-              economicas
+            label: IRPF. Fecha de la obligación de pagos fraccionados por actividades
+              económicas
           obl-irpf-pagos-fraccionados-atribucion:
-            label: IRPF. Obligacion de pagos fraccionados como miembro de una entidad
-              en atribucion de rentas
+            label: IRPF. Obligación de pagos fraccionados como miembro de una entidad
+              en atribución de rentas
           obl-irpf-pagos-fraccionados-atribucion-fecha:
-            label: IRPF. Fecha de la obligacion de pagos fraccionados como miembro
-              de una entidad en atribucion
+            label: IRPF. Fecha de la obligación de pagos fraccionados como miembro
+              de una entidad en atribución
           obl-regimen-ley-49-2002-ejerce-opcion:
-            label: Regimen fiscal especial de la Ley 49/2002. Ejerce la opcion por
-              el regimen fiscal especial
+            label: Régimen fiscal especial de la Ley 49/2002. Ejerce la opción por
+              el régimen fiscal especial
           obl-regimen-ley-49-2002-ejerce-opcion-fecha:
-            label: Regimen fiscal especial de la Ley 49/2002. Fecha del ejercicio
-              de la opcion por el regimen fiscal especial
+            label: Régimen fiscal especial de la Ley 49/2002. Fecha del ejercicio
+              de la opción por el régimen fiscal especial
           obl-regimen-ley-49-2002-renuncia:
-            label: Regimen fiscal especial de la Ley 49/2002. Renuncia a la aplicacion
-              del regimen fiscal especial
+            label: Régimen fiscal especial de la Ley 49/2002. Renuncia a la aplicación
+              del régimen fiscal especial
           obl-regimen-ley-49-2002-renuncia-fecha:
-            label: Regimen fiscal especial de la Ley 49/2002. Fecha de la renuncia
-              al regimen fiscal especial
+            label: Régimen fiscal especial de la Ley 49/2002. Fecha de la renuncia
+              al régimen fiscal especial
           obl-sociedades-cierre-ejercicio:
-            label: Impuesto sobre Sociedades. Fecha de cierre del ejercicio economico,
-              dia y mes
+            label: Impuesto sobre Sociedades. Fecha de cierre del ejercicio económico,
+              día y mes
           obl-sociedades-entidad-exenta:
-            label: Impuesto sobre Sociedades. Condicion de entidad exenta
+            label: Impuesto sobre Sociedades. Condición de entidad exenta
           obl-sociedades-obligacion-declarar:
-            label: Impuesto sobre Sociedades. Obligacion de presentar declaración
+            label: Impuesto sobre Sociedades. Obligación de presentar declaración
           obl-sociedades-obligacion-declarar-fecha:
-            label: Impuesto sobre Sociedades. Fecha de la obligacion de presentar
+            label: Impuesto sobre Sociedades. Fecha de la obligación de presentar
               declaración
           obl-sociedades-opcion-art-40-3:
-            label: Impuesto sobre Sociedades. Opcion por el sistema de calculo del
+            label: Impuesto sobre Sociedades. Opción por el sistema de calculo del
               art. 40.3
           obl-sociedades-opcion-art-40-3-fecha:
-            label: Impuesto sobre Sociedades. Fecha de la opcion por el sistema de
+            label: Impuesto sobre Sociedades. Fecha de la opción por el sistema de
               calculo del art. 40.3
           obl-sociedades-renuncia-consolidacion:
-            label: Impuesto sobre Sociedades. Renuncia a la aplicacion del regimen
-              de consolidacion fiscal
+            label: Impuesto sobre Sociedades. Renuncia a la aplicación del régimen
+              de consolidación fiscal
           obl-sociedades-renuncia-consolidacion-fecha:
-            label: Impuesto sobre Sociedades. Fecha de la renuncia al regimen de consolidacion
+            label: Impuesto sobre Sociedades. Fecha de la renuncia al régimen de consolidación
               fiscal
           persona-juridica-domicilio-social-bloque:
-            label: Persona juridica o entidad. Domicilio social. Bloque
+            label: Persona jurídica o entidad. Domicilio social. Bloque
           persona-juridica-domicilio-social-nombre-via:
-            label: Persona juridica o entidad. Domicilio social. Nombre de la via
-              publica
+            label: Persona jurídica o entidad. Domicilio social. Nombre de la vía
+              pública
           persona-juridica-domicilio-social-numero-casa:
-            label: Persona juridica o entidad. Domicilio social. Número de casa
+            label: Persona jurídica o entidad. Domicilio social. Número de casa
           pf-avisos-email:
             label: Avisos. E-mail
           pf-avisos-telefono-movil:
-            label: Avisos. Teléfono movil
+            label: Avisos. Teléfono móvil
           pf-domicilio-fiscal-bloque:
-            label: Domicilio fiscal en Espana. Bloque
+            label: Domicilio fiscal en España. Bloque
           pf-domicilio-fiscal-calificador-numero:
-            label: Domicilio fiscal en Espana. Calificador del número
+            label: Domicilio fiscal en España. Calificador del número
           pf-domicilio-fiscal-codigo-postal:
-            label: Domicilio fiscal en Espana. Codigo postal
+            label: Domicilio fiscal en España. Código postal
           pf-domicilio-fiscal-codigo-provincia:
-            label: Domicilio fiscal en Espana. Codigo de provincia
+            label: Domicilio fiscal en España. Código de provincia
           pf-domicilio-fiscal-complemento-domicilio:
-            label: Domicilio fiscal en Espana. Complemento de domicilio
+            label: Domicilio fiscal en España. Complemento de domicilio
           pf-domicilio-fiscal-escalera:
-            label: Domicilio fiscal en Espana. Escalera
+            label: Domicilio fiscal en España. Escalera
           pf-domicilio-fiscal-indicador-referencia-catastral:
-            label: Domicilio fiscal en Espana. Indicador de referencia catastral del
+            label: Domicilio fiscal en España. Indicador de referencia catastral del
               domicilio fiscal
           pf-domicilio-fiscal-localidad:
-            label: Domicilio fiscal en Espana. Localidad o poblacion
+            label: Domicilio fiscal en España. Localidad o población
           pf-domicilio-fiscal-municipio:
-            label: Domicilio fiscal en Espana. Nombre del municipio
+            label: Domicilio fiscal en España. Nombre del municipio
           pf-domicilio-fiscal-nombre-via:
-            label: Domicilio fiscal en Espana. Nombre de la via publica
+            label: Domicilio fiscal en España. Nombre de la vía pública
           pf-domicilio-fiscal-numero-casa:
-            label: Domicilio fiscal en Espana. Número de casa
+            label: Domicilio fiscal en España. Número de casa
           pf-domicilio-fiscal-planta:
-            label: Domicilio fiscal en Espana. Planta
+            label: Domicilio fiscal en España. Planta
           pf-domicilio-fiscal-portal:
-            label: Domicilio fiscal en Espana. Portal
+            label: Domicilio fiscal en España. Portal
           pf-domicilio-fiscal-puerta:
-            label: Domicilio fiscal en Espana. Puerta
+            label: Domicilio fiscal en España. Puerta
           pf-domicilio-fiscal-referencia-catastral:
-            label: Domicilio fiscal en Espana. Referencia catastral
+            label: Domicilio fiscal en España. Referencia catastral
           pf-domicilio-fiscal-tipo-numero:
-            label: Domicilio fiscal en Espana. Tipo de número
+            label: Domicilio fiscal en España. Tipo de número
           pf-domicilio-fiscal-tipo-via:
-            label: Domicilio fiscal en Espana. Tipo de via
+            label: Domicilio fiscal en España. Tipo de vía
           pf-domicilio-gestion-administrativa-bloque:
-            label: Domicilio de gestion administrativa. Bloque
+            label: Domicilio de gestión administrativa. Bloque
           pf-domicilio-gestion-administrativa-calificador-numero:
-            label: Domicilio de gestion administrativa. Calificador del número
+            label: Domicilio de gestión administrativa. Calificador del número
           pf-domicilio-gestion-administrativa-codigo-postal:
-            label: Domicilio de gestion administrativa. Codigo postal
+            label: Domicilio de gestión administrativa. Código postal
           pf-domicilio-gestion-administrativa-codigo-provincia:
-            label: Domicilio de gestion administrativa. Codigo de provincia
+            label: Domicilio de gestión administrativa. Código de provincia
           pf-domicilio-gestion-administrativa-complemento-domicilio:
-            label: Domicilio de gestion administrativa. Complemento de domicilio
+            label: Domicilio de gestión administrativa. Complemento de domicilio
           pf-domicilio-gestion-administrativa-escalera:
-            label: Domicilio de gestion administrativa. Escalera
+            label: Domicilio de gestión administrativa. Escalera
           pf-domicilio-gestion-administrativa-indicador-baja:
-            label: Domicilio de gestion administrativa. Indicador de baja del domicilio
-              de gestion administrativa
+            label: Domicilio de gestión administrativa. Indicador de baja del domicilio
+              de gestión administrativa
           pf-domicilio-gestion-administrativa-localidad:
-            label: Domicilio de gestion administrativa. Localidad o poblacion
+            label: Domicilio de gestión administrativa. Localidad o población
           pf-domicilio-gestion-administrativa-municipio:
-            label: Domicilio de gestion administrativa. Nombre del municipio
+            label: Domicilio de gestión administrativa. Nombre del municipio
           pf-domicilio-gestion-administrativa-nombre-via:
-            label: Domicilio de gestion administrativa. Nombre de la via publica
+            label: Domicilio de gestión administrativa. Nombre de la vía pública
           pf-domicilio-gestion-administrativa-numero-casa:
-            label: Domicilio de gestion administrativa. Número de casa
+            label: Domicilio de gestión administrativa. Número de casa
           pf-domicilio-gestion-administrativa-planta:
-            label: Domicilio de gestion administrativa. Planta
+            label: Domicilio de gestión administrativa. Planta
           pf-domicilio-gestion-administrativa-portal:
-            label: Domicilio de gestion administrativa. Portal
+            label: Domicilio de gestión administrativa. Portal
           pf-domicilio-gestion-administrativa-puerta:
-            label: Domicilio de gestion administrativa. Puerta
+            label: Domicilio de gestión administrativa. Puerta
           pf-domicilio-gestion-administrativa-tipo-numero:
-            label: Domicilio de gestion administrativa. Tipo de número
+            label: Domicilio de gestión administrativa. Tipo de número
           pf-domicilio-gestion-administrativa-tipo-via:
-            label: Domicilio de gestion administrativa. Tipo de via
+            label: Domicilio de gestión administrativa. Tipo de vía
           pf-domicilio-notificaciones-apartado-calidad:
             label: Domicilio a efectos de notificaciones. En calidad de, para el apartado
               de correos
           pf-domicilio-notificaciones-apartado-codigo-postal:
-            label: Domicilio a efectos de notificaciones. Codigo postal del apartado
+            label: Domicilio a efectos de notificaciones. Código postal del apartado
               de correos
           pf-domicilio-notificaciones-apartado-codigo-provincia:
-            label: Domicilio a efectos de notificaciones. Codigo de provincia del
+            label: Domicilio a efectos de notificaciones. Código de provincia del
               apartado de correos
           pf-domicilio-notificaciones-apartado-correos:
             label: Domicilio a efectos de notificaciones. Número de apartado de correos
@@ -757,7 +757,7 @@ modelo:
             label: Domicilio a efectos de notificaciones. Destinatario del apartado
               de correos, si es distinto del declarante
           pf-domicilio-notificaciones-apartado-poblacion:
-            label: Domicilio a efectos de notificaciones. Poblacion o ciudad del apartado
+            label: Domicilio a efectos de notificaciones. Población o ciudad del apartado
               de correos
           pf-domicilio-notificaciones-baja-domicilio:
             label: Domicilio a efectos de notificaciones. Baja del domicilio de notificaciones
@@ -770,10 +770,10 @@ modelo:
             label: Domicilio a efectos de notificaciones. Calificador del número (domicilio
               1)
           pf-domicilio-notificaciones-codigo-postal:
-            label: Domicilio a efectos de notificaciones. Codigo postal (domicilio
+            label: Domicilio a efectos de notificaciones. Código postal (domicilio
               1)
           pf-domicilio-notificaciones-codigo-provincia:
-            label: Domicilio a efectos de notificaciones. Codigo de provincia (domicilio
+            label: Domicilio a efectos de notificaciones. Código de provincia (domicilio
               1)
           pf-domicilio-notificaciones-complemento-domicilio:
             label: Domicilio a efectos de notificaciones. Complemento de domicilio
@@ -784,7 +784,7 @@ modelo:
           pf-domicilio-notificaciones-escalera:
             label: Domicilio a efectos de notificaciones. Escalera (domicilio 1)
           pf-domicilio-notificaciones-localidad:
-            label: Domicilio a efectos de notificaciones. Localidad o poblacion (domicilio
+            label: Domicilio a efectos de notificaciones. Localidad o población (domicilio
               1)
           pf-domicilio-notificaciones-municipio:
             label: Domicilio a efectos de notificaciones. Nombre del municipio (domicilio
@@ -807,388 +807,388 @@ modelo:
           pf-domicilio-notificaciones-tipo-via:
             label: Domicilio a efectos de notificaciones. Tipo de via (domicilio 1)
           pf-domicilio-residencia-extranjero-codigo-pais:
-            label: Domicilio en el Estado de residencia. Codigo de pais
+            label: Domicilio en el Estado de residencia. Código de país
           pf-domicilio-residencia-extranjero-codigo-postal:
-            label: Domicilio en el Estado de residencia. Codigo postal
+            label: Domicilio en el Estado de residencia. Código postal
           pf-domicilio-residencia-extranjero-complemento-domicilio:
             label: Domicilio en el Estado de residencia. Complemento de domicilio
           pf-domicilio-residencia-extranjero-domicilio:
             label: Domicilio en el Estado de residencia. Domicilio
           pf-domicilio-residencia-extranjero-pais:
-            label: Domicilio en el Estado de residencia. Pais
+            label: Domicilio en el Estado de residencia. País
           pf-domicilio-residencia-extranjero-poblacion:
-            label: Domicilio en el Estado de residencia. Poblacion o ciudad
+            label: Domicilio en el Estado de residencia. Población o ciudad
           pf-domicilio-residencia-extranjero-provincia-region:
-            label: Domicilio en el Estado de residencia. Provincia, region o estado
+            label: Domicilio en el Estado de residencia. Provincia, región o estado
           pf-establecimientos-permanentes-cuantos:
             label: Establecimientos permanentes. Número de establecimientos permanentes
           pf-establecimientos-permanentes-denominacion-1:
-            label: Establecimientos permanentes. Denominacion del establecimiento
+            label: Establecimientos permanentes. Denominación del establecimiento
               permanente 1
           pf-establecimientos-permanentes-denominacion-2:
-            label: Establecimientos permanentes. Denominacion del establecimiento
+            label: Establecimientos permanentes. Denominación del establecimiento
               permanente 2
           pf-establecimientos-permanentes-denominacion-3:
-            label: Establecimientos permanentes. Denominacion del establecimiento
+            label: Establecimientos permanentes. Denominación del establecimiento
               permanente 3
           pf-establecimientos-permanentes-opera-establecimiento-permanente:
-            label: Establecimientos permanentes. Opera en Espana a traves de establecimiento
+            label: Establecimientos permanentes. Opera en España a través de establecimiento
               permanente
           pf-identificacion-apellido-1:
-            label: Identificacion. Primer apellido
+            label: Identificación. Primer apellido
           pf-identificacion-apellido-2:
-            label: Identificacion. Segundo apellido
+            label: Identificación. Segundo apellido
           pf-identificacion-codigo-pais-residencia:
-            label: Identificacion. Codigo de pais del Estado de residencia
+            label: Identificación. Código de país del Estado de residencia
           pf-identificacion-dominio-internet:
-            label: Identificacion. Dominio o direccion de internet
+            label: Identificación. Dominio o dirección de internet
           pf-identificacion-erl-alta-baja:
-            label: Identificacion. Alta o baja como Empresario de Responsabilidad
+            label: Identificación. Alta o baja como Empresario de Responsabilidad
               Limitada
           pf-identificacion-erl-fecha:
-            label: Identificacion. Fecha de alta o baja como Empresario de Responsabilidad
+            label: Identificación. Fecha de alta o baja como Empresario de Responsabilidad
               Limitada
           pf-identificacion-nacionalidad:
-            label: Identificacion. Nacionalidad del no residente
+            label: Identificación. Nacionalidad del no residente
           pf-identificacion-nif:
-            label: Identificacion. N.I.F. o N.I.E.
+            label: Identificación. N.I.F. o N.I.E.
           pf-identificacion-nif-estado-residencia:
-            label: Identificacion. Codigo de identificacion fiscal del Estado de residencia
+            label: Identificación. Código de identificación fiscal del Estado de residencia
               o NIF-IVA
           pf-identificacion-nombre:
-            label: Identificacion. Nombre
+            label: Identificación. Nombre
           pf-identificacion-nombre-comercial:
-            label: Identificacion. Nombre comercial
+            label: Identificación. Nombre comercial
           pj-aviso-email:
-            label: Persona juridica o entidad. Avisos. E-mail
+            label: Persona jurídica o entidad. Avisos. E-mail
           pj-aviso-prefijo-pais-movil:
-            label: Persona juridica o entidad. Avisos. Prefijo de pais del teléfono
-              movil
+            label: Persona jurídica o entidad. Avisos. Prefijo de país del teléfono
+              móvil
           pj-aviso-telefono-movil:
-            label: Persona juridica o entidad. Avisos. Teléfono movil
+            label: Persona jurídica o entidad. Avisos. Teléfono móvil
           pj-dext-codigo-pais:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
-              Codigo de pais
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
+              Código de país
           pj-dext-codigo-postal:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
-              Codigo postal
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
+              Código postal
           pj-dext-complemento-domicilio:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
               Complemento de domicilio
           pj-dext-domicilio:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
               Domicilio
           pj-dext-pais:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
-              Pais
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
+              País
           pj-dext-poblacion:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
-              Poblacion o ciudad
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
+              Población o ciudad
           pj-dext-provincia-region:
-            label: Persona juridica o entidad. Domicilio en el Estado de residencia.
-              Provincia, region o estado
+            label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
+              Provincia, región o estado
           pj-dfisc-bloque:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Bloque
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Bloque
           pj-dfisc-calificador-numero:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Calificador
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Calificador
               del número
           pj-dfisc-codigo-postal:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Codigo
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Código
               postal
           pj-dfisc-codigo-provincia:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Codigo
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Código
               de provincia
           pj-dfisc-complemento-domicilio:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Complemento
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Complemento
               de domicilio
           pj-dfisc-escalera:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Escalera
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Escalera
           pj-dfisc-indicador-referencia-catastral:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Indicador
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Indicador
               de referencia catastral del domicilio fiscal
           pj-dfisc-localidad:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Localidad
-              o poblacion
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Localidad
+              o población
           pj-dfisc-municipio:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Nombre
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Nombre
               del municipio
           pj-dfisc-nombre-via:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Nombre
-              de la via publica
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Nombre
+              de la vía pública
           pj-dfisc-numero-casa:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Número
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Número
               de casa
           pj-dfisc-planta:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Planta
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Planta
           pj-dfisc-portal:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Portal
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Portal
           pj-dfisc-puerta:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Puerta
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Puerta
           pj-dfisc-referencia-catastral:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Referencia
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Referencia
               catastral
           pj-dfisc-tipo-numero:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Tipo de
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Tipo de
               número
           pj-dfisc-tipo-via:
-            label: Persona juridica o entidad. Domicilio fiscal en Espana. Tipo de
-              via
+            label: Persona jurídica o entidad. Domicilio fiscal en España. Tipo de
+              vía
           pj-dnoti-apartado-calidad:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               En calidad de, para el apartado de correos
           pj-dnoti-apartado-codigo-postal:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Codigo postal del apartado de correos
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Código postal del apartado de correos
           pj-dnoti-apartado-codigo-provincia:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Codigo de provincia del apartado de correos
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Código de provincia del apartado de correos
           pj-dnoti-apartado-correos:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Número de apartado de correos
           pj-dnoti-apartado-destinatario:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Destinatario del apartado de correos, si es distinto del declarante
           pj-dnoti-apartado-poblacion:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Poblacion o ciudad del apartado de correos
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Población o ciudad del apartado de correos
           pj-dnoti-bloque:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Bloque (domicilio 1)
           pj-dnoti-calidad:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               En calidad de (domicilio 1)
           pj-dnoti-calificador-numero:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Calificador del número (domicilio 1)
           pj-dnoti-codigo-postal:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Codigo postal (domicilio 1)
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Código postal (domicilio 1)
           pj-dnoti-codigo-provincia:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Codigo de provincia (domicilio 1)
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Código de provincia (domicilio 1)
           pj-dnoti-complemento-domicilio:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Complemento de domicilio (domicilio 1)
           pj-dnoti-destinatario:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Destinatario, si es distinto del declarante (domicilio 1)
           pj-dnoti-escalera:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Escalera (domicilio 1)
           pj-dnoti-localidad:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Localidad o poblacion (domicilio 1)
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Localidad o población (domicilio 1)
           pj-dnoti-municipio:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Nombre del municipio (domicilio 1)
           pj-dnoti-nombre-via:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Nombre de la via publica (domicilio 1)
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Nombre de la vía pública (domicilio 1)
           pj-dnoti-numero-casa:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Número de casa (domicilio 1)
           pj-dnoti-planta:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Planta (domicilio 1)
           pj-dnoti-portal:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Portal (domicilio 1)
           pj-dnoti-puerta:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Puerta (domicilio 1)
           pj-dnoti-tipo-numero:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
               Tipo de número (domicilio 1)
           pj-dnoti-tipo-via:
-            label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-              Tipo de via (domicilio 1)
+            label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+              Tipo de vía (domicilio 1)
           pj-dsoc-calificador-numero:
-            label: Persona juridica o entidad. Domicilio social. Calificador del número
+            label: Persona jurídica o entidad. Domicilio social. Calificador del número
           pj-dsoc-codigo-postal:
-            label: Persona juridica o entidad. Domicilio social. Codigo postal
+            label: Persona jurídica o entidad. Domicilio social. Código postal
           pj-dsoc-codigo-provincia:
-            label: Persona juridica o entidad. Domicilio social. Codigo de provincia
+            label: Persona jurídica o entidad. Domicilio social. Código de provincia
           pj-dsoc-complemento-domicilio:
-            label: Persona juridica o entidad. Domicilio social. Complemento de domicilio
+            label: Persona jurídica o entidad. Domicilio social. Complemento de domicilio
           pj-dsoc-escalera:
-            label: Persona juridica o entidad. Domicilio social. Escalera
+            label: Persona jurídica o entidad. Domicilio social. Escalera
           pj-dsoc-localidad:
-            label: Persona juridica o entidad. Domicilio social. Localidad o poblacion
+            label: Persona jurídica o entidad. Domicilio social. Localidad o población
           pj-dsoc-municipio:
-            label: Persona juridica o entidad. Domicilio social. Nombre del municipio
+            label: Persona jurídica o entidad. Domicilio social. Nombre del municipio
           pj-dsoc-planta:
-            label: Persona juridica o entidad. Domicilio social. Planta
+            label: Persona jurídica o entidad. Domicilio social. Planta
           pj-dsoc-portal:
-            label: Persona juridica o entidad. Domicilio social. Portal
+            label: Persona jurídica o entidad. Domicilio social. Portal
           pj-dsoc-puerta:
-            label: Persona juridica o entidad. Domicilio social. Puerta
+            label: Persona jurídica o entidad. Domicilio social. Puerta
           pj-dsoc-tipo-numero:
-            label: Persona juridica o entidad. Domicilio social. Tipo de número
+            label: Persona jurídica o entidad. Domicilio social. Tipo de número
           pj-dsoc-tipo-via:
-            label: Persona juridica o entidad. Domicilio social. Tipo de via
+            label: Persona jurídica o entidad. Domicilio social. Tipo de vía
           pj-eperm-cuantos:
-            label: Persona juridica o entidad. Establecimientos permanentes. Número
+            label: Persona jurídica o entidad. Establecimientos permanentes. Número
               de establecimientos permanentes
           pj-eperm-denominacion-1:
-            label: Persona juridica o entidad. Establecimientos permanentes. Denominacion
+            label: Persona jurídica o entidad. Establecimientos permanentes. Denominación
               del establecimiento permanente 1
           pj-eperm-denominacion-2:
-            label: Persona juridica o entidad. Establecimientos permanentes. Denominacion
+            label: Persona jurídica o entidad. Establecimientos permanentes. Denominación
               del establecimiento permanente 2
           pj-eperm-denominacion-3:
-            label: Persona juridica o entidad. Establecimientos permanentes. Denominacion
+            label: Persona jurídica o entidad. Establecimientos permanentes. Denominación
               del establecimiento permanente 3
           pj-eperm-nif-1:
-            label: Persona juridica o entidad. Establecimientos permanentes. N.I.F.
+            label: Persona jurídica o entidad. Establecimientos permanentes. N.I.F.
               del establecimiento permanente 1
           pj-eperm-nif-2:
-            label: Persona juridica o entidad. Establecimientos permanentes. N.I.F.
+            label: Persona jurídica o entidad. Establecimientos permanentes. N.I.F.
               del establecimiento permanente 2
           pj-eperm-nif-3:
-            label: Persona juridica o entidad. Establecimientos permanentes. N.I.F.
+            label: Persona jurídica o entidad. Establecimientos permanentes. N.I.F.
               del establecimiento permanente 3
           pj-eperm-opera-establecimiento-permanente:
-            label: Persona juridica o entidad. Establecimientos permanentes. Opera
-              en Espana a traves de establecimiento permanente
+            label: Persona jurídica o entidad. Establecimientos permanentes. Opera
+              en España a través de establecimiento permanente
           pj-ident-anagrama:
-            label: Persona juridica o entidad. Identificacion. Anagrama
+            label: Persona jurídica o entidad. Identificación. Anagrama
           pj-ident-dominio-internet:
-            label: Persona juridica o entidad. Identificacion. Dominio o direccion
+            label: Persona jurídica o entidad. Identificación. Dominio o dirección
               de internet
           pj-ident-dominio-internet-secundario:
-            label: Persona juridica o entidad. Identificacion. Dominio o direccion
+            label: Persona jurídica o entidad. Identificación. Dominio o dirección
               de internet (segundo)
           pj-ident-fecha-acuerdo-voluntades:
-            label: Persona juridica o entidad. Identificacion. Fecha del acuerdo de
+            label: Persona jurídica o entidad. Identificación. Fecha del acuerdo de
               voluntades
           pj-ident-fecha-constitucion:
-            label: Persona juridica o entidad. Identificacion. Fecha de constitucion
+            label: Persona jurídica o entidad. Identificación. Fecha de constitución
           pj-ident-fecha-inscripcion-registral:
-            label: Persona juridica o entidad. Identificacion. Fecha de inscripcion
+            label: Persona jurídica o entidad. Identificación. Fecha de inscripción
               registral
           pj-ident-nif:
-            label: Persona juridica o entidad. Identificacion. N.I.F.
+            label: Persona jurídica o entidad. Identificación. N.I.F.
           pj-ident-nif-estado-residencia:
-            label: Persona juridica o entidad. Identificacion. Codigo de identificacion
+            label: Persona jurídica o entidad. Identificación. Código de identificación
               fiscal del Estado de residencia
           pj-ident-nif-otros-paises:
-            label: Persona juridica o entidad. Identificacion. N.I.F. de otros paises
+            label: Persona jurídica o entidad. Identificación. N.I.F. de otros países
           pj-ident-pais-constitucion:
-            label: Persona juridica o entidad. Identificacion. Entidad no residente
+            label: Persona jurídica o entidad. Identificación. Entidad no residente
               o constituida en el extranjero
           pj-ident-razon-social:
-            label: Persona juridica o entidad. Identificacion. Razon o denominacion
+            label: Persona jurídica o entidad. Identificación. Razón o denominación
               social
           pj-pjur-atribucion-espana-con-actividad:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Entidad en atribucion de rentas constituida en Espana con actividad
-              economica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Entidad en atribución de rentas constituida en España con actividad
+              económica
           pj-pjur-atribucion-espana-con-actividad-clase:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Clase de entidad en atribucion de rentas constituida en Espana con actividad
-              economica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Clase de entidad en atribución de rentas constituida en España con actividad
+              económica
           pj-pjur-atribucion-espana-sin-actividad-clase:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Clase de entidad en atribucion de rentas constituida en Espana sin actividad
-              economica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Clase de entidad en atribución de rentas constituida en España sin actividad
+              económica
           pj-pjur-atribucion-extranjero-con-presencia-clase:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Clase de entidad en atribucion de rentas constituida en el extranjero
-              con presencia en Espana
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Clase de entidad en atribución de rentas constituida en el extranjero
+              con presencia en España
           pj-pjur-atribucion-extranjero-sin-presencia-clase:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Clase de entidad en atribucion de rentas constituida en el extranjero
-              sin presencia en Espana
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Clase de entidad en atribución de rentas constituida en el extranjero
+              sin presencia en España
           pj-pjur-es-persona-juridica:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Persona juridica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Persona jurídica
           pj-pjur-forma-juridica:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Forma juridica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Forma jurídica
           pj-pjur-otras-entidades:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
               Otras entidades
           pj-pjur-otras-entidades-clase:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
               Otras entidades. Clase de entidad
           pj-pjur-tiene-personalidad-juridica:
-            label: Persona juridica o entidad. Personalidad juridica y clase de entidad.
-              Tiene personalidad juridica
+            label: Persona jurídica o entidad. Personalidad jurídica y clase de entidad.
+              Tiene personalidad jurídica
           rep1-apellidos-razon-social:
-            label: Apellidos y nombre o razon social del representante (primer representante,
+            label: Apellidos y nombre o razón social del representante (primer representante,
               bloque 3.1)
           rep1-designada-apellido-1:
-            label: Primer apellido de la persona fisica designada (primer representante,
+            label: Primer apellido de la persona física designada (primer representante,
               bloque 3.1)
           rep1-designada-apellido-2:
-            label: Segundo apellido de la persona fisica designada (primer representante,
+            label: Segundo apellido de la persona física designada (primer representante,
               bloque 3.1)
           rep1-designada-fecha-causa:
-            label: Fecha efectiva de la causa de la presentacion de la persona fisica
+            label: Fecha efectiva de la causa de la presentación de la persona física
               designada (primer representante, bloque 3.1)
           rep1-designada-nif:
-            label: NIF de la persona fisica designada (primer representante, bloque
+            label: NIF de la persona física designada (primer representante, bloque
               3.1)
           rep1-designada-nombre:
-            label: Nombre de la persona fisica designada (primer representante, bloque
+            label: Nombre de la persona física designada (primer representante, bloque
               3.1)
           rep1-fecha-causa:
-            label: Fecha efectiva de la causa de la presentacion del representante
+            label: Fecha efectiva de la causa de la presentación del representante
               (primer representante, bloque 3.1)
           rep1-nif:
             label: NIF del representante (primer representante, bloque 3.1)
           rep1-representacion-legal-clave:
-            label: Clave de la representacion legal (primer representante, bloque
+            label: Clave de la representación legal (primer representante, bloque
               3.1)
           rep1-residente:
             label: 'El representante es residente: si o no (primer representante,
               bloque 3.1)'
           rep1-tipo-representacion:
-            label: Clave del tipo de representacion (primer representante, bloque
+            label: Clave del tipo de representación (primer representante, bloque
               3.1)
           rep1-titulo-representacion:
-            label: Clave del titulo de representacion (primer representante, bloque
+            label: Clave del titulo de representación (primer representante, bloque
               3.1)
           rep2-apellidos-razon-social:
-            label: Apellidos y nombre o razon social del representante (segundo representante,
+            label: Apellidos y nombre o razón social del representante (segundo representante,
               bloque 3.2)
           rep2-designada-apellido-1:
-            label: Primer apellido de la persona fisica designada (segundo representante,
+            label: Primer apellido de la persona física designada (segundo representante,
               bloque 3.2)
           rep2-designada-apellido-2:
-            label: Segundo apellido de la persona fisica designada (segundo representante,
+            label: Segundo apellido de la persona física designada (segundo representante,
               bloque 3.2)
           rep2-designada-fecha-causa:
-            label: Fecha efectiva de la causa de la presentacion de la persona fisica
+            label: Fecha efectiva de la causa de la presentación de la persona física
               designada (segundo representante, bloque 3.2)
           rep2-designada-nif:
-            label: NIF de la persona fisica designada (segundo representante, bloque
+            label: NIF de la persona física designada (segundo representante, bloque
               3.2)
           rep2-designada-nombre:
-            label: Nombre de la persona fisica designada (segundo representante, bloque
+            label: Nombre de la persona física designada (segundo representante, bloque
               3.2)
           rep2-fecha-causa:
-            label: Fecha efectiva de la causa de la presentacion del representante
+            label: Fecha efectiva de la causa de la presentación del representante
               (segundo representante, bloque 3.2)
           rep2-nif:
             label: NIF del representante (segundo representante, bloque 3.2)
           rep2-representacion-legal-clave:
-            label: Clave de la representacion legal (segundo representante, bloque
+            label: Clave de la representación legal (segundo representante, bloque
               3.2)
           rep2-residente:
             label: 'El representante es residente: si o no (segundo representante,
               bloque 3.2)'
           rep2-tipo-representacion:
-            label: Clave del tipo de representacion (segundo representante, bloque
+            label: Clave del tipo de representación (segundo representante, bloque
               3.2)
           rep2-titulo-representacion:
-            label: Clave del titulo de representacion (segundo representante, bloque
+            label: Clave del titulo de representación (segundo representante, bloque
               3.2)
           ret-extractores-depositos-alcohol:
-            label: Registro de extractores de depositos fiscales. Solicita alta o
+            label: Registro de extractores de depósitos fiscales. Solicita alta o
               baja para productos de los Impuestos sobre el alcohol y bebidas derivadas
           ret-extractores-depositos-hidrocarburos:
-            label: Registro de extractores de depositos fiscales. Solicita alta o
+            label: Registro de extractores de depósitos fiscales. Solicita alta o
               baja para productos de los Impuestos sobre Hidrocarburos
           ret-impuestos-especiales-impuesto-electricidad:
             label: Impuestos especiales. Obligado a presentar autoliquidación por
@@ -1197,110 +1197,110 @@ modelo:
             label: Impuestos especiales. Fecha. Obligado a presentar autoliquidación
               por el Impuesto sobre la Electricidad
           ret-impuestos-especiales-inscripcion-registro-territorial:
-            label: Impuestos especiales. Obligacion de inscribir los establecimientos
+            label: Impuestos especiales. Obligación de inscribir los establecimientos
               en el registro territorial de la oficina gestora
           ret-impuestos-especiales-inscripcion-registro-territorial-fecha:
-            label: Impuestos especiales. Fecha. Obligacion de inscribir los establecimientos
+            label: Impuestos especiales. Fecha. Obligación de inscribir los establecimientos
               en el registro territorial de la oficina gestora
           ret-impuestos-especiales-primas-seguros:
-            label: Impuestos especiales. Obligacion de presentar declaración por el
+            label: Impuestos especiales. Obligación de presentar declaración por el
               Impuesto Especial sobre Primas de Seguros
           ret-impuestos-especiales-primas-seguros-fecha:
-            label: Impuestos especiales. Fecha. Obligacion de presentar declaración
+            label: Impuestos especiales. Fecha. Obligación de presentar declaración
               por el Impuesto Especial sobre Primas de Seguros
           ret-impuestos-especiales-resumen-anual-carbon:
             label: Impuestos especiales. Obligado a presentar la declaración resumen
-              anual del Impuesto Especial sobre el Carbon
+              anual del Impuesto Especial sobre el Carbón
           ret-impuestos-especiales-resumen-anual-carbon-fecha:
             label: Impuestos especiales. Fecha. Obligado a presentar la declaración
-              resumen anual del Impuesto Especial sobre el Carbon
+              resumen anual del Impuesto Especial sobre el Carbón
           ret-medioambientales-obligacion-declarar:
-            label: Impuestos medioambientales. Obligacion de presentar declaración
+            label: Impuestos medioambientales. Obligación de presentar declaración
           ret-medioambientales-obligacion-declarar-fecha:
-            label: Impuestos medioambientales. Fecha de la obligacion de presentar
+            label: Impuestos medioambientales. Fecha de la obligación de presentar
               declaración
           ret-retenciones-actividades-profesionales:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre rendimientos de actividades profesionales
           ret-retenciones-actividades-profesionales-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rendimientos
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rendimientos
               de actividades profesionales
           ret-retenciones-arrendamiento:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre rendimientos del arrendamiento o subarrendamiento
           ret-retenciones-arrendamiento-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rendimientos
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rendimientos
               del arrendamiento o subarrendamiento
           ret-retenciones-capital-mobiliario-contraprestacion:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
-              a cuenta sobre rentas de capital mobiliario obtenidas por la contraprestacion
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
+              a cuenta sobre rentas de capital mobiliario obtenidas por la contraprestación
           ret-retenciones-capital-mobiliario-contraprestacion-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rentas
-              de capital mobiliario obtenidas por la contraprestacion
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rentas
+              de capital mobiliario obtenidas por la contraprestación
           ret-retenciones-capital-mobiliario-operaciones:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre rentas de capital mobiliario procedentes de operaciones
           ret-retenciones-capital-mobiliario-operaciones-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rentas
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rentas
               de capital mobiliario procedentes de operaciones
           ret-retenciones-capital-mobiliario-otros:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre otras rentas de capital mobiliario
           ret-retenciones-capital-mobiliario-otros-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre otras
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre otras
               rentas de capital mobiliario
           ret-retenciones-capital-mobiliario-transmision:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
-              a cuenta sobre rentas de capital mobiliario derivadas de la transmision
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
+              a cuenta sobre rentas de capital mobiliario derivadas de la transmisión
           ret-retenciones-capital-mobiliario-transmision-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rentas
-              de capital mobiliario derivadas de la transmision
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rentas
+              de capital mobiliario derivadas de la transmisión
           ret-retenciones-trabajo-personal:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre rendimientos del trabajo personal
           ret-retenciones-trabajo-personal-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre rendimientos
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre rendimientos
               del trabajo personal
           ret-retenciones-transmision-acciones:
-            label: Retenciones e ingresos a cuenta. Obligacion de retener o ingresar
+            label: Retenciones e ingresos a cuenta. Obligación de retener o ingresar
               a cuenta sobre transmisiones o reembolsos de acciones o participaciones
           ret-retenciones-transmision-acciones-fecha:
-            label: Retenciones e ingresos a cuenta. Fecha de la obligacion sobre transmisiones
+            label: Retenciones e ingresos a cuenta. Fecha de la obligación sobre transmisiones
               o reembolsos de acciones o participaciones
           ret-servicios-digitales-obligacion-autoliquidar:
             label: Impuesto sobre determinados servicios digitales. Obligado a presentar
               autoliquidación
           ret-servicios-digitales-obligacion-autoliquidar-fecha:
-            label: Impuesto sobre determinados servicios digitales. Fecha de la obligacion
+            label: Impuesto sobre determinados servicios digitales. Fecha de la obligación
               de presentar autoliquidación
           ret-telecom-art-70-uno-4-destino:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
-              (art. 70.Uno.4.a). Tributacion en destino
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
+              (art. 70.Uno.4.a). Tributación en destino
           ret-telecom-art-70-uno-4-fecha:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
               (art. 70.Uno.4.a). Fecha
           ret-telecom-art-70-uno-4-revocacion:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
-              (art. 70.Uno.4.a). Revocacion
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
+              (art. 70.Uno.4.a). Revocación
           ret-telecom-art-70-uno-8-destino:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
-              (art. 70.Uno.8). Tributacion en destino
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
+              (art. 70.Uno.8). Tributación en destino
           ret-telecom-art-70-uno-8-fecha:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
               (art. 70.Uno.8). Fecha
           ret-telecom-art-70-uno-8-revocacion:
-            label: Servicios de telecomunicaciones, radiodifusion y via electronica
-              (art. 70.Uno.8). Revocacion
+            label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
+              (art. 70.Uno.8). Revocación
           socio-principal-causa-fecha:
-            label: Socios, miembros o participes. Fecha de la causa de la presentacion
+            label: Socios, miembros o participes. Fecha de la causa de la presentación
           socio-principal-cuota-atribucion:
-            label: Socios, miembros o participes. Cuota o porcentaje de atribucion
+            label: Socios, miembros o participes. Cuota o porcentaje de atribución
           socio-principal-cuota-participacion:
-            label: Socios, miembros o participes. Cuota o porcentaje de participacion
+            label: Socios, miembros o participes. Cuota o porcentaje de participación
           socio-principal-nif:
             label: Socios, miembros o participes. N.I.F.
           socio-principal-nombre-razon-social:
-            label: Socios, miembros o participes. Apellidos y nombre, razon o denominacion
+            label: Socios, miembros o participes. Apellidos y nombre, razón o denominación
               social
           suc-a-nif:
             label: NIF del sucesor o beneficiario (sucesor 13a)
@@ -1326,74 +1326,74 @@ modelo:
         2023-hasta-2025-02-02:
           casilla:
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
-              label: Identificacion. Dominio o direccion de internet (segundo)
+              label: Identificación. Dominio o dirección de internet (segundo)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
-              label: Identificacion. Fecha de efectos de la residencia fiscal
+              label: Identificación. Fecha de efectos de la residencia fiscal
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
-              label: Identificacion. Persona fisica residente o no residente en Espana
+              label: Identificación. Persona física residente o no residente en España
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
-              label: Persona juridica o entidad. Identificacion. Fecha de efectos
+              label: Persona jurídica o entidad. Identificación. Fecha de efectos
                 de la residencia fiscal
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13a)
             x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13a)
             x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13a)
             x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13b)
             x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13b)
             x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13b)
             x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13c)
             x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13c)
             x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13c)
             x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13d)
             x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13d)
             x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13d)
             x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13e)
             x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13e)
             x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13e)
             x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
-              label: Cuota de liquidacion, patrimonio o caudal hereditario del sucesor
+              label: Cuota de liquidación, patrimonio o caudal hereditario del sucesor
                 o beneficiario (sucesor 13f)
             x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              label: Apellidos y nombre, razon o denominacion social del sucesor o
+              label: Apellidos y nombre, razón o denominación social del sucesor o
                 beneficiario (sucesor 13f)
             x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              label: Porcentaje de liquidacion, participacion o herencia del sucesor
+              label: Porcentaje de liquidación, participación o herencia del sucesor
                 o beneficiario (sucesor 13f)
           field:
             label: Modelo 036, desde 2023 hasta el 2 de febrero de 2025
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
-              label: Actividad fuera de local determinado. Codigo de provincia
+              label: Actividad fuera de local determinado. Código de provincia
             x-chim6r1ecdgnasr15koj8d0:
               label: Solicitud de rehabilitación de NIF
             x-chim6r1ecdgnasr15koj8d8:
@@ -1417,74 +1417,74 @@ modelo:
             x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
               label: Establecimiento permanente. Avisos. Baja de avisos de la AEAT
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
-              label: Establecimiento permanente. Avisos. Alta en la aplicacion movil
+              label: Establecimiento permanente. Avisos. Alta en la aplicación móvil
                 de la AEAT
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
-              label: Establecimiento permanente. Avisos. Baja en la aplicacion movil
+              label: Establecimiento permanente. Avisos. Baja en la aplicación móvil
                 de la AEAT
             x-clo2sobmd5pmuspdchjn8bb1dhq62:
               label: Establecimiento permanente. Avisos. Alta de avisos de la DGT
             x-clo2sobmd5pmuspdchjn8bb2c5l62:
               label: Establecimiento permanente. Avisos. Baja de avisos de la DGT
             x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
-              label: Establecimiento permanente. Avisos. Alta o modificacion del e-mail
+              label: Establecimiento permanente. Avisos. Alta o modificación del e-mail
                 de avisos
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
               label: Establecimiento permanente. Avisos. Baja del e-mail de avisos
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
-              label: Establecimiento permanente. Avisos. Alta o modificacion del teléfono
-                movil
+              label: Establecimiento permanente. Avisos. Alta o modificación del teléfono
+                móvil
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
-              label: Establecimiento permanente. Avisos. Baja del teléfono movil
+              label: Establecimiento permanente. Avisos. Baja del teléfono móvil
             x-clo2sobmd5pmuspdehim2bb1dhq62:
               label: Establecimiento permanente. Avisos. Alta de avisos del TEA
             x-clo2sobmd5pmuspdehim2bb2c5l62:
               label: Establecimiento permanente. Avisos. Baja de avisos del TEA
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
-              label: Establecimiento permanente. Domicilio fiscal en Espana. Codigo
+              label: Establecimiento permanente. Domicilio fiscal en España. Código
                 de municipio INE
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
-              label: Establecimiento permanente. Domicilio fiscal en Espana. Codigo
-                de via INE
+              label: Establecimiento permanente. Domicilio fiscal en España. Código
+                de vía INE
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
               label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-                Codigo de municipio INE (domicilio 1)
+                Código de municipio INE (domicilio 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
               label: Establecimiento permanente. Domicilio a efectos de notificaciones.
-                Codigo de via INE (domicilio 1)
+                Código de vía INE (domicilio 1)
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
-              label: IVA. Importacion. Forales. Ingreso del IVA a la importacion.
-                Opcion o renuncia
+              label: IVA. Importación. Forales. Ingreso del IVA a la importación.
+                Opción o renuncia
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
-              label: IVA. Importacion. Ingreso del IVA a la importacion. Opcion, renuncia,
-                revocacion o baja
+              label: IVA. Importación. Ingreso del IVA a la importación. Opción, renuncia,
+                revocación o baja
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
               label: IVA. Libros de registro. Llevanza de los libros de registro a
-                traves de la sede electronica de la AEAT
+                través de la sede electrónica de la AEAT
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
-              label: IVA. Regimenes. Regimen especial de agricultura, ganaderia y
+              label: IVA. Regímenes. Régimen especial de agricultura, ganadería y
                 pesca
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
-              label: IVA. Regimenes. Agricultura, ganaderia y pesca. Fecha
+              label: IVA. Regímenes. Agricultura, ganadería y pesca. Fecha
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
-              label: IVA. Regimenes. Agricultura, ganaderia y pesca. Grupo o epigrafe
-                del I.A.E. o codigo de actividad
+              label: IVA. Regímenes. Agricultura, ganadería y pesca. Grupo o epígrafe
+                del I.A.E. o código de actividad
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
-              label: IVA. Regimenes. Regimen especial del criterio de caja
+              label: IVA. Regímenes. Régimen especial del criterio de caja
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
-              label: IVA. Regimenes. Criterio de caja. Fecha
+              label: IVA. Regímenes. Criterio de caja. Fecha
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
-              label: IVA. Regimenes. Criterio de caja. Grupo o epigrafe del I.A.E.
-                o codigo de actividad
+              label: IVA. Regímenes. Criterio de caja. Grupo o epígrafe del I.A.E.
+                o código de actividad
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
-              label: IVA. Regimenes. Regimen especial simplificado
+              label: IVA. Regímenes. Régimen especial simplificado
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
-              label: IVA. Regimenes. Regimen simplificado. Fecha
+              label: IVA. Regímenes. Régimen simplificado. Fecha
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
-              label: IVA. Regimenes. Regimen simplificado. Grupo o epigrafe del I.A.E.
-                o codigo de actividad
+              label: IVA. Regímenes. Régimen simplificado. Grupo o epígrafe del I.A.E.
+                o código de actividad
             x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
-              label: IVA. Registros. Solicita alta o baja en el registro de devolucion
+              label: IVA. Registros. Solicita alta o baja en el registro de devolución
                 mensual
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
               label: IVA. Registros. Solicita alta o baja en el registro de operadores
@@ -1493,348 +1493,348 @@ modelo:
               label: IRNR. Establecimiento permanente. Modalidad de establecimiento
                 permanente
             x-dth6obj9e9o6cbb5chpiqc9dd5gma:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 1 declarada
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 1 declarada
                 en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
               label: IRPF. Tipo de actividad, actividad 1 declarada en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqchdd5gma:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 2 declarada
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 2 declarada
                 en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
               label: IRPF. Tipo de actividad, actividad 2 declarada en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqcpdd5gma:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 3 declarada
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 3 declarada
                 en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
               label: IRPF. Tipo de actividad, actividad 3 declarada en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqd1dd5gma:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 4 declarada
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 4 declarada
                 en modalidad simplificada
             x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
               label: IRPF. Tipo de actividad, actividad 4 declarada en modalidad simplificada
             x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 1 declarada
-                en estimacion objetiva
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 1 declarada
+                en estimación objetiva
             x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
-              label: IRPF. Tipo de actividad, actividad 1 declarada en estimacion
+              label: IRPF. Tipo de actividad, actividad 1 declarada en estimación
                 objetiva
             x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 2 declarada
-                en estimacion objetiva
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 2 declarada
+                en estimación objetiva
             x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
-              label: IRPF. Tipo de actividad, actividad 2 declarada en estimacion
+              label: IRPF. Tipo de actividad, actividad 2 declarada en estimación
                 objetiva
             x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 3 declarada
-                en estimacion objetiva
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 3 declarada
+                en estimación objetiva
             x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
-              label: IRPF. Tipo de actividad, actividad 3 declarada en estimacion
+              label: IRPF. Tipo de actividad, actividad 3 declarada en estimación
                 objetiva
             x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
-              label: IRPF. Seccion del I.A.E. y grupo o epigrafe, actividad 4 declarada
-                en estimacion objetiva
+              label: IRPF. Sección del I.A.E. y grupo o epígrafe, actividad 4 declarada
+                en estimación objetiva
             x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
-              label: IRPF. Tipo de actividad, actividad 4 declarada en estimacion
+              label: IRPF. Tipo de actividad, actividad 4 declarada en estimación
                 objetiva
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
-              label: IRPF. Estimacion directa normal
+              label: IRPF. Estimación directa normal
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
-              label: IRPF. Estimacion directa simplificada
+              label: IRPF. Estimación directa simplificada
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
-              label: IRPF. Estimacion objetiva
+              label: IRPF. Estimación objetiva
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
-              label: Impuesto sobre Sociedades. Exencion
+              label: Impuesto sobre Sociedades. Exención
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
-              label: Impuesto sobre Sociedades. Exencion. Fecha
+              label: Impuesto sobre Sociedades. Exención. Fecha
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
               label: Avisos. Alta de avisos de la AEAT
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
               label: Avisos. Baja de avisos de la AEAT
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
-              label: Avisos. Alta en la aplicacion movil de la AEAT
+              label: Avisos. Alta en la aplicación móvil de la AEAT
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
-              label: Avisos. Baja en la aplicacion movil de la AEAT
+              label: Avisos. Baja en la aplicación móvil de la AEAT
             x-e1j2sobmd5pmuspdchjn8bb1dhq62:
               label: Avisos. Alta de avisos de la DGT
             x-e1j2sobmd5pmuspdchjn8bb2c5l62:
               label: Avisos. Baja de avisos de la DGT
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
-              label: Avisos. Alta o modificacion del e-mail de avisos
+              label: Avisos. Alta o modificación del e-mail de avisos
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
               label: Avisos. Baja del e-mail de avisos
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
-              label: Avisos. Alta o modificacion del teléfono movil
+              label: Avisos. Alta o modificación del teléfono móvil
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
-              label: Avisos. Baja del teléfono movil
+              label: Avisos. Baja del teléfono móvil
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
-              label: Avisos. Prefijo de pais del teléfono movil
+              label: Avisos. Prefijo de país del teléfono móvil
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
               label: Avisos. Alta de avisos del TEA
             x-e1j2sobmd5pmuspdehim2bb2c5l62:
               label: Avisos. Baja de avisos del TEA
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
-              label: Domicilio fiscal en Espana. Codigo de municipio INE
+              label: Domicilio fiscal en España. Código de municipio INE
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
-              label: Domicilio fiscal en Espana. Codigo de via INE
+              label: Domicilio fiscal en España. Código de vía INE
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
-              label: Domicilio de gestion administrativa. Codigo de municipio INE
+              label: Domicilio de gestión administrativa. Código de municipio INE
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
-              label: Domicilio de gestion administrativa. Codigo de via INE
+              label: Domicilio de gestión administrativa. Código de vía INE
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
-              label: Domicilio a efectos de notificaciones. Codigo de municipio INE
+              label: Domicilio a efectos de notificaciones. Código de municipio INE
                 (domicilio 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
-              label: Domicilio a efectos de notificaciones. Codigo de via INE (domicilio
+              label: Domicilio a efectos de notificaciones. Código de vía INE (domicilio
                 1)
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
-              label: Identificacion. Fecha de efectos de la residencia fiscal
+              label: Identificación. Fecha de efectos de la residencia fiscal
             x-e1l2sobmd5pmubb1clgn8bb1dhq62:
-              label: Persona juridica o entidad. Avisos. Alta de avisos de la AEAT
+              label: Persona jurídica o entidad. Avisos. Alta de avisos de la AEAT
             x-e1l2sobmd5pmubb1clgn8bb2c5l62:
-              label: Persona juridica o entidad. Avisos. Baja de avisos de la AEAT
+              label: Persona jurídica o entidad. Avisos. Baja de avisos de la AEAT
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
-              label: Persona juridica o entidad. Avisos. Alta en la aplicacion movil
+              label: Persona jurídica o entidad. Avisos. Alta en la aplicación móvil
                 de la AEAT
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
-              label: Persona juridica o entidad. Avisos. Baja en la aplicacion movil
+              label: Persona jurídica o entidad. Avisos. Baja en la aplicación móvil
                 de la AEAT
             x-e1l2sobmd5pmubb4ctq2qobcehgg:
-              label: Persona juridica o entidad. Avisos. Alta de avisos de la DGT
+              label: Persona jurídica o entidad. Avisos. Alta de avisos de la DGT
             x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
-              label: Persona juridica o entidad. Avisos. Baja de avisos de la DGT
+              label: Persona jurídica o entidad. Avisos. Baja de avisos de la DGT
             x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
-              label: Persona juridica o entidad. Avisos. Alta o modificacion del e-mail
+              label: Persona jurídica o entidad. Avisos. Alta o modificación del e-mail
                 de avisos
             x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
-              label: Persona juridica o entidad. Avisos. Baja del e-mail de avisos
+              label: Persona jurídica o entidad. Avisos. Baja del e-mail de avisos
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
-              label: Persona juridica o entidad. Avisos. Alta o modificacion del teléfono
-                movil
+              label: Persona jurídica o entidad. Avisos. Alta o modificación del teléfono
+                móvil
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
-              label: Persona juridica o entidad. Avisos. Baja del teléfono movil
+              label: Persona jurídica o entidad. Avisos. Baja del teléfono móvil
             x-e1l2sobmd5pmubbkclgiqobcehgg:
-              label: Persona juridica o entidad. Avisos. Alta de avisos del TEA
+              label: Persona jurídica o entidad. Avisos. Alta de avisos del TEA
             x-e1l2sobmd5pmubbkclgiqoj1d9gg:
-              label: Persona juridica o entidad. Avisos. Baja de avisos del TEA
+              label: Persona jurídica o entidad. Avisos. Baja de avisos del TEA
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
-              label: Persona juridica o entidad. Domicilio en el Estado de residencia.
+              label: Persona jurídica o entidad. Domicilio en el Estado de residencia.
                 Indicador de domicilio fiscal o social en el extranjero
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
-              label: Persona juridica o entidad. Domicilio fiscal en Espana. Codigo
+              label: Persona jurídica o entidad. Domicilio fiscal en España. Código
                 de municipio INE
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
-              label: Persona juridica o entidad. Domicilio fiscal en Espana. Codigo
-                de via INE
+              label: Persona jurídica o entidad. Domicilio fiscal en España. Código
+                de vía INE
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
-              label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
+              label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
                 Indicador de baja del domicilio de notificaciones
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
-              label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-                Codigo de municipio INE (domicilio 1)
+              label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+                Código de municipio INE (domicilio 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
-              label: Persona juridica o entidad. Domicilio a efectos de notificaciones.
-                Codigo de via INE (domicilio 1)
+              label: Persona jurídica o entidad. Domicilio a efectos de notificaciones.
+                Código de vía INE (domicilio 1)
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
-              label: Persona juridica o entidad. Domicilio social. Codigo de municipio
+              label: Persona jurídica o entidad. Domicilio social. Código de municipio
                 INE
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
-              label: Persona juridica o entidad. Domicilio social. Codigo de via INE
+              label: Persona jurídica o entidad. Domicilio social. Código de vía INE
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
-              label: Persona juridica o entidad. Identificacion. Fecha de efectos
+              label: Persona jurídica o entidad. Identificación. Fecha de efectos
                 de la residencia fiscal
             x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
-              label: Persona juridica o entidad. Identificacion. Entidad residente
-                o constituida en Espana, o no residente
+              label: Persona jurídica o entidad. Identificación. Entidad residente
+                o constituida en España, o no residente
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
-              label: Persona juridica o entidad. Personalidad juridica y clase de
-                entidad. Entidad en atribucion de rentas constituida en Espana sin
-                actividad economica
+              label: Persona jurídica o entidad. Personalidad jurídica y clase de
+                entidad. Entidad en atribución de rentas constituida en España sin
+                actividad económica
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
-              label: Persona juridica o entidad. Personalidad juridica y clase de
-                entidad. Entidad en atribucion de rentas constituida en el extranjero
-                con presencia en Espana
+              label: Persona jurídica o entidad. Personalidad jurídica y clase de
+                entidad. Entidad en atribución de rentas constituida en el extranjero
+                con presencia en España
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
-              label: Persona juridica o entidad. Personalidad juridica y clase de
-                entidad. Entidad en atribucion de rentas constituida en el extranjero
-                sin presencia en Espana
+              label: Persona jurídica o entidad. Personalidad jurídica y clase de
+                entidad. Entidad en atribución de rentas constituida en el extranjero
+                sin presencia en España
             x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
-              label: 'Causa de la presentacion: alta, baja o modificacion del representante
+              label: 'Causa de la presentación: alta, baja o modificación del representante
                 (primer representante, bloque 3.1)'
             x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
-              label: Causa de la representacion (primer representante, bloque 3.1)
+              label: Causa de la representación (primer representante, bloque 3.1)
             x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              label: Causa de la presentacion de la persona fisica designada (primer
+              label: Causa de la presentación de la persona física designada (primer
                 representante, bloque 3.1)
             x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
-              label: 'Causa de la presentacion: alta, baja o modificacion del representante
+              label: 'Causa de la presentación: alta, baja o modificación del representante
                 (segundo representante, bloque 3.2)'
             x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
-              label: Causa de la representacion (segundo representante, bloque 3.2)
+              label: Causa de la representación (segundo representante, bloque 3.2)
             x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              label: Causa de la presentacion de la persona fisica designada (segundo
+              label: Causa de la presentación de la persona física designada (segundo
                 representante, bloque 3.2)
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
-              label: IVA. Adquisiciones intracomunitarias. Opcion por el regimen general
-                del IVA, sujecion o no sujecion
+              label: IVA. Adquisiciones intracomunitarias. Opción por el régimen general
+                del IVA, sujeción o no sujeción
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
               label: IVA. Adquisiciones intracomunitarias. Ha superado el umbral de
                 10.000 euros
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
-              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+              label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
                 (art. 70.Uno.4.a). Ha superado el umbral de 10.000 euros
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
-              label: Servicios de telecomunicaciones, radiodifusion y via electronica
+              label: Servicios de telecomunicaciones, radiodifusión y vía electrónica
                 (art. 70.Uno.8). Ha superado el umbral de 10.000 euros
             x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
-              label: Socios, miembros o participes. Causa de la presentacion
+              label: Socios, miembros o participes. Causa de la presentación
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
-              label: 'Socios, miembros o participes. IRPF, estimacion directa simplificada:
-                renuncia o revocacion'
+              label: 'Socios, miembros o participes. IRPF, estimación directa simplificada:
+                renuncia o revocación'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
-              label: 'Socios, miembros o participes. IRPF, estimacion objetiva: renuncia
-                o revocacion'
+              label: 'Socios, miembros o participes. IRPF, estimación objetiva: renuncia
+                o revocación'
             x-ednm6bj9epgiqsj5c5jn0:
-              label: 'Socios, miembros o participes. IVA, regimen especial de agricultura,
-                ganaderia y pesca: renuncia o revocacion'
+              label: 'Socios, miembros o participes. IVA, régimen especial de agricultura,
+                ganadería y pesca: renuncia o revocación'
             x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
-              label: 'Socios, miembros o participes. IVA, regimen simplificado: renuncia
-                o revocacion'
+              label: 'Socios, miembros o participes. IVA, régimen simplificado: renuncia
+                o revocación'
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14a
             x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14a
+              label: Titulares reales. Causa de la presentación, titular real 14a
             x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14a
             x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14a
             x-ehkn8bj15ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14a
             x-ehkn8bj15ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14a
             x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14a
             x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14a
+              label: Titulares reales. País de residencia, titular real 14a
             x-ehkn8bj15lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14a
             x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14b
             x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14b
+              label: Titulares reales. Causa de la presentación, titular real 14b
             x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14b
             x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14b
             x-ehkn8bj25ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14b
             x-ehkn8bj25ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14b
             x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14b
             x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14b
+              label: Titulares reales. País de residencia, titular real 14b
             x-ehkn8bj25lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14b
             x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14c
             x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14c
+              label: Titulares reales. Causa de la presentación, titular real 14c
             x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14c
             x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14c
             x-ehkn8bj35ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14c
             x-ehkn8bj35ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14c
             x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14c
             x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14c
+              label: Titulares reales. País de residencia, titular real 14c
             x-ehkn8bj35lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14c
             x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14d
             x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14d
+              label: Titulares reales. Causa de la presentación, titular real 14d
             x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14d
             x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14d
             x-ehkn8bj45ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14d
             x-ehkn8bj45ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14d
             x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14d
             x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14d
+              label: Titulares reales. País de residencia, titular real 14d
             x-ehkn8bj45lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14d
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
-              label: Titulares reales. Declaración de no variacion de datos
+              label: Titulares reales. Declaración de no variación de datos
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14e
             x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14e
+              label: Titulares reales. Causa de la presentación, titular real 14e
             x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14e
             x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14e
             x-ehkn8bj55ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14e
             x-ehkn8bj55ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14e
             x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14e
             x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14e
+              label: Titulares reales. País de residencia, titular real 14e
             x-ehkn8bj55lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14e
             x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
-              label: Titulares reales. Fecha de la causa de la presentacion, titular
+              label: Titulares reales. Fecha de la causa de la presentación, titular
                 real 14f
             x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
-              label: Titulares reales. Causa de la presentacion, titular real 14f
+              label: Titulares reales. Causa de la presentación, titular real 14f
             x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
               label: Titulares reales. Fecha de nacimiento, titular real 14f
             x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
-              label: Titulares reales. N.I.F. o codigo de identificacion extranjero,
+              label: Titulares reales. N.I.F. o código de identificación extranjero,
                 titular real 14f
             x-ehkn8bj65ln62or9dtn62r39chgm8:
               label: Titulares reales. Nacionalidad, titular real 14f
             x-ehkn8bj65ln6urb2e9ig:
               label: Titulares reales. Apellidos y nombre, titular real 14f
             x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
-              label: Titulares reales. Pais de expedicion del documento de identificacion,
+              label: Titulares reales. País de expedición del documento de identificación,
                 titular real 14f
             x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
-              label: Titulares reales. Pais de residencia, titular real 14f
+              label: Titulares reales. País de residencia, titular real 14f
             x-ehkn8bj65lq6is3f5li6uorldlimst3f:
               label: Titulares reales. Tipo de documento identificativo, titular real
                 14f
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
-              label: Titulares reales. Entidad sin obligacion de identificar al titular
+              label: Titulares reales. Entidad sin obligación de identificar al titular
                 real
           field:
             label: Modelo 036 desde 3 de febrero de 2025

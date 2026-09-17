@@ -21,7 +21,14 @@ import pytest
 
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
 from ...filing.retention import FilingRetentionAuthority
 from ..revision_persistence import _refresh_filing_retention_snapshot
 
@@ -53,6 +60,9 @@ def _catalogue() -> ModeloRecordCatalogue:
                 period=Period.from_year_and_code(_FILED_AT.year, "2T"),
                 filed_at=_FILED_AT,
                 filed_by="aeat.cli.modelo.file",
+                origin=FilingOrigin.LOCAL,
+                confirmation=AeatConfirmationState.PENDIENTE,
+                declaration_kind=FilingDeclarationKind.ORIGINAL,
             )
         }
     )

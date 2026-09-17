@@ -22,8 +22,11 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordStatus,
@@ -133,7 +136,9 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         filed_at=_T2,
         filed_by=_PRIVATE_ACTOR,
         notes=_PRIVATE_NOTES,
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id=_PRIVATE_REFERENCE,

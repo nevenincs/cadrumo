@@ -36,9 +36,9 @@ from ._invoice_confirmation_test_support import (
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,
+    seed_filer_profile,
 )
 from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,6 +48,19 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 # to declare, so it grounds for a different and legitimate reason -- using one
 # here would have tested the multi-rate carve-out rather than the confirm hop.
 _SINGLE_RATE_FIXTURE = _EVIDENCE_CORPUS / "facturae_32_series_and_parties_invoice.xml"
+# The document's seller party. Confirming it as ISSUED is only honest when the
+# filer is that seller; any other filer is refused before grounding is reached.
+_FIXTURE_SELLER_TAX_ID = "45821337R"
+
+
+@pytest.fixture(autouse=True)
+def seeded_filer_profile(
+    secure_objects: SecureObjectRepository,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
+    """Seed the filer as the document's issuer."""
+    del secure_objects, invoice_authority
+    seed_filer_profile(tax_id=_FIXTURE_SELLER_TAX_ID)
 
 
 def _confirm_as_issued(

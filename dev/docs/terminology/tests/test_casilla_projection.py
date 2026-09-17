@@ -219,14 +219,14 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     assert match.descriptions[OutputLanguage.ES] == sample_casilla.label  # type: ignore[attr-defined]
 
 
-def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -> None:
-    """Modelo 121 keeps its canonical casilla id separate from its display number."""
+def test_m122_projection_preserves_canonical_id_distinct_from_display_number() -> None:
+    """Modelo 122 keeps its canonical casilla id separate from its display number."""
     from ..casilla_projection import project_modelo_casillas
     from ..unified_record import to_search_record
 
     authority = compiled_bundled_authority()
     assert isinstance(authority, ValidatedRegistryAuthority)
-    definition = authority.modelo("121")
+    definition = authority.modelo("122")
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
     authoritative = next(casilla for casilla in latest_revision.casillas if casilla.id == "decl.ejercicio")
 
@@ -235,7 +235,7 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
     assert authoritative.id != authoritative.number
 
     projected = next(
-        record for record in project_modelo_casillas(Modelo("121"), authority) if record.casilla_id == authoritative.id
+        record for record in project_modelo_casillas(Modelo("122"), authority) if record.casilla_id == authoritative.id
     )
     assert projected.casilla_id == authoritative.id
     assert projected.number == authoritative.number

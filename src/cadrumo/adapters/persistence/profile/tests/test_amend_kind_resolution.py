@@ -60,8 +60,11 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from .....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
@@ -77,6 +80,7 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .justificante_metadata import persist_justificante_metadata
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -92,6 +96,7 @@ _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000234"
+_BASELINE_JUSTIFICANTE_CSV = "JUST2024303AMENDKIND"
 _PROFILE_LABEL = "Amendment kind resolution test profile"
 _READY_PROFILE_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X1234567L"),
@@ -230,15 +235,26 @@ def _seed_m303_external_baseline(
         filed_at=_T1,
         filed_by="aeat-import",
         notes=None,
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST-2024-303-AMEND-KIND",
+            reference_id=_BASELINE_JUSTIFICANTE_CSV,
             imported_at=_T1,
         ),
     )
     fr_repo.save(upsert_filing_record(fr_repo.load(), baseline_filing))
+    # A rectificativa targets the AEAT receipt the baseline's evidence names.
+    persist_justificante_metadata(
+        _BASELINE_JUSTIFICANTE_CSV,
+        modelo="303",
+        filing_year=filing_year,
+        period=period_code,
+        captured_at=_T1,
+        presentation_id="1300000000001",
+    )
 
     return work_unit, revision, baseline_filing
 

@@ -23,6 +23,7 @@ from ....application.calculations.binding_prefill import resolve_bindings_from_l
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
@@ -97,6 +98,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
             "modelo",
             "filing-record",
             "observe-local",
+            "--reason",
+            "synthetic prior-year reconstruction",
             "--modelo",
             "100",
             "--year",
@@ -123,7 +126,12 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     assert envelope["status"] == "warning"
     payload = unwrap_schema_envelope(result.output)
     assert payload["operation"] == "modelo.filing_record.observe_local"
+    assert payload["action"] == "recorded"
+    assert payload["reason"] == "synthetic prior-year reconstruction"
     assert payload["observation_key"] == "100:2024:0A"
+    assert payload["observation_layers"]["official"] is None
+    assert payload["observation_layers"]["pending_local"]["source_kind"] == "operator_manual"
+    assert payload["observation_layers"]["effective_source_kind"] == "operator_manual"
     assert payload["source_kind"] == "operator_manual"
     assert payload["official_evidence"] is False
     assert payload["filing_record_created"] is False
@@ -216,48 +224,7 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
 
 
-def test_observe_local_exposes_and_executes_explicit_official_evidence_replacement(
-    runtime_profile: TestRuntimeProfile,
-) -> None:
-    """The operator can invoke the exact escape hatch named by the refusal."""
-    period = Period.from_year_and_code(2025, "1T")
-    with open_test_profile_session(runtime_profile.bucket_id):
-        repository = CalculationObservationRepository()
-        repository.save(
-            repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2025,
-                    period=period.registry_token,
-                    observations=(
-                        CasillaObservation(
-                            casilla_id=validated_casilla_id("iva.repercutido.general"),
-                            value=Decimal("20000.00"),
-                            formula_id=None,
-                            operand_refs=(),
-                            operand_casilla_refs=(),
-                            operand_values=(),
-                            legal_refs=("ley-37-1992:art-21",),
-                            source_refs=("aeat-iva-2025",),
-                        ),
-                    ),
-                ),
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 4, 1, 9, 30, tzinfo=UTC),
-                stamped_revision_id=str(
-                    published_snapshot(
-                        "303",
-                        filing_year=period.filing_year,
-                        period=period.registry_token,
-                    ).revision.id
-                ),
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "202530300000001Z",
-                },
-            ),
-        )
-
+def _observe_local(*arguments: str) -> dict[str, object]:
     result = invoke_cached_cli(
         [
             "--format",
@@ -267,22 +234,94 @@ def test_observe_local_exposes_and_executes_explicit_official_evidence_replaceme
             "filing-record",
             "observe-local",
             "--modelo",
-            "303",
+            "130",
             "--year",
             "2025",
             "--period",
             "1T",
-            "--set",
-            "iva.repercutido.general=21000.00",
-            "--replace-official-evidence",
+            "--by",
+            "operator-override",
+            *arguments,
         ],
     )
-
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
-    assert payload["source_kind"] == "operator_manual"
+    return unwrap_schema_envelope(result.output)
+
+
+def test_observe_local_overrides_official_evidence_with_audit_and_clear_restores_it(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """An override sits above the official layer with its audit; ``--clear`` restores the official value."""
+    period = Period.from_year_and_code(2025, "1T")
+    casilla_id = validated_casilla_id("01")
+    revision = published_snapshot("130", filing_year=2025, period=period.registry_token).revision
+    declared = casillas_by_id(revision)[casilla_id]
     with open_test_profile_session(runtime_profile.bucket_id):
-        replaced = CalculationObservationRepository().load_observation("303", period)
-        assert replaced is not None
-        assert replaced.source_kind == "operator_manual"
-        assert replaced.observation.casilla_values["iva.repercutido.general"] == Decimal("21000.00")
+        repository = CalculationObservationRepository()
+        repository.save(
+            repository.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=2025,
+                    period=period.registry_token,
+                    observations=(
+                        CasillaObservation(
+                            casilla_id=casilla_id,
+                            value=Decimal("1000.00"),
+                            legal_refs=declared.legal_refs,
+                            source_refs=declared.source_refs,
+                        ),
+                    ),
+                ),
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime(2025, 4, 18, 9, 30, tzinfo=UTC),
+                stamped_revision_id=str(revision.id),
+                source_metadata={"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"},
+            ),
+        )
+
+    overridden = _observe_local("--reason", "receipt mistyped the income", "--set", "01=1100.00")
+
+    assert overridden["action"] == "recorded"
+    layers = overridden["observation_layers"]
+    assert layers["official"]["source_kind"] == "aeat_sede_justificante"
+    assert layers["official"]["casilla_values"] == {"01": "1000.00"}
+    assert layers["pending_local"]["casilla_values"] == {"01": "1100.00"}
+    assert layers["effective_source_kind"] == "operator_manual"
+    assert layers["override"]["actor"] == "operator-override"
+    assert layers["override"]["reason"] == "receipt mistyped the income"
+    assert layers["override"]["replaced_source_kind"] == "aeat_sede_justificante"
+    assert layers["override"]["replaced_values"] == {"01": "1000.00"}
+    with open_test_profile_session(runtime_profile.bucket_id):
+        effective = CalculationObservationRepository().load_observation("130", period)
+        assert effective is not None
+        assert effective.source_kind == "operator_manual"
+        assert effective.observation.casilla_values["01"] == Decimal("1100.00")
+
+    cleared = _observe_local("--reason", "receipt confirmed correct", "--clear")
+
+    assert cleared["action"] == "cleared"
+    assert cleared["casilla_values"] == {}
+    assert cleared["observation_layers"]["pending_local"] is None
+    assert cleared["observation_layers"]["override"] is None
+    assert cleared["observation_layers"]["effective_source_kind"] == "aeat_sede_justificante"
+    with open_test_profile_session(runtime_profile.bucket_id):
+        restored = CalculationObservationRepository().load_observation("130", period)
+        assert restored is not None
+        assert restored.source_kind == "aeat_sede_justificante"
+        assert restored.observation.casilla_values["01"] == Decimal("1000.00")
+
+
+def test_observe_local_refuses_values_with_clear_and_a_missing_reason(runtime_profile: TestRuntimeProfile) -> None:
+    """``--clear`` takes no values and every mode requires ``--reason``."""
+    del runtime_profile
+    base = ["--format", "json", "app", "modelo", "filing-record", "observe-local"]
+    target = ["--modelo", "130", "--year", "2025", "--period", "1T"]
+
+    with_values = invoke_cached_cli([*base, *target, "--reason", "r", "--clear", "--set", "01=1.00"])
+    without_reason = invoke_cached_cli([*base, *target, "--set", "01=1.00"])
+
+    assert with_values.exit_code != 0
+    assert "--clear" in with_values.output
+    assert without_reason.exit_code != 0
+    assert "--reason" in without_reason.output

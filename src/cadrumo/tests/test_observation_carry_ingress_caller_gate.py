@@ -32,7 +32,7 @@ _CANONICAL_WRITE_DOOR_CALLERS = {
     ),
     _Caller(
         "application/modelo/external_import_actions.py",
-        "_build_external_import_observation_payload",
+        "build_external_filing_observation_payload",
     ),
     _Caller(
         "application/modelo/filed_revision_observation.py",

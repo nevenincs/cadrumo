@@ -55,13 +55,12 @@ from datetime import datetime
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
+from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations.iva_compensation_history import (
-    persist_observation_envelope_and_iva_history,
-)
+from ..calculations.iva_compensation_history import iva_compensation_state_from_observation_envelope
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
     APP_FILING_SOURCE_KIND,
@@ -210,6 +209,36 @@ def prepare_filed_revision_observation(
     return PreparedFiledRevisionObservation(payload=payload, key=key, history_repository=history_repo)
 
 
+def filed_revision_observation_writes(
+    prepared: PreparedFiledRevisionObservation,
+    *,
+    repository: CalculationObservationRepositoryProtocol,
+    taxpayer_nif: str | None,
+    filing_record_id: str | None,
+) -> tuple[SecureObjectWrite, ...]:
+    """Return the writes placing a prepared filed-revision observation, for an outer unit of work.
+
+    The observation lands in the pending-local layer; a locally filed Modelo
+    303 with a taxpayer NIF also projects its IVA compensation history row.
+    Both are prepared before the caller commits, so a refusal leaves nothing
+    written.
+    """
+    writes = [repository.to_secure_object_write(prepared.payload)]
+    history_repo = prepared.history_repository
+    if history_repo is not None and taxpayer_nif is not None:
+        filing_ref = filing_record_id or prepared.key
+        with bundled_indexed_authority().operation() as operation:
+            state = iva_compensation_state_from_observation_envelope(
+                prepared.payload,
+                taxpayer_nif=taxpayer_nif.strip(),
+                provenance=IvaCompensationStateProvenance.APP_FILING,
+                source_observation_key=f"{prepared.key}:local:{filing_ref[:64]}",
+                operation=operation,
+            )
+        writes.append(history_repo.to_secure_object_write(state))
+    return tuple(writes)
+
+
 def persist_filed_revision_observation(
     *,
     revision: CalculationRevision,
@@ -300,28 +329,20 @@ def persist_filed_revision_observation(
             filing_record_id=filing_record_id,
             iva_compensation_history_repository=iva_compensation_history_repository,
         )
-    payload = prepared.payload
-    key = prepared.key
-    history_repo = prepared.history_repository
-    if history_repo is not None and taxpayer_nif is not None:
-        filing_ref = filing_record_id or key
-        with bundled_indexed_authority().operation() as operation:
-            persist_observation_envelope_and_iva_history(
-                observation_repository=repository,
-                history_repository=history_repo,
-                envelope=payload,
-                taxpayer_nif=taxpayer_nif.strip(),
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                source_observation_key=f"{key}:local:{filing_ref[:64]}",
-                operation=operation,
-            )
-    else:
-        repository.save(payload)
-    return key
+    repository.secure_object_repository.apply_batch(
+        filed_revision_observation_writes(
+            prepared,
+            repository=repository,
+            taxpayer_nif=taxpayer_nif,
+            filing_record_id=filing_record_id,
+        ),
+    )
+    return prepared.key
 
 
 __all__ = [
     "PreparedFiledRevisionObservation",
+    "filed_revision_observation_writes",
     "persist_filed_revision_observation",
     "prepare_filed_revision_observation",
     "require_filing_result_disposition",

@@ -72,7 +72,8 @@ _REVISION_SCOPED: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revis
 #: Scaffold renderings standing in for a label that was never authored. Help text may
 #: legitimately open with its box number, so only labels are judged.
 _PLACEHOLDER: Final = re.compile(
-    r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
+    r"^(?:Casilla|Casella|Box)\s+\S+:\s|^Casella . informaci"
+    r"|^(?:Casilla|Casella|Box)\b[^—]{0,40}—|^[^—]{0,40}\brovat\s+—",
     re.IGNORECASE,
 )
 
@@ -220,11 +221,11 @@ class CatalogueFindings:
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, lineages whose one Spanish text is translated more than one way."""
     stranded_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, rows rendering Spanish although their lineage translates that text."""
     stale_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, lineages rendering two different Spanish texts with one translation."""
-    """Per locale, rows rendering Spanish although their lineage translates that text."""
-    """Per locale, lineages whose one Spanish text is translated more than one way."""
 
     def counts(self) -> dict[str, object]:
         """Summarise every finding family as counts."""
@@ -674,10 +675,10 @@ class ModeloCasillaCatalogue:
             proof = ModeloCasillaCatalogue(self.occurrences, load_casilla_values(staged))
             changed = sum(1 for coordinate, text in proof.resolution().items() if result.baseline[coordinate] != text)
         except BaseException:
-            shutil.rmtree(pending_dir)
+            _discard(pending_dir)
             raise
         if changed:
-            shutil.rmtree(pending_dir)
+            _discard(pending_dir)
             raise CollapseVerificationError(f"the staged catalogue resolves {changed} texts differently")
         resume_install(locales_dir, pending_dir)
         return written
@@ -733,10 +734,10 @@ class ModeloCasillaCatalogue:
                     unattributed.append(coordinate)
                 changed[locale] += 1
         except BaseException:
-            shutil.rmtree(pending_dir)
+            _discard(pending_dir)
             raise
         if unattributed:
-            shutil.rmtree(pending_dir)
+            _discard(pending_dir)
             raise CollapseVerificationError(f"{len(unattributed)} changed texts are not served by the manifest")
         resume_install(locales_dir, pending_dir)
         return dict(changed)
@@ -777,7 +778,17 @@ def resume_install(locales_dir: Path = LOCALES_DIR, pending_dir: Path = PENDING_
     failed = _install_shards(staged, locales_dir)
     if failed:
         raise CollapseVerificationError(f"verified shards could not be installed, resume again: {failed}")
-    shutil.rmtree(pending_dir)
+    _discard(pending_dir)
+
+
+def _discard(pending_dir: Path) -> None:
+    """Remove a staged catalogue, tolerating lock sidecars that vanish while it is walked."""
+
+    def ignore_vanished(function: Callable[..., object], path: str, error: BaseException) -> None:
+        if not isinstance(error, FileNotFoundError):
+            raise error
+
+    shutil.rmtree(pending_dir, onexc=ignore_vanished)
 
 
 def _install_shards(staged: Path, locales_dir: Path) -> tuple[str, ...]:

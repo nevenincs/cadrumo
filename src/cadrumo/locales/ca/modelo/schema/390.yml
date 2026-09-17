@@ -219,28 +219,28 @@ modelo:
               per percentatge definitivo - Quota.'
             label: Regularització de prorrata per percentatge definitiu - quota
           iva-anual-repercutido-recargo-tipo-0-26-base:
-            help: Import declarat al resum anual d'IVA, model 390, per al recarrec
-              d'equivalencia al tipus indicat.
+            help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
+              d'equivalència al tipus indicat.
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 0,26%.
               Base imposable
           iva-anual-repercutido-recargo-tipo-0-62-base:
-            help: Import declarat al resum anual d'IVA, model 390, per al recarrec
-              d'equivalencia al tipus indicat.
+            help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
+              d'equivalència al tipus indicat.
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 0,62%.
               Base imposable
           iva-anual-repercutido-recargo-tipo-0-base:
-            help: Import declarat al resum anual d'IVA, model 390, per al recarrec
-              d'equivalencia al tipus indicat.
+            help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
+              d'equivalència al tipus indicat.
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 0%.
               Base imposable
           iva-anual-repercutido-recargo-tipo-0-cuota:
-            help: Import declarat al resum anual d'IVA, model 390, per al recarrec
-              d'equivalencia al tipus indicat.
+            help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
+              d'equivalència al tipus indicat.
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 0%.
               Quota
           iva-anual-repercutido-recargo-tipo-1-base:
-            help: Import declarat al resum anual d'IVA, model 390, per al recarrec
-              d'equivalencia al tipus indicat.
+            help: Import declarat al resum anual d'IVA, model 390, per al recàrrec
+              d'equivalència al tipus indicat.
             label: Operacions en règim general. Recàrrec d'equivalència. Tipo 1%.
               Base imposable
           iva-anual-resultado-regimen-general:

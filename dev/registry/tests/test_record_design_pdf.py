@@ -125,7 +125,7 @@ def test_generated_record_design_pdf_rejects_inverted_position_ranges(tmp_path: 
         ),
     )
 
-    with pytest.raises(ValueError, match="inverted position range 4-3"):
+    with pytest.raises(RegistryValidationError, match="inverted position range 4-3"):
         extract_record_design_pdf(pdf_path)
 
 
@@ -224,7 +224,7 @@ def test_generated_non_table_pdf_does_not_activate_visual_chart_fallback(tmp_pat
         ),
     )
 
-    with pytest.raises(ValueError, match="did not contain parseable field rows"):
+    with pytest.raises(RegistryValidationError, match="did not contain parseable field rows"):
         extract_record_design_pdf(pdf_path)
 
 

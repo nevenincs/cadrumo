@@ -252,6 +252,9 @@ def _import_external_m303_baseline(
             filing_instance_evidence=general_m303_filing_evidence(work_unit.period, reference=csv, operation=operation),
             actor="aeat-import",
             expected_tax_id=_TAX_ID,
+            work_unit_repository=ports.work_unit_repository,
+            calculation_repository=ports.calculation_repository,
+            filing_repository=ports.filing_repository,
             observation_repository=ports.observation_repository,
             source_headers=source_headers,
         )

@@ -43,6 +43,7 @@ from typing import Final, Literal, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -63,6 +64,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from .errors import (
     ObservationCasillaReferenceError,
     ObservationKeyError,
@@ -193,6 +195,24 @@ class PriorDomiciliationElectionProjection(BaseModel):
         return self
 
 
+class ObservationOverride(BaseModel):
+    """Audit of one operator figure that replaced the effective observation of a coordinate.
+
+    ``replaced_source_kind`` and ``replaced_values`` describe the envelope that
+    was effective when the operator recorded the figure; both are empty when
+    the coordinate held nothing. The replaced envelope itself is not destroyed:
+    an official layer stays stored beside the pending-local one.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    actor: ModeloActorLabel
+    reason: OperatorReason
+    recorded_at: UtcInstant
+    replaced_source_kind: ObservationSourceKind | None = None
+    replaced_values: dict[CasillaId, str] = Field(default_factory=dict)
+
+
 class ObservationEnvelopePayload(BaseModel):
     """Canonical public persistence payload for filed observations.
 
@@ -296,6 +316,10 @@ class ObservationEnvelopePayload(BaseModel):
             "303 ingress has made available compensation explicit."
         ),
     )
+    override: ObservationOverride | None = Field(
+        default=None,
+        description="Audit of the operator override this local envelope records, when it is one.",
+    )
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -303,6 +327,19 @@ class ObservationEnvelopePayload(BaseModel):
     def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
         """Parse encrypted JSON provenance into the closed source taxonomy."""
         return ObservationSourceKind(value)
+
+    @property
+    def is_pending_local(self) -> bool:
+        """Return whether this envelope belongs to the pending-local layer."""
+        return not self.source_kind.is_official_aeat
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_override_on_local_layer(self) -> ObservationEnvelopePayload:
+        """Keep operator overrides out of official AEAT evidence."""
+        if self.override is not None and self.source_kind.is_official_aeat:
+            raise ValueError("an official AEAT observation cannot carry an operator override")
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -320,6 +357,47 @@ class ObservationEnvelopePayload(BaseModel):
             raise RegistrySnapshotError(
                 "Modelo 303 observation requires canonical result disposition and compensation basis"
             )
+        return self
+
+
+class ObservationLayers(BaseModel):
+    """Both stored observation layers of one ``(modelo, filing_year, period, member)`` coordinate.
+
+    ``official`` holds evidence observed from AEAT. ``pending_local`` holds a
+    local filing or an operator figure that AEAT has not confirmed. Readers
+    that want one answer use :attr:`effective`; the pending layer keeps its
+    non-official ``source_kind``, so filing-grade gates still refuse it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: str = Field(min_length=1)
+    filing_year: int
+    period: str = Field(min_length=1)
+    member_nif: str | None = None
+    official: ObservationEnvelopePayload | None = None
+    pending_local: ObservationEnvelopePayload | None = None
+
+    @property
+    def effective(self) -> ObservationEnvelopePayload | None:
+        """Return the pending-local envelope when present, otherwise the official one."""
+        return self.pending_local if self.pending_local is not None else self.official
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_layer_membership(self) -> ObservationLayers:
+        if self.official is not None and self.official.is_pending_local:
+            raise ValueError("the official observation layer only holds AEAT evidence")
+        if self.pending_local is not None and not self.pending_local.is_pending_local:
+            raise ValueError("the pending-local observation layer cannot hold AEAT evidence")
+        coordinate = (self.modelo, self.filing_year, self.period, self.member_nif)
+        for layer in (self.official, self.pending_local):
+            if layer is None:
+                continue
+            observation = layer.observation
+            layer_coordinate = (str(observation.modelo), observation.filing_year, observation.period, layer.member_nif)
+            if layer_coordinate != coordinate:
+                raise ValueError(f"observation layer {layer_coordinate!r} does not belong to {coordinate!r}")
         return self
 
 
@@ -595,15 +673,15 @@ class CalculationObservationRepositoryProtocol(Protocol):
     """Application-owned read/write capability for filed observations."""
 
     def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
-        """Load one validated observation."""
+        """Load the effective observation of one single-filer coordinate."""
         ...
 
     def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
-        """Iterate validated observations for one modelo."""
+        """Iterate the effective observation of every coordinate of one modelo."""
         ...
 
     def iter_records(self) -> Iterator[ObservationEnvelopePayload]:
-        """Iterate every validated observation row."""
+        """Iterate the effective observation of every stored coordinate."""
         ...
 
     def prepare_observation_envelope(
@@ -618,17 +696,63 @@ class CalculationObservationRepositoryProtocol(Protocol):
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        replace_official_evidence: bool = False,
+        override: ObservationOverride | None = None,
     ) -> ObservationEnvelopePayload:
         """Validate and normalize one observation before persistence."""
         ...
 
+    def load_observation_layers(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+    ) -> ObservationLayers:
+        """Return both stored layers of one coordinate; absent layers are ``None``."""
+        ...
+
     def save(self, payload: ObservationEnvelopePayload) -> None:
-        """Persist one validated observation."""
+        """Persist one validated observation into the layer its source kind selects."""
+        ...
+
+    def promote_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+        source_kind: ObservationSourceKind,
+        source_metadata: Mapping[str, str],
+        captured_at: datetime,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the writes that make the pending-local layer the official one.
+
+        Used when AEAT confirms a pending local filing: the pending-local
+        envelope's casilla values become the official layer under the official
+        ``source_kind`` and ``source_metadata``, and the pending-local layer is
+        removed. Removal is expressed as upserts so the writes join the
+        caller's unit of work. Returns ``()`` when the coordinate has no
+        pending-local layer.
+        """
+        ...
+
+    def clear_pending_local(
+        self,
+        modelo: str,
+        period: Period,
+        *,
+        member_nif: str | None = None,
+    ) -> tuple[SecureObjectWrite, ...]:
+        """Prepare the writes that remove the pending-local layer of one coordinate.
+
+        The official layer is left untouched. Removal is expressed as upserts
+        so the writes join the caller's unit of work. Returns ``()`` when the
+        coordinate has no pending-local layer.
+        """
         ...
 
     def to_secure_object_write(self, payload: ObservationEnvelopePayload) -> SecureObjectWrite:
-        """Prepare one encrypted observation write for an outer transaction."""
+        """Prepare the write placing one observation into its layer, for an outer transaction."""
         ...
 
     @property
@@ -687,6 +811,8 @@ __all__ = [
     "IvaWalletDecisionEnvelopePayload",
     "IvaWalletDecisionRepositoryProtocol",
     "ObservationEnvelopePayload",
+    "ObservationLayers",
+    "ObservationOverride",
     "ObservationSourceKind",
     "PriorDomiciliationElectionProjection",
     "ResultDispositionProjection",

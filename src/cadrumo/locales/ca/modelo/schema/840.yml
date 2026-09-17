@@ -23,7 +23,7 @@ modelo:
               label: Bonificació aplicable (codi i descripció)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
               help: Informació fiscal de la casella del Modelo 840.
-              label: L'activitat es realitza dins d'un campament turistic
+              label: L'activitat es realitza dins d'un campament turístic
             x-c5hn8bj3c5qn6o9dc9gmko8:
               help: Informació fiscal de la casella 63 del Modelo 840.
               label: Causa de la baixa (codi i descripció)
@@ -90,14 +90,14 @@ modelo:
               label: 'Domicili de l''activitat: nom de la via publica'
             x-c5hn8bj5f1imsor9dtn0:
               help: Informació fiscal de la casella 60 del Modelo 840.
-              label: Exempcio aplicable (codi i descripció)
+              label: Exempció aplicable (codi i descripció)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
               help: Informació fiscal de la casella 62 del Modelo 840.
               label: Data d'inici, variació, cessament o altres causes
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
               help: 'Consulteu la informació de la casella: Grup o epigrafe de las
                 tarifas del IAE.'
-              label: Grup o epigraf de les tarifes de l'IAE
+              label: Grup o epígraf de les tarifes de l'IAE
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
               help: 'Consulteu la informació de la casella: Informacion adicional.'
               label: Informació addicional
@@ -111,27 +111,27 @@ modelo:
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd64:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 agrupacion, primera.'
-              label: 'Notes que son aplicables: agrupacio, primera'
+              label: 'Notes que són aplicables: agrupació, primera'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd68:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 agrupacion, segunda.'
-              label: 'Notes que son aplicables: agrupacio, segona'
+              label: 'Notes que són aplicables: agrupació, segona'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd6c:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 agrupacion, tercera.'
-              label: 'Notes que son aplicables: agrupacio, tercera'
+              label: 'Notes que són aplicables: agrupació, tercera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 epigrafe, primera.'
-              label: 'Notes que son aplicables: epigraf, primera'
+              label: 'Notes que són aplicables: epígraf, primera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 epigrafe, segunda.'
-              label: 'Notes que son aplicables: epigraf, segona'
+              label: 'Notes que són aplicables: epígraf, segona'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 epigrafe, tercera.'
-              label: 'Notes que son aplicables: epigraf, tercera'
+              label: 'Notes que són aplicables: epígraf, tercera'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
               help: 'Consulteu la informació de la casella: Notas que son de aplicació:
                 grup, primera.'
@@ -156,18 +156,18 @@ modelo:
               label: Província a la qual correspon la quota provincial
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
               help: Informació fiscal de la casella del Modelo 840.
-              label: Es realitza la recepcio de loteries i apostes
+              label: Es realitza la recepció de loteries i apostes
             x-c5hn8bjicljmoo9d6gmj4bb6:
               help: 'Consulteu la informació de la casella: Regla que es de aplicació:
                 Regla 4a apartado 2 F).'
-              label: 'Regla que es d''aplicacio: Regla 4a apartat 2 F)'
+              label: 'Regla que és d''aplicació: Regla 4a apartat 2 F)'
             x-c5hn8bjjclhm6qbfdo:
               help: Informació fiscal de la casella 58 del Modelo 840.
-              label: Seccio de les tarifes de l'IAE (reservat a l'Administració)
+              label: Secció de les tarifes de l'IAE (reservat a l'Administració)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               help: 'Consulteu la informació de la casella: Tipus de activitat (E
-                empresarial, P profesional, A artistica).'
-              label: Tipus d'activitat (E empresarial, P professional, A artistica)
+                empresarial, P profesional, A artística).'
+              label: Tipus d'activitat (E empresarial, P professional, A artística)
             x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
               help: Informació fiscal de la casella 100 del Modelo 840.
               label: Quota abans de bonificacions o increments (reservat a l'Administració)
@@ -183,7 +183,7 @@ modelo:
                 l'Administració)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
               help: Informació fiscal de la casella 107 del Modelo 840.
-              label: Quota despres de bonificacions o increments (reservat a l'Administració)
+              label: Quota després de bonificacions o increments (reservat a l'Administració)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
               help: Informació fiscal de la casella 104 del Modelo 840.
               label: Clau d'increment aplicat (reservat a l'Administració)
@@ -214,7 +214,7 @@ modelo:
               label: Quota consignada directament a les tarifes (reservat a l'Administració)
             x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
               help: Informació fiscal de la casella 85 del Modelo 840.
-              label: Suma dels elements tributaris del grup o epigraf (reservat a
+              label: Suma dels elements tributaris del grup o epígraf (reservat a
                 l'Administració)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
               help: Informació fiscal de la casella 93 del Modelo 840.
@@ -241,7 +241,7 @@ modelo:
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               help: Informació fiscal sobre informació fiscal de la casella 90 del
                 Modelo 840.
-              label: 'Quota municipal: superficie deduible'
+              label: 'Quota municipal: superfície deduïble'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
               help: Informació fiscal de la casella 92 del Modelo 840.
               label: 'Quota municipal: valor de l''element tributari (reservat a l''Administració)'
@@ -340,10 +340,10 @@ modelo:
               label: 'Qualitat en que signa: titular o representant'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
               help: 'Consulteu la informació de la casella: Data de la notificacion.'
-              label: Data de la notificacio
+              label: Data de la notificació
             x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
               help: 'Consulteu la informació de la casella: Lugar de la notificacion.'
-              label: Lloc de la notificacio
+              label: Lloc de la notificació
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               help: 'Consulteu la informació de la casella: Cognoms i nom o raó social
                 del representant.'

@@ -71,8 +71,11 @@ from ....domain.modelos.calculation_revision_amendment import (
 )
 from ....domain.modelos.errors import ModeloExportError, ModeloValidationError
 from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingDeclarationKind,
+    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
@@ -191,7 +194,9 @@ def _authorities(
         period=period,
         filed_at=_NOW,
         filed_by="aeat-import",
-        aeat_accepted=True,
+        origin=FilingOrigin.AEAT,
+        confirmation=AeatConfirmationState.CONFIRMADA,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             reference_id=_CSV,
@@ -354,9 +359,15 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
     work_unit, _, target, receipt, context, revision = _authorities(operation=operation)
     payload = revision.model_dump(mode="python")
     empty_records = ModeloRecordCatalogue(records={})
-    with pytest.raises(ValidationError, match="external filing evidence must carry AEAT acceptance"):
-        ModeloRecord.model_validate({**target.model_dump(mode="python"), "aeat_accepted": False})
-    with pytest.raises(ValidationError, match="AEAT-accepted filing record must carry external evidence"):
+    with pytest.raises(ValidationError, match="pendiente filing record must not carry external evidence"):
+        ModeloRecord.model_validate(
+            {
+                **target.model_dump(mode="python"),
+                "origin": FilingOrigin.LOCAL,
+                "confirmation": AeatConfirmationState.PENDIENTE,
+            },
+        )
+    with pytest.raises(ValidationError, match="confirmed filing record must carry external evidence"):
         ModeloRecord.model_validate({**target.model_dump(mode="python"), "external_evidence": None})
     variants = (
         (

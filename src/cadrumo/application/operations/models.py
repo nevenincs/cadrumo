@@ -35,6 +35,9 @@ type OperationDefinitionId = Annotated[
 ]
 """Stable registered operation-definition identity."""
 
+type OperationFailureErrorCode = Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9_]+$")]
+"""Upper-case machine error code a terminal failure reports."""
+
 type OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Opaque safe reference to an application-owned record or subject."""
 
@@ -106,7 +109,7 @@ class OperationTerminalReceipt(BaseModel):
     settled_at: datetime
     result_ref: OperationReference | None = None
     refusal_ref: OperationReference | None = None
-    failure_error_code: Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9_]+$")] | None = None
+    failure_error_code: OperationFailureErrorCode | None = None
     diagnostic_ref: OperationDiagnosticReference | None = None
 
     @model_validator(mode="after")
@@ -296,6 +299,7 @@ __all__ = [
     "CredentialFreeOperationRequest",
     "OperationDefinitionId",
     "OperationDiagnosticReference",
+    "OperationFailureErrorCode",
     "OperationId",
     "OperationIdentity",
     "OperationReconciliationOutcome",

@@ -176,18 +176,6 @@ application:
         observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
           clave de modelo, ejercicio o periodo: {primary_modelo} {primary_filing_year}
           {primary_period} frente a {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-    errors:
-      observation_displaces_official_evidence_app_filing: 'Este modelo, ejercicio
-        y periodo ya contiene evidencia capturada de la AEAT ({existing_source_kind}),
-        por lo que no se puede guardar encima una declaración calculada localmente.
-        Un recalculo local no es la autoridad sobre lo presentado: si es correcto,
-        presente la correccion ante la AEAT y descargue el resultado. La evidencia
-        capturada no se puede recuperar por ninguna via que exponga esta aplicacion.'
-      observation_displaces_official_evidence_manual: Este modelo, ejercicio y periodo
-        ya contiene evidencia capturada de la AEAT ({existing_source_kind}). Guardar
-        aqui una cifra manual la sustituye, y la evidencia sustituida no se puede
-        recuperar por ninguna via que exponga esta aplicacion. Vuelva a ejecutarlo
-        con la opcion de sustituir evidencia oficial si la sustitucion es intencionada.
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Las observaciones de compensación

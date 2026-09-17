@@ -18,7 +18,14 @@ from ....application.filing.retention import try_record_filing_retention_snapsho
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+from ....domain.modelos.filing_record import (
+    AeatConfirmationState,
+    FilingDeclarationKind,
+    FilingOrigin,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    derive_filing_record_id,
+)
 from .._bootstrap_exempt import is_bootstrap_exempt
 from .cli_runner import invoke_cached_cli
 
@@ -46,6 +53,9 @@ def _persist_retained_filing() -> None:
         period=Period.from_year_and_code(2025, "2T"),
         filed_at=datetime(2025, 7, 1, tzinfo=UTC),
         filed_by="aeat.cli.modelo.file",
+        origin=FilingOrigin.LOCAL,
+        confirmation=AeatConfirmationState.PENDIENTE,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
     )
     with open_test_profile_session(_PROFILE_ID):
         repository = ModeloRecordCatalogueRepository(bucket_id=_PROFILE_ID)

@@ -40,89 +40,89 @@ modelo:
               részre bontja.
             label: Nyereség / veszteség
           gasto-actividad-amortizaciones:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Értékcsökkenés
           gasto-actividad-arrendamientos-canones:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Bérleti díjak és jogdíjak
           gasto-actividad-consumos-explotacion:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Működési anyagfelhasználás
           gasto-actividad-gastos-financieros:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Pénzügyi ráfordítások
           gasto-actividad-gastos-personal:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Személyi jellegű ráfordítások
           gasto-actividad-otros-gastos-deducibles:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Egyéb adózásban levonható költségek
           gasto-actividad-provisiones:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Céltartalékok
           gasto-actividad-reparaciones-conservacion:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Javítás és karbantartás
           gasto-actividad-servicios-profesionales:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Független szakmai szolgáltatások
           gasto-actividad-suministros:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Közüzemi szolgáltatások
           gasto-actividad-tributos-deducibles:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Adózásban levonható adók
           gasto-inmobiliario-amortizacion-bienes-muebles:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Ingóságok értékcsökkenése
           gasto-inmobiliario-amortizacion-inmueble:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Az ingatlan értékcsökkenése
           gasto-inmobiliario-cantidades-devengadas-terceros:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Harmadik felek által elszámolt összegek
           gasto-inmobiliario-conservacion-reparacion:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Karbantartás és javítás
           gasto-inmobiliario-intereses-financiacion:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Kamatok és egyéb finanszírozási költségek
           gasto-inmobiliario-intereses-gastos-reparacion:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Függő kamatok, javítási és karbantartási
               költségek
           gasto-inmobiliario-otros-gastos-deducibles:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Egyéb levonható költségek
           gasto-inmobiliario-primas-seguros:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Biztosítási díjak
           gasto-inmobiliario-saldos-dudoso-cobro:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Kétes követelések
           gasto-inmobiliario-tributos-recargos:
-            help: A 184-es modelo szervezeti rekordjaban bevallott, adozasban levonhato
-              koltseg. A nyomtatvany egesz es tizedes reszre bontja.
+            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
+              költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Adók és pótlékok
           gastos-deducibles-atribuibles:
             help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes

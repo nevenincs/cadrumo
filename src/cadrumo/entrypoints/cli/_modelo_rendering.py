@@ -42,6 +42,7 @@ from ...domain.modelos.row_models import Modelo184MemberRow
 from ...domain.modelos.verification_report import ModeloVerificationFinding, VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
+from ._filing_chain_payloads import aeat_register_lines, aeat_register_payload
 from ._modelo_bindings_payloads import BindingEncodedOptionPayload
 from ._modelo_payloads import (
     CalculationRevisionPayload,
@@ -930,7 +931,12 @@ def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
         period=record.period,
         filed_at=record.filed_at,
         filed_by=record.filed_by,
+        member_nif=record.member_nif,
         notes=record.notes,
+        origin=record.origin,
+        confirmation=record.confirmation,
+        declaration_kind=record.declaration_kind,
+        aeat_register=aeat_register_payload(record.aeat_register),
         aeat_accepted=record.aeat_accepted,
         status=record.status,
         superseded_at=record.superseded_at,
@@ -960,8 +966,14 @@ def filing_record_lines(record: ModeloRecord) -> list[str]:
         f"filed_at\t{record.filed_at.isoformat()}",
         f"filed_by\t{record.filed_by}",
         f"status\t{record.status.value}",
+        f"origin\t{record.origin.value}",
+        f"confirmation\t{record.confirmation.value}",
+        f"declaration_kind\t{record.declaration_kind.value}",
         f"aeat_accepted\t{str(record.aeat_accepted).lower()}",
     ]
+    if record.member_nif is not None:
+        lines.append(f"member_nif\t{record.member_nif}")
+    lines.extend(aeat_register_lines(record.aeat_register))
     if record.notes is not None:
         lines.append(f"notes\t{record.notes}")
     if record.superseded_at is not None:

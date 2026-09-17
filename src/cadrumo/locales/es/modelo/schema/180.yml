@@ -18,9 +18,9 @@ modelo:
           payee-inmueble-calificador-numero:
             label: Calificador del número del inmueble arrendado
           payee-inmueble-codigo-municipio:
-            label: Codigo de municipio del inmueble arrendado
+            label: Código de municipio del inmueble arrendado
           payee-inmueble-codigo-postal:
-            label: Codigo postal del inmueble arrendado
+            label: Código postal del inmueble arrendado
           payee-inmueble-complemento:
             label: Complemento de domicilio del inmueble arrendado
           payee-inmueble-escalera:
@@ -38,25 +38,25 @@ modelo:
           payee-inmueble-portal:
             label: Portal del inmueble arrendado
           payee-inmueble-provincia:
-            label: Codigo provincia del inmueble arrendado
+            label: Código provincia del inmueble arrendado
           payee-inmueble-puerta:
             label: Puerta del inmueble arrendado
           payee-inmueble-referencia-catastral:
             label: Referencia catastral del inmueble arrendado
           payee-inmueble-situacion:
-            label: Situacion del inmueble
+            label: Situación del inmueble
           payee-inmueble-tipo-numeracion:
-            label: Tipo de numeracion del inmueble arrendado
+            label: Tipo de numeración del inmueble arrendado
           payee-inmueble-tipo-via:
             label: Tipo de via del inmueble arrendado
           payee-modalidad-renta:
             label: Modalidad de renta o rendimiento
           payee-name:
-            label: Apellidos y nombre, razon social o denominacion del perceptor
+            label: Apellidos y nombre, razón social o denominación del perceptor
           payee-nif:
             label: NIF del perceptor
           payee-province:
-            label: Codigo provincia del domicilio del perceptor
+            label: Código provincia del domicilio del perceptor
           payee-representative-nif:
             label: NIF del representante legal del perceptor
           perc-base:
