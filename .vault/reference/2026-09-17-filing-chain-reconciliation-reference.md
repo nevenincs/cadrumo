@@ -69,3 +69,20 @@ Code map for how Cadrumo records filings, local corrections, AEAT evidence and m
 - Per-modelo kind policy: `resolve_amendment_kind_regime_for_period` (`src/cadrumo/domain/calculations/registry/amendment_regime_policy.py`).
 - Receipt fields usable for content matching: `Justificante.presentation_id`, `total_a_ingresar`, `total_a_devolver`, `presented_at` (`schema.py:67`).
 - Supersession helper: `supersede_prior_current_filing` (`revision_persistence.py:964`).
+
+### Legal mechanics
+
+This section is a survey of official sources, paraphrased. The locators are BOE and AEAT pages.
+
+- The autoliquidación rectificativa (LGT art. 120.4, added by Ley 13/2023, BOE-A-2023-12946, and developed by RD 117/2024, BOE-A-2024-1771) is a full restatement of the period. Its economic effect is only the difference from the previously declared result. It carries the número de justificante of the declaration it corrects. The classic request procedure remains in art. 120.3. Locators: BOE-A-2003-23186 art. 120 and art. 122.
+- Successive rectificativas chain to the immediately preceding declaration, not to the original. For M303, casilla 69 of correction N feeds casilla 70 of correction N+1 (AEAT manual IVA 2025, cap. 8). This was confirmed only through a summary of the manual page.
+- The rectificativa is the sole mechanism for:
+  - M303 from September 2024 (monthly) and 3T 2024 (quarterly), under Orden HAC/819/2024 (BOE-A-2024-16129);
+  - M200/M220 for periods starting in 2024, under Orden HAC/657/2025 (BOE-A-2025-12818);
+  - M100/M714 from the 2024 campaign (box 103 marks it; box 104 holds the prior justificante).
+- No evidence of adoption was found for M111, M115, M130, M131 or M202/M222. They keep the complementaria (LGT art. 122.2) for increases and the solicitud de rectificación (art. 120.3, RGAT arts. 126-128) for decreases. The solicitud is a request that AEAT resolves; it is not a declaration.
+- M390 and M349 are informative declarations outside arts. 120/122 and are corrected by a declaración sustitutiva. M349 first requires a baja por sustitución.
+- Repo agreement: `src/cadrumo/_data/registry/aeat/facts/0135-amendment-regime-policy.toml` matches the M303, M100 and M200 boundary dates. It still admits `sustitutiva` for every autoliquidación, which the survey does not support. That is an open grounding item and is not changed by this feature.
+- Uncertain: the exact position of the M303 prior-justificante field in the record design; the M111, M115, M130, M131 and M202 status (absence of evidence only); and the RD 117/2024 article numbering, which comes from a secondary source.
+
+Consequence for the model: the chain is linear. Each correction supersedes the previous in-force declaration and references its justificante, and the latest AEAT-accepted entry is the one in force.
