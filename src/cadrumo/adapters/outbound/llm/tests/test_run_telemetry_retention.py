@@ -42,10 +42,10 @@ import pytest
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.hashing import canonical_json_bytes
+from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NAMESPACE
 from ..errors import LLMCacheError
-from ..run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

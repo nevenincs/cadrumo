@@ -58,7 +58,7 @@ class LLMPdfRasterisationError(LLMError):
 
 
 class LLMCacheError(LLMError):
-    """Raised when :class:`~adapters.outbound.llm.cache.LLMCache` storage fails."""
+    """Raised when :class:`~adapters.persistence.llm.cache.LLMCache` storage fails."""
 
 
 class LLMRateLimitError(LLMProviderError):

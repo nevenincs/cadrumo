@@ -32,16 +32,16 @@ from .....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from ....persistence.llm.cache import LLMCache
+from ....persistence.llm.run_telemetry import LLMRunTelemetryRecorder
+from ....persistence.llm.usage import UsageRecorder
 from .. import client as client_module
-from ..cache import LLMCache
 from ..client import (
     LLMClient,
     LLMRetryPolicy,
 )
 from ..errors import LLMRateLimitError
 from ..models import LLMRequest
-from ..run_telemetry import LLMRunTelemetryRecorder
-from ..usage import UsageRecorder
 from ._arena_fixtures import reset_client_process_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

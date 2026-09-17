@@ -21,11 +21,11 @@ from .....core.classification.policies import SensitivityClass
 from .....core.config_support import LLMProvider
 from .....core.hashing import canonical_json_bytes
 from .....core.redaction.rules import default_rules_for_class, redact_structured
+from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.secure_object_namespaces import LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

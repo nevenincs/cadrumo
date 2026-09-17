@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
-from ..cache import LLMCache
 from ..errors import LLMCacheError
 from ..models import LLMRequest, LLMResponse
 from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine

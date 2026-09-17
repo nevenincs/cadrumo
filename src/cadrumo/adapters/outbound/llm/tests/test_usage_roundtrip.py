@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config_support import LLMProvider
+from ....persistence.llm.usage import UsageRecorder
 from ..models import UsageRecord
-from ..usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
