@@ -800,7 +800,6 @@ REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
         Modelo("130"),
         Modelo("131"),
         Modelo("136"),
-        Modelo("145"),
         Modelo("151"),
         Modelo("180"),
         Modelo("184"),
