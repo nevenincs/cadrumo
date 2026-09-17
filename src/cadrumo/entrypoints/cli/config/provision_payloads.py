@@ -29,7 +29,7 @@ ProvisioningFactPayload = Mapping[str, str | int | bool]
 class ProvisionContentionPayload(OutputSchema):
     """The measured admission verdict for one model load.
 
-    ``causes`` is the :class:`~core.ContentionCause` set the application layer
+    ``causes`` is the :class:`~core.hardware.ContentionCause` set the application layer
     attributed the shortfall to. The application outcome's facts and resolved
     verdict preserve the remaining explanation without prose parsing.
     """

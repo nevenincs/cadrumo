@@ -13,11 +13,11 @@ named source through the sole
 :class:`~application.auth.certificate_secret_backend.CertificateSecretBackend`.
 
 See Also:
-    :func:`~application.auth.register_operator_certificate_source`
+    :func:`~application.auth.certificate_source_operations.register_operator_certificate_source`
         Application service behind ``certificate register``.
-    :func:`~application.auth.list_operator_certificate_sources`
+    :func:`~application.auth.certificate_source_operations.list_operator_certificate_sources`
         Application service behind ``certificate list``.
-    :func:`~application.auth.select_operator_certificate_source`
+    :func:`~application.auth.certificate_source_operations.select_operator_certificate_source`
         Application service behind ``certificate select``.
     :class:`~application.auth.certificate_secret_backend.CertificateSecretBackend`
         Per-source encrypted passphrase owner used by ``certificate secret`` verbs.

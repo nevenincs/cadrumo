@@ -16,7 +16,7 @@ one purely on gate ordering.
 
 Nothing here duplicates the policy it enforces: the stub-only decision and its
 locale key both come from
-:func:`~cadrumo.application.modelo.modelo_work_create_refusal_locale_key`, the
+:func:`~cadrumo.application.modelo.work_create_policy.modelo_work_create_refusal_locale_key`, the
 same authority the in-handler guard consults. The in-handler guard stays --- it
 is the one that fires once a profile IS active, and it is reached through paths
 that do not pass this gate.

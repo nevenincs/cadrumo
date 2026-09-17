@@ -23,7 +23,6 @@ from typing import Any, cast
 
 import pytest
 from click.testing import Result
-from dev.scripted_registration_channels import scripted_registration_descriptors
 
 from .....adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_ALPHABET,
@@ -36,6 +35,7 @@ from .....core.i18n.render import tr
 from ... import command_specs as _command_specs
 from ...command_spec import ArgumentSpec
 from ...tests.cli_runner import invoke_cached_cli
+from ...tests.scripted_registration_channels import scripted_registration_descriptors
 from ...verb_input_schema import build_verb_input_schemas, project_recovery_handoff_contract
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -134,7 +134,7 @@ def _capturing_descriptors(
 ) -> Iterator[tuple[int, int, list[str]]]:
     """Play the operator's part of the handoff while keeping the code for a later reset.
 
-    ``dev.scripted_registration_channels`` only echoes the document back; a
+    ``scripted_registration_descriptors`` only echoes the document back; a
     reset needs the code itself, so this relay records it before answering.
     ``respond`` transforms the answer so a wrong proof can be exercised.
     """

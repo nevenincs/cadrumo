@@ -356,7 +356,7 @@ def invoice_wizard(
     independently before any write is attempted — a malformed NIF and a
     malformed date are BOTH reported in one refusal, never just the first one
     found (``no-silent-under-declaration``). The write delegates to the same
-    :func:`cadrumo.application.invoices.create_catalogue_invoice` primitive
+    :func:`cadrumo.application.invoices.catalogue_creation.create_catalogue_invoice` primitive
     ``catalogue create`` uses (``aeat-architecture-boundaries``).
     A retry with identical fields resolves to the already-catalogued
     content-derived identity and is reported as a guarded idempotent no-op
@@ -553,7 +553,7 @@ def invoice_import(
     """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
 
     Each row is handed one at a time to
-    :func:`cadrumo.application.invoices.create_catalogue_invoice` -- the same sole
+    :func:`cadrumo.application.invoices.catalogue_creation.create_catalogue_invoice` -- the same sole
     write path ``catalogue create`` uses for a single invoice; this verb never
     writes the catalogue itself. A row whose content-derived identity already
     exists in the catalogue (a re-import of an unchanged file) is reported

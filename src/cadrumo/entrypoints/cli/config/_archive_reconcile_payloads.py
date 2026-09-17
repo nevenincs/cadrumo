@@ -3,7 +3,7 @@
 Every declared payload is an :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets and carried by :class:`SchemaEnvelope` through
 :func:`emit_envelope`. These schemas project
-:class:`~application.user_profile.ProfileBundleExportReconciliation` -- the
+:class:`~application.user_profile.bundle_export.ProfileBundleExportReconciliation` -- the
 outcome of one crash-recovery sweep over the portable profile-bundle export
 journals -- into the CLI JSON contract.
 

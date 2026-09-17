@@ -331,7 +331,7 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
     notification rule — served, with every downstream plazo already running,
     even though the taxpayer never read it. That consequence attaches to
     the notification's delivery state, not to its
-    :class:`~cadrumo.core.PostFilingEventKind`, so a plain ``notificacion`` whose
+    :class:`~cadrumo.core.post_filing_event.PostFilingEventKind`, so a plain ``notificacion`` whose
     concepto matches no sharper procedural pattern carries it just as a
     requerimiento does and cannot be reported through the kind-keyed
     :func:`overview_post_filing_event_notices` context map.
@@ -819,7 +819,7 @@ def overview_status_output(report: OverviewStatusReport) -> tuple[list[str], lis
     """Project :class:`OverviewStatusReport` into text lines and notices.
 
     Both halves are built from one pass over
-    :func:`~application.overview.build_overview_status_next_steps`: the text
+    :func:`~application.overview.next_actions.build_overview_status_next_steps`: the text
     lines carry each row's localized explanation, the notices carry the same
     explanation plus the resolved action, and the shared envelope renders the
     executable text line from that same action.  There is no second decision
@@ -907,7 +907,7 @@ def _storage_line(report: OverviewStatusReport) -> str:
     """State the local-storage readability finding.
 
     The remedy is not stated here: unreadable rows raise a
-    :attr:`~application.overview.OverviewStatusNextStepId.REPAIR_STORAGE`
+    :attr:`~application.overview.next_actions.OverviewStatusNextStepId.REPAIR_STORAGE`
     guidance row, which carries the diagnostics action through the same one
     projection every other row uses.
     """

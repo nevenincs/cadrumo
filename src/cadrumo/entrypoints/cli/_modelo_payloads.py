@@ -941,7 +941,7 @@ class FilingRecordLocalObservationResult(OutputSchema):
     :class:`ModeloLocalObservationResult`:
     values are stored in the calculation-observation repository for prefill.
     ``official_evidence``, ``filing_record_created``, and ``aeat_accepted``
-    are pinned ``False`` -- :func:`~application.modelo.record_operator_local_observation`
+    are pinned ``False`` -- :func:`~application.modelo.local_observation_actions.record_operator_local_observation`
     never stamps a ``ModeloRecord`` or :class:`ExternalEvidence` for this
     action, so the envelope cannot be constructed to look like AEAT-backed
     evidence.
@@ -1022,14 +1022,14 @@ class ModeloCasillasResult(OutputSchema):
 class DataInventoryCasillaPayload(OutputSchema):
     """One casilla entry on the ``modelo requires`` data-inventory checklist.
 
-    Projects :class:`~application.modelo.DataInventoryCasilla`. ``binding_id``
+    Projects :class:`~application.modelo.data_inventory.DataInventoryCasilla`. ``binding_id``
     and ``binding_source`` are populated only for ``ledger_derivable`` and
     ``profile_derivable`` rows; required and optional manual entries carry no
     binding (they are hand-entered).
 
     The grounding invariant — ``legal_refs`` and ``source_refs`` non-empty —
     belongs to the canonical
-    :class:`~application.modelo.DataInventoryCasilla`, which refuses to build an
+    :class:`~application.modelo.data_inventory.DataInventoryCasilla`, which refuses to build an
     ungrounded entry, so every consumer of the checklist inherits it rather than
     only the JSON surface. This schema is the wire shape of an entry that
     already satisfies it.
@@ -1195,7 +1195,7 @@ class ModeloCompareResult(OutputSchema):
 class ModeloLifecycleEventPayload(OutputSchema):
     """One bucket event in the modelo history output.
 
-    Projects :class:`~cadrumo.domain.buckets.BucketEvent` through the identity
+    Projects :class:`~cadrumo.domain.buckets.event.BucketEvent` through the identity
     aliases and closed enums that package already exports, rather than
     re-declaring their shape as free strings. Enum members and ``datetime``
     values render to the same JSON the former hand-built mapping emitted, so the
@@ -1371,10 +1371,10 @@ class ModeloAggregateResult(OutputSchema):
     """Per-modelo aggregation result, projected from the canonical service result.
 
     Every field is typed from the contract
-    :class:`~application.aggregation.PerModeloAggregationResult` already
+    :class:`~application.aggregation.service.PerModeloAggregationResult` already
     enforces: a bounded non-blank modelo, the closed
-    :class:`~application.aggregation.PerModeloAggregationContributor` provider,
-    closed :class:`~core.BindingSourceKind` source kinds, and non-negative
+    :class:`~application.aggregation.service.PerModeloAggregationContributor` provider,
+    closed :class:`~core.aggregation.BindingSourceKind` source kinds, and non-negative
     counters. Redeclaring them as bare strings and unbounded integers made this
     transport shell strictly more permissive than the result it renders, so an
     empty modelo, an unknown provider, a bogus source kind, or a negative count
@@ -1457,7 +1457,7 @@ class ModeloAggregateResult(OutputSchema):
         The one construction path, so the envelope cannot carry a modelo,
         period, provider, source-kind set, or counter the service did not
         produce. Counters come from the result's own
-        :class:`~application.aggregation.PerModeloAggregationLogFields`, which
+        :class:`~application.aggregation.service.PerModeloAggregationLogFields`, which
         already bounds them.
 
         Args:

@@ -891,7 +891,7 @@ class ConfigProfileDeleteResult(OutputSchema):
     because ``completed_at`` is populated on exactly one of them.
 
     ``fingerprint`` nests the canonical
-    :class:`~cadrumo.application.bucket_maintenance.BucketDeletionFingerprint`
+    :class:`~cadrumo.application.bucket_deletion_contracts.BucketDeletionFingerprint`
     rather than restating its three facts as loose fields, so the envelope's
     contract is the observation's contract by construction.
 
@@ -923,7 +923,7 @@ class ConfigProfileDeleteResult(OutputSchema):
 
 
 class ActiveProfileHealthPayload(OutputSchema):
-    """JSON-mode projection of :class:`~cadrumo.application.workflow.ActiveProfileHealth`.
+    """JSON-mode projection of :class:`~cadrumo.application.workflow.profile_health.ActiveProfileHealth`.
 
     Mirrors the canonical health verdict field-for-field so a malformed
     ``status`` or ``source`` is refused rather than forwarded as an arbitrary
@@ -950,7 +950,7 @@ class RepairProfileResult(OutputSchema):
     Covers the inspection branch (operator-readable profile-record status)
     and the ``--clear-active`` pointer-repair branch. The pointer-repair
     branch projects the canonical
-    :class:`~cadrumo.application.workflow.ActiveProfileHealth` verdict (the
+    :class:`~cadrumo.application.workflow.profile_health.ActiveProfileHealth` verdict (the
     same typed model :class:`ActiveProfileRepairResult` carries as
     ``before``/``after``) through :class:`ActiveProfileHealthPayload`, so a
     malformed ``status`` or ``source`` is refused rather than forwarded as an
@@ -980,7 +980,7 @@ class RepairProfileResult(OutputSchema):
 class RepairIntegrityCheckPayload(OutputSchema):
     """The pass/fail verdict ``repair integrity objects`` emits for its sweep.
 
-    Narrower than the full :class:`~cadrumo.application.diagnostics.DiagnosticCheck`
+    Narrower than the full :class:`~cadrumo.application.diagnostic_models.DiagnosticCheck`
     used by ``config repair`` (which requires a check ``name`` and a
     next-action/dead-end contract): this command reports only the aggregate
     unreadable-row verdict and its summary.
@@ -994,10 +994,10 @@ class RepairIntegrityObjectsResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity objects``.
 
     Projects the per-namespace
-    :class:`~cadrumo.application.diagnostics.SecureObjectIntegrityReport`
+    :class:`~cadrumo.application.diagnostic_models.SecureObjectIntegrityReport`
     (via the shared :class:`ConfigRepairNamespacePayload` rows, bounded
     exactly as the canonical
-    :class:`~cadrumo.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_object_records.SecureObjectNamespaceIntegrity`
     row) plus the aggregate pass/fail verdict for the unreadable-row count.
     """
 
@@ -1073,7 +1073,7 @@ class ApoderadoScopesListResult(OutputSchema):
 class CertificateSourcePayloadEntry(OutputSchema):
     """One registered certificate source row.
 
-    Mirrors :class:`application.auth.CertificateSourcePayload`; nested in
+    Mirrors :class:`application.auth.operator_results.CertificateSourcePayload`; nested in
     :class:`CertificateSourceListPayload`, not a direct CommandSpec schema target.
     """
 
@@ -1088,7 +1088,7 @@ class CertificateSourceMutationPayload(OutputSchema):
     """JSON envelope for ``certificate register`` / ``select`` / ``remove``.
 
     Field set is 1:1 with the application
-    :class:`application.auth.CertificateSourceMutationResult`. The same
+    :class:`application.auth.operator_results.CertificateSourceMutationResult`. The same
     schema class is referenced under the three distinct command paths
     below because ``register``, ``select``, and ``remove`` all emit the
     identical mutation-result shape.
@@ -1103,7 +1103,7 @@ class CertificateSourceMutationPayload(OutputSchema):
 class CertificateSourceListPayload(OutputSchema):
     """JSON envelope for ``aeat config auth certificate list``.
 
-    Mirrors :class:`application.auth.CertificateSourceListResult`.
+    Mirrors :class:`application.auth.operator_results.CertificateSourceListResult`.
     """
 
     sources: list[CertificateSourcePayloadEntry] = []
@@ -1113,7 +1113,7 @@ class CertificateSourceListPayload(OutputSchema):
 class CertificateSourceCheckEntryPayload(OutputSchema):
     """One certificate source's expiry/rotation verdict row.
 
-    Mirrors :class:`application.auth.CertificateSourceCheckEntry`; nested
+    Mirrors :class:`application.auth.operator_results.CertificateSourceCheckEntry`; nested
     in :class:`CertificateSourceCheckPayload`, not a direct CommandSpec schema target.
     """
 
@@ -1129,7 +1129,7 @@ class CertificateSourceCheckEntryPayload(OutputSchema):
 class CertificateSourceCheckPayload(OutputSchema):
     """JSON envelope for ``aeat config auth certificate check``.
 
-    Mirrors :class:`application.auth.CertificateSourceCheckReport`.
+    Mirrors :class:`application.auth.operator_results.CertificateSourceCheckReport`.
     """
 
     entries: list[CertificateSourceCheckEntryPayload] = []
@@ -1139,7 +1139,7 @@ class CertificateSourceCheckPayload(OutputSchema):
 class CertificateSourceSecretMutationPayload(OutputSchema):
     """JSON envelope for ``certificate secret set`` / ``certificate secret remove``.
 
-    Mirrors :class:`application.auth.CertificateSourceSecretMutationResult`.
+    Mirrors :class:`application.auth.operator_results.CertificateSourceSecretMutationResult`.
     Never carries the secret value itself — only whether one is now
     registered and whether the call rotated an existing secret. Named
     certificate secrets have exactly one storage authority (encrypted

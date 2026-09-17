@@ -35,7 +35,7 @@ def _validated_ratio_text(value: str, *, field: str) -> str:
     The ratio crosses the wire as text so the exact operator-entered scale
     survives JSON, but the band itself is not re-stated here: the check
     routes through
-    :func:`~domain.usage_ratios.validate_usage_ratio_bound`, the one
+    :func:`~domain.usage_ratios.model.validate_usage_ratio_bound`, the one
     authority the persisted :class:`UsageRatioProfile` also uses.
     """
     parsed = try_parse_canonical_decimal(value)
@@ -52,7 +52,7 @@ class RatiosRowPayload(OutputSchema):
     """One per-category usage-ratio row.
 
     ``category`` reuses the canonical
-    :class:`~domain.categories.SpendingCategory` closed set and ``ratio``
+    :class:`~domain.categories.spending_category.SpendingCategory` closed set and ``ratio``
     is bound to ``[0, 1]`` through the domain authority, so an unknown
     category or an out-of-band ratio is refused at the transport edge
     instead of crossing it.
@@ -72,7 +72,7 @@ class RatiosEligibleRowPayload(OutputSchema):
     """One ``ledger ratios eligible`` row (D2).
 
     ``proportionality_kind`` reuses the canonical registry-projected
-    :class:`~domain.categories.ProportionalityKind` token rather than
+    :class:`~domain.categories.proportionality.ProportionalityKind` token rather than
     restating the rule vocabulary as free text.
     """
 

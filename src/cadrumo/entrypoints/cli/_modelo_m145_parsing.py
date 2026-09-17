@@ -7,9 +7,9 @@ strict backend create-command DTO.
 See Also:
     :mod:`~entrypoints.cli._modelo_m145_cli`
         Typer command group that calls these parsing helpers.
-    :class:`~application.modelo.M145CommunicationCreateCommand`
+    :class:`~application.modelo.m145_communication_records.M145CommunicationCreateCommand`
         Backend DTO produced by :func:`m145_create_command_from_cli`.
-    :class:`~application.modelo.M145CommunicationPeriod`
+    :class:`~application.modelo.m145_communication_period.M145CommunicationPeriod`
         Closed period-token type accepted by the CLI option and backend DTO.
     :mod:`~entrypoints.cli._modelo_m145_rendering`
         Sibling output boundary that emits results after parsed commands run.

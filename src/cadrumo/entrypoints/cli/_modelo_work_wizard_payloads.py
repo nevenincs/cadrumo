@@ -2,7 +2,7 @@
 
 The wizard walks an operator through a work unit's outstanding manual-input
 casillas and bindings/relations in plain language, then calls the same
-:func:`~application.modelo.calculate_modelo_work_revision` composition
+:func:`~application.modelo.calculate_input.calculate_modelo_work_revision` composition
 path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and calculation
 delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
@@ -28,7 +28,7 @@ class WizardPromptedCasillaPayload(OutputSchema):
 
     Carries the same grounding parity (``legal_refs`` / ``source_refs``) the
     ``casilla`` discovery command exposes -- required, non-empty, exactly as
-    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` requires
+    :class:`~cadrumo.domain.calculations.registry.schema_surfaces.CasillaDefinition` requires
     -- so a scripted or JSON-mode caller can audit exactly what was asked and
     what was answered, without needing a live terminal.
     """

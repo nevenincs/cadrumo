@@ -93,11 +93,11 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 
         ``None`` is skipped rather than validated: a factura simplificada may
         legitimately carry no counterparty tax id (RD 1619/2012 art. 6.1.d),
-        and the rich :class:`~domain.invoices.Invoice` this payload projects
+        and the rich :class:`~domain.invoices.models.Invoice` this payload projects
         already enforces the cases where one is mandatory.
 
         WHICH regime applies is the domain's answer, through
-        :func:`~domain.invoices.validate_counterparty_tax_id`. This surface used
+        :func:`~domain.invoices.validators.validate_counterparty_tax_id`. This surface used
         to decide it here with its own ``country == "ES"``, so the rule sat in a
         wire projection as well as in the invoice normaliser and a third regime
         would have had to reach both.
@@ -145,7 +145,7 @@ class CatalogueInvoiceUpdatePayload(CatalogueInvoiceRecordPayload):
     Projects the re-validated :class:`Invoice` returned by
     :func:`update_catalogue_invoice`. The content-addressed ``invoice_id`` is
     unchanged: identity fields are structurally excluded from
-    :class:`~application.invoices.CatalogueInvoicePatch`, so a correction never
+    :class:`~application.invoices.catalogue_lifecycle.CatalogueInvoicePatch`, so a correction never
     silently re-mints the record under a new identity.
 
     ``bucket_event_ids`` carries the lifecycle events the correction emitted,
@@ -191,9 +191,9 @@ class CatalogueInvoiceImportResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice import``.
 
     Mirrors the application-layer
-    :class:`~application.invoices.BulkInvoiceImportResult`: ``created``
+    :class:`~application.invoices.bulk_import.BulkInvoiceImportResult`: ``created``
     rows were persisted through
-    :func:`~application.invoices.create_catalogue_invoice`;
+    :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`;
     ``skipped_duplicate`` rows already existed under an identical
     content-derived identity (a guarded idempotent re-import no-op); ``refused``
     rows failed validation and were not persisted.

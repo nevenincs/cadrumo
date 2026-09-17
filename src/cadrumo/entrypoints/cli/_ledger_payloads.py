@@ -1187,7 +1187,7 @@ class LedgerPreflightIssuePayload(OutputSchema):
 class LedgerLinkInconsistencyPayload(OutputSchema):
     """One one-sided invoice/transaction link found by the check verb.
 
-    Mirrors :class:`~cadrumo.domain.invoices.LinkInconsistency`. ``direction``
+    Mirrors :class:`~cadrumo.domain.invoices.service.LinkInconsistency`. ``direction``
     names which catalogue cites the other without being cited back:
     ``invoice-only`` when the invoice carries the transaction in its
     ``linked_transaction_ids`` but the transaction's ``invoice_id`` does not
@@ -1196,7 +1196,7 @@ class LedgerLinkInconsistencyPayload(OutputSchema):
     until the operator re-runs ``link``.
 
     ``direction`` stays typed as the core
-    :class:`~cadrumo.core.LinkInconsistencyDirection` all the way to the
+    :class:`~cadrumo.core.invoice_link.LinkInconsistencyDirection` all the way to the
     operator boundary, so the closed value set is validated here rather than
     degrading to a free-form string on the way out.
     """
@@ -1216,7 +1216,7 @@ class LedgerCheckResult(OutputSchema):
 
     ``link_inconsistencies`` is the second, period-independent channel: the
     one-sided invoice/transaction links
-    :func:`~cadrumo.application.invoices.verify_invoice_repository_links`
+    :func:`~cadrumo.application.invoices.catalogue_reads.verify_invoice_repository_links`
     reports over the whole bucket. ``ready`` is false when either channel is
     non-empty, because a disagreeing link makes the affected rows' invoice
     association untrustworthy just as a missing fact does.

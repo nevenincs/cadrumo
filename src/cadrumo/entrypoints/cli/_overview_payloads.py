@@ -292,7 +292,7 @@ class OverviewObligationCoveragePayload(OutputSchema):
     """JSON projection of the canonical total obligation-coverage partition.
 
     Each modelo occurs in exactly one disposition. That invariant belongs to the
-    canonical :class:`~application.overview.ObligationCoverageReport`, which
+    canonical :class:`~application.overview.coverage.ObligationCoverageReport`, which
     refuses to construct a self-contradicting partition, so every consumer of
     the application layer inherits it rather than only the JSON surface. This
     schema is the transport shape of a report that already satisfies it.
@@ -448,7 +448,7 @@ class OverviewExplainResult(OutputSchema):
 class OverviewPrepareStepPayload(OutputSchema):
     """One ordered row in the ``aeat app overview prepare`` checklist.
 
-    Mirrors :class:`~cadrumo.application.overview.DataPrepStep`: a closed step
+    Mirrors :class:`~cadrumo.application.overview.data_prep.DataPrepStep`: a closed step
     identifier, its current readiness state, a human-readable progress summary,
     and the schema-resolved action that advances the step.
 
@@ -467,7 +467,7 @@ class OverviewPrepareStepPayload(OutputSchema):
 class OverviewPrepareResult(OutputSchema):
     """JSON envelope result for ``aeat app overview prepare``.
 
-    Wraps :class:`~cadrumo.application.overview.DataPrepWalkthrough`: the ordered
+    Wraps :class:`~cadrumo.application.overview.data_prep.DataPrepWalkthrough`: the ordered
     data-prep checklist for one ``(modelo, filing_year, period)`` scope,
     read-only over the active profile bucket's ledger, invoice, evidence, and
     modelo work-unit state. Never contacts AEAT and persists nothing.
@@ -483,7 +483,7 @@ class OverviewPrepareResult(OutputSchema):
 class OverviewPipelineModeloPayload(OutputSchema):
     """One modelo readiness row nested in a pipeline health result.
 
-    Mirrors :class:`~cadrumo.application.overview.ModeloHealthRow`: the modelo's
+    Mirrors :class:`~cadrumo.application.overview.pipeline_health.ModeloHealthRow`: the modelo's
     current readiness state against the requested period, its outstanding
     blocking/warning finding counts, and the schema-resolved action that
     advances it.
@@ -501,7 +501,7 @@ class OverviewPipelineModeloPayload(OutputSchema):
 class OverviewPipelineResult(OutputSchema):
     """JSON envelope result for ``aeat app overview pipeline``.
 
-    Wraps :class:`~cadrumo.application.overview.PipelineHealthReport`: the
+    Wraps :class:`~cadrumo.application.overview.pipeline_health.PipelineHealthReport`: the
     cross-domain pipeline health dashboard for one ``(filing_year, period)``
     scope, composing the reused ledger status report, one modelo readiness
     row per work unit found for the period, and aggregate finding counts.

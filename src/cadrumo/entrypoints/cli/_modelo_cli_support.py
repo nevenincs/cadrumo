@@ -426,7 +426,7 @@ def optional_decimal_option(raw: str | None, *, translation_key: str, default: s
     is shared and enforced here once.
 
     Conformance is the canonical euro-amount grammar
-    (:func:`~cadrumo.core.decimal.try_parse_canonical_decimal` with a
+    (:func:`~cadrumo.core.decimal.grammar.try_parse_canonical_decimal` with a
     two-fractional-digit cap): a dot decimal separator, at most euro-cent
     precision, no thousands grouping, no comma decimal, no scientific notation,
     no leading ``+``, and no ``NaN``/``Infinity``. The cap is what makes the

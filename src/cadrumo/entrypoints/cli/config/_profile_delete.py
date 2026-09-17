@@ -104,7 +104,7 @@ def _refuse_erase_inside_the_retention_floor(assessment: BucketDeletionAssessmen
     all-profile flow tested the blocking flag together with a recorded
     override, this verb tested the flag alone, and a third condition added to
     the retention contract would have reached one site and not the other. It
-    now asks :func:`~domain.retention.erase_is_blocked`, so both surfaces
+    now asks :func:`~domain.retention.floor.erase_is_blocked`, so both surfaces
     reach the same rule. No override is passed because this verb offers none,
     which is the accurate statement rather than a value withheld.
     """

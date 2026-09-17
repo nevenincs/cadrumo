@@ -1,12 +1,12 @@
 """Operator-facing entry surface for Modelo 100 ``renta_family.descendiente.*`` facts.
 
 The Art. 58/61 LIRPF minimo por descendientes engine
-(:meth:`~domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`,
+(:meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.minimo_descendientes_estatal`,
 consumed at calculate time by
 :func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) reads the
 active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, no
-production CLI surface wrote those facts: :func:`~domain.contribuyente.parse_descendiente_flag`
-and :func:`~domain.contribuyente.descendant_facts_from_list` had zero non-test
+production CLI surface wrote those facts: :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`
+and :func:`~domain.contribuyente.descendant_facts.descendant_facts_from_list` had zero non-test
 callers, so casillas 0513/0514 computed to zero for every filer with children. This
 module closes that gap with three flag verbs mounted under ``config profile descendiente``:
 ``add`` (append one or more descendants), ``list`` (show the declared descendants), and
@@ -30,7 +30,7 @@ revision-bound replacement command.
 See Also:
     :mod:`~application.modelo.profile_binding`:
         ``inject_derived_minimo_descendientes_facts`` reads the facts this module writes.
-    :func:`~domain.contribuyente.parse_descendiente_flag`:
+    :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`:
         Parses the ``--descendiente`` flag's ``KEY=VALUE,...`` grammar.
 """
 
@@ -155,7 +155,7 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
 
     Fires only for a row BOTH declaring real working months AND left at the
     unstated default relación — the same narrow conjunction
-    :func:`~application.modelo._calculate_input._ambiguous_relacion_hijo_ids`
+    :func:`~application.modelo.calculate_input._ambiguous_relacion_hijo_ids`
     checks at calculate time. Checked here too, immediately at declaration,
     because an operator actively answering questions is better served by
     disclosure at the point they typed the figure than by discovering it only
@@ -164,7 +164,7 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
     existed at all.
 
     Which relación is ambiguous is the domain's answer, not this surface's:
-    :func:`~domain.contribuyente.relacion_is_ambiguous_for_maternidad` states it
+    :func:`~domain.contribuyente.descendant_maternity.relacion_is_ambiguous_for_maternidad` states it
     once, with the manual's reasoning. The months gate stays here because it
     genuinely differs between the two callers -- this one asks whether the
     operator declared months, the calculate-time one whether those months
@@ -312,7 +312,7 @@ def descendiente_add(
     """Append one or more ``--descendiente`` rows to the active profile.
 
     Each ``--descendiente`` flag is parsed by
-    :func:`~domain.contribuyente.parse_descendiente_flag`; a malformed flag
+    :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`; a malformed flag
     refuses instructively before any profile write. The new rows are appended after
     the existing declared descendants and the full set is rewritten so the
     Art. 58/61 LIRPF minimo por descendientes engine

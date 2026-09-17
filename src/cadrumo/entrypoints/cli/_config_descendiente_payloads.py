@@ -4,7 +4,7 @@ Split out of the cohesive sibling :mod:`config_payloads` so the declared-descend
 transport can carry the full canonical contract without growing that module.
 
 :class:`ProfileDescendientePayload` is a lossless projection of
-:class:`~cadrumo.domain.contribuyente.DescendantInfo`: every field the canonical
+:class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo`: every field the canonical
 record validates is re-declared here with the same shape, including the two
 tax-driving inputs (``meses_madre_trabajo``, ``gastos_guarderia_euros``) that
 feed the Art. 81 LIRPF deducción maternidad (81.1) and guardería increment (81.2).
@@ -17,7 +17,7 @@ deduction from every machine-readable surface, so they are carried, not summaris
 pass the typed value they already hold; ``model_dump(mode="json")`` renders the
 same ISO-8601 wire form as before.
 
-``relacion`` rides as a registry-projected :class:`~cadrumo.core.DescendantRelacion`
+``relacion`` rides as a registry-projected :class:`~cadrumo.core.descendant_relacion.DescendantRelacion`
 token rather than a bare string, so a consumer reading this transport gets the
 same authority-owned relationship catalogue the engine branches on. It is what
 decides whether the Art. 58.2 increase applies at all — a temporal acogimiento
@@ -57,8 +57,8 @@ DescendantNif = Annotated[
 class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     """One declared descendant row in the ``config profile descendiente`` surface.
 
-    Lossless projection of :class:`~cadrumo.domain.contribuyente.DescendantInfo`;
-    ``index`` is the 0-based position :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`
+    Lossless projection of :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo`;
+    ``index`` is the 0-based position :func:`~cadrumo.domain.contribuyente.descendant_facts.descendant_list_from_facts`
     assigns, the same index ``descendiente remove`` addresses.
     """
 

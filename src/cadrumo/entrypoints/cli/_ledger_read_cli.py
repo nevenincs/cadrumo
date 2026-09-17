@@ -304,7 +304,7 @@ def ledger_categories(ctx: typer.Context) -> None:
 def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Notice]:
     """Return the warning notice for one-sided invoice links, or nothing.
 
-    Takes the typed :class:`~cadrumo.domain.invoices.LinkInconsistency` rows
+    Takes the typed :class:`~cadrumo.domain.invoices.service.LinkInconsistency` rows
     rather than a serialised mapping, so the closed ``direction`` axis and the
     identifiers stay typed up to the envelope, mirroring how the readiness
     issues are carried alongside them.

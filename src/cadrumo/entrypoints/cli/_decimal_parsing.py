@@ -9,7 +9,7 @@ two-digit fractional cap is what makes the Spanish thousands-grouping shape
 ``1.234,56``, ``1e3``, ``NaN``, ``Infinity`` all refuse.
 
 The grammar itself lives in
-:func:`~cadrumo.core.decimal.try_parse_canonical_decimal`, in ``core`` rather
+:func:`~cadrumo.core.decimal.grammar.try_parse_canonical_decimal`, in ``core`` rather
 than here, because the application-layer calculate-input boundary needs the
 same shape and cannot import from ``entrypoints``. What stays here is the
 thing that is genuinely CLI-owned: the localised, instructive refusal. One
@@ -40,7 +40,7 @@ __all__ = ["optional_decimal_text", "parse_decimal_amount", "parse_optional_deci
 # ``1.234,56``, ``1e3``, ``NaN``, ``Infinity`` all refuse.
 #
 # The grammar itself lives in
-# :func:`~cadrumo.core.decimal.try_parse_canonical_decimal`, in ``core`` rather
+# :func:`~cadrumo.core.decimal.grammar.try_parse_canonical_decimal`, in ``core`` rather
 # than here, because the application-layer calculate-input boundary needs the
 # same shape and cannot import from ``entrypoints``. What stays here is the
 # thing that is genuinely CLI-owned: the localised, instructive refusal. One

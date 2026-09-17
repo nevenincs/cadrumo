@@ -54,8 +54,8 @@ class GoogleCredentialSourceSetResult(GoogleCredentialSourcePayload):
     """JSON envelope for ``aeat config google credential-source set``.
 
     Mirrors the persisted
-    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection`
-    after :func:`~adapters.outbound.google.save_credential_source_selection`
+    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection`
+    after :func:`~adapters.outbound.google.session_store.save_credential_source_selection`
     writes it for the active profile. The impersonation fields are ``None``
     whenever ``kind`` is ``oauth_desktop``. No SA private key or access
     token field exists anywhere on this payload: the impersonated token is
@@ -70,10 +70,10 @@ class GoogleCredentialSourceViewResult(GoogleCredentialSourcePayload):
     """JSON envelope for ``aeat config google credential-source view``.
 
     Projects the optional persisted
-    :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` for the
+    :class:`~adapters.outbound.google.impersonation.GoogleCredentialSourceSelection` for the
     active profile. ``configured`` distinguishes a profile that has never
     opted into a non-default credential source (``kind`` then reports the
-    :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
+    :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP` default the
     factory dispatch applies) from one with a persisted selection.
     """
 

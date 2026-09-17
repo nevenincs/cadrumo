@@ -53,7 +53,7 @@ separators — legitimately fails a verbatim search, and warning on every one of
 those would train an operator to ignore the channel.
 
 See Also:
-    :class:`~core.FieldGroundingOutcome`
+    :class:`~core.field_grounding.FieldGroundingOutcome`
         The closed set of verification outcomes these notices report.
     :class:`~core.json_contract.Notice`
         The only sanctioned channel for an operator-facing diagnostic.

@@ -39,9 +39,13 @@ def apoderado_scopes_list(
     from ..config_payloads import ApoderadoScopesListResult
 
     svc = _service(ctx)
-    payload = svc.catalogue.model_dump(mode="json")
     lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
-    scopes_result = ApoderadoScopesListResult.model_validate(payload)
+    # Projected field-by-field: a JSON round-trip hands the strict schema lists
+    # where the catalogue holds tuples, and the schema correctly refuses them.
+    scopes_result = ApoderadoScopesListResult(
+        catalogue_version=svc.catalogue.catalogue_version,
+        scopes=list(svc.catalogue.scopes),
+    )
     emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
 
 

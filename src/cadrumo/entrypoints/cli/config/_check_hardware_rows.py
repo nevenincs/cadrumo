@@ -15,7 +15,7 @@ shortfall from an UNMEASURABLE machine, and the two are not the same claim.
   platform it merely cannot measure.
 
 The classification is not re-derived here. It is read from
-:class:`~core.ContentionCause` on the snapshot the application layer produced,
+:class:`~core.hardware.ContentionCause` on the snapshot the application layer produced,
 because the attribution is application-owned evidence.
 
 Neither row changes the command's exit contract. Like the preflight rows, they

@@ -418,7 +418,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
 
     Most failures reaching here are genuine crashes and are wrapped in
     :class:`CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
-    :class:`~core.errors.CadrumoError` is different: it is an *expected*,
+    :class:`~core.errors.hierarchy.CadrumoError` is different: it is an *expected*,
     already-classified refusal that simply had no callback boundary to catch it,
     because it was raised during command resolution rather than inside a command
     body (the lazy command-group loader is the canonical raiser). Flattening it

@@ -195,7 +195,7 @@ def _format_percent(value: Decimal) -> str:
     """Render a 0..1 proportion as its percentage for operator context.
 
     The trailing-zero trim is :meth:`~decimal.Decimal.normalize` inside
-    :func:`~cadrumo.core.decimal.format_decimal` rather than a local
+    :func:`~cadrumo.core.decimal.formatting.format_decimal` rather than a local
     ``rstrip("0").rstrip(".")``. The string form needs a guard the
     numeric form does not: stripping zeros from ``"100"`` yields ``"1"``,
     so the local spelling was only correct because it first tested for a

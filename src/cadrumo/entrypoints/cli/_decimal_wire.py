@@ -9,7 +9,7 @@ canonical :class:`~decimal.Decimal`-typed application models refuse outright.
 
 These annotated types close that gap by validating the rendered text against
 the one canonical decimal grammar
-(:func:`~core.decimal.try_parse_canonical_decimal`) rather than re-deriving a
+(:func:`~core.decimal.grammar.try_parse_canonical_decimal`) rather than re-deriving a
 per-payload regex. Non-finite values do not conform to that grammar, so
 ``NaN`` and ``Infinity`` are refused by construction.
 
@@ -17,7 +17,7 @@ The types are plain ``str`` at runtime and on the wire, so adopting one
 changes what a payload *accepts*, never what it *emits*.
 
 See Also:
-    :func:`~core.decimal.try_parse_canonical_decimal`
+    :func:`~core.decimal.grammar.try_parse_canonical_decimal`
         Canonical grammar these types validate against.
 """
 

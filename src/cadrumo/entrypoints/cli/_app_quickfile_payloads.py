@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schema for the ``aeat app quickfile`` envelope.
 
-Projects the application :class:`~application.modelo.QuickfileResult` onto a
+Projects the application :class:`~application.modelo.quickfile.QuickfileResult` onto a
 strict :class:`~core.json_contract.OutputSchema` referenced as a deferred public target under the
 ``quickfile`` command path. The per-stage outcomes and the terminal export
 receipt (path reference only — never raw fichero bytes) are surfaced so a machine
@@ -91,8 +91,8 @@ class QuickfileStageOutcomePayload(OutputSchema):
     """One quickfile stage's outcome projected for the JSON envelope.
 
     ``stage`` and ``status`` reuse the canonical
-    :class:`~application.modelo.QuickfileStage` and
-    :class:`~application.modelo.QuickfileStageStatus` enums the application
+    :class:`~application.modelo.quickfile.QuickfileStage` and
+    :class:`~application.modelo.quickfile.QuickfileStageStatus` enums the application
     layer owns, so an unknown stage or status is refused at the transport
     boundary rather than crossing it as an opaque string. Both are
     ``StrEnum`` members and therefore still serialise to their string form.

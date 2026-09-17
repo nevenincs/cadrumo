@@ -11,17 +11,17 @@ transport shapes.
 See Also:
     :mod:`~entrypoints.cli._modelo_iva_wallet_cli`
         Typer command group that emits these payload classes.
-    :func:`~application.calculations.query_iva_wallet_balance`
+    :func:`~application.calculations.iva_wallet_balance.query_iva_wallet_balance`
         Application query that supplies :class:`IvaWalletBalanceResult`.
-    :func:`~application.modelo.seed_iva_compensation_period_for_bucket`
+    :func:`~application.modelo.iva_wallet_seed.seed_iva_compensation_period_for_bucket`
         Seed service projected by :class:`IvaWalletSeedResult`.
-    :func:`~application.modelo.record_iva_compensation_override_for_bucket`
+    :func:`~application.modelo.iva_wallet_seed.record_iva_compensation_override_for_bucket`
         Override recorder projected by :class:`IvaWalletOverrideResult`.
-    :class:`~domain.iva_compensation.IvaWalletBalanceReport`
+    :class:`~domain.iva_compensation.balance.IvaWalletBalanceReport`
         Domain balance summary converted into the balance payload.
-    :class:`~domain.iva_compensation.IvaCompensationPeriodState`
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
         Persisted period-state record returned by seed operations.
-    :class:`~domain.iva_compensation.IvaCompensationReconciliationDecision`
+    :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
         Persisted wallet-authority decision returned by override operations.
 """
 
@@ -42,7 +42,7 @@ class IvaWalletBalanceResult(OutputSchema):
     """IVA compensation carry-forward wallet balance.
 
     Every field mirrors the constraint the canonical
-    :class:`~domain.iva_compensation.IvaWalletBalanceReport` already enforces.
+    :class:`~domain.iva_compensation.balance.IvaWalletBalanceReport` already enforces.
     Redeclared as free strings and unbounded primitives this payload accepted
     balance claims the domain report refuses -- a 1900 reference year, a
     negative or ``NaN`` balance, a negative lot count -- and emitted them at the

@@ -9,7 +9,7 @@ does not acknowledge, mark, submit, or mutate notifications in AEAT.
 The ``document`` subgroup reaches one notification's served content.
 ``document pull`` is the only verb in this module that can cause an AEAT
 request for a document, and it is guarded by
-:func:`~adapters.outbound.aeat.sede.assert_notification_content_readable`:
+:func:`~adapters.outbound.aeat.sede.notifications.assert_notification_content_readable`:
 AEAT serves a notification's content and performs its *comparecencia* through
 the same control, so driving it on an unread notification is the act that makes
 the notification legally served, starts the appeal and payment periods, and

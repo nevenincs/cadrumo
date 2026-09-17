@@ -10,7 +10,7 @@ and even then only when the consent gate permits AND an endpoint is
 configured; otherwise it remains a safe no-op.
 
 Every field this module can ever surface as "would be sent" is drawn from
-:class:`~core.telemetry.TelemetryEventPayload`, the closed allowlisted
+:class:`~core.telemetry.schema.TelemetryEventPayload`, the closed allowlisted
 payload shape -- there is no other data source, so this transport module
 cannot itself widen what telemetry carries.
 
@@ -29,7 +29,7 @@ See Also:
         Dry-run payload builder backing the default ``flush`` mode.
     :func:`~application.diagnostics_telemetry.flush_telemetry`
         Non-dry-run application service that still honours the consent gate.
-    :class:`~core.telemetry.TelemetryEventPayload`
+    :class:`~core.telemetry.schema.TelemetryEventPayload`
         Closed payload shape surfaced in the flush preview result.
 """
 

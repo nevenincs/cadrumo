@@ -213,7 +213,7 @@ def _target_command_registration_metadata(
     policy: CommandPolicyMetadata,
     owner: str | None,
 ) -> CommandRegistrationMetadata | None:
-    """Project a target result schema into one command registration, if exposed."""
+    """Project a target result schema into :class:`CommandRegistrationMetadata`, if exposed."""
     from ._profile_authentication_contract import profile_authentication_posture
 
     spec = node.spec
@@ -294,7 +294,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
 
 
 def command_registration_for_node(node: CommandSpecNode) -> CommandRegistrationMetadata | None:
-    """Project one graph node's command registration in the selected output language, if exposed."""
+    """Project one graph node into :class:`CommandRegistrationMetadata` in the output language, if exposed."""
     spec = node.spec
     return _target_command_registration_metadata(
         node,

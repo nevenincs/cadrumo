@@ -61,6 +61,12 @@ _BOOTSTRAP_STORE_COMMANDS: dict[tuple[str, ...], str] = {
     ("config", "repair", "integrity", "objects"): "inspects secure-object integrity, which requires the store",
 }
 
+#: Side-effect-free leaves this headless probe cannot run, keyed with why. The
+#: probe has no terminal to give them, so they would wait for input forever.
+_INTERACTIVE_ONLY_LEAVES: dict[tuple[str, ...], str] = {
+    ("app", "tui"): "hands the console to the full-screen root process, which waits for an interactive terminal",
+}
+
 _DATABASE_PATHS = ("cadrumo.db", "cadrumo.db-shm", "cadrumo.db-wal")
 
 
@@ -127,7 +133,7 @@ def _has_only_optional_parameters(spec: CommandSpec) -> bool:
     return all(not str(parameter.default.kind).endswith("REQUIRED") for parameter in spec.parameters)
 
 
-def _side_effect_free_leaves() -> list[tuple[str, ...]]:
+def _declared_side_effect_free_leaves() -> list[tuple[str, ...]]:
     return [
         node.path[1:]
         for node in COMMAND_GRAPH.nodes()
@@ -135,6 +141,10 @@ def _side_effect_free_leaves() -> list[tuple[str, ...]]:
         and node.spec.policy.side_effects == frozenset({"none"})
         and _has_only_optional_parameters(node.spec)
     ]
+
+
+def _side_effect_free_leaves() -> list[tuple[str, ...]]:
+    return [argv for argv in _declared_side_effect_free_leaves() if argv not in _INTERACTIVE_ONLY_LEAVES]
 
 
 class _LeafReport(TypedDict):
@@ -231,6 +241,15 @@ def test_a_side_effect_free_leaf_writes_no_storage_state(
         + "\n  ".join(created)
         + "\nEither the leaf really does write -- declare it -- or something on its "
         "path is materialising state it was not asked for."
+    )
+
+
+@pytest.mark.parametrize("argv", sorted(_INTERACTIVE_ONLY_LEAVES), ids=lambda argv: "/".join(argv))
+def test_every_interactive_only_exclusion_still_names_a_probed_leaf(argv: tuple[str, ...]) -> None:
+    """STALE-ENTRY: an exclusion must still remove a leaf the probe would otherwise run."""
+    assert argv in _declared_side_effect_free_leaves(), (
+        f"`aeat {' '.join(argv)}` is no longer a side-effect-free leaf, so its entry in "
+        f"_INTERACTIVE_ONLY_LEAVES ({_INTERACTIVE_ONLY_LEAVES[argv]}) is stale and must be removed."
     )
 
 

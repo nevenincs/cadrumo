@@ -6,7 +6,7 @@ consulta, and ``file --file PATH`` reads a Certificado de Situación
 Censal (procedure G313) the operator downloaded from Sede themselves.
 They differ in transport and evidence tier. Certificate files commit through
 the single cotejo apply authority
-(:func:`~cadrumo.application.user_profile.apply_cotejo`, which delegates
+(:func:`~cadrumo.application.user_profile.cotejo_apply.apply_cotejo`, which delegates
 to the manual-enrolment write path and emits exactly one
 ``CENSO_APPLIED`` per apply-commit; no parallel write route). The live pull is
 preview-only until its frontend can complete the canonical

@@ -198,7 +198,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
     ``preview`` (:class:`InventoryValuationPreview`)
     fields and lifting the wrapper's ``bucket_event_ids`` to the top level.
     Derive via
-    :meth:`~entrypoints.cli._ledger_business_payloads.InventoryValuationPreviewPayload.from_result`.
+    :meth:`~entrypoints.cli.ledger_business_payloads.InventoryValuationPreviewPayload.from_result`.
     """
 
     actividad_id: str
@@ -359,7 +359,7 @@ class EvidenceConfirmResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract --confirm``.
 
     Reports the persisted (or already-existing, on a guarded no-op) rich
-    catalogue :class:`~domain.invoices.Invoice` -- mirroring
+    catalogue :class:`~domain.invoices.models.Invoice` -- mirroring
     ``CatalogueInvoiceRecordPayload`` -- plus the resolved evidence reference
     and a ``created`` flag distinguishing a fresh write
     (``aeat-cli-contract``) from a same-identity

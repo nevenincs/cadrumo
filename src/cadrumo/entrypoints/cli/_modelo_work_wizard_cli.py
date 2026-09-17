@@ -8,7 +8,7 @@ still needs (the same set the canonical bindings discovery action
 surfaces) — one question at a time, showing each item's official label, help
 text, and legal grounding before asking for a value. Every value the operator
 confirms then flows through the exact same
-:func:`~application.modelo.calculate_modelo_work_revision` composition
+:func:`~application.modelo.calculate_input.calculate_modelo_work_revision` composition
 path that the canonical calculation action uses (via
 :func:`~._modelo_cli_support.work_calculate_input_bundle_from_cli`); the
 wizard is a guided front end over that one calculation path, not a second one
