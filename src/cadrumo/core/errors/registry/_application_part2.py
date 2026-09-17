@@ -574,16 +574,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations.errors.ObservationEvidenceDisplacementError",
-        ErrorCode(
-            code="REFUSED_OBSERVATION_EVIDENCE_DISPLACEMENT",
-            category=ErrorCategory.REFUSED,
-            message_key="application.calculations.errors.observation_displaces_official_evidence_manual",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.calculations.errors.ObservationCasillaReferenceError",
         ErrorCode(
             code="REFUSED_OBSERVATION_CASILLA_REFERENCE",
