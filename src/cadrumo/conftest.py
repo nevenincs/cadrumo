@@ -336,6 +336,32 @@ def _evict_test_bound_bucket_session() -> Iterator[None]:
         bind_active_bucket_session(inherited)
 
 
+@pytest.fixture(autouse=True)
+def _evict_test_bound_profile_record_session() -> Iterator[None]:
+    """Close a record authority a test caused to be bound, so none crosses into the next test.
+
+    A record session is process-wide and pinned to the authority generation it
+    was opened under. Left bound, it answers the next test that reuses the same
+    profile id under a different generation, which then refuses as a crossed
+    generation boundary. A session derived from a live custody session is
+    re-derived on the next read, so closing one a test introduced loses
+    nothing; one the test inherited is left alone, as for bucket sessions.
+    """
+    if "cadrumo.application.user_profile.profile_record_repository" not in sys.modules:
+        yield
+        return
+    from .application.user_profile.profile_record_repository import (
+        active_profile_record_session,
+        close_active_profile_record_session,
+    )
+
+    inherited = active_profile_record_session()
+    yield
+    bound = active_profile_record_session()
+    if bound is not None and bound is not inherited:
+        close_active_profile_record_session()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _release_settings_storage_directories() -> Iterator[None]:
     """Drop the temporary storage roots ``env_scope`` mints, at session end.
