@@ -7,7 +7,7 @@ record_type = 'regimen-simplificado'
 order = 1
 encoding = 'iso-8859-1'
 line_ending = 'crlf'
-required = true
+required = false
 repeat = 'projection_rows'
 
 [[revisions.2024-desde-09-y-3t.export_layouts.records.fields]]

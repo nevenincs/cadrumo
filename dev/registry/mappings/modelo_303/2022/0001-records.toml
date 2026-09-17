@@ -16,6 +16,7 @@ sheet = "DP30302"
 record_identity = "DP30302"
 export_record_id = "m303-regimen-simplificado"
 record_type = "regimen-simplificado"
+required = false
 
 [[records]]
 sheet = "DP30303"
@@ -28,12 +29,14 @@ sheet = "DP30304"
 record_identity = "DP30304"
 export_record_id = "m303-exonerado-390"
 record_type = "exonerado-390"
+required = false
 
 [[records]]
 sheet = "DP30305"
 record_identity = "DP30305"
 export_record_id = "m303-prorrata-deducciones"
 record_type = "prorrata-deducciones"
+required = false
 
 [[variable_envelopes]]
 source_ref = "aeat-dr-303-2022"

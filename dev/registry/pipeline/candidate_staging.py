@@ -27,6 +27,7 @@ from ._export_tree import render_toml_bytes
 
 __all__ = [
     "GeneratedExportBootstrapTarget",
+    "drop_cross_edition_evolutions",
     "generated_export_bootstrap_target",
     "ignore_export_authority_directories",
     "retarget_bootstrap_construct_export_layout",
@@ -296,6 +297,7 @@ def stage_generated_export_candidate(
             shutil.rmtree(sibling)
     if _DETACHMENT_DECLARATIONS.intersection(edition.table):
         write_complete_edition(staged_modelo_root / "revisions" / revision, edition)
+    drop_cross_edition_evolutions(staged_modelo_root / "revisions" / revision)
     if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
         retarget_bootstrap_construct_export_layout(
             staged_modelo_root,
@@ -437,3 +439,10 @@ def retarget_bootstrap_construct_export_layout(
         )
     for path, payload in updates:
         path.write_text(rtoml.dumps(payload, pretty=True), encoding="utf-8", newline="")
+
+
+def drop_cross_edition_evolutions(revision_root: Path) -> None:
+    """Remove continuity evolutions from an isolated edition whose sibling endpoints were pruned."""
+    evolutions = revision_root / "casilla_continuidad_evolutions"
+    if evolutions.is_dir():
+        shutil.rmtree(evolutions)

@@ -46,6 +46,7 @@ from ._tree_validation import GeneratedExportTreeValidationContext, validate_gen
 from .authority_publication import publish_sqlite_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
+    drop_cross_edition_evolutions,
     generated_export_bootstrap_target,
     stage_continuity_metadata,
     stage_generated_export_candidate,
@@ -332,8 +333,10 @@ def stage_isolated_edition(
         if entry.name != revision:
             shutil.rmtree(entry)
     if edition.inherits_from is None:
+        drop_cross_edition_evolutions(revisions_root / revision)
         return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
     write_complete_edition(revisions_root / revision, edition)
+    drop_cross_edition_evolutions(revisions_root / revision)
     shutil.copytree(source_locales_root, staged_locales_root)
     manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
     for locale in sorted(discover_locale_codes(staged_locales_root)):
