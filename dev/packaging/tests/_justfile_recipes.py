@@ -54,6 +54,23 @@ _RECIPE_HEADER: Final[re.Pattern[str]] = re.compile(
 )
 
 
+#: A top-level assignment whose value is a literal or an environment default.
+_ASSIGNMENT: Final[re.Pattern[str]] = re.compile(
+    r"""^(?P<name>[A-Za-z_]\w*)\s*:=\s*(?:env_var_or_default\(\s*"[^"]*"\s*,\s*"(?P<default>[^"]*)"\s*\)|"(?P<literal>[^"]*)")\s*$""",
+)
+_INTERPOLATION: Final[re.Pattern[str]] = re.compile(r"\{\{\s*(?P<name>[A-Za-z_]\w*)\s*\}\}")
+
+
+def _literal_variables(lines: list[str]) -> dict[str, str]:
+    """Return the justfile variables whose default value is a plain literal."""
+    variables: dict[str, str] = {}
+    for line in lines:
+        match = _ASSIGNMENT.match(line)
+        if match is not None:
+            variables[match.group("name")] = match.group("default") or match.group("literal") or ""
+    return variables
+
+
 class Recipe(NamedTuple):
     """One pytest invocation over the target directory, read off the justfile.
 
@@ -84,7 +101,9 @@ def packaging_pytest_recipes(*, justfile: Path | None = None) -> tuple[Recipe, .
     """
     recipes: list[Recipe] = []
     current = ""
-    for raw_line in (justfile or _JUSTFILE).read_text(encoding=UTF_8).splitlines():
+    lines = (justfile or _JUSTFILE).read_text(encoding=UTF_8).splitlines()
+    variables = _literal_variables(lines)
+    for raw_line in lines:
         header = _RECIPE_HEADER.match(raw_line)
         if header is not None:
             current = header.group("name")
@@ -94,6 +113,9 @@ def packaging_pytest_recipes(*, justfile: Path | None = None) -> tuple[Recipe, .
         line = next(iter(executed_lines(raw_line)), "")
         if not line:
             continue
+        # A literal variable is expanded as just would run it; anything else is
+        # left verbatim so pytest refuses it rather than this reader guessing.
+        line = _INTERPOLATION.sub(lambda match: variables.get(match.group("name"), match.group(0)), line)
         tokens = shlex.split(line.lstrip("@"))
         if "pytest" not in tokens:
             continue
