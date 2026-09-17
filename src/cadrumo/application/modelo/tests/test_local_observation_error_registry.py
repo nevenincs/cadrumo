@@ -39,8 +39,8 @@ def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candi
     assert exc_info.value.context == {
         "casillas": _M200_AMBIGUOUS_PRINTED_NUMBER,
         "revision_id": snapshot.revision.id,
+        "noncanonical_reference_targets": (
+            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
+            f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+        ),
     }
-    assert (
-        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
-    ) in str(exc_info.value)

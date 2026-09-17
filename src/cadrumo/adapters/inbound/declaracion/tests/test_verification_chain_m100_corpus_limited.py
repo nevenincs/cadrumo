@@ -20,7 +20,7 @@ from ._verification_chain_support import (
     _decimal_inputs_from_extracted_values,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_verification_chain_m100_engine_corpus_limited() -> None:

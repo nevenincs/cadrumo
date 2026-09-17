@@ -42,7 +42,7 @@ import pytest
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.calculations.registry.tests.published_authority import published_revision_definitions
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 # value_kind values that make an unarmed target a fabricated-AMOUNT hazard.
 # A non-monetary target (an ejercicio year, a tipo-declaracion token) also goes

@@ -36,7 +36,7 @@ from ...review.filter import LedgerReviewFilterSpec
 from ..action_ports import LedgerActionPorts
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 

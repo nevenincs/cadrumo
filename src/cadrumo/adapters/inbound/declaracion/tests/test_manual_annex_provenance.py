@@ -40,7 +40,7 @@ from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _ANNEX_ROOT = FIXTURES_DIR / "manual_annexes"
 _SYNTHETIC_PRODUCER_SIGNATURE = "aeat-test-fixture-generator"

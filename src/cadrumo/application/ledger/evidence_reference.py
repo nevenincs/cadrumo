@@ -37,6 +37,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.iva.classification import InvoiceKind
@@ -95,6 +96,7 @@ class EvidenceReference(BaseModel):
     invoice: Invoice | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _payload_matches_outcome(self) -> Self:
         """Reject a resolution whose carried payload contradicts its outcome."""
         if self.outcome is EvidenceReferenceOutcome.PURCHASE_INVOICE_EVIDENCE:

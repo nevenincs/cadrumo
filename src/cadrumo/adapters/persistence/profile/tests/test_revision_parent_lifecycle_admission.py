@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import (
+    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     T1,
@@ -43,23 +44,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
-    repository = kwargs.pop("work_unit_repository", None)
-    for key in ("calculation_repository", "bucket_event_repository"):
+    for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
             **kwargs,
         )
 
 
 def _discard_work_unit(work_unit_id: str, **kwargs: Any) -> Any:
-    repository = kwargs.pop("repository", None)
+    kwargs.pop("repository", None)
     kwargs.pop("bucket_event_repository", None)
     return discard_work_unit(
         work_unit_id,
-        ports=build_work_lifecycle_ports(bucket_id=repository.bucket_id),
+        ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
         **kwargs,
     )
 
@@ -84,14 +84,19 @@ def _verify_modelo_revision_with_preconditions(calculation_revision_id: str, **k
 
 
 def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
-    repository = kwargs.pop("work_unit_repository", None)
-    for key in ("calculation_repository", "filing_repository", "verification_repository", "bucket_event_repository"):
+    for key in (
+        "work_unit_repository",
+        "calculation_repository",
+        "filing_repository",
+        "verification_repository",
+        "bucket_event_repository",
+    ):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=repository.bucket_id),
+            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
             operation=operation,
             **kwargs,
         )

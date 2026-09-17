@@ -24,6 +24,7 @@ from types import UnionType
 from typing import Union, get_args, get_origin
 
 import pytest
+from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
@@ -42,9 +43,13 @@ from ..external_constants import load_external_constants
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 ENV_EXAMPLE_PATH = REPO_ROOT / "env" / ".env.example"
+
+#: Variables the example documents for development tooling, which reads them
+#: itself rather than through the product ``Settings``.
+_DEVELOPMENT_TOOLING_VARS = frozenset({DEV_CACHE_ROOT_ENV})
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -103,7 +108,7 @@ class TestEnvExampleAlignment:
         """Every .env.example variable must have a corresponding Settings field."""
         settings_vars = Settings.env_var_names()
         example_vars = _parse_env_example_vars()
-        extra = sorted(example_vars - settings_vars)
+        extra = sorted(example_vars - settings_vars - _DEVELOPMENT_TOOLING_VARS)
         assert not extra, (
             f"env/.env.example variables with no Settings field: {extra}. "
             "Add a corresponding field to Settings in config.py."

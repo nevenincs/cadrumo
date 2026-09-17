@@ -20,7 +20,7 @@ from ...core.aggregation import AggregationCaptureKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -38,7 +38,7 @@ def _validate_key_component(token: str, *, context: str) -> str:
     else:
         return token
     raise AggregationValidationError(
-        t("errors.integrity.integrity_storage_path_containment"),
+        tr("errors.integrity.integrity_storage_path_containment"),
         context={"path_context": context, "violation": violation},
     )
 
@@ -48,7 +48,7 @@ def _hashed_tax_id_token(tax_id: str) -> str:
     token = tax_id_identity_token(tax_id)
     if not token:
         raise AggregationValidationError(
-            t("aggregation.retenciones.errors.perceptor_nif_blank"),
+            tr("aggregation.retenciones.errors.perceptor_nif_blank"),
             context={"field": "perceptor_tax_id"},
         )
     return sha256_hex(token.encode(UTF_8_ENCODING))
@@ -70,7 +70,7 @@ def percepcion_observation_key(
     """
     if not 2000 <= filing_year <= 2099:
         raise AggregationValidationError(
-            t("aggregation.retenciones.errors.filing_year_out_of_range"),
+            tr("aggregation.retenciones.errors.filing_year_out_of_range"),
             context={"filing_year": str(filing_year), "min_year": "2000", "max_year": "2099"},
         )
     _validate_key_component(modelo, context="modelo")

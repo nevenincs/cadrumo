@@ -38,7 +38,7 @@ def test_modelo_discovery_rejects_wrong_suffix_files(tmp_path: Path, name: str) 
     modelos.mkdir()
     (modelos / name).write_text("plausible ignored source", encoding="utf-8")
 
-    with pytest.raises(RegistryLoadError, match="unrecognized modelos file"):
+    with pytest.raises(RegistryLoadError, match="single-file modelos are not a supported layout"):
         discover_modelo_sources(modelos)
 
 
@@ -147,7 +147,7 @@ def test_revision_root_rejects_stray_wrong_suffix_file(tmp_path: Path) -> None:
     )
     (modelo / "revisions" / "notes.txt").write_text("ignored", encoding="utf-8")
 
-    with pytest.raises(RegistryLoadError, match="unrecognized revision file"):
+    with pytest.raises(RegistryLoadError, match="revision files are not a supported layout"):
         load_modelo_directory(modelo)
 
 

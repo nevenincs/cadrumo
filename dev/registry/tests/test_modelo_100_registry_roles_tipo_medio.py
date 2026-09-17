@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import _modelo_100_snapshot
+from ._modelo_100_registry_support import _modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,7 +51,7 @@ _GENERAL_SCALE_ART_63_REF_BY_YEAR = {
 
 @pytest.mark.parametrize("filing_year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_modelo_100_average_rate_casillas_are_ratio_typed(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in _AVERAGE_RATE_ROWS}
     formulas_by_id = {formula.id: formula for formula in revision.formulas}
 
@@ -59,7 +59,7 @@ def test_modelo_100_average_rate_casillas_are_ratio_typed(filing_year: int) -> N
 
     for casilla_id, (role, label_formula, label_part, formula_suffix) in _AVERAGE_RATE_ROWS.items():
         casilla = casillas_by_id[casilla_id]
-        expected_formula = f"renta-{filing_year}-{formula_suffix}"
+        expected_formula = f"renta-{formula_suffix}"
 
         assert tuple(casilla.section) == _AVERAGE_RATE_SECTION
         assert casilla.data_type == "ratio"

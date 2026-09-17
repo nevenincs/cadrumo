@@ -106,7 +106,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..renta_income_ledger import aggregate_renta_m100_income_ledger
 from .renta_income_aggregation_support import m130_activity_category_matcher, m130_employment_category_matcher
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")

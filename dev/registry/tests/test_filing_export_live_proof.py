@@ -28,7 +28,7 @@ from ..filing_export_proof import (
     verify_filing_export_payload_acceptance,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 _FIRST_RECORD = "m151-page-01"
 _FIRST_FIELD = "m151-2023.pagina01.f001"

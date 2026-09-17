@@ -21,6 +21,7 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core.document_shape import DocumentShape
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -77,6 +78,7 @@ class EvidenceInput(BaseModel):
     attachment_id: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verify_content_address(self) -> Self:
         """Reject bytes whose digest does not match the declared content address."""
         if not self.data:

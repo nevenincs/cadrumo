@@ -196,7 +196,7 @@ def apply_cotejo[StateT](
 
     Then emits exactly one ``CENSO_APPLIED`` bucket event marking the
     apply-commit — never one per fact. Returns the updated
-    :class:`~cadrumo.application.workflow.WorkflowState`; the caller persists
+    :class:`~cadrumo.application.workflow.state_models.WorkflowState`; the caller persists
     it through the workflow repository like every other fact mutation.
 
     The resulting sequence is judged by the same schema authority the

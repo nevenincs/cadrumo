@@ -53,7 +53,7 @@ from .._modelo_bindings_invoice_iva import (
 from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_cuota
 from ..iva_ledger import resolve_iva_ledger_binding_values
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture

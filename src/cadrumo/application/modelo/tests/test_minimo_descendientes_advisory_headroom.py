@@ -95,12 +95,15 @@ def _elision_marker() -> str:
     return marker
 
 
+_HEADROOM_FILING_YEAR = 2025
+
+
 def _headroom_revision() -> ModeloRevision:
     """A real M100 revision, fetched once, for the registry-scoped advisory builders.
 
-    Only the revision's bindings matter here -- these
-    tests measure message length, not grounding -- so any committed M100
-    revision serves; the resident registry authority is real rather than a
+    These tests measure message length, not grounding, but the advisory reads
+    its named-detail limit from the revision, so the revision must be one that
+    declares it (2025); the resident registry authority is real rather than a
     hand-built stub.
 
     Reached through the compiler and the canonical temporal resolver. Measuring
@@ -111,7 +114,7 @@ def _headroom_revision() -> ModeloRevision:
     """
     modelos, _catalogues = bundled_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "100")
-    return select_revision(modelo, filing_year=2024, period="0A")
+    return select_revision(modelo, filing_year=_HEADROOM_FILING_YEAR, period="0A")
 
 
 def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagnostic]]]:
@@ -127,7 +130,7 @@ def _advisory_builders() -> list[tuple[str, Callable[[], CalculationSourceDiagno
     scope = _RegistryScope(
         revision=revision,
         bindings=tuple(revision.bindings),
-        filing_year=2024,
+        filing_year=_HEADROOM_FILING_YEAR,
         **{"period_token": "0A"},
     )
     return [

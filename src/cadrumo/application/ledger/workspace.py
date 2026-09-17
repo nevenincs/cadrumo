@@ -20,7 +20,7 @@ from typing import Final, Protocol
 
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId, InvoiceId
@@ -108,6 +108,7 @@ class LedgerWorkspaceAreaStateV1(BaseModel):
     item_count: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _sources_are_present_and_unique(self) -> LedgerWorkspaceAreaStateV1:
         if not self.sources:
             raise ValueError("a Ledger workspace area requires at least one local source")
@@ -201,6 +202,7 @@ class LedgerAffectedDeclarationRefV1(BaseModel):
     removed_count: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_year(self) -> LedgerAffectedDeclarationRefV1:
         if self.period.filing_year != self.filing_year:
             raise ValueError("affected declaration period must match its filing year")
@@ -224,6 +226,7 @@ class LedgerWorkspaceProjectionV1(BaseModel):
     affected_declarations: tuple[LedgerAffectedDeclarationRefV1, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _area_catalogue_is_total_and_ordered(self) -> LedgerWorkspaceProjectionV1:
         expected = tuple(LedgerWorkspaceArea)
         actual = tuple(item.area for item in self.areas)

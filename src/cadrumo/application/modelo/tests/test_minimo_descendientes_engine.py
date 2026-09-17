@@ -16,11 +16,11 @@ The engine and injector remain application policy tests: the resident registry
 authority is the canonical source for every loaded :class:`RegistrySnapshot`,
 while profile-bound persistence and calculate-path integration live in the
 outward profile adapter test owner. Expected euro amounts
-are read from the loaded revision's own ``renta-{year}-minimo-descendientes-*``
+are read from the loaded revision's own ``renta-minimo-descendientes-*``
 parameters (including the Madrid-specific ``-madrid-*`` tranches), never
 hand-duplicated as a Decimal literal independent of the registry
 (`aeat-quality-gates`); the parity assertion
-(``test_all_six_revisions_expose_the_full_parameter_set``) would fail if any
+(``test_every_engine_revision_exposes_the_full_parameter_set``) would fail if any
 revision's registry authoring drifted from the formula this engine consumes.
 """
 
@@ -36,18 +36,42 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_authored_revision,
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ..profile_binding import inject_derived_minimo_descendientes_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MINIMO_ESTATAL_ROLE = "irpf_minimo_descendientes_estatal"
 _MINIMO_AUTONOMICO_ROLE = "irpf_minimo_descendientes_autonomico"
-_ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
-# Years where Madrid's own table diverges only on the 3º/4º tranches (1º/2º/
-# menor-3 coincide with the estatal Art. 58 figures per the bundled 2020/2021
-# AEAT Renta manuals' own "Importante" note).
+
+
+def _engine_filing_years() -> tuple[int, ...]:
+    """Supported filing years that carry their own authored Modelo 100 revision.
+
+    A year served by carrying an earlier revision forward has no authored
+    parameter set of its own; it would only re-read its anchor's.
+    """
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None, "the bundled registry declares no supported filing years"
+    with _indexed_authority_for_test().operation() as operation:
+        authored_start_years = {
+            metadata.valid_from.year
+            for metadata in operation.modelo_directory("100").revisions
+            if metadata.valid_from is not None
+        }
+    return tuple(year for year in supported_years.years if year in authored_start_years)
+
+
+_ENGINE_FILING_YEARS = _engine_filing_years()
+# Historical years where Madrid's own table diverges only on the 3º/4º tranches
+# (1º/2º/menor-3 coincide with the estatal Art. 58 figures per the bundled
+# 2020/2021 AEAT Renta manuals' own "Importante" note). They lie below the
+# supported floor, so their authored revisions are read directly.
 _MADRID_PARTIAL_DIVERGENCE_YEARS = (2020, 2021)
 # Years where Madrid's own table diverges on all five tranches.
 _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
@@ -67,24 +91,30 @@ def _autonomico_aggregate_key(year: int) -> str:
 
 
 def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = None) -> tuple[list[Decimal], Decimal]:
-    """Read the four birth-order amounts + menor-3 supplement from *snapshot*'s own params.
+    """Read the four birth-order amounts + menor-3 supplement from *snapshot*'s own params."""
+    return _revision_tranches(snapshot.revision, snapshot.filing_year, ccaa_infix=ccaa_infix)
+
+
+def _revision_tranches(
+    revision: ModeloRevision, year: int, *, ccaa_infix: str | None = None
+) -> tuple[list[Decimal], Decimal]:
+    """Read the four birth-order amounts + menor-3 supplement from *revision*'s own params.
 
     When *ccaa_infix* is supplied, reads the CCAA-specific parameter for each
     tranche where the revision declares one (e.g. ``-madrid-``), falling back
     to the general Art. 58 parameter for any tranche the CCAA has not
     diverged on — mirroring the injector's own per-tranche fallback.
     """
-    year = snapshot.filing_year
     suffixes = ("primer-hijo", "segundo-hijo", "tercer-hijo", "cuarto-y-siguientes")
     date_context = {"filing_period": date(year, 12, 31)}
-    by_id = {p.id: p for p in snapshot.revision.parameters}
+    by_id = {p.id: p for p in revision.parameters}
 
     def _resolve(suffix: str) -> Decimal:
         if ccaa_infix is not None:
-            specific_id = f"renta-{year}-minimo-descendientes-{ccaa_infix}-{suffix}-{year}"
+            specific_id = f"renta-minimo-descendientes-{ccaa_infix}-{suffix}"
             if specific_id in by_id:
                 return resolve_parameter(by_id[specific_id], date_context)
-        return resolve_parameter(by_id[f"renta-{year}-minimo-descendientes-{suffix}-{year}"], date_context)
+        return resolve_parameter(by_id[f"renta-minimo-descendientes-{suffix}"], date_context)
 
     tranches = [_resolve(suffix) for suffix in suffixes]
     menor_tres = _resolve("menor-tres-anos")
@@ -97,7 +127,8 @@ def _registry_tranches(snapshot: RegistrySnapshot, *, ccaa_infix: str | None = N
 # ---------------------------------------------------------------------------
 
 
-def test_all_six_revisions_expose_the_full_parameter_set() -> None:
+def test_every_engine_revision_exposes_the_full_parameter_set() -> None:
+    assert _ENGINE_FILING_YEARS, "no supported filing year carries an authored Modelo 100 revision"
     for year in _ENGINE_FILING_YEARS:
         snapshot = _snapshot(year)
         tranches, menor_tres = _registry_tranches(snapshot)
@@ -309,19 +340,20 @@ def test_madrid_first_two_descendants_match_estatal_for_partial_divergence_years
     hijo ... coinciden con las fijadas artículo 58 de la Ley del IRPF".
     """
     for year in _MADRID_PARTIAL_DIVERGENCE_YEARS:
-        snapshot = _snapshot(year)
-        estatal_tranches, _ = _registry_tranches(snapshot)
-        madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
+        revision = published_authored_revision("100", year=year)
+        estatal_tranches, _ = _revision_tranches(revision, year)
+        madrid_tranches, _ = _revision_tranches(revision, year, ccaa_infix="madrid")
         assert madrid_tranches[0] == estatal_tranches[0], year
         assert madrid_tranches[1] == estatal_tranches[1], year
 
 
 def test_madrid_third_and_fourth_tranches_diverge_from_estatal_every_year() -> None:
-    """Madrid's own tercer/cuarto-y-siguientes tranches diverge every engine year (DL 1/2010 art. 2)."""
-    for year in _ENGINE_FILING_YEARS:
-        snapshot = _snapshot(year)
-        estatal_tranches, _ = _registry_tranches(snapshot)
-        madrid_tranches, _ = _registry_tranches(snapshot, ccaa_infix="madrid")
+    """Madrid's own tercer/cuarto-y-siguientes tranches diverge every authored year (DL 1/2010 art. 2)."""
+    revisions = [(year, published_authored_revision("100", year=year)) for year in _MADRID_PARTIAL_DIVERGENCE_YEARS]
+    revisions += [(year, _snapshot(year).revision) for year in _ENGINE_FILING_YEARS]
+    for year, revision in revisions:
+        estatal_tranches, _ = _revision_tranches(revision, year)
+        madrid_tranches, _ = _revision_tranches(revision, year, ccaa_infix="madrid")
         assert madrid_tranches[2] != estatal_tranches[2], year
         assert madrid_tranches[3] != estatal_tranches[3], year
         assert madrid_tranches[2] == Decimal("4400"), year

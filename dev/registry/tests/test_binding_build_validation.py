@@ -31,7 +31,6 @@ import pytest
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import (
@@ -41,10 +40,10 @@ from cadrumo.domain.calculations.registry.schema import (
     RegistryCatalogues,
 )
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
@@ -293,7 +292,7 @@ def test_binding_family_build_gate_contract(
     mutated = _inject_binding(modelo, malformed)
 
     with pytest.raises(RegistryValidationError) as excinfo:
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated)
+        committed_registry_validator(catalogues).validate_modelo(mutated)
 
     message = str(excinfo.value)
     assert malformed.id in message

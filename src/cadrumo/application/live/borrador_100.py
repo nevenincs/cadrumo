@@ -15,6 +15,7 @@ from typing import Annotated, Protocol, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -75,6 +76,7 @@ class Borrador100Snapshot(BaseModel):
     discard_reason: str = Field(default="", max_length=500)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_state_payload(self) -> Borrador100Snapshot:
         expected_ref = RegistrySnapshotRef(
             modelo=self.modelo,

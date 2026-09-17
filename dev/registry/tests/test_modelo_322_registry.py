@@ -16,11 +16,11 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .ledger_iva_aggregation_support import _deduction_provenance
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -32,7 +32,7 @@ def test_modelo_322_validator_accepts_committed_definition() -> None:
     assert modelo.id == "322"
     assert modelo.revisions, "322 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "322 must declare casillas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_322_metadata_matches_orden_eha_3434_2007() -> None:

@@ -45,7 +45,7 @@ from .....domain.calculations.registry.schema_extraction import ExtractionTarget
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..parser import _classify_target, _printed_box_numbers, _TargetClassification
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 # Verbatim from the ANEXO's "Pagina 3" Resultado block. In 1T the box carries a
@@ -256,7 +256,7 @@ def test_populated_box_still_extracts_its_printed_amount(
     [
         (
             "390",
-            2021,
+            2022,
             "0A",
             {
                 "iva.anual.cuota-devengada-total": "47",

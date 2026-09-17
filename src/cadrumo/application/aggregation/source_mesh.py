@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, field_serializer
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
-from ...core.errors.hierarchy import CoreValidationError
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId, WorkUnitId
@@ -573,10 +573,12 @@ class CalculationSourceDiagnostic(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _set_binding_source(cls, value: object) -> object:
         return _infer_binding_source(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_out_of_window_summary(self) -> Self:
         count = self.out_of_window_count
         min_filing_date = self.out_of_window_min_filing_date
@@ -667,6 +669,7 @@ class CalculationSourceProvenance(BaseModel):
     dependency_treatment: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_coherent_lineage(self) -> CalculationSourceProvenance:
         try:
             contributor_kind = BindingSourceKind(self.contributor_source_kind)
@@ -685,6 +688,7 @@ class CalculationSourceProvenance(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _relation_provenance_is_complete(self) -> CalculationSourceProvenance:
         if self.relation_id is None:
             return self
@@ -815,6 +819,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("owned_sources", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_owned_sources(cls, value: object) -> object:
         """Hydrate known bare source-token strings to their :class:`BindingSourceKind` member.
 
@@ -850,6 +855,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("owned_sources")
     @classmethod
+    @pydantic_validation_boundary
     def _owned_sources_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         # After the before-coercer, every item is a canonical BindingSourceKind member
         # (no blank/whitespace possible). Guard uniqueness and sort by the stable string
@@ -861,26 +867,31 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("binding_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_binding_values(cls, value: Mapping[BindingId, Decimal]) -> Mapping[BindingId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("enum_binding_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_enum_binding_values(cls, value: Mapping[BindingId, str]) -> Mapping[BindingId, str]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("date_binding_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("boolean_binding_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_boolean_binding_values(cls, value: Mapping[BindingId, bool]) -> Mapping[BindingId, bool]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("row_binding_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_row_binding_values(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return _ROW_BINDING_VALUES.validate_python(value)
@@ -902,6 +913,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_binding_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_row_binding_values(
         cls,
         value: Mapping[RowBindingKey, RowBindingValue],
@@ -915,6 +927,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_source_identities", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_row_source_identities(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return _ROW_SOURCE_IDENTITIES.validate_python(value)
@@ -936,6 +949,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_source_identities")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_row_source_identities(
         cls,
         value: Mapping[RowBindingKey, RowSourceIdentity],
@@ -949,6 +963,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_casilla_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_row_casilla_values(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return _ROW_CASILLA_VALUES.validate_python(value)
@@ -971,6 +986,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_casilla_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_row_casilla_values(cls, value: Mapping[RowCasillaKey, Decimal]) -> Mapping[RowCasillaKey, Decimal]:
         normalized: dict[RowCasillaKey, Decimal] = {}
         for (casilla_id, row_index), row_value in value.items():
@@ -981,6 +997,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_casilla_provenance", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_row_casilla_provenance(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return _ROW_CASILLA_PROVENANCE.validate_python(value)
@@ -1006,6 +1023,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("row_casilla_provenance")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_row_casilla_provenance(
         cls,
         value: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
@@ -1019,11 +1037,13 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("relation_values")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("unresolved_relation_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_unresolved_relation_ids(cls, value: tuple[RelationId, ...]) -> tuple[RelationId, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
@@ -1034,6 +1054,7 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("unresolved_binding_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_unresolved_binding_ids(cls, value: tuple[BindingId, ...]) -> tuple[BindingId, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
@@ -1044,11 +1065,13 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("bound_inputs_by_casilla_id")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_bound_inputs_by_casilla_id(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("source_transaction_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_source_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
@@ -1058,6 +1081,7 @@ class CalculationSourceResolution(BaseModel):
         return tuple(sorted(normalized))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _row_source_identities_have_row_values(self) -> CalculationSourceResolution:
         """Refuse orphan identities while row producers migrate independently.
 
@@ -1071,6 +1095,7 @@ class CalculationSourceResolution(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _row_casillas_are_an_exact_direct_materialization(self) -> CalculationSourceResolution:
         if set(self.row_casilla_values) != set(self.row_casilla_provenance):
             raise SourceMeshError("aggregation.source_mesh.errors.row_casilla_provenance_coordinate_mismatch")
@@ -1092,6 +1117,7 @@ class CalculationSourceResolution(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
         primary_refs = _primary_provenance_refs(self.provenance)
         _require_unique_primary_provenance_refs(primary_refs)

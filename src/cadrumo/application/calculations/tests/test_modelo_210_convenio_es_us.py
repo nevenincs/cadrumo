@@ -23,7 +23,7 @@ import pytest
 from ....domain.calculations.registry.tests.published_authority import published_legal_reference
 from ._convenio_rate_support import resolve_convenio_rate
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_us_dividend_resolves_treaty_ceiling_of_15_percent() -> None:

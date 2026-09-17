@@ -7,12 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _LEGAL_REFS = frozenset(
     {
@@ -44,12 +42,12 @@ _SOURCE_REFS = frozenset(
 def test_modelo_136_current_revision_is_grounded_in_model_specific_catalogues() -> None:
     modelo, catalogues = _committed_modelo("136")
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     assert modelo.calculation_class == "filing"
     assert set(modelo.legal_refs) == _LEGAL_REFS
     assert set(modelo.source_refs) == _SOURCE_REFS
-    assert set(modelo.revisions) == {"2026"}
+    assert set(modelo.revisions) == {"2022-2025", "2026"}
 
     revision = modelo.revisions["2026"]
     assert revision.period_selector.years == (2026,)

@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from ..kdf_params import KdfParams
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_default_pins_owasp_baseline_constants() -> None:

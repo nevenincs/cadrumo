@@ -407,7 +407,7 @@ def _raise_scope_conflict(
     """Refuse replacing an already-confirmed territorial scope."""
     existing_scope = existing.territorial_scope
     asserted_scope = asserted.territorial_scope
-    if existing_scope is None or asserted_scope is None or existing_scope is asserted_scope:
+    if existing_scope is None or asserted_scope is None or existing_scope == asserted_scope:
         return
     raise CounterpartyEstablishmentConflictError(
         translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",
@@ -426,7 +426,7 @@ def _raise_identification_conflict(
     """Refuse replacing an already-confirmed IVA identification state."""
     existing_state = existing.identification_state
     asserted_state = asserted.identification_state
-    if existing_state is None or asserted_state is None or existing_state is asserted_state:
+    if existing_state is None or asserted_state is None or existing_state == asserted_state:
         return
     raise CounterpartyEstablishmentConflictError(
         translated_message="errors.refused.refused_ledger_counterparty_establishment_conflict",

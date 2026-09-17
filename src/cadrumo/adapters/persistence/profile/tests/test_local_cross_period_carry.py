@@ -42,7 +42,7 @@ from dev.registry.tests.profile_schema_support import (
 
 from cadrumo.application.calculations.tests.cross_period_verdict_support import has_non_official_local_chain
 
-from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
+from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.calculation_actions import (
     calculate_modelo_revision,
@@ -54,6 +54,7 @@ from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.iva_wallet_carry_targets import (
@@ -71,6 +72,7 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..buckets import BucketEventHistoryRepository
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
+from ..justificante import JustificanteRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_verification_reports import VerificationReportCatalogueRepository
@@ -90,6 +92,7 @@ from .file_flow_test_support import (
     _verify_revision,
     calculation_ports_for_test,
 )
+from .modelo_303_filed_disposition import modelo_303_filed_disposition
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -305,7 +308,7 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
     seed_test_profile_record(profile)
 
 
-def _seed_first_303_activity_profile(repos_: _Repos) -> None:
+def _seed_first_303_activity_profile(repos_: _Repos, *, activity_start_date: str = "2025-01-01") -> None:
     profile = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
@@ -326,7 +329,7 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+            UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
         ),
         created_at=_T1,
         updated_at=_T1,
@@ -497,6 +500,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(
         filing_repository=ModeloRecordCatalogueRepository(objects=bv_repo.secure_object_repository),
         calculation_repository=cr_repo,
         verification_repository=VerificationReportCatalogueRepository(objects=bv_repo.secure_object_repository),
+        justificante_repository=JustificanteRepository(objects=bv_repo.secure_object_repository),
     )
     assert verdict is not None
     same_year = [
@@ -771,43 +775,52 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(
 _SEED_OPENING_BALANCE_WITH_ZERO_REFUSAL = "application.modelo.errors.iva_wallet_not_seeded"
 
 
-def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 2024) -> None:
+def _local_m303_observation(
+    *, filing_year: int, period_code: str, available: Decimal
+) -> tuple[RegistryModeloObservation, ResultDispositionProjection]:
+    """A locally filed M303 whose negative result requested compensation."""
+    casilla_values, _ = modelo_303_filed_disposition(
+        {_M303_COMPENSACION_DISPONIBLE_CASILLA: available},
+        source_locator=f"local-filing:{filing_year}:{period_code}:declaration-type",
+    )
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=filing_year,
+        period=period_code,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=filing_year,
+            period=period_code,
+            casilla_values=casilla_values,
+        ),
+    )
+    disposition = ResultDispositionProjection(
+        disposition=ResultDisposition.COMPENSACION,
+        provenance_kind="app_filing",
+        provenance_locator=f"filed-revision:{filing_year}:{period_code}",
+    )
+    return observation, disposition
+
+
+def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 2025) -> None:
     """Store a prior-period Modelo 303 observation the carry gate cannot interpret.
 
-    Written the way the operator CLI writes one: an unrestricted local observation
-    with no carry normalisation, so it carries neither a result disposition nor the
-    normalized available/generated pair the carry consumer requires.
+    Canonical writes refuse such a row, so it is the stored shape of a corrupted
+    write: a valid local filing whose revision stamp names a design that does not
+    govern its period, so this build cannot interpret it.
     """
-    CalculationObservationRepository().save(
-        CalculationObservationRepository().prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=filing_year,
-                period=period_code,
-                observations=registry_grounded_observations(
-                    modelo="303",
-                    filing_year=filing_year,
-                    period=period_code,
-                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
-                ),
-            ),
-            source_kind="operator_manual",
-            captured_at=_T1,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=filing_year,
-                    period=period_code,
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=filing_year,
-                        period=period_code,
-                        casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
-                    ),
-                )
-            ),
-        )
+    repository = CalculationObservationRepository()
+    observation, disposition = _local_m303_observation(
+        filing_year=filing_year, period_code=period_code, available=Decimal("850.00")
     )
+    envelope = repository.prepare_observation_envelope(
+        observation,
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T1,
+        result_disposition=disposition,
+        stamped_revision_id=revision_id_for_observation(observation),
+    )
+    repository.save(envelope.model_copy(update={"stamped_revision_id": "2026-y-siguientes"}))
 
 
 def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
@@ -825,14 +838,14 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(
     laundered into a zero on the compensación with no signal.
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
-    _seed_first_303_activity_profile(repos)
+    _seed_first_303_activity_profile(repos, activity_start_date="2026-01-01")
     _persist_unreadable_prior_303()
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
-        revision_id="2025",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2026-y-siguientes",
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
         operation=operation,
@@ -876,34 +889,14 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     offset -1) discovers it and the raw resolver emits the
     ``modelo-303-compensacion-pendiente-anteriores`` binding the D3 exclusion strips.
     """
+    observation, disposition = _local_m303_observation(filing_year=2026, period_code="1T", available=Decimal("1200.00"))
     repository.save(
         repository.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=2026,
-                period="1T",
-                observations=registry_grounded_observations(
-                    modelo="303",
-                    filing_year=2026,
-                    period="1T",
-                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
-                ),
-            ),
+            observation,
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T1,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2026,
-                    period="1T",
-                    observations=registry_grounded_observations(
-                        modelo="303",
-                        filing_year=2026,
-                        period="1T",
-                        casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
-                    ),
-                )
-            ),
+            result_disposition=disposition,
+            stamped_revision_id=revision_id_for_observation(observation),
         )
     )
 
@@ -951,6 +944,7 @@ def test_first_filer_same_year_chain_is_fully_reachable(
         filing_repository=ModeloRecordCatalogueRepository(objects=bv_repo.secure_object_repository),
         calculation_repository=cr_repo,
         verification_repository=VerificationReportCatalogueRepository(objects=bv_repo.secure_object_repository),
+        justificante_repository=JustificanteRepository(objects=bv_repo.secure_object_repository),
         activity_start_date=date(2026, 1, 1),
     )
     assert verdict is not None

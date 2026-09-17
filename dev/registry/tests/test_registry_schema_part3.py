@@ -28,14 +28,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
 )
@@ -45,8 +43,9 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     with_revision as _with_revision,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_verification_expectation_rejects_negative_tolerance() -> None:
@@ -109,7 +108,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     )
 
     with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
@@ -136,7 +135,7 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="must name exactly four casilla ids"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None:
@@ -154,7 +153,7 @@ def test_validator_rejects_verification_predicate_unknown_casilla_refs() -> None
         ("implies_any_nonzero", 'implies_any_nonzero(["01", "02", "missing-casilla"])'),
         ("roll_forward_balances", 'roll_forward_balances(["01", "02", "03", "missing-casilla"])'),
     )
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     for operator_name, expression in cases:
         predicate = VerificationPredicateDefinition(
             id=f"{operator_name.replace('_', '-')}:missing-casilla",
@@ -191,7 +190,7 @@ def test_validator_rejects_known_verification_predicate_with_malformed_casilla_l
     )
 
     with pytest.raises(RegistryValidationError, match=r"any_nonzero expression .* is malformed"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
@@ -211,7 +210,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     )
 
     with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_accepts_known_verification_predicate_operators() -> None:
@@ -226,7 +225,7 @@ def test_validator_accepts_known_verification_predicate_operators() -> None:
 
     modelo, catalogues = _committed_modelo("130")
     # No mutation — committed M130 carries the predicate.
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predicates() -> None:
@@ -234,7 +233,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predica
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     cases = (
         (
             "bad-arity",
@@ -301,7 +300,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> N
         RegistryValidationError,
         match=r"consequent casilla 'tipo_renta' must be a numeric casilla, not a text-family one",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predicate() -> None:
@@ -327,7 +326,7 @@ def test_validator_accepts_committed_m210_casilla_equals_implies_nonzero_predica
     assert predicate.finding_kind == "ADVISORY"
 
     # No mutation — committed M210 carries the predicate.
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_predicates() -> None:
@@ -335,7 +334,7 @@ def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     cases = (
         (
             "bad-arity",
@@ -397,7 +396,7 @@ def test_validator_accepts_committed_m100_deduccion_requires_adquisicion_before_
     assert predicate.finding_kind == "ADVISORY"
 
     # No mutation — committed M100 carries the predicate.
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() -> None:
@@ -405,7 +404,7 @@ def test_validator_rejects_advisory_when_positive_malformed_m130_predicates() ->
 
     modelo, catalogues = _committed_modelo("130")
     revision = next(iter(modelo.revisions.values()))
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     cases = (
         ("bad-arity", 'advisory_when_positive(["01", "07"])', "must name exactly 1 casilla ids"),
         (
@@ -452,7 +451,7 @@ def test_committed_m100_anualidades_advisory_retired_after_separate_escala_compu
         )
 
     # The committed M100 revisions validate cleanly with the advisory retired.
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 @pytest.mark.parametrize(
@@ -491,7 +490,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unreadable_threshold(threshold
     )
 
     with pytest.raises(RegistryValidationError, match="is not a plain decimal number") as caught:
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
     assert threshold in str(caught.value), f"the refusal must echo the rejected threshold ({why})"
 
@@ -527,7 +526,7 @@ def test_validator_accepts_advisory_when_ratio_ge_plain_threshold(threshold: str
         update={"verification_predicates": (*revision.verification_predicates, predicate)},
     )
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+    committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
@@ -547,7 +546,7 @@ def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="unknown denominator casilla 'missing-casilla'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
@@ -567,4 +566,4 @@ def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match=r"advisory_when_ratio_ge expression.*is malformed"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        committed_registry_validator(catalogues).validate_modelo(_with_revision(modelo, mutated))

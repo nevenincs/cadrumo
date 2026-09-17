@@ -19,7 +19,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
-from ..errors.hierarchy import CoreValidationError
+from ..errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 _ISO_4217_LENGTH: int = 3
 _ISO_3166_ALPHA2_LENGTH: int = 2
@@ -85,7 +85,7 @@ def normalise_iso_3166_alpha2_jurisdiction(value: str | None) -> str | None:
     return normalised
 
 
-IsoCurrencyCode = Annotated[str, BeforeValidator(normalise_iso_4217_currency)]
+IsoCurrencyCode = Annotated[str, BeforeValidator(pydantic_validation_boundary(normalise_iso_4217_currency))]
 """A three-letter uppercase ISO 4217 code, normalised before it is checked.
 
 The normalisation has to happen BEFORE the shape check, which is why this is a

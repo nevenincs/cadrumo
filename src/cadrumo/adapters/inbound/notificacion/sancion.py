@@ -56,6 +56,7 @@ from ....core.i18n.render import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import CENT, round_to_cents
 from ....core.text_fold import fold_diacritics
+from ....core.time.clock import today_madrid
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
@@ -427,7 +428,7 @@ def parse_sancion_document(
         missing=missing,
         malformed=malformed,
         ambiguous=ambiguous,
-        effective_date=effective_date or date.today(),
+        effective_date=effective_date or today_madrid(),
         authority=authority,
     )
     payable = _resolve_payable(values, missing)
@@ -467,7 +468,7 @@ def _parse_sancion_values(
             malformed=malformed,
             ambiguous=ambiguous,
         )
-    money_labels = dict(_MONEY_LABELS)
+    money_labels: dict[str, tuple[str, ...]] = dict(_MONEY_LABELS)
     money_labels.update(
         _resolved_sanction_reduction_labels(
             effective_date=effective_date,

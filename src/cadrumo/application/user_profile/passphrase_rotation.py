@@ -21,7 +21,7 @@ leaves a profile that authenticates under the new password and then cannot
 read its own record.
 
 See Also:
-    :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
+    :func:`~cadrumo.application.user_profile.registration.register_profile_with_credentials`
         The creation door, which mints the first envelope this one replaces.
 """
 

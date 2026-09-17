@@ -36,7 +36,7 @@ from ....domain.prorrata_register.register import (
 )
 from ..iva_ledger import _sector_scoped_apportionment
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EJERCICIO = 2026
 _PERCENTAGE = Decimal("64")
@@ -88,7 +88,7 @@ def test_the_iva_gate_follows_the_shared_predicate_for_every_regime(
         assert (apportionment is not None) is regime_apportions_deduction(regime)
         if apportionment is not None:
             assert apportionment.percentage == _PERCENTAGE
-            assert apportionment.regime is regime
+            assert apportionment.regime == regime
 
 
 def test_a_percentage_and_its_provenance_are_resolved_together_or_not_at_all() -> None:

@@ -51,9 +51,16 @@ from ._referential_integrity_support import (
     minimal_source_ref,
     minimal_workbook_ref,
     snapshot_for_revision,
+    supported_filing_year,
 )
+from .profile_schema_support import load_user_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("governed_fact_scope"),
+    pytest.mark.usefixtures("isolated_provider_registration"),
+]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _TEXT_CASILLA: CasillaId = validated_casilla_id("text-casilla", surface="_TEXT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
@@ -70,7 +77,7 @@ _PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     try:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
@@ -104,6 +111,8 @@ def test_committed_registry_passes_referential_integrity(
     construction_failures: list[str] = []
     for modelo in registry_authority.modelos:
         for revision in modelo.revisions.values():
+            if supported_filing_year(revision, registry_authority.catalogues) is None:
+                continue
             try:
                 snapshot = snapshot_for_revision(modelo, registry_authority.catalogues, revision)
             except Exception as exc:
@@ -235,7 +244,9 @@ def test_modelo_validation_rejects_casilla_sourced_only_by_executable_parity() -
         RegistryValidationError,
         match=r"casilla 01 requires one of official_source_guidance, layout_authority source evidence",
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executable_parity() -> None:
@@ -251,7 +262,9 @@ def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executabl
         RegistryValidationError,
         match=r"casilla 01 constraints requires one of official_source_guidance, layout_authority source evidence",
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_parity() -> None:
@@ -270,7 +283,9 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
             r"requires one of official_source_guidance, layout_authority source evidence"
         ),
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:

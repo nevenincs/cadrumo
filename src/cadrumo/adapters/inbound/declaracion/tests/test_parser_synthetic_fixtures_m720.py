@@ -11,6 +11,7 @@ from ._parser_boundary_support import _MODELO_720_SYNTHETIC_FIXTURE, _expected_p
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
+    pytest.mark.usefixtures("operation"),
 ]
 
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(

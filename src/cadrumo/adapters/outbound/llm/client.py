@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, SecretStr
 
 from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
-from ....core.errors.hierarchy import InternalInvariantError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -102,11 +102,10 @@ def transport_retry_permitted(exc: BaseException) -> bool:
     Returns:
         True only when the taxonomy declares this failure class retryable.
     """
-    try:
-        return get_registered_error_code(exc).retryable
-    except ValueError:
+    if not isinstance(exc, CadrumoError):
         # An unregistered exception type. Not a retry decision to guess at.
         return False
+    return get_registered_error_code(exc).retryable
 
 
 class LLMRetryPolicy(BaseModel):

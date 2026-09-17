@@ -13,7 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...domain.transactions.models import Transaction
 from .errors import AggregationConfigError
 
@@ -64,7 +64,7 @@ def effective_eur_amount(transaction: Transaction) -> Decimal:
     """
     if is_non_eur_without_conversion(transaction):
         raise AggregationConfigError(
-            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            translated_message=tr("aggregation.service.errors.currency_conversion_required"),
             context={
                 "transaction_id": transaction.transaction_id,
                 "currency": transaction.raw.currency,
@@ -104,7 +104,7 @@ def effective_eur_taxable_base(transaction: Transaction) -> Decimal | None:
         return None
     if is_non_eur_without_conversion(transaction):
         raise AggregationConfigError(
-            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            translated_message=tr("aggregation.service.errors.currency_conversion_required"),
             context={
                 "transaction_id": transaction.transaction_id,
                 "currency": transaction.raw.currency,
@@ -135,7 +135,7 @@ def effective_eur_iva_amount(transaction: Transaction) -> Decimal | None:
         return None
     if is_non_eur_without_conversion(transaction):
         raise AggregationConfigError(
-            translated_message=t("aggregation.service.errors.currency_conversion_required"),
+            translated_message=tr("aggregation.service.errors.currency_conversion_required"),
             context={
                 "transaction_id": transaction.transaction_id,
                 "currency": transaction.raw.currency,

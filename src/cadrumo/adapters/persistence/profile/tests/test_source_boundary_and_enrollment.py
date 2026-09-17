@@ -25,6 +25,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -249,15 +250,11 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # Fabricate a revision with a synthetic unknown source by wrapping the real one.
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
-    from cadrumo.domain.calculations.registry.schema import BindingDefinition
 
     revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
-    # Build a synthetic binding with a novel source kind via model_construct (no validators).
-    synthetic_binding = BindingDefinition.model_construct(
-        id="synthetic-test-binding",
-        provider={"kind": "synthetic_novel_source_xyz"},
-        value={"data_type": "money", "channel": "decimal"},
-    )
+    # The typed provider union is closed, so a novel kind only exists as a
+    # stand-in exposing the one attribute the gate reads.
+    synthetic_binding = SimpleNamespace(id="synthetic-test-binding", source="synthetic_novel_source_xyz")
     # Graft the synthetic binding onto the revision's binding list via model_copy.
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic_binding)})
 

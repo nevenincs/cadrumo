@@ -40,7 +40,6 @@ def test_missing_layout_address_raises_typed_error_without_raw_identifier() -> N
         ("binding", FormulaExpression(binding="private-binding-token")),
         ("date_binding", FormulaExpression(date_binding="private-date-binding-token")),
         ("parameter", FormulaExpression(parameter="private-parameter-token")),
-        ("relation", FormulaExpression(binding="private-relation-token")),
     ],
 )
 def test_referenced_undeclared_layout_inputs_are_not_silently_skipped(

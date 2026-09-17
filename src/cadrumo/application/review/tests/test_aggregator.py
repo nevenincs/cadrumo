@@ -39,7 +39,7 @@ from .._aggregator import ReviewQueue
 from ..enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .draft_review_test_support import draft_review_ports
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 _PROFILE_ID = "23232323-2323-4232-8232-232323232323"
 
@@ -48,7 +48,8 @@ def _summary(text: str = "demo") -> tr:
     return tr("translation")
 
 
-_TEST_REVISION_ID = "test-revision"
+# The published Modelo 130 revision for 2026, so the draft passes the current-coordinate gate.
+_TEST_REVISION_ID = "2019-y-siguientes"
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -95,7 +96,7 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
         quantity=Decimal("1"),
         unit_price=Decimal("100.00"),
         subtotal=Decimal("100.00"),
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=Decimal("21.00"),
     )
     invoice = Invoice.model_validate(

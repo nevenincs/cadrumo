@@ -56,7 +56,7 @@ from sqlalchemy import Engine, select
 from ......adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
-from ...errors import ClassificationError
+from ...errors import ClassificationError, PathContainmentError
 from ...sql.engine import create_engine_from_settings, dispose_engine
 from ...sql.orm import Base, SecureObjectRow
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
@@ -207,7 +207,7 @@ def _object_marker_identifies_secure_backend[T: BaseModel](
 def _unsafe_id_rejected[T: BaseModel](case: SecureRepositoryContractCase[T]) -> None:
     repo = case.repository_factory()
     for bad in _UNSAFE_IDS:
-        with pytest.raises(ValueError):
+        with pytest.raises(PathContainmentError):
             repo.envelope_path_for(bad)
 
 

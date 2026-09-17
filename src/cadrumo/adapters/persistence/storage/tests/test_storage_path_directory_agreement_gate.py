@@ -2,12 +2,12 @@
 
 Every :class:`~adapters.persistence.storage.StoragePathDefinition` grammar is a
 hand-written string. Where its directory portion nests beneath an already-declared
-:class:`~cadrumo.core.StorageCategory` member -- ``<root>/runs/<run_id>/trace.json``
+:class:`~cadrumo.core.storage_taxonomy.StorageCategory` member -- ``<root>/runs/<run_id>/trace.json``
 nests beneath ``StorageCategory.RUNS``'s ``"runs"`` subpath -- the two spellings
 duplicate each other, and nothing previously compared them: renaming the member's
 subpath would leave every grammar that spelled out its old name silently
 disagreeing with the taxonomy. This gate makes that comparison live, re-derived
-from :func:`~cadrumo.core.storage_location` on every run rather than a copied
+from :func:`~cadrumo.core.storage_taxonomy_locations.storage_location` on every run rather than a copied
 constant, so a rename is caught the moment it lands.
 
 Every ``<root>``-anchored filesystem-kind entry is checked, regardless of which
@@ -213,7 +213,7 @@ _EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
 
 The directory-agreement gate above checks *membership*: every literal run a
 grammar spells must be SOME declared subpath. Measured directly against
-:func:`~cadrumo.tests.literal_directory_runs`, that check catches a
+:func:`~cadrumo.adapters.persistence.storage.tests.storage_path_grammar.literal_directory_runs`, that check catches a
 DOUBLED segment (``bucket_database_file`` briefly interpolated
 ``BUCKET_DB_DIRNAME`` twice, rendering ``<root>/buckets/<bucket_id>/db/db/cadrumo.db``;
 the collapsed run ``"db/db"`` matches no declared subpath, so the existing

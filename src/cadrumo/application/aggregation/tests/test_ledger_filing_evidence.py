@@ -31,7 +31,7 @@ from ..ledger_filing_snapshot import (
     row_fingerprint,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")

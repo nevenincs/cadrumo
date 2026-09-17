@@ -27,7 +27,7 @@ from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion, parse_declaracion_bytes
 from ._parser_boundary_support import _modelo_snapshot, _write_declaration_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: Published NIST SHA-256 vector for the ASCII bytes ``abc``.
 _NIST_ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"

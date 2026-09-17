@@ -186,7 +186,8 @@ def test_unsupported_casilla_data_type_error_is_localized() -> None:
         registry_value_type("blob")
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.unsupported_casilla_data_type"
-    assert exc_info.value.context == {"data_type": "blob"}
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["data_type"] == "blob"
 
 
 def _registry_casilla_schema(

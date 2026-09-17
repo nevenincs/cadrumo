@@ -42,7 +42,7 @@ class TestTheDivergenceIsReadBeforeThePersist:
         """
         source = inspect.getsource(FiledCaptureAccumulator.absorb)
         read_at = source.index("recapture_divergence_notices")
-        write_at = source.index("store.persist_observation")
+        write_at = source.index(".persist_observation(")
         assert read_at < write_at, (
             "the recapture divergence must be read BEFORE persist_observation; "
             "afterwards the prior values are gone and the advisory can only "
@@ -62,7 +62,7 @@ class TestTheDivergenceIsReadBeforeThePersist:
         module = importlib.import_module("..filed_data_capture", package=__package__)
         assert module.__file__ is not None
         source = Path(module.__file__).read_text(encoding="utf-8")
-        assert source.count("store.persist_observation(") == 1, (
+        assert source.count(".persist_observation(") == 1, (
             "persist_observation is called outside the accumulator funnel; that "
             "path upserts without reading the divergence first"
         )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....tests.inventory import FIXTURES_DIR
+from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
 from ._parser_boundary_casillas import (
     _M303_CASILLA_27,
@@ -18,12 +19,14 @@ from ._parser_boundary_m303_support import (
     _M303_HISTORICAL_IDS,
     _M303_HISTORICAL_PARAMS,
     _M303_HISTORICAL_PROFILE_CASILLAS,
+    _M303_HISTORICAL_UNSUPPORTED_IDS,
+    _M303_HISTORICAL_UNSUPPORTED_PARAMS,
 )
 from ._parser_boundary_support import (
     _expected_period,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("pdf_stem,year,period", _M303_HISTORICAL_PARAMS, ids=_M303_HISTORICAL_IDS)
@@ -64,3 +67,18 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
         assert values[casilla_id] == expected_value, (
             f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
         )
+
+
+@pytest.mark.parametrize(
+    "pdf_stem,year,period", _M303_HISTORICAL_UNSUPPORTED_PARAMS, ids=_M303_HISTORICAL_UNSUPPORTED_IDS
+)
+def test_parser_refuses_modelo_303_historical_corpus_below_the_supported_floor(
+    pdf_stem: str,
+    year: int,
+    period: str,
+) -> None:
+    """A historical render for a year outside the support envelope is refused, never resolved."""
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(pdf_path, modelo_override="303", año_override=year, period_override=period)

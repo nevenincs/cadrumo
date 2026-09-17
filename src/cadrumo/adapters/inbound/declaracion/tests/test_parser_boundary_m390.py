@@ -14,7 +14,7 @@ from ._parser_boundary_support import (
     _expected_period,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _M390_CORPUS_PARAMS: tuple[tuple[str, int], ...] = (
     ("2022-0A", 2022),

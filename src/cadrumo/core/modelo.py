@@ -10,7 +10,7 @@ from __future__ import annotations
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from .errors.hierarchy import CoreValidationError
+from .errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 __all__ = ["Modelo"]
 
@@ -41,7 +41,7 @@ class Modelo(str):
         """Validate from and serialize to the canonical JSON string shape."""
         del source_type, handler
         return core_schema.no_info_after_validator_function(
-            cls,
+            pydantic_validation_boundary(cls),
             core_schema.str_schema(pattern=r"^[0-9]{3}$"),
             serialization=core_schema.to_string_ser_schema(),
         )

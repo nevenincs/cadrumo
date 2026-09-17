@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from ..compiler.producer_inventory import producer_inventory
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_every_formula_target_is_declared_as_the_matching_computed_casilla() -> None:

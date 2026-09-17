@@ -25,17 +25,11 @@ KEY_SIZE: Final = 32
 """AES-256 key size in bytes."""
 
 
-class AesGcmKeyLengthError(ValueError):
-    """Raised when a key is not exactly :data:`KEY_SIZE` bytes.
-
-    ``AESGCM`` itself also accepts 128- and 192-bit keys, so the AES-256
-    requirement is enforced here rather than left to the library.
-    """
-
-
 def _cipher(key: bytes) -> AESGCM:
+    # ``AESGCM`` itself also accepts 128- and 192-bit keys, so the AES-256
+    # requirement is enforced here rather than left to the library.
     if len(key) != KEY_SIZE:
-        raise AesGcmKeyLengthError(f"AES-256-GCM key must be exactly {KEY_SIZE} bytes; got {len(key)}")
+        raise ValueError(f"AES-256-GCM key must be exactly {KEY_SIZE} bytes; got {len(key)}")
     return AESGCM(key)
 
 
@@ -47,8 +41,9 @@ def seal(plaintext: bytes, *, key: bytes, associated_data: bytes | None = None) 
         :data:`GCM_TAG_SIZE` bytes.
 
     Raises:
-        AesGcmKeyLengthError: If ``key`` is not exactly :data:`KEY_SIZE` bytes.
-        TypeError, ValueError: If the underlying AEAD operation refuses its input.
+        ValueError: If ``key`` is not exactly :data:`KEY_SIZE` bytes, or the
+            underlying AEAD operation refuses its input.
+        TypeError: If the underlying AEAD operation refuses its input type.
     """
     cipher = _cipher(key)
     nonce = secrets.token_bytes(NONCE_SIZE)
@@ -59,9 +54,10 @@ def open_sealed(nonce: bytes, ciphertext: bytes, *, key: bytes, associated_data:
     """Decrypt ``ciphertext`` (with its trailing tag) and verify it.
 
     Raises:
-        AesGcmKeyLengthError: If ``key`` is not exactly :data:`KEY_SIZE` bytes.
         cryptography.exceptions.InvalidTag: If authentication fails.
-        TypeError, ValueError: If the underlying AEAD operation refuses its input.
+        ValueError: If ``key`` is not exactly :data:`KEY_SIZE` bytes, or the
+            underlying AEAD operation refuses its input.
+        TypeError: If the underlying AEAD operation refuses its input type.
     """
     return _cipher(key).decrypt(nonce, ciphertext, associated_data)
 
@@ -70,7 +66,6 @@ __all__ = [
     "GCM_TAG_SIZE",
     "KEY_SIZE",
     "NONCE_SIZE",
-    "AesGcmKeyLengthError",
     "open_sealed",
     "seal",
 ]

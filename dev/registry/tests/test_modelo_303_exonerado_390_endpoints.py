@@ -15,11 +15,11 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ENDPOINTS = frozenset(
     {
@@ -158,7 +158,7 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
 
 def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers() -> None:
     modelo, catalogues = _committed_modelo("303")
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for _revision_id, _source_ref, filing_year, _design_epoch, period in _DESIGNS:
         revision = build_snapshot(

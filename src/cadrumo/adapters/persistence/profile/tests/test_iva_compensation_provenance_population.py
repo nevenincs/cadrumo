@@ -376,14 +376,18 @@ def _persist_every_legitimate_row(
         operation=operation,
     )
     work_unit = _app_filed_work_unit()
+    # The envelope and its history row co-commit, so both share one backend.
+    observations = CalculationObservationRepository()
     persist_filed_revision_observation(
         revision=_app_filed_revision(work_unit, operation=operation),
         work_unit=work_unit,
-        repository=CalculationObservationRepository(),
+        repository=observations,
         captured_at=_APP_FILED_AT,
         result_disposition=ResultDisposition.COMPENSACION,
         taxpayer_nif=_NIF,
-        iva_compensation_history_repository=IvaCompensationHistoryRepository(),
+        iva_compensation_history_repository=IvaCompensationHistoryRepository(
+            objects=observations.secure_object_repository,
+        ),
     )
     persist_filed_calculation_observation(
         _aeat_captured_303_observation(operation=operation),

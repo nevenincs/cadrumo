@@ -8,6 +8,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import content_hash_hex
 from ....core.hex import Hex64Str
 from ....core.identity.digest import ContentDigest
@@ -73,6 +74,7 @@ class OperationOwnerLease(BaseModel):
     expires_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> OperationOwnerLease:
         validate_utc_aware(self.acquired_at)
         validate_utc_aware(self.expires_at)
@@ -107,6 +109,7 @@ class OperationLeaseObservation(BaseModel):
     evidence_ref: ContentDigest = Field(default=_EVIDENCE_REF_PENDING)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_observation(self) -> OperationLeaseObservation:
         validate_utc_aware(self.observed_at)
         _validate_observation_witness(self)
@@ -166,6 +169,7 @@ class OperationLeaseResult(BaseModel):
     evidence_ref: ContentDigest = Field(default=_EVIDENCE_REF_PENDING)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_shape(self) -> OperationLeaseResult:
         validate_utc_aware(self.observed_at)
         _validate_result_witnesses(self)

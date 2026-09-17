@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from functools import cache
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
@@ -50,7 +51,13 @@ def _committed_modelo(modelo_id: str) -> ModeloDefinition:
 
 
 @cache
-def _committed_snapshot(modelo_id: str, filing_year: int, period: str) -> RegistrySnapshot:
+def _committed_snapshot(
+    modelo_id: str,
+    filing_year: int,
+    period: str,
+    *,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> RegistrySnapshot:
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path()).snapshot(
-        modelo_id, filing_year=filing_year, period=period
+        modelo_id, filing_year=filing_year, period=period, grade=grade
     )

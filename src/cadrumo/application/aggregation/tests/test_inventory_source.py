@@ -54,7 +54,7 @@ from ..inventory import _VALUE_ATTRIBUTE_BY_OPERATION, InventorySourceResolver
 from ..source_mesh import CalculationSourceContext
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 class _InventoryLedgerRepositoryScenario:

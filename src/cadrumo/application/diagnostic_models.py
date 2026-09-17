@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import (
     ActionArgumentSource,
@@ -114,6 +115,7 @@ class DiagnosticCheck(BaseModel):
     findings: tuple[DiagnosticFinding, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_actionable_contract(self) -> DiagnosticCheck:
         if self.status in {DiagnosticStatus.FAIL, DiagnosticStatus.WARN}:
             if self.precondition_verdict is None:

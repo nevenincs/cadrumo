@@ -37,7 +37,7 @@ from ..m303_arrivals import (
     resolve_m303_supplier_regime_arrival,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")

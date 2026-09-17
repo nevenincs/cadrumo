@@ -148,6 +148,13 @@ _MARRIAGE_DERIVED_MONTH_FACT_PATHS = (
     "renta_taxpayer.marriage_month_start",
     "renta_taxpayer.marriage_month_end",
 )
+_MARITIME_WORKER_CLASS_FACT_PATH = "maritime_worker.worker_class"
+_MARITIME_ORDINARY_WORK_FACTS: tuple[tuple[str, UserProfileFactValue], ...] = (
+    ("maritime_worker.exemption_path_rebeca", False),
+    ("maritime_worker.gross_navigation_income", Decimal("0")),
+    ("maritime_worker.annual_salary", Decimal("0")),
+    ("maritime_worker.qualifying_days", Decimal("0")),
+)
 _ECONOMIC_ACTIVITY_INCOME_CATEGORY = "actividad_economica"
 _ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX = "-profile-has-economic-activity"
 
@@ -163,6 +170,23 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     payload = profile_record.model_dump_json() if isinstance(profile_record, BaseModel) else repr(profile_record)
     digest = sha256_hex(payload.encode(UTF_8_ENCODING))
     return f"sha256:{digest}"
+
+
+def inject_ordinary_work_maritime_facts(fact_index: dict[str, UserProfileFactValue]) -> None:
+    """Resolve the maritime exemption inputs of a taxpayer with no maritime classification.
+
+    The profile schema states that an unclassified worker receives the ordinary
+    treatment of employment income, so neither the art. 7.p LIRPF nor the art.
+    75 Ley 19/1994 exemption reaches them: the exemption path is not REBECA and
+    every exempt-income input is a proven zero. A taxpayer classified as a
+    maritime worker is left untouched, so an incomplete maritime profile still
+    refuses the calculation instead of borrowing these values. Facts already
+    present are never overwritten.
+    """
+    if fact_index.get(_MARITIME_WORKER_CLASS_FACT_PATH) is not None:
+        return
+    for fact_path, value in _MARITIME_ORDINARY_WORK_FACTS:
+        fact_index.setdefault(fact_path, value)
 
 
 def inject_derived_marriage_facts(
@@ -566,25 +590,24 @@ _MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX = "menor-tres-anos"
 def _minimo_descendientes_parameter(
     snapshot: RegistrySnapshot,
     *,
-    filing_year: int,
     suffix: str,
     ccaa_infix: str | None = None,
 ) -> ParameterDefinition | None:
     """Return the Art. 58 mínimo-por-descendientes registry parameter for *suffix*.
 
-    Parameter ids follow the uniform ``renta-{year}-minimo-descendientes-
-    {suffix}-{year}`` shape across every 2020-2025 revision (e.g.
-    ``renta-2024-minimo-descendientes-primer-hijo-2024``). When *ccaa_infix*
-    is supplied the id gains a CCAA segment
-    (``renta-{year}-minimo-descendientes-{ccaa_infix}-{suffix}-{year}``, e.g.
-    ``renta-2024-minimo-descendientes-madrid-tercer-hijo-2024``) — the shape a
+    Parameter ids keep one ``renta-minimo-descendientes-{suffix}`` identity
+    across every revision (e.g. ``renta-minimo-descendientes-primer-hijo``);
+    the selected revision supplies the figure for its filing year. When
+    *ccaa_infix* is supplied the id gains a CCAA segment
+    (``renta-minimo-descendientes-{ccaa_infix}-{suffix}``, e.g.
+    ``renta-minimo-descendientes-madrid-tercer-hijo``) — the shape a
     comunidad's own Art. 46 Ley 22/2009 divergent figure uses. Returns
-    ``None`` when the revision declares no such parameter (a revision outside
-    the engine's supported filing-year set, or a CCAA with no published
-    divergent figure for this tranche).
+    ``None`` when the revision declares no such parameter (a revision that
+    does not carry the table, or a CCAA with no published divergent figure
+    for this tranche).
     """
     infix = f"{ccaa_infix}-" if ccaa_infix else ""
-    parameter_id = f"renta-{filing_year}-minimo-descendientes-{infix}{suffix}-{filing_year}"
+    parameter_id = f"renta-minimo-descendientes-{infix}{suffix}"
     for parameter in snapshot.revision.parameters:
         if parameter.id == parameter_id:
             return parameter
@@ -641,11 +664,9 @@ def _resolved_minimo_descendientes_tranches(
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
-            _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix, ccaa_infix=ccaa_infix)
-            if ccaa_infix
-            else None
+            _minimo_descendientes_parameter(snapshot, suffix=suffix, ccaa_infix=ccaa_infix) if ccaa_infix else None
         )
-        general = _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix)
+        general = _minimo_descendientes_parameter(snapshot, suffix=suffix)
         chosen = specific if specific is not None else general
         return resolve_parameter(chosen, date_context) if chosen is not None else None
 
@@ -696,7 +717,7 @@ def _resolved_minimo_descendientes_thresholds(
     date_context = {"filing_period": date(filing_year, 12, 31)}
 
     def _resolve(suffix: str) -> Decimal | None:
-        parameter = _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix)
+        parameter = _minimo_descendientes_parameter(snapshot, suffix=suffix)
         return resolve_parameter(parameter, date_context) if parameter is not None else None
 
     rentas_limite = _resolve(_MINIMO_DESCENDIENTES_RENTAS_LIMITE_SUFFIX)
@@ -1152,7 +1173,7 @@ def _guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     leaves the aggregate unresolved rather than proceeding against a guessed
     ceiling.
     """
-    parameter_id = f"renta-{snapshot.filing_year}-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
+    parameter_id = f"renta-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
     for parameter in snapshot.revision.parameters:
         if parameter.id == parameter_id:
             return resolve_parameter(parameter, {"filing_period": date(snapshot.filing_year, 12, 31)})
@@ -1577,6 +1598,7 @@ def _load_profile_facts(
     fact_index = profile_fact_index(record, resolved_schema)
     family_context = _family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
+    inject_ordinary_work_maritime_facts(fact_index)
     declared_selectors = _declared_profile_selectors(snapshot.revision)
     _inject_derived_family_facts(
         fact_index,
@@ -1931,6 +1953,7 @@ __all__ = [
     "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
     "inject_derived_minimo_descendientes_facts",
+    "inject_ordinary_work_maritime_facts",
     "is_indeterminate_unidad_familiar",
     "is_madrid_autonomic_deduccion_filing_year",
     "is_madrid_resident",

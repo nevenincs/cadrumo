@@ -3226,3 +3226,24 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2024"]
+
+[[revisions.2024-y-siguientes.export_layouts.records]]
+id = "modelo-604-envelope-footer"
+record_type = "envelope_footer"
+order = 3
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
+id = "modelo-604-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]

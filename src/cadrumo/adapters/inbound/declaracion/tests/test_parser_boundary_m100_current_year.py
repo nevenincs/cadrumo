@@ -36,7 +36,7 @@ from ._parser_boundary_support import (
     _modelo_snapshot,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 # Ground truth mirrors the amounts _generate_modelo_100_current.py stamps onto
 # the committed fixture PDFs (the single source of the fixture's printed values).

@@ -38,6 +38,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.digest import ContentDigest
 from ....core.identity.transaction_ids import TransactionId
@@ -826,6 +827,7 @@ class SheetExportMetadata(BaseModel):
     exported_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _exported_at_is_utc(self) -> SheetExportMetadata:
         validate_utc_aware(self.exported_at)
         return self

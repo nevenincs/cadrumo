@@ -13,6 +13,7 @@ import httpx
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.config import Settings, load_settings
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import AcceleratorKind, ContentionCause
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.clock import now
@@ -243,6 +244,7 @@ class ContentionSnapshot(ProvisioningOutcome):
     causes: tuple[ContentionCause, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_contention_outcome(self) -> ContentionSnapshot:
         require_provisioning_verdict(failed=not self.admitted, verdict=self.precondition_verdict)
         return self
@@ -519,6 +521,7 @@ class UnloadOutcome(ProvisioningOutcome):
     was_resident: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_unload_outcome(self) -> UnloadOutcome:
         require_provisioning_verdict(failed=not self.unloaded, verdict=self.precondition_verdict)
         return self
@@ -628,6 +631,7 @@ class LoadOutcome(ProvisioningOutcome):
     elapsed_ms: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_load_outcome(self) -> LoadOutcome:
         require_provisioning_verdict(failed=not self.loaded, verdict=self.precondition_verdict)
         return self
@@ -827,6 +831,7 @@ class PullOutcome(ProvisioningOutcome):
     bytes_fetched: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_pull_outcome(self) -> PullOutcome:
         require_provisioning_verdict(failed=not self.pulled, verdict=self.precondition_verdict)
         return self
@@ -1021,6 +1026,7 @@ class ReadinessOutcome(ProvisioningOutcome):
     elapsed_ms: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_readiness_outcome(self) -> ReadinessOutcome:
         require_provisioning_verdict(failed=not self.ready, verdict=self.precondition_verdict)
         return self
@@ -1201,6 +1207,7 @@ class RemoveOutcome(ProvisioningOutcome):
     freed_bytes: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_removal_outcome(self) -> RemoveOutcome:
         require_provisioning_verdict(failed=not self.removed, verdict=self.precondition_verdict)
         return self

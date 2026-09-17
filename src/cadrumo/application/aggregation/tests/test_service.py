@@ -55,9 +55,9 @@ def test_aggregation_config_error_round_trips_through_build_error_envelope() -> 
 
 
 def test_site5_command_rejects_cross_family_observations() -> None:
-    """PerModeloAggregationCommand._only_matching_observation_family_is_populated raises AggregationConfigError."""
+    """aggregate_per_modelo refuses observations outside the modelo's provider family."""
     from ..foreign_assets import ForeignAssetIngestObservation
-    from ..service import PerModeloAggregationCommand
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = ForeignAssetIngestObservation(
         source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -68,14 +68,16 @@ def test_site5_command_rejects_cross_family_observations() -> None:
         valuation_eur=Decimal("50000.01"),
         acquisition_date="2023-01-15",
     )
-    with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationCommand(
-            modelo="111",
-            period=_P_2025_Q1,
-            foreign_asset_observations=(obs,),
-        )
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, AggregationConfigError) for c in causes)
+    command = PerModeloAggregationCommand(
+        modelo="111",
+        period=_P_2025_Q1,
+        foreign_asset_observations=(obs,),
+    )
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(AggregationConfigError),
+    ):
+        aggregate_per_modelo(command, operation=operation)
 
 
 def test_site6_result_rejects_duplicate_source_kinds() -> None:
@@ -116,7 +118,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
                 ),
                 log_fields=log,
             )
-        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
         assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
@@ -159,7 +161,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
                 log_fields=log,
             )
-        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
         assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
@@ -202,7 +204,7 @@ def test_site8_result_rejects_period_mismatch() -> None:
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
                 log_fields=log,
             )
-        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
         assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 
@@ -244,7 +246,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
                 source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
                 log_fields=log,
             )
-        causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
         assert any(isinstance(c, AggregationConfigError) for c in causes)
 
 

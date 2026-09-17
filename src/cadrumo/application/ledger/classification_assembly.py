@@ -88,6 +88,7 @@ from pydantic import BaseModel, Field
 from ...core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.iva_category_catalogue import (
@@ -837,7 +838,7 @@ def assemble_classification_criteria(
         operation=operation,
     )
     projected = resolve_iva_classification_inputs(
-        effective_date=transaction_date or date.today(),
+        effective_date=transaction_date or today_madrid(),
         operation=operation,
     )
     missing = list(initial.missing)
@@ -1273,7 +1274,7 @@ def resolve_ingestion_iva_category(
                 classified=classified,
             )
         projected = resolve_iva_classification_inputs(
-            effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else date.today()),
+            effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
             operation=operation,
         )
         inferred = projected.rate_categories.get(rate_tier) if rate_tier is not None else None
@@ -1308,7 +1309,7 @@ def resolve_ingestion_iva_category(
         stated,
         rate_tier,
         operation=operation,
-        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else date.today()),
+        effective_date=(assembly.criteria.transaction_date if assembly.criteria is not None else today_madrid()),
     )
     if tier_conflict:
         return IvaCategoryResolution(

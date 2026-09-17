@@ -28,6 +28,7 @@ from ...entrypoints.adapter_composition import build_censal_fetch_port
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ..ledger.action_ports import LedgerActionPorts
 from ..ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
@@ -357,8 +358,11 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
             expires_at=_NOW,
         ),
         operation_contracts=contracts,
-        transaction_repository=cast(Any, _StableStore(TransactionCatalogue())),
-        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+        ledger_action_ports=_ledger_ports(
+            authority_operation,
+            transactions=_StableStore(TransactionCatalogue()),
+            invoices=_StableStore(InvoiceCatalogue()),
+        ),
         modelo_projection_reader=lambda _unit: pytest.fail("the empty catalogue must not invoke the Modelo reader"),
     )
 
@@ -529,6 +533,38 @@ class _StableStore:
         return self._value
 
 
+class _EmptyAttachmentStore:
+    """An attachment store holding no manifests."""
+
+    @staticmethod
+    def iter_manifests() -> tuple[()]:
+        return ()
+
+
+def _ledger_ports(
+    operation: PinnedAuthorityOperation,
+    *,
+    transactions: object,
+    invoices: object,
+) -> LedgerActionPorts:
+    """Bind the ledger stores the door reads through the action ports."""
+    from ...domain.buckets.event import BucketEventHistoryCatalogue
+    from ...domain.usage_ratios.model import UsageRatioProfile
+
+    return LedgerActionPorts(
+        operation=operation,
+        transaction_repository=cast(Any, transactions),
+        bucket_event_repository=cast(Any, _StableStore(BucketEventHistoryCatalogue())),
+        invoice_repository=cast(Any, invoices),
+        attachment_store=cast(Any, _EmptyAttachmentStore()),
+        usage_ratio_profile=UsageRatioProfile(),
+        usage_ratio_profile_loader=cast(Any, None),
+        work_unit_repository=cast(Any, None),
+        calculation_repository=cast(Any, None),
+        purchase_invoice_evidence_records=(),
+    )
+
+
 def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
@@ -566,8 +602,11 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
             profile_label="Perfil local",
             expires_at=_NOW,
         ),
-        transaction_repository=cast(Any, _ChangingLedgerStore(TransactionCatalogue(), written)),
-        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+        ledger_action_ports=_ledger_ports(
+            authority_operation,
+            transactions=_ChangingLedgerStore(TransactionCatalogue(), written),
+            invoices=_StableStore(InvoiceCatalogue()),
+        ),
     )
 
     with pytest.raises(InternalInvariantError, match="changed during capture"):
@@ -604,8 +643,11 @@ def test_a_quiet_ledger_publishes_its_generation(
             profile_label="Perfil local",
             expires_at=_NOW,
         ),
-        transaction_repository=cast(Any, _StableStore(TransactionCatalogue())),
-        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+        ledger_action_ports=_ledger_ports(
+            authority_operation,
+            transactions=_StableStore(TransactionCatalogue()),
+            invoices=_StableStore(InvoiceCatalogue()),
+        ),
     )
 
     inputs = door.read_workbench_generation_inputs()

@@ -8,6 +8,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import PrefixedContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
@@ -45,6 +46,7 @@ class ProfileCustodyRetentionOverride(BaseModel):
     latest_safe_erase_date: datetime | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_instants(self) -> ProfileCustodyRetentionOverride:
         validate_utc_aware(self.approved_at)
         if self.latest_safe_erase_date is not None:
@@ -87,6 +89,7 @@ class ProfileCustodyHoldAssessment(BaseModel):
     evidence_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_assessed_at(self) -> ProfileCustodyHoldAssessment:
         validate_utc_aware(self.assessed_at)
         return self
@@ -170,6 +173,7 @@ class ProfileCustodyHoldEvidence(BaseModel):
         return validate_prefixed_digest(value, field_name="hold source record digest")
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_proof(self) -> ProfileCustodyHoldEvidence:
         validate_utc_aware(self.assessed_at)
         expected_authority = f"application-{self.owner}-hold-owner"

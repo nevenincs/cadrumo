@@ -34,6 +34,7 @@ from pydantic import (
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole, ForeignAssetClass
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.foreign_asset_obligation import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     ForeignAssetObligationGroup,
@@ -132,15 +133,18 @@ class ForeignAssetIngestObservation(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
         return _foreign_asset_source_kind(value)
 
     @field_validator("country")
     @classmethod
+    @pydantic_validation_boundary
     def _country_is_uppercase(cls, value: str) -> str:
         return _validate_country(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _ledger_source_is_a_transaction_identity(self) -> ForeignAssetIngestObservation:
         """Hold a ledger-sourced observation to the canonical transaction identity.
 
@@ -182,6 +186,7 @@ class ForeignAssetClassRollup(BaseModel):
 
     @field_validator("countries")
     @classmethod
+    @pydantic_validation_boundary
     def _countries_are_uppercase_ascii_alpha2(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for country in value:
             _validate_country(country)
@@ -189,10 +194,12 @@ class ForeignAssetClassRollup(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
         return _foreign_asset_source_kind(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _held_count_within_total(self) -> ForeignAssetClassRollup:
         if self.held_at_year_end_count > self.assets_count:
             raise ValueError(
@@ -213,6 +220,7 @@ class ForeignAssetsAggregation(BaseModel):
     total_valuation_eur: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _totals_match_rollups(self) -> ForeignAssetsAggregation:
         assert_rollup_totals_match(
             self.rollups,

@@ -63,7 +63,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 from sqlalchemy import delete, select, update
 
 from ....core.config import load_settings
-from ....core.errors.hierarchy import InternalInvariantError
+from ....core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.iva_deduction_fact import IvaDeductionFactKind
@@ -152,6 +152,7 @@ class _PersistedTransactionTimestampWitness(BaseModel):
 
     @field_validator("created_at", "modified_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_utc_aware(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 

@@ -52,7 +52,7 @@ from .renta_income_aggregation_support import (
     raw_transaction,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "9f86d081-884c-4d65-9a2f-eaa0c55ad015"  # was 'test'
 _Q1 = Period.from_year_and_code(2026, "2T")

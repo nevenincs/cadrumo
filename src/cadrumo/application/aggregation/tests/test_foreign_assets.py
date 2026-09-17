@@ -32,7 +32,7 @@ from ..foreign_assets import (
 )
 from ..source_mesh import CalculationSourceContext
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
 _M720_LEGAL_REFS = (

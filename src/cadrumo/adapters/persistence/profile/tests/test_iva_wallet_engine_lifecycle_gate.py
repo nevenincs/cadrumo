@@ -76,13 +76,9 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
-            calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            operation=operation,
-            **kwargs,
-        )
+        kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
+        kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
+        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
 
 
 def _require_persisted_iva_compensation_decision_matches_revision(work_unit: Any, revision: Any, **kwargs: Any) -> Any:
@@ -182,7 +178,7 @@ def test_modelo_303_lifecycle_gate_rejects_wallet_authority_amount_drift(
 
         with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
-        assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
+        assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_amount_mismatch"
         assert exc_info.value.context is not None
         assert exc_info.value.context["divergence"] == "authority_amount_mismatch"
 

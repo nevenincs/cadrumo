@@ -32,10 +32,11 @@ from typing import Annotated, ClassVar
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -199,7 +200,7 @@ def validate_oss_ioss_observation(
     )
     if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
         )
     expected = _expected_iva_amount(candidate, operation=operation)
     persisted = round_to_cents(candidate.iva_amount)
@@ -210,7 +211,7 @@ def validate_oss_ioss_observation(
     # cent the rounding produced, not a threshold this module chose.
     if abs(persisted - expected) > CENT:
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"),
+            tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"),
             context={
                 "ledger_id": candidate.ledger_id,
                 "destination_member_state": candidate.destination_member_state.value,
@@ -332,7 +333,7 @@ def _exterior_projection_declarations(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
         )
     declarations = {
         entry.key: entry.value
@@ -343,7 +344,7 @@ def _exterior_projection_declarations(
     missing = sorted(required - declarations.keys())
     if missing:
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
             context={"missing": ",".join(missing)},
         )
     return declarations
@@ -356,7 +357,7 @@ def _group_exterior_service_observations(
 ) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
     """Group Exterior service observations by destination and supported rate."""
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
-    effective_date = observations[0].transaction_date if observations else date.today()
+    effective_date = observations[0].transaction_date if observations else today_madrid()
     transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
     external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
     external_regime = resolve_oss_ioss_regime_catalogue(
@@ -383,7 +384,7 @@ def _validate_exterior_rate_kind(
     if f"rate_code.{observation.rate_kind.value}" in declarations:
         return
     raise AggregationValidationError(
-        t("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
+        tr("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
         context={
             "ledger_id": observation.ledger_id,
             "rate_kind": observation.rate_kind.value,
@@ -407,8 +408,17 @@ def _exterior_detail_row_fields(
         observations[0].transaction_date,
         operation=operation,
     ).pct
+    # The design writes ISO-3166 alpha-2 codes with its own exceptions ("EL" for
+    # Greece, "XI" for Northern Ireland), so the wire code is the dated
+    # declaration's, never the member-state token itself.
+    country_code = declarations.get(f"country_code.{country.value}")
+    if country_code is None:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.exterior_country_code_undeclared"),
+            context={"member_state": country.value},
+        )
     fields = {
-        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.value,
+        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country_code,
         f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
     }
     decimals = {
@@ -495,7 +505,7 @@ def _candidate_for_invoice_line(
     rate_kind = line.oss_rate_kind or iva_rate_kind(line.iva_rate)
     if rate_kind is None:
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
+            tr("aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"),
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_number": invoice.invoice_number,
@@ -515,7 +525,7 @@ def _candidate_for_invoice_line(
     iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
     if base_amount_eur is None or iva_amount_eur is None:
         raise AggregationValidationError(
-            t("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
+            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_number": invoice.invoice_number,

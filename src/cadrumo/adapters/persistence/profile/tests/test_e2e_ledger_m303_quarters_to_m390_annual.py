@@ -64,6 +64,7 @@ from cadrumo.adapters.persistence.profile.tests._export_modelo_303_support impor
     _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
 )
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -89,10 +90,18 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
+from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -115,9 +124,34 @@ from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
+
+def _product_software_identity() -> AeatProductSoftwareIdentity:
+    """Test product identity: the withdrawn-layout refusal is judged after it is supplied."""
+    return AeatProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            AeatProductSoftwareEvidence(
+                reference="aeat-software-registration:e2e-ledger-m303-m390",
+                digest="a" * 64,
+            ),
+        ),
+    )
+
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "30330303-3030-4303-8303-303303303303"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _YEAR = 2025
 _TAX_ID = "12345678Z"
 _IRENE_YEAR = 2024
@@ -552,6 +586,19 @@ def workflow_profile() -> TaxpayerProfile:
         does_intracomunitario=True,
         bienes_extranjero_above_threshold=False,
         activity_start_date=date(_YEAR, 1, 1),
+        iva=_general_regime_iva_profile(),
+    )
+
+
+def _general_regime_iva_profile() -> ModeloIVAProfile:
+    """The declared IVA facts a common-territory general-regime filer carries."""
+    return ModeloIVAProfile(
+        tax_territory=M303TaxTerritory.from_registry("common_regime"),
+        regime_composition=M303RegimeComposition.from_registry("general"),
+        redeme_enrolled=False,
+        cash_accounting_regime_enrolled=False,
+        voluntary_sii_enrolled=False,
+        hydrocarbon_deposit_advance_payment_deduction_entitled=False,
     )
 
 
@@ -579,7 +626,7 @@ def _calculate_m303_quarter_revision(
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     CalculationRevisionCatalogueRepository(objects=secure_objects)
     BucketEventHistoryRepository(objects=secure_objects)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -650,7 +697,7 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
     """Persona-like persisted ledger input verifies under the live revision and refuses its withdrawn export."""
     _store_profile(secure_objects)
     stored = _persist_year_of_invoices(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
@@ -695,6 +742,8 @@ def test_persisted_m303_ledger_revision_verifies_and_refuses_withdrawn_export(
                 calculation_revision_id=revision.calculation_revision_id,
                 output_path=output_path,
                 actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                product_software_identity=_product_software_identity(),
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
@@ -722,7 +771,7 @@ def _calculate_m390_annual(
     secure_objects: SecureObjectRepository, *, filing_year: int = _YEAR, operation: PinnedAuthorityOperation
 ) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     CalculationRevisionCatalogueRepository(objects=secure_objects)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     InvoiceCatalogueRepository(objects=secure_objects)
@@ -781,7 +830,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
         facts_by_period=_IRENE_QUARTER_FACTS,
     )
     workflow_profile = _ireneworkflow_profile()
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     verification_repo = VerificationReportCatalogueRepository(objects=secure_objects)
@@ -840,6 +889,8 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_and_withdrawn_export
                     calculation_revision_id=revision.calculation_revision_id,
                     output_path=quarter_output,
                     actor="irene",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                    product_software_identity=_product_software_identity(),
                 ),
                 workflow_profile=workflow_profile,
                 export_ports=modelo_export_ports_for_test(

@@ -41,7 +41,7 @@ from ..provisioning import (
     select_model_for_role,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _GIB = 1024**3
 

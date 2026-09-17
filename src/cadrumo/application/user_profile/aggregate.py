@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest, PrefixedContentDigest
 from ...core.identity.profile import ProfileId
 from ...core.identity.profile_label import ProfileLabel
@@ -79,6 +80,7 @@ class CommittedProfileView(BaseModel):
 
     @field_validator("committed_at")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_committed_at(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
 

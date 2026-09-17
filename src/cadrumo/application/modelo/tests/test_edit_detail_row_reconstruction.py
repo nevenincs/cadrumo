@@ -24,7 +24,7 @@ from ..edit_models import (
     ModeloEditExecutionNoEffectV1,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _contraparte(nif: str, importe: str) -> Modelo347ContraparteRow:

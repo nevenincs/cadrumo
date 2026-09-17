@@ -9,7 +9,7 @@ from ..errors.hierarchy import CadrumoError, CoreValidationError
 from ..modelo import Modelo
 from ..tax_domain import TaxDomain
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize("code", ["000", "037", "179", "999"])
@@ -26,7 +26,7 @@ def test_modelo_rejects_noncanonical_syntax_with_typed_error(code: str) -> None:
     with pytest.raises(CoreValidationError) as caught:
         Modelo(code)
 
-    assert isinstance(caught.value, ValueError)
+    assert not isinstance(caught.value, ValueError)
     assert isinstance(caught.value, CadrumoError)
     assert caught.value.code.code == "INTEGRITY_CADRUMO_CORE_VALIDATION"
 
@@ -48,7 +48,7 @@ def test_tax_domain_rejects_noncanonical_syntax_with_typed_error(identifier: str
     with pytest.raises(CoreValidationError) as caught:
         TaxDomain(identifier)
 
-    assert isinstance(caught.value, ValueError)
+    assert not isinstance(caught.value, ValueError)
     assert isinstance(caught.value, CadrumoError)
     assert caught.value.code.code == "INTEGRITY_CADRUMO_CORE_VALIDATION"
 

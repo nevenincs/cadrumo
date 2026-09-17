@@ -42,6 +42,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     mutate_encrypted_secure_object_json,
 )
 from cadrumo.application.calculations.observations_repository import ObservationEnvelopePayload, member_observation_key
+from cadrumo.application.persistence_errors import PersistenceDegradationError
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
@@ -65,7 +66,9 @@ def _observation() -> RegistryModeloObservation:
         observations=(
             CasillaObservation(
                 casilla_id=_IVA_RESULTADO,
-                value=Decimal("12345.67"),
+                # Negative: the declared type ``C`` requests compensation, which
+                # only a negative result supports.
+                value=Decimal("-12345.67"),
                 formula_id=None,
                 operand_refs=(),
                 operand_casilla_refs=(),
@@ -191,8 +194,12 @@ def test_a_header_fact_stripped_of_its_locator_refuses_at_load(tmp_path: Path) -
             mutate=mutate,
         )
 
-        with pytest.raises(ValidationError, match="source_locator"):
+        with pytest.raises(PersistenceDegradationError) as refused:
             repo.load(member_observation_key("303", _PERIOD, "B12345678"))
+
+    cause = refused.value.__cause__
+    assert isinstance(cause, ValidationError)
+    assert "source_locator" in str(cause)
 
 
 def test_dropping_the_whole_header_channel_surfaces_as_inequality(tmp_path: Path) -> None:

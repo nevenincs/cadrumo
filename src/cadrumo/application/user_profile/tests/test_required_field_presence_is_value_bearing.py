@@ -15,9 +15,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.tests.profile_schema_support import load_user_profile_schema, profile_creation_context_for_test
+
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..overview import build_profile_overview
 from ..validation import ProfileValidationService
 
@@ -109,16 +112,15 @@ def test_the_enforcing_check_agrees_with_the_overview_the_operator_is_shown(valu
     silently.
     """
     facts = (UserProfileFact(path=TAX_ID, value=value),)
-    record = UserProfileRecord(
-        schema_id=_SCHEMA.id,
-        schema_version=_SCHEMA.version,
+    record = create_user_profile_record(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=facts,
         created_at=_STAMP,
         updated_at=_STAMP,
+        context=profile_creation_context_for_test(),
     )
-    overview = build_profile_overview(record)
+    overview = build_profile_overview(record, schema=load_user_profile_schema())
 
     assert TAX_ID in overview.missing_required
     assert TAX_ID in _missing(*facts)

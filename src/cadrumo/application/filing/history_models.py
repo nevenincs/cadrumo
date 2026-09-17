@@ -29,6 +29,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.identifiers import ModeloIdentifier
@@ -54,6 +55,7 @@ class ModeloHistory(BaseModel):
     entries: tuple[ModeloHistoryEntry, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _entries_match_modelo(self) -> ModeloHistory:
         for entry in self.entries:
             if entry.modelo != self.modelo:

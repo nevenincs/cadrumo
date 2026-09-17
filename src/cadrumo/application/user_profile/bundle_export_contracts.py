@@ -1,7 +1,7 @@
 """Typed contracts for the sole portable profile-bundle export service.
 
 This module owns the closed value sets and typed envelopes the single
-:func:`~cadrumo.application.user_profile.export_profile_bundle` authority
+:func:`~cadrumo.application.user_profile.bundle_export.export_profile_bundle` authority
 composes: the operator :class:`ProfileBundleExportPurpose` (portable transfer
 versus subject access), the :class:`ProfileBundleExportTransport` wire
 protection, the :class:`ProfileBundleExportRequest` input, the resolved

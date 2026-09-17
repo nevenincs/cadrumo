@@ -35,7 +35,7 @@ The screen exits 0 whatever it finds. It reports; the gate beside it decides.
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -234,6 +234,7 @@ def revision_findings(
 
 def screen_authority(
     authority: ValidatedRegistryAuthority,
+    _modelo_ids: Sequence[str] = (),
 ) -> tuple[tuple[RecordAlignment, ...], tuple[TypeColumnContradiction, ...]]:
     """Return every hand-authored record alignment and contradiction across the registry."""
     alignments: list[RecordAlignment] = []

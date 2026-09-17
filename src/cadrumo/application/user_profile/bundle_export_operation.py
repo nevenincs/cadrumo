@@ -1,6 +1,6 @@
 """Durable, non-secret operation state for profile-bundle publication.
 
-The single :func:`~cadrumo.application.user_profile.export_profile_bundle`
+The single :func:`~cadrumo.application.user_profile.bundle_export.export_profile_bundle`
 authority records the progress of one publication as a credential-free journal
 file so a crash in any publication window recovers honestly. Journal files live
 under ``<storage-root>/profile-export-operations``, deliberately OUTSIDE both
@@ -33,7 +33,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.config import Settings
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
@@ -131,6 +131,7 @@ class ProfileBundleExportOperation(BaseModel):
     event_occurred_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_journal_invariants(self) -> ProfileBundleExportOperation:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)

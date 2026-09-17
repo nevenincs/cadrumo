@@ -43,7 +43,7 @@ from ..taxation_comparison import (
     compare_taxation_modes,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # Importing the renta package registers the first-slice routing check.
 importlib.import_module("....domain.renta", package=__package__)

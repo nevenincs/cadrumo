@@ -35,7 +35,7 @@ from ..core.config import Settings, load_settings
 from ..core.directory_scan import (
     iter_directory,
 )
-from ..core.errors.hierarchy import CadrumoError
+from ..core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ..core.paths import (
@@ -104,6 +104,7 @@ class PreflightCheck(BaseModel):
     precondition_verdict: PreconditionVerdict | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verdict_matches_health(self) -> PreflightCheck:
         if self.healthy and self.precondition_verdict is not None:
             raise ValueError("healthy preflight rows cannot carry a failed precondition")

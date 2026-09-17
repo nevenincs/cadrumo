@@ -37,8 +37,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.ledger.confirmation_gate import FindingResolution, confirmation_blockers
 from cadrumo.application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
+from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from cadrumo.core.config import Settings
+from cadrumo.core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from cadrumo.domain.invoices.enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -50,6 +53,7 @@ from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     _make_svc,
     invoice_confirmation_kwargs,
+    invoice_draft_extraction_kwargs,
     isolated_settings,
     secure_objects,
     serving_a_loopback_reader,
@@ -150,6 +154,35 @@ def _loopback_reader() -> Iterator[None]:
         yield
 
 
+def _direction_attestations(
+    *,
+    evidence_id: str,
+    isolated_settings: Settings,
+    authority: InvoiceAuthorityFixture,
+) -> tuple[FindingResolution, ...]:
+    """Attest the direction the fixture document never states, as the operator must.
+
+    The fixtures print only the supplier, so the reading cannot derive which
+    side the bucket is on. These cases are about the rate slot, so only that
+    direction finding is answered; any other finding still refuses.
+    """
+    draft = extract_invoice_draft_from_evidence(
+        bucket_id=_BUCKET_ID,
+        evidence_id=evidence_id,
+        settings=isolated_settings,
+        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+    )
+    return tuple(
+        FindingResolution(
+            blocker_id=blocker.blocker_id,
+            action=FindingResolutionAction.ATTEST,
+            note="the operator received this invoice from the named supplier",
+        )
+        for blocker in confirmation_blockers(draft)
+        if blocker.reason is ConfirmationBlockReason.UNRESOLVED_DIRECTION
+    )
+
+
 def _confirm(
     lines: tuple[str, ...],
     *,
@@ -170,6 +203,11 @@ def _confirm(
         evidence_id=record.evidence_id,
         counterparty_name="Energia Peninsular SL",
         settings=isolated_settings,
+        resolutions=_direction_attestations(
+            evidence_id=record.evidence_id,
+            isolated_settings=isolated_settings,
+            authority=authority,
+        ),
         **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 

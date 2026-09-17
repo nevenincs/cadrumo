@@ -11,7 +11,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from cadrumo.domain.categories.proportionality import ProportionalityKind
+from cadrumo.domain.categories.proportionality_catalogue import require_proportionality_kind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -48,7 +48,12 @@ from .renta_income_aggregation_support import _period
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 _DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_application,
+    pytest.mark.usefixtures("authority_operation"),
+    pytest.mark.usefixtures("operation"),
+]
 
 
 def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> BindingDefinition:
@@ -183,7 +188,7 @@ def _invoice(
         quantity=Decimal("1"),
         unit_price=base_total,
         subtotal=base_total,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=Decimal("21.00"),
     )
     return Invoice.model_validate(
@@ -517,7 +522,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
         category=category,
         display_label=tr("Override territorial de prueba"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind.from_registry("fixed_percentage"),
+            kind=require_proportionality_kind("fixed_percentage"),
             fixed_pct=Decimal("0.50"),
             citations=(
                 CategoryCitation(
@@ -591,7 +596,7 @@ def test_region_override_selected_when_residence_matches() -> None:
     )
 
     assert result.issues == ()
-    assert result.observations[0].proportionality_kind == ProportionalityKind.from_registry("fixed_percentage")
+    assert result.observations[0].proportionality_kind == require_proportionality_kind("fixed_percentage")
     assert result.observations[0].deductible_amount == Decimal("50.0000")
 
 

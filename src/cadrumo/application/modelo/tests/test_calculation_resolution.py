@@ -32,6 +32,35 @@ def test_calculation_binding_channel_resolver_is_the_public_owner_identity() -> 
     assert resolve_calculation_binding_channels is _owner_resolve_calculation_binding_channels
 
 
+def test_replay_payloads_carry_a_folded_relation_value_once() -> None:
+    payloads = build_calculation_replay_payloads(
+        resolved_inputs={},
+        resolved_bindings={"modelo-202-cuota-base-ejercicio-anterior": Decimal("37000.00")},
+        resolved_enum_bindings={},
+        resolved_date_bindings={},
+        resolved_relations={
+            "modelo-202-cuota-base-ejercicio-anterior": Decimal("37000"),
+            "modelo-100-relation-only": Decimal("12.50"),
+        },
+    )
+
+    assert payloads.binding_overrides == {"modelo-202-cuota-base-ejercicio-anterior": "37000"}
+    assert payloads.relation_overrides == {"modelo-100-relation-only": "12.5"}
+
+
+def test_replay_payloads_keep_a_disagreeing_relation_value_visible() -> None:
+    payloads = build_calculation_replay_payloads(
+        resolved_inputs={},
+        resolved_bindings={"modelo-202-cuota-base-ejercicio-anterior": Decimal("37000")},
+        resolved_enum_bindings={},
+        resolved_date_bindings={},
+        resolved_relations={"modelo-202-cuota-base-ejercicio-anterior": Decimal("1")},
+    )
+
+    assert payloads.binding_overrides == {"modelo-202-cuota-base-ejercicio-anterior": "37000"}
+    assert payloads.relation_overrides == {"modelo-202-cuota-base-ejercicio-anterior": "1"}
+
+
 def test_replay_payloads_keep_row_bindings_out_of_scalar_overrides() -> None:
     payloads = build_calculation_replay_payloads(
         resolved_inputs={},

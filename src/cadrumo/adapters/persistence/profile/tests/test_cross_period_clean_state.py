@@ -760,16 +760,15 @@ def test_activity_start_scoping_applies_to_both_requirement_origins(tmp_path: Pa
     assert all(e.requirement.origin is CrossPeriodDependencyOrigin.REGISTRY_RELATION for e in relation_suppressed)
     assert {e.requirement.period.registry_token for e in relation_suppressed} == {"1T", "2T"}
 
-    # M303/4T depends on M303/3T (Jul-Sep) via BOTH a previous_filing binding and a
-    # self-compensacion registry relation; an alta of 2026-10-15 places 3T strictly
-    # before activity start, so BOTH origins suppress it. This proves the scoping is
-    # uniform across the two requirement origins on the very same period.
+    # M303/4T depends on M303/3T (Jul-Sep) through its previous_filing compensación
+    # binding; an alta of 2026-10-15 places 3T strictly before activity start, so the
+    # binding origin is suppressed under the same rule the M180 relations follow.
     previous_filing_suppressed = suppressed_pre_activity(previous_filing_verdict)
     assert previous_filing_suppressed
     assert {e.requirement.period.registry_token for e in previous_filing_suppressed} == {"3T"}
-    suppressed_origins = {e.requirement.origin for e in previous_filing_suppressed}
-    assert CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING in suppressed_origins
-    assert CrossPeriodDependencyOrigin.REGISTRY_RELATION in suppressed_origins
+    assert {e.requirement.origin for e in previous_filing_suppressed} == {
+        CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+    }
 
 
 def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path: Path) -> None:

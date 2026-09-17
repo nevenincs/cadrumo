@@ -19,7 +19,7 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field, field_validator
 
 from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
-from .....core.errors.hierarchy import AeatLoginAssertionError
+from .....core.errors.hierarchy import AeatLoginAssertionError, pydantic_validation_boundary
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import validate_utc_aware
@@ -51,6 +51,7 @@ class PersistedSessionMetadata(BaseModel):
 
     @field_validator("authenticated_at", "idle_deadline")
     @classmethod
+    @pydantic_validation_boundary
     def _instants_are_utc(cls, value: datetime) -> datetime:
         """Reject a session instant that is naive or not UTC.
 

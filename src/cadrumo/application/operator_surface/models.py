@@ -27,6 +27,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import NamespacedId
 from ...core.logging import LogExtra
 from ...core.operator_action_enums import NoRecoveryOutcome
@@ -128,6 +129,7 @@ class RootSurface(BaseModel):
 
     @field_validator("required_children")
     @classmethod
+    @pydantic_validation_boundary
     def _children_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
             raise ValueError("root surface children must be unique")
@@ -151,6 +153,7 @@ class LifecycleContract(BaseModel):
 
     @field_validator("steps")
     @classmethod
+    @pydantic_validation_boundary
     def _steps_are_canonical(cls, value: tuple[ModeloLifecycleStep, ...]) -> tuple[ModeloLifecycleStep, ...]:
         expected = (
             ModeloLifecycleStep.CALCULATE,
@@ -163,6 +166,7 @@ class LifecycleContract(BaseModel):
 
     @field_validator("live_submission_enabled")
     @classmethod
+    @pydantic_validation_boundary
     def _live_submission_is_forbidden(cls, value: bool) -> bool:
         if value:
             raise ValueError("live submission must remain disabled")
@@ -210,6 +214,7 @@ class MountedCommandFamily(BaseModel):
 
     @field_validator("child")
     @classmethod
+    @pydantic_validation_boundary
     def _child_is_kebab(cls, value: str) -> str:
         if value != value.strip().lower() or " " in value:
             raise ValueError("mounted command child must be a lower-case command token")
@@ -242,6 +247,7 @@ class ManifestActionProfile(BaseModel):
         return (self.subject_leaf_key, self.condition_id, self.scenario_id)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_action_or_explicit_no_recovery(self) -> ManifestActionProfile:
         if (self.action is None) == (self.no_recovery_outcome is None):
             raise ValueError(
@@ -306,6 +312,7 @@ class OperatorSurfaceContract(BaseModel):
 
     @field_validator("roots")
     @classmethod
+    @pydantic_validation_boundary
     def _roots_are_exact(cls, value: tuple[RootSurface, ...]) -> tuple[RootSurface, ...]:
         names = tuple(root.name for root in value)
         expected = (RootSurfaceName.CONFIG, RootSurfaceName.APP)
@@ -315,6 +322,7 @@ class OperatorSurfaceContract(BaseModel):
 
     @field_validator("source_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if value != COUNTERPART_SOURCE_KIND_ORDER:
             raise ValueError("source kinds must match the accepted four-kind taxonomy")
@@ -322,6 +330,7 @@ class OperatorSurfaceContract(BaseModel):
 
     @field_validator("command_families")
     @classmethod
+    @pydantic_validation_boundary
     def _command_families_are_unique(
         cls,
         value: tuple[MountedCommandFamily, ...],

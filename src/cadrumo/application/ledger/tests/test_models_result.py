@@ -13,7 +13,7 @@ from ....domain.transactions.models import BucketTransactionRef, Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..models import ManualLedgerTransactionResult
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "21212121-2121-4121-8121-212121212121"
 

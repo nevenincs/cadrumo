@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.config import Settings
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -49,6 +50,7 @@ class ExpedientesDeclaration(BaseModel):
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches_ejercicio(self) -> ExpedientesDeclaration:
         if self.period.filing_year != self.ejercicio:
             raise ValueError("period.filing_year must match ejercicio")

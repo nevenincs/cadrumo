@@ -35,7 +35,7 @@ from ...ledger.classification_assembly import DeclaredFact
 from ...ledger.confirm_establishment import _declared_facts
 from ...ledger.establishment_ladder import CounterpartyEstablishment
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _counterparty() -> CounterpartyEstablishment:

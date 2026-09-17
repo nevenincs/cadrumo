@@ -87,16 +87,24 @@ _SETTINGS_PREAMBLE = dedent(
     token = config_module.settings_override.set(settings)
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage import (
-        build_profile_custody_port,
-        build_profile_login_session_port,
-    )
+    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
+    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
     from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 
     composition = ExitStack()
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
     composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+
+    from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+    from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from cadrumo.application.user_profile.custody_ports import profile_custody_port
+
+    reset_ports = {
+        "certificate_secret_backend_factory": build_certificate_secret_backend,
+        "operator_scope_ports": build_operator_scope_ports(),
+        "bucket_storage": profile_custody_port().bucket_storage(),
+    }
     """,
 )
 
@@ -180,7 +188,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
 
     sys.settrace(trace)
     try:
-        start_config_reset(confirmed=True)
+        start_config_reset(**reset_ports, confirmed=True)
     finally:
         config_module.settings_override.reset(token)
     if boundary in effect_return_by_boundary and not effect_frame_seen:
@@ -202,6 +210,7 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
     try:
         operation = resume_config_reset(
             operation_id,
+            **reset_ports,
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=sys.argv[3],

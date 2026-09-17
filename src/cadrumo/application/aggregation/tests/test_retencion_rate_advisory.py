@@ -34,7 +34,7 @@ from .._retencion_rate_advisory import (
 )
 from ..retenciones import RetencionObservation
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EFFECTIVE_DATE = date(2026, 3, 31)
 

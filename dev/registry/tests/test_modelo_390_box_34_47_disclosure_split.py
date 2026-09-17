@@ -35,12 +35,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _CASILLA_BOX_34 = "iva.anual.total-bases-cuotas-iva"
 _CASILLA_BOX_47 = "iva.anual.cuota-devengada-total"
@@ -88,7 +89,7 @@ def _bundled_registry_root() -> Path:
     # package (domain/calculations/registry/tests -> domain/calculations ->
     # domain -> cadrumo), matching the layout _authority.compiled_bundled_authority()
     # points at.
-    return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+    return bundled_path("registry", "aeat")
 
 
 def _export_field(revision, *, record_id: str, offset: int):

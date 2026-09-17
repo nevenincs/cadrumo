@@ -139,6 +139,11 @@ def clear_active_profile_record_session_binding(expected: ProfileRecordSession) 
         _ACTIVE_RECORD_AUTHORITY.clear_bound(authority)
 
 
+def active_profile_record_session() -> ProfileRecordSession | None:
+    """Return the record session this process currently holds, whatever installed it."""
+    return _active_record_session()
+
+
 def close_active_profile_record_session() -> None:
     """Zeroise and clear the process-local record authority."""
     session = _active_record_session()
@@ -209,7 +214,7 @@ def profile_record_session_if_authenticated(
     Declining does not zeroise it. The record authority and the bucket session
     are bound together and rebound together during the login handover's
     rollback window, so a reader is not the owner that may destroy either;
-    :func:`~cadrumo.application.user_profile.logout_active_profile`, which is
+    :func:`~cadrumo.application.user_profile.login_session.logout_active_profile`, which is
     the close owner, wipes it there.
 
     A ``profile_id`` that is not a canonical UUID still raises: that is a

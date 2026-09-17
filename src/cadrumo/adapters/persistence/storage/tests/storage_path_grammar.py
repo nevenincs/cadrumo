@@ -6,11 +6,11 @@ import time to derive its own shard-directory name and manifest suffix, so
 the declaration is already load-bearing there. This module extends that same
 idea to test-side verification for a parameterised fan-out shape (a content
 hash prefix, a namespace, a per-run id) that cannot be expressed as an
-enumerable :class:`~cadrumo.core.StorageCategory` member.
+enumerable :class:`~cadrumo.core.storage_taxonomy.StorageCategory` member.
 
 A test comparing the grammar against itself proves nothing. The contract
 here is: read the grammar off the one declaration
-(:data:`~cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`),
+(:data:`~cadrumo.adapters.persistence.storage.namespace_registry.STORAGE_NAMESPACE_REGISTRY`),
 drive a REAL write through the REAL production code path, and assert the
 REAL resulting path matches a regex derived from that grammar. A declaration
 that drifts from what production actually writes reds the calling test
@@ -18,7 +18,7 @@ rather than passing because the test's own expectation drifted the same way.
 
 :func:`literal_directory_runs` serves a second, independent gate: a grammar's
 directory portion is a hand-written literal that duplicates a
-:class:`~cadrumo.core.StorageCategory` member's ``subpath`` spelling, and
+:class:`~cadrumo.core.storage_taxonomy.StorageCategory` member's ``subpath`` spelling, and
 nothing previously compared the two spellings against each other -- a member
 rename would leave every grammar that spelled its old name out silently
 disagreeing. Extracting the literal runs lets a caller assert each one still
@@ -105,7 +105,7 @@ def assert_path_matches_grammar(*, key: str, root: Path, produced: Path) -> None
     """Assert ``produced`` conforms to the declared grammar shape for ``key``.
 
     Args:
-        key: The :class:`~cadrumo.adapters.persistence.storage.StoragePathDefinition`
+        key: The :class:`~cadrumo.adapters.persistence.storage.storage_path_definitions.StoragePathDefinition`
             registry key whose grammar governs the expected shape.
         root: The path ``<root>`` substitutes for in that grammar. Callers
             pass whatever anchor the specific grammar's ``<root>`` token
@@ -145,11 +145,11 @@ def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str,
     A grammar is split on ``/`` into path components. A component is a
     placeholder run (contains a ``<...>`` token) or a pure literal. Pure
     literals are collapsed into maximal consecutive runs and returned joined
-    by ``/`` -- exactly the shape a :class:`~cadrumo.core.StorageLocation`
+    by ``/`` -- exactly the shape a :class:`~cadrumo.core.storage_taxonomy.StorageLocation`
     ``subpath`` is declared in, so a caller can compare them directly.
 
     The terminal path component is excluded from consideration for
-    :attr:`~cadrumo.adapters.persistence.storage.StoragePathKind.FILE` and
+    :attr:`~cadrumo.adapters.persistence.storage.namespace_taxonomy.StoragePathKind.FILE` and
     :attr:`~...StoragePathKind.BLOB_OBJECT` grammars, because that component
     names the leaf itself (a filename or a content-addressed object), never a
     directory -- ``manifest.toml`` is not a directory a category could

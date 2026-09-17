@@ -16,11 +16,10 @@ looking. The shape is the only part that may differ. The algorithm and the
 leader policy may not.
 
 This gate is structural rather than a behavioural sample, because a sample
-cannot see a validator that no test calls yet. It asserts that the checksum
-tables and control-kind partitions are each DECLARED exactly once in the
-package, and that no module outside their home reimplements the arithmetic.
-Shape-leader membership is registry-owned and is tested through the resolved
-declaration rather than duplicated here.
+cannot see a validator that no test calls yet. The checksum tables and
+control-kind partitions are governed registry facts supplied to the kernel as a
+``SpanishTaxIdFormat``, so no module in this package may declare one, and the
+checksum arithmetic may be computed only in the kernel module.
 """
 
 from __future__ import annotations
@@ -34,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PACKAGE = Path(__file__).resolve().parent.parent
 
-#: The module that owns the algorithm and the kind partition.
+#: The module that owns the checksum arithmetic.
 _AUTHORITY = "documents.py"
 
 #: Values whose second declaration would be a second policy. Each is a table or
@@ -48,8 +47,8 @@ _POLICY_LITERALS: dict[str, str] = {
 }
 
 
-def _modules() -> list[Path]:
-    return [path for path in sorted(_PACKAGE.rglob("*.py")) if "tests" not in path.relative_to(_PACKAGE).parts]
+def _modules(package: Path = _PACKAGE) -> list[Path]:
+    return [path for path in sorted(package.rglob("*.py")) if "tests" not in path.relative_to(package).parts]
 
 
 def _string_constants(path: Path) -> set[str]:
@@ -73,12 +72,9 @@ def _docstrings(path: Path) -> set[str]:
     return found
 
 
-def test_each_policy_table_is_declared_once() -> None:
-    """A second declaration of a table is a second opinion about the rule."""
+def _policy_table_offenders(package: Path) -> list[str]:
     offenders: list[str] = []
-    for path in _modules():
-        if path.name == _AUTHORITY:
-            continue
+    for path in _modules(package):
         prose = "\n".join(_docstrings(path))
         for literal, description in _POLICY_LITERALS.items():
             if literal not in _string_constants(path):
@@ -87,10 +83,26 @@ def test_each_policy_table_is_declared_once() -> None:
             # value implements the rule a second time. Only the latter drifts.
             if literal in prose:
                 continue
-            offenders.append(f"{path.relative_to(_PACKAGE).as_posix()} restates {description}")
+            offenders.append(f"{path.relative_to(package).as_posix()} restates {description}")
+    return offenders
+
+
+def test_no_module_declares_a_policy_table() -> None:
+    """A declared table is an opinion about the rule the governed fact already states."""
+    offenders = _policy_table_offenders(_PACKAGE)
     assert not offenders, (
-        f"these modules declare an identity policy table that {_AUTHORITY} already owns; import it instead: {offenders}"
+        f"these modules declare an identity policy table the governed tax-ID format fact owns: {offenders}"
     )
+
+
+def test_a_restated_policy_table_is_detected(tmp_path: Path) -> None:
+    """The scan must find a table spelled as a value, and ignore one named in prose."""
+    (tmp_path / "restating.py").write_text('LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"\n', encoding="utf-8")
+    (tmp_path / "documenting.py").write_text(
+        '"""Kinds ``ABEH`` carry a digit control."""\n\nKINDS = "ABEH"\n', encoding="utf-8"
+    )
+
+    assert _policy_table_offenders(tmp_path) == ["restating.py restates the NIF/NIE check-letter table"]
 
 
 def test_the_checksum_arithmetic_has_one_home() -> None:
@@ -111,18 +123,8 @@ def test_the_checksum_arithmetic_has_one_home() -> None:
     )
 
 
-def test_the_authority_still_owns_what_the_gate_pins() -> None:
-    """A rename must not leave this gate passing over an empty package.
-
-    Without this, moving the tables out of ``documents.py`` makes every
-    assertion above vacuously true: no module would restate a table the gate
-    can no longer find anywhere.
-    """
+def test_the_authority_still_computes_what_the_gate_pins() -> None:
+    """A rename must not leave the arithmetic gate passing over an empty package."""
     authority = _PACKAGE / _AUTHORITY
     assert authority.exists(), f"{_AUTHORITY} is the pinned authority and must exist"
-    declared = _string_constants(authority)
-    missing = sorted(literal for literal in _POLICY_LITERALS if literal not in declared)
-    assert not missing, (
-        f"{_AUTHORITY} no longer declares these policy tables, so the "
-        f"single-declaration checks above prove nothing: {missing}"
-    )
+    assert "(10 - " in authority.read_text(encoding="utf-8")

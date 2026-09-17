@@ -27,11 +27,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELOS = ("187", "188", "194")
 _REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "194": "2024"}
@@ -57,7 +57,7 @@ def test_modelo_187_188_194_validators_accept_committed_definitions(modelo_id: s
     modelo, catalogues = _committed_modelo(modelo_id)
     assert modelo.id == modelo_id
     assert modelo.revisions, f"{modelo_id} must declare at least one revision"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 @pytest.mark.parametrize("modelo_id", _MODELOS)

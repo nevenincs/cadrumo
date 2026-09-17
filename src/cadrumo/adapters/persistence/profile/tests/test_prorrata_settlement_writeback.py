@@ -32,6 +32,7 @@ from .....core.prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -68,6 +69,7 @@ _VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 _PORCENTAJE: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
+_RESULTADO: CasillaId = validated_casilla_id("iva.resultado", surface="test casilla id")
 
 _SETTLEMENT_VALUES = {
     _VOLUMEN_TOTAL: Decimal("200000.00"),
@@ -103,6 +105,8 @@ def _seed_verified_m303_revision(
     operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
+    # Filed as an ingreso, so the positive result the disposition declares is observed with it.
+    values.setdefault(_RESULTADO, Decimal("100.00"))
     period = Period.from_year_and_code(2026, period_code)
     revision_id = (
         published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
@@ -190,6 +194,7 @@ def _file_verified_revision(
         iva_compensation_history_repository=iva_compensation_history_repository,
         participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
         prorrata_register_repository=prorrata_repository,
+        result_disposition=ResultDisposition.INGRESO,
         operation=operation,
     )
 

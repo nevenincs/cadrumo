@@ -810,6 +810,7 @@ def _python_parameter(
     flow: WizardFlow,
     question: WizardQuestion,
     *,
+    operation: PinnedAuthorityOperation,
     section_title: str | None = None,
 ) -> inspect.Parameter:
     """Build the ``inspect.Parameter`` Typer reads to register a flag.
@@ -827,6 +828,12 @@ def _python_parameter(
         SETUP_OPTION_INFOS[question.id] = option
     if question.widget is WizardWidget.SELECT:
         values = [choice.value for choice in question.choices]
+        if question.id == "tax-residence-ccaa":
+            # Foral tokens stay selectable so the refusal can redirect the
+            # operator to the foral Hacienda instead of a generic choice error.
+            from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
+
+            values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
         option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
         option.metavar = _choice_metavar(values)
         if question.id == "tax-residence-ccaa":
@@ -919,7 +926,7 @@ def _mode_parameters(flow: WizardFlow, *, mode: WizardPersistMode) -> tuple[insp
     return (ctx, profile_name, quiet, accept_defaults)
 
 
-def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
+def _question_parameters(flow: WizardFlow, *, operation: PinnedAuthorityOperation) -> tuple[inspect.Parameter, ...]:
     """Build one ``inspect.Parameter`` per descriptor question.
 
     Each question's ``rich_help_panel`` is the section's translated
@@ -930,7 +937,7 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     for section in flow.sections:
         section_title = tr(str(section.title))
         for question in section.questions:
-            parameters.append(_python_parameter(flow, question, section_title=section_title))
+            parameters.append(_python_parameter(flow, question, operation=operation, section_title=section_title))
     return tuple(parameters)
 
 
@@ -2072,7 +2079,7 @@ def build_wizard_command(
     An invocation that supplies neither ``--quiet``/``--accept-defaults``
     nor the values it needs is refused with the flag form named.
     """
-    question_params = _question_parameters(flow)
+    question_params = _question_parameters(flow, operation=operation)
     mode_params = _mode_parameters(flow, mode=mode)
     parameters = (*mode_params, *question_params)
     signature, annotations = _wizard_command_metadata(parameters)

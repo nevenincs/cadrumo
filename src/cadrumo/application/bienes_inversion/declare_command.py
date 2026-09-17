@@ -19,7 +19,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, NonNegativeInt, field_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
@@ -64,6 +64,7 @@ class BienInversionDeclarationCommand(BaseModel):
 
     @field_validator("kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _kind_from_registry(cls, value: object) -> BienInversionKind:
         from ...domain.calculations.registry.bienes_inversion_catalogue import require_bien_inversion_kind
 
@@ -71,6 +72,7 @@ class BienInversionDeclarationCommand(BaseModel):
 
     @field_validator("disposal_regime", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _disposal_regime_from_registry(cls, value: object) -> BienInversionDisposalRegime | None:
         if value is None:
             return None

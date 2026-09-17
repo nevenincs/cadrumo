@@ -10,7 +10,7 @@ from dev.registry.compiler.producer_inventory import producer_inventory
 from ..profile import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_axes(

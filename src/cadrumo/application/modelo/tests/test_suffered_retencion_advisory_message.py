@@ -28,10 +28,10 @@ import pytest
 
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ..verification_predicates import _advisory_predicate_finding
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _REVISION_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _FORBIDDEN_WORDS = ("pull", "capture", "fetch")
@@ -48,7 +48,9 @@ def _capital_mobiliario_predicate_id(year: int) -> str:
 
 
 def _predicate(year: int, predicate_id: str) -> VerificationPredicateDefinition:
-    revision = published_snapshot("100", filing_year=year, period="0A").revision
+    # Historical revisions below the filing floor stay declared; read the authored
+    # revision covering the year rather than asking filing selection for it.
+    revision = published_authored_revision("100", year=year)
     for predicate in revision.verification_predicates or ():
         if predicate.predicate_id == predicate_id:
             return predicate

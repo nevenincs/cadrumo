@@ -24,7 +24,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..classifier_inputs import ClassifierInputFact, collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SUPPLIER_CIF = "B12345674"
 _CUSTOMER_NIF = "12345678Z"

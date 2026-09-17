@@ -79,8 +79,8 @@ def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:
 @pytest.mark.parametrize(
     "modelo,filing_year,period,casilla_id,printed,record_design",
     [
-        ("390", 2021, "0A", "iva.anual.cuota-deducible-total", "64", "iva.anual.cuota-deducible-total"),
-        ("390", 2021, "0A", "iva.anual.resultado-regimen-general", "65", "iva.anual.resultado-regimen-general"),
+        ("390", 2022, "0A", "iva.anual.cuota-deducible-total", "64", "iva.anual.cuota-deducible-total"),
+        ("390", 2022, "0A", "iva.anual.resultado-regimen-general", "65", "iva.anual.resultado-regimen-general"),
         ("190", 2024, "0A", "decl.percepciones-total", "02", "145-160"),
         ("190", 2024, "0A", "decl.retenciones-total", "03", "161-175"),
     ],

@@ -8,6 +8,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
@@ -40,6 +41,7 @@ class OperationInteractionRequest(BaseModel):
     expires_at: datetime | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expiry(self) -> OperationInteractionRequest:
         if self.expires_at is not None:
             validate_utc_aware(self.expires_at)
@@ -80,6 +82,7 @@ class _OperationInteractionResponseBase(BaseModel):
     responded_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_response_time(self) -> _OperationInteractionResponseBase:
         validate_utc_aware(self.responded_at)
         return self
@@ -239,6 +242,7 @@ class OperationConsumedInteraction(BaseModel):
         return self.intent
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_consumed_at(self) -> OperationConsumedInteraction:
         validate_utc_aware(self.consumed_at)
         if self.interaction_id != self.checkpoint.request.interaction_id:

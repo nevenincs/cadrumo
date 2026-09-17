@@ -36,7 +36,7 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 
 from ..residual_identity import is_self_replacement
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:

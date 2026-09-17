@@ -213,6 +213,7 @@ def _persist_sealed_303(
         "created_at": when,
         "updated_at": when,
         "filing_instance_evidence": filing_instance_evidence,
+        "source_provenance": (),
         **audit_metadata,
     }
     # model_validate (not **splat) so the dict[str, object] audit_metadata does

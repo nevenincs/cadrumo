@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.casilla_id import CasillaId
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
@@ -445,7 +445,7 @@ def aggregate_renta_m100_income_ledger(
     """
     if period.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.unsupported_period"),
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
     window_start = date(period.filing_year, 1, 1)
@@ -576,7 +576,7 @@ def aggregate_renta_m131_agrario_income_ledger(
     """
     if period.kind is not PeriodKind.QUARTERLY:
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.unsupported_period"),
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
     resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()

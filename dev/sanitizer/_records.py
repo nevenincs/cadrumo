@@ -27,6 +27,7 @@ from pydantic import (
     model_validator,
 )
 
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 
@@ -118,6 +119,7 @@ class NifReplacement(_ReplacementBase):
 
     @field_validator("synthetic")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_synthetic_nif(cls, value: str) -> str:
         return validate_runtime_spanish_tax_id(value)
 

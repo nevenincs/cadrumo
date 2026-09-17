@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -898,7 +898,7 @@ def _resolve_annual_period(period: Period) -> Period:
     resolved = period
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.annual_period_required"),
+            tr("aggregation.renta_ledger.errors.annual_period_required"),
             context={"period": str(resolved)},
         )
     return resolved

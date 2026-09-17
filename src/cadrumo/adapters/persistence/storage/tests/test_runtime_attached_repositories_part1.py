@@ -114,7 +114,7 @@ from ._runtime_attached_repositories_support import (
     _workflow_state,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
 class _StorageDiagnosticsPort:

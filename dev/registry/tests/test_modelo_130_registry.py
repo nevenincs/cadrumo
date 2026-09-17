@@ -8,9 +8,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.authority import compile_registry_tree
-from ..compiler.validator import RegistryValidator
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_validator_rejects_missing_relationless_direct_settlement_classification() -> None:
@@ -41,4 +41,4 @@ def test_validator_rejects_missing_relationless_direct_settlement_classification
         RegistryValidationError,
         match=r"binding source modelo '130' has no dependency classification",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)

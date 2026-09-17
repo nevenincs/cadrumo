@@ -37,7 +37,6 @@ def _registry_no_retenciones_periods(
             modelo,
             filing_year=filing_year,
             period=period_token,
-            revision_id=selected_revision.id,
         )
     except (RegistrySnapshotError, RegistryValidationError):
         return frozenset[tuple[int, str]]()

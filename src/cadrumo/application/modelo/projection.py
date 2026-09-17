@@ -522,79 +522,38 @@ def _parse_projection_binding_overrides(
 
 
 def _verb_baseline_projection_bindings(
-    year: int,
     ccaa: str,
     declared_binding_ids: set[BindingId],
-) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str], dict[BindingId, bool]]:
     """Build the verb-supplied baseline projection bindings, filtered to declared ids."""
-    retenciones_binding_ids = (
-        _binding_id(
-            f"renta-{year}-modelo-111-retenciones-periodicas",
-            surface="project modelo 100 generated binding id",
-        ),
-        _binding_id(
-            f"renta-{year}-modelo-123-retenciones-periodicas",
-            surface="project modelo 100 generated binding id",
-        ),
-        _binding_id(
-            f"renta-{year}-modelo-193-retenciones-anuales",
-            surface="project modelo 100 generated binding id",
-        ),
-    )
+
+    def binding(value: str) -> BindingId:
+        return _binding_id(value, surface="project modelo 100 baseline binding id")
+
     verb_baseline_bindings: dict[BindingId, Decimal] = {
-        _binding_id(
-            f"renta-{year}-modelo-100-estimacion-directa-es-normal",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("1"),
-        _binding_id(
-            f"renta-{year}-profile-declaration-type",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("1"),
-        _binding_id(
-            f"renta-{year}-profile-family-minor-children-in-unit",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-guarderia-gastos-reales",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-cotizaciones-ss-madre",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-full-year",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-month-start",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-profile-marriage-month-end",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        _binding_id(
-            f"renta-{year}-base-liquidable-negativa-general-anterior",
-            surface="project modelo 100 generated binding id",
-        ): Decimal("0"),
-        **{binding_id: Decimal("0") for binding_id in retenciones_binding_ids},
+        binding("renta-modelo-100-estimacion-directa-es-normal"): Decimal("1"),
+        binding("renta-profile-declaration-type"): Decimal("1"),
+        binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
+        binding("renta-profile-guarderia-gastos-reales"): Decimal("0"),
+        binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
+        binding("renta-profile-marriage-month-start"): Decimal("0"),
+        binding("renta-profile-marriage-month-end"): Decimal("0"),
+        binding("renta-base-liquidable-negativa-general-anterior"): Decimal("0"),
+        binding("renta-modelo-111-retenciones-periodicas"): Decimal("0"),
+        binding("renta-modelo-123-retenciones-periodicas"): Decimal("0"),
+        binding("renta-modelo-193-retenciones-anuales"): Decimal("0"),
     }
     verb_baseline_enum_bindings: dict[BindingId, str] = {
-        _binding_id(
-            f"renta-{year}-profile-tax-residence-ccaa",
-            surface="project modelo 100 generated binding id",
-        ): ccaa,
+        binding("renta-profile-tax-residence-ccaa"): ccaa,
     }
-    verb_baseline_bindings = {
-        binding_id: value for binding_id, value in verb_baseline_bindings.items() if binding_id in declared_binding_ids
+    verb_baseline_boolean_bindings: dict[BindingId, bool] = {
+        binding("renta-profile-marriage-full-year"): False,
     }
-    verb_baseline_enum_bindings = {
-        binding_id: value
-        for binding_id, value in verb_baseline_enum_bindings.items()
-        if binding_id in declared_binding_ids
-    }
-    return verb_baseline_bindings, verb_baseline_enum_bindings
+    return (
+        {key: value for key, value in verb_baseline_bindings.items() if key in declared_binding_ids},
+        {key: value for key, value in verb_baseline_enum_bindings.items() if key in declared_binding_ids},
+        {key: value for key, value in verb_baseline_boolean_bindings.items() if key in declared_binding_ids},
+    )
 
 
 def _profile_projection_bindings(
@@ -669,19 +628,17 @@ def project_modelo_100_from_m130(
     }
     m100_relations: dict[RelationId, Decimal] = {
         _relation_id(
-            f"renta-{year}-rel-130-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
+            "renta-modelo-130-pagos-fraccionados",
+            surface="project modelo 100 carried relation id",
         ): annual.total_pagos_fraccionados,
         _relation_id(
-            f"renta-{year}-rel-131-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
+            "renta-modelo-131-pagos-fraccionados",
+            surface="project modelo 100 carried relation id",
         ): Decimal("0"),
     }
     declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
-    verb_baseline_bindings, verb_baseline_enum_bindings = _verb_baseline_projection_bindings(
-        year,
-        ccaa,
-        declared_binding_ids,
+    verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
+        _verb_baseline_projection_bindings(ccaa, declared_binding_ids)
     )
     profile_decimal_bindings, profile_date_bindings, profile_enum_bindings = _profile_projection_bindings(
         m100_snapshot,
@@ -704,6 +661,7 @@ def project_modelo_100_from_m130(
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
             date_binding_values=merged_date_bindings or None,
+            boolean_binding_values=verb_baseline_boolean_bindings or None,
         )
     except RegistryValidationError:
         _LOG.exception(

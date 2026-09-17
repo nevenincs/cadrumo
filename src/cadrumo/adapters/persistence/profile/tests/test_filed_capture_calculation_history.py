@@ -118,7 +118,13 @@ def _filed_ports(
     calculation_repository: CalculationObservationRepository | None = None,
 ) -> FiledObservationPersistencePorts:
     """Compose the canonical filed-observation capability bundle for a test."""
-    objects = secure_object_repository_for_bucket(bucket_id)
+    # The observation envelope and its IVA history co-commit in one backend
+    # transaction, so every repository here must share the caller's backend.
+    objects = (
+        calculation_repository.secure_object_repository
+        if calculation_repository is not None
+        else secure_object_repository_for_bucket(bucket_id)
+    )
     operation = _FILED_OPERATION_STACK.enter_context(bundled_indexed_authority().operation())
     work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
     filing = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)

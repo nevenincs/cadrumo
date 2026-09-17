@@ -34,7 +34,7 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.auth_provider import AuthProviderKind
-from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike
+from ...core.errors.hierarchy import SiteHealthState, SiteHealthStatusLike, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identifier_grammar import NamespacedId
 from ...core.modelo import Modelo
@@ -131,6 +131,7 @@ class WorkflowSiteHealthFacts(BaseModel):
     detected_marker_count: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_alert_identity(self) -> WorkflowSiteHealthFacts:
         """Bind the persisted alert code to the canonical closed state."""
         expected = f"workflow.site.{self.state.value}"
@@ -186,6 +187,7 @@ class WorkflowDeadlineRecoveryFacts(BaseModel):
     legal_ref: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_stable_facts(self) -> WorkflowDeadlineRecoveryFacts:
         """Reject prose-shaped identifiers and an inverted month range."""
         if _WORKFLOW_STABLE_FACT_ID_PATTERN.fullmatch(self.recargo_band_id) is None:
@@ -219,6 +221,7 @@ class WorkflowObligationFacts(BaseModel):
 
     @field_validator("boe_references")
     @classmethod
+    @pydantic_validation_boundary
     def _legal_references_are_stable(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Keep only unique registry identities, never rendered citations."""
         if len(set(value)) != len(value):
@@ -228,6 +231,7 @@ class WorkflowObligationFacts(BaseModel):
         return tuple(sorted(value))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_window(self) -> WorkflowObligationFacts:
         """Retain the domain window and overdue-recovery coherence."""
         if self.opens_on > self.closes_on:
@@ -292,6 +296,7 @@ class WorkflowDeadlineContextDetails(_WorkflowStepDetail):
     extemporanea: bool | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_context(self) -> WorkflowDeadlineContextDetails:
         """Keep deadline metadata internally coherent rather than loosely optional.
 
@@ -388,6 +393,7 @@ class WorkflowDraftNotReadyDetails(_WorkflowStepDetail):
 
     @field_validator("blocking_finding_codes")
     @classmethod
+    @pydantic_validation_boundary
     def _finding_codes_are_stable(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Require deterministic non-prose finding identities."""
         if len(set(value)) != len(value):
@@ -427,6 +433,7 @@ class WorkflowAuthCheckDetails(_WorkflowStepDetail):
     cert_days_until_expiry: int | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_provider_shape(self) -> WorkflowAuthCheckDetails:
         """Make configured and skipped provider observations disjoint shapes."""
         if self.provider_check_skipped:
@@ -588,6 +595,7 @@ class WorkflowStep(BaseModel):
     site_health_alert: SiteHealthAlert | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_timestamps(self) -> WorkflowStep:
         if self.ended_at is not None:
             if self.ended_at < self.started_at:
@@ -622,6 +630,7 @@ class WorkflowResult(BaseModel):
     resumed_from: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_terminal_consistency(self) -> WorkflowResult:
         if self.ended_at < self.started_at:
             raise ValueError("ended_at precedes started_at")

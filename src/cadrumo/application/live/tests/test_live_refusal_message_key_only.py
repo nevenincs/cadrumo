@@ -38,7 +38,7 @@ from ..snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _LIVE_PACKAGE = Path(__file__).resolve().parent.parent
 

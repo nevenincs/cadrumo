@@ -30,11 +30,13 @@ See Also:
 from __future__ import annotations
 
 import hashlib
+import importlib
+import pkgutil
+from typing import TypeAliasType
 
 import pytest
 from pydantic import ValidationError
 
-from ... import core as _core_package
 from ...tests.fixtures.identity_holder import single_field_holder
 from .. import identity as _identity_package
 from ..hex import Hex64Str
@@ -68,13 +70,24 @@ def _hex64_aliases() -> dict[str, object]:
     CONSTRUCTION: a new alias is covered the moment it is declared, and one that
     stops being the primitive drops out and is caught by
     :func:`test_every_alias_is_defined_from_the_one_canonical_primitive`.
+
+    Packages are inert, so the aliases are read from the modules that define
+    them rather than from the package namespace.
     """
     aliases: dict[str, object] = {"Hex64Str": Hex64Str}
-    for package in (_core_package, _identity_package):
-        for name in dir(package):
-            if not name.startswith("_") and getattr(package, name, None) is Hex64Str:
-                aliases[name] = Hex64Str
+    for module_info in pkgutil.iter_modules(_identity_package.__path__):
+        if module_info.name.startswith("_") or module_info.name == "tests":
+            continue
+        module = importlib.import_module(f"{_identity_package.__name__}.{module_info.name}")
+        for name, value in vars(module).items():
+            if not name.startswith("_") and name != "Hex64Str" and _primitive_of(value) is Hex64Str:
+                aliases[name] = value
     return aliases
+
+
+def _primitive_of(alias: object) -> object:
+    """Return what a ``type X = ...`` statement names, or the object itself."""
+    return alias.__value__ if isinstance(alias, TypeAliasType) else alias
 
 
 _ALIASES = _hex64_aliases()
@@ -132,4 +145,4 @@ def test_every_alias_is_defined_from_the_one_canonical_primitive() -> None:
     for name, alias in _ALIASES.items():
         if name == "Hex64Str":
             continue
-        assert alias is Hex64Str, f"{name} must be Hex64Str itself, not a re-declared equivalent"
+        assert _primitive_of(alias) is Hex64Str, f"{name} must be Hex64Str itself, not a re-declared equivalent"

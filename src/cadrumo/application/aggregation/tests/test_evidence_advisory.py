@@ -38,7 +38,7 @@ from ..evidence_advisory import (
     missing_evidence_advisory_observations,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 

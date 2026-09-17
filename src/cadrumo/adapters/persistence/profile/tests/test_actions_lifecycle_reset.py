@@ -9,6 +9,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import reset_ledger_catalogue
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
@@ -85,6 +87,8 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         invoice_repository=invoice_repository,
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 
@@ -153,6 +157,8 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
         reason="bulk wipe",
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
 

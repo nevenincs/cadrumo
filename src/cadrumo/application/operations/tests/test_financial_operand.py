@@ -19,7 +19,7 @@ from ..financial_operand import (
     OperationTransientFinancialOperandRequirement,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
 

@@ -48,6 +48,7 @@ from ..counterpart import (
     CounterpartObservation,
 )
 from ..errors import (
+    AggregationConfigError,
     AggregationUnsupportedModeloError,
 )
 from ..foreign_assets import (
@@ -461,23 +462,27 @@ def test_command_rejects_observations_from_non_selected_provider_family() -> Non
     in its message, so a Catalan, Spanish or Hungarian session keeps the same
     detail an English reader gets.
     """
-    with pytest.raises(
-        ValidationError,
-        match=r"aggregation\.service\.errors\.observations_mismatch",
-    ) as exc_info:
-        PerModeloAggregationCommand(
-            modelo="111",
-            period=_P_2025_Q1,
-            foreign_asset_observations=(_asset_obs(),),
-        )
+    command = PerModeloAggregationCommand(
+        modelo="111",
+        period=_P_2025_Q1,
+        foreign_asset_observations=(_asset_obs(),),
+    )
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(AggregationConfigError, match=r"aggregation\.service\.errors\.observations_mismatch") as exc_info,
+    ):
+        aggregate_per_modelo(command, operation=operation)
 
-    cause = exc_info.value.errors()[0]["ctx"]["error"]
-    assert cause.context == {"names": "foreign_assets", "modelo": "111"}
+    assert exc_info.value.context == {"names": "foreign_assets", "modelo": "111"}
 
 
 def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
-    with pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info:
-        PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
+    command = PerModeloAggregationCommand(modelo="999", period=_P_2025_ANNUAL)
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info,
+    ):
+        aggregate_per_modelo(command, operation=operation)
 
     error = exc_info.value
     verdict = error.terminal_precondition_verdict
@@ -490,12 +495,16 @@ def test_unsupported_modelo_uses_registered_aggregation_error() -> None:
 
 
 def test_modelo_whitespace_is_rejected_before_dispatch() -> None:
-    with pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info:
-        PerModeloAggregationCommand(
-            modelo=" 347 ",
-            period=_P_2025_ANNUAL,
-            counterpart_observations=(_counterpart_obs(),),
-        )
+    command = PerModeloAggregationCommand(
+        modelo=" 347 ",
+        period=_P_2025_ANNUAL,
+        counterpart_observations=(_counterpart_obs(),),
+    )
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info,
+    ):
+        aggregate_per_modelo(command, operation=operation)
 
     assert exc_info.value.context == {"modelo": " 347 "}
 

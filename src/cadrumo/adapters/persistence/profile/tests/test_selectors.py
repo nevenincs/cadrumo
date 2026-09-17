@@ -253,7 +253,7 @@ def test_revision_selector_refuses_a_persisted_divergent_registry_coordinate(
             calculation_revision_id=revision.calculation_revision_id,
             calculation_repository=calculation_repo,
             operation=operation,
-        ).calculation_revision_id
+        ).revision.calculation_revision_id
         == revision.calculation_revision_id
     )
 

@@ -31,7 +31,7 @@ from ..evidence_reference import (
     find_bytes_bearing_evidence_record,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"
 _OTHER_BUCKET_ID = "31313131-3131-4131-8131-313131313131"

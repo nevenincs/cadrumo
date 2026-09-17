@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -23,7 +23,11 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    create_user_profile_record,
+)
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,13 +40,12 @@ _Repos = tuple[
 
 
 def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
-    repository = kwargs.pop("work_unit_repository", None)
-    for key in ("calculation_repository", "bucket_event_repository"):
+    for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             **kwargs,
         )
 
@@ -97,14 +100,13 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
-                schema_id="cadrumo.user_profile",
-                schema_version=load_user_profile_schema().version,
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_PROFILE_SEEDED_AT,
                 updated_at=_PROFILE_SEEDED_AT,
+                context=profile_creation_context_for_test(),
             ),
         )
         wu = WorkUnitCatalogueRepository(objects=objects)

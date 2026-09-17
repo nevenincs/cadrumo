@@ -28,6 +28,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
@@ -100,8 +101,9 @@ def _resolve_registry_snapshot(
     filing_year: int,
     period: Period,
     operation: PinnedAuthorityOperation | None = None,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistrySnapshot:
-    """Resolve the law-selected registry snapshot for one filing target."""
+    """Resolve the law-selected registry snapshot for one filing target at ``grade``."""
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return _resolve_registry_snapshot(
@@ -109,8 +111,9 @@ def _resolve_registry_snapshot(
                 filing_year=filing_year,
                 period=period,
                 operation=indexed_operation,
+                grade=grade,
             )
-    return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+    return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token, grade=grade)
 
 
 def _normalise_registry_casilla_inputs[CasillaKey](
@@ -122,12 +125,18 @@ def _normalise_registry_casilla_inputs[CasillaKey](
     surface: str,
     operation: PinnedAuthorityOperation | None = None,
 ) -> _ResolvedRegistryCasillaInputs:
-    """Resolve a snapshot and classify a casilla map against its declared ids."""
+    """Resolve a snapshot and classify a casilla map against its declared ids.
+
+    Classifying ids reads only the revision's casilla declarations, which a
+    calculation-grade revision already carries; filing-grade capability is
+    enforced by the filing gates, not by id classification.
+    """
     snapshot = _resolve_registry_snapshot(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
         operation=operation,
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     malformed: list[str] = []
     canonical_values: dict[CasillaId, Decimal] = {}

@@ -29,6 +29,7 @@ filesystem hands back, which a constructed fixture cannot stand in for.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import pytest
@@ -43,6 +44,16 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ENVELOPE = ("custody", "envelope.v1.json")
+
+
+def _custody_refusal(error: BaseException) -> ProfileCustodyRecordError:
+    """Return the anchored reader's refusal carried under the source error."""
+    current: BaseException | None = error
+    while current is not None:
+        if isinstance(current, ProfileCustodyRecordError):
+            return current
+        current = current.__cause__
+    raise AssertionError(f"no custody refusal beneath {type(error).__name__}")
 
 
 def _capsule_skeleton(root: Path) -> Path:
@@ -63,8 +74,9 @@ def test_a_member_beyond_its_ceiling_is_refused(tmp_path: Path) -> None:
     source = _capsule_skeleton(tmp_path / "capsule")
     (source.joinpath(*_ENVELOPE)).write_bytes(b"{" + b"0" * (PROFILE_CUSTODY_ENVELOPE_MAX_BYTES * 4))
 
-    with pytest.raises(ProfileCustodyRecordError, match="not a bounded regular file"):
+    with pytest.raises(ProfileCapsuleSourceError) as raised:
         read_profile_capsule_source(source)
+    assert "not a bounded regular file" in str(_custody_refusal(raised.value))
 
 
 def test_a_member_that_is_a_reparse_point_or_directory_is_refused(tmp_path: Path) -> None:
@@ -88,14 +100,14 @@ def test_a_member_that_is_a_reparse_point_or_directory_is_refused(tmp_path: Path
         linked_content_was_exercised = False
         link.mkdir()
 
-    with pytest.raises(
-        ProfileCustodyRecordError,
-        match=r"reparse point or directory|record is unavailable",
-    ) as raised:
+    with pytest.raises(ProfileCapsuleSourceError) as raised:
         read_profile_capsule_source(source)
+    refusal = _custody_refusal(raised.value)
+    assert re.search(r"reparse point or directory|record is unavailable", str(refusal))
 
     if linked_content_was_exercised:
         assert "stolen" not in str(raised.value), "the linked file's contents must not reach the refusal either"
+        assert "stolen" not in str(refusal), "the linked file's contents must not reach the refusal either"
     else:
         assert link.is_dir(), "the fallback must remain a real non-regular filesystem member"
 

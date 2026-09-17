@@ -52,7 +52,7 @@ from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
 from ..iva_ledger import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture
@@ -162,7 +162,7 @@ def _as_invoice(*, category: IvaCategory, country: str, tax_id: str) -> Invoice:
                     "quantity": "1",
                     "unit_price": format(_BASE, "f"),
                     "subtotal": format(_BASE, "f"),
-                    "iva_rate": resolve_iva_rate_token("exempt", date.today()).value,
+                    "iva_rate": resolve_iva_rate_token("EXEMPT", date.today()).value,
                     "iva_amount": "0.00",
                 },
             ],

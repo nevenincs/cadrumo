@@ -44,7 +44,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")

@@ -39,10 +39,10 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # (modelo_id, approval, plazo, doc, tax_domain, period_codes_per_filing_year)
 _MODELOS = [
@@ -103,7 +103,7 @@ def test_committed_definition_legal_authority_and_deadline_windows(
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain == domain
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]
@@ -185,7 +185,7 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
 ) -> None:
     """The selector and deadline stay coupled at every evidence boundary."""
     modelo, catalogues = _committed_modelo("763")
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     snapshot = build_snapshot(
         modelo,

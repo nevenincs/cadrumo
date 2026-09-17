@@ -44,6 +44,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 
 __all__ = [
@@ -185,6 +186,7 @@ class InvoiceFieldContract(BaseModel):
         return self.form is InvoiceFieldForm.TAX_IDENTIFIER
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _only_an_identity_field_evidences_a_role(self) -> Self:
         """Tie the role-evidence instruction to the form that needs one.
 

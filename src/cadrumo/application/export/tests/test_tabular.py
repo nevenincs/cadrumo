@@ -17,7 +17,7 @@ from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path
 from ..errors import ExportFieldError, ExportFormatError
 from ..tabular import ExportSerializationFormat, serialize_tabular_rows
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_serialize_tabular_rows_writes_stable_csv_payload() -> None:

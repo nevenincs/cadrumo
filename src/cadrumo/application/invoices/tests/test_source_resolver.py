@@ -30,7 +30,7 @@ from ..source_resolver import (
 )
 from ..source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 

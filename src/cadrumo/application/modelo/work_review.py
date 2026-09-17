@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -93,6 +94,7 @@ class BlockerRef(BaseModel):
 
     @field_validator("facts")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_facts(cls, value: Mapping[str, _BlockerFact]) -> Mapping[str, _BlockerFact]:
         return MappingProxyType(dict(sorted(value.items())))
 
@@ -170,6 +172,7 @@ class ModeloWorkProgress(BaseModel):
     denominator: ModeloWorkProgressDenominator | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _counts_match_state(self) -> ModeloWorkProgress:
         values = (self.materialised_count, self.target_count, self.denominator)
         if self.state is ModeloWorkProgressState.UNDEFINED:

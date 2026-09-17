@@ -32,6 +32,7 @@ from ._modelo_100_registry_support import (
     _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS,
     _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS,
     _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -122,7 +123,7 @@ def test_modelo_100_2025_payments_on_account_article_stays_on_payment_casillas_o
 def test_modelo_100_fractional_payment_casilla_carries_payment_obligation_and_amount_refs(
     filing_year: int,
 ) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casilla = next(
         casilla
         for casilla in revision.casillas

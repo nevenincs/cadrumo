@@ -22,7 +22,7 @@ from ..snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _BUCKET_ID = "52525252-5252-4252-8252-525252525252"

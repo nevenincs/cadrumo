@@ -28,7 +28,7 @@ from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module
 from ..errors import UnhandledWorkflowError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _WORKFLOW_PRODUCER_MODULES = (
     engine_module,

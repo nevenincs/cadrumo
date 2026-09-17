@@ -30,7 +30,7 @@ from ..completeness import missing_required_field_paths, profile_value_is_presen
 from ..keys_validation import validate_profile_values
 from ..overview import build_profile_overview
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _TAX_ID_PATH = "identity.tax_id"

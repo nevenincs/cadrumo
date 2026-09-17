@@ -38,7 +38,7 @@ from ..provider_selection import select_provider
 from ._auth_fixtures import CERTIFICATE_INPUT
 from ._authenticator_support import _build_bundle
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _IDENTITY = "12345678Z"
 

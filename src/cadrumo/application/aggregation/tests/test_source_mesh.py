@@ -396,7 +396,7 @@ def test_source_resolution_rejects_serialized_row_binding_index_below_one() -> N
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.row_binding_index_invalid"
 
 
@@ -413,7 +413,7 @@ def test_source_resolution_rejects_invalid_serialized_decimal_row_binding_value(
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.row_binding_value_invalid"
 
 
@@ -473,7 +473,7 @@ def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> Non
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.binding_source_mismatch"
 
 
@@ -507,7 +507,7 @@ def test_source_diagnostic_rejects_incomplete_out_of_window_summary() -> None:
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_incomplete"
 
 
@@ -525,7 +525,7 @@ def test_source_diagnostic_rejects_reversed_out_of_window_summary_span() -> None
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid"
 
 
@@ -681,7 +681,7 @@ def test_relation_source_provenance_rejects_incomplete_typed_trace() -> None:
     context = exc_info.value.errors()[0].get("ctx")
     assert context is not None
     error = context["error"]
-    assert isinstance(error, SourceMeshError)
+    assert isinstance(error.__cause__, SourceMeshError)
     assert str(error) == "aggregation.source_mesh.errors.relation_provenance_incomplete"
 
 
@@ -761,9 +761,9 @@ def test_source_resolution_validator_errors_are_localized() -> None:
         context = exc_info.value.errors()[0].get("ctx")
         assert context is not None, message_key
         error = context["error"]
-        assert isinstance(error, SourceMeshError), message_key
+        assert isinstance(error.__cause__, SourceMeshError), message_key
         assert str(error) == message_key
-        assert error.translated_message == message_key
+        assert error.__cause__.translated_message == message_key
 
 
 def test_owned_sources_unknown_token_is_rejected_by_the_typed_field() -> None:

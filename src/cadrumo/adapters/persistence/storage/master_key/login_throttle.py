@@ -22,7 +22,7 @@ hard refusal that could strand the legitimate operator. The counter resets
 to clear on a successful login and on logout.
 
 Every read-modify-write of the sidecar is serialized under
-:func:`~cadrumo.core.exclusive_file_lock`, because the counter is the whole
+:func:`~cadrumo.core.locks.exclusive_file_lock`, because the counter is the whole
 substance of the control: overlapping attempts that each read ``n`` and each
 write ``n + 1`` advance it once, so a burst of wrong passwords faces the
 backoff owed to a single failure. That tolerance is not one of the ones above

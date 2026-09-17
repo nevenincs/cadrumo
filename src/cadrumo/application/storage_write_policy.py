@@ -40,7 +40,7 @@ from ..core.config import (
     settings_for_active_profile_bucket,
 )
 from ..core.config_support import StorageRouteClassification, StorageRouteKind
-from ..core.errors.hierarchy import InternalInvariantError
+from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ..core.i18n.render import tr
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.operator_action_enums import (
@@ -121,6 +121,7 @@ class StorageWritePolicyDecision(BaseModel):
     verdict: PreconditionVerdict | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verdict_matches_decision(self) -> StorageWritePolicyDecision:
         """Require a verdict exactly when the write policy refuses dispatch."""
         if self.allowed and self.verdict is not None:

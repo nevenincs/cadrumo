@@ -47,7 +47,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..diagnostics import LedgerImportDiagnosticKind
 from ..import_diagnostics import LedgerImportResult, import_ledger_with_diagnostics
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _diagnose(

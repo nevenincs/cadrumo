@@ -40,7 +40,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
 

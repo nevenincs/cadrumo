@@ -49,6 +49,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -355,6 +356,7 @@ class StorageLocation(BaseModel):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _fixed_override_policy_forbids_a_settings_field(self) -> StorageLocation:
         """Refuse a FIXED member that also exposes an operator-facing settings field.
 
@@ -378,6 +380,7 @@ class StorageLocation(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exactly_one_liveness_claim(self) -> StorageLocation:
         """Refuse a member that claims both a consumer and dormancy, or neither."""
         claims = (self.consumer_module, self.dormant_reason)

@@ -58,7 +58,7 @@ from ..protocols import (
 )
 from ..rule_repository import LedgerClassificationRuleRepositoryProtocol
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "22222222-2222-4222-8222-222222222222"
 

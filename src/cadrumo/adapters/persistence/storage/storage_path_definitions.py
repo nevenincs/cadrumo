@@ -8,7 +8,7 @@ per-bucket and per-keystore layout names (read from the one core storage
 taxonomy) and the :class:`StoragePathDefinition` contracts for the on-disk
 hierarchy, including the parameterised fan-out SHAPES (a content-hash
 prefix, an outbound namespace, a per-run id) that cannot be enumerable
-:class:`~cadrumo.core.StorageCategory` members.
+:class:`~cadrumo.core.storage_taxonomy.StorageCategory` members.
 
 :data:`STORAGE_PATH_DEFINITIONS` is consumed by
 ``namespace_registry.STORAGE_NAMESPACE_REGISTRY``, which combines it with
@@ -73,7 +73,7 @@ PROFILE_COMMIT_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_COMMI
 ACTIVE_PROFILE_POINTER_FILENAME = storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
-#: once in the core taxonomy (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`)
+#: once in the core taxonomy (:class:`~cadrumo.core.storage_taxonomy.StorageCategory.CONFIG_RESET_JOURNAL`)
 #: and read here, so the on-disk hierarchy has one inventory rather than two
 #: agreeing constants.
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath

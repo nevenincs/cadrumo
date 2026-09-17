@@ -33,6 +33,7 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_origin import FieldOrigin
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -110,6 +111,7 @@ class TranscriberIdentity(BaseModel):
     revision: str = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reject_non_acquisition_origin(self) -> Self:
         """Refuse an origin that names something other than a document read."""
         if self.origin not in ACQUISITION_ORIGINS:

@@ -16,9 +16,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .....core.casilla_id import CasillaId
-from ._parser_boundary_support import _expected_casilla_values
+from ._parser_boundary_support import _expected_casilla_values, _split_by_supported_filing_year
 
-_M130_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
+_M130_CORPUS_CASES: tuple[tuple[str, int, str], ...] = (
     ("2021-2T", 2021, "2T"),
     ("2021-3T", 2021, "3T"),
     ("2021-4T", 2021, "4T"),
@@ -35,7 +35,9 @@ _M130_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
     ("2024-3T", 2024, "3T"),
     ("2024-4T", 2024, "4T"),
 )
+_M130_CORPUS_PARAMS, _M130_UNSUPPORTED_CORPUS_PARAMS = _split_by_supported_filing_year(_M130_CORPUS_CASES, year_index=1)
 _M130_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M130_CORPUS_PARAMS)
+_M130_UNSUPPORTED_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M130_UNSUPPORTED_CORPUS_PARAMS)
 _M130_CORPUS_GROUND_TRUTH: dict[str, dict[CasillaId, Decimal]] = {
     "2021-2T": _expected_casilla_values({"03": Decimal("5000.00"), "19": Decimal("900.00")}),
     "2021-3T": _expected_casilla_values({"03": Decimal("7500.00"), "19": Decimal("1400.00")}),

@@ -9,6 +9,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -67,6 +69,8 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     )
 
     removed = remove_manual_transaction(
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -112,6 +116,8 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
     )
 
     report = remove_manual_transaction(
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",
@@ -198,6 +204,8 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
         )
 
     removed = remove_manual_transaction(
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         bucket_id=_BUCKET_ID,
         transaction_id=created.ref.transaction_id,
         actor="operator-A",

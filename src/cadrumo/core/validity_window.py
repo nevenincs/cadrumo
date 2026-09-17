@@ -32,6 +32,7 @@ from datetime import date
 
 from pydantic import BaseModel, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -49,6 +50,7 @@ class ValidityWindow(BaseModel):
     valid_to: date
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _span_runs_forwards(self) -> ValidityWindow:
         """Refuse a window that ends before it starts.
 

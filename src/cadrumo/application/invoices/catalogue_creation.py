@@ -38,6 +38,7 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.currency.service import resolve_fx_conversion_stamp
@@ -162,7 +163,7 @@ def _registry_m349_operation_type_requirement(
 
     try:
         category = require_iva_category(required("modelo.349.operation_type_required_category"))
-    except ValueError as exc:
+    except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
         token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip()

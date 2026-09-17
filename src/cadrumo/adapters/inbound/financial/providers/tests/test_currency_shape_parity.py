@@ -15,6 +15,7 @@ boundary-specific wording.
 
 from __future__ import annotations
 
+import inspect
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -29,7 +30,7 @@ from ..base import FinancialValidationError, default_currency
 from ..csv import _currency_from_aliases
 from ..ofx import _resolve_statement_context
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: Tokens every inbound surface must normalise to the same canonical code.
 _ACCEPTED: tuple[tuple[str, str], ...] = (
@@ -170,7 +171,10 @@ def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
         ),
     }
     for label, function in call_sites.items():
-        assert helper_name in function.__code__.co_names, f"{label} must call the shared core currency normaliser"
+        # Unwrap any Pydantic translation boundary to read the body itself.
+        assert helper_name in inspect.unwrap(function).__code__.co_names, (
+            f"{label} must call the shared core currency normaliser"
+        )
 
 
 def test_refused_currency_keeps_boundary_specific_diagnostics() -> None:

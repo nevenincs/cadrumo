@@ -977,7 +977,10 @@ def _assert_validation_error_caused_by_diagnostic_model_error(
         ctx = e.get("ctx")
         if isinstance(ctx, dict) and "error" in ctx:
             causes.append(ctx["error"])
-    matching = [c for c in causes if isinstance(c, DiagnosticModelError) and match in str(c)]
+    # The validator boundary hands pydantic a ValueError whose cause is the
+    # registered failure, so the registered error is read from that cause.
+    registered = [c.__cause__ if isinstance(c, ValueError) else c for c in causes]
+    matching = [c for c in registered if isinstance(c, DiagnosticModelError) and match in str(c)]
     assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 
 

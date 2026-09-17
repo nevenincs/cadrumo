@@ -1,4 +1,4 @@
-"""Unit tests for :class:`cadrumo.adapters.persistence.storage.secret_store.SecretStore`.
+"""Unit tests for :class:`cadrumo.adapters.persistence.storage.secret_store.store.SecretStore`.
 
 Exercises the put/get/delete/rotate API, the index encryption
 invariants, the retention-policy gate, and the blob-cleanup behaviour

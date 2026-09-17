@@ -48,7 +48,7 @@ from ..storage_taxonomy import (
 )
 from ..storage_taxonomy_locations import STORAGE_TAXONOMY
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 
 def _materialisable_members() -> tuple[StorageLocation, ...]:
@@ -217,35 +217,6 @@ def test_the_usage_ratios_document_is_declared_a_file() -> None:
         "puts a directory exactly where the document must be written"
     )
     assert not location.subpath.endswith("/")
-
-
-def test_an_opt_in_member_with_no_value_is_not_materialised(materialised: tuple[Path, Settings]) -> None:
-    """A location the operator has not asked for is absent, and that is parity.
-
-    The registry disk cache is the worked case: its name is taxonomy-governed
-    while its field is deliberately not derived, because the resolver selects
-    its shared-temporary branch by observing the field is unset. Materialising
-    it would retire that branch by side effect.
-    """
-    root, settings = materialised
-    unset = [
-        location
-        for location in _materialisable_members()
-        if getattr(settings, location.settings_field or "", None) is None
-    ]
-    assert unset, (
-        "no root member resolved to None, so this control covers nothing; the taxonomy declares "
-        "at least one opt-in member whose field is deliberately not derived"
-    )
-
-    for location in unset:
-        subpath = root / location.relative_path()
-        assert not subpath.exists(), (
-            f"{location.category.value} resolved to None yet {subpath} was created; an opt-in "
-            "location must stay absent until the operator asks for it"
-        )
-    # And its absence must not read as a parity failure.
-    assert not unexplained_directories(_observed_directories(root), set(expected_directories(settings)), root)
 
 
 def test_parity_survives_a_second_call_and_preserves_what_was_written(

@@ -26,6 +26,7 @@ from ...core.aggregation import (
     counterpart_source_kind,
 )
 from ...core.country_code import CountryCodeAlpha2
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
@@ -146,6 +147,7 @@ class _CounterpartBoundaryModel(BaseModel):
 
     @field_validator("source_kind", mode="before", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_canonical(cls, value: object) -> CounterpartSourceKind:
         if not isinstance(value, str):
             raise ValueError("source_kind must be a string")
@@ -153,11 +155,13 @@ class _CounterpartBoundaryModel(BaseModel):
 
     @field_validator("operation_kind", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _operation_kind_is_canonical(cls, value: str) -> str:
         return _validate_operation_kind(value)
 
     @field_validator("counterparty_country", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _country_is_uppercase(cls, value: str) -> str:
         return _validate_country(value, field_name="counterparty_country")
 
@@ -237,6 +241,7 @@ class CounterpartAggregation(BaseModel):
     total_invoice_total: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _totals_match_rollups(self) -> CounterpartAggregation:
         assert_rollup_totals_match(
             self.rollups,

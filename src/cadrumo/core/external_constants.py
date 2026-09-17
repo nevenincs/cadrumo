@@ -32,6 +32,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .errors.hierarchy import CoreValidationError
 from .models import STRICT_FROZEN_CONFIG
 from .toml import load_toml, parse_toml
@@ -161,6 +162,7 @@ class AeatClaveMovilSurface(_Frozen):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _markers_from_toml_arrays(cls, value: object) -> object:
         if is_object_list(value):
             return tuple(value)
@@ -225,6 +227,7 @@ class AeatPre303Surface(_Frozen):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _tuples_from_toml_arrays(cls, value: object) -> object:
         if is_object_list(value):
             return tuple(value)
@@ -300,6 +303,7 @@ class AeatLiveSafety(_Frozen):
         mode="before",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _tuples_from_toml_arrays(cls, value: object) -> object:
         if is_object_list(value):
             return tuple(value)
@@ -320,12 +324,14 @@ class AeatPortalPathSection(_Frozen):
 
     @field_validator("filing_censo_path_regex")
     @classmethod
+    @pydantic_validation_boundary
     def _filing_censo_path_regex_is_valid(cls, value: str) -> str:
         re.compile(value)
         return value
 
     @field_validator("paths")
     @classmethod
+    @pydantic_validation_boundary
     def _paths_are_relative_urls(cls, value: dict[str, str]) -> dict[str, str]:
         for key, path in value.items():
             if not key.strip():

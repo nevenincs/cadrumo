@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now as _now_utc
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -75,6 +76,7 @@ class InventoryMovementCommand(BaseModel):
     acquisition_cost: InventoryAcquisitionCost | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _purchase_has_one_cost_authority(self) -> InventoryMovementCommand:
         if self.kind is MovementKind.PURCHASE:
             if self.acquisition_cost is None:

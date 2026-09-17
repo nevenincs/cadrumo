@@ -15,7 +15,7 @@ from typing import Final, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -62,6 +62,7 @@ class DeclarationsCalendarSourceObservationV1(BaseModel):
     reason_code: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _availability_is_truthful(self) -> Self:
         if self.availability is HomeAvailability.AVAILABLE and self.reason_code is not None:
             raise ValueError("an available calendar source cannot carry a refusal reason")
@@ -80,6 +81,7 @@ class DeclarationsCalendarSourceStateV1(DeclarationsCalendarSourceObservationV1)
     item_count: NonNegativeInt | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
         observable = self.availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
         if observable != (self.item_count is not None):
@@ -120,6 +122,7 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _safe_axes_are_coherent(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("calendar natural address year and period disagree")
@@ -147,6 +150,7 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _recovery_action_is_the_canonical_create_at_this_address(self) -> Self:
         """A recovery action must be the create action, bound to THIS entry.
 
@@ -191,6 +195,7 @@ class DeclarationsCalendarProjectionV1(BaseModel):
     entries: tuple[DeclarationsCalendarEntryRefV1, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _sources_are_total_and_entries_unique(self) -> Self:
         _validate_projection_model(self)
         return self

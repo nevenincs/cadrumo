@@ -21,6 +21,7 @@ from ....application.operations.persistence.leases import (
     OperationLeaseResult,
     OperationOwnerLease,
 )
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.link_safety import is_link_like
 from ....core.locks import exclusive_file_lock
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -42,6 +43,7 @@ class _OperationLeaseRecord(BaseModel):
     lease: OperationOwnerLease | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_record(self) -> _OperationLeaseRecord:
         validate_utc_aware(self.recorded_at)
         if self.lease is not None:

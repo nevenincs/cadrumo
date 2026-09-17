@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
@@ -35,6 +36,7 @@ class WorkflowEvent(BaseModel):
 
     @field_validator("at")
     @classmethod
+    @pydantic_validation_boundary
     def _instant_is_utc(cls, value: datetime) -> datetime:
         """Reject an event instant that is naive or not UTC.
 
@@ -74,6 +76,7 @@ class LedgerReviewRecord(BaseModel):
 
     @field_validator("updated_at")
     @classmethod
+    @pydantic_validation_boundary
     def _instant_is_utc(cls, value: datetime) -> datetime:
         """Reject a review-update instant that is naive or not UTC.
 
@@ -95,6 +98,7 @@ class InvoiceReviewRecord(BaseModel):
 
     @field_validator("updated_at")
     @classmethod
+    @pydantic_validation_boundary
     def _instant_is_utc(cls, value: datetime) -> datetime:
         """Reject a review-update instant that is naive or not UTC.
 

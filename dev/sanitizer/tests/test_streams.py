@@ -23,7 +23,7 @@ from pydantic import SecretStr
 from .._records import ArbitraryReplacement, NameReplacement, NifReplacement, TokenMap
 from .._streams import apply_token_map_to_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NIE_CANARY_PREFIX = "Y1234567"

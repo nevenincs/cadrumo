@@ -28,7 +28,7 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_manual import _carry_forward_fx
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CONVERTED = Decimal("920.00")
 _RATE = Decimal("0.92")

@@ -450,3 +450,24 @@ justification = "none"
 signed = false
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-115-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "iso-8859-1"
+line_ending = "none"
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]

@@ -47,6 +47,7 @@ from ._modelo_100_registry_support import (
     _SAVINGS_BASE_ART_49_REF,
     _SAVINGS_BASE_GYP_LIMIT_CASILLA,
     _loaded_registry,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -83,7 +84,7 @@ def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> N
 
 def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revisions() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         general_formula_id = "renta-saldo-gp-base-general-cap-25"
         savings_formula_id = "renta-saldo-gp-base-ahorro-cap-25"
         general_formula = next(formula for formula in revision.formulas if formula.id == general_formula_id)
@@ -453,7 +454,7 @@ def test_modelo_100_reserva_inversiones_roles_follow_official_section() -> None:
         required_ref,
         forbidden_ref,
     ) in expected_cases:
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casilla = next(
             casilla
             for casilla in revision.casillas
@@ -486,7 +487,7 @@ def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -
 
 def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding() -> None:
     for filing_year in range(2023, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casilla = next(
             casilla
             for casilla in revision.casillas
@@ -520,7 +521,7 @@ def test_modelo_100_housing_energy_result_role_stays_in_housing_energy_section()
 
 def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded() -> None:
     for filing_year in range(2022, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         offences: list[str] = []
         roles_by_casilla: dict[CasillaId, str] = {}
         for casilla in revision.casillas:

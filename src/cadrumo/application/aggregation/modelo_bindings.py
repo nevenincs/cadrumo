@@ -33,7 +33,7 @@ from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
@@ -1217,12 +1217,12 @@ def aggregation_period_for_modelo(*, filing_year: int, code: str) -> Period:
         resolved = Period.from_year_and_code(filing_year, normalized)
     except PeriodError as exc:
         raise AggregationValidationError(
-            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            tr("aggregation.modelo_bindings.errors.unsupported_period"),
             context={"filing_year": str(filing_year), "period": code},
         ) from exc
     if not resolved.has_date_span():
         raise AggregationValidationError(
-            t("aggregation.modelo_bindings.errors.unsupported_period"),
+            tr("aggregation.modelo_bindings.errors.unsupported_period"),
             context={"filing_year": str(filing_year), "period": code},
         )
     return resolved

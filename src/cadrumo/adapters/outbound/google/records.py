@@ -28,6 +28,7 @@ from urllib.parse import SplitResult, urlsplit
 from pydantic import BaseModel, Field, field_validator
 
 from ....core.config import Settings
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
 
@@ -116,16 +117,19 @@ class OAuthClient(BaseModel):
 
     @field_validator("auth_uri")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_auth_uri(cls, value: str) -> str:
         return _validate_google_oauth_endpoint(value, field_name="auth_uri", expected_host="accounts.google.com")
 
     @field_validator("token_uri")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_token_uri(cls, value: str) -> str:
         return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
 
     @field_validator("auth_provider_x509_cert_url")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_cert_uri(cls, value: str) -> str:
         return _validate_google_oauth_endpoint(
             value,
@@ -152,6 +156,7 @@ class OAuthToken(BaseModel):
 
     @field_validator("refresh_token")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_refresh_token(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("refresh_token must contain a non-whitespace token")
@@ -159,6 +164,7 @@ class OAuthToken(BaseModel):
 
     @field_validator("token_uri")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_token_uri(cls, value: str) -> str:
         return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
 
@@ -189,6 +195,7 @@ class OAuthMetadata(BaseModel):
 
     @field_validator("granted_scopes")
     @classmethod
+    @pydantic_validation_boundary
     def _require_all_scopes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Reject metadata that omits any required scope.
 

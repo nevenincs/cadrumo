@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     OperationCancellation,
@@ -78,6 +79,7 @@ class OperationCapabilities(BaseModel):
     close_policy: OperationClosePolicy
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_combinations(self) -> OperationCapabilities:
         self._validate_durability()
         self._validate_stopping()

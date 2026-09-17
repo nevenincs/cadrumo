@@ -138,6 +138,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -164,6 +165,16 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "8f1a6c2e-9b3d-4e7a-9c1f-2d5b6a7e8f90"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _T0 = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 10, 0, tzinfo=UTC)
 _M200 = "200"

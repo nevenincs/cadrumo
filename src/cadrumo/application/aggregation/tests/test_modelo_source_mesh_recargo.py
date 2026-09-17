@@ -13,7 +13,7 @@ from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
@@ -52,7 +52,7 @@ def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
                     quantity=Decimal("1"),
                     unit_price=Decimal("1000.00"),
                     subtotal=Decimal("1000.00"),
-                    iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+                    iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
                     iva_amount=Decimal("210.00"),
                 ),
                 InvoiceLine(
@@ -60,7 +60,7 @@ def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
                     quantity=Decimal("1"),
                     unit_price=Decimal("500.00"),
                     subtotal=Decimal("500.00"),
-                    iva_rate=resolve_iva_rate_token("rate_10", date.today()),
+                    iva_rate=resolve_iva_rate_token("RATE_10", date.today()),
                     iva_amount=Decimal("50.00"),
                 ),
             ),

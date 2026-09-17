@@ -16,10 +16,10 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
@@ -63,7 +63,7 @@ _COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
 
 def test_committed_modelo_720_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_720()
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
     assert set(modelo.revisions) == {"2013-y-siguientes"}
 
 
@@ -101,7 +101,7 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
         RegistryValidationError,
         match=r"binding source modelo '720' has no dependency classification",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
 def test_validator_rejects_non_dependency_previous_filing_classification() -> None:
@@ -137,7 +137,7 @@ def test_validator_rejects_non_dependency_previous_filing_classification() -> No
         RegistryValidationError,
         match=r"binding source modelo '720' cannot be classified as non_dependency",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
 @pytest.mark.parametrize(

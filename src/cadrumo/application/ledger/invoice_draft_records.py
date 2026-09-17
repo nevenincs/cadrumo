@@ -21,6 +21,7 @@ from typing import Self
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.identity.digest import ContentDigest
@@ -223,6 +224,7 @@ class FieldProvenance(BaseModel):
     note: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_derived_value_cites_its_inputs_and_never_an_anchor(self) -> Self:
         """Tie ``DERIVED`` to the inputs it followed from, and bar it from ANCHORED.
 
@@ -253,6 +255,7 @@ class FieldProvenance(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_self_reported_anchor_can_never_read_as_verified(self) -> Self:
         """Refuse an ``ANCHORED`` outcome on an anchor nothing independent confirmed.
 
@@ -281,6 +284,7 @@ class FieldProvenance(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _ambiguity_carries_its_candidates(self) -> Self:
         """Tie the ``AMBIGUOUS`` outcome to the candidates that justify it.
 
@@ -300,6 +304,7 @@ class FieldProvenance(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _anchor_matches_the_outcome(self) -> Self:
         """Refuse an ``ANCHORED`` claim with no anchor to show for it."""
         if self.grounding is FieldGroundingOutcome.ANCHORED and self.anchor is None:
@@ -307,6 +312,7 @@ class FieldProvenance(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_refused_anchor_is_never_also_a_carried_one(self) -> Self:
         """Keep the refused form out of every slot a consumer reads as evidence.
 
@@ -621,6 +627,7 @@ class InvoiceDraft(InvoiceDraftIdentityDocumentFields):
         self._facturae_invoice_class = value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _provenance_names_real_fields(self) -> Self:
         """Refuse an envelope naming a field this draft does not have.
 

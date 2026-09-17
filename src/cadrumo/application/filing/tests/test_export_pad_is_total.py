@@ -39,7 +39,7 @@ from .._record_field_renderer import render_record
 from ..record_types import RecordRenderRow
 from .export_support import _approved_registry_draft, _typed_producer_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PADDING_MODES = tuple(ExportPadding)
 _JUSTIFICATION_BY_PADDING = {

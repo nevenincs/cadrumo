@@ -46,8 +46,14 @@ from ._referential_integrity_support import (
     minimal_source_ref,
     snapshot_for_revision,
 )
+from .profile_schema_support import load_user_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("governed_fact_scope"),
+    pytest.mark.usefixtures("isolated_provider_registration"),
+]
 
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
@@ -58,7 +64,7 @@ _PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     try:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
@@ -107,7 +113,9 @@ def test_modelo_validation_rejects_modelo_sourced_only_by_executable_parity() ->
         RegistryValidationError,
         match=r"modelo: 130 requires one of official_source_guidance, layout_authority source evidence",
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(modelo)
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(modelo)
 
 
 def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() -> None:
@@ -120,7 +128,9 @@ def test_modelo_validation_rejects_revision_sourced_only_by_executable_parity() 
             r"requires one of official_source_guidance, layout_authority source evidence"
         ),
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_snapshot_integrity_rejects_dangling_legal_refs_on_revision_surfaces() -> None:
@@ -351,6 +361,6 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     )
     catalogues = minimal_catalogues()
     informative_modelo = minimal_modelo(revision).model_copy(update={"calculation_class": "informative"})
-    validator = RegistryValidator(catalogues)
+    validator = RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema())
     with pytest.raises(RegistryValidationError, match="informative modelo must not declare calculation formulas"):
         validator.validate_modelo(informative_modelo)

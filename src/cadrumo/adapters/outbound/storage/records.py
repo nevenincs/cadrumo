@@ -26,6 +26,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG
 
@@ -143,6 +144,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
     objects: tuple[RemoteMirrorObjectManifest, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_object_key_uniqueness_and_count(self) -> RemoteMirrorNamespaceManifest:
         """Refuse foreign-namespace children, duplicate object keys, and a disagreeing ``object_count``.
 

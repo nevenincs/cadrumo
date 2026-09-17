@@ -96,7 +96,7 @@ def _flatten_locale(data: object, prefix: str = "") -> dict[str, str]:
     return result
 
 
-def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
+def _collect_tr_call_sites(src_root: Path, *, include_error_context: bool = False) -> dict[str, list[frozenset[str]]]:
     """Walk ``src_root`` for ``tr(literal_key, **literal_kwargs)`` call sites.
 
     Returns a mapping of locale key → list of kwarg-name sets, one entry
@@ -105,7 +105,10 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
     silently skipped because they cannot be resolved statically.
 
     The ``locale`` and ``default`` meta-kwargs are excluded from the
-    kwarg set; they are not interpolation placeholders.
+    kwarg set; they are not interpolation placeholders. With
+    ``include_error_context`` the literal ``context=`` keys of the error a key
+    is raised with count as supplied too; those facts may legitimately exceed
+    the message, so only the orphan check reads them.
     """
     calls: dict[str, list[frozenset[str]]] = defaultdict(list)
     for module_path in scan_directory(src_root, pattern="*.py", recursive=True):
@@ -119,11 +122,12 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
             tree = ast.parse(source, filename=str(module_path))
         except SyntaxError:
             continue
+        translation_names = _translation_call_names(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
             func = node.func
-            if not isinstance(func, ast.Name) or func.id != "tr":
+            if not isinstance(func, ast.Name) or func.id not in translation_names:
                 continue
             if not node.args or not isinstance(node.args[0], ast.Constant):
                 continue
@@ -133,8 +137,41 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
             kws = frozenset(
                 kw.arg for kw in node.keywords if kw.arg not in {"locale", "default"} and kw.arg is not None
             )
-            calls[key].append(kws)
+            context_keys = _enclosing_context_keys(tree, node) if include_error_context else frozenset()
+            calls[key].append(kws | context_keys)
     return dict(calls)
+
+
+def _translation_call_names(tree: ast.AST) -> frozenset[str]:
+    """Return every local name bound to a translation entry point.
+
+    ``tr`` is the reserved name, and a module that also needs the renderer
+    binds it under an alias; both supply placeholders.
+    """
+    names = {"tr"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").endswith("i18n.render"):
+            names.update(alias.asname for alias in node.names if alias.name == "tr" and alias.asname)
+    return frozenset(names)
+
+
+def _enclosing_context_keys(tree: ast.AST, call: ast.Call) -> frozenset[str]:
+    """Return the literal ``context=`` keys of the error a translatable key is raised with.
+
+    A registered error renders its translatable message from the facts on its
+    ``context``, so those keys supply the message's placeholders.
+    """
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not any(argument is call for argument in node.args):
+            continue
+        for keyword in node.keywords:
+            if keyword.arg == "context" and isinstance(keyword.value, ast.Dict):
+                return frozenset(
+                    key.value
+                    for key in keyword.value.keys
+                    if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                )
+    return frozenset()
 
 
 # ---------------------------------------------------------------------------
@@ -167,9 +204,15 @@ def tr_call_sites() -> dict[str, list[frozenset[str]]]:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(scope="module")
+def tr_supplied_values() -> dict[str, list[frozenset[str]]]:
+    """Call sites with the error-context facts that also fill a raised message."""
+    return _collect_tr_call_sites(_SRC_ROOT, include_error_context=True)
+
+
 def test_no_orphan_placeholder_tokens(
     canonical_locale: dict[str, str],
-    tr_call_sites: dict[str, list[frozenset[str]]],
+    tr_supplied_values: dict[str, list[frozenset[str]]],
 ) -> None:
     """Every placeholder token in a locale value is supplied by every call site.
 
@@ -180,7 +223,7 @@ def test_no_orphan_placeholder_tokens(
     - updating the call site(s) to supply the missing kwarg.
     """
     findings: list[str] = []
-    for key, call_kwargs_list in sorted(tr_call_sites.items()):
+    for key, call_kwargs_list in sorted(tr_supplied_values.items()):
         if key not in canonical_locale:
             continue
         locale_val = canonical_locale[key]

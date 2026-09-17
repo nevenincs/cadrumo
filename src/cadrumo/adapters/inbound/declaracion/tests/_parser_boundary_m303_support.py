@@ -19,9 +19,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._parser_boundary_support import _expected_casilla_values
+from ._parser_boundary_support import _expected_casilla_values, _split_by_supported_filing_year
 
-_M303_HISTORICAL_PARAMS: tuple[tuple[str, int, str], ...] = (
+_M303_HISTORICAL_CASES: tuple[tuple[str, int, str], ...] = (
     ("2021-2T", 2021, "2T"),
     ("2021-3T", 2021, "3T"),
     ("2021-4T", 2021, "4T"),
@@ -30,7 +30,13 @@ _M303_HISTORICAL_PARAMS: tuple[tuple[str, int, str], ...] = (
     ("2022-3T", 2022, "3T"),
     ("2022-4T", 2022, "4T"),
 )
+_M303_HISTORICAL_PARAMS, _M303_HISTORICAL_UNSUPPORTED_PARAMS = _split_by_supported_filing_year(
+    _M303_HISTORICAL_CASES, year_index=1
+)
 _M303_HISTORICAL_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M303_HISTORICAL_PARAMS)
+_M303_HISTORICAL_UNSUPPORTED_IDS: tuple[str, ...] = tuple(
+    stem for stem, _year, _period in _M303_HISTORICAL_UNSUPPORTED_PARAMS
+)
 
 _M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = (
     ("2023-1T", 2023, "1T"),
@@ -45,7 +51,7 @@ _M303_2023_2024_PARAMS: tuple[tuple[str, int, str], ...] = (
 _M303_2023_2024_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M303_2023_2024_PARAMS)
 
 _M303_CORPUS_STEMS: tuple[str, ...] = tuple(
-    stem for stem, _year, _period in (*_M303_HISTORICAL_PARAMS, *_M303_2023_2024_PARAMS)
+    stem for stem, _year, _period in (*_M303_HISTORICAL_CASES, *_M303_2023_2024_PARAMS)
 )
 
 _M303_CURRENT_PROFILE_CASILLAS: frozenset[str] = frozenset(

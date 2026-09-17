@@ -15,7 +15,7 @@ from ._parser_boundary_support import (
     _write_declaration_pdf,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:

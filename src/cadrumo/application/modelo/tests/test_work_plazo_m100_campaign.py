@@ -16,12 +16,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "e" * 64
 
+# Campaign windows: Orden HAC/265/2024, art. 8 (IRPF ejercicio 2023, 3 de abril a
+# 1 de julio de 2024) and Orden HAC/277/2026, art. 7 (IRPF ejercicio 2025, 8 de
+# abril a 30 de junio de 2026).
+
 
 @pytest.mark.parametrize(
     ("filing_year", "opens_on", "closes_on"),
     (
-        (2020, date(2021, 4, 7), date(2021, 6, 30)),
-        (2021, date(2022, 4, 6), date(2022, 6, 30)),
+        (2023, date(2024, 4, 3), date(2024, 7, 1)),
+        (2025, date(2026, 4, 8), date(2026, 6, 30)),
     ),
 )
 def test_m100_tax_year_work_unit_resolves_its_following_campaign_deadline(

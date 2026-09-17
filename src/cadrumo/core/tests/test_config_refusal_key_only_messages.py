@@ -48,11 +48,15 @@ def _settings_refusal(excinfo: pytest.ExceptionInfo[ValidationError]) -> CoreVal
 
     Pydantic embeds ``str(exc)`` of the raised ``ValueError`` in the rendered
     ``ValidationError``, so an authored sentence would leak through the wrapper
-    too. The original exception survives under the error's ``ctx``, which lets
-    this module assert on the refusal itself rather than on pydantic's
+    too. The validator boundary raises that ``ValueError`` from the registered
+    refusal, which survives as its cause under the error's ``ctx``; this lets
+    the module assert on the refusal itself rather than on pydantic's
     rendering of it.
     """
-    inner = excinfo.value.errors()[0].get("ctx", {}).get("error")
+    wrapper = excinfo.value.errors()[0].get("ctx", {}).get("error")
+    assert isinstance(wrapper, ValueError)
+    assert str(wrapper) == _CORE_VALIDATION_KEY, f"the boundary leaked an authored sentence: {str(wrapper)!r}"
+    inner = wrapper.__cause__
     assert isinstance(inner, CoreValidationError)
     return inner
 

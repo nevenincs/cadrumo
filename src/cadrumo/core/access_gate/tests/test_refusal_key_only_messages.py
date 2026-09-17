@@ -34,9 +34,9 @@ _LIVE_SUBMIT_KEY = "errors.locked.locked_access_gate_live_submit_forbidden"
 
 
 def test_live_read_refusal_renders_as_its_key_only() -> None:
-    """The pytest live-read refusal carries the key and machine facts, no prose."""
+    """The guarded live-read refusal carries the key and machine facts, no prose."""
     with override_settings(cadrumo_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
-        AeatAccessGate(settings=load_settings()).require_live_read()
+        AeatAccessGate(settings=load_settings()).require_live_read(guarded_read_context="live-read-refusal")
 
     error = excinfo.value
     assert error.translated_message == _LIVE_READ_KEY

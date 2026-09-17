@@ -12,20 +12,19 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.registry_schema_support import (
     committed_registry_tree as _committed_registry_tree,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _committed_cross_reference() -> LiveCrossReferenceDecision:
@@ -107,7 +106,7 @@ def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
     duplicate_revision = _revision_with_cross_references(revision, (twin_a, twin_b))
     duplicate_modelo = _modelo_with_revision(modelo, duplicate_revision)
 
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     with pytest.raises(RegistryValidationError, match="aeat-nif-iva-checker"):
         validator.validate_modelo(duplicate_modelo)
 
@@ -132,7 +131,7 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
         "modelo-100-renta-web-open",
     }, "distinct revision must carry both oracle bindings"
 
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     validator.validate_modelo(distinct_modelo)
 
 
@@ -141,7 +140,7 @@ def test_registry_accepts_no_oracle_binding_anywhere() -> None:
 
     modelos, catalogues = _committed_registry_tree()
     assert len(modelos) >= 5, "committed registry must declare a meaningful number of modelos"
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     validated = 0
     for modelo in modelos:
         validator.validate_modelo(modelo)

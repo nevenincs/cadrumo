@@ -41,7 +41,7 @@ from .ledger_iva_aggregation_support import (
     _revision_with_bindings,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # The official AEAT box numbers this file asserts against, read from the modelo
 # 303 diseño de registros: box [11] "Adquisiciones intracomunitarias de bienes y

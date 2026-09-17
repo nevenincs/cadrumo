@@ -18,7 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.config import load_settings
+from ...core.config import Settings
+from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ..model_catalogue import (
     DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
     MODEL_CATALOGUE,
@@ -33,7 +34,7 @@ from ..model_catalogue import (
     model_candidate,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 
 def test_every_role_and_runtime_has_a_commercially_licensed_candidate() -> None:
@@ -67,9 +68,10 @@ def test_shipped_settings_defaults_are_the_catalogued_commercial_defaults() -> N
 
     Closes the gap the gate above cannot see on its own: the catalogue could be
     correct while a settings field still carried a hand-typed literal. Reads the
-    real ``Settings`` defaults through the production loader.
+    real ``Settings`` defaults with the ambient environment cleared, so an
+    operator's own model choice cannot stand in for the shipped default.
     """
-    settings = load_settings()
+    settings = _shipped_defaults()
     local, cloud = ModelRuntime.LOCAL_OLLAMA, ModelRuntime.CLOUD_ANTHROPIC
     for field_value, role, runtime in (
         (settings.cadrumo_llm_ollama_vision_model, ModelRole.VISION_TRANSCRIPTION, local),
@@ -96,7 +98,7 @@ def test_the_global_model_floor_is_the_weakest_catalogued_cloud_candidate() -> N
     frontier-tier identifier, which made adding a consumer and forgetting to
     route it the cheapest way to reach the most expensive model in the product.
     """
-    settings = load_settings()
+    settings = _shipped_defaults()
     candidate = model_candidate(settings.cadrumo_llm_model)
     assert candidate is not None, f"the global model floor {settings.cadrumo_llm_model!r} is not catalogued"
     assert candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
@@ -114,7 +116,7 @@ def test_every_runtime_default_is_the_weakest_candidate_for_its_role() -> None:
     because of its name — a mutation that added exactly that passed every other
     gate in this file.
     """
-    required_context = load_settings().cadrumo_llm_ollama_num_ctx
+    required_context = _shipped_defaults().cadrumo_llm_ollama_num_ctx
     for runtime in ModelRuntime:
         for role in ModelRole:
             ordered = candidates_for_role(role, runtime)
@@ -256,7 +258,7 @@ def test_the_catalogue_carries_a_candidate_excluded_on_context_capability() -> N
     excludes; without it the selection matrix's capability dimension would be
     untested by construction, and 'weakest first' would degenerate into 'first'.
     """
-    required = load_settings().cadrumo_llm_ollama_num_ctx
+    required = _shipped_defaults().cadrumo_llm_ollama_num_ctx
     vision = candidates_for_role(ModelRole.VISION_TRANSCRIPTION)
     assert vision[0].max_context_tokens < required, (
         "no vision candidate is excluded by the configured context window; the capability floor is untested"
@@ -310,3 +312,8 @@ def test_the_mapping_default_is_no_heavier_than_the_text_default() -> None:
 def test_model_candidate_returns_none_for_an_uncatalogued_id() -> None:
     """An unknown id is 'no claim made', never a fabricated permissive record."""
     assert model_candidate("not-a-real-model:0b") is None
+
+
+def _shipped_defaults() -> Settings:
+    with isolated_aeat_env():
+        return settings_without_env_file()

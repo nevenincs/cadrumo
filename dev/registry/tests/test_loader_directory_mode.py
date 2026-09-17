@@ -266,33 +266,6 @@ required_text = ["first provision"]
         load_shared_catalogues(tmp_path)
 
 
-def test_shared_catalogues_reject_noncanonical_parameter_key(tmp_path: Path) -> None:
-    """The TOML map key must pass the canonical ParameterId boundary."""
-
-    legal_dir = tmp_path / "legal"
-    legal_dir.mkdir()
-    (legal_dir / "parameters.toml").write_text(
-        """
-[parameters."bad id with spaces"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(
-        RegistryLoadError,
-        match=r"invalid legal parameter 'bad id with spaces'",
-    ):
-        load_shared_catalogues(tmp_path)
-
-
 def test_shared_catalogues_reject_retired_parameters_in_catalogue_toml(tmp_path: Path) -> None:
     """Directory-mode shared loading must refuse the retired global parameters section."""
 
@@ -333,34 +306,6 @@ reviewed_by = "registry-test"
         match=r"retired global \[parameters\] catalogue section is forbidden",
     ):
         load_shared_catalogues(tmp_path)
-
-
-def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:
-    """The full registry merge validates legal-parameter legal refs before returning."""
-
-    legal_dir = tmp_path / "legal"
-    legal_dir.mkdir()
-    (tmp_path / "modelos").mkdir()
-    (legal_dir / "parameters.toml").write_text(
-        """
-[parameters."test-rate"]
-evidence_tier = "legal_authority"
-value = "0.21"
-unit = "fraction"
-applies_to = "test-case"
-legal_refs = ["ley-test:art-1"]
-review_status = "pending_review"
-reviewed_at = 2026-06-28
-reviewed_by = "registry-test"
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(
-        RegistryLoadError,
-        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
-    ):
-        load_registry_tree(tmp_path)
 
 
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:

@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -15,23 +14,28 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
-from .....domain.modelos.work_unit import derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
+from ..modelos_work_units import WorkUnitCatalogueRepository
+from .ledger_action_persistence_support import _BUCKET_ID as SECURE_OBJECTS_BUCKET_ID
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 6, 3, 14, 0, tzinfo=UTC)
-_BUCKET_ID = "30330300-0000-4000-8000-000000000501"
+#: The ``secure_objects`` fixture is scoped to this bucket; parents must live in it.
+_BUCKET_ID = SECURE_OBJECTS_BUCKET_ID
 _TX_ID = "c" * 64
 
 
@@ -101,6 +105,31 @@ def _evidence() -> LedgerFilingEvidence:
     )
 
 
+def _seed_parent_work_unit(secure_objects: SecureObjectRepository) -> None:
+    """Persist the WorkUnit every saved revision must belong to."""
+    period = Period.from_year_and_code(2026, "1T")
+    work_unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=period,
+            revision_id="2022",
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2026,
+        period=period,
+        revision_id="2022",
+        name="303-2026-1T",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    WorkUnitCatalogueRepository(objects=secure_objects).save(
+        WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+    )
+
+
 def _revision(evidence: LedgerFilingEvidence | None, *, operation: PinnedAuthorityOperation) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -152,6 +181,7 @@ def test_ledger_filing_evidence_roundtrips_through_encrypted_revision(
 ) -> None:
     evidence = _evidence()
     original = _revision(evidence, operation=operation)
+    _seed_parent_work_unit(secure_objects)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
 
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
@@ -187,6 +217,7 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(
     from .....core.classification.policies import SensitivityClass
 
     original = _revision(_evidence(), operation=operation)
+    _seed_parent_work_unit(secure_objects)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
@@ -211,8 +242,9 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CalculationRevisionPersistenceError) as exc_info:
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
+    assert exc_info.value.context == {"reason": "invalid_payload"}
 
 
 def test_ledger_evidence_malformed_identity_payload_rejected_at_load(
@@ -224,6 +256,7 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(
     from .....core.classification.policies import SensitivityClass
 
     original = _revision(_evidence(), operation=operation)
+    _seed_parent_work_unit(secure_objects)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
     record = secure_objects.load(
@@ -245,5 +278,6 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(
         payload=_json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError, match="transaction_id"):
+    with pytest.raises(CalculationRevisionPersistenceError) as exc_info:
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
+    assert exc_info.value.context == {"reason": "invalid_payload"}

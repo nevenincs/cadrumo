@@ -33,7 +33,7 @@ from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERCEPTOR_BINDING_ID = "modelo-180-115-perceptores-anual"
 _M115_PERCEPTOR_BINDING_ID = "modelo-115-perceptores"

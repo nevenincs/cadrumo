@@ -11,6 +11,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity as _BaseSeverity
 from ...core.filing_year import FilingYear
 from ...core.identity.profile import ProfileId
@@ -96,6 +97,7 @@ class ProfilePreflightReport(BaseModel):
     per_operation_requirements_assessed: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_filing_year(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("filing_year must match period.filing_year")

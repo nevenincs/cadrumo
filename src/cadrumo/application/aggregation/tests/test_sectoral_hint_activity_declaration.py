@@ -27,11 +27,13 @@ from types import SimpleNamespace
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.user_profile.values import UserProfileFact
 from .. import _retencion_rate_advisory
 from .._retencion_rate_advisory import _profile_suggests_sectoral_activity
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "20020020-0200-4200-8200-200200200200"
 
@@ -53,8 +55,17 @@ def _suggests(*facts: UserProfileFact) -> bool | None:
     """Exercise the policy with an inward fake profile, without persistence."""
     profile = _profile_for_facts(*facts)
     with pytest.MonkeyPatch.context() as monkeypatch:
-        monkeypatch.setattr(_retencion_rate_advisory, "_load_profile_for_bucket", lambda _bucket_id: profile)
-        return _profile_suggests_sectoral_activity(_BUCKET_ID)
+        monkeypatch.setattr(
+            _retencion_rate_advisory,
+            "_load_profile_for_bucket",
+            lambda _bucket_id, *, profile_decode_context: profile,
+        )
+        operation = governed_facts_in_scope()
+        assert isinstance(operation, PinnedAuthorityOperation)
+        return _profile_suggests_sectoral_activity(
+            _BUCKET_ID,
+            profile_decode_context=operation.profile_decode_context(),
+        )
 
 
 def test_a_declared_sectorial_activity_answers_the_hint() -> None:

@@ -37,7 +37,7 @@ from ...aggregation.ledger_filing_snapshot import (
     stale_filed_revisions,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 _P_2026_1T = Period.from_year_and_code(2026, "1T")

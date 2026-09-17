@@ -31,7 +31,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -87,6 +87,7 @@ class VerifyObservation(BaseModel):
 
     @field_validator("checked_at", "persisted_at")
     @classmethod
+    @pydantic_validation_boundary
     def _instant_is_utc(cls, value: datetime) -> datetime:
         """Reject a naive or non-UTC instant; see :func:`~cadrumo.core.time.validate_utc_aware`."""
         return validate_utc_aware(value)

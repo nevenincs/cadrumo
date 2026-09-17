@@ -50,7 +50,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
 from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_bundle
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
@@ -152,6 +152,7 @@ class ReviewPackageManifest(BaseModel):
     notes: ReviewPackageNote = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _registry_coordinate_matches_manifest(self) -> ReviewPackageManifest:
         expected = RegistrySnapshotRef(
             modelo=self.modelo,

@@ -8,6 +8,7 @@ from typing import Annotated, Final, Literal, cast, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from . import filing_projection_ref_support as _projection_ref_support
 from .casilla_id import CasillaId
 from .models import STRICT_FROZEN_CONFIG
@@ -176,6 +177,7 @@ class M303RegimenSimplificadoActivityProjectionRef(BaseModel):
     field: M303RegimenSimplificadoActivityField
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _cohort_owns_field(self) -> M303RegimenSimplificadoActivityProjectionRef:
         allowed = (
             {M303RegimenSimplificadoActivityField.ACTIVITY_CODE}
@@ -205,6 +207,7 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
     sub_index: int | None = Field(default=None, ge=1, le=4)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_the_closed_multiplicity_axis(self) -> M303RegimenSimplificadoFactProjectionRef:
         if self.fact not in M303_REPEATING_FACTS and self.sub_index is not None:
             raise ValueError("a singleton simplified-regime fact must not carry sub_index")
@@ -330,6 +333,7 @@ class M390RepresentativeProjectionRef(BaseModel):
     field: M390RepresentativeField
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_source_declared_representative_shape(self) -> M390RepresentativeProjectionRef:
         if self.representative_kind is M390RepresentativeKind.FISICA_COMUNIDAD_BIENES:
             if self.slot != 1 or self.field not in _M390_PHYSICAL_REPRESENTATIVE_FIELDS:
@@ -406,6 +410,7 @@ class M390RegimenSimplificadoActivityProjectionRef(BaseModel):
     field: M390RegimenSimplificadoActivityField
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_source_declared_cohort_shape(self) -> M390RegimenSimplificadoActivityProjectionRef:
         if self.cohort is M390RegimenSimplificadoCohort.NO_AGRICOLA:
             if self.slot > 2 or self.field not in _M390_NO_AGRICOLA_SIMPLIFICADO_FIELDS:

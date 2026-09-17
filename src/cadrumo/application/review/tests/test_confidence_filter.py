@@ -8,6 +8,7 @@ only the rows whose confidence sits strictly below a threshold.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....application.filing.draft_review_ports import DraftReviewPorts
-from ....core.config import Settings
+from ....core.config import Settings, override_settings
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -23,9 +24,16 @@ from ..enums import ReviewState
 from ..operator import project_review_queue
 from .draft_review_test_support import draft_review_ports
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "23232323-2323-4232-8232-232323232323"
+
+
+@pytest.fixture(autouse=True)
+def _active_profile() -> Iterator[None]:
+    """Select the bucket the review queue projection reads through."""
+    with override_settings(cadrumo_active_profile=_PROFILE_ID):
+        yield
 
 
 def _build_settings(tmp_path: Path) -> Settings:

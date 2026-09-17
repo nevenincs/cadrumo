@@ -51,7 +51,7 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError, CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.parsing.codes import normalise_iso_4217_currency
+from ...core.parsing.codes import IsoCurrencyCode, normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.invoices.enums import resolve_iva_rate_slot
@@ -124,7 +124,7 @@ class _ValidatedWizardFields:
     operation_date: date | None
     taxable_base: Decimal | None
     iva_rate: Decimal | None
-    currency: str
+    currency: IsoCurrencyCode
     retention_amount: Decimal | None
     retention_rate: Decimal | None
 

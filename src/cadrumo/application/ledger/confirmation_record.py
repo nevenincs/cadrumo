@@ -40,7 +40,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.config import Settings
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
@@ -101,6 +101,7 @@ class FieldAssertion(BaseModel):
     prior_grounding: FieldGroundingOutcome | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _a_prior_origin_needs_a_prior_value(self) -> Self:
         """Refuse an origin for a value the record does not carry.
 
@@ -133,6 +134,7 @@ class ResolvedFinding(BaseModel):
     resolution: FindingResolution
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _the_resolution_answers_this_blocker(self) -> Self:
         """Refuse a pair whose two halves are about different findings."""
         if self.blocker.blocker_id != self.resolution.blocker_id:

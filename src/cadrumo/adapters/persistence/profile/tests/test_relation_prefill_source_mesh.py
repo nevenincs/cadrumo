@@ -479,11 +479,10 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
         snapshot = _snapshot("202", 2025, "2P")
 
-        consumption_index = relation_consumption_index(snapshot.revision)
+        # Any declared relation binding serves as the template: the copy below
+        # takes a fresh id, so nothing in the revision consumes it.
         seed_binding, seed_provider = next(
-            (binding, provider)
-            for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="2P")
-            if not relation_consumption_channels(binding.id, consumption_index)
+            iter(relation_prefill_bindings_for_period(snapshot.revision, period="2P")),
         )
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
         orphan_target = "no-such-binding-orphan-xyz"

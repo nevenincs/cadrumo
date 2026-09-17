@@ -26,7 +26,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..operator_actions.models import PreconditionVerdict
@@ -110,6 +110,7 @@ class AuthConfigureResult(BaseModel):
     precondition_verdict: PreconditionVerdict | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_a_verdict_for_an_incomplete_configuration(self) -> AuthConfigureResult:
         """Keep an incomplete configuration attached to its exact failed condition."""
         if self.complete and self.precondition_verdict is not None:

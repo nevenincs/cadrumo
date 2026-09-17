@@ -34,7 +34,7 @@ from ..sql.secure_objects import SecureObjectRepository
 
 _runtime_profile = default_bucket_runtime_profile_fixture()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _SUBMITTED_AT = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)

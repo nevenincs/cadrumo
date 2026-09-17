@@ -10,6 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, field_validator
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -111,6 +112,7 @@ class ProfileRepeatableRowMutationOperationRequest(BaseModel):
 
     @field_validator("values")
     @classmethod
+    @pydantic_validation_boundary
     def _require_distinct_field_keys(
         cls, value: tuple[ProfileRepeatableRowValue, ...]
     ) -> tuple[ProfileRepeatableRowValue, ...]:

@@ -10,7 +10,6 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 __all__ = ["registry_tree"]
 
 _FORMAL_WITHHOLDING_MODELOS = frozenset({"111", "115", "123", "180", "190", "193"})
-_M100_WITHHOLDING_IMPORT_SECTIONS = frozenset({"bindings", "relations", "dependency_classifications"})
 _FORMAL_WITHHOLDING_ARTICLE_REF = "rd-439-2007:art-108"
 _FRACTIONAL_PAYMENT_ARTICLE_REF = "rd-439-2007:art-109"
 

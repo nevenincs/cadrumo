@@ -23,6 +23,7 @@ from typing import Annotated, Literal, Protocol, Self, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, PlainSerializer, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
@@ -210,6 +211,7 @@ class OverviewCalendarRange(BaseModel):
     to_date: date
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_window_order(self) -> OverviewCalendarRange:
         _validate_inclusive_date_range(self.from_date, self.to_date)
         return self

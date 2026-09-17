@@ -915,7 +915,7 @@ def assemble_foreign_asset_observations(
                     valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, RegistryValidationError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
@@ -969,7 +969,7 @@ def assemble_atribucion_observations(
                     clave=_coerce_text(fields.get("clave")),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, RegistryValidationError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
@@ -1017,7 +1017,7 @@ def assemble_refund_observations(
                     refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, RegistryValidationError) as exc:
             raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 

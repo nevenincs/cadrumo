@@ -26,11 +26,11 @@ from cadrumo.domain.prorrata_register.register import ProrrataActivityRow, Prorr
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ..maintenance_support import resolve_record_design_binary
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ENDPOINTS = frozenset(str(number) for number in range(500, 525))
 _DESIGNS = (
@@ -321,7 +321,7 @@ def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_so
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: revised}})
 
     with pytest.raises(RegistryValidationError, match="outside the selected revision authority"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
 def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_construction() -> None:
@@ -344,7 +344,7 @@ def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_co
     with pytest.raises(
         RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
     with pytest.raises(
         RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
     ):
@@ -369,7 +369,7 @@ def test_real_layoutless_revision_without_projection_only_casillas_needs_no_decl
     # asserted the state of the campaign rather than the property.
     assert revision.projection_endpoints == ()
     assert all(casilla.input_kind is not InputKind.PROJECTION_ONLY for casilla in revision.casillas)
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -> None:

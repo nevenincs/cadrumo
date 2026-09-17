@@ -106,7 +106,7 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
     inputs = {
         "modelo-200-profile-legal-entity-form": "sl",
         "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
-        "modelo-200-profile-new-entity-flag": Decimal("0"),
+        "modelo-200-profile-new-entity-flag": False,
     }
 
     # Must not raise ModeloBuilderError for the string enum binding

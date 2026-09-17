@@ -18,6 +18,8 @@ from typing import Final, NoReturn, Self, override
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
+from .errors.hierarchy import pydantic_validation_boundary
+
 __all__ = ["FROZEN_MAPPING", "FrozenMapping", "FrozenMappingMarker"]
 
 
@@ -97,7 +99,7 @@ class FrozenMappingMarker:
         """Wrap the field's own mapping schema; validation and JSON shape are unchanged."""
         mapping_schema = handler(source)
         return core_schema.no_info_after_validator_function(
-            FrozenMapping,
+            pydantic_validation_boundary(FrozenMapping),
             mapping_schema,
             serialization=core_schema.wrap_serializer_function_ser_schema(_serialise_as_dict, schema=mapping_schema),
         )

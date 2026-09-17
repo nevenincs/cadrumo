@@ -16,7 +16,7 @@ from ._modelo_100_registry_support import (
     _MADRID_DEDUCTION_SECTION,
     _MADRID_REUSED_ID_DEDUCTION_ROWS,
     _MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS,
-    _modelo_100_snapshot,
+    _modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_modelo_100_carry_forward_pending_outliers_are_regional_deductions() -> None:
     for filing_year in (2023, 2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         expected_rows = _CARRY_FORWARD_PENDING_OUTLIERS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
         legacy_rows = [
@@ -45,7 +45,7 @@ def test_modelo_100_carry_forward_pending_outliers_are_regional_deductions() -> 
 
 def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
     for filing_year in (2023, 2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         expected_rows = _MADRID_REUSED_ID_DEDUCTION_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
         legacy_rows = [
@@ -64,7 +64,7 @@ def test_modelo_100_madrid_reused_ids_are_regional_deductions() -> None:
 
 def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_deduction() -> None:
     for filing_year in (2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         expected_rows = _MADRID_VIVIENDA_ACQUISITION_DETAIL_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
 
@@ -79,7 +79,7 @@ def test_modelo_100_madrid_vivienda_acquisition_detail_roles_follow_current_dedu
 
 def test_modelo_100_carry_forward_remaining_inst_auto_rows_use_inst_auto_role() -> None:
     for filing_year in (2021, 2022, 2023, 2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         expected_rows = _CARRY_FORWARD_REMAINING_INST_AUTO_ROWS[filing_year]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
         legacy_rows = [

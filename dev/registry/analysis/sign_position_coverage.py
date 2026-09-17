@@ -25,7 +25,7 @@ from __future__ import annotations
 import functools
 import re
 import sys
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -172,7 +172,9 @@ def _screen(authority: ValidatedRegistryAuthority) -> Iterator[UndeclaredSignPos
                         )
 
 
-def screen_authority(authority: ValidatedRegistryAuthority) -> tuple[UndeclaredSignPosition, ...]:
+def screen_authority(
+    authority: ValidatedRegistryAuthority, _modelo_ids: Sequence[str] = ()
+) -> tuple[UndeclaredSignPosition, ...]:
     """Return every money field on a design SIGNO position that declares no sign_position."""
     return tuple(_screen(authority))
 

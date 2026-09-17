@@ -16,12 +16,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog: pytest.LogCaptureFixture) -> None:
-    """Invalid registry scopes return no resolved bindings and emit debug diagnostics."""
+    """An unregistered modelo returns no resolved bindings and emits debug diagnostics."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
         resolved = profile_resolvable_binding_ids(
-            modelo="not-a-modelo",
+            modelo="999",
             bucket_id="operator",
             filing_year=2026,
             period=None,
@@ -44,7 +44,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
         resolved = profile_resolvable_binding_ids(
-            modelo="not-a-modelo",
+            modelo="999",
             bucket_id="operator",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),

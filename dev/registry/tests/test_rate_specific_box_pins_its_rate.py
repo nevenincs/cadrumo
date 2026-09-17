@@ -113,7 +113,7 @@ def _rate_specific_boxes(modelo_id: str) -> set[str]:
 
 def _pinned_rates(binding) -> tuple[object, ...] | None:
     """The binding's ``applied_rates`` narrowing, or None when it has no such axis."""
-    selector = getattr(binding, "selector", None)
+    selector = binding.provider
     raw_rates = getattr(selector, "applied_rates", None) if selector is not None else None
     if raw_rates is None:
         return None
@@ -121,7 +121,7 @@ def _pinned_rates(binding) -> tuple[object, ...] | None:
 
 
 def _selector_supports_rates(binding) -> bool:
-    selector = getattr(binding, "selector", None)
+    selector = binding.provider
     return selector is not None and hasattr(selector, "applied_rates")
 
 

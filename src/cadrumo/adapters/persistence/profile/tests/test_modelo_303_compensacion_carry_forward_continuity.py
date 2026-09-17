@@ -52,6 +52,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.calculations.observations_repository import ResultDispositionProjection
+from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from .....application.calculations.observations_repository import observation_key
 from .....application.calculations.relation_prefill import resolve_relations_from_local_store
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -276,7 +283,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
     LIVA art. 99 makes the 2T surplus available for the following settlement.
     The two source values are independently grounded form inputs: 63.00
-    deductible less 21.00 accrued VAT yields the asserted 42.00 carry; the
+    deductible less 21.00 IVA devengado yields the asserted 42.00 carry; the
     calculation engine is not used as the expected-value oracle.
     """
     with (
@@ -306,6 +313,11 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
                     result=source_result,
                 ),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test-local-filing:compensacion-carry",
+                ),
                 captured_at=_CLOCK,
                 stamped_revision_id=source_snapshot.revision.id,
             )
@@ -365,6 +377,11 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
                     result=source_result,
                 ),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test-local-filing:compensacion-carry",
+                ),
                 captured_at=_CLOCK,
                 stamped_revision_id=_EARLY_2024_REVISION,
             )
@@ -423,6 +440,23 @@ def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
     assert result.values[_M303_SALDO_COMPENSACION_CASILLA] > Decimal("0")
 
 
+def _resolve_carry_from_local_store(
+    snapshot: RegistrySnapshot,
+    *,
+    repository: CalculationObservationRepository,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, Decimal]:
+    """Resolve the previous-filing carry binding the way the calculate path does."""
+    prefill = resolve_bindings_from_local_store(
+        snapshot,
+        repository=repository,
+        captured_at=_CLOCK,
+        iva_history_repository=IvaCompensationHistoryRepository(objects=repository.secure_object_repository),
+        operation=operation,
+    )
+    return {str(binding_id): value for binding_id, value in prefill.binding_values.items()}
+
+
 def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path: Path) -> None:
     """1T of year N+1 auto-resolves casilla 110 to year N's 4T carried saldo.
 
@@ -449,6 +483,11 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
             obs_repo.prepare_observation_envelope(
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test-local-filing:compensacion-carry",
+                ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
                     _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
@@ -457,14 +496,11 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
         )
 
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(
+        resolved = _resolve_carry_from_local_store(
             snapshot_n1,
             repository=obs_repo,
             operation=_authority_operation_for_test,
         )
-        resolved: dict[RelationId, Decimal] = {
-            item.relation: item.value for item in relation_values.values if item.value is not None
-        }
 
     assert resolved.get(_CARRY_RELATION) == carried_saldo
     assert carried_saldo > Decimal("0")
@@ -498,6 +534,11 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
             obs_repo.prepare_observation_envelope(
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test-local-filing:compensacion-carry",
+                ),
                 captured_at=_CLOCK,
                 stamped_revision_id=revision_id_for_observation(
                     _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
@@ -508,19 +549,16 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta
         # wrap), lands in casilla 110, and a real calculation runs with it.
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(
+        resolved = _resolve_carry_from_local_store(
             snapshot_n1,
             repository=obs_repo,
             operation=_authority_operation_for_test,
         )
-        resolved: dict[RelationId, Decimal] = {
-            item.relation: item.value for item in relation_values.values if item.value is not None
-        }
         result_n1, _produced_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
-            cuota_binding_overrides=_YEAR_N_PLUS_1_1T_INPUTS,
-            relation_values=resolved,
+            cuota_binding_overrides={**_YEAR_N_PLUS_1_1T_INPUTS, **resolved},
+            relation_values={},
         )
 
     # Cross-renta wiring invariant: 1T/N+1 casilla 110 == 4T/N persisted saldo.

@@ -18,7 +18,7 @@ import pytest
 
 from ..field_role import FieldRole
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 
 _EXPECTED_TOKENS = {
@@ -41,6 +41,7 @@ _EXPECTED_TOKENS = {
     "IVA_CATEGORY": "iva_category",
     "IRPF_CATEGORY": "irpf_category",
     "RETENCION_AMOUNT": "retencion_amount",
+    "RETENCION_RATE": "retencion_rate",
     "RECARGO_AMOUNT": "recargo_amount",
     "SUPLIDO_AMOUNT": "suplido_amount",
     "GRAND_TOTAL": "grand_total",

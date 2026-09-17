@@ -52,6 +52,7 @@ __all__ = [
     "_resolve_relations_from_observations",
     "_select_authoritative_declaration",
     "_submitted_file_payload",
+    "_value_valid_m100_submitted_payload",
     "_whitespace_nif_session",
 ]
 
@@ -241,6 +242,30 @@ def _modelo_snapshot_ref(*, modelo: str, filing_year: int, period: str) -> Regis
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+# The redacted Modelo 100 submission keeps AEAT's structure but not its values:
+# its redactor wrote ``S`` into every boolean row, which neither of the 2023
+# schema's boolean types accepts -- ``tipo_logico`` is ``([0-1]){1}`` and
+# ``tipo_SINO_Exclusivo`` enumerates ``SI``/``NO``. Value-reading tests replace
+# that filler on the dictionary's boolean rows with each type's own affirmative
+# token, so they exercise the reader on bytes AEAT would accept.
+_M100_REDACTED_BOOLEAN_ROWS = {
+    "FINESSOCIALES": "1",
+    "CURBA": "1",
+    "USOHAB": "1",
+    "OBLMATERSN": "SI",
+}
+
+
+def _value_valid_m100_submitted_payload() -> bytes:
+    """Return the redacted Modelo 100 submission with its boolean filler made schema-valid."""
+    body = _SUBMITTED_FILE_100_2023_0A.read_bytes()
+    for tag, token in _M100_REDACTED_BOOLEAN_ROWS.items():
+        filler = f"<{tag}>S</{tag}>".encode()
+        assert body.count(filler) == 1, tag
+        body = body.replace(filler, f"<{tag}>{token}</{tag}>".encode())
+    return body
 
 
 def _declaration_pdf_payload(

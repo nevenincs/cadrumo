@@ -37,6 +37,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.export_parse import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
@@ -464,7 +465,7 @@ def _registry_modelo_100_xml_declarations() -> Mapping[str, str]:
         MappingFactQuery(
             fact_id="modelo-100-xml-export-declarations-mapping",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date.today(),
+            effective_date=today_madrid(),
         ),
     )
     if not isinstance(resolved, ResolvedMappingFact):

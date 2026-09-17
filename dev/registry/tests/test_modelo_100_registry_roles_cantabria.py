@@ -6,6 +6,7 @@ import pytest
 
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -147,7 +148,7 @@ def test_modelo_100_cantabria_2025_nuevos_contribuyentes_extranjero_roles_follow
 def test_modelo_100_cantabria_2020_2023_obras_mejora_slots_keep_historical_cant3aa_shape(
     filing_year: int,
 ) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0948", "0950", "0956"}}
 
     assert set(casillas_by_id) == {"0948", "0950", "0956"}
@@ -173,7 +174,7 @@ def test_modelo_100_cantabria_2020_2023_obras_mejora_slots_keep_historical_cant3
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
 def test_modelo_100_cantabria_2024_2025_obras_mejora_roles_follow_cant3_family(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {
         casilla.id: casilla
         for casilla in revision.casillas

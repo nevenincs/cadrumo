@@ -37,12 +37,14 @@ from ....domain.transactions.models import (
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..amendment_actions import _amendment_ledger_anchor
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _AMENDED_AT = datetime(2026, 6, 11, 9, 0, tzinfo=UTC)
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
-_OBSERVATION = SimpleNamespace(legal_refs=("art-75",), source_refs=("test-ledger-anchor",))
+_OBSERVATION = SimpleNamespace(
+    casilla_id="base_retenciones", legal_refs=("art-75",), source_refs=("test-ledger-anchor",)
+)
 _WORK_BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 
 

@@ -13,6 +13,7 @@ from functools import wraps
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.classification.policies import SensitivityClass
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.storage_taxonomy import StorageCustodyProfile
 from .errors import NamespaceRegistryError
@@ -94,6 +95,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
     @field_validator("key")
     @classmethod
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
             raise NamespaceRegistryError("registry key must not carry surrounding whitespace")
@@ -104,6 +106,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
     @field_validator("namespace")
     @classmethod
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _namespace_is_sql_safe(cls, value: str) -> str:
         if value != value.strip():
             raise NamespaceRegistryError("namespace must not carry surrounding whitespace")
@@ -114,6 +117,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
     @field_validator("default_object_key")
     @classmethod
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _default_key_is_repository_safe(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -183,6 +187,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @model_validator(mode="after")
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _singleton_default_key_matches_grammar(self) -> SecureObjectNamespaceDefinition:
         """Keep a singleton namespace's default key equal to its declared grammar.
 
@@ -201,6 +206,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @model_validator(mode="after")
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
             if not self.remote_mirror_requires_revision or not self.remote_mirror_requires_integrity_manifest:
@@ -228,6 +234,7 @@ class StorageHierarchyRegistry(BaseModel):
 
     @model_validator(mode="after")
     @_pydantic_namespace_validator
+    @pydantic_validation_boundary
     def _reject_duplicate_keys_and_namespaces(self) -> StorageHierarchyRegistry:
         namespace_keys = [item.key for item in self.namespaces]
         namespace_values = [item.namespace for item in self.namespaces]

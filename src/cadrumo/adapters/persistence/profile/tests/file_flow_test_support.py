@@ -370,7 +370,7 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
                 context=_profile_creation_context_for_test(),
             ),
         )
-        wu = WorkUnitCatalogueRepository(objects=objects)
+        wu = WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)

@@ -28,7 +28,6 @@ checks every anchor against the transcription.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import unicodedata
 from collections.abc import Iterable, Mapping
@@ -42,6 +41,7 @@ from pydantic import BaseModel
 from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
+from ...core.hashing import sha256_hex
 from ...core.identity.documents import IdentityError
 from ...core.identity.nif_iva import normalise_nif_iva
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -1099,7 +1099,7 @@ def text_layer_reads_completely_by_labels(
     transcription = DocumentTranscription(
         text=text,
         page_count=len(pages),
-        source_content_sha256=hashlib.sha256(data).hexdigest(),
+        source_content_sha256=sha256_hex(data),
         transcriber=text_layer_transcriber_identity(),
     )
     return read_invoice_fields_by_labels(transcription, operation=operation).complete

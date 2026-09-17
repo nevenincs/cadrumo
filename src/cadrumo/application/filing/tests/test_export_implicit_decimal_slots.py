@@ -56,7 +56,7 @@ from ....domain.calculations.registry.fixed_width_codec import parse_fixed_width
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .._record_field_renderer import format_field
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "303"
 _FILING_YEAR = 2025

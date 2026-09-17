@@ -32,7 +32,7 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..actions_split_merge import _split_child_eur_values
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _RATE = Decimal("0.1")
 # Chosen because independent per-child rounding does NOT re-sum to the parent

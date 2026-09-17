@@ -11,7 +11,6 @@ must read this persisted contract rather than recover an election themselves.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -33,6 +32,7 @@ from ...domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
+from ...domain.period import period_end_date
 
 if TYPE_CHECKING:
     from ..operator_actions.models import PreconditionVerdict
@@ -84,7 +84,7 @@ def _selected_registry_mapping(
             context={"modelo": raw_modelo, "filing_year": filing_year, "period": raw_period},
         )
     try:
-        effective_date = date(filing_year, 12, 31)
+        effective_date = period_end_date(filing_year, normalized_period)
         revision = operation.revision_for_context(
             normalized_modelo,
             filing_year=filing_year,

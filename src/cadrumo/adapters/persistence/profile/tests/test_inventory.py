@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .....domain.contribuyente.inventory.records import (
@@ -104,7 +105,7 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
         InventoryLedgerDocument(ledgers=(ledger.model_copy(update={"period_movements": (movement,)}),)),
     )
 
-    with pytest.raises(InventoryLedgerError) as exc_info:
+    with pytest.raises(ValidationError) as exc_info:
         record_movement("retail", movement, year=2025)
 
     assert exc_info.value.translated_message == "adapters.persistence.profile.inventory.errors.movement_already_exists"

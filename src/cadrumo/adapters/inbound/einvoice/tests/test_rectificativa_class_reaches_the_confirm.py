@@ -35,7 +35,7 @@ from cadrumo.adapters.inbound.einvoice.parsers import FacturaeInvoiceClass, Pars
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry.invoice_legal_classification import require_invoice_class
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: A bundled Facturae 3.2 document that corrects invoice ``0028`` in its own
 #: ``Corrective`` block while numbering itself ``0031`` in series ``R-2026``.
@@ -110,7 +110,7 @@ def test_the_class_follows_the_reference_in_both_directions() -> None:
     """
     parsed = _parsed()
 
-    assert require_invoice_class("ordinaria") != require_invoice_class("rectificativa")
+    assert require_invoice_class("ORDINARIA") != require_invoice_class("RECTIFICATIVA")
     assert parsed.facturae_invoice_class is FacturaeInvoiceClass.ORIGINAL_CORRECTIVE
     assert parsed.rectifies_invoice_number is not None
 

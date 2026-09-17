@@ -53,7 +53,7 @@ from typing import Any
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -64,6 +64,7 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -106,7 +107,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 from cadrumo.tests.env_scope import ready_clave_settings
 
@@ -139,14 +140,10 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         "bucket_event_repository",
     ):
         kwargs.pop(key, None)
+    kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
+    kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
     with bundled_indexed_authority().operation() as operation:
-        return verify_modelo_revision(
-            calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            operation=operation,
-            **kwargs,
-        )
+        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
 
 
 def _export_modelo_revision(command: Any, **kwargs: Any) -> Any:
@@ -160,6 +157,16 @@ def _import_external_filing_evidence(**kwargs: Any) -> Any:
 
 
 _BUCKET_ID = "13010000-0000-4000-8000-000000000100"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _TAX_ID = "12345678Z"
 _YEAR = 2024
 _T0 = datetime(2024, 1, 10, 10, 0, tzinfo=UTC)
@@ -391,7 +398,7 @@ def _calculate_and_file_m130_quarter(
     computed revision is then persisted through the production filing-observation
     path so the next quarter (and the annual fold-in) can carry it.
     """
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -435,7 +442,7 @@ def _import_official_m130_result_observation(
     c19_value: Decimal,
 ) -> None:
     """Persist the autonoma's filed M130 result as AEAT-attested local evidence."""
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     bucket_events = BucketEventHistoryRepository(objects=secure_objects)
@@ -567,9 +574,8 @@ def _seed_taxpayer_profile() -> None:
     # display_name MUST equal the manifest label isolated_runtime_profile created
     # ("Test runtime profile") — CommittedProfileView._validate_cross_store_agreement
     # rejects a label/display_name mismatch as a torn-rename inconsistency.
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        schema_version=load_user_profile_schema().version,
+    record = create_user_profile_record(
+        context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -592,7 +598,7 @@ def _seed_taxpayer_profile() -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
@@ -646,7 +652,7 @@ def _calculate_m100_annual(
 ) -> CalculationRevision:
     """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)

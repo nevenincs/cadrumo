@@ -181,13 +181,19 @@ class TestTheProductionReadPathSuppliesTheValues:
             "the read path must resolve the regulatory values it hands the reader"
         )
 
-    def test_the_reader_receives_them_as_a_keyword(self) -> None:
+    def test_the_reader_receives_them(self) -> None:
         """And they are passed on, rather than resolved and dropped."""
         import ast
         from pathlib import Path
 
         router = Path(__file__).parents[1] / "invoice_draft_extraction.py"
         tree = ast.parse(router.read_text(encoding="utf-8"))
-        keywords = {keyword.arg for node in ast.walk(tree) if isinstance(node, ast.Call) for keyword in node.keywords}
+        passed = {
+            argument.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            for argument in (*node.args, *(keyword.value for keyword in node.keywords))
+            if isinstance(argument, ast.Name)
+        }
 
-        assert "authority_values" in keywords
+        assert "authority_values" in passed

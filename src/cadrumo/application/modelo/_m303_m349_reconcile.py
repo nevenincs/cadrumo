@@ -15,6 +15,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -287,6 +288,11 @@ def m303_m349_intracom_reconcile_findings(
     if gap <= Decimal(contract.expectation.tolerance):
         return []
 
+    # The finding names each total by its modelo, whichever side is being verified.
+    if contract.sibling_modelo == Modelo("303").value:
+        m303_total, m349_total = sibling_total, own_total
+    else:
+        m303_total, m349_total = own_total, sibling_total
     return [
         ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
@@ -295,8 +301,8 @@ def m303_m349_intracom_reconcile_findings(
             message_facts={
                 "period_code": work_unit.period.registry_token,
                 "filing_year": work_unit.filing_year,
-                "m303_total": own_total,
-                "m349_total": sibling_total,
+                "m303_total": m303_total,
+                "m349_total": m349_total,
                 "gap": gap,
             },
             expectation_id=contract.expectation.id,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._modelo_100_registry_support import _modelo_100_snapshot
+from ._modelo_100_registry_support import _modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -16,7 +16,7 @@ _LEGACY_RECTIFICATION_SEPA_IBAN_ROLE = "irpf_rectsepa_cuenta_iban"
 
 
 def test_modelo_100_2020_rectification_iban_uses_root_regularization_account() -> None:
-    revision = _modelo_100_snapshot(2020).revision
+    revision = _modelo_100_revision(2020)
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0687")
 
     assert casilla.label == "IBAN rectificación"
@@ -30,7 +30,7 @@ def test_modelo_100_2020_rectification_iban_uses_root_regularization_account() -
 def test_modelo_100_rectification_sepa_account_is_iban_typed_and_role_specific(
     filing_year: int,
 ) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1780", "1781", "1782"}}
     stale_roles = [
         casilla.id for casilla in revision.casillas if casilla.semantic_role == _LEGACY_RECTIFICATION_SEPA_IBAN_ROLE

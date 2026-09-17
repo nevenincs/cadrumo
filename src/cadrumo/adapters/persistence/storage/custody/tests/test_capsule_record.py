@@ -209,9 +209,8 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
         ).fetchone() == (2,)
         connection.commit()
         connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-    with pytest.raises(
-        ProfileRecordIntegrityError, match="authenticated current-record validation"
-    ) as duplicate_refusal:
+    # Two rows: the count really is what failed, so the count is what is named.
+    with pytest.raises(ProfileRecordIntegrityError, match="exactly one current record row; it holds 2"):
         ProfileCapsuleLifecycle(root=tmp_path / "duplicate").restore(
             label="Restore target",
             password_envelope=envelope,
@@ -221,9 +220,6 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
             database_bytes=duplicate_database.read_bytes(),
             authority="password",
         )
-    assert isinstance(duplicate_refusal.value.__cause__, ProfileRecordIntegrityError)
-    # Two rows: the count really is what failed, so the count is what is named.
-    assert "exactly one current record row; it holds 2" in str(duplicate_refusal.value.__cause__)
 
     # A session minted from a different envelope is now refused BEFORE the
     # capsule is staged, on the envelope digest the session copied at mint.
@@ -255,7 +251,7 @@ def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: 
         envelope=other_envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
     )
 
-    with pytest.raises(ProfileRecordIntegrityError, match="authenticated current-record validation") as refusal:
+    with pytest.raises(ProfileRecordIntegrityError, match="addressed to a different object key") as refusal:
         ProfileCapsuleLifecycle(root=tmp_path / "uuid-mismatch").restore(
             label="Restore target",
             password_envelope=other_envelope,
@@ -266,10 +262,7 @@ def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: 
             authority="password",
         )
 
-    assert isinstance(refusal.value.__cause__, ProfileRecordIntegrityError)
     # One row, wrong key. The count clause passes here, so a message naming the
     # count would describe the half that did not fail and send a reader looking
     # for a missing or duplicated row that is not what went wrong.
-    cause = str(refusal.value.__cause__)
-    assert "addressed to a different object key" in cause
-    assert "exactly one current record row" not in cause
+    assert "exactly one current record row" not in str(refusal.value)

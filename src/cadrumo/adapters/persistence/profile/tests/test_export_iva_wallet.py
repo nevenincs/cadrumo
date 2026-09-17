@@ -74,11 +74,11 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with (
-        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
         bundled_indexed_authority().operation() as operation,
     ):
         export_modelo_revision(
@@ -109,11 +109,11 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with (
-        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"),
+        pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_requires_override"),
         bundled_indexed_authority().operation() as operation,
     ):
         export_modelo_revision(
@@ -144,14 +144,14 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, operation=operation)
+    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
         with (
-            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
             bundled_indexed_authority().operation() as operation,
         ):
             export_modelo_revision(
@@ -203,8 +203,8 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
 
     assert report.granted_verificado_completo is False
     assert any(
-        finding.message_locale_key == "application.modelo.findings.iva_wallet_reconciliation_blocked"
-        and finding.message_facts.get("divergence_code") == "filed_history_only"
+        finding.message_locale_key == "application.modelo.findings.iva_wallet_precondition_failed"
+        and str(finding.message_facts.get("scenario_id", "")).endswith("filed_history_requires_override")
         for finding in report.findings
     )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
@@ -236,7 +236,10 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
             report = verify_modelo_revision(
                 calc_rev_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                verification_repositories=build_test_verification_repository_bundle(),
+                verification_repositories=replace(
+                    build_test_verification_repository_bundle(),
+                    iva_compensation_decision=decision_repo,
+                ),
                 actor="operator",
                 workflow_profile=_profile(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -247,8 +250,8 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
 
     assert report.granted_verificado_completo is False
     assert any(
-        finding.message_locale_key == "application.modelo.findings.iva_wallet_reconciliation_blocked"
-        and finding.message_facts.get("divergence_code") == "wallet_higher"
+        finding.message_locale_key == "application.modelo.findings.iva_wallet_precondition_failed"
+        and str(finding.message_facts.get("scenario_id", "")).endswith("wallet_local_recurrence_divergence")
         for finding in report.findings
     )
     revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
@@ -277,7 +280,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
 
     try:
         with (
-            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"),
+            pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_local_recurrence_divergence"),
             bundled_indexed_authority().operation() as operation,
         ):
             file_modelo_revision(

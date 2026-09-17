@@ -302,7 +302,7 @@ def _merged_taxpayer_values(
 ) -> dict[str, str]:
     """Merge the path-keyed and selector-keyed projections for the taxpayer coercion.
 
-    :func:`~cadrumo.domain.deadlines.taxpayer_profile_from_mapping` reads
+    :func:`~cadrumo.domain.deadlines.profiles.taxpayer_profile_from_mapping` reads
     most fields at their canonical schema path (which is also the key space
     the wizard's ``project_answers`` resolves questions against), but a
     field family is read at its declared ``model_selectors`` alias instead

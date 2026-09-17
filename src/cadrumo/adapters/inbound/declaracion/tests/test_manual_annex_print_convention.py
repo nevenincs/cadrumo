@@ -46,7 +46,7 @@ import pytest
 
 from .test_manual_annex_provenance import _annex_pdfs
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: A printed euro amount in the Spanish convention: thousands separated by ".",
 #: two decimals after ",". Matches "0,00", "624,00" and "21.420,00"; the sign of

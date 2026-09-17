@@ -36,11 +36,11 @@ from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_authored_revision
 from ....domain.deadlines.models import TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: Every M100 revision declaring casilla 0597. Each was resolved from that
 #: revision's OWN casilla set through semantic_role rather than copied,
@@ -71,7 +71,7 @@ def _profile() -> TaxpayerProfile:
 
 def _predicate(year: int):
     """Return the registry's own declared predicate, not a hand-written expression."""
-    revision = published_snapshot("100", filing_year=year, period="0A").revision
+    revision = published_authored_revision("100", year=year)
     for predicate in revision.verification_predicates or ():
         if predicate.predicate_id == _predicate_id(year):
             return predicate

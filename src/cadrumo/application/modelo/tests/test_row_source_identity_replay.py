@@ -26,7 +26,7 @@ from .._row_source_identity_replay import (
     attach_revision_row_source_identities,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _RAW_IDENTITY = "opaque-inventory-activity-canary"
 _DIGEST = "a" * 64

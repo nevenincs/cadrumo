@@ -24,6 +24,7 @@ from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.binding_targets import (
     bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
 )
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel as _BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
 )
@@ -166,6 +167,7 @@ class _DraftInputChannels(NamedTuple):
     binding_inputs: dict[_BindingId, Decimal]
     enum_binding_inputs: dict[_BindingId, str]
     date_binding_inputs: dict[_BindingId, date]
+    boolean_binding_inputs: dict[_BindingId, bool]
     relation_inputs: dict[_RelationId, Decimal]
     filing_binding_values: list[_ModeloBindingValue]
 
@@ -181,9 +183,14 @@ def _draft_input_channels(
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
     date_binding_ids = _date_binding_ids(snapshot)
     relation_ids = _relation_ids(snapshot)
-    # Date and relation ids ride dedicated engine channels; never coerce their
-    # values through the Decimal binding channel (an ISO date is not a Decimal).
-    decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
+    boolean_binding_ids = {
+        binding_id for binding_id, binding in bindings.items() if binding.value.channel is _BindingValueChannel.BOOLEAN
+    }
+    # Date, truth-value and relation ids ride dedicated engine channels; never
+    # coerce their values through the Decimal binding channel.
+    decimal_binding_ids = (
+        calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids - boolean_binding_ids
+    )
     _validate_filing_input_keys(
         inputs,
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
@@ -200,6 +207,11 @@ def _draft_input_channels(
         binding_inputs=_decimal_inputs_for_ids(inputs, decimal_binding_ids),
         enum_binding_inputs=_string_inputs_for_ids(inputs, enum_binding_ids),
         date_binding_inputs=_date_inputs_for_ids(inputs, date_binding_ids),
+        boolean_binding_inputs={
+            binding_id: _boolean_input(binding_id, inputs[binding_id])
+            for binding_id in boolean_binding_ids
+            if inputs.get(binding_id) is not None
+        },
         relation_inputs=_decimal_inputs_for_ids(inputs, relation_ids),
         filing_binding_values=filing_binding_values(
             inputs,
@@ -225,6 +237,7 @@ def _calculate_draft_result(
             enum_binding_values=input_channels.enum_binding_inputs or None,
             relation_values=input_channels.relation_inputs or None,
             date_binding_values=input_channels.date_binding_inputs or None,
+            boolean_binding_values=input_channels.boolean_binding_inputs or None,
             text_inputs=input_channels.text_casilla_inputs or None,
         )
     except _RegistryValidationError as exc:
@@ -483,9 +496,12 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     annual settlement) are supplied to the engine on the dedicated
     ``relation_values`` channel. A draft replay extracts them from the
     persisted inputs by this id-set; relations not present in the inputs
-    are simply absent from the resolved relation map.
+    are simply absent from the resolved relation map. The set is scoped to
+    the snapshot period, matching the engine's own accepted relation ids.
     """
-    return {binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)}
+    return {
+        binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+    }
 
 
 def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, str]:

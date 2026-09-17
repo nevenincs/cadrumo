@@ -41,7 +41,7 @@ from ..compiler.validate_bindings import validate_binding_registration_section
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 

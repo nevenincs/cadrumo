@@ -35,6 +35,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     iva_ledger_selector,
@@ -47,7 +48,7 @@ from ..compiler.loader import load_registry_tree
 from ._gate_support import fragment_declaring
 from .ledger_iva_aggregation_support import _deduction_provenance
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: The revision-span split replaced the open-ended `2010-y-siguientes` revision
 #: with one revision per bundled diseno year, so this names the current one. The
@@ -68,7 +69,7 @@ def _m390_revision(root: Path):
 
 
 def _bundled_registry_root() -> Path:
-    return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+    return bundled_path("registry", "aeat")
 
 
 def _export_field(revision, *, record_id: str, offset: int):

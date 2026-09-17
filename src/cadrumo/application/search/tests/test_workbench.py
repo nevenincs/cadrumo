@@ -38,7 +38,7 @@ from ..workbench import (
 #: keeps the test's lookup explicit without making either canonical spelling a
 #: dependency-direction requirement.
 workbench_module = import_module("..workbench", package=__package__)
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CALCULATION_REVISION_ID = "c" * 64
 _FILING_RECORD_ID = "f" * 64

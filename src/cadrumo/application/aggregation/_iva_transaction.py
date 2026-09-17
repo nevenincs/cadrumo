@@ -20,12 +20,20 @@ from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.components import (
+    category_components,
+    registry_category_projection,
+    registry_component_catalogue,
+    registry_component_presence_token,
+    registry_kind_applicability_token,
+)
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ...domain.iva.flow import (
     IvaFlowDirection,
     derive_flow_for_classification,
     received_flow_direction,
 )
+from ...domain.iva.lookup import rate_table_covers_any_positive_tier
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import (
     IvaCashAccountingTreatment,
@@ -35,6 +43,7 @@ from ...domain.iva.schema import (
     IvaRateKind,
     default_iva_cash_accounting_treatment,
     is_iva_cash_accounting_none,
+    spanish_eu_member_state,
 )
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
@@ -50,6 +59,7 @@ from .iva_ledger import (
     missing_tax_fact_detail,
     missing_tax_fact_reason,
     prorrata_reference_for,
+    validate_iva_ledger_counterparty_category,
 )
 
 
@@ -301,14 +311,96 @@ def _canonical_iva_rate_kind(
     """Resolve a declared rate against the legal table available on its date."""
     rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date, operation=operation)
     if rate_kind is None:
+        member_state = spanish_eu_member_state(effective_date=operation_date, authority=operation)
+        if rate_table_covers_any_positive_tier(member_state, operation_date, operation=operation):
+            return _IvaTransactionOutcome(
+                gate_issue=IvaLedgerAggregationIssue(
+                    transaction_id=transaction.transaction_id,
+                    reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
+                    detail=(
+                        f"IVA rate {iva_rate} is not a canonical substrate IVA rate for {operation_date.isoformat()}"
+                    ),
+                ),
+            )
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction.transaction_id,
-                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
-                detail=(f"IVA rate {iva_rate} is not a canonical substrate IVA rate for {operation_date.isoformat()}"),
+                reason=IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
+                detail=(
+                    f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
+                    "reaches no tier bearing a positive rate on that date, so a transaction dated "
+                    f"there cannot be classified whatever rate it carries. The rate {iva_rate} is "
+                    "not what needs correcting -- the filing year is outside the supported window"
+                ),
             ),
         )
     return rate_kind
+
+
+def _declared_category_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    explicit_category: IvaCategory,
+    invoice_kind: InvoiceKind,
+    operation: PinnedAuthorityOperation,
+) -> IvaLedgerAggregationIssue | None:
+    """Return why an OPERATOR-DECLARED category contradicts the row, or ``None``.
+
+    Every screen here is scoped to the declared category deliberately. The
+    derived branch reads its category off the rate, so it cannot contradict the
+    rate; a screen written across both would be vacuous on half its population
+    while reading as though it covered it.
+    """
+    effective_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+    if explicit_category in registry_category_projection(
+        "m303_base_out_of_scope",
+        effective_date=effective_date,
+        authority=operation,
+    ):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
+            detail=(
+                f"iva_category {explicit_category.value!r} does not produce a declarable ledger IVA "
+                "observation; the registry places its base outside the Modelo 303 ledger scope"
+            ),
+        )
+    counterparty_issue = validate_iva_ledger_counterparty_category(transaction, operation=operation)
+    if counterparty_issue is not None:
+        return counterparty_issue
+    catalogue = registry_component_catalogue(effective_date=effective_date, authority=operation)
+    components = category_components(explicit_category, invoice_kind, component_catalogue=catalogue)
+    does_not_arise = registry_kind_applicability_token(
+        "does_not_arise",
+        effective_date=effective_date,
+        authority=operation,
+    )
+    if components.applicability == does_not_arise:
+        # The row's own note names the category that IS this side's
+        # counterpart, so the refusal can say what the operator probably meant.
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
+            detail=(
+                f"row declares iva_category {explicit_category.value!r} on a "
+                f"{invoice_kind.value!r} invoice, a combination that describes no operation. "
+                f"{components.retencion_note}"
+            ),
+        )
+    zero_by_law = registry_component_presence_token("zero_by_law", effective_date=effective_date, authority=operation)
+    if components.cuota == zero_by_law and transaction.iva_rate != Decimal("0"):
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
+            detail=(
+                f"row declares iva_category {explicit_category.value!r} on a "
+                f"{invoice_kind.value!r} invoice, whose cuota is zero by law, with "
+                f"iva_rate {transaction.iva_rate}; a category that admits no cuota admits "
+                "no tipo either, so one of the two facts is wrong"
+            ),
+        )
+    return None
 
 
 def _resolve_iva_transaction_classification(
@@ -325,6 +417,15 @@ def _resolve_iva_transaction_classification(
             effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,
             authority=operation,
         ).require(explicit_category)
+        declared_issue = _declared_category_issue(
+            transaction,
+            transaction_id=transaction_id,
+            explicit_category=effective_category,
+            invoice_kind=invoice_kind,
+            operation=operation,
+        )
+        if declared_issue is not None:
+            return _IvaTransactionOutcome(gate_issue=declared_issue)
     else:
         catalogue = resolve_iva_rate_kind_catalogue(
             effective_date=transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date,

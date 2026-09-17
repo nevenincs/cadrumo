@@ -32,7 +32,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..actions_manual import _command_from_patch
 from ..models import ManualLedgerTransactionPatch
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "b" * 36
 _SECTOR = "sector-a"

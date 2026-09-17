@@ -10,10 +10,10 @@ from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
-from ..compiler.validator import RegistryValidator
 from .catalogue_verification_support import registry_tree
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
@@ -24,7 +24,7 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
     verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
     verify_source_catalogue(REPO_ROOT, catalogues.sources)
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     validator.validate_registry(modelos)
 
 

@@ -24,7 +24,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ..simplificada_advisory import SimplificadaTaxIdAdvisory, resolve_simplificada_tax_id_advisory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BASE = Decimal("40.00")
 _CUOTA = Decimal("8.40")

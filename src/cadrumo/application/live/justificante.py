@@ -61,6 +61,7 @@ if TYPE_CHECKING:
     from ..modelo.reconciliation import ModeloReconciliationReport
 
 from ...core.aeat_csv import normalise_aeat_csv
+from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity.aeat_csv import AeatCsv
@@ -181,11 +182,12 @@ class JustificanteCaptureSnapshot(BaseModel):
 
     @field_validator("modelo")
     @classmethod
+    @pydantic_validation_boundary
     def _modelo_is_known(cls, value: str) -> str:
         """Reject a modelo code that is not a member of the core :class:`Modelo` enum."""
         try:
             Modelo(value)
-        except ValueError as exc:
+        except CoreValidationError as exc:
             raise LiveApplicationInputError(
                 translated_message="application.live.justificante.errors.modelo_unknown",
                 context={"modelo": value},

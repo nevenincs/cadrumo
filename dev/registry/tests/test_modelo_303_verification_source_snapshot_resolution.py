@@ -46,7 +46,7 @@ from dev.registry.compiler.authority_state import source_root_for
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..compiler.validator import RegistryValidator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELO_303 = "303"
 

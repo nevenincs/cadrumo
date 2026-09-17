@@ -14,7 +14,7 @@ from pydantic import BaseModel, StringConstraints, model_validator
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
@@ -167,6 +167,7 @@ class TaxpayerIdentityFacts(BaseModel):
     full_name: _NonBlankName | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _refuse_entity_and_person_names_together(self) -> TaxpayerIdentityFacts:
         """An entity carries a legal name; a natural person carries given name and surnames.
 
@@ -886,6 +887,7 @@ class M303FilingFacts(BaseModel):
     bienes_parameters: BienesInversionRegularizacionParameters
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _arrivals_share_one_filing_period(self) -> M303FilingFacts:
         _validate_m303_filing_periods(self)
         _validate_m303_calculation_results(self)
@@ -965,6 +967,7 @@ class AmendmentEvidence(BaseModel):
     original_aeat_receipt: _AeatReceiptNumber
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _motive_belongs_only_to_rectificativa(self) -> AmendmentEvidence:
         if (
             self.m303_rectificativa_motive is not None
@@ -1043,6 +1046,7 @@ class FilingProducerSnapshot(BaseModel):
     m390_filing_facts: _M390FilingFacts | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_model_profile(self) -> FilingProducerSnapshot:
         _validate_snapshot_model_profile(self)
         _validate_snapshot_account_selection(self)

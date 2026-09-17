@@ -28,7 +28,7 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
-from .....core.errors.hierarchy import AuthError
+from .....core.errors.hierarchy import AuthError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
@@ -79,6 +79,7 @@ class PersistedBrowserSession(BaseModel):
     written_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _schema_is_current(self) -> PersistedBrowserSession:
         if self.schema_version != _SESSION_VERSION:
             raise ValueError("persisted browser session schema version is unsupported")

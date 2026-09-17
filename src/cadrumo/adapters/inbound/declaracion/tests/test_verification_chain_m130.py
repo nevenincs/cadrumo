@@ -16,7 +16,7 @@ from ._verification_chain_support import (
     _parse_extracted_declaracion_values,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")

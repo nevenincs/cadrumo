@@ -18,7 +18,7 @@ from ..diagnostics import (
 )
 from ..errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 class _UnusedDiagnosticPersistence:

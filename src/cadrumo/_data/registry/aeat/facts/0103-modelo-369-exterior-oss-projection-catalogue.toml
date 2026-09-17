@@ -18,13 +18,41 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-369-2021"
-required_text = ["Prestaciones de servicios. Tipo IVA", "S:", "R:"]
+required_text = ["Prestaciones de servicios. Tipo IVA", "S:", "R:", "ISO-3166", "para Grecia"]
 
 [fact.variants.payload]
 kind = "mapping"
 entries = [
   { key = "rate_code.general", value = "S" },
   { key = "rate_code.reduced", value = "R" },
+  { key = "country_code.at", value = "AT" },
+  { key = "country_code.be", value = "BE" },
+  { key = "country_code.bg", value = "BG" },
+  { key = "country_code.cy", value = "CY" },
+  { key = "country_code.cz", value = "CZ" },
+  { key = "country_code.de", value = "DE" },
+  { key = "country_code.dk", value = "DK" },
+  { key = "country_code.ee", value = "EE" },
+  { key = "country_code.es", value = "ES" },
+  { key = "country_code.fi", value = "FI" },
+  { key = "country_code.fr", value = "FR" },
+  { key = "country_code.gr", value = "EL" },
+  { key = "country_code.hr", value = "HR" },
+  { key = "country_code.hu", value = "HU" },
+  { key = "country_code.ie", value = "IE" },
+  { key = "country_code.it", value = "IT" },
+  { key = "country_code.lt", value = "LT" },
+  { key = "country_code.lu", value = "LU" },
+  { key = "country_code.lv", value = "LV" },
+  { key = "country_code.mt", value = "MT" },
+  { key = "country_code.nl", value = "NL" },
+  { key = "country_code.pl", value = "PL" },
+  { key = "country_code.pt", value = "PT" },
+  { key = "country_code.ro", value = "RO" },
+  { key = "country_code.se", value = "SE" },
+  { key = "country_code.si", value = "SI" },
+  { key = "country_code.sk", value = "SK" },
+  { key = "country_code.xi", value = "XI" },
   { key = "regime.order", value = "external_scheme,union_scheme,import_scheme" },
   { key = "regime.selector", value = "selector.regime" },
   { key = "regime.common_semantics", value = "Article 163 septiesdecies provides definitions common to all three regimes (declaraciones-liquidaciones periódicas, Estado miembro de consumo, Estado miembro de identificación)." },

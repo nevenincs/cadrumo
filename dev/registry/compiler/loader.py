@@ -420,8 +420,10 @@ def load_shared_catalogues(root: Path) -> RegistryCatalogues:
             sociedades_annual_manual_coverage = catalogue.sociedades_annual_manual_coverage
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
-    if supported_filing_years is None or sociedades_annual_manual_coverage is None:
-        raise RegistryLoadError(f"{legal_dir}: required shared catalogue declaration is missing")
+    if supported_filing_years is None:
+        raise RegistryLoadError(f"{legal_dir}: missing supported_filing_years shared catalogue declaration")
+    if sociedades_annual_manual_coverage is None:
+        raise RegistryLoadError(f"{legal_dir}: missing sociedades_annual_manual_coverage shared catalogue declaration")
     _validate_sociedades_annual_manual_coverage(sociedades_annual_manual_coverage, supported_filing_years, sources)
     return RegistryCatalogues(
         legal=legal,
@@ -441,19 +443,19 @@ def _validate_sociedades_annual_manual_coverage(
     for disposition in catalogue.dispositions:
         if disposition.status is not SociedadesAnnualManualCoverageStatus.AVAILABLE:
             continue
+        subject = f"Sociedades annual manual coverage year {disposition.year}"
         source = sources.get(disposition.source_ref or "")
-        if source is None or source.kind != "manual_pdf" or source.authority != "aeat":
-            raise RegistryLoadError(
-                f"Sociedades annual manual coverage year {disposition.year} has no AEAT manual source"
-            )
-        if source.corpus_path != f"corpus/manuals/sociedades/{disposition.year}/source.pdf":
-            raise RegistryLoadError(
-                f"Sociedades annual manual coverage year {disposition.year} has an invalid corpus path"
-            )
+        if source is None:
+            raise RegistryLoadError(f"{subject} references unknown source {disposition.source_ref!r}")
+        if source.kind != "manual_pdf":
+            raise RegistryLoadError(f"{subject} source must be kind='manual_pdf', not {source.kind!r}")
+        if source.authority != "aeat":
+            raise RegistryLoadError(f"{subject} source must be published by AEAT, not {source.authority!r}")
+        expected_path = f"corpus/manuals/sociedades/{disposition.year}/source.pdf"
+        if source.corpus_path != expected_path:
+            raise RegistryLoadError(f"{subject} source must use corpus path {expected_path!r}")
         if source.applies_from != date(disposition.year, 1, 1) or source.applies_to != date(disposition.year, 12, 31):
-            raise RegistryLoadError(
-                f"Sociedades annual manual coverage year {disposition.year} has an invalid applicability interval"
-            )
+            raise RegistryLoadError(f"{subject} source must have the exact annual applicability interval")
 
 
 def load_registry_tree(

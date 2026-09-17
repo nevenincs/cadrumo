@@ -39,7 +39,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_ID = "3f2a1b4c-5d6e-4f70-8a9b-0c1d2e3f4a5b"
 _DERIVED_PATH = "renta_family.descendientes_minimos_aggregate_2024"

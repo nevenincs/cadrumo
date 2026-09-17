@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.hashing import content_hash_hex
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -208,6 +208,7 @@ class FindingResolution(BaseModel):
     note: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _the_action_determines_what_must_accompany_it(self) -> Self:
         """Refuse a resolution whose payload does not match its action.
 

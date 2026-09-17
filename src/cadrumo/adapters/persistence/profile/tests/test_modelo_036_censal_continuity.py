@@ -104,6 +104,9 @@ def _alta_observation() -> RegistryModeloObservation:
             # application produces no fichero for it, so the FILING default asks
             # for capability the modelo neither has nor claims.
             grade=RegistryAuthorityGrade.APPLICABILITY,
+            # 2025 is split between the editions before and from 2025-02-03;
+            # the alta happens on the clock date, after the boundary.
+            on=_CLOCK_N.date(),
             casilla_values={
                 _EVENT_KIND_CASILLA: Decimal("1"),
                 _VIGENCIA_2025_CASILLA: _VIGENCIA,
@@ -154,7 +157,7 @@ def test_alta_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
                 obs,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs),
+                stamped_revision_id=revision_id_for_observation(obs, on=_CLOCK_N.date()),
             )
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
@@ -180,7 +183,7 @@ def test_modificacion_observation_persists_and_reloads_strictly(tmp_path: Path) 
                 obs,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs),
+                stamped_revision_id=revision_id_for_observation(obs, on=_CLOCK_N_PLUS_1.date()),
             )
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
@@ -214,7 +217,7 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
                 obs_n,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
+                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
             )
         )
         repo.save(
@@ -222,7 +225,7 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
                 obs_n1,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
+                stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
             )
         )
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
@@ -261,7 +264,7 @@ def test_vigencia_normativa_is_identical_in_both_annual_contexts(tmp_path: Path)
                 obs_n,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
+                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
             )
         )
         repo.save(
@@ -269,7 +272,7 @@ def test_vigencia_normativa_is_identical_in_both_annual_contexts(tmp_path: Path)
                 obs_n1,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
+                stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
             )
         )
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
@@ -313,7 +316,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
                 obs_n,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
+                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
             )
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
@@ -351,7 +354,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
                 obs_n,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
+                stamped_revision_id=revision_id_for_observation(obs_n, on=_CLOCK_N.date()),
             )
         )
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_ALTA_PERIOD)
@@ -365,7 +368,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
                 obs_n1,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
+                stamped_revision_id=revision_id_for_observation(obs_n1, on=_CLOCK_N_PLUS_1.date()),
             )
         )
         loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)

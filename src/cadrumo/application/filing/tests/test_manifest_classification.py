@@ -39,15 +39,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — manifest-bearing modelos across the gated set,
 # spanning every shape: pagos fraccionados (130/131), retenciones (111/115/123),
-# IVA (303), sociedades (202), and informativas (190/180/349/232/720).
+# IVA (303), sociedades (202/200), and informativas (190/180/349/232/720).
 #
-# The sociedades slot names 202 (pago fraccionado del Impuesto sobre Sociedades)
-# rather than 200. The completeness gate reads a FILING-grade snapshot, and 200
-# no longer declares filing authority, so a 200 row here would not be testing
-# the gate at all -- it would refuse at the snapshot boundary before the gate
-# ever ran. That refusal is a real contract, so it is asserted explicitly in
-# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below
-# rather than being dropped silently.
+# Modelo 200 enters only from its 2025 design, the first it declares at filing
+# grade. Its 2024 revision stays at calculation grade and refuses at the
+# snapshot boundary before the gate runs; that refusal is asserted explicitly in
+# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below.
 _MANIFEST_MODELOS = [
     ("130", 2025, "1T", date(2025, 6, 1)),
     ("111", 2025, "1T", date(2025, 6, 1)),
@@ -56,6 +53,7 @@ _MANIFEST_MODELOS = [
     ("131", 2025, "1T", date(2025, 6, 1)),
     ("303", 2025, "1T", date(2025, 6, 1)),
     ("202", 2025, "1P", date(2025, 6, 1)),
+    ("200", 2025, "0A", date(2026, 7, 1)),
     ("190", 2025, "0A", date(2026, 6, 1)),
     ("180", 2025, "0A", date(2026, 6, 1)),
     ("349", 2025, "1T", date(2025, 6, 1)),
@@ -100,10 +98,11 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, yea
     assert required, f"modelo {modelo} has an empty gate-required set (vacuous gate)"
 
 
-# A modelo whose registry declares a rung below filing. Modelo 200 declares
-# `calculation`: it computes, but it ships no export layout, so claiming filing
-# authority for it would be a false capability claim.
-_CALCULATION_GRADE_COORDINATE = ("200", 2025, "0A", date(2025, 6, 1))
+# A coordinate whose registry revision declares a rung below filing. Modelo
+# 200's 2024 revision declares `calculation`: it computes, but it ships no
+# export layout, so claiming filing authority for it would be a false
+# capability claim.
+_CALCULATION_GRADE_COORDINATE = ("200", 2024, "0A", date(2024, 12, 31))
 
 
 def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:

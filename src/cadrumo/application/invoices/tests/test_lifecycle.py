@@ -21,7 +21,7 @@ from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "20202020-2020-4202-8202-202020202020"
 _COUNTERPARTY_CIF = "A58818501"

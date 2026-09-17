@@ -24,6 +24,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import (
@@ -83,6 +84,7 @@ class ModeloEditMutationResultReceiptV1(EditModel):
     result_destination: OperationReference
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_utc_commit_time(self) -> ModeloEditMutationResultReceiptV1:
         validate_utc_aware(self.committed_at)
         return self

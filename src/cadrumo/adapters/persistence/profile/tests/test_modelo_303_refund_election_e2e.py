@@ -38,10 +38,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
+from dev.registry.tests.profile_schema_support import profile_creation_context_for_test
 from pydantic import SecretStr
 
-from .....application.calculations.binding_prefill import BindingPrefillReport
+from cadrumo.domain.user_profile.values import create_user_profile_record
+
+from .....application.calculations.binding_prefill import (
+    BindingPrefillReport,
+    extract_modelo_303_local_iva_compensation_recurrence,
+)
 from .....application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from .....application.calculations.relation_prefill import resolve_relations_from_local_store
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
@@ -66,7 +71,7 @@ from .....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .....entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_filing_action_ports,
@@ -79,6 +84,7 @@ from ..calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from ..iva_compensation_history import IvaCompensationHistoryRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_filing import ModeloRecordCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -134,7 +140,8 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
 def _create_work_unit(**kwargs: Any) -> Any:
     kwargs.pop("repository", None)
     kwargs.pop("bucket_event_repository", None)
-    return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), **kwargs)
+    with bundled_indexed_authority().operation() as operation:
+        return create_work_unit(ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID), operation=operation, **kwargs)
 
 
 def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
@@ -194,9 +201,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
 def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
     activity_start_date = _activity_start_date_for_period(period_token)
     seed_test_profile_record(
-        UserProfileRecord(
-            schema_id="cadrumo.user_profile",
-            schema_version=load_user_profile_schema().version,
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -219,6 +224,7 @@ def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
             ),
             created_at=created_at,
             updated_at=created_at,
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -436,16 +442,21 @@ def _file_period(
 
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:
-    """Resolve the next period's casilla-110 carry-in from whatever carry the filing persisted."""
+    """Reconstruct the next period's casilla-110 carry-in from whatever carry the filing persisted.
+
+    This is the local recurrence the IVA wallet reconciliation compares against
+    AEAT evidence; the Modelo 303 compensation carry is wallet-owned, not a
+    relation prefill.
+    """
     snapshot_next = published_authority_operation().snapshot("303", filing_year=next_year, period=next_period)
-    relation_values = _resolve_relations_from_local_store(
-        snapshot_next,
-        repository=CalculationObservationRepository(),
-    )
-    resolved: dict[RelationId, Decimal] = {
-        item.relation: item.value for item in relation_values.values if item.value is not None
-    }
-    return resolved.get(_CARRY_RELATION)
+    with bundled_indexed_authority().operation() as operation:
+        recurrence, _ = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot_next,
+            operation=operation,
+            repository=CalculationObservationRepository(),
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        )
+    return None if recurrence is None else recurrence.amount
 
 
 def test_non_redeme_last_period_refund_election_yields_devolucion_and_zero_carry(
@@ -543,15 +554,10 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(
     ``_REDEME_LAST_PERIOD`` (December) in place of the quarterly ``_LAST_PERIOD``
     (4T) the non-REDEME tests in this module use.
 
-    The self-compensación carry relation
-    (``modelo-303-compensacion-pendiente-anteriores``) the registry declares
-    targets only the quarterly periods (``target_periods = ["1T", "2T", "3T",
-    "4T"]``, ``previous_quarter`` alignment); the registry models no monthly
-    ``previous_month`` self-compensación carry. So the January-of-the-next-year
-    monthly period resolves NO casilla-110 carry-in via this relation
-    (``carry_in is None``): the refunded December credit is not carried forward,
-    so the standing-REDEME devolución path does not double-claim it. The positive
-    quarterly-carry counterpart is exercised by the non-REDEME control above.
+    The January-of-the-next-year monthly period reconstructs a casilla-110
+    carry-in of exactly zero: the refunded December credit is not carried
+    forward, so the standing-REDEME devolución path does not double-claim it. The
+    positive carry counterpart is exercised by the non-REDEME control above.
     """
     with _secure_backend(tmp_path):
         revision_id, saldo = _calculate_negative_period(
@@ -566,4 +572,4 @@ def test_redeme_taxpayer_refunds_without_election_regression_guard(
         carry_in = _next_period_carry_in(next_year=_YEAR + 1, next_period="01")
 
     assert disposition is ResultDisposition.DEVOLUCION
-    assert carry_in is None
+    assert carry_in == Decimal("0")

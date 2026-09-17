@@ -22,7 +22,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..enums import ReviewItemKind, ReviewSeverity
 from ..models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _REVIEW_ITEM_ADAPTER: TypeAdapter[ReviewItem] = TypeAdapter(ReviewItem)

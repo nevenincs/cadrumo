@@ -35,6 +35,7 @@ from typing import Any, BinaryIO
 
 import rtoml
 
+from .errors.hierarchy import CoreValidationError
 from .type_guards import is_object_dict, is_object_list, is_object_list_or_tuple, is_object_mapping
 
 #: A table's position in a rendered document: its keys, with the index of the
@@ -45,7 +46,7 @@ _BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
 _STRING_ESCAPES = {'"': '\\"', "\\": "\\\\", "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f", "\r": "\\r"}
 
 
-class TomlDecodeError(ValueError):
+class TomlDecodeError(CoreValidationError):
     """A document is not valid TOML."""
 
 

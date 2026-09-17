@@ -192,16 +192,16 @@ def test_post_cut_binding_override_is_preserved_unchanged() -> None:
         assert dict(carried.relation_overrides) == {binding_id: _OVERRIDE_VALUE}
 
 
-def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -> None:
+def test_calculation_read_path_migrates_the_stored_catalogue(tmp_path: Path) -> None:
     """The production calculation path rekeys a pre-cut store it finds on disk.
 
-    The entry point is the real source-mesh resolution, not the migration
-    helper: it is invoked exactly as a calculate run invokes it, with no
+    The entry point is the real calculation read path, not the migration
+    helper: it is invoked exactly as the calculate actions invoke it, with no
     repository injected, so the assertion is that the wiring exists rather than
     that the migration works in isolation.
     """
     from .....adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
-    from .....application.modelo.calculation_actions import resolve_bucket_source_mesh
+    from .....application.modelo.calculation_actions import list_calculation_revisions
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_parent_work_unit(profile)
@@ -211,14 +211,8 @@ def test_calculation_source_mesh_migrates_the_stored_catalogue(tmp_path: Path) -
 
         work_unit = WorkUnitCatalogueRepository(objects=profile.repository).load().get(_work_unit_id())
         assert work_unit is not None
-        with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_192:
-            resolve_bucket_source_mesh(
-                _snapshot(),
-                work_unit,
-                ports=_calculation_ports_192,
-                foreign_asset_observations=(),
-                foreign_asset_row_observations=(),
-            )
+        with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports:
+            list_calculation_revisions(ports=ports, work_unit_id=work_unit.work_unit_id)
 
         reloaded = repository.load()
         assert stored.calculation_revision_id not in reloaded

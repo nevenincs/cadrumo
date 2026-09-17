@@ -467,6 +467,12 @@ sequence_removals = {profile_conditions = [0], source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "live_cross_references"
+selector = {revision = "2023-2024", id = "modelo-202-filed-declarations-read"}
+sequence_additions = {source_refs = ["aeat-modelo-202-instructions"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "live_cross_references"
 selector = {revision = "2023-2024", id = "modelo-202-static-documentation"}
 fields = {guard_policy_id = "modelo-202-static-documentation-only"}
 sequence_additions = {source_refs = ["aeat-modelo-202-instructions"]}
@@ -482,8 +488,8 @@ sequence_removals = {source_refs = [0]}
 family = "constructs"
 selector = {revision = "2023-2024", id = "modelo-202-foundation"}
 sequence_additions = {bindings = ["modelo-202-cuota-base-ejercicio-anterior"], dependency_classifications = ["modelo-202-dep-200-cuota-base"], formulas = ["modelo-202-importe-pago-fraccionado-b2-tipo-3", "modelo-202-importe-pago-fraccionado-b2-tipo-4"], legal_refs = ["orden-hac-262-2025:art-unico-1-anexo-i"], source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026", "boe-modelo-202-2025-amendment"]}
-sequence_removals = {application_links = [8], legal_refs = [5], source_refs = [1, 2, 3, 4, 6]}
-sequence_order = {formulas = [0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 8, 9, 10], source_refs = [0, 2, 3, 4, 5, 1, 6]}
+sequence_removals = {application_links = [8], legal_refs = [5], source_refs = [0, 1, 2, 3, 5]}
+sequence_order = {formulas = [0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 8, 9, 10], source_refs = [1, 2, 3, 4, 0, 5]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
 family = "application_links"
@@ -501,6 +507,12 @@ sequence_removals = {source_refs = [0, 1]}
 family = "application_links"
 selector = {revision = "2023-2024", id = "modelo-202-deadline"}
 sequence_additions = {source_refs = ["aeat-modelo-202-instructions"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2023-2024", id = "modelo-202-export"}
+sequence_additions = {source_refs = ["aeat-dr-202-2025"]}
 sequence_removals = {source_refs = [0]}
 
 [[revisions."2025-y-siguientes".family_overrides]]

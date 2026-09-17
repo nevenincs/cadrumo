@@ -37,7 +37,7 @@ from ..reconciliation_records import (
     ModeloReconciliationVerdict,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
 _EVENT_ID = "a" * 64

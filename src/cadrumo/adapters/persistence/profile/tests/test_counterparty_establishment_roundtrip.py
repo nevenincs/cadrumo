@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.ledger.counterparty_establishment import ConfirmedCounterpartyFacts
+from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentPersistenceError
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.classifier_input_source import ClassifierInputSource
 from cadrumo.domain.iva.classification import IvaTerritorialScope
@@ -165,8 +166,9 @@ def test_persisted_fact_answering_neither_question_is_refused_at_load(
     del stored["identification_state"]
     _rewrite(envelope)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CounterpartyEstablishmentPersistenceError) as refusal:
         CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+    assert isinstance(refusal.value.__cause__, ValidationError)
 
 
 def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
@@ -202,8 +204,9 @@ def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
         payload=json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CounterpartyEstablishmentPersistenceError) as refusal:
         CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+    assert isinstance(refusal.value.__cause__, ValidationError)
 
 
 def test_object_key_carries_no_tax_identifier(secure_objects: SecureObjectRepository) -> None:

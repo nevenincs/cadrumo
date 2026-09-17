@@ -39,7 +39,12 @@ from ._referential_integrity_support import (
 )
 from .profile_schema_support import load_user_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("governed_fact_scope"),
+    pytest.mark.usefixtures("isolated_provider_registration"),
+]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
 _SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
@@ -63,7 +68,7 @@ _PARITY_SOURCE_ID = "aeat-open-parity-source"
 
 def _modelo_validation_failures(modelo: ModeloDefinition) -> list[str]:
     try:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
     except RegistryValidationError as exc:
         return str(exc).splitlines()
     return []
@@ -232,7 +237,7 @@ def test_revision_without_calculation_closure_passes_without_completeness_manife
     revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),))
     modelo = minimal_modelo(revision)
     # A clean return proves no-calculation revisions are not forced to author an empty manifest.
-    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+    RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
 
 
 def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
@@ -258,7 +263,7 @@ def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
         RegistryValidationError,
         match="calculation-bearing revision declares no calculation-completeness manifest",
     ):
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
 
 
 def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None:
@@ -379,7 +384,7 @@ def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="manifest includes internal-only"):
-        RegistryValidator(catalogues).validate_modelo(malformed_modelo)
+        RegistryValidator(catalogues, user_profile_schema=load_user_profile_schema()).validate_modelo(malformed_modelo)
 
 
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:
@@ -395,7 +400,7 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
     )
     revision = minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
     modelo = minimal_modelo(revision)
-    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+    RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
 
 
 def test_completeness_gate_passes_when_revision_declares_extra_accounting_casilla() -> None:
@@ -418,7 +423,7 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     )
     modelo = minimal_modelo(revision)
     # A clean return proves the extra accounting casilla does not fail.
-    RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+    RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
 
 
 def test_completeness_gate_fails_on_missing_required_casilla() -> None:
@@ -445,7 +450,7 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
             r"but the revision does not declare it"
         ),
     ):
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
 
 
 def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
@@ -563,7 +568,9 @@ def test_modelo_validation_rejects_manifest_sourced_only_by_executable_parity() 
             r"requires one of official_source_guidance, layout_authority source evidence"
         ),
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation() -> None:
@@ -616,7 +623,9 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
             r"requires one of official_source_guidance, layout_authority source evidence"
         ),
     ):
-        RegistryValidator(_catalogues_with_executable_parity_source()).validate_modelo(minimal_modelo(revision))
+        RegistryValidator(
+            _catalogues_with_executable_parity_source(), user_profile_schema=load_user_profile_schema()
+        ).validate_modelo(minimal_modelo(revision))
 
 
 def test_snapshot_carries_manifest_and_continuity_refs() -> None:

@@ -36,7 +36,7 @@ from ....domain.iva.classification import (
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ..source_resolver import iva_category_for_operation_type
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _eu_inbound_b2b(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteria:

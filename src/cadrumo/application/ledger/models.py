@@ -18,6 +18,7 @@ from pydantic import (
 )
 
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -104,6 +105,7 @@ def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     return normalise_iso_3166_alpha2_jurisdiction(value)
 
 
+@pydantic_validation_boundary
 def _normalise_optional_ledger_text(value: str | None) -> str | None:
     """Strip an optional ledger input, collapsing blanks to an absent value."""
     if value is None:
@@ -142,6 +144,7 @@ class _LedgerCountryCodeModel(BaseModel):
 
     @field_validator("source_jurisdiction", "counterparty_country", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_country_codes(cls, value: str | None) -> str | None:
         return _validate_iso_3166_jurisdiction(value)
 
@@ -151,6 +154,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
 
     @field_validator("currency", mode="before", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_currency(cls, value: object) -> object:
         if value is None:
             return None
@@ -158,6 +162,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
 
     @field_validator("attachment_ids", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _normalise_identifier_tuple(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         if value is None:
             return None
@@ -168,6 +173,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
 
     @field_validator("art_104_tres_exclusion", mode="before", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _require_registry_art104_tres_exclusion(cls, value: object) -> object:
         """Accept only exclusion tokens declared by the published facts authority."""
         if value is None:
@@ -176,6 +182,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
 
     @field_validator("deduction_fact_kind", mode="before", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _require_registry_deduction_fact_kind(cls, value: object) -> object:
         """Accept only deduction-kind tokens declared by fact 0085."""
         if value is None or isinstance(value, IvaDeductionFactKind):
@@ -184,6 +191,7 @@ class _ManualLedgerTransactionInput(_LedgerCountryCodeModel):
 
     @field_validator("input_classification", mode="before", check_fields=False)
     @classmethod
+    @pydantic_validation_boundary
     def _require_registry_input_classification(cls, value: object) -> object:
         """Accept only input-use tokens declared by fact 0116."""
         if value is None or isinstance(value, InputClassification):
@@ -240,6 +248,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
         "source_command",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _trim_required_text(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -248,16 +257,19 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
 
     @field_validator("notes")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_notes(cls, value: str) -> str:
         return value.strip()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_business_percentage(self) -> Self:
         """Ask the domain whether this classification and share agree."""
         validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_direction_policy(self) -> Self:
         if self.amount < Decimal("0"):
             raise TransactionValidationError(
@@ -334,6 +346,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     group_label: _LedgerOptionalGroupLabel = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_change(self) -> Self:
         if not self.model_fields_set:
             raise TransactionValidationError("manual ledger patch must carry at least one field")
@@ -485,6 +498,7 @@ class SplitChildCommand(BaseModel):
 
     @field_validator("description")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_description(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -493,6 +507,7 @@ class SplitChildCommand(BaseModel):
 
     @field_validator("counterparty")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_counterparty(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -590,6 +605,7 @@ class LedgerSourceImportCommand(BaseModel):
 
     @field_validator("bucket_id", "provider", "actor", "source_command")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_text(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -656,6 +672,7 @@ class LedgerReviewQuery(BaseModel):
         "transaction_id",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _trim_optional_query_text(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -801,6 +818,7 @@ class LedgerExportCommand(BaseModel):
 
     @field_validator("bucket_id", "actor", "source_command")
     @classmethod
+    @pydantic_validation_boundary
     def _trim_required_text(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
@@ -949,6 +967,7 @@ class LedgerExportRow(BaseModel):
 
     @field_validator("booked_date", "effective_date")
     @classmethod
+    @pydantic_validation_boundary
     def _require_iso_date(cls, value: str) -> str:
         """Keep a mandatory exported date parseable without changing its form.
 
@@ -964,6 +983,7 @@ class LedgerExportRow(BaseModel):
 
     @field_validator("value_date")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:
         """The same rule where the serializer spells an absent column as ``""``."""
         if value:
@@ -972,6 +992,7 @@ class LedgerExportRow(BaseModel):
 
     @field_validator("amount", "taxable_base", "iva_amount", "value_in_eur")
     @classmethod
+    @pydantic_validation_boundary
     def _require_non_negative_decimal(cls, value: str) -> str:
         """Refuse an export amount the ledger could never have stored.
 
@@ -1006,6 +1027,7 @@ class LedgerExportResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _metadata_describes_the_payload(self) -> Self:
         """Refuse a result whose metadata contradicts the bytes it carries.
 

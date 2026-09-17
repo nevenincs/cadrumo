@@ -71,6 +71,7 @@ from .....application.modelo.calculation_actions import calculate_modelo_revisio
 from .....application.modelo.verification_actions import verify_modelo_revision
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....core.aggregation import BindingSourceKind
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
 from .....core.period import Period
@@ -498,6 +499,7 @@ def test_modelo_721_declares_no_independent_evidence_source(tmp_path: Path) -> N
             Modelo("721").value,
             filing_year=2024,
             period=_PERIOD,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         )
 
     assert snapshot.revision.bindings == (), (

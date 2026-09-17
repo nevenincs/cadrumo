@@ -29,7 +29,6 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
@@ -39,6 +38,7 @@ from ...application.calculations.maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing.utils import parse_bool
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
@@ -226,7 +226,7 @@ def preview_maritime_exemption_for_active_profile(
                 operation=indexed_operation,
             )
     facts = maritime_facts_from_active_profile()
-    resolved_on = date.today()
+    resolved_on = today_madrid()
     try:
         result = resolve_maritime_exemption(
             facts=facts,

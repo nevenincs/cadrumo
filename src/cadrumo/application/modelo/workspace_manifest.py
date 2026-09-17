@@ -25,7 +25,7 @@ from typing import (
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -145,6 +145,7 @@ class ModeloWorkspaceFieldManifestEntryV1(_ManifestModel):
     reason: _Reason | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_classification_metadata(self) -> ModeloWorkspaceFieldManifestEntryV1:
         projected = self.classification is ModeloWorkspaceSchemaClassification.PROJECTED
         if projected != (self.destination is not None):
@@ -166,6 +167,7 @@ class ModeloWorkspaceFieldManifestV1(_ManifestModel):
 
     @field_validator("traversal_roots")
     @classmethod
+    @pydantic_validation_boundary
     def _require_sorted_unique_roots(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != tuple(sorted(value)) or len(set(value)) != len(value):
             raise ValueError("workspace field manifest roots must be sorted and unique")
@@ -173,6 +175,7 @@ class ModeloWorkspaceFieldManifestV1(_ManifestModel):
 
     @field_validator("entries")
     @classmethod
+    @pydantic_validation_boundary
     def _require_sorted_unique_entries(
         cls,
         value: tuple[ModeloWorkspaceFieldManifestEntryV1, ...],
@@ -183,6 +186,7 @@ class ModeloWorkspaceFieldManifestV1(_ManifestModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_reproducible_digest(self) -> ModeloWorkspaceFieldManifestV1:
         if self.manifest_digest != _manifest_digest(self.traversal_roots, self.entries):
             raise ValueError("workspace field manifest digest does not reproduce")

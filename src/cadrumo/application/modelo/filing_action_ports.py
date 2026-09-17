@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -40,6 +41,7 @@ class FilingActionPorts:
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
     verification_repository: VerificationReportCatalogueRepositoryProtocol
+    justificante_repository: JustificanteRepositoryProtocol
     observation_repository: CalculationObservationRepositoryProtocol
     participation_index_repository: TransactionParticipationIndexRepositoryProtocol
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol

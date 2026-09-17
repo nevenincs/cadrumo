@@ -39,11 +39,8 @@ _LOCK_HOLDER_HARNESS = dedent(
     import sys
     from pathlib import Path
 
-    from cadrumo.adapters.persistence.storage.bucket import (
-        acquire_lock,
-        bucket_paths,
-        release_lock,
-    )
+    from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
+    from cadrumo.adapters.persistence.storage.bucket.lockfile import acquire_lock, release_lock
 
     root = Path(sys.argv[1])
     paths = bucket_paths(root, sys.argv[2])
@@ -61,7 +58,7 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
     import json
     import time
 
-    from cadrumo.adapters.persistence.storage.bucket import BucketBusyError
+    from cadrumo.adapters.persistence.storage.bucket.errors import BucketBusyError
     from cadrumo.application.config_reset import start_config_reset
 
     config_module.settings_override.reset(token)
@@ -74,7 +71,7 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
     token = config_module.settings_override.set(settings)
     started = time.monotonic()
     try:
-        start_config_reset(confirmed=True)
+        start_config_reset(**reset_ports, confirmed=True)
     except BucketBusyError as exc:
         print(
             json.dumps(
@@ -110,8 +107,9 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     import json
     import time
 
-    from cadrumo.adapters.persistence.storage.bucket import BucketBusyError
+    from cadrumo.adapters.persistence.storage.bucket.errors import BucketBusyError
     from cadrumo.application.auth.operator import reset_operator_auth
+    from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
     config_module.settings_override.reset(token)
@@ -125,12 +123,22 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     started = time.monotonic()
     try:
         with open_test_profile_session(sys.argv[2]):
-            reset_operator_auth(all_providers=True, target_bucket_id=sys.argv[2])
-    except BucketBusyError as exc:
+            reset_operator_auth(
+                certificate_secret_backend_factory=reset_ports["certificate_secret_backend_factory"],
+                operator_scope_ports=reset_ports["operator_scope_ports"],
+                all_providers=True,
+                target_bucket_id=sys.argv[2],
+            )
+    except OperatorScopeStorageError as exc:
+        # The operator-scope port reports the lock refusal as its own storage
+        # failure; only a busy bucket underneath it is the exclusion proved here.
+        busy = exc.__cause__
+        if not isinstance(busy, BucketBusyError):
+            raise
         print(
             json.dumps(
                 {
-                    "bucket_id": exc.bucket_id,
+                    "bucket_id": busy.bucket_id,
                     "elapsed": time.monotonic() - started,
                 },
             ),
@@ -148,7 +156,7 @@ _START_HARNESS = _SETTINGS_PREAMBLE + dedent(
     from cadrumo.application.config_reset import start_config_reset
 
     try:
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(**reset_ports, confirmed=True)
         print(operation.model_dump_json())
     finally:
         config_module.settings_override.reset(token)
@@ -163,7 +171,7 @@ _EXCLUDED_START_HARNESS = _SETTINGS_PREAMBLE + dedent(
     )
 
     try:
-        start_config_reset(confirmed=True)
+        start_config_reset(**reset_ports, confirmed=True)
     except ConfigResetAlreadyRunningError as exc:
         print(exc.context["operation_id"])
         raise SystemExit(76) from exc
@@ -187,6 +195,7 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
     try:
         operation = resume_config_reset(
             operation_id,
+            **reset_ports,
             confirmed=confirmed,
             acknowledge_retention_override=override,
             retention_override_reason=reason,

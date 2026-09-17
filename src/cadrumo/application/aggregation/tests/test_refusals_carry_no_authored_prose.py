@@ -38,11 +38,11 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.directory_scan import scan_directory
-from ....core.i18n.render import tr
-from ....core.i18n.translatable import Translatable as t
+from ....core.i18n.render import tr as render_tr
+from ....core.i18n.translatable import Translatable as tr
 from ..errors import AggregationConfigError, AggregationValidationError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: A registered translation key: dotted, lowercase, no whitespace.
 _REGISTERED_KEY = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)+$")
@@ -194,7 +194,7 @@ def test_every_migrated_refusal_key_resolves_to_real_text(key: str) -> None:
     humanised = key.rsplit(".", 1)[-1].replace("_", " ").capitalize()
     for language in ("en", "es", "ca", "hu"):
         with override_settings(cadrumo_output_language=language):
-            rendered = tr(key)
+            rendered = render_tr(key)
         assert rendered != key, f"{key} is unauthored in {language}"
         assert rendered != humanised, f"{key} falls back to a humanised key in {language}"
         assert rendered.strip()
@@ -212,7 +212,7 @@ def test_config_refusal_renders_as_its_key_only() -> None:
 def test_validation_refusal_renders_as_its_key_only() -> None:
     """A ``t(...)``-keyed refusal degrades to its key, carrying no sentence."""
     error = AggregationValidationError(
-        t("aggregation.m303_arrivals.errors.supplier_regime_blank_ledger_identity"),
+        tr("aggregation.m303_arrivals.errors.supplier_regime_blank_ledger_identity"),
         context={"source_ledger_id_count": 2},
     )
 

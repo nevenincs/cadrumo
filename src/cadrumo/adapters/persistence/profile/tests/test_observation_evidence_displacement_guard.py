@@ -35,25 +35,30 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CAPTURED_AT = datetime(2026, 4, 1, 9, 30, tzinfo=UTC)
-_OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202530300000001Z"}
+_OFFICIAL_METADATA = {"aeat_register_status": "ALTA", "aeat_expediente_id": "202513000000001Z"}
 
 
 def _observation() -> RegistryModeloObservation:
-    """One minimal registry-valid M303 observation; provenance is what varies."""
+    """One minimal registry-valid M130 observation; provenance is what varies.
+
+    Modelo 130 keeps the guard under test on its own: Modelo 303 envelopes
+    also pass the carry-ingress policy, which refuses operator-manual rows
+    before occupancy is ever consulted.
+    """
     return RegistryModeloObservation(
-        modelo="303",
+        modelo="130",
         filing_year=2025,
         period="1T",
         observations=(
             CasillaObservation(
-                casilla_id=validated_casilla_id("iva.repercutido.general"),
-                value=Decimal("20000.00"),
+                casilla_id=validated_casilla_id("19"),
+                value=Decimal("250.00"),
                 formula_id=None,
                 operand_refs=(),
                 operand_casilla_refs=(),
                 operand_values=(),
-                legal_refs=("ley-37-1992:art-21",),
-                source_refs=("aeat-iva-2025",),
+                legal_refs=("ley-35-2006:art-99",),
+                source_refs=("boe-modelo-130-2025-form",),
             ),
         ),
     )
@@ -74,10 +79,10 @@ def _save_official(repo: CalculationObservationRepository) -> None:
 
 def _assert_slot_still_official(repo: CalculationObservationRepository) -> None:
     """The refusal must leave the stored evidence exactly as it was."""
-    loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+    loaded = repo.load_observation("130", Period.from_year_and_code(2025, "1T"))
     assert loaded is not None
     assert loaded.source_kind == "aeat_sede_justificante"
-    assert dict(loaded.source_metadata).get("aeat_expediente_id") == "202530300000001Z"
+    assert dict(loaded.source_metadata).get("aeat_expediente_id") == "202513000000001Z"
 
 
 @pytest.mark.parametrize("source_kind", ["operator_manual", "app_filing"])
@@ -152,7 +157,7 @@ def test_the_operator_can_displace_evidence_deliberately(tmp_path: Path) -> None
             )
         )
 
-        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        loaded = repo.load_observation("130", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.source_kind == "operator_manual"
 
@@ -178,7 +183,7 @@ def test_official_evidence_may_replace_official_evidence(tmp_path: Path) -> None
             )
         )
 
-        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        loaded = repo.load_observation("130", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.source_kind == "aeat_sede_live_capture"
 
@@ -206,7 +211,7 @@ def test_a_manual_row_may_be_corrected_by_another_manual_row(tmp_path: Path) -> 
             )
         )
 
-        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        loaded = repo.load_observation("130", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.source_kind == "app_filing"
 
@@ -230,6 +235,6 @@ def test_an_empty_slot_accepts_a_non_official_write(tmp_path: Path) -> None:
             )
         )
 
-        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
+        loaded = repo.load_observation("130", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None
         assert loaded.source_kind == "app_filing"

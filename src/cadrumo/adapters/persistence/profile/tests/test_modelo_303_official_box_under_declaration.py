@@ -71,6 +71,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -686,25 +687,22 @@ def test_export_ref_points_at_projected_box_carrying_value(
     box 27 a projection of ``iva.cuota-devengada-total``, so whatever transport
     reads it reads the real cuota.
 
-    The ``modelo-303-page-01-casilla-27`` export-field half of this claim has no
-    witness at present: every Modelo 303 revision has had its filing-grade export
-    layouts withdrawn, so no revision declares an export ref to assert against.
-    That withdrawal is asserted here rather than skipped, so restoring a layout
-    reds this test and forces the ref-targeting assertion back rather than
-    leaving it silently unproven.
+    The export half of the claim is that the selected revision's fichero writes
+    box 27 from that same casilla, exactly once.
     """
     snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
 
-    authority = _authority_for_303()
-    modelo = authority.modelo("303")
-    for revision in modelo.revisions.values():
-        assert revision.export_layouts == (), (
-            f"revision {revision.id} declares export layouts again -- restore the casilla-27 "
-            "export-ref assertion this test dropped when the layouts were withdrawn"
-        )
     casilla_27 = next(c for c in rev.casillas if c.id == _OFFICIAL_CUOTA_DEVENGADA_TOTAL)
     assert casilla_27.number == "27"
+    box_27_fields = [
+        field
+        for layout in rev.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.CASILLA and field.casilla_id == casilla_27.id
+    ]
+    assert len(box_27_fields) == 1, "the selected revision's fichero must write box 27 exactly once"
 
     # On a ledger-fed calculate, box 27 carries the projected (non-zero) cuota,
     # equal to its semantic source — so a transport reads value, not zero.

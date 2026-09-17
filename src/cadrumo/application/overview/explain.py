@@ -39,7 +39,6 @@ from ...domain.calculations.registry.applicability import (
     derive_modelo_applicability,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.modelo_obligation_scope import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...domain.deadlines.engine import DeadlineEngine
@@ -183,13 +182,17 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     # surface it as a stable comma-joined token.
     facts["irpf_income_categories"] = ",".join(sorted(category.value for category in profile.irpf_income_categories))
     # The nested IVA + enrolment sub-models also gate applicability.
+    # An undeclared IVA sub-model surfaces each fact as an explicit empty
+    # string, like the undeclared axes above, rather than dropping the keys.
     iva = getattr(profile, "iva", None)
-    if iva is not None:
-        facts["iva.roi_enrolled"] = iva.roi_enrolled
-        facts["iva.oss_enrolled"] = iva.oss_enrolled
-        facts["iva.group_member_enrolled"] = iva.group_member_enrolled
-        facts["iva.group_dominant_entity_enrolled"] = iva.group_dominant_entity_enrolled
-        facts["iva.intracommunity_operations_exceed_50000_eur"] = iva.intracommunity_operations_exceed_50000_eur
+    for iva_field in (
+        "roi_enrolled",
+        "oss_enrolled",
+        "group_member_enrolled",
+        "group_dominant_entity_enrolled",
+        "intracommunity_operations_exceed_50000_eur",
+    ):
+        facts[f"iva.{iva_field}"] = "" if iva is None else getattr(iva, iva_field)
     return facts
 
 
@@ -202,11 +205,7 @@ def _modelo_is_registered(modelo: str, *, operation: PinnedAuthorityOperation) -
     a registry-data gap the CLI should degrade gracefully around rather
     than crash on.
     """
-    try:
-        operation.modelo_directory(modelo)
-    except RegistrySnapshotError:
-        return False
-    return True
+    return modelo in operation.modelo_ids()
 
 
 def build_overview_explain(

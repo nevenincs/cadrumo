@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -39,6 +40,7 @@ class ModeloPreconditionFailure(BaseModel):
         return (self.subject_leaf_key, self.verdict.failed_condition_id, self.scenario_id)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _match_declared_profile(self) -> ModeloPreconditionFailure:
         profile = MODELO_PRECONDITION_PROFILE_REGISTRY.get(self.identity)
         if profile is None:

@@ -27,7 +27,7 @@ from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..verification_actions import _cuota_less_without_base_findings
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _T0 = datetime(2026, 3, 1, tzinfo=UTC)
 _AMOUNT = Decimal("1000.00")

@@ -37,7 +37,7 @@ from ..prorrata_regularizacion import (
     derive_prorrata_applicability,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _unresolved() -> ProrrataProvisionalResolution:

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 
@@ -34,6 +33,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ..errors import AggregationValidationError
 from ..iva_ledger import (
     IvaLedgerAggregation,
     IvaLedgerAggregationIssueReason,
@@ -43,7 +43,7 @@ from ..iva_ledger import (
 )
 from .renta_income_aggregation_support import _period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TEST_ASSET_REGISTER = BienesInversionIvaRegister()
 
@@ -265,13 +265,15 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
 
     with (
         _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        pytest.raises(TypeError, match="investment_asset_register"),
+        pytest.raises(AggregationValidationError) as refusal,
     ):
-        cast(Any, _aggregate_iva_ledger_observations_with_authority)(
+        _aggregate_iva_ledger_observations_with_authority(
             catalogue,
             period=_Q2_2026,
+            ledger_profile_id="test-profile",
             operation=_authority_operation_for_test,
         )
+    assert refusal.value.context["has_investment_asset_register"] is False
 
 
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
@@ -347,7 +349,7 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     assert observation.ledger_id == transaction.transaction_id
     assert observation.transaction_date == date(2026, 4, 5)
     assert observation.category == IvaCategory("domestic_general")
-    assert observation.rate_kind is IvaRateKind("general")
+    assert observation.rate_kind == IvaRateKind("general")
     assert observation.flow_direction == IvaFlowDirection.from_registry("soportado")
     assert observation.base_amount == transaction.taxable_base
     assert observation.iva_amount == transaction.iva_amount
@@ -422,7 +424,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
     assert result.issues == ()
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_reduced")
-    assert observation.rate_kind is IvaRateKind("reduced")
+    assert observation.rate_kind == IvaRateKind("reduced")
     assert observation.flow_direction == IvaFlowDirection.from_registry("repercutido")
     assert observation.iva_amount == Decimal("10.00")
 
@@ -467,7 +469,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert reference.transaction_date == date(2026, 4, 5)
     assert reference.reference.year == 2026
     assert reference.reference.kind == ProrrataKind.from_registry("provisional")
-    assert reference.reference.regime is ProrrataRegime("general")
+    assert reference.reference.regime == ProrrataRegime("general")
     assert reference.base_amount == Decimal("200.00")
     assert reference.input_iva_amount == Decimal("42.00")
     assert result.observations[0].iva_amount == Decimal("42.00")
@@ -805,8 +807,8 @@ def test_the_applied_rate_survives_tier_resolution() -> None:
     assert set(by_rate) == {Decimal("0.21"), Decimal("0.10")}
     # The tier is still carried, unchanged -- the value rides ALONGSIDE it, and a
     # reader must not conclude one replaced the other.
-    assert by_rate[Decimal("0.21")].rate_kind is IvaRateKind("general")
-    assert by_rate[Decimal("0.10")].rate_kind is IvaRateKind("reduced")
+    assert by_rate[Decimal("0.21")].rate_kind == IvaRateKind("general")
+    assert by_rate[Decimal("0.10")].rate_kind == IvaRateKind("reduced")
 
 
 def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> None:
@@ -872,7 +874,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_exempt")
     assert observation.ledger_id == transaction.transaction_id
-    assert observation.exemption_article is IvaExemptionArticle("art_20_uno_8")
+    assert observation.exemption_article == IvaExemptionArticle("art_20_uno_8")
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
@@ -934,7 +936,7 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
 
     assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
     observation = result.observations[0]
-    assert observation.rate_kind is IvaRateKind("super_reduced")
+    assert observation.rate_kind == IvaRateKind("super_reduced")
     assert observation.applied_rate == Decimal("0.02")
 
 

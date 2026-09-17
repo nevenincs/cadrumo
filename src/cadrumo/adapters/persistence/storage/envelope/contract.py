@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.atomic_write import atomic_write_text
 from .....core.classification.policies import SensitivityClass
-from .....core.errors.hierarchy import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -167,6 +167,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     @field_validator("written_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware(cls, value: datetime) -> datetime:
         try:
             return validate_utc_aware(value)

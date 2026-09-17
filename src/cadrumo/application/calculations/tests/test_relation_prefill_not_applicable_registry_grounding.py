@@ -35,20 +35,30 @@ import pytest
 from cadrumo.application.user_profile.profile_read_ports import ProfilePathValuesReadPort
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ....domain.user_profile.values import UserProfileFact
 from ..relation_prefill import (
     _economic_activity_conditional_source_modelos,
     _not_applicable_source_modelos_for_bucket,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 if TYPE_CHECKING:
     from ....domain.calculations.registry.schema import RegistrySnapshot
 
-#: Modelo 100 filing years whose revisions declare the pagos-fraccionados dependency pair.
-_M100_YEARS: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025)
+
+def _supported_filing_years() -> tuple[int, ...]:
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None, "the bundled registry declares no supported filing years"
+    return supported_years.years
+
+
+#: Every supported Modelo 100 filing year; each revision declares the pagos-fraccionados dependency pair.
+_M100_YEARS: tuple[int, ...] = _supported_filing_years()
 
 _PROFILE_ID = "30030030-0300-4300-8300-300300300300"
 

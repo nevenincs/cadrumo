@@ -895,7 +895,13 @@ def _schedules_for_calendar_range(
     """
     deadline_engine = engine if engine is not None else _DeadlineEngine(authority=operation)
     schedules: list[_Schedule] = []
+    # The prior year that ``covered_years`` adds for late-opening windows can
+    # sit below the registry's support floor, where nothing resolves at all.
+    modelo_ids = operation.modelo_ids()
+    support = operation.modelo_directory(modelo_ids[0]).supported_filing_years if modelo_ids else None
     for year in calendar_range.covered_years():
+        if support is not None and not support.admits_filing_year(year):
+            continue
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
         except _NoDeadlineWindowsError as exc:

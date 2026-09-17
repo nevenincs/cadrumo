@@ -69,6 +69,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.time.date_range import validate_inclusive_date_range
 from .diagnostics_run_health_ports import (
     DiagnosticAuthProbePort,
@@ -175,6 +176,7 @@ class RunHealthReport(BaseModel):
     probe_summary: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> RunHealthReport:
         """Reject a reported window whose ``until`` precedes its ``since``.
 
@@ -355,6 +357,7 @@ class LatencyReport(BaseModel):
     by_provider: tuple[tuple[str, LatencyPercentiles], ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> LatencyReport:
         """Reject a reported window whose ``until`` precedes its ``since``.
 
@@ -400,6 +403,7 @@ class ErrorsBreakdownReport(BaseModel):
     by_error_kind: tuple[ErrorKindCount, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> ErrorsBreakdownReport:
         """Reject a reported window whose ``until`` precedes its ``since``.
 
@@ -621,6 +625,7 @@ class LlmUsageReport(BaseModel):
     total_failed: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> LlmUsageReport:
         """Reject a reported window whose ``until`` precedes its ``since``.
 

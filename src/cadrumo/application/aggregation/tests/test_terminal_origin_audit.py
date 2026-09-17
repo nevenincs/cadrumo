@@ -32,7 +32,7 @@ from ....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLe
 from ..source_mesh import CalculationSourceProvenance, CalculationSourceResolution
 from ..terminal_origin_audit import collect_terminal_origin_diagnostics
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _LEGAL_REFS = ("ley-37-1992:art-1",)
 _SOURCE_REFS = ("aeat-modelo-303-diseno-registro",)

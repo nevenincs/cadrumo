@@ -35,7 +35,7 @@ from ..workspace import (
     project_ledger_workspace,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "31313131-3131-4131-8131-313131313131"
 _NOW = datetime(2026, 9, 3, 10, 0, tzinfo=UTC)

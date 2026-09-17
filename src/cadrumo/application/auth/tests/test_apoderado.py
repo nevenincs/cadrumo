@@ -30,7 +30,7 @@ from ..apoderado_service import (
 )
 from .apoderado_fakes import InMemoryApoderadoConfigurationRepositoryFactory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_BUCKET_ID = "26262626-2626-4262-8262-262626262626"
 _APODERADO_BUCKET_ID = _PROFILE_BUCKET_ID

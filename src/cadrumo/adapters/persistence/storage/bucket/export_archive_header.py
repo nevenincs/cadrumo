@@ -20,7 +20,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core.errors.hierarchy import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .....core.identity.bucket import BucketId
 from .....core.identity.digest import ContentDigest
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -85,6 +85,7 @@ class ExportArchiveHeader(BaseModel):
 
     @field_validator("created_at")
     @classmethod
+    @pydantic_validation_boundary
     def _check_created_at(cls, value: datetime) -> datetime:
         try:
             return validate_utc_aware(value)

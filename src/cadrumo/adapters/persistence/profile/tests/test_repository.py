@@ -35,7 +35,7 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 _P_Q1 = Period.from_year_and_code(2026, "1T")

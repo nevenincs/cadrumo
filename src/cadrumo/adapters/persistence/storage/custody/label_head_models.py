@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 
 from pydantic import Field, field_validator, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.identity.digest import PrefixedContentDigest
 from .capsule_records import ProfileCustodyCapsuleLabel
 from .digest_model import CustodyDigestModel
@@ -38,6 +39,7 @@ class ProfileLabelHead(CustodyDigestModel):
         "previous_head_digest",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _validate_digest(cls, value: str | None) -> str | None:
         if value is None:
             return None
@@ -50,6 +52,7 @@ class ProfileLabelHead(CustodyDigestModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_head(self) -> ProfileLabelHead:
         if self.label_revision == 1 and self.previous_head_digest is not None:
             raise ValueError("first label head must not carry a predecessor")
@@ -148,6 +151,7 @@ class ProfileLabelHeadPendingAdvance(CustodyDigestModel):
 
     @field_validator("expected_head_digest")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_expected_head_digest(cls, value: str) -> str:
         if (
             len(value) != 71
@@ -158,6 +162,7 @@ class ProfileLabelHeadPendingAdvance(CustodyDigestModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_pending(self) -> ProfileLabelHeadPendingAdvance:
         if (
             self.expected_label.profile_id != self.profile_id

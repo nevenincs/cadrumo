@@ -36,7 +36,7 @@ from typing import Final
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.classification.policies import SensitivityClass, default_policy_for
-from .....core.errors.hierarchy import CoreValidationError
+from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity.digest import ContentDigest
 from .....core.locks import exclusive_file_lock
@@ -145,6 +145,7 @@ class SecretRecord(BaseModel):
 
     @field_validator("created_at", "expires_at")
     @classmethod
+    @pydantic_validation_boundary
     def _require_aware(cls, value: datetime | None) -> datetime | None:
         if value is None:
             return None

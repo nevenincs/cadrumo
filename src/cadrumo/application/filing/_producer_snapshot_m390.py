@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_projection_ref import (
     M390ActivityField,
     M390DifferentiatedDeductionProjectionField,
@@ -102,6 +103,7 @@ class M390FilingFacts(BaseModel):
     differentiated_deduction_rows: tuple[M390DifferentiatedDeductionValueArrival, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_annual_period(self) -> M390FilingFacts:
         if self.period.standard_code is not StandardPeriodCode.ANNUAL:
             raise ValueError("M390 repeated-row filing facts require the annual 0A period")

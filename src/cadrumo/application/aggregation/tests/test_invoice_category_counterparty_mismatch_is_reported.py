@@ -21,7 +21,7 @@ from ....domain.iva.schema import IvaCategory
 from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "e5cd70fc-3d46-4768-a775-f9443282596d"
 _YEAR = 2024

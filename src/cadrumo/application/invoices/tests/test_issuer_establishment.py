@@ -26,7 +26,7 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ..issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BASE = Decimal("40.00")
 _CUOTA = Decimal("8.40")
@@ -44,7 +44,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -52,7 +52,7 @@ def _line() -> InvoiceLine:
 def _invoice(**overrides: Any) -> Invoice:
     payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
-        "invoice_class": require_invoice_class("simplificada"),
+        "invoice_class": require_invoice_class("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
         "issued_at": date(2026, 5, 3),
         "counterparty_name": "Cliente de mostrador",
@@ -109,7 +109,7 @@ def test_a_domestic_ticket_from_a_non_resident_issuer_does_not_trigger_case_3() 
 
 def test_an_ordinaria_is_not_evaluated_under_case_3() -> None:
     """Ordinaria/rectificativa already require the tax id unconditionally; this predicate is simplificada-only."""
-    invoice = _invoice(invoice_class=require_invoice_class("ordinaria"), counterparty_tax_id="B12345674")
+    invoice = _invoice(invoice_class=require_invoice_class("ORDINARIA"), counterparty_tax_id="B12345674")
     profile = _profile(fiscal_residency=FiscalResidency.from_registry("resident_irpf"))
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False

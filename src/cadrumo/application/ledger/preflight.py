@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_serializer, field_validator
 
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
@@ -138,6 +138,7 @@ class LedgerPreflightReport(BaseModel):
 
     @field_validator("issues")
     @classmethod
+    @pydantic_validation_boundary
     def _freeze_issues(cls, value: Sequence[LedgerPreflightIssue]) -> tuple[LedgerPreflightIssue, ...]:
         return tuple(value)
 

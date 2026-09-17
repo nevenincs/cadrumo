@@ -34,6 +34,7 @@ from cadrumo.core.aggregation import (
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ledger_binding_selector_support import LedgerIncomeFact
 from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -241,7 +242,7 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
     gross_binding = committed_binding.model_copy(
         update={
             "id": "test-m130-gross-income-sum",
-            "selector": {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
+            "provider": committed_binding.provider.model_copy(update={"fact": LedgerIncomeFact.CASH_RECEIVED_SUM}),
         },
     )
     revision_with_gross_binding = revision.model_copy(update={"bindings": (*revision.bindings, gross_binding)})

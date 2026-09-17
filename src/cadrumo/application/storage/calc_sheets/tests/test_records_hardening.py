@@ -27,7 +27,7 @@ from ..records import (
     column_letters_to_index,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _IVA_DEVENGADO_BASE_CASILLA: CasillaId = validated_casilla_id(
     "iva.devengado.base",

@@ -56,7 +56,7 @@ from ._arena_fixtures import _fresh_arena
 
 __all__ = ["_fresh_arena"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _OK_BODY: Mapping[str, object] = ollama_chat_reply(" local completion ")
 

@@ -26,6 +26,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.persistence_errors import PersistenceDegradationError
+
 from .....application.calculations.binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .....application.calculations.observations_repository import observation_key
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -211,8 +213,10 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
             mutate=mutate,
         )
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(PersistenceDegradationError) as refusal:
             repo.load_observation(_MODELO, _filing_period())
+        assert isinstance(refusal.value.__cause__, ValidationError)
+        assert "stamped_revision_id" in str(refusal.value.__cause__)
 
 
 # ---------------------------------------------------------------------------

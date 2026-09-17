@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from ......core.period import Period
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 # The attempt coordinate is `<submission_id>.<ordinal>`, so the fixture derives
 # both from one content-addressed id rather than naming them independently.

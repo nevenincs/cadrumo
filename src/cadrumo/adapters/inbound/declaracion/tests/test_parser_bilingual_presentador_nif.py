@@ -48,12 +48,14 @@ import pdfplumber
 import pytest
 
 from .....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....tests.inventory import FIXTURES_DIR
 from .._detect import detect_template_revision
+from .._parsers.pdfplumber_backend import extract_pages_text
 from ..errors import DeclaracionParseError
 from ..parser import _extract_tax_id, parse_declaracion
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 #: Generated reproduction of the withdrawn real AEAT M390 English receipt.
 _ENGLISH_RENDER = ("390", "2021-0A", 2021, "0A")
@@ -129,24 +131,41 @@ def test_anchor_fixture_still_renders_in_english() -> None:
     )
 
 
-def test_parses_the_english_render_receipt() -> None:
-    """The English-render receipt parses instead of refusing.
+def _parser_text(modelo: str, stem: str) -> str:
+    """The page text exactly as the parser boundary joins it before reading the tax id."""
+    return "\n".join(extract_pages_text(_fixture(modelo, stem)))
 
-    This is the regression gate. The same call previously raised
-    ``DeclaracionParseError`` (``tax_id_unresolved``), which made the receipt
-    unreconcilable for any filer who used the English-language sede.
+
+def test_extracts_the_tax_id_from_the_english_render_receipt() -> None:
+    """The English-render receipt yields its tax id instead of refusing.
+
+    This is the regression gate. Tax-id extraction previously raised
+    ``DeclaracionParseError`` (``tax_id_unresolved``) on this render, which made
+    the receipt unreconcilable for any filer who used the English-language sede.
+    The anchor render is a filing year below the support envelope, so the gate
+    runs on the text the parser boundary reads rather than through filing
+    selection, which refuses the year.
     """
-    modelo, stem, year, period = _ENGLISH_RENDER
+    modelo, stem, _year, _period = _ENGLISH_RENDER
 
-    observation = parse_declaracion(
-        _fixture(modelo, stem),
-        modelo_override=modelo,
-        año_override=year,
-        period_override=period,
+    assert _extract_tax_id(_parser_text(modelo, stem)) == declared_tax_id(modelo, stem)
+
+
+def test_english_render_below_the_supported_floor_is_refused() -> None:
+    """The anchor render's filing year is outside the support envelope, so parsing refuses it."""
+    modelo, stem, year, period = _ENGLISH_RENDER
+    support = published_supported_filing_years()
+    assert support is not None and not support.admits_filing_year(year), (
+        "the English anchor render is now inside the support envelope; parse it end to end instead"
     )
 
-    assert observation.tax_id == declared_tax_id(modelo, stem)
-    assert observation.modelo == modelo
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(
+            _fixture(modelo, stem),
+            modelo_override=modelo,
+            año_override=year,
+            period_override=period,
+        )
 
 
 @pytest.mark.parametrize("tax_id", ("12345678A", "X1234567A", "B12345678"))
@@ -171,15 +190,10 @@ def test_spanish_render_receipts_keep_parsing(modelo: str, stem: str, year: int,
 
 def test_both_renders_yield_the_same_tax_id() -> None:
     """The render language changes the label, never the identity it labels."""
-    english_modelo, english_stem, english_year, english_period = _ENGLISH_RENDER
+    english_modelo, english_stem, _english_year, _english_period = _ENGLISH_RENDER
     spanish_modelo, spanish_stem, spanish_year, spanish_period = _SPANISH_RENDERS[0]
 
-    english = parse_declaracion(
-        _fixture(english_modelo, english_stem),
-        modelo_override=english_modelo,
-        año_override=english_year,
-        period_override=english_period,
-    )
+    english_tax_id = _extract_tax_id(_parser_text(english_modelo, english_stem))
     spanish = parse_declaracion(
         _fixture(spanish_modelo, spanish_stem),
         modelo_override=spanish_modelo,
@@ -187,7 +201,7 @@ def test_both_renders_yield_the_same_tax_id() -> None:
         period_override=spanish_period,
     )
 
-    assert english.tax_id == spanish.tax_id
+    assert english_tax_id == spanish.tax_id
 
 
 @pytest.mark.parametrize(
@@ -230,20 +244,20 @@ def test_detects_the_header_stamp_on_the_english_render() -> None:
     assert template.detected_from == "header"
 
 
-def test_english_render_needs_no_modelo_or_year_override() -> None:
-    """Detection carries the receipt: only the unprinted period is supplied.
+def test_english_render_without_overrides_is_refused_on_its_detected_year() -> None:
+    """Detection carries the receipt, and the year it detects is then held to the envelope.
 
     M390 receipts print no period stamp in either render (the modelo is
     annual-only), so ``period_override`` remains the documented mechanism for
-    that field. Everything the document DOES print now resolves unaided.
+    that field. Everything else is read from the header stamp (asserted by
+    :func:`test_detects_the_header_stamp_on_the_english_render`); the detected
+    year lies below the support envelope, so the unaided parse must refuse
+    rather than resolve a revision.
     """
-    modelo, stem, year, period = _ENGLISH_RENDER
+    modelo, stem, _year, period = _ENGLISH_RENDER
 
-    observation = parse_declaracion(_fixture(modelo, stem), period_override=period)
-
-    assert observation.modelo == modelo
-    assert observation.ejercicio == str(year)
-    assert observation.tax_id == declared_tax_id(modelo, stem)
+    with pytest.raises(DeclaracionParseError):
+        parse_declaracion(_fixture(modelo, stem), period_override=period)
 
 
 @pytest.mark.parametrize(

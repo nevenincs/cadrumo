@@ -44,13 +44,13 @@ from ._declarations_support import (
     _FIXTURE_ROOT,
     _MODELO_130_COMPUTED_CASILLAS,
     _REGISTER_DOWNLOAD_URL,
-    _SUBMITTED_FILE_100_2023_0A,
     _declaration_pdf_payload,
     _filed_observation,
     _modelo_130_snapshot,
     _modelo_snapshot,
     _resolve_previous_filing_from_observations,
     _submitted_file_payload,
+    _value_valid_m100_submitted_payload,
 )
 
 pytestmark = [
@@ -178,6 +178,8 @@ class TestSubmittedFileObservation:
                 (2, 4): "180",
                 (5, 8): "2026",
                 (9, 17): "00011111Z",
+                (18, 57): "DECLARANTE EJEMPLO".ljust(40),
+                (58, 58): "T",
                 (136, 144): "000000001",
                 (145, 160): " " + "100050".zfill(15),
                 (161, 175): "19010".zfill(15),
@@ -260,8 +262,8 @@ class TestSubmittedFileObservation:
             header_facts = observed_header_facts_from_submitted_file(
                 snapshot=snapshot, body=body, operation=_authority_operation_for_test
             )
-            presenter_tax_id_values = {fact.value for fact in header_facts if fact.header_key == "presenter.tax_id"}
-            assert presenter_tax_id_values == {"00011111Z"}
+            declarant_tax_id_values = {fact.value for fact in header_facts if fact.header_key == "taxpayer.tax_id"}
+            assert declarant_tax_id_values == {"00011111Z"}
 
     def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
@@ -453,15 +455,15 @@ class TestSubmittedFileObservation:
             official_page_casillas = {validated_casilla_id(f"{number:02d}") for number in range(1, 31)}
 
             assert set(observed_values) == official_page_casillas
-            assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
-            assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
+            assert parsed_fields["modelo-111-page-01-nif"] == "Y0000001S"
+            assert parsed_fields["modelo-111-page-01-apellidos"] == "SANITIZED SURNAME"
             assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]
             assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
-            body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+            body = _value_valid_m100_submitted_payload()
             declaration = Declaracion(
                 modelo="100",
                 ejercicio=2023,
@@ -496,11 +498,9 @@ class TestSubmittedFileObservation:
             assert observed_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == "37.37"
             assert observed_values[_M100_CASILLA_0695] == "87.87"
             # `0067` (CURBA, "Urbana") is an `LGC` row, so the parser hands back a
-            # bool -- and this assertion previously read "True", pinning a Python
-            # repr into filed-artefact evidence against a REAL AEAT artefact. The
-            # artefact says `<CURBA>S</CURBA>`; inverted rather than deleted, so it
-            # now holds the boundary to the token AEAT wrote.
-            assert observed_values[_M100_CASILLA_0067] == "S"
+            # bool; the observation records the artefact's own token, never a
+            # Python repr such as "True".
+            assert observed_values[_M100_CASILLA_0067] == "1"
             assert "True" not in observed_values.values(), (
                 "a Python bool repr reached filed-artefact evidence; observations record the "
                 "artefact's own token, so nothing here may spell a value the way Python does"
@@ -512,7 +512,7 @@ class TestSubmittedFileObservation:
     def test_modelo_100_redacted_xml_observation_roundtrips_through_encrypted_store(self, tmp_path: Path) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
-            body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+            body = _value_valid_m100_submitted_payload()
             declaration = Declaracion(
                 modelo="100",
                 ejercicio=2023,

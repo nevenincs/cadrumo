@@ -39,6 +39,7 @@ from typing import Annotated, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .interactions import OperationInteractionId
@@ -127,6 +128,7 @@ class OperationTransientFinancialOperandRequirement(_OperandModel):
     expires_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expiry(self) -> OperationTransientFinancialOperandRequirement:
         validate_utc_aware(self.expires_at)
         return self
@@ -140,6 +142,7 @@ class OperationTransientFinancialOperandAcknowledgement(_OperandModel):
     accepted_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_accepted_at(self) -> OperationTransientFinancialOperandAcknowledgement:
         validate_utc_aware(self.accepted_at)
         return self
@@ -154,6 +157,7 @@ class OperationTransientFinancialOperandRefusal(_OperandModel):
     refused_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_refused_at(self) -> OperationTransientFinancialOperandRefusal:
         validate_utc_aware(self.refused_at)
         return self
@@ -167,6 +171,7 @@ class OperationTransientFinancialOperandExpiry(_OperandModel):
     expired_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expired_at(self) -> OperationTransientFinancialOperandExpiry:
         validate_utc_aware(self.expired_at)
         return self
@@ -180,6 +185,7 @@ class OperationTransientFinancialOperandRelease(_OperandModel):
     released_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_released_at(self) -> OperationTransientFinancialOperandRelease:
         validate_utc_aware(self.released_at)
         return self

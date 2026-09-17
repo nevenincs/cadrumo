@@ -12,7 +12,7 @@ from ._parser_boundary_support import (
 )
 from ._parser_synthetic_quarterly_support import _M115_EXPECTED_VALUES, _M131_EXPECTED_VALUES
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:

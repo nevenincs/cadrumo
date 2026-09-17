@@ -35,6 +35,7 @@ from secrets import token_bytes
 from threading import RLock
 from typing import TYPE_CHECKING
 
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
@@ -917,13 +918,17 @@ def law_selected_revision_for_work_target(
 
     Exactly one :class:`RegistryAuthorityCapture` is taken for
     ``(modelo, filing_year, period)``, so the work path performs one registry
-    read and both axes are judged against the same atomic projection.
+    read and both axes are judged against the same atomic projection. Only the
+    selected revision's identity is read, so the capture asks for the lowest
+    authority rung: a work unit may target a revision that declares less than
+    filing grade, and the filing-grade gates refuse it later where they apply.
     """
     capture = RegistryAuthorityCapture(
         projection=operation.snapshot(
             modelo.strip(),
             filing_year=filing_year,
             period=period.registry_token,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         ),
         comparison_domain=operation.generation.logical_generation,
         generation=0,

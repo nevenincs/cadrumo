@@ -60,7 +60,7 @@ from ..producer_snapshot import (
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 #: An explicit bundle. These tests exercise the surrounding wiring, not the law;

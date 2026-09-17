@@ -71,6 +71,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validat
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.decimal.coercion import coerce_decimal_strict
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FilingYear
 from .....core.identity.aeat_csv import AeatCsv
@@ -125,6 +126,7 @@ class Expediente(BaseModel):
 
     @field_validator("category_path")
     @classmethod
+    @pydantic_validation_boundary
     def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Reject empty / whitespace entries inside ``category_path``."""
         for entry in value:
@@ -380,6 +382,7 @@ class FiledDeclarationAvailability(BaseModel):
 
     @field_validator("ejercicios")
     @classmethod
+    @pydantic_validation_boundary
     def _ejercicios_in_range(cls, value: tuple[int, ...]) -> tuple[int, ...]:
         """Reject an ejercicio outside the range every other record in this module accepts."""
         for ejercicio in value:
@@ -457,6 +460,7 @@ class FiledDeclaracionObservation(BaseModel):
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _registry_coordinate_matches_observation(self) -> FiledDeclaracionObservation:
         ref = self.registry_snapshot_ref
         if ref.modelo != self.modelo or ref.modelo_year != self.ejercicio or ref.period != self.period.registry_token:

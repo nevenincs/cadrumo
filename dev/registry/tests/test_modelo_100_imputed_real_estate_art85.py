@@ -138,9 +138,9 @@ def test_m100_art85_computes_manual_cadastral_example_for_revised_value(
         "0087",
         "0088",
         "0084",
-        f"renta-{year}-imputacion-inmobiliaria-year-days",
-        f"renta-{year}-imputacion-inmobiliaria-rate-recent-revision",
-        f"renta-{year}-imputacion-inmobiliaria-rate-old-or-no-revision",
+        "renta-imputacion-inmobiliaria-year-days",
+        "renta-imputacion-inmobiliaria-rate-recent-revision",
+        "renta-imputacion-inmobiliaria-rate-old-or-no-revision",
     )
     assert entry.legal_refs == expected_legal_refs
     assert entry.source_refs == expected_source_refs

@@ -6,6 +6,7 @@ import pytest
 
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -26,7 +27,7 @@ _EXPECTED_CL11EA14_LABELS = {
 
 @pytest.mark.parametrize("filing_year", sorted(_EXPECTED_CL11EA14_LABELS))
 def test_modelo_100_castilla_y_leon_cl11ea14_is_pending_application_slot(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casilla = next(casilla for casilla in revision.casillas if casilla.id == "0983")
 
     assert casilla.label == _EXPECTED_CL11EA14_LABELS[filing_year]

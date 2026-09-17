@@ -115,11 +115,11 @@ def test_gate_error_text_carries_no_raw_python_repr() -> None:
 def test_gate_error_context_exposes_stable_primitive_machine_codes() -> None:
     """The context carries stringified machine codes, not the live object."""
 
-    error = ModeloWorkflowGateError(_aborted_result())
-    rendered = render_error_text(error)
+    with override_settings(cadrumo_output_language="en"):
+        rendered = render_error_text(ModeloWorkflowGateError(_aborted_result()))
 
-    assert "abort_code: NO_PENDING_OBLIGATION" in rendered
-    assert "stage: ABORTED" in rendered
+    assert "Abort code: NO_PENDING_OBLIGATION" in rendered
+    assert "Stage: ABORTED" in rendered
 
 
 def test_gate_error_keeps_the_persisted_summary_as_a_locale_identity() -> None:
@@ -140,11 +140,12 @@ def test_other_gate_abort_reasons_keep_their_workflow_locale_identity() -> None:
             reason=WorkflowAbortReason.DEADLINE_PASSED,
         )
     )
-    rendered = render_error_text(error)
+    with override_settings(cadrumo_output_language="en"):
+        rendered = render_error_text(error)
 
     assert error.translated_message == "application.workflow.steps.deadline_closed"
-    assert "abort_code: DEADLINE_PASSED" in rendered
-    assert "stage: ABORTED" in rendered
+    assert "Abort code: DEADLINE_PASSED" in rendered
+    assert "Stage: ABORTED" in rendered
 
 
 def test_gate_error_json_envelope_context_is_all_strings() -> None:

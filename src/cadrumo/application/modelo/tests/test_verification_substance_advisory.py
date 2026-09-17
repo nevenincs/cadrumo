@@ -21,7 +21,7 @@ from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # ---------------------------------------------------------------------------
 # Advisory predicate unit tests

@@ -29,13 +29,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
 # Modelos 179, 186, 233, 234 and 238 are deliberately ABSENT from this list.
@@ -60,7 +59,7 @@ def test_committed_definition_legal_authority_and_deadline_shape(
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert rev in modelo.revisions
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for ref in (approval, plazo):
         entry = catalogues.legal[ref]

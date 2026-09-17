@@ -58,7 +58,10 @@ def pair(authority: ValidatedRegistryAuthority) -> tuple[ModeloDefinition, Model
 def _two_edition_definition(
     definition: ModeloDefinition, predecessor: ModeloRevision, successor: ModeloRevision
 ) -> ModeloDefinition:
-    return definition.model_copy(update={"revisions": {predecessor.id: predecessor, successor.id: successor}})
+    # The pair stands alone, so the predecessor becomes its root: a declaration
+    # naming an edition outside the pair would point at nothing.
+    root = predecessor.model_copy(update={"predecessor": None})
+    return definition.model_copy(update={"revisions": {root.id: root, successor.id: successor}})
 
 
 def _judgements_by_casilla(definition: ModeloDefinition) -> dict[str, RowJudgement]:
@@ -126,13 +129,13 @@ def _edition_keyed_pair(
         item
         for item in successor.casillas
         if str(item.id) in restated
-        and item.binding is not None
         and item.continuidad_id is not None
         and chains[str(item.continuidad_id)].binding == item.binding
     )
     inherited = chains[str(row.continuidad_id)]
-    binding = row.binding
-    assert binding is not None
+    # A restated row may bind nothing; the plant then supplies the shared
+    # edition-free identifier both rows start from.
+    binding = row.binding or "modelo-131-planted-binding"
     assert successor_id not in binding and predecessor_id not in binding, "the chosen binding already embeds an edition"
 
     def _rekeyed(revision: ModeloRevision, target: str, edition: str) -> ModeloRevision:
@@ -163,14 +166,14 @@ def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
     its own edition key - which is exactly what a raw comparison would have
     reported as a change. The screen names the row; the raw dumps disagree.
     """
-    planted, casilla_id, binding = _edition_keyed_pair(authority.modelo(_MODELO), "2019-2023", "2024")
-    successor, predecessor = planted.revisions["2024"], planted.revisions["2019-2023"]
+    planted, casilla_id, binding = _edition_keyed_pair(authority.modelo(_MODELO), _PREDECESSOR, _SUCCESSOR)
+    successor, predecessor = planted.revisions[_SUCCESSOR], planted.revisions[_PREDECESSOR]
     by_id = {str(item.id): item for item in successor.casillas}
     chains = {str(item.continuidad_id): item for item in predecessor.casillas if item.continuidad_id}
     restated = [
         item
         for item in judge_definition(planted, modelo_id=_MODELO)
-        if item.revision == "2024" and item.kind == "restated_unchanged"
+        if item.revision == _SUCCESSOR and item.kind == "restated_unchanged"
     ]
     assert restated
     raw_differs = [
@@ -189,8 +192,8 @@ def test_restatement_is_found_through_the_edition_tokens_not_in_spite_of_them(
     )
     row = rekeyed[0]
     inherited = chains[str(row.continuidad_id)]
-    assert row.binding == f"{binding}-2024"
-    assert inherited.binding == f"{binding}-2019-2023"
+    assert row.binding == f"{binding}-{_SUCCESSOR}"
+    assert inherited.binding == f"{binding}-{_PREDECESSOR}"
     assert inheritable_value(row, successor)["binding"] == inheritable_value(inherited, predecessor)["binding"]
 
     # Normalisation removes the edition token and nothing else: a binding
@@ -284,7 +287,11 @@ def test_source_refs_are_compared_net_of_each_editions_default_only_when_both_de
     )
     # Without a default on both sides nothing separates the edition's grounding
     # from the row's, so the references are not compared at all.
-    assert differences(row.model_copy(update={"source_refs": ("aeat-dr-2025", other)}), (successor, predecessor)) == ()
+    without_defaults = (
+        successor.model_copy(update={"casilla_source_refs": ()}),
+        predecessor.model_copy(update={"casilla_source_refs": ()}),
+    )
+    assert differences(row.model_copy(update={"source_refs": ("aeat-dr-2025", other)}), without_defaults) == ()
 
 
 def test_a_minimal_delta_restating_its_whole_manifest_is_not_named(
@@ -422,7 +429,15 @@ def test_an_undeclared_edition_overlapping_its_neighbour_is_unchecked_unless_dec
     predecessor resolves it, and the same full copy is then judged and named.
     """
     definition, predecessor, successor = pair
-    overlapping = successor.model_copy(update={"period_selector": predecessor.period_selector})
+    # Simultaneity needs both a shared period and an intersecting validity window.
+    overlapping = successor.model_copy(
+        update={
+            "predecessor": None,
+            "period_selector": predecessor.period_selector,
+            "valid_from": predecessor.valid_from,
+            "valid_to": predecessor.valid_to,
+        }
+    )
     planted = _two_edition_definition(definition, predecessor, overlapping)
     findings = definition_findings(planted, modelo_id=_MODELO)
     assert {item.kind for item in findings} == {"unchecked_predecessor_undecidable"}

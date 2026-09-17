@@ -393,19 +393,20 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     parsed = parse_export_payload(layout, wire)
     detail = tuple(field for field in parsed.fields if field.record_id == "modelo-369-exterior-t36901")
 
-    def detail_value(offset_token: str) -> object:
-        matches = [field.value for field in detail if offset_token in str(field.binding_id)]
+    def detail_value(binding_name: str) -> object:
+        binding_id = f"modelo-369-exterior-fichero.{binding_name}"
+        matches = [field.value for field in detail if str(field.binding_id) == binding_id]
         assert len(matches) == 1, [(field.field_id, field.binding_id, field.value) for field in detail]
         return matches[0]
 
-    assert detail_value(".213-216.") == 2026
-    assert detail_value(".217-217.") == "T"
-    assert detail_value(".218-219.") == int(period_token[-2])
-    assert detail_value(".221-222.") == "DE"
-    assert detail_value(".223-227.") == Decimal("19")
-    assert detail_value(".228-228.") == "S"
-    assert detail_value(".229-245.") == Decimal("100")
-    assert detail_value(".246-262.") == Decimal("19")
+    assert detail_value("2-ejercicio-y-periodo-ejercicio") == 2026
+    assert detail_value("2-ejercicio-y-periodo-tipo-de-periodo") == "T"
+    assert detail_value("2-ejercicio-y-periodo-periodo") == int(period_token[-2])
+    assert detail_value("3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1") == "DE"
+    assert detail_value("3-prestaciones-de-servicios-tipo-de-iva-1") == Decimal("19")
+    assert detail_value("3-prestaciones-de-servicios-tipo-iva-1") == "S"
+    assert detail_value("3-prestaciones-de-servicios-base-imponible-1") == Decimal("100")
+    assert detail_value("3-prestaciones-de-servicios-cuota-iva-1") == Decimal("19")
     record_ids = {field.record_id for field in parsed.fields}
     assert "modelo-369-exterior-t36902" not in record_ids
     assert "modelo-369-exterior-t36903" in record_ids

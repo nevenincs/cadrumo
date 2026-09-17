@@ -43,6 +43,7 @@ from typing import Final, Literal, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import FilingRecordId
@@ -57,7 +58,7 @@ from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
-from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
@@ -143,6 +144,7 @@ class ResultDispositionProjection(BaseModel):
 
     @field_validator("disposition", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_disposition(cls, value: object) -> ResultDisposition:
         return ResultDisposition(value)
 
@@ -167,10 +169,12 @@ class PriorDomiciliationElectionProjection(BaseModel):
 
     @field_validator("election", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_election(cls, value: object) -> PriorDomiciliationElection:
         return PriorDomiciliationElection(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_baseline_proof_shape(self) -> PriorDomiciliationElectionProjection:
         proof = (
             self.baseline_filing_record_id,
@@ -295,11 +299,13 @@ class ObservationEnvelopePayload(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
         """Parse encrypted JSON provenance into the closed source taxonomy."""
         return ObservationSourceKind(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_canonical_m303_shape(self, info: ValidationInfo) -> ObservationEnvelopePayload:
         """Reject persisted M303 envelopes that predate canonical carry ingress."""
         if str(self.observation.modelo) != "303":
@@ -513,19 +519,36 @@ def validate_observation_casilla_ids(
     observation: RegistryModeloObservation,
     *,
     operation: PinnedAuthorityOperation,
+    stamped_revision_id: str | None = None,
 ) -> str:
-    """Validate all observed and operand casillas against the selected revision."""
+    """Validate all observed and operand casillas against the selected revision.
+
+    The revision is chosen by law from the observation's coordinates. Only when
+    those coordinates alone are ambiguous -- a filing year split between editions
+    at a dated boundary, which an observation carries no date to resolve -- does
+    ``stamped_revision_id`` decide, and only among the law's own candidates.
+    """
     observed_casilla_ids = frozenset(observation.casilla_values)
     operand_casilla_refs = frozenset(
         operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
     try:
-        revision = operation.revision_for_context(
-            observation.modelo,
-            filing_year=observation.filing_year,
-            period=observation.period,
-        )
+        try:
+            revision = operation.revision_for_context(
+                observation.modelo,
+                filing_year=observation.filing_year,
+                period=observation.period,
+            )
+        except AmbiguousRevisionSelectionError as ambiguity:
+            if stamped_revision_id is None or stamped_revision_id not in ambiguity.candidate_ids:
+                raise
+            revision = operation.revision_for_context(
+                observation.modelo,
+                filing_year=observation.filing_year,
+                period=observation.period,
+                revision_id=stamped_revision_id,
+            )
     except RegistrySnapshotError as exc:
         raise ObservationCasillaReferenceError(
             translated_message="application.calculations.observations.errors.registry_snapshot_missing",

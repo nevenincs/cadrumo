@@ -46,7 +46,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 _IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")

@@ -29,7 +29,7 @@ from ..draft_review import (
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from .filing_support import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
@@ -128,12 +128,16 @@ def _modelo_130_unscoped_provider() -> CasillaSchemaProvider:
 
 @cache
 def _unscoped_schema_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD)
+    return build_runtime_schema_provider(
+        modelos=("111", "115", "130", "131"), filing_year=_PERIOD.filing_year, period=_PERIOD
+    )
 
 
 @cache
 def _period_schema_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD)
+    return build_runtime_schema_provider(
+        modelos=("111", "115", "130", "131"), filing_year=_PERIOD.filing_year, period=_PERIOD
+    )
 
 
 def _draft(

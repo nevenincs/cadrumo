@@ -24,7 +24,7 @@ from cadrumo.domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
 from ..compiler.authority import compiled_bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _YEAR = 2020
 

@@ -19,7 +19,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
 from ...core.bucket_pointer import BucketPointer
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.hashing import (
     bounded_canonical_json_bytes,
     prefixed_digest,
@@ -318,6 +318,7 @@ class ProfileCustodyTransactionJournal(ProfileCustodyDigestModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_record(self) -> ProfileCustodyTransactionJournal:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)
@@ -416,6 +417,7 @@ class ProfileCustodyTransactionReceipt(ProfileCustodyDigestModel):
     self_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_receipt(self) -> ProfileCustodyTransactionReceipt:
         validate_utc_aware(self.completed_at)
         if self.retained_external_state != _EXTERNAL_STATE_RETAINED:
@@ -473,6 +475,7 @@ class ProfileCustodyOwnerReceipt(ProfileCustodyDigestModel):
     self_digest: PrefixedContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_receipt(self) -> ProfileCustodyOwnerReceipt:
         validate_utc_aware(self.completed_at)
         if self.self_digest != self.computed_self_digest:

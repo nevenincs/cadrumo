@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.operations import (
     OperationCancellation,
@@ -76,6 +77,7 @@ class OperationReviewProjectionReferenceV1(BaseModel):
     expires_at: datetime | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expiry(self) -> OperationReviewProjectionReferenceV1:
         if self.expires_at is not None:
             validate_utc_aware(self.expires_at)
@@ -97,6 +99,7 @@ class OperationReviewAvailableInteractionV1(BaseModel):
     review_reference: OperationReviewProjectionReferenceV1
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_reference(self) -> OperationReviewAvailableInteractionV1:
         if self.expires_at is not None:
             validate_utc_aware(self.expires_at)
@@ -125,6 +128,7 @@ class OperationUnsupportedInteractionV1(BaseModel):
     expires_at: datetime | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_expiry(self) -> OperationUnsupportedInteractionV1:
         if self.expires_at is not None:
             validate_utc_aware(self.expires_at)
@@ -165,6 +169,7 @@ class OperationPublicProjectionV1(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_projection(self) -> OperationPublicProjectionV1:
         # Keep the projection module importable on its own.  The public
         # The public validation helpers refer back to this model. Resolving

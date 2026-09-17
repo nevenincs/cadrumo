@@ -58,18 +58,32 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "the same raw parse struct as the CSV provider, for the same reason: it "
         "carries the source cell, and RawTransaction normalises it"
     ),
-    "entrypoints/cli/ledger_business_payloads.py::currency": (
-        "one field of an EvidenceExtractResult, the extractor's reading of a "
-        "document, sitting beside taxable_base and iva_rate which are strings "
-        "for the same reason: the payload shows the operator what was read, "
-        "including when what was read is wrong"
+    "application/ledger/invoice_draft_payloads.py::currency": (
+        "the draft payload of a document reading, beside taxable_base and "
+        "iva_rate which are strings for the same reason: it shows the operator "
+        "what was read, including when what was read is wrong"
+    ),
+    "application/ledger/structured_invoice_ports.py::currency": (
+        "a structured e-invoice as the parser read it, beside the parsed "
+        "country codes and tax ids; the grounding and confirmation steps judge "
+        "it, so the port must be able to carry a malformed value to them"
+    ),
+    "application/ledger/workspace.py::currency": (
+        "a review row projected for display beside date and amount strings; it "
+        "repeats the stored transaction's already-normalised code and "
+        "validates nothing itself"
+    ),
+    "entrypoints/tui/ledger/models.py::currency": (
+        "workbench transport models: an entry carries what the operator typed, "
+        "which the application writer alone judges, and a reader draft carries "
+        "the document's text for display, including when it is wrong"
     ),
     "application/ledger/invoice_draft_records.py::currency": (
         "read off a document rather than declared, so it must hold whatever the "
         "invoice actually said -- a refusal that cannot quote the unreadable "
         "value tells the operator nothing about which document to fix"
     ),
-    "llm/invoice_field_grounding.py::currency": (
+    "adapters/outbound/llm/invoice_field_grounding.py::currency": (
         "an extraction result awaiting grounding; refusing a malformed code at "
         "the model boundary would discard the evidence the grounding check "
         "exists to evaluate"
@@ -118,7 +132,12 @@ def _currency_fields() -> dict[str, set[str]]:
         except SyntaxError:  # a peer's mid-edit file is not this gate's finding
             continue
         relative = path.relative_to(_SRC).as_posix()
-        for node in ast.walk(tree):
+        # A field is an annotated name in a CLASS body; a function's annotated
+        # local holding a value it is still reading is not a declaration.
+        class_statements = (
+            statement for owner in ast.walk(tree) if isinstance(owner, ast.ClassDef) for statement in owner.body
+        )
+        for node in class_statements:
             if not isinstance(node, ast.AnnAssign) or not isinstance(node.target, ast.Name):
                 continue
             if node.target.id not in _CURRENCY_FIELD_NAMES:

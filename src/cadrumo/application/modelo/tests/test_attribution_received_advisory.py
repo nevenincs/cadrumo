@@ -127,7 +127,10 @@ def test_facts_present_casilla_empty_fires_advisory(
     assert finding.message_locale_key == "application.modelo.findings.attribution_received_unfolded"
     assert finding.message_facts["casilla_id"] == _CASILLA_1577
     assert finding.message_facts["total_base"] == Decimal("58100.00")
-    assert {"ley-35-2006:art-86", "ley-35-2006:art-89"} <= set(finding.legal_refs)
+    # The advisory cites what the registry declares for the casilla, not a local list.
+    casilla = next(candidate for candidate in snapshot.revision.casillas if candidate.id == _CASILLA_1577)
+    assert finding.legal_refs
+    assert tuple(finding.legal_refs) == tuple(casilla.legal_refs)
 
 
 def test_casilla_present_no_facts_fires_capture_advisory(

@@ -47,7 +47,7 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CENT = Decimal("0.01")
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)

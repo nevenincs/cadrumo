@@ -38,7 +38,7 @@ from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
 from ._parser_boundary_support import _expected_period, _modelo_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 # Ground truth mirrors the amounts _generate_misc_b.py stamps onto the
 # committed fixture PDF (the single source of the fixture's printed values);

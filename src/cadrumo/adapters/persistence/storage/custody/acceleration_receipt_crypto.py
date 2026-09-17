@@ -15,6 +15,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import canonical_json_bytes
 from .....core.identity.profile import canonical_profile_bucket_id
@@ -82,6 +83,7 @@ class PersistedProfileSession(BaseModel):
 
     @field_validator("issued_at", "idle_deadline", "absolute_deadline")
     @classmethod
+    @pydantic_validation_boundary
     def _require_utc(cls, value: datetime) -> datetime:
         """Reject naive or non-UTC deadlines at the model boundary."""
         return validate_utc_aware(value)

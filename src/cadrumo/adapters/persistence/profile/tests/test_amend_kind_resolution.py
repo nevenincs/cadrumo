@@ -38,6 +38,7 @@ from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
+from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.modelo.action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentKindNotPermittedError,
@@ -56,7 +57,7 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from .....domain.modelos.filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -167,6 +168,11 @@ def _seed_m303_external_baseline(
     )
 
     casilla_values = {_M303_RESULT_CASILLA: result_casilla_value}
+    filing_instance_evidence = general_m303_filing_evidence(
+        period,
+        reference="test:amend-kind-resolution",
+        operation=operation,
+    )
     inputs: dict[CasillaId, str] = {}
     overrides_map: dict[str, str] = {}
     revision_id = derive_calculation_revision_id(
@@ -174,7 +180,7 @@ def _seed_m303_external_baseline(
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
     filing_id = derive_filing_record_id(
@@ -207,7 +213,7 @@ def _seed_m303_external_baseline(
         verified_by="aeat-import",
         filed_at=_T1,
         filed_by="aeat-import",
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -379,6 +385,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
             amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             reason="lawful rectificativa lowering the declared result",
             actor="operator-A",
             clock=_T4,

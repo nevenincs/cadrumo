@@ -11,7 +11,6 @@ import pytest
 from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
@@ -22,15 +21,15 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
@@ -168,7 +167,7 @@ def test_modelo_390_validator_accepts_committed_definition() -> None:
     assert modelo.id == "390"
     assert modelo.revisions, "390 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "390 must declare casillas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_390_metadata_matches_orden_eha_3111_2009() -> None:
@@ -327,7 +326,7 @@ def test_modelo_390_construct_requires_recargo_grounding(revision_id: str) -> No
             r"\['ley-37-1992:art-161'\] required by formula 'modelo-390-iva-anual-cuota-devengada-total'"
         ),
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(catalogues).validate_modelo(mutated_modelo)
 
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)

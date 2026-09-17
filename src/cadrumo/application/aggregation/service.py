@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import LogExtra, get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -264,7 +264,7 @@ def provider_for_modelo(
     supported = _supported_per_modelo_modelos(operation=operation)
     if modelo != modelo.strip():
         raise AggregationUnsupportedModeloError(
-            t("aggregation.per_modelo.errors.unsupported_modelo"),
+            tr("aggregation.per_modelo.errors.unsupported_modelo"),
             context={"modelo": modelo},
             precondition_verdict=aggregation_no_recovery_verdict(
                 AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
@@ -275,7 +275,7 @@ def provider_for_modelo(
         if modelo in modelos:
             return provider
     raise AggregationUnsupportedModeloError(
-        t("aggregation.per_modelo.errors.unsupported_modelo"),
+        tr("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},
         precondition_verdict=aggregation_no_recovery_verdict(
             AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,

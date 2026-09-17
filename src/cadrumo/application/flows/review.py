@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.flows import PageStatus
 from ...core.models import STRICT_FROZEN_CONFIG
 from .definition import FlowDefinition
@@ -60,6 +61,7 @@ class ReviewProjection(BaseModel):
     required_remaining: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _derived_state_matches_rows(self) -> ReviewProjection:
         """Refuse projections whose reported review state contradicts their rows."""
         _validate_flow_verdicts(self.flow_verdicts)

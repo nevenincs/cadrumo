@@ -36,7 +36,7 @@ from ..source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BASE = Decimal("1000.00")
 _CUOTA = Decimal("210.00")
@@ -48,7 +48,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
+        iva_rate=resolve_iva_rate_token("RATE_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -85,7 +85,7 @@ def test_a_recorded_operation_date_takes_precedence_over_the_issue_date() -> Non
     devengo = resolve_invoice_devengo(
         _invoice(
             operation_date=date(2026, 3, 28),
-            operation_date_role=require_invoice_operation_date_role("operation_performed"),
+            operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
         ),
     )
 
@@ -103,7 +103,7 @@ def test_a_pago_anticipado_collection_date_is_read_identically() -> None:
     devengo = resolve_invoice_devengo(
         _invoice(
             operation_date=date(2026, 4, 1),
-            operation_date_role=require_invoice_operation_date_role("advance_payment_received"),
+            operation_date_role=require_invoice_operation_date_role("ADVANCE_PAYMENT_RECEIVED"),
         ),
     )
 
@@ -121,7 +121,7 @@ def test_an_operation_performed_in_q1_and_invoiced_in_q2_is_attributed_to_q1() -
     invoice = _invoice(
         issued_at=date(2026, 4, 15),
         operation_date=date(2026, 3, 28),
-        operation_date_role=require_invoice_operation_date_role("operation_performed"),
+        operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
     q1 = Period.from_year_and_code(2026, "1T")
     q2 = Period.from_year_and_code(2026, "2T")
@@ -150,7 +150,7 @@ def test_proxy_attributed_ids_name_only_the_records_resting_on_a_substitute() ->
     declared = _invoice(
         invoice_number="2026/DEV-DECLARED",
         operation_date=date(2026, 3, 28),
-        operation_date_role=require_invoice_operation_date_role("operation_performed"),
+        operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
     proxied = _invoice(invoice_number="2026/DEV-PROXY")
 
@@ -167,7 +167,7 @@ def test_a_period_built_only_on_declared_dates_raises_no_advisory() -> None:
     """
     declared = _invoice(
         operation_date=date(2026, 3, 28),
-        operation_date_role=require_invoice_operation_date_role("operation_performed"),
+        operation_date_role=require_invoice_operation_date_role("OPERATION_PERFORMED"),
     )
 
     assert (

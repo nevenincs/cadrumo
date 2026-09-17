@@ -29,7 +29,7 @@ from pydantic import BaseModel
 
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.period import Period
 from ...core.time.clock import now
@@ -82,7 +82,7 @@ def hashed_tax_id_token(tax_id: str, *, field_name: str) -> str:
     token = tax_id_identity_token(tax_id)
     if not token:
         raise AggregationValidationError(
-            t("aggregation.retenciones.errors.perceptor_nif_blank"),
+            tr("aggregation.retenciones.errors.perceptor_nif_blank"),
             context={"field": field_name},
         )
     return sha256_hex(token.encode(UTF_8_ENCODING))

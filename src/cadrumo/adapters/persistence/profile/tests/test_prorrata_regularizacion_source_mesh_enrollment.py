@@ -43,6 +43,7 @@ from .....domain.calculations.registry.tests.registry_observations import regist
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ...storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..prorrata_register import ProrrataRegisterRepository
@@ -186,6 +187,7 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CREATED_AT)
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_194:
             resolution = resolve_bucket_source_mesh(
@@ -227,6 +229,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
     work_unit = _work_unit(revision_id=snapshot.revision.id, modelo=ModeloCode("390"), period=period)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CREATED_AT)
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         _save_current_year_source_observations(CalculationObservationRepository(objects=profile.repository))
         with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_236:

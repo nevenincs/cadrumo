@@ -7,7 +7,6 @@ from collections.abc import Callable
 import pytest
 
 from cadrumo.core.errors.severity import BaseSeverity
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
@@ -16,9 +15,9 @@ from cadrumo.domain.deadlines.models import IVARegime, ModeloEnrollment, Taxpaye
 from cadrumo.domain.user_profile.registry_contract import validate_user_profile_registry_contract
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
-from ..compiler.validator import RegistryValidator
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_modelo_111_selects_monthly_schedule_from_profile_enrollment_facts(
@@ -76,7 +75,7 @@ def test_validator_rejects_schedule_periods_outside_revision_selector(
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="declares periods outside revision selector"):
-        RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(registry_authority.catalogues).validate_modelo(mutated_modelo)
 
 
 @pytest.mark.parametrize(
@@ -109,7 +108,7 @@ def test_validator_rejects_filing_schedule_cadence_contradictions(
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match=r"period_kind .* contradicts periods"):
-        RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+        committed_registry_validator(registry_authority.catalogues).validate_modelo(mutated_modelo)
 
 
 @pytest.mark.parametrize("modelo_id", ("036", "111", "184", "202", "369", "840"))
@@ -119,7 +118,7 @@ def test_shipped_filing_schedule_cadences_pass_canonical_period_classification(
 ) -> None:
     modelo = registry_authority.modelo(modelo_id)
 
-    RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(registry_authority.catalogues).validate_modelo(modelo)
 
 
 def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_error(

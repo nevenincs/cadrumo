@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.support_matrix import build_support_ma
 from ...compiler.authority import compiled_bundled_authority
 from ..profile import audit_bundled_registry_conformance
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: Anti-vacuity floor, far below the tree's real size, so ordinary registry
 #: growth never reds this while an empty or collapsed compose cannot clear it.

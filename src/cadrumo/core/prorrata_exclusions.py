@@ -8,6 +8,8 @@ command models.
 
 from __future__ import annotations
 
+from .errors.hierarchy import pydantic_validation_boundary
+
 
 class Art104TresExclusion(str):
     """Opaque registry-projected art. 104.Tres exclusion token.
@@ -25,7 +27,7 @@ class Art104TresExclusion(str):
         """Expose the opaque token as a string to Pydantic without a catalogue."""
         from pydantic_core import core_schema
 
-        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+        return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
 
     @property
     def value(self) -> str:

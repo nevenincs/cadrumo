@@ -28,7 +28,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from .financial_operand import (
@@ -135,6 +135,7 @@ class OperationFinancialOperandCustodyCheckpoint(BaseModel):
     crash_classification: OperationFinancialOperandCrashClassification | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_checkpoint(self) -> OperationFinancialOperandCustodyCheckpoint:
         validate_utc_aware(self.recorded_at)
         settled_without_delivery = self.state in {

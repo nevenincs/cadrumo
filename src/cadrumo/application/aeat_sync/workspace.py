@@ -14,7 +14,7 @@ from typing import Annotated, Any, Final, NotRequired, Self, TypedDict, Unpack, 
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import HEX_PATTERN_64
 from ...core.identifier_grammar import NamespacedId
@@ -238,6 +238,7 @@ class AeatSyncWorkspaceSourceObservationV1(BaseModel):
     item_count: NonNegativeInt | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coherent(self) -> Self:
         observable = _observable(self.availability)
         if observable != (self.observed_at is not None and self.item_count is not None):
@@ -258,6 +259,7 @@ class AeatSyncWorkspaceZoneObservationV1(BaseModel):
     sources: tuple[AeatSyncWorkspaceSourceObservationV1, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _unique(self) -> Self:
         ids = tuple(item.source for item in self.sources)
         if len(ids) != len(set(ids)):
@@ -294,6 +296,7 @@ class AeatSyncWorkspaceOverviewRowV1(AeatSyncWorkspaceActionRowV1):
     discrepancy_kind: AeatSyncDiscrepancyKind
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coherent(self) -> Self:
         _dual(self.local_state, self.local_observed_at, self.aeat_state, self.aeat_observed_at)
         _discrepancy(self.local_state, self.aeat_state, self.discrepancy_kind)
@@ -326,6 +329,7 @@ class AeatSyncWorkspaceCensusRowV1(AeatSyncWorkspaceActionRowV1):
     """
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _the_status_and_the_values_must_agree(self) -> Self:
         """A verdict must carry what it judged; a non-verdict must not pretend to.
 
@@ -369,6 +373,7 @@ class AeatSyncWorkspaceFiledDeclarationRowV1(AeatSyncWorkspaceActionRowV1):
         return self.aeat_observation_state
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coherent(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("period and filing year disagree")
@@ -407,6 +412,7 @@ class AeatSyncWorkspaceNotificationRowV1(BaseModel):
         return self.issued_on
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coherent(self) -> Self:
         if (self.read_state is AeatSyncNotificationReadState.READ) != (self.read_on is not None):
             raise ValueError("only read state carries read date")
@@ -440,6 +446,7 @@ class _DualRow(AeatSyncWorkspaceActionRowV1):
     """What AEAT holds for the same figure, or nothing when unobserved."""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _coherent(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("period and filing year disagree")
@@ -461,6 +468,7 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
     reconciliation_state: AeatSyncReconciliationState
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reconciled(self) -> Self:
         no_action = self.reconciliation_state is AeatSyncReconciliationState.NO_ACTION
         if (self.discrepancy_kind is AeatSyncDiscrepancyKind.NONE) != no_action:
@@ -509,6 +517,7 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
     reconciliation: tuple[AeatSyncWorkspaceReconciliationRowV1, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _six_zones(self) -> Self:
         if tuple(item.zone for item in self.zones) != tuple(AeatSyncWorkspaceZone):
             raise ValueError("zones must cover the closed catalogue")

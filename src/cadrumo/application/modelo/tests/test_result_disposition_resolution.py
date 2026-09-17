@@ -25,7 +25,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..result_disposition_resolution import resolve_modelo_result_disposition
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "915b0469-91b1-4787-a650-9aad55564dd3"  # was 'result-disposition-resolution-test'

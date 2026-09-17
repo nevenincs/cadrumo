@@ -30,13 +30,12 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
 #: The single 2000-y-siguientes revision was narrowed into two eras. Both cite
@@ -71,7 +70,7 @@ def test_validator_accepts_committed_definition(
     assert modelo.id == mid
     assert rev in modelo.revisions
     assert modelo.tax_domain == "iva"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 @pytest.mark.parametrize("mid,rev,approval,plazo,doc,has_windows", _MODELOS)

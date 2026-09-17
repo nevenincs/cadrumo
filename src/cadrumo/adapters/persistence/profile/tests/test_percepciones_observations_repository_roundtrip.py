@@ -44,7 +44,7 @@ from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _repository() -> PercepcionObservationRepositoryAdapter:

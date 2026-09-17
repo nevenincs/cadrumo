@@ -18,7 +18,7 @@ from typing import ClassVar, Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from .errors.hierarchy import CoreValidationError
+from .errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 
 class RegistryToken(str):
@@ -78,7 +78,7 @@ class StrictRegistryToken(RegistryToken):
     ) -> CoreSchema:
         """Accept only a projected token and serialize it as text."""
         return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
+            pydantic_validation_boundary(cls._require_registry_token),
             json_schema_input_schema=core_schema.str_schema(),
             serialization=core_schema.to_string_ser_schema(),
         )
@@ -105,7 +105,7 @@ class TextProjectedRegistryToken(RegistryToken):
     ) -> CoreSchema:
         """Project the text token through the registry boundary."""
         return core_schema.no_info_after_validator_function(
-            cls._project_pydantic,
+            pydantic_validation_boundary(cls._project_pydantic),
             core_schema.str_schema(min_length=1),
         )
 

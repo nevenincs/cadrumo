@@ -17,6 +17,7 @@ from functools import wraps
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.config_support import LLMProvider
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.image_media_type import ImageMediaType
@@ -150,6 +151,7 @@ class LLMRequest(BaseModel):
     @field_validator("prompt")
     @classmethod
     @_pydantic_llm_validator
+    @pydantic_validation_boundary
     def validate_prompt(cls, value: str) -> str:
         """Ensure prompts are not empty or whitespace-only.
 
@@ -171,6 +173,7 @@ class LLMRequest(BaseModel):
 
     @field_validator("system")
     @classmethod
+    @pydantic_validation_boundary
     def validate_system(cls, value: str | None) -> str | None:
         """Normalize empty system prompts to ``None``."""
         if value is None:
@@ -180,6 +183,7 @@ class LLMRequest(BaseModel):
 
     @field_validator("language")
     @classmethod
+    @pydantic_validation_boundary
     def validate_language(cls, value: str | None) -> str | None:
         """Validate optional ISO 639-1 language codes."""
         if value is None:
@@ -233,6 +237,7 @@ class PromptDefinition(BaseModel):
     @field_validator("id")
     @classmethod
     @_pydantic_llm_validator
+    @pydantic_validation_boundary
     def validate_id(cls, value: str) -> str:
         """Ensure prompt identifiers are kebab-case."""
         if not _PROMPT_ID_PATTERN.fullmatch(value):

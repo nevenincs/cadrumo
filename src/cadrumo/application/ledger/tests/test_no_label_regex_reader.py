@@ -56,7 +56,7 @@ _ROUTER = _SRC_ROOT / "application" / "ledger" / "invoice_draft_extraction.py"
 # by this gate; they serve as its positive control.
 _AEAT_LAYOUT_PARSERS = (
     _SRC_ROOT / "adapters" / "inbound" / "justificante" / "_extract.py",
-    _SRC_ROOT / "adapters" / "inbound" / "declaracion" / "_parser.py",
+    _SRC_ROOT / "adapters" / "inbound" / "declaracion" / "parser.py",
 )
 
 

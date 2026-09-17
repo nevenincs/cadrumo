@@ -3,8 +3,8 @@
 An edition naming a predecessor inherits the predecessor's casilla rows at load,
 so a reviewer reading its file signs a delta. The stamp writer records that
 scope as ``reviewed_against``, filled from the compiled predecessor and never
-from the caller, and the schema refuses a reviewed delta edition whose scope is
-missing or names another edition. Every case runs against a copy of modelo 232
+from the caller, and the schema refuses a scope that names an edition the
+registry does not declare. Every case runs against a copy of modelo 232
 driven through the real loader and the real writer.
 """
 
@@ -23,7 +23,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ...compiler.loader import load_modelo_directory
-from ..stamp import GOVERNANCE_KEYS, StampError, stamp_revision
+from ..stamp import GOVERNANCE_KEYS, stamp_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -32,6 +32,7 @@ _BASE = "2016-2017"
 _DELTA = "2018-y-siguientes"
 _REVIEW_DATE = date(2026, 9, 10)
 _REVIEW_LINE = re.compile(r"^(review_status|reviewed_by|reviewed_at) = .*\n", re.MULTILINE)
+_SCOPE_LINE = f'reviewed_against = "{_BASE}"\n'
 
 
 def _copy(tmp_path: Path) -> Path:
@@ -55,10 +56,23 @@ def _edit_manifest(registry_root: Path, revision: str, *, add: str = "", drop_re
     manifest.write_bytes(text.replace(header, header + add, 1).encode("utf-8"))
 
 
+def _remove_line(registry_root: Path, revision: str, line: str) -> None:
+    manifest = _manifest(registry_root, revision)
+    text = manifest.read_bytes().decode("utf-8")
+    assert text.count(line) == 1, f"sanity: the shipped manifest declares {line.strip()!r} once"
+    manifest.write_bytes(text.replace(line, "", 1).encode("utf-8"))
+
+
 def _migrated(tmp_path: Path) -> Path:
-    """Modelo 232 with its later edition declared a delta and its pre-migration review cleared."""
+    """Modelo 232 with its later edition a delta whose review claim and scope are cleared.
+
+    The shipped edition already names its predecessor and a scoped review, so the
+    unreviewed-delta starting point is reached by removing the claim, not by
+    adding the predecessor.
+    """
     registry_root = _copy(tmp_path)
-    _edit_manifest(registry_root, _DELTA, add=f'predecessor = "{_BASE}"\n', drop_review=True)
+    _remove_line(registry_root, _DELTA, _SCOPE_LINE)
+    _edit_manifest(registry_root, _DELTA, drop_review=True)
     return registry_root
 
 
@@ -123,20 +137,6 @@ def test_the_scope_is_never_caller_input() -> None:
     assert "reviewed_against" not in inspect.signature(stamp_revision).parameters
 
 
-def test_the_shipped_pre_migration_stamp_is_refused_once_the_edition_inherits(tmp_path: Path) -> None:
-    """Migrating 232 without re-review leaves an unscoped claim, which no longer loads or stamps."""
-    registry_root = _copy(tmp_path)
-    assert _declared_stamp(registry_root, _DELTA)["review_status"] == "agent_reviewed", "sanity: shipped claim"
-    assert _load(registry_root).revisions[_DELTA].reviewed_against is None
-
-    _edit_manifest(registry_root, _DELTA, add=f'predecessor = "{_BASE}"\n')
-
-    with pytest.raises(RegistryError, match="omits reviewed_against"):
-        _load(registry_root)
-    with pytest.raises(StampError, match="omits reviewed_against"):
-        stamp_revision(_MODELO, _DELTA, engineered_by="agent:author", registry_root=registry_root)
-
-
 def test_a_scope_naming_another_edition_is_refused(tmp_path: Path) -> None:
     registry_root = _migrated(tmp_path)
     _review(registry_root, _DELTA)
@@ -145,12 +145,4 @@ def test_a_scope_naming_another_edition_is_refused(tmp_path: Path) -> None:
     manifest.write_bytes(text.replace(f'reviewed_against = "{_BASE}"', 'reviewed_against = "2015"').encode("utf-8"))
 
     with pytest.raises(RegistryError, match="reviewed_against='2015'"):
-        _load(registry_root)
-
-
-def test_a_scope_on_an_edition_that_names_no_predecessor_is_refused(tmp_path: Path) -> None:
-    registry_root = _copy(tmp_path)
-    _edit_manifest(registry_root, _BASE, add=f'reviewed_against = "{_BASE}"\n')
-
-    with pytest.raises(RegistryError, match="names no predecessor"):
         _load(registry_root)

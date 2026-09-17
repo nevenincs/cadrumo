@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -45,6 +46,7 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
         verification=VerificationReportCatalogueRepository(bucket_id=bucket_id, objects=objects),
         bucket_event=BucketEventHistoryRepository(objects=objects),
         observation=CalculationObservationRepository(objects=objects),
+        iva_compensation_history=IvaCompensationHistoryRepository(objects=objects),
         iva_compensation_decision=IvaWalletDecisionRepository(objects=objects),
         participation_index=TransactionParticipationIndexRepository(bucket_id=bucket_id, objects=objects),
         workflow_run=WorkflowRunRepository(objects=objects),

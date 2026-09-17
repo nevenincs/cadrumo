@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.modelo import Modelo
@@ -55,6 +56,7 @@ class FilingEnvelopeOccurrence(BaseModel):
     payload_sha256: ContentDigest
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_payload_digest(self) -> FilingEnvelopeOccurrence:
         if self.payload_sha256 != sha256_hex(self.payload):
             raise ValueError("filing-envelope occurrence digest must be derived from its emitted bytes")
@@ -79,6 +81,7 @@ class FilingEnvelopeRenderRequest(BaseModel):
         return Modelo(self.registry_snapshot.modelo.id)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_one_coherent_filing_instance(self) -> FilingEnvelopeRenderRequest:
         snapshot = self.registry_snapshot
         _validate_envelope_filing_draft(self.draft, snapshot)
@@ -183,6 +186,7 @@ class FilingEnvelopeRenderResult(BaseModel):
     total_length: int = Field(gt=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_exact_envelope_byte_derivation(self) -> FilingEnvelopeRenderResult:
         _require_envelope_occurrence_order(self.envelope, self.occurrences)
         if len(self.prefix) != self.envelope.prefix_extent:

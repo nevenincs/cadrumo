@@ -44,12 +44,10 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.period import Period
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
@@ -67,6 +65,7 @@ from cadrumo.application.user_profile.login_session_port import bind_profile_log
 composition = ExitStack()
 composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
 composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+operation = composition.enter_context(bundled_indexed_authority().operation())
 
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 _BUCKET = _PROFILE_ID
@@ -74,7 +73,9 @@ _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 tmp = Path(sys.argv[1])
 
 with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
-    record = UserProfileRecord(setup_state=ProfileSetupState.COMPLETE,
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
@@ -131,11 +132,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         )
     )
 
-    secure_objects = profile.repository
-    wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    ports = build_calculation_action_ports(bucket_id=_BUCKET, operation=operation)
     # This child asks a CALCULATION question -- it resolves a modalidad and
     # calculates, and never renders a fichero or an export layout -- so it asks
     # for the calculation rung. Modelo 200's revision declares exactly that rung
@@ -154,16 +151,14 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=ports.work_lifecycle_ports,
+        operation=operation,
         clock=_T0,
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         binding_values={},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
+        ports=ports,
         clock=_T0,
     )
     present = "DP200014B:00611" in result.revision.casilla_values

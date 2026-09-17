@@ -6,6 +6,7 @@ import pytest
 
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -51,7 +52,7 @@ _EXPECTED_MURCIA_MU4_LABELS = {
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
 def test_modelo_100_murcia_mu4_recursos_energeticos_roles_are_family_specific(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"1055", "2038", "2039"}}
     legacy_roles = [
         casilla.semantic_role

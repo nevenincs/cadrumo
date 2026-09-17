@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, field_valida
 from ...core.casilla_id import CasillaId, validated_casilla_id_map
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.error_codes import resolve_error_message
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.hex import Hex64Str
@@ -200,6 +201,7 @@ class M145CommunicationExportResult(BaseModel):
     source_refs: tuple[str, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _receipt_describes_its_payload(self) -> M145CommunicationExportResult:
         """Confirm ``byte_length`` and ``payload_sha256`` measure ``payload``.
 
@@ -236,6 +238,7 @@ class M145CommunicationCreateCommand(BaseModel):
 
     @field_validator("field_values", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_field_value_keys(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return validated_casilla_id_map(
@@ -346,6 +349,7 @@ class M145CommunicationRecord(BaseModel):
         return self.communication_record_id
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_local_transition_state(self) -> M145CommunicationRecord:
         _validate_m145_transition_timestamps(
             self.created_at,

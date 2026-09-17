@@ -45,7 +45,7 @@ from .._modelo_bindings_invoice_iva import (
     recargo_rate_mismatch_diagnostics,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BASE = Decimal("1000.00")
 

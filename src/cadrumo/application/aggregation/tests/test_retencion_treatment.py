@@ -9,7 +9,7 @@ import pytest
 from ....core.aggregation import RetencionScheme, WorkIncomeRetencionTreatment
 from ..retenciones import registry_work_income_retencion_treatments
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_work_income_treatment_matches_statutory_scheme() -> None:

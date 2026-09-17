@@ -53,7 +53,7 @@ from cadrumo.domain.calculations.registry.schema_rounding import RegistryRoundin
 from cadrumo.domain.iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")

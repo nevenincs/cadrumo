@@ -8,6 +8,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -63,6 +64,7 @@ class CertificateSourceRecord(BaseModel):
     registered_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _timestamps_are_utc(self) -> CertificateSourceRecord:
         """Reject a registration instant that is naive or not UTC."""
         _require_utc(self.registered_at)
@@ -85,6 +87,7 @@ class AuthCleanupCertificateSource(BaseModel):
     registered_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _timestamps_are_utc(self) -> AuthCleanupCertificateSource:
         """Reject a witness instant that is naive or not UTC."""
         _require_utc(self.registered_at)
@@ -115,6 +118,7 @@ class AuthCleanupIntent(BaseModel):
     secret_source_names: tuple[CertificateSourceName, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _timestamps_are_utc(self) -> AuthCleanupIntent:
         """Reject any populated intent instant that is naive or not UTC."""
         _require_utc(self.started_at, self.configured_at_at_start, self.authenticated_at_at_start)
@@ -144,6 +148,7 @@ class CertificateSecretMutationIntent(BaseModel):
     completion_witness: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _timestamps_are_utc(self) -> CertificateSecretMutationIntent:
         """Reject a mutation start instant that is naive or not UTC."""
         _require_utc(self.started_at)
@@ -166,6 +171,7 @@ class AuthState(BaseModel):
     certificate_secret_mutation_intent: CertificateSecretMutationIntent | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _timestamps_are_utc(self) -> AuthState:
         """Reject any populated auth-state instant that is naive or not UTC."""
         _require_utc(self.configured_at, self.authenticated_at)

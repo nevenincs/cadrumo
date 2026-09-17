@@ -29,7 +29,7 @@ from ...storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 
 
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 11, 45, 0, tzinfo=UTC)

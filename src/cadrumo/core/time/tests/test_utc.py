@@ -23,7 +23,7 @@ import pytest
 from ...errors.hierarchy import CoreValidationError
 from ..utc import coerce_utc_aware, validate_utc_aware
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 _TZ_PLUS2 = timezone(timedelta(hours=2))
 _TZ_MINUS5 = timezone(timedelta(hours=-5))
@@ -72,4 +72,4 @@ def test_validate_utc_aware_rejects_non_utc_or_naive(
     with pytest.raises(CoreValidationError, match=expected_match) as exc_info:
         validate_utc_aware(value)
 
-    assert isinstance(exc_info.value, ValueError)
+    assert not isinstance(exc_info.value, ValueError)

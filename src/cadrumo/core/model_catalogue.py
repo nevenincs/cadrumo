@@ -53,6 +53,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 from .source_locator import OptionalSourceUrl
 
@@ -230,6 +231,7 @@ class ModelLicence(BaseModel):
     verified_quote: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _verification_supports_the_claim(self) -> ModelLicence:
         """Refuse a commercial-use claim that no publisher text backs."""
         if self.verification is LicenceVerification.UNVERIFIED:
@@ -277,6 +279,7 @@ class ModelCandidate(BaseModel):
     notes: str = ""
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _memory_requirement_matches_the_runtime(self) -> ModelCandidate:
         """Require a memory figure exactly where one can be measured against.
 
@@ -296,6 +299,7 @@ class ModelCandidate(BaseModel):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _hosted_candidates_declare_their_price(self) -> ModelCandidate:
         """Require the ranking axis each runtime actually has.
 

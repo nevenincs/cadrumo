@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from ..compiler.loader import load_registry_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:
@@ -47,4 +49,4 @@ def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:
 
 
 def _bundled_registry_root() -> Path:
-    return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+    return bundled_path("registry", "aeat")

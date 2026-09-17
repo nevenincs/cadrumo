@@ -773,7 +773,7 @@ class TestProfileSessionAcceleration:
         """A malformed renewal deadline cannot materialise a root lock."""
         profile_id = _profile_id()
         record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id)
-        with pytest.raises(ValueError, match="timezone-aware UTC"):
+        with pytest.raises(CoreValidationError, match="timezone-aware UTC"):
             advance_persisted_profile_session_idle_deadline(
                 storage_root=tmp_path,
                 profile_id=profile_id,

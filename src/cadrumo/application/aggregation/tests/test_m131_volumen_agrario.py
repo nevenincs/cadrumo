@@ -33,7 +33,7 @@ from ..modelo_bindings import _activity_category_matcher, _employment_category_m
 from ..renta_income_ledger import aggregate_renta_m131_agrario_income_ledger
 from .renta_income_aggregation_support import raw_transaction
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "9f86d081-884c-4d65-9a2f-eaa0c55ad015"  # was 'test'
 _Q1 = Period.from_year_and_code(2026, "2T")

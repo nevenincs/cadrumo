@@ -53,6 +53,7 @@ from .config_support import default_clave_sede_access_url_template as _default_c
 from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from .config_support import default_status_detail_url_template as _default_status_detail_url_template
 from .config_support import default_status_notificaciones_path as _default_status_notificaciones_path
+from .errors.hierarchy import pydantic_validation_boundary
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources.bundled_data import bundled_path
@@ -848,6 +849,7 @@ class Settings(CadrumoLlmSettings):
     # ── Introspection ───────────────────────────────────────────────────────
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
         return _config_validation.validate_live_iva_timeout_hierarchy(self)
 
@@ -882,6 +884,7 @@ class Settings(CadrumoLlmSettings):
 
     @field_validator("aeat_status_detail_url_template")
     @classmethod
+    @pydantic_validation_boundary
     def _detail_url_template_has_expediente_id(cls, value: str) -> str:
         return _config_validation.detail_url_template_has_expediente_id(value)
 
@@ -899,6 +902,7 @@ class Settings(CadrumoLlmSettings):
 
     @field_validator("cadrumo_clave_movil_dni_fecha")
     @classmethod
+    @pydantic_validation_boundary
     def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
         return _config_validation.clave_dni_fecha_is_iso_date(value)
 
@@ -907,6 +911,7 @@ class Settings(CadrumoLlmSettings):
         "aeat_clave_permanente_sede_access_url_template",
     )
     @classmethod
+    @pydantic_validation_boundary
     def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
         return _config_validation.clave_sede_access_url_template_has_target(value)
 

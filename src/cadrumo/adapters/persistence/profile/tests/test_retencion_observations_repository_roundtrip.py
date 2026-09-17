@@ -357,7 +357,8 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
         # The model itself canonicalises, so the aggregation identity matches.
         assert padded.perceptor_nif == canonical.perceptor_nif == "12345678Z"
 
-        aggregation = aggregate_retenciones_111((padded, canonical), period=period)
+        # Modelo 111 is periodic; the observations accrue in the first quarter.
+        aggregation = aggregate_retenciones_111((padded, canonical), period=Period.from_year_and_code(2024, "1T"))
         assert aggregation.total_perceptors == 1
         assert len(aggregation.rollups) == 1
 

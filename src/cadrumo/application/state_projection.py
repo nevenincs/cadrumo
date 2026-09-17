@@ -77,7 +77,7 @@ from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_
 from ..core.aggregation import BindingSourceKind
 from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
-from ..core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ..core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ..core.filing_year import FilingYear
 from ..core.identity.profile import ProfileId
 from ..core.logging import get_logger
@@ -404,6 +404,7 @@ class ProjectionModeloBindingRequirement(BaseModel):
 
     @field_validator("source", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _hydrate_source(cls, value: object) -> object:
         """Hydrate the persisted source token without admitting unknown strings."""
         if isinstance(value, str) and not isinstance(value, BindingSourceKind):

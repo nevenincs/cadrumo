@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, computed_field, model_validator
 
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.schema_family_disposition import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
@@ -103,6 +104,7 @@ class SchemaFamilyCoverageRow(CoverageModel):
     source_refs: tuple[SourceRefId, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_disposition_matches_content(self) -> SchemaFamilyCoverageRow:
         """Refuse a row whose disposition disagrees with what it reports.
 
@@ -147,6 +149,7 @@ class RevisionCoverageManifest(CoverageModel):
     rows: tuple[SchemaFamilyCoverageRow, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rows_cover_every_enrolled_family_once(self) -> RevisionCoverageManifest:
         """Refuse a manifest that skips an enrolled family or reports one twice.
 

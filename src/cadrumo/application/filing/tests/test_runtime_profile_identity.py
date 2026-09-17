@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from ..runtime import ModeloOperatorProfile, filing_profile_from_taxpayer
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_modelo_operator_profile_uses_subject_tax_id_validation() -> None:

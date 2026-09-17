@@ -13,7 +13,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.user_profile.values import UserProfileFact
 from ..validation import ProfileValidationService
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _RETIRED_FILING_EXPORT_FACTS = (
     UserProfileFact(path="filing_export.iban", value="ES9121000418450200051332"),

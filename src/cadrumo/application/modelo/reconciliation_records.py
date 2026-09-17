@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
@@ -207,6 +207,7 @@ class ModeloReconciliationRecord(BaseModel):
 
     @field_validator("reconciled_at")
     @classmethod
+    @pydantic_validation_boundary
     def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
         """Hold the persisted instant to the canonical UTC-aware contract.
 
@@ -258,6 +259,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
     @field_validator("reconciled_at")
     @classmethod
+    @pydantic_validation_boundary
     def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
         """Project the record's UTC instant under the same canonical contract."""
         return validate_utc_aware(value)

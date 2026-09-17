@@ -61,9 +61,12 @@ def _active_bucket_id() -> str:
     return bucket_id
 
 
-def _seed_work_unit(*, modelo: str, filing_year: int, period: str, revision_suffix: str = "0") -> str:
+def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
     bucket_id = _active_bucket_id()
-    revision_id = "r" + revision_suffix * 63
+    # The history refuses a record whose revision diverges from the law-selected
+    # one, so the seeded unit carries the revision the registry actually selects.
+    with bundled_indexed_authority().operation() as operation:
+        revision_id = str(operation.revision_for_context(modelo, filing_year=filing_year, period=period).id)
     typed_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -110,8 +113,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields(
     modelo diff). The history projects both with the right verdict, source kind,
     diff count, and actor.
     """
-    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
-    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T", revision_suffix="1")
+    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
     _reconcile(matching_unit, operation=operation)
     _reconcile(mismatching_unit, operation=operation)
 
@@ -136,8 +139,8 @@ def test_history_lists_recorded_reconciliations_with_typed_fields(
 
 def test_history_narrows_to_one_work_unit(operation: PinnedAuthorityOperation) -> None:
     """The optional work_unit_id filter narrows the history to one work unit."""
-    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
-    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T", revision_suffix="1")
+    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
     _reconcile(unit_a, operation=operation)
     _reconcile(unit_b, operation=operation)
 
@@ -185,8 +188,8 @@ def test_anti_tautology_unreconciled_unit_absent_from_history(
     reconcile it, then assert the history lists only the first. If this passed
     with the unreconciled unit present, the read-back would be tautological.
     """
-    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T", revision_suffix="0")
-    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T", revision_suffix="2")
+    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T")
     _reconcile(reconciled_unit, operation=operation)
 
     with bundled_indexed_authority().operation() as operation:

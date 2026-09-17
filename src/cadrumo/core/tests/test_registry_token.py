@@ -64,8 +64,10 @@ def test_a_strict_model_boundary_admits_only_projected_tokens_and_serializes_tex
 
     assert adapter.validate_python(projected) is projected
     assert adapter.dump_python(projected) == "general"
-    with pytest.raises(CoreValidationError, match=r"^_Strict must be a registry-projected token$"):
+    with pytest.raises(ValidationError, match="_Strict must be a registry-projected token") as refused:
         adapter.validate_python("general")
+    registered = refused.value.errors()[0]["ctx"]["error"].__cause__
+    assert isinstance(registered, CoreValidationError)
 
 
 def test_a_text_model_boundary_projects_stripped_text_and_refuses_blank_input() -> None:

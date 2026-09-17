@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
-from ....core.storage_taxonomy import StorageArea, StorageScope
+from ....core.storage_taxonomy import StorageArea, StorageNodeKind, StorageScope
 from ....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
 from ..errors import StorageReclaimRefusedError
 from ..service import RECLAIMABLE_LIFECYCLES, reclaim_storage_area
@@ -25,6 +25,19 @@ def _targets(area: StorageArea):
         and location.scope is StorageScope.ROOT
         and location.lifecycle in RECLAIMABLE_LIFECYCLES
     )
+
+
+def _independent_directory_targets(area: StorageArea):
+    """Return two directory targets of ``area`` where neither contains the other."""
+    directories = [
+        category for category in _targets(area) if STORAGE_TAXONOMY[category].node_kind is StorageNodeKind.DIRECTORY
+    ]
+    for index, first in enumerate(directories):
+        for second in directories[index + 1 :]:
+            first_path, second_path = storage_path(first), storage_path(second)
+            if not first_path.is_relative_to(second_path) and not second_path.is_relative_to(first_path):
+                return first, second
+    raise AssertionError(f"{area} declares no two independent reclaimable directories")
 
 
 def _bind_directory(link: Path, target: Path) -> str:
@@ -89,8 +102,9 @@ class TestFilesystemContainment:
         assert survivor.read_bytes() == b"survive", f"external target lost through {link_kind}"
 
     def test_reclaim_refuses_a_declared_target_redirected_outside_storage(self, tmp_path) -> None:
-        redirected_category, ordinary_category = _targets(StorageArea.CACHE)
+        area = StorageArea.LOGS
         with override_settings(cadrumo_local_storage_root=tmp_path / "storage"):
+            redirected_category, ordinary_category = _independent_directory_targets(area)
             redirected_target = storage_path(redirected_category)
             redirected_target.parent.mkdir(parents=True, exist_ok=True)
             outside = tmp_path / "outside"
@@ -105,9 +119,9 @@ class TestFilesystemContainment:
             ordinary.write_bytes(b"reclaimable only after complete preflight")
 
             with pytest.raises(StorageReclaimRefusedError) as caught:
-                reclaim_storage_area(StorageArea.CACHE, confirmed=True)
+                reclaim_storage_area(area, confirmed=True)
 
-        assert caught.value.area is StorageArea.CACHE
+        assert caught.value.area is area
         assert caught.value.reason == "a selected target is not root-scoped"
         assert survivor.read_bytes() == b"must survive", f"external target lost through {link_kind}"
         assert ordinary.read_bytes() == b"reclaimable only after complete preflight"

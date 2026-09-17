@@ -37,10 +37,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .....application.calculations.binding_prefill import resolve_bindings_from_local_store
+from .....application.modelo.calculation_actions import calculate_modelo_revision
 from .....application.modelo.external_import_actions import import_external_filing_evidence
+from .....application.modelo.verification_actions import verify_modelo_revision
 from .....application.modelo.work_lifecycle import create_work_unit
 from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -48,6 +49,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.tests.published_authority import leased_profile_create_context
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_coordinates,
@@ -63,7 +65,7 @@ from .....domain.deadlines.models import (
 from .....domain.modelos.calculation_revision import CalculationRevision
 from .....domain.modelos.filing_record import ExternalEvidenceKind
 from .....domain.modelos.verification_report import ModeloVerificationFindingKind
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .....entrypoints.adapter_composition import build_calculation_action_ports
 from .....tests.env_scope import ready_clave_settings
 from ...storage.operator_scope import build_operator_scope_ports
@@ -85,7 +87,7 @@ from .verification_repository_support import (
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
@@ -93,7 +95,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return _calculate_modelo_revision(
+        return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
             **kwargs,
@@ -110,13 +112,9 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     ):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return _verify_modelo_revision(
-            calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            operation=operation,
-            **kwargs,
-        )
+        kwargs.setdefault("certificate_secret_backend_factory", build_test_certificate_secret_backend_factory())
+        kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
+        return verify_modelo_revision(calculation_revision_id, operation=operation, **kwargs)
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:
@@ -216,7 +214,7 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         objects = profile.repository
         _seed_ready_profile(profile_id=_PROFILE_ID)
         yield (
-            WorkUnitCatalogueRepository(objects=objects),
+            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
             BucketEventHistoryRepository(objects=objects),
             CalculationObservationRepository(objects=objects),
@@ -227,9 +225,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
 def _seed_ready_profile(*, profile_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
-            schema_id="cadrumo.user_profile",
-            schema_version=load_user_profile_schema().version,
+        create_user_profile_record(
+            context=leased_profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
             facts=_READY_PROFILE_FACTS,

@@ -17,9 +17,12 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
+from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -83,6 +86,12 @@ def seed_clean_cross_period_sources(
         source_period = Period.from_year_and_code(filing_year, period)
         source_revision = resolved_revision(modelo=source_modelo, filing_year=filing_year, period=period)
         values = source_casilla_values(source_casilla_ids)
+        source_headers: tuple[ObservedHeaderFact, ...] = ()
+        if source_modelo == "303":
+            values, source_headers = modelo_303_filed_disposition(
+                values,
+                source_locator=f"seed:{source_modelo}:{filing_year}:{period}:declaration-type",
+            )
         current = filing_catalogue.current_for(
             bucket_id=work_unit.bucket_id,
             modelo=source_modelo,
@@ -121,6 +130,15 @@ def seed_clean_cross_period_sources(
                 observation_repository=observation_repository,
                 expected_tax_id=SEEDED_SOURCE_TAX_ID,
                 clock=SEED_CLOCK,
+                filing_instance_evidence=(
+                    general_m303_filing_evidence(
+                        source_period,
+                        reference=f"seed:{source_modelo}:{filing_year}:{period}",
+                        operation=operation,
+                    )
+                    if source_modelo == "303"
+                    else None
+                ),
             )
             filing_catalogue = filing_repository.load()
         observation_repository.save(
@@ -138,6 +156,7 @@ def seed_clean_cross_period_sources(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=SEED_CLOCK,
+                source_headers=source_headers,
                 stamped_revision_id=source_revision.id,
                 source_metadata={
                     "aeat_register_status": "ALTA",

@@ -29,7 +29,7 @@ from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ..draft_review import _invoice_catalogue_fingerprint
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _RUNTIME_BUCKET_ID = "0fab7c94-777c-4598-ae8f-c4b539f300c3"  # was 'filing-test'
 _COUNTERPARTY_CIF = "A58818501"

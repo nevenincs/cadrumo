@@ -75,10 +75,21 @@ from ..modelos_work_units import WorkUnitCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .file_flow_test_support import calculation_ports_for_test
 from .published_authority_support import published_authority_operation
+from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "30330303-0303-4303-8303-303303303303"
+
+
+__all__ = ["secure_objects"]
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
 _YEAR = 2025
 _TAX_ID = "12345678Z"
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
@@ -159,7 +170,7 @@ def _recargo_sale(
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
-            "category_id": "test_recargo_sale",
+            "category_id": None,
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,

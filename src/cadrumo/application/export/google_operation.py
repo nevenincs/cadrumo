@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.capabilities import ServiceCapability
-from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -123,6 +123,7 @@ class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
     dry_run: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_canonical_filing_period(self) -> Self:
         Period.from_year_and_code(self.filing_year, self.period)
         return self

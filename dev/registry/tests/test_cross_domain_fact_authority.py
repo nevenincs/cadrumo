@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_re
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
-from cadrumo.domain.iva.rates import iva_rate_record_from_fact
+from cadrumo.domain.iva.rates import rate_record_from_fact
 from cadrumo.domain.iva.recargo_equivalencia import (
     recargo_rate_record_from_fact,
     resolve_recargo_rate_for_applied_rate,
@@ -67,7 +67,7 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
 
     iva_rate = registry_authority.resolve_governed_fact(_probe("iva-rate").query)
     assert isinstance(iva_rate, ResolvedMappingFact)
-    projected_rate = iva_rate_record_from_fact(iva_rate, authority=registry_authority)
+    projected_rate = rate_record_from_fact(iva_rate, authority=registry_authority)
     assert projected_rate.pct == Decimal("21")
     assert projected_rate.legal_refs == iva_rate.legal_refs
     assert projected_rate.source_refs == iva_rate.source_refs

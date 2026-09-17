@@ -94,7 +94,7 @@ from ..residual_identity import (
     scan_for_residual_identities,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 #: Synthetic specimen identities PLANTED to prove the scanner actually fires.
 #:

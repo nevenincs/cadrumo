@@ -48,7 +48,7 @@ from ....domain.modelos.verification_report import (
 )
 from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding as _build_lob_advisory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _TIPO_RENTA = validated_casilla_id("tipo_renta", surface="test_m210_convenio_lob_advisory")
 _DEVENGO_DATE = date(2025, 12, 31)

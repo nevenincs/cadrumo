@@ -24,7 +24,7 @@ from ._modelo_100_registry_support import (
     _RENTAL_HOUSING_DEDUCTION_DT_15_REF,
     _SAVINGS_BASE_ART_49_REF,
     _STATE_DEDUCTION_ART_67_REF,
-    _modelo_100_snapshot,
+    _modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         formula = next(
             formula for formula in revision.formulas if formula.target_casilla_id == _BASE_IMPONIBLE_AHORRO_CASILLA
         )
@@ -43,7 +43,7 @@ def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
 
 def test_modelo_100_donation_deduction_surface_cites_art_68_3() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.id in _DONATION_DEDUCTION_CASILLAS
         }
@@ -88,7 +88,7 @@ def test_modelo_100_ceuta_melilla_deduction_cites_art_68_4() -> None:
     }
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
         }
@@ -105,7 +105,7 @@ def test_modelo_100_ceuta_melilla_deduction_cites_art_68_4() -> None:
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
         for role, quota_ref in role_refs.items():
             suffix = formula_suffixes[role]
-            formula_id = f"renta-{filing_year}-deduccion-ceuta-melilla-{suffix}-50-porciento"
+            formula_id = f"renta-deduccion-ceuta-melilla-{suffix}-50-porciento"
             casilla = casillas_by_role[role]
             formula = formulas_by_id[formula_id]
 
@@ -126,7 +126,7 @@ def test_modelo_100_cultural_interest_deduction_cites_art_68_5() -> None:
     }
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
         }
@@ -144,7 +144,7 @@ def test_modelo_100_cultural_interest_deduction_cites_art_68_5() -> None:
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
         for role, quota_ref in role_refs.items():
             suffix = formula_suffixes[role]
-            formula_id = f"renta-{filing_year}-deduccion-cultural-{suffix}-50-porciento"
+            formula_id = f"renta-deduccion-cultural-{suffix}-50-porciento"
             casilla = casillas_by_role[role]
             formula = formulas_by_id[formula_id]
 
@@ -158,7 +158,7 @@ def test_modelo_100_new_company_investment_deduction_cites_art_68_1() -> None:
     anexo_section = ("resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res")
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         state_casilla = next(
             casilla for casilla in revision.casillas if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
         )
@@ -204,7 +204,7 @@ def test_modelo_100_business_investment_deductions_cite_art_68_2() -> None:
     }
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         rollup_casillas = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in rollup_roles
         }
@@ -238,7 +238,7 @@ def test_modelo_100_home_investment_deduction_cites_dt_18() -> None:
     }
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
         }
@@ -272,7 +272,7 @@ def test_modelo_100_home_investment_deduction_cites_dt_18() -> None:
 
 def test_modelo_100_energy_efficiency_deduction_formula_cites_da_50() -> None:
     for filing_year in range(2021, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casilla = next(
             casilla
             for casilla in revision.casillas
@@ -301,7 +301,7 @@ def test_modelo_100_rental_housing_transitional_deduction_cites_dt_15() -> None:
     }
 
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
         }
@@ -310,7 +310,7 @@ def test_modelo_100_rental_housing_transitional_deduction_cites_dt_15() -> None:
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
         for role, quota_ref in role_refs.items():
             suffix = formula_suffixes[role]
-            formula_id = f"renta-{filing_year}-deduccion-alquiler-vivienda-{suffix}-50-porciento"
+            formula_id = f"renta-deduccion-alquiler-vivienda-{suffix}-50-porciento"
             casilla = casillas_by_role[role]
             formula = formulas_by_id[formula_id]
 

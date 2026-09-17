@@ -46,7 +46,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .ledger_iva_aggregation_support import _deduction_provenance
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 _GENERAL_BASE = Decimal("4000.00")

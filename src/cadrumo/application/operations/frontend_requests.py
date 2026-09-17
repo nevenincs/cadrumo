@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
 from ...core.time.utc import validate_utc_aware
@@ -261,6 +262,7 @@ class OperationResponseApplyRequestV1(OperationResponseControlRequestV1):
     responded_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_response_time(self) -> OperationResponseApplyRequestV1:
         validate_utc_aware(self.responded_at)
         return self
@@ -274,6 +276,7 @@ class OperationResponseRejectRequestV1(OperationResponseControlRequestV1):
     reason_code: OperationEventCode | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_response_time(self) -> OperationResponseRejectRequestV1:
         validate_utc_aware(self.responded_at)
         return self
@@ -460,6 +463,7 @@ class _OperationPublicEventBase(BaseModel):
     code: OperationEventCode
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_timestamp(self) -> _OperationPublicEventBase:
         validate_utc_aware(self.timestamp)
         return self

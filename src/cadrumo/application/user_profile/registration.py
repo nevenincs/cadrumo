@@ -20,7 +20,7 @@ bucket's key-encryption key is derived from the credential the operator chose
 rather than from an ambient environment value.
 
 See Also:
-    :func:`~cadrumo.application.user_profile.login_profile`
+    :func:`~cadrumo.application.user_profile.login_session.login_profile`
         The returning-operator counterpart; this module is the first-time
         path that has no key material to unwrap yet.
 """

@@ -1,8 +1,8 @@
 """Unit tests for secure workflow-run persistence.
 
-Covers :func:`cadrumo.application.workflow.save_run`,
-:func:`cadrumo.application.workflow.load_run`, and
-:func:`cadrumo.application.workflow.list_runs`, including round-tripping
+Covers :func:`cadrumo.application.workflow.persistence.save_run`,
+:func:`cadrumo.application.workflow.persistence.load_run`, and
+:func:`cadrumo.application.workflow.persistence.list_runs`, including round-tripping
 and traversal-safe id validation.
 """
 

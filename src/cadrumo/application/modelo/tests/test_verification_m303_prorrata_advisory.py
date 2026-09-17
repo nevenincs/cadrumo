@@ -52,7 +52,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EXPRESSION = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
 _PRORRATA_BINDING_SOURCE = "prorrata_regularizacion"
@@ -62,7 +62,7 @@ _CASILLA_44: CasillaId = validated_casilla_id("44", surface="test casilla id")
 
 #: One filing year inside each shipped revision's serving window, used to reach
 #: the revision through the law-determined resolver rather than by literal id.
-_PROBE_FILING_YEARS: tuple[int, ...] = (2020, 2024)
+_PROBE_FILING_YEARS: tuple[int, ...] = (2022, 2024)
 
 
 @lru_cache

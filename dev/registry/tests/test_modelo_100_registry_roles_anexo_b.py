@@ -39,6 +39,7 @@ from ._modelo_100_registry_support import (
     _ANEXO_B_TOTAL_SATISFECHO_ROLE,
     _ANEXO_B_TOTAL_SATISFECHO_SECTIONS,
     _AUTONOMIC_DEDUCTION_ART_77_REF,
+    _modelo_100_revision,
     _modelo_100_snapshot,
 )
 
@@ -54,7 +55,7 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> 
         (2024, 5),
         (2025, 7),
     ):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -72,7 +73,7 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> 
 
 def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -> None:
     for filing_year, expected_count in ((2024, 24), (2025, 32)):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -91,7 +92,7 @@ def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -
 
 def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_anual() -> None:
     for filing_year in (2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casilla = next(casilla for casilla in revision.casillas if casilla.id == "2140")
 
         assert casilla.label == _ANEXO_B_OTROS_GASTOS_LABELS[filing_year]
@@ -128,7 +129,7 @@ def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> Non
 
 def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded() -> None:
     for filing_year in (2023, 2024, 2025):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         casillas_by_id = {
             casilla.id: casilla for casilla in revision.casillas if casilla.id in _ANEXO_B_BALEARES_NACIMIENTO_ROWS
         }
@@ -148,7 +149,7 @@ def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded(
 
 def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee() -> None:
     for filing_year, expected_count in ((2024, 3), (2025, 3)):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -166,7 +167,7 @@ def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee(
 
 def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code() -> None:
     for filing_year, expected_count in ((2024, 3), (2025, 4)):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -191,7 +192,7 @@ def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amoun
         (2024, 16),
         (2025, 22),
     ):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -217,7 +218,7 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -
         (2024, 8),
         (2025, 10),
     ):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -236,7 +237,7 @@ def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -
 
 def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -255,7 +256,7 @@ def test_modelo_100_anexo_b_insurance_premium_role_is_credit_insurance() -> None
 
 def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total() -> None:
     for filing_year in range(2020, 2026):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -280,7 +281,7 @@ def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific() -> No
         (2024, 2),
         (2025, 3),
     ):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas
@@ -305,7 +306,7 @@ def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean() -
         (2024, 2),
         (2025, 3),
     ):
-        revision = _modelo_100_snapshot(filing_year).revision
+        revision = _modelo_100_revision(filing_year)
         checked = [
             casilla
             for casilla in revision.casillas

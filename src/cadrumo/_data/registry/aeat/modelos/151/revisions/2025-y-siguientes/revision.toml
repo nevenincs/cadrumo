@@ -7627,6 +7627,12 @@ sequence_additions = {legal_refs = ["orden-hfp-1338-2023:art-2"]}
 sequence_removals = {legal_refs = [2]}
 
 [[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2015-2022", id = "modelo-151-export"}
+sequence_additions = {source_refs = ["aeat-dr-151-2023"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
 family = "constructs"
 selector = {revision = "2015-2022", id = "m151-impatriado-calculation"}
 sequence_additions = {formulas = ["modelo-151-cuota-integra-ahorro"]}

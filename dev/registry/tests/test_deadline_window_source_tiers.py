@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_registry as _committed_registry,
 )
@@ -17,8 +15,9 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     with_revision as _with_revision,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_validator_rejects_deadline_window_legal_ref_without_legal_authority() -> None:
@@ -34,7 +33,7 @@ def test_validator_rejects_deadline_window_legal_ref_without_legal_authority() -
         RegistryValidationError,
         match=r"deadline window modelo-130-2024-1t legal ref .* is not legal authority",
     ):
-        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+        committed_registry_validator(mutated_catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_deadline_window_without_official_guidance_source() -> None:
@@ -50,7 +49,7 @@ def test_validator_rejects_deadline_window_without_official_guidance_source() ->
         RegistryValidationError,
         match=r"deadline window modelo-130-2024-1t requires official_source_guidance source evidence",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+        committed_registry_validator(catalogues).validate_modelo(
             _with_revision(modelo, mutated_revision),
         )
 
@@ -69,7 +68,7 @@ def test_validator_rejects_deadline_condition_legal_ref_without_legal_authority(
         RegistryValidationError,
         match=r"deadline condition for modelo-130-2024-1t legal ref .* is not legal authority",
     ):
-        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+        committed_registry_validator(mutated_catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_deadline_condition_without_official_guidance_source() -> None:
@@ -87,6 +86,6 @@ def test_validator_rejects_deadline_condition_without_official_guidance_source()
         RegistryValidationError,
         match=r"deadline condition for modelo-130-2024-1t requires official_source_guidance source evidence",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+        committed_registry_validator(catalogues).validate_modelo(
             _with_revision(modelo, mutated_revision),
         )

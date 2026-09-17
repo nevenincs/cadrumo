@@ -23,6 +23,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -139,6 +140,7 @@ class InboundDeclaracionObservation(BaseModel):
 
     @field_validator("period", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _coerce_filing_period(cls, raw_period: object, info: ValidationInfo) -> object:
         ejercicio = info.data.get("ejercicio")
         if not isinstance(raw_period, str):

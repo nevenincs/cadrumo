@@ -16,6 +16,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.digest import PrefixedContentDigest
 from ...core.identity.hex_ids import FilingRecordId
@@ -68,6 +69,7 @@ class FilingRetentionFact(BaseModel):
     filed_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_fact(self) -> FilingRetentionFact:
         validate_utc_aware(self.filed_at)
         return self
@@ -93,6 +95,7 @@ class FilingRetentionSnapshot(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_snapshot(self) -> FilingRetentionSnapshot:
         validate_utc_aware(self.observed_at)
         if self.self_digest != self.computed_self_digest:

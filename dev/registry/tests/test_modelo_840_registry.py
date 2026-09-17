@@ -5,15 +5,16 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
 
@@ -44,13 +45,18 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 
 def test_committed_modelo_840_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_840()
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
     assert set(modelo.revisions) == {"2003-y-siguientes"}
 
 
 def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     modelo, catalogues = _load_modelo_840()
-    for filing_year in (2003, 2010, 2018, 2024, 2026):
+    # The one 2003-onward edition serves every year the registry supports; a
+    # year below the registry-wide floor is refused rather than resolved.
+    floor = catalogues.supported_filing_years.floor
+    with pytest.raises(NoRevisionForPeriodError):
+        build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=floor - 1, period="0A")
+    for filing_year in (floor, 2024, 2026):
         # Modelo 840 is the IAE censal declaration: informative, filed on AEAT's
         # own surface, declaring no export layout, and graded `applicability`
         # accordingly. Building at the FILING default refuses on the missing

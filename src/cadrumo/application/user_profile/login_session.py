@@ -15,7 +15,7 @@ belong to different custody classes with different key requirements:
   with no unlocked profile, which is why retirement can complete during
   recovery. Not a session: no counterparty, no protocol.
 - the **live bucket session** -- the in-process
-  :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
+  :class:`~cadrumo.adapters.persistence.storage.master_key.bucket_session.BucketSession`
   holding the unlocked DEK. Purely process-local, so it is absent in an
   ordinary invocation, every one of which is a fresh process.
 - the **AEAT authority session** -- an encrypted row INSIDE the bucket,
@@ -37,7 +37,7 @@ the named-profile read path all call it, so the surfaces cannot drift.
 See Also:
     :mod:`cadrumo.adapters.persistence.storage.custody.acceleration_receipt`
         The split-knowledge receipt this module mints and resumes.
-    :func:`~cadrumo.application.user_profile.logout_active_profile`
+    :func:`~cadrumo.application.user_profile.login_session.logout_active_profile`
         The symmetric strong close, which reuses
         :func:`close_profile_session_artefacts` from here.
 """
@@ -146,7 +146,7 @@ class ProfileLoginOutcome(BaseModel):
     """Typed result of one ``login`` invocation.
 
     Carries no key material: the unlocked
-    :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
+    :class:`~cadrumo.adapters.persistence.storage.master_key.bucket_session.BucketSession`
     is bound to the process through the active-session context variable,
     never to this record.
 
@@ -366,7 +366,7 @@ def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> No
     The single authority for "this profile is no longer logged in": clears the
     process-local record authority, then revokes the durable artefacts through
     :func:`_revoke_profile_session_artefacts`. Composed by the strong close in
-    :func:`~cadrumo.application.user_profile.logout_active_profile`, so neither
+    :func:`~cadrumo.application.user_profile.login_session.logout_active_profile`, so neither
     surface owns a second teardown path.
 
     Args:
@@ -500,9 +500,9 @@ def bind_resumed_profile_session(
 
     Returns:
         ``None`` when the session resumed and is now the active
-        :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`,
+        :class:`~cadrumo.adapters.persistence.storage.master_key.bucket_session.BucketSession`,
         otherwise the typed
-        :class:`~cadrumo.core.ProfileSessionRefusalReason` naming why not.
+        :class:`~cadrumo.core.profile_session.ProfileSessionRefusalReason` naming why not.
     """
     instant = _now() if now is None else now
     storage_root = effective_storage_root()

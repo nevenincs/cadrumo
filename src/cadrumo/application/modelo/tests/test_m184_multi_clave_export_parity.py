@@ -33,7 +33,7 @@ from ...filing.record_types import RecordRenderRow
 from .._calculation_modelo_adjustments import union_detail_rows_by_identity
 from ..action_errors import ModeloAggregationBindingError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _REVISION = "2025-y-siguientes"
 

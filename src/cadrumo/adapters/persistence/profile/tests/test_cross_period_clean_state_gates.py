@@ -133,7 +133,7 @@ def _persist_390_draft(
         modelo="390",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        revision_id="2025-clean-state-test",
+        revision_id="2025",
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -141,7 +141,7 @@ def _persist_390_draft(
         modelo=ModeloCode("390"),
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        revision_id="2025-clean-state-test",
+        revision_id="2025",
         name="390-2025-0A",
         created_at=_CLOCK,
         updated_at=_CLOCK,
