@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from dev._paths import REPO_ROOT
 
 from ..compiler.fact_providers import (
@@ -35,7 +36,7 @@ from ..compiler.fact_providers import (
     compile_registered_fact_providers,
     validate_fact_provider_registrations,
 )
-from ..compiler.loader import load_registry_tree
+from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 __all__ = [
     "FactQualityFinding",
@@ -259,24 +260,34 @@ def resolved_fact_provenance_findings(results: Iterable[ResolvedGovernedFact]) -
     return tuple(sorted(set(findings)))
 
 
-def _resolved_variants(facts: Iterable[GovernedFact]) -> tuple[ResolvedGovernedFact, ...]:
+def _resolved_variants(
+    facts: Iterable[GovernedFact],
+    support: SupportedFilingYearsCatalogue,
+) -> tuple[ResolvedGovernedFact, ...]:
     """Resolve every declared variant at its first applicable coordinate through the real resolver."""
     frozen = tuple(facts)
     catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in frozen})
     query_adapter = TypeAdapter(GovernedFactQuery)
     resolved: list[ResolvedGovernedFact] = []
+    envelope = support.date_envelope()
     for fact in frozen:
         for variant in fact.variants:
+            window = fact.validity_window(variant, envelope)
+            effective_date = max(window.valid_from, envelope.floor)
+            if (window.valid_to is not None and window.valid_to < effective_date) or not envelope.admits_coordinate(
+                effective_date
+            ):
+                continue
             query = query_adapter.validate_python(
                 {
                     "family": fact.family,
                     "fact_id": fact.fact_id,
                     "date_axis": variant.date_axis,
-                    "effective_date": variant.valid_from,
+                    "effective_date": effective_date,
                     "selectors": variant.selectors,
                 },
             )
-            resolved.append(resolve_governed_fact(catalogue, query, authority_digest="0" * 64))
+            resolved.append(resolve_governed_fact(catalogue, query, authority_digest="0" * 64, support=support))
     return tuple(resolved)
 
 
@@ -419,12 +430,13 @@ def live_facts_catalogue_findings(
                 )
             )
     governed_directories = tuple(directory for registration in frozen for directory in registration.owned_directories)
+    support = load_shared_catalogues(registry_root).require_supported_filing_years()
     if any(registration.project_modelos is not None for registration in frozen):
         try:
             modelos, _catalogues = load_registry_tree(registry_root)
             provenance_facts = compile_registered_fact_providers(registry_root, modelos=modelos).facts.values()
             resolved_findings = resolved_fact_provenance_findings(
-                resolved for resolved in _resolved_variants(provenance_facts)
+                resolved for resolved in _resolved_variants(provenance_facts, support)
             )
         except Exception as error:
             resolved_findings = (
@@ -436,7 +448,7 @@ def live_facts_catalogue_findings(
             )
     else:
         resolved_findings = resolved_fact_provenance_findings(
-            resolved for facts in compiled.values() for resolved in _resolved_variants(facts)
+            resolved for facts in compiled.values() for resolved in _resolved_variants(facts, support)
         )
     return tuple(
         sorted(

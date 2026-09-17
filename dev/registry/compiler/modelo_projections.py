@@ -139,7 +139,33 @@ def _target_variants(modelo: ModeloDefinition, target: _ProjectionTarget) -> tup
                     continue
                 index_by_identity[identity] = len(variants)
                 variants.append(_project_variant(modelo.id, revision, parameter, value))
-    return tuple(sorted(variants, key=lambda variant: (variant.valid_from, variant.variant_id)))
+    return _open_newest_edition(
+        modelo,
+        tuple(sorted(variants, key=lambda variant: (variant.valid_from, variant.variant_id))),
+    )
+
+
+def _open_newest_edition(
+    modelo: ModeloDefinition,
+    variants: tuple[GovernedFactVariant, ...],
+) -> tuple[GovernedFactVariant, ...]:
+    """Leave the newest edition's value open-ended, as the registry carries that edition forward.
+
+    A modelo revision's annual window marks the edition it was authored for, not
+    a legal end of the parameter; the registry projects the newest edition into
+    later filing years. A governed fact treats an explicit end as a legal
+    boundary, so the projection drops only the end that is exactly the newest
+    edition's own window end.
+    """
+    newest = max(modelo.revisions.values(), key=lambda revision: (revision.valid_from, str(revision.id)))
+    if newest.valid_to is None:
+        return variants
+    return tuple(
+        variant.model_copy(update={"valid_to": None})
+        if newest.id in variant.source_revision_ids and variant.valid_to == newest.valid_to
+        else variant
+        for variant in variants
+    )
 
 
 def _require_scalar_parameter(parameter: ParameterDefinition, *, modelo_id: str, revision_id: str) -> None:

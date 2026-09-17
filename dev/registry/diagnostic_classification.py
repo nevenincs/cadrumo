@@ -136,7 +136,9 @@ def _derive_filing_revision_classifications(
                 )
                 continue
             try:
-                with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+                with validating_governed_facts(
+                    CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+                ):
                     snapshots = tuple(
                         build_validated_snapshot(
                             modelo,

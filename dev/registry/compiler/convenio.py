@@ -18,6 +18,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import require_tipo_renta_irnr
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
@@ -27,6 +28,8 @@ __all__ = ["convenio_authority_from_facts"]
 def convenio_authority_from_facts(
     facts: GovernedFactCatalogue,
     legal: Mapping[str, LegalReference],
+    *,
+    support: SupportedFilingYearsCatalogue,
 ) -> ConvenioAuthority:
     """Build the immutable runtime catalogue from the canonical override fact.
 
@@ -41,7 +44,7 @@ def convenio_authority_from_facts(
         raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} must be an override family")
     # The tokens belong to the catalogue being compiled, never to the published
     # bundle: this runs inside the compile path, which must not read the artifact.
-    candidate = CandidateFactAuthority(facts)
+    candidate = CandidateFactAuthority(facts, support)
 
     rows_by_country: dict[str, list[ConvenioOverrideRow]] = {}
     document_by_country: dict[str, str] = {}
@@ -89,7 +92,7 @@ def convenio_authority_from_facts(
             raise RegistryValidationError(
                 f"convenio fact variant {variant.variant_id!r} tipo_renta must be text",
             )
-        validity_window = fact.validity_window(variant)
+        validity_window = fact.validity_window(variant, support.date_envelope())
         rows_by_country.setdefault(country_code, []).append(
             ConvenioOverrideRow(
                 tipo_renta=require_tipo_renta_irnr(tipo_renta_value, authority=candidate),

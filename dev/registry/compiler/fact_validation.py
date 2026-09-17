@@ -278,10 +278,10 @@ def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
                     f"retired-provider fact {fact.fact_id!r} track {track!r} has a gap in its "
                     "source-grounded temporal coverage",
                 )
-        if windows[ordered[-1].variant_id].valid_to is not None and fact.support is None:
+        if windows[ordered[-1].variant_id].valid_to is not None:
             failures.append(
                 f"retired-provider fact {fact.fact_id!r} track {track!r} must retain an open current "
-                "applicability window or declare bounded support",
+                "applicability window",
             )
     return tuple(failures)
 

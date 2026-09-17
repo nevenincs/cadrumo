@@ -498,7 +498,7 @@ def _decode_payload_bytes(payload_bytes: bytes) -> object:
     modelos_bytes = payload_bytes[catalogue_end:]
     if not isinstance(catalogues, RegistryCatalogues):
         raise pickle.UnpicklingError("compiled cache catalogue has a foreign shape")
-    authority = CandidateFactAuthority(catalogues.facts)
+    authority = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
     with validating_governed_facts(authority):
         modelos = _CompiledCacheUnpickler(io.BytesIO(modelos_bytes)).load()
     return modelos, catalogues
