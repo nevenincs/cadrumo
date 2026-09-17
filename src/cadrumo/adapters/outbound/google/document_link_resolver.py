@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.external_constants import PDF_MIME_TYPE
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -140,6 +141,7 @@ class DriveFolderDocument(BaseModel):
 
     @field_validator("file_id", "name", "mime_type")
     @classmethod
+    @pydantic_validation_boundary
     def _require_non_blank_wire_value(cls, value: str) -> str:
         """Reject blank Drive resource values before a listing can consume them."""
         if not value.strip():

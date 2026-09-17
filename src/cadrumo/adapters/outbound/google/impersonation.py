@@ -77,6 +77,7 @@ from typing import TYPE_CHECKING, Protocol, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.google_credential_source import GoogleCredentialSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -167,6 +168,7 @@ class GoogleImpersonationConfig(BaseModel):
 
     @field_validator("target_principal")
     @classmethod
+    @pydantic_validation_boundary
     def _target_principal_looks_like_an_email(cls, value: str) -> str:
         stripped = value.strip()
         if not stripped or "@" not in stripped:
@@ -175,6 +177,7 @@ class GoogleImpersonationConfig(BaseModel):
 
     @field_validator("delegates")
     @classmethod
+    @pydantic_validation_boundary
     def _delegates_look_like_emails(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         for delegate in value:
             if not delegate.strip() or "@" not in delegate:
@@ -210,6 +213,7 @@ class GoogleCredentialSourceSelection(BaseModel):
     impersonation: GoogleImpersonationConfig | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _impersonation_config_required_for_impersonation_kind(self) -> GoogleCredentialSourceSelection:
         if self.kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION and self.impersonation is None:
             raise ValueError(

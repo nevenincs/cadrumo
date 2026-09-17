@@ -36,7 +36,7 @@ from ..calc_sheets_pull import (
 )
 from ..calc_sheets_pull_records import MetadataMatchState, OperatorEdit, PullMetadata
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _SPREADSHEET_ID = "spreadsheet-123"
 

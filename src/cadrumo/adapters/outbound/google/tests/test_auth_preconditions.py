@@ -34,7 +34,7 @@ from ..oauth_flow import (
 )
 from ..records import REQUIRED_SCOPES
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 @dataclass(frozen=True)

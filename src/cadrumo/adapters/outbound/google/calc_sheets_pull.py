@@ -67,7 +67,7 @@ from ....application.storage.calc_sheets.records import (
 from ....core.casilla_id import CasillaId
 from ....core.decimal.coercion import coerce_decimal, coerce_finite_european_decimal
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ....core.period import Period
+from ....core.period import Period, PeriodError
 from ....core.type_guards import is_object_list, is_str_keyed_dict
 from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
@@ -406,7 +406,7 @@ def _require_matching_metadata(
     """
     try:
         workbook_period = Period.from_year_and_code(metadata.filing_year, metadata.period)
-    except ValueError:
+    except PeriodError:
         workbook_period = None
     metadata_binds_snapshot = (
         metadata.modelo_id == snapshot.modelo.id

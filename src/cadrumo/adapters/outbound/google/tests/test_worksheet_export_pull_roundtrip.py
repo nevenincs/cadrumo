@@ -30,7 +30,10 @@ from .....domain.calculations.registry.errors import NoRevisionForPeriodError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
+from .....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from .....domain.period import calculation_filing_date
 from ..calc_sheets_pull import compute_from_pull
 from ..calc_sheets_pull_records import (
@@ -43,7 +46,7 @@ from ..calc_sheets_pull_records import (
 )
 from ._calc_sheets_support import modelo_130_2025_1t_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_INGRESOS_CASILLA")
 _GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_GASTOS_CASILLA")
@@ -275,23 +278,30 @@ def test_modelo_369_exterior_export_reference_uses_the_quarter_anchor() -> None:
 
     The committed exterior revision takes effect on 1 July 2021.  Its
     ``EXT-1T`` calculation anchor is 31 March, so no export/pull reference
-    may be built for that quarter; selecting it at the former 31 December
-    fallback would incorrectly expose the live revision.
+    may be built for that quarter, and the former 31 December fallback must
+    not expose the live revision either; 2021 also lies below the published
+    filing floor, so both anchors refuse.  Inside the envelope the quarter
+    anchor selects the exterior revision.
     """
-    period = Period.from_year_and_code(2021, "EXT-1T")
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    assert supported_years.floor > 2021
+    pre_effective = Period.from_year_and_code(2021, "EXT-1T")
 
-    with pytest.raises(NoRevisionForPeriodError):
-        published_snapshot(
-            "369",
-            filing_year=2021,
-            period=period.registry_token,
-            on=calculation_filing_date(period),
-        )
+    for anchor in (calculation_filing_date(pre_effective), date(2021, 12, 31)):
+        with pytest.raises(NoRevisionForPeriodError):
+            published_snapshot(
+                "369",
+                filing_year=2021,
+                period=pre_effective.registry_token,
+                on=anchor,
+            )
 
-    legacy_snapshot = published_snapshot(
+    supported = Period.from_year_and_code(supported_years.floor, "EXT-1T")
+    snapshot = published_snapshot(
         "369",
-        filing_year=2021,
-        period=period.registry_token,
-        on=date(2021, 12, 31),
+        filing_year=supported_years.floor,
+        period=supported.registry_token,
+        on=calculation_filing_date(supported),
     )
-    assert legacy_snapshot.revision.id == "esquema-exterior"
+    assert snapshot.revision.id == "esquema-exterior"
