@@ -28,6 +28,7 @@ from .....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from .....core.period import Period
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.ids import BindingId, RelationId
 from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema import RegistrySnapshot
@@ -137,15 +138,18 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
 
 
 def _zero_relation_values() -> dict[RelationId, Decimal]:
-    """Zero every quarterly relation the borrador does not itself supply.
+    """Zero every relation that does not feed the casilla the borrador supplies.
 
-    Relations share their binding's identity, so a filler for the
-    borrador-sourced binding would contradict the borrador value.
+    Relations share their binding's identity, and equivalent bindings of one
+    casilla must agree, so a zero filler there would contradict the borrador.
     """
+    revision = _modelo_100_registry_snapshot().revision
+    targets = casillas_by_binding(revision)
+    borrador_casillas = set(targets.get(_DECIMAL_BINDING, ()))
     return {
         binding.id: Decimal("0")
-        for binding, _ in relation_prefill_bindings_for_period(_modelo_100_registry_snapshot().revision)
-        if binding.id != _DECIMAL_BINDING
+        for binding, _ in relation_prefill_bindings_for_period(revision)
+        if not borrador_casillas.intersection(targets.get(binding.id, ()))
     }
 
 
