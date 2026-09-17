@@ -1,7 +1,8 @@
 """THE canonical actionlint provisioner. One implementation, five repos.
 
-Deployed, not called: same constraint as `ci_contract.py` and `preflight.sh`
-beside it - ci-fleet is private, every consumer is public.
+Deployed, not called: same constraint as the CI contract checker and the
+runner preflight - their source repository is private, every consumer is
+public.
 
 WHY THIS EXISTS. The fleet acquired actionlint four different ways, one per
 repo, and each way was wrong in its own direction:
@@ -40,18 +41,17 @@ installed to install something.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import http.client
 import os
 import platform
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.request
 import zipfile
 from pathlib import Path
-from urllib.parse import urlsplit
 
 VERSION = "1.7.12"
 
@@ -110,41 +110,10 @@ def _cache_root() -> Path:
     return Path.cwd() / ".venv" / "tools" / "actionlint" / VERSION
 
 
-_DOWNLOAD_HOSTS = frozenset({"github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"})
-_MAX_REDIRECTS = 5
-
-
 def _download(url: str, into: Path) -> None:
-    """Fetch `url` to `into`, failing loudly rather than partially.
-
-    GitHub serves release assets through a redirect to its asset host, so
-    redirects are followed, but only to HTTPS GitHub asset hosts; the pinned
-    digest check still decides whether the bytes are accepted.
-    """
-    for _ in range(_MAX_REDIRECTS + 1):
-        parsed = urlsplit(url)
-        if parsed.scheme != "https" or parsed.hostname not in _DOWNLOAD_HOSTS:
-            raise ValueError(f"actionlint downloads require an HTTPS GitHub asset URL: {url}")
-        target = parsed.path or "/"
-        if parsed.query:
-            target = f"{target}?{parsed.query}"
-        connection = http.client.HTTPSConnection(parsed.hostname, port=parsed.port or 443, timeout=120)
-        try:
-            connection.request("GET", target, headers={"User-Agent": "cadrumo-actionlint"})
-            response = connection.getresponse()
-            if response.status in {301, 302, 303, 307, 308}:
-                location = response.getheader("Location")
-                if not location:
-                    raise OSError(f"actionlint download redirect (HTTP {response.status}) has no Location")
-                url = location
-                continue
-            if not 200 <= response.status < 300:
-                raise OSError(f"actionlint download returned HTTP {response.status}")
-            into.write_bytes(response.read())
-            return
-        finally:
-            connection.close()
-    raise OSError(f"actionlint download exceeded {_MAX_REDIRECTS} redirects")
+    """Fetch `url` to `into`, failing loudly rather than partially."""
+    with urllib.request.urlopen(url, timeout=120) as response:
+        into.write_bytes(response.read())
 
 
 def _verify(archive: Path, expected: str) -> None:
@@ -185,26 +154,6 @@ def _extract_member(archive: Path, suffix: str, destination: Path) -> None:
             destination.write_bytes(extracted.read())
 
 
-def _cached_binary() -> Path | None:
-    """Return the platform-specific cache path, when this platform is pinned."""
-    key = _platform_key()
-    if key not in ARCHIVES:
-        return None
-    root = _cache_root()
-    return root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
-
-
-def find() -> Path | None:
-    """Find an actionlint executable without creating files or using the network."""
-    on_path = shutil.which("actionlint")
-    if on_path:
-        return Path(on_path)
-    cached = _cached_binary()
-    if cached is not None and cached.is_file():
-        return cached
-    return None
-
-
 def ensure() -> Path:
     """Return a verified actionlint executable, downloading it once if needed.
 
@@ -213,9 +162,9 @@ def ensure() -> Path:
     second copy downloaded behind their back, and the version skew that
     creates is visible in the report actionlint prints.
     """
-    existing = find()
-    if existing is not None:
-        return existing
+    on_path = shutil.which("actionlint")
+    if on_path:
+        return Path(on_path)
 
     key = _platform_key()
     if key not in ARCHIVES:
@@ -227,10 +176,10 @@ def ensure() -> Path:
             "reached an ARM runner and passed its own digest check."
         )
     suffix, expected = ARCHIVES[key]
-    binary = _cached_binary()
-    if binary is None:  # pragma: no cover - guarded by the ARCHIVES check above
-        raise SystemExit(f"no pinned actionlint archive for {key[0]}/{key[1]}")
-    root = binary.parent
+    root = _cache_root()
+    binary = root / ("actionlint.exe" if key[0] == "windows" else "actionlint")
+    if binary.is_file():
+        return binary
 
     root.mkdir(parents=True, exist_ok=True)
     url = f"{BASE_URL}/v{VERSION}/actionlint_{VERSION}_{suffix}"
@@ -252,37 +201,22 @@ def ensure() -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run actionlint, or explicitly provision it when ``--install`` is passed."""
+    """Run actionlint over the repository's workflows."""
     args = list(sys.argv[1:] if argv is None else argv)
-    install = "--install" in args
-    if install:
-        args.remove("--install")
     try:
-        binary = ensure() if install else find()
+        binary = ensure()
     except SystemExit as failure:
         print(str(failure), file=sys.stderr)
         return TOOL_MISSING
     except OSError as failure:
         print(f"could not provision actionlint: {failure}", file=sys.stderr)
         return TOOL_MISSING
-    if binary is None:
-        print("actionlint is unavailable; run `just setup-repository-tools`.", file=sys.stderr)
-        return TOOL_MISSING
-    if install:
-        print(f"actionlint ready: {binary}")
-        return OK
     # shellcheck and pyflakes are disabled EXPLICITLY rather than left to
     # whether a runner happens to carry them. actionlint silently skips a
     # missing external linter, so leaving them implicit means the gate checks
     # a different set of things on every machine and nobody can tell which.
     command = [str(binary), "-no-color", "-shellcheck=", "-pyflakes=", *args]
-    return asyncio.run(_run_actionlint(command))
-
-
-async def _run_actionlint(command: list[str]) -> int:
-    """Run the validated actionlint argv and inherit its diagnostic streams."""
-    process = await asyncio.create_subprocess_exec(*command)
-    return await process.wait()
+    return subprocess.call(command)
 
 
 if __name__ == "__main__":

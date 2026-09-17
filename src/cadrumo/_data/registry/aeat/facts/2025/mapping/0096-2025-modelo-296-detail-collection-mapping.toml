@@ -11,7 +11,7 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-296-2024"
-required_text = ["%PDF"]
+required_text = ["M296"]
 
 [fact.variants.payload]
 kind = "mapping"

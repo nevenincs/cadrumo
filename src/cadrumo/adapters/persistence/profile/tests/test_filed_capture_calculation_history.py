@@ -86,6 +86,7 @@ from cadrumo.application.live.filed_observation_ports import FiledObservationPer
 from cadrumo.application.live.iva_remote_state import (
     list_iva_compensation_history,
 )
+from cadrumo.application.modelo.filing_chain_reconciliation import FilingReconciliationOutcome
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
@@ -587,7 +588,13 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
             assert JustificanteRepository().load(_MODELO_130_FIXTURE_CSV) is None, case_id
 
 
-def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_path: Path) -> None:
+def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_stamping_it(tmp_path: Path) -> None:
+    """A receipt alone cannot show that the pending local filing is what AEAT holds.
+
+    The matching receipt is enrolled and reconciled with the in-force pending
+    filing; Modelo 130 declares no receipt-total comparison, so the filing stays
+    unconfirmed and the reconciliation is recorded as unverifiable.
+    """
     with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
@@ -598,7 +605,10 @@ def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_pat
         )
 
         assert result.justificante_csvs == ("ABCD1234EFGH5678",)
-        assert result.filing_record_ids == (filing.filing_record_id,)
+        assert result.filing_record_ids == ()
+        assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
+            (FilingReconciliationOutcome.UNVERIFIABLE, filing.filing_record_id),
+        ]
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -610,21 +620,19 @@ def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_pat
             )
         )
         assert current is not None
-        assert current.aeat_accepted is True
-        assert current.external_evidence is not None
-        assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
-        assert current.external_evidence.reference_id == "ABCD1234EFGH5678"
+        assert current.aeat_accepted is False
+        assert current.external_evidence is None
         events = [
             event
             for event in BucketEventHistoryRepository().load().events.values()
-            if event.event_type is BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED
+            if event.event_type is BucketEventType.MODELO_FILING_RECONCILED
         ]
         assert len(events) == 1
         assert events[0].bucket_id == bucket_id
         assert events[0].actor == "aeat-filed-history"
         assert events[0].object_id == filing.filing_record_id
-        assert events[0].payload["evidence_reference_id"] == "ABCD1234EFGH5678"
-        assert events[0].payload["expediente_id"] == observation.expediente_id
+        assert events[0].payload["outcome"] == "unverifiable"
+        assert events[0].payload["aeat_expediente_id"] == observation.expediente_id
 
 
 def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_same_csv(tmp_path: Path) -> None:
@@ -713,7 +721,8 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
         assert events == []
 
 
-def test_filed_observation_capture_reports_existing_evidence_conflict_without_overwrite(tmp_path: Path) -> None:
+def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched(tmp_path: Path) -> None:
+    """A receipt for another presentation cannot be recorded without its content."""
     with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
@@ -732,7 +741,10 @@ def test_filed_observation_capture_reports_existing_evidence_conflict_without_ov
         )
 
         assert result.filing_record_ids == ()
-        assert result.conflicting_filing_record_ids == (filing.filing_record_id,)
+        assert result.conflicting_filing_record_ids == ()
+        assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
+            (FilingReconciliationOutcome.UNVERIFIABLE, filing.filing_record_id),
+        ]
         current = (
             ModeloRecordCatalogueRepository()
             .load()
@@ -1328,10 +1340,10 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
     }
 
 
-def test_a_receipt_stamps_its_filing_even_though_its_identifier_is_not_the_register_expediente_id(
+def test_a_receipt_reaches_its_filing_even_though_its_identifier_is_not_the_register_expediente_id(
     tmp_path: Path,
 ) -> None:
-    """A receipt that belongs to the filing is enrolled, and its own identifier is not consulted.
+    """A receipt that belongs to the filing is enrolled and reconciled; its own identifier is not consulted.
 
     This test previously pinned the OPPOSITE. A justificante carries AEAT's
     Número de justificante and the register row carries an expediente id; those
@@ -1349,7 +1361,8 @@ def test_a_receipt_stamps_its_filing_even_though_its_identifier_is_not_the_regis
     That axis is exercised in both directions by
     ``test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched_under``
     and the two-filings discrimination test below, so this test's job is
-    narrower: the divergent identifiers no longer block a legitimate stamp.
+    narrower: the divergent identifiers no longer keep a legitimate receipt from
+    reaching the filing's reconciliation, which records the register expediente.
     """
     # DO NOT "tidy" these two into agreement. Their divergence is still the
     # premise: it is what makes the stamp below evidence that the identifier is
@@ -1382,13 +1395,12 @@ def test_a_receipt_stamps_its_filing_even_though_its_identifier_is_not_the_regis
         )
 
     assert result.justificante_csvs == (receipt.csv,)
-    assert result.filing_record_ids == (filing.filing_record_id,)
+    assert [(item.filing_record_id, item.outcome) for item in result.reconciliation_results] == [
+        (filing.filing_record_id, FilingReconciliationOutcome.UNVERIFIABLE),
+    ]
     assert result.conflicting_filing_record_ids == ()
     assert current is not None
-    assert current.aeat_accepted is True
-    assert current.external_evidence is not None
-    assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
-    assert current.external_evidence.reference_id == receipt.csv
+    assert current.aeat_accepted is False
 
 
 def test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched_under(
@@ -1479,8 +1491,8 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
 
     So the same receipt bytes are enrolled twice against two register rows that
     differ only in expediente id. The row whose artefact URL names the csv
-    printed on those bytes stamps its filing. The row whose URL names the other
-    filing's csv is refused, and its filing is left unstamped.
+    printed on those bytes reaches its filing's reconciliation. The row whose URL
+    names the other filing's csv is refused before any reconciliation.
     """
     receipt = parse_justificante_bytes(_modelo_303_justificante_pdf_bytes())
     other_filing_csv = "QQQQ7777WWWW3333"
@@ -1537,17 +1549,15 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
         )
 
     assert refused.justificante_csvs == ()
-    assert refused.filing_record_ids == ()
+    assert refused.reconciliation_results == ()
     assert after_refusal is not None
     assert after_refusal.external_evidence is None
     assert after_refusal.aeat_accepted is False
 
     assert accepted.justificante_csvs == (receipt.csv,)
-    assert accepted.filing_record_ids == (filing.filing_record_id,)
+    assert [item.filing_record_id for item in accepted.reconciliation_results] == [filing.filing_record_id]
     assert after_acceptance is not None
-    assert after_acceptance.aeat_accepted is True
-    assert after_acceptance.external_evidence is not None
-    assert after_acceptance.external_evidence.reference_id == receipt.csv
+    assert after_acceptance.aeat_accepted is False
 
 
 def _artefact_replaced(

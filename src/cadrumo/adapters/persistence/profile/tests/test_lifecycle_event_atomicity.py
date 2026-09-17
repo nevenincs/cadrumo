@@ -218,7 +218,7 @@ def test_split_import_write_shape_commits_between_catalogues(
     assert recorder.commits_between_writes() >= 1
 
 
-def test_external_import_persists_its_filing_imported_event(
+def test_external_import_persists_its_filing_reconciled_event(
     fixture: _Fixture, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A valid import leaves coherent state and exactly one matching event.
@@ -245,7 +245,7 @@ def test_external_import_persists_its_filing_imported_event(
     imported = [
         event
         for event in fixture.events.load().events.values()
-        if event.event_type is BucketEventType.MODELO_FILING_IMPORTED
+        if event.event_type is BucketEventType.MODELO_FILING_RECONCILED
     ]
     assert len(imported) == 1
     assert imported[0].object_type is BucketEventObjectType.FILING_RECORD

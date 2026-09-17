@@ -44,7 +44,7 @@ def test_modelo_validation_rejects_construct_without_official_source_evidence() 
     casilla = minimal_casilla()
     construct = ConstructDefinition(
         id="construct.without-guidance",
-        localization_key="test.schema.construct.without-guidance.title",
+        localization_keys=("test.schema.construct.without-guidance.title",),
         casilla_ids=(casilla.id,),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -84,7 +84,7 @@ def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped()
 
     construct = ConstructDefinition(
         id="construct.drift-probe",
-        localization_key="test.schema.construct.drift-probe.title",
+        localization_keys=("test.schema.construct.drift-probe.title",),
         formulas=("f1",),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),

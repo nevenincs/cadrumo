@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import select
@@ -73,6 +74,12 @@ _M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_CARRY_SOURCE_CASILLA",
 )
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+
+
+def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
+    """Return the one observation layer the mutated row holds."""
+    layers = envelope["payload"]
+    return layers["pending_local"] or layers["official"]
 
 
 def _m303_compensation_header() -> tuple[ObservedHeaderFact, ...]:
@@ -182,7 +189,7 @@ def _public_carry_outcomes(
             )
 
             def mutate(envelope) -> None:
-                envelope["payload"]["stamped_revision_id"] = stamped_revision_id
+                _stored_layer(envelope)["stamped_revision_id"] = stamped_revision_id
 
             mutate_encrypted_secure_object_json(
                 get_engine(profile.settings),

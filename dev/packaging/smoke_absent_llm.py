@@ -205,7 +205,7 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
         dropped: an operator cannot reach those directly, but a lane that
         silently discarded them would be capping its own denominator.
     """
-    package = repo_root / "src" / "cadrumo" / "llm"
+    package = repo_root / "src" / "cadrumo" / "adapters" / "outbound" / "llm"
     derived: set[str] = set()
     reachable: set[str] = set()
     for path in scan_directory(package, pattern="*.py", recursive=True):

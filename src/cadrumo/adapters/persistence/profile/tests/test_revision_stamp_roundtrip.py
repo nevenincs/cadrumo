@@ -22,6 +22,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -55,6 +56,12 @@ _DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+
+
+def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
+    """Return the one observation layer the mutated row holds."""
+    layers = envelope["payload"]
+    return layers["pending_local"] or layers["official"]
 
 
 def _m303_declaration_header(code: str = "I") -> tuple[ObservedHeaderFact, ...]:
@@ -202,10 +209,10 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
 
         def mutate(envelope):
             # Confirm the field is present with a non-null value before we mutate.
-            assert envelope["payload"]["stamped_revision_id"] == revision_id, (
+            assert _stored_layer(envelope)["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
-            del envelope["payload"]["stamped_revision_id"]
+            del _stored_layer(envelope)["stamped_revision_id"]
 
         mutate_encrypted_secure_object_json(
             get_engine(profile.settings),
@@ -318,7 +325,7 @@ def test_carry_divergent_stamp_refuses_single_observation(
         )
 
         def mutate(envelope) -> None:
-            envelope["payload"]["stamped_revision_id"] = _DIVERGENT_REVISION_ID
+            _stored_layer(envelope)["stamped_revision_id"] = _DIVERGENT_REVISION_ID
 
         mutate_encrypted_secure_object_json(
             get_engine(profile.settings),

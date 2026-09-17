@@ -48,6 +48,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import select
@@ -181,6 +182,12 @@ _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 #: general-rate cuota binding on each side to make `cuota-devengada-total < cuota-
 #: deducible-total`, yielding a negative régimen-general result — the IVA credit
 #: that becomes the saldo a compensar carried forward.
+
+
+def _stored_layer(envelope: dict[str, Any]) -> dict[str, Any]:
+    """Return the one observation layer the mutated row holds."""
+    layers = envelope["payload"]
+    return layers["pending_local"] or layers["official"]
 
 
 def _calculate_303(
@@ -386,7 +393,7 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
         def mutate(envelope) -> None:
             # Mutation bite: 2T must be stamped with the early, not 3T,
             # design. The real carry gate drops this persisted source.
-            envelope["payload"]["stamped_revision_id"] = _LATE_2024_REVISION
+            _stored_layer(envelope)["stamped_revision_id"] = _LATE_2024_REVISION
 
         mutate_encrypted_secure_object_json(
             get_engine(profile.settings),

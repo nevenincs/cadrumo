@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
 from cadrumo.core.period import Period
 from cadrumo.domain.justificante.schema import Justificante
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
+from cadrumo.domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind, ModeloRecord
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -167,39 +167,60 @@ def test_live_capture_evidence_reconciles_plural_filed_history_justificante_csv(
             assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers, case_label
 
 
-def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(
-    tmp_path: Path,
-) -> None:
-    """When AEAT exposes both references, expediente and justificante presentation id must agree."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130PRESID"
-        period = Period.from_year_and_code(2026, "1T")
-        _persist_justificante_metadata(
-            csv,
-            modelo="130",
-            period=period.registry_token,
-            filing_year=period.filing_year,
-            presentation_id=f"PRES-130-{period.filing_year}-{period.registry_token}",
-        )
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
+_REGISTER_IDENTIFIER_CASES = (
+    ("same-identifiers-in-their-own-namespaces", "EXP-130-2026-1T", "PRES-130-2026-1T", "EXP-130-2026-1T", False),
+    ("other-register-expediente", "EXP-130-2026-1T", "PRES-130-2026-1T", "EXP-OTHER", True),
+    ("other-justificante-number", "EXP-130-2026-1T", "PRES-OTHER", "EXP-130-2026-1T", True),
+)
 
-        blockers = _external_evidence_blockers(
-            filing,
-            "aeat_sede_justificante",
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
-                "aeat_expediente_id": "DIFFERENT-PRESENTATION-ID",
-            },
-        )
 
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+def test_register_identifiers_are_compared_within_their_own_namespace(tmp_path: Path) -> None:
+    """The expediente id and the número de justificante are never compared with each other.
+
+    The chain entry's register expediente is checked against the observation's
+    expediente, and its justificante number against the receipt's presentation
+    id; the two namespaces differ in every case, including the accepted one.
+    """
+    for case_label, register_expediente, register_number, metadata_expediente, mismatch in _REGISTER_IDENTIFIER_CASES:
+        case_tmp_path = tmp_path / case_label
+        case_tmp_path.mkdir()
+        with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID):
+            csv = "LIVECAP130PRESID"
+            period = Period.from_year_and_code(2026, "1T")
+            _persist_justificante_metadata(
+                csv,
+                modelo="130",
+                period=period.registry_token,
+                filing_year=period.filing_year,
+                presentation_id="PRES-130-2026-1T",
+            )
+            filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE).model_copy(
+                update={
+                    "aeat_register": AeatRegisterRef(
+                        expediente_id=register_expediente,
+                        csv=csv,
+                        justificante_number=register_number,
+                    ),
+                },
+            )
+
+            blockers = _external_evidence_blockers(
+                filing,
+                "aeat_sede_justificante",
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "authenticated_identity": "X1234567L",
+                    "aeat_expediente_id": metadata_expediente,
+                },
+            )
+
+        assert (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers) is mismatch, case_label
 
 
 def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparable_receipt_reference(
     tmp_path: Path,
 ) -> None:
-    """Expediente-only filed history cannot verify a receipt lacking presentation id."""
+    """Expediente-only filed history cannot be tied to a receipt without a register reference or CSV."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130EXPONLY"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026, presentation_id=None)
