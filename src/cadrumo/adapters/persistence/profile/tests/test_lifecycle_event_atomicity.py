@@ -172,7 +172,7 @@ def _import(fixture: _Fixture, work_unit: WorkUnit):
         observation_repository=CalculationObservationRepository(),
         expected_tax_id=_TAX_ID,
         clock=_T1,
-    )
+    ).filing_record
 
 
 def test_external_import_commits_state_and_event_in_one_transaction(

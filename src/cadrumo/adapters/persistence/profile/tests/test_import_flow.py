@@ -29,6 +29,7 @@ from cadrumo.adapters.persistence.profile.tests.import_flow_support import (
     _seed_work_unit,
     repos,
 )
+from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.calculation_actions import get_calculation_revision
 from cadrumo.application.modelo.filing_actions import get_filing_record
@@ -38,7 +39,7 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition import (
     build_amendment_action_ports,
     build_calculation_action_ports,
@@ -140,14 +141,14 @@ def test_import_work_unit_pointers_advance_to_new_filing(repos: _Repos, *, opera
     assert refreshed_wu.current_filing_record_id == outcome.filing.filing_record_id
 
 
-def test_import_emits_single_modelo_filing_imported_event(
+def test_import_emits_single_modelo_filing_reconciled_event(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     outcome = _drive_import_persists_filing(repos, operation=operation)
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
-        event_types=(BucketEventType.MODELO_FILING_IMPORTED,),
+        event_types=(BucketEventType.MODELO_FILING_RECONCILED,),
     )
     assert len(events) == 1
     assert events[0].object_type is BucketEventObjectType.FILING_RECORD
@@ -155,10 +156,10 @@ def test_import_emits_single_modelo_filing_imported_event(
 
 
 _IMPORTED_EVENT_PAYLOAD_EXPECTATIONS = (
+    ("outcome", "appended"),
     ("evidence_kind", "aeat_justificante_pdf"),
-    ("evidence_reference_id", "JUST2026303Q1OPERATOR1"),
-    ("supersedes_filing_record_id", ""),
-    ("casilla_count", "2"),
+    ("aeat_expediente_id", "JUST2026303Q1OPERATOR1"),
+    ("affected_filing_record_ids", ""),
 )
 
 
@@ -170,16 +171,17 @@ def test_import_event_payload_records_field(
     _, _, _, _, bv_repo = repos
     events = bv_repo.load().for_bucket(
         outcome.work_unit.bucket_id,
-        event_types=(BucketEventType.MODELO_FILING_IMPORTED,),
+        event_types=(BucketEventType.MODELO_FILING_RECONCILED,),
     )
     assert events[0].payload[payload_key] == expected
 
 
-def test_import_supersedes_prior_current_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
-    """A second import for the same (bucket, modelo, year, period)
-    supersedes the prior current filing. The supersession metadata
-    is captured; the new filing's bucket-event references the prior
-    via ``supersedes_filing_record_id``."""
+def test_import_of_a_declared_correction_amends_the_prior_filing(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A second import for the same (bucket, modelo, year, period), declared as
+    a correction, supersedes and amends the prior confirmed filing. The
+    reconciliation event names the prior entry it affected."""
 
     wu_repo, _cr_repo, _fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
@@ -210,6 +212,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos, *, operation: Pin
         evidence_reference_id="CSVSECOND01",
         expected_tax_id=_TAX_ID,
         clock=_T2,
+        declared_kind=FilingDeclarationKind.COMPLEMENTARIA,
     )
 
     refreshed_first = get_filing_record(
@@ -229,15 +232,46 @@ def test_import_supersedes_prior_current_filing(repos: _Repos, *, operation: Pin
     assert second.status is ModeloRecordStatus.VIGENTE
     assert second.external_evidence is not None
     assert second.external_evidence.kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
+    assert second.amends_filing_record_id == first.filing_record_id
 
     catalogue = bv_repo.load()
-    imports = catalogue.for_bucket(
+    reconciled = catalogue.for_bucket(
         work_unit.bucket_id,
-        event_types=(BucketEventType.MODELO_FILING_IMPORTED,),
+        event_types=(BucketEventType.MODELO_FILING_RECONCILED,),
     )
-    assert len(imports) == 2
-    assert imports[0].payload["supersedes_filing_record_id"] == ""
-    assert imports[1].payload["supersedes_filing_record_id"] == first.filing_record_id
+    assert len(reconciled) == 2
+    assert reconciled[0].payload["affected_filing_record_ids"] == ""
+    assert reconciled[1].payload["affected_filing_record_ids"] == first.filing_record_id
+
+
+def test_import_after_a_confirmed_filing_without_a_declared_kind_is_refused(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    wu_repo, _cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
+    _persist_matching_justificante("JUSTFIRST02", work_unit, captured_at=_T1)
+    _import_external_filing(
+        repos,
+        work_unit,
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+        evidence_reference_id="JUSTFIRST02",
+        expected_tax_id=_TAX_ID,
+        clock=_T1,
+    )
+    before = fr_repo.load()
+
+    with pytest.raises(ExternalModeloImportError) as refusal:
+        _import_external_filing(
+            repos,
+            work_unit,
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
+            evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            evidence_reference_id="CSVSECOND02",
+            clock=_T2,
+        )
+
+    assert refusal.value.translated_message == "application.modelo.errors.external_import_unverifiable"
+    assert fr_repo.load() == before
 
 
 def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
@@ -289,9 +323,9 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos, *, operation: P
     chain = tuple(
         e.event_type
         for e in catalogue.for_bucket(work_unit.bucket_id)
-        if e.event_type in {BucketEventType.MODELO_FILING_IMPORTED, BucketEventType.MODELO_AMENDED}
+        if e.event_type in {BucketEventType.MODELO_FILING_RECONCILED, BucketEventType.MODELO_AMENDED}
     )
     assert chain == (
-        BucketEventType.MODELO_FILING_IMPORTED,
+        BucketEventType.MODELO_FILING_RECONCILED,
         BucketEventType.MODELO_AMENDED,
     )

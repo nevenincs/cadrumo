@@ -14,12 +14,12 @@ from pydantic import AnyHttpUrl
 from cadrumo.adapters.inbound.justificante.parser import parse_justificante_bytes
 from cadrumo.adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from cadrumo.adapters.outbound.aeat.sede.filed_observation_persistence import (
-    BaselineImportAdapter,
     BucketEventRepositoryAdapter,
     CalculationObservationRepositoryAdapter,
     FiledDeclarationTransformationAdapter,
     FiledObservationParserAdapter,
     FiledObservationStoreAdapter,
+    FilingReconciliationAdapter,
     FilingRepositoryAdapter,
     IvaHistoryRepositoryAdapter,
     IvaObservationPersistenceAdapter,
@@ -143,7 +143,7 @@ def _filed_ports(
         justificante_repository=JustificanteRepositoryAdapter(repository=justificantes),
         filing_repository=FilingRepositoryAdapter(repository=filing),
         bucket_event_repository=BucketEventRepositoryAdapter(repository=events),
-        baseline_import=BaselineImportAdapter(
+        filing_reconciliation=FilingReconciliationAdapter(
             work_lifecycle_ports=WorkLifecyclePorts(
                 work_unit_repository=work_units,
                 bucket_event_repository=events,

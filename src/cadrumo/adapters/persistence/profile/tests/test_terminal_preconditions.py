@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import inspect
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import ModuleType
 from typing import TYPE_CHECKING
@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations import errors as errors_module
 from cadrumo.application.calculations import m303_carry_ingress as m303_module
-from cadrumo.application.calculations.errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
+from cadrumo.application.calculations.errors import CalculationRefusalPrecondition
 from cadrumo.application.calculations.m303_carry_ingress import (
     M303CarryIngressError,
     resolve_available_compensation_formula_id,
@@ -124,26 +124,6 @@ _TERMINAL_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
             ("registry_operands", "','.join((str(item) for item in expected_operands))"),
         ),
     ),
-    "calculation_observations:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:1": _contract(
-        CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
-        (
-            ("modelo", "str(observation.modelo)"),
-            ("filing_year", "str(observation.filing_year)"),
-            ("period", "str(observation.period)"),
-            ("existing_source_kind", "existing.source_kind.value"),
-            ("incoming_source_kind", "payload.source_kind.value"),
-        ),
-    ),
-    "calculation_observations:_refuse_official_evidence_displacement:ObservationEvidenceDisplacementError:2": _contract(
-        CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
-        (
-            ("modelo", "str(observation.modelo)"),
-            ("filing_year", "str(observation.filing_year)"),
-            ("period", "str(observation.period)"),
-            ("existing_source_kind", "existing.source_kind.value"),
-            ("incoming_source_kind", "payload.source_kind.value"),
-        ),
-    ),
 }
 
 _TERMINAL_PRODUCER_MODULES: tuple[ModuleType, ...] = (m303_module, observations_adapter_module)
@@ -201,7 +181,7 @@ def _fact_expressions(builder: ast.Call) -> tuple[tuple[str, str], ...]:
 
 def _terminal_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
-    error_names = {"M303CarryIngressError", "ObservationEvidenceDisplacementError"}
+    error_names = {"M303CarryIngressError"}
     for module in _TERMINAL_PRODUCER_MODULES:
         tree = ast.parse(inspect.getsource(module))
         for function in (node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)):
@@ -232,7 +212,7 @@ def _terminal_carriers() -> dict[str, ast.Call]:
 
 
 def _assert_exact_terminal_contract(
-    error: M303CarryIngressError | ObservationEvidenceDisplacementError,
+    error: M303CarryIngressError,
     *,
     condition: CalculationRefusalPrecondition,
     facts: dict[str, str],
@@ -291,19 +271,6 @@ def _plain_m303_observation() -> RegistryModeloObservation:
             M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("7.00"),
             M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
         }
-    )
-
-
-def _seed_official_observation(repository: CalculationObservationRepository) -> None:
-    repository.save(
-        repository.prepare_observation_envelope(
-            _plain_m303_observation(),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=_CAPTURED_AT,
-            source_headers=(_header(ResultDisposition.COMPENSACION),),
-            source_metadata={"aeat_expediente_id": "202530300000001Z"},
-            stamped_revision_id=revision_id_for_observation(_plain_m303_observation()),
-        )
     )
 
 
@@ -482,39 +449,5 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
             "registry_operands": ",".join(
                 (str(M303_COMPENSATION_POSTERIOR_CASILLA), str(M303_COMPENSATION_GENERADA_CASILLA))
             ),
-        },
-    )
-
-
-def test_real_app_filing_observation_repository_displacement_has_exact_safety_verdict(
-    tmp_path: Path,
-) -> None:
-    source_kind = ObservationSourceKind.APP_FILING
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        _seed_official_observation(repository)
-
-        with pytest.raises(ObservationEvidenceDisplacementError) as raised:
-            repository.prepare_observation_envelope(
-                _plain_m303_observation(),
-                source_kind=source_kind,
-                captured_at=_CAPTURED_AT + timedelta(days=1),
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator="test:terminal-preconditions:incoming-displacement",
-                ),
-                stamped_revision_id=revision_id_for_observation(_plain_m303_observation()),
-            )
-
-    _assert_exact_terminal_contract(
-        raised.value,
-        condition=CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
-        facts={
-            "modelo": Modelo("303").value,
-            "filing_year": str(_PERIOD.filing_year),
-            "period": _PERIOD.registry_token,
-            "existing_source_kind": ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE.value,
-            "incoming_source_kind": source_kind.value,
         },
     )
