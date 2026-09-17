@@ -76,6 +76,7 @@ REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES: Mapping[str, str] = MappingProxyType(
     {
         Modelo("100"): "cadrumo.domain.renta.first_slice_routing_integrity",
         Modelo("130"): "cadrumo.domain.renta.retenciones_routing_integrity",
+        Modelo("190"): "cadrumo.domain.modelos.perceptor_clave_scope",
     },
 )
 

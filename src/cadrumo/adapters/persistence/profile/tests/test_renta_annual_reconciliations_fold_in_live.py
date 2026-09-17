@@ -497,7 +497,12 @@ def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
     return Decimal(base) + Decimal("0.50")
 
 
-def _seed_m190_withholding_detail(secure_objects: SecureObjectRepository) -> None:
+def _seed_m190_withholding_detail(
+    secure_objects: SecureObjectRepository,
+    *,
+    clave: str = "G",
+    subclave: str = "01",
+) -> None:
     PercepcionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo="190",
         filing_year=_YEAR,
@@ -507,9 +512,11 @@ def _seed_m190_withholding_detail(secure_objects: SecureObjectRepository) -> Non
                 source_id="m190-professional-row-001",
                 perceptor_tax_id="12345678Z",
                 perceptor_legal_name="Profesional Ejemplo",
+                province_code="28",
+                territorial_deduction_clave=0,
                 transaction_date=date(_YEAR, 3, 15),
-                clave=RetencionClave.from_registry("G"),
-                subclave="01",
+                clave=RetencionClave.from_registry(clave),
+                subclave=subclave,
                 percibido_dinerario=Decimal("1000.00"),
                 retencion_practicada=Decimal("150.00"),
                 incapacity_cash_perception=Decimal("0"),
@@ -787,6 +794,42 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
         and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
         for finding in report.findings
     )
+
+
+def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The registry scopes descendant data to work-income claves, so a clave A row must carry it.
+
+    The companion above files a clave G row without that data and verifies; the
+    same row as clave A is refused on exactly the casillas its clave carries.
+    """
+    _seed_and_file_m111_1t(secure_objects, operation=operation)
+    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail(secure_objects, clave="A", subclave="")
+
+    result = _calculate_annual(secure_objects, modelo="190", operation=operation)
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="test-operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings("12345678Z"),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+
+    assert report.granted_verificado_completo is False
+    missing = {
+        str(finding.casilla_id) for finding in report.findings if finding.kind.value == "missing_required_casilla"
+    }
+    assert "perc.descendientes-menores-3-total" in missing
+    assert "perc.contrato-relacion" in missing
+    # A casilla the row does carry is not reported.
+    assert "perc.percepcion-dineraria" not in missing
 
 
 # ---------------------------------------------------------------------------

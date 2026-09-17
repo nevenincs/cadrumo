@@ -20,7 +20,7 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-190-2024"
-required_text = ["Solo para percepciones correspondientes a las claves A, B.01, B.03 y C", "Solo para percepciones correspondientes a la clave A"]
+required_text = ["Solo para percepciones correspondientes a las claves A, B.01, B.03 y C", "Solo para percepciones correspondientes a la clave A", "Dato adicional, exclusivamente para percepciones correspondientes a la clave L.29"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -34,6 +34,7 @@ entries = [
     { key = "casilla:perc.discapacidad", value = "A,B.01,B.03,C" },
     { key = "casilla:perc.contrato-relacion", value = "A" },
     { key = "casilla:perc.titular-unidad-convivencia", value = "L.29" },
+    { key = "casilla:perc.complemento-ayuda-infancia", value = "L.29" },
     { key = "casilla:perc.movilidad-geografica", value = "A" },
     { key = "casilla:perc.reducciones-aplicables", value = "A,B.01,B.03,C,E,F.01,F.02,F.03,F.04,F.05,F.06,G.01,G.02,G.03,G.04,G.05,G.06,G.08,H,I" },
     { key = "casilla:perc.gastos-deducibles", value = "A,B.01,B.03,C,E.01,E.02" },
@@ -82,7 +83,7 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-190-2025"
-required_text = ["claves A, B (subclaves 01, 03, 04 y 99) y C", "Solo para percepciones correspondientes a la clave A"]
+required_text = ["claves A, B (subclaves 01, 03, 04 y 99) y C", "Solo para percepciones correspondientes a la clave A", "Dato adicional, exclusivamente para percepciones correspondientes a la clave L.29"]
 
 [fact.variants.payload]
 kind = "mapping"
@@ -96,6 +97,7 @@ entries = [
     { key = "casilla:perc.discapacidad", value = "A,B.01,B.03,B.04,B.99,C" },
     { key = "casilla:perc.contrato-relacion", value = "A" },
     { key = "casilla:perc.titular-unidad-convivencia", value = "L.29" },
+    { key = "casilla:perc.complemento-ayuda-infancia", value = "L.29" },
     { key = "casilla:perc.movilidad-geografica", value = "A" },
     { key = "casilla:perc.reducciones-aplicables", value = "A,B.01,B.03,B.04,B.99,C,E,F.01,F.02,F.03,F.04,F.05,F.06,G.01,G.02,G.03,G.04,G.05,G.06,G.08,H,I" },
     { key = "casilla:perc.gastos-deducibles", value = "A,B.01,B.03,B.04,B.99,C,E.01,E.02" },

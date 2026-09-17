@@ -99,6 +99,12 @@ from ...domain.modelos.calculation_revision import (
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
+from ...domain.modelos.perceptor_clave_scope import (
+    PerceptorClaveScope,
+    resolve_perceptor_clave_scope,
+    row_field_value_bindings,
+    rows_missing_scoped_casilla,
+)
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -1526,6 +1532,20 @@ def _resolve_verification_snapshot(
         return None
 
 
+def _perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> PerceptorClaveScope | None:
+    """Return the registry clave scope for the work unit's ejercicio, if one is declared."""
+    from ...domain.calculations.registry.errors import RegistryValidationError
+
+    try:
+        return resolve_perceptor_clave_scope(
+            effective_date=date(work_unit.filing_year, 12, 31),
+            authority=operation,
+        )
+    except RegistryValidationError:
+        # An ejercicio no scope variant covers keeps every per-record casilla required.
+        return None
+
+
 def _append_required_casilla_findings(
     *,
     work_unit: WorkUnit,
@@ -1535,20 +1555,41 @@ def _append_required_casilla_findings(
     resolved_casilla_ids: list[CasillaId],
     missing_required_casilla_ids: list[CasillaId],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+    clave_scope: PerceptorClaveScope | None = None,
 ) -> None:
     revision_keys = set(target.input_values_by_casilla_id)
+    row_values = target.row_binding_values or {}
+    # Where the registry scopes a modelo's per-record casillas by clave, each
+    # record answers for the casillas its clave carries; a record outside a
+    # casilla's scope owes it nothing.
+    scoped = (
+        clave_scope is not None
+        and clave_scope.modelo_id == str(work_unit.modelo)
+        and clave_scope.row_clave_binding in row_values
+    )
+    value_bindings = row_field_value_bindings(snapshot.revision) if scoped else {}
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind != InputKind.MANUAL or not casilla.required:
             continue
-        if _detail_row_template_casilla_is_satisfied(
-            work_unit=work_unit,
-            target=target,
-            casilla=casilla,
-            revision=snapshot.revision,
+        value_binding = value_bindings.get(casilla.id)
+        if clave_scope is not None and scoped and value_binding is not None:
+            if not rows_missing_scoped_casilla(
+                clave_scope,
+                casilla_id=casilla.id,
+                value_binding=value_binding,
+                row_binding_values=row_values,
+            ):
+                resolved_casilla_ids.append(casilla.id)
+                continue
+        elif (
+            _detail_row_template_casilla_is_satisfied(
+                work_unit=work_unit,
+                target=target,
+                casilla=casilla,
+                revision=snapshot.revision,
+            )
+            or casilla.id in revision_keys
         ):
-            resolved_casilla_ids.append(casilla.id)
-            continue
-        if casilla.id in revision_keys:
             resolved_casilla_ids.append(casilla.id)
             continue
         missing_required_casilla_ids.append(casilla.id)
@@ -1734,6 +1775,7 @@ def _collect_revision_verification_findings(
         resolved_casilla_ids=resolved_casilla_ids,
         missing_required_casilla_ids=missing_required_casilla_ids,
         failures_by_finding_id=failures_by_finding_id,
+        clave_scope=_perceptor_clave_scope(work_unit, operation=operation),
     )
     _append_oss_verification_finding(
         work_unit=work_unit,

@@ -24,6 +24,7 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.ids import BindingId
+from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.validate_cross_domain_snapshot import register_cross_domain_snapshot_check
 from ..calculations.registry.withholding_bindings import resolve_retencion_clave
@@ -130,6 +131,55 @@ def resolve_perceptor_clave_scope(
     )
 
 
+def row_field_value_bindings(revision: ModeloRevision) -> dict[CasillaId, BindingId]:
+    """Map each row-template casilla to the row-set binding that fills it.
+
+    The export record names the casilla of each row field, and the row-set
+    binding names the row field it supplies for that record.
+    """
+    casilla_by_record_field: dict[tuple[str, str], CasillaId] = {}
+    for layout in revision.export_layouts:
+        for record in layout.records:
+            if record.binding_record is None:
+                continue
+            for row_field, casilla_id in record.row_field_casilla_ids.items():
+                casilla_by_record_field[(str(record.binding_record), str(row_field))] = casilla_id
+    bindings: dict[CasillaId, BindingId] = {}
+    for binding in revision.bindings:
+        record = getattr(binding.provider, "record", None)
+        row_field = getattr(binding.provider, "row_field", None)
+        if record is None or row_field is None:
+            continue
+        casilla_id = casilla_by_record_field.get((str(record), str(row_field)))
+        if casilla_id is not None:
+            bindings[casilla_id] = binding.id
+    return bindings
+
+
+def rows_missing_scoped_casilla(
+    scope: PerceptorClaveScope,
+    *,
+    casilla_id: CasillaId,
+    value_binding: BindingId,
+    row_binding_values: Mapping[BindingId, Mapping[str, str]],
+) -> tuple[str, ...]:
+    """Return the rows inside ``casilla_id``'s clave scope that carry no value for it.
+
+    A row is identified by its row-set index. A row whose clave the scope
+    excludes owes the casilla nothing; every other row must carry a value,
+    zero included.
+    """
+    claves = row_binding_values.get(scope.row_clave_binding, dict[str, str]())
+    subclaves = row_binding_values.get(scope.row_subclave_binding, dict[str, str]())
+    values = row_binding_values.get(value_binding, dict[str, str]())
+    return tuple(
+        row
+        for row, clave in claves.items()
+        if scope.admits(casilla_id, clave.strip(), (subclaves.get(row) or "").strip() or None)
+        and not (values.get(row) or "").strip()
+    )
+
+
 def perceptor_clave_scope_failures(
     scope: PerceptorClaveScope,
     *,
@@ -182,4 +232,6 @@ __all__ = [
     "check_perceptor_clave_scope",
     "perceptor_clave_scope_failures",
     "resolve_perceptor_clave_scope",
+    "row_field_value_bindings",
+    "rows_missing_scoped_casilla",
 ]

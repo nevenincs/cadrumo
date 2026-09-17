@@ -28,6 +28,7 @@ from ...domain.calculations.registry.binding_terminal_origin import TerminalOrig
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
+    resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
 from .percepciones_observations_repository import (
@@ -123,6 +124,7 @@ class WithholdingSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
+            row_binding_values=resolve_withholding_binding_row_values(context.revision, observations),
             diagnostics=diagnostics,
             provenance=_provenance(observations),
         )

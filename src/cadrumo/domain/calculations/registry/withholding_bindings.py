@@ -39,6 +39,7 @@ __all__ = [
     "WithholdingProvider",
     "aggregate_withholding_by_clave",
     "resolve_retencion_clave",
+    "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
 ]
@@ -729,6 +730,48 @@ def resolve_withholding_binding_values(
             )
         else:  # pragma: no cover - guarded by validator
             raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
+    return resolved
+
+
+def resolve_withholding_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
+    """Resolve row-producer withholding bindings into per-row indexed values.
+
+    One row per observation, ordered by perceptor, clave, subclave and source so
+    the row index is stable across reads. An unset field (``None`` or blank
+    text) is left out of the row rather than filled, so a required value stays
+    visibly absent.
+    """
+    row_bindings = [
+        (binding, selector)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.WITHHOLDING
+        and (selector := _validated_withholding_selector(binding)).fact == "row_field"
+    ]
+    if not row_bindings:
+        return {}
+    rows = sorted(
+        observations,
+        key=lambda obs: (obs.perceptor_tax_id, str(obs.clave), obs.subclave, obs.source_id),
+    )
+    resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
+    for binding, selector in row_bindings:
+        row_field = str(selector.row_field)
+        if row_field not in WithholdingObservation.model_fields:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
+            )
+        for row_index, observation in enumerate(rows, start=1):
+            value = getattr(observation, row_field)
+            if value is None:
+                continue
+            if isinstance(value, str):
+                if not value.strip():
+                    continue
+                value = str(value)
+            resolved[(binding.id, row_index)] = value
     return resolved
 
 
