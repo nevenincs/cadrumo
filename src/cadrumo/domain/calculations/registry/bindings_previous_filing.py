@@ -1,12 +1,12 @@
 """Previous-filing binding selectors, requirements, and resolvers.
 
-The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
+The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
 ``previous_filing``
-:class:`~cadrumo.domain.calculations.registry.BindingDefinition`
+:class:`~cadrumo.domain.calculations.registry.schema.BindingDefinition`
 declarations; this module turns those selectors into
-:class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement` source
+:class:`~cadrumo.domain.calculations.registry.relations.RegistryFoldRequirement` source
 requirements and resolved
-:class:`~cadrumo.domain.calculations.registry.BindingId` values.
+:class:`~cadrumo.domain.calculations.registry.ids.BindingId` values.
 
 See Also:
     :mod:`cadrumo.domain.calculations.registry.bindings`
@@ -78,8 +78,8 @@ class PreviousFilingSourceReference:
     """Canonical source reference extracted from a typed previous-filing selector.
 
     The reference names the source
-    :class:`~cadrumo.domain.calculations.registry.ModeloId`, required periods, and
-    source :class:`~cadrumo.core.CasillaId` values declared
+    :class:`~cadrumo.domain.calculations.registry.ids.ModeloId`, required periods, and
+    source :class:`~cadrumo.core.casilla_id.CasillaId` values declared
     by one previous-filing binding selector.
 
     ``filing_year_delta`` and ``max_year_delta`` ride along so a build-time
@@ -131,7 +131,7 @@ def previous_filing_source_reference(binding: BindingDefinition) -> PreviousFili
     """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
 
     The supplied
-    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` is parsed
+    :class:`~cadrumo.domain.calculations.registry.schema.BindingDefinition` is parsed
     through the same selector model used by
     :func:`previous_filing_observation_requirements`.
     """
@@ -285,10 +285,10 @@ def previous_filing_observation_requirements(
 ) -> tuple[RegistryFoldRequirement, ...]:
     """Return source requirements needed by direct previous-filing bindings.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` is scanned
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` is scanned
     for direct ``previous_filing`` bindings, and each selector becomes a
-    :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement` naming
-    source modelo/year/period, :class:`~cadrumo.domain.calculations.registry.BindingId`
+    :class:`~cadrumo.domain.calculations.registry.relations.RegistryFoldRequirement` naming
+    source modelo/year/period, :class:`~cadrumo.domain.calculations.registry.ids.BindingId`
     consumers, and source casilla ids.
     """
     accumulator = _PreviousFilingRequirementAccumulator()
@@ -463,10 +463,10 @@ def resolve_previous_filing_binding_values(
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies the
     binding selectors and aggregation operators; ``observations`` supply the
     filed casilla values they fold. The returned mapping is keyed by
-    :class:`~cadrumo.domain.calculations.registry.BindingId` and carries resolved
+    :class:`~cadrumo.domain.calculations.registry.ids.BindingId` and carries resolved
     :class:`decimal.Decimal` values for formula runtime consumption.
     """
     available = tuple(observations)
@@ -695,7 +695,7 @@ def validate_previous_filing_binding(binding: BindingDefinition) -> list[str]:
     Accumulating ``list[str]`` validator: validates the selector shape against
     :class:`PreviousFilingProvider` and lifts the previous-filing op/source
     invariants for a
-    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` to build
+    :class:`~cadrumo.domain.calculations.registry.schema.BindingDefinition` to build
     time, preserving the underlying pydantic field error.
     """
     failures = selector_against_model(binding, PreviousFilingProvider)

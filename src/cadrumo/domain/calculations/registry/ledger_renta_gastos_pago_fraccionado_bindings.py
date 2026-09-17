@@ -37,7 +37,7 @@ class RentaGastosPagoFraccionadoObservationProtocol(Protocol):
 
     The registry only needs these two attributes to resolve
     ``ledger_renta_gastos_pago_fraccionado_aggregation`` bindings; the full
-    :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
+    :class:`~cadrumo.application.aggregation.renta_gasto_ledger.RentaGastoObservation`
     satisfies this protocol without any explicit declaration. Mirrors
     :class:`RentaIncomeObservationProtocol` for the gastos dimension.
     """
@@ -99,7 +99,7 @@ class _ReachabilityProbeObservation(NamedTuple):
     time, constructing the smallest object that satisfies the registry's
     own declared Protocol. It exists so the reachability probe below never
     needs to import the concrete
-    :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
+    :class:`~cadrumo.application.aggregation.renta_gasto_ledger.RentaGastoObservation`
     -- doing so would have domain code depend on the application layer,
     the wrong hexagonal direction (`aeat-architecture-boundaries`). The
     Protocol is exactly the seam that makes this substitution legitimate:

@@ -106,7 +106,7 @@ class RegistryFoldRequirement(BaseModel):
 
     Consumed by :func:`relation_source_requirements`,
     :func:`resolve_relation_values_from_observations`, and
-    :func:`cadrumo.domain.calculations.registry.previous_filing_observation_requirements`.
+    :func:`cadrumo.domain.calculations.registry.bindings_previous_filing.previous_filing_observation_requirements`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -257,7 +257,7 @@ def relation_source_requirements(
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             relation-prefill bindings to inspect.
         filing_year: Target filing year; combined with each provider's temporal
             member to derive the expected source-modelo filing year.
@@ -265,7 +265,7 @@ def relation_source_requirements(
             seeds the source-period derivation.
 
     Returns:
-        :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement`
+        :class:`~cadrumo.domain.calculations.registry.relations.RegistryFoldRequirement`
         rows keyed by source modelo/year/period and source casilla.
     """
     grouped = _group_fold_requirements(revision, filing_year=filing_year, period=period)
@@ -390,10 +390,10 @@ def resolve_relation_values(
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             relation-prefill bindings are resolved against the supplied outputs.
         external_outputs: Caller-supplied per-binding values keyed by
-            :class:`~cadrumo.domain.calculations.registry.BindingId`; a
+            :class:`~cadrumo.domain.calculations.registry.ids.BindingId`; a
             :class:`decimal.Decimal` under ``copy`` aggregation or a tuple of
             Decimals under ``sum``.
         period: Optional period token; restricts active bindings to those whose
@@ -433,10 +433,10 @@ def resolve_relation_values_from_observations(
 
     Args:
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             relation-prefill bindings to resolve.
         observations: Filed-declaration
-            :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation`
+            :class:`~cadrumo.domain.calculations.registry.bindings.RegistryModeloObservation`
             rows that supply the source values each fold consumes.
         filing_year: Target filing year; combined with each provider's temporal
             member to match observation rows.
@@ -444,7 +444,7 @@ def resolve_relation_values_from_observations(
             matching.
 
     Returns:
-        Resolved :class:`~cadrumo.domain.calculations.registry.BindingId` values
+        Resolved :class:`~cadrumo.domain.calculations.registry.ids.BindingId` values
         suitable for
         :func:`cadrumo.domain.calculations.registry.formula_runtime.calculate_registry_snapshot`.
     """

@@ -183,7 +183,7 @@ class RentaIncomeObservationProtocol(Protocol):
 
     The registry only needs these attributes to resolve
     ``ledger_renta_income_aggregation`` bindings; the full
-    :class:`~cadrumo.application.aggregation._renta_income_ledger.RentaIncomeObservation`
+    :class:`~cadrumo.application.aggregation.renta_income_ledger.RentaIncomeObservation`
     satisfies this protocol without any explicit declaration.
     """
 

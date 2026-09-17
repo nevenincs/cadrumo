@@ -2,9 +2,9 @@
 
 The single gather-and-fold primitive shared by both relation fold paths (the
 application-layer relation prefill and the domain-layer
-:func:`domain.calculations.registry.resolve_relation_values_from_observations`).
+:func:`domain.calculations.registry.relations.resolve_relation_values_from_observations`).
 It matches the source filings a
-:class:`~domain.calculations.registry.RegistryFoldRequirement` declares and
+:class:`~domain.calculations.registry.relations.RegistryFoldRequirement` declares and
 extracts the source casilla value per period, then folds the gathered values
 through the requirement's declared ``copy`` / ``sum`` aggregation to one
 :class:`~decimal.Decimal`.
@@ -14,9 +14,9 @@ the domain relation resolver consumes it and the hexagonal direction forbids a
 domain module importing the application layer.
 
 See Also:
-    :mod:`domain.calculations.registry._relations`
+    :mod:`domain.calculations.registry.relations`
         Domain relation resolver that gathers and folds requirements here.
-    :mod:`domain.calculations.registry._bindings_previous_filing`
+    :mod:`domain.calculations.registry.bindings_previous_filing`
         Previous-filing binding resolver that reuses :func:`fold_sum_or_copy`.
 """
 
@@ -40,9 +40,9 @@ def gather_observed_requirement_values(
     """Return the source-casilla values matched for one fold requirement, per period.
 
     Matches exactly one
-    :class:`~domain.calculations.registry.RegistryModeloObservation` per
+    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` per
     declared source period and extracts the requirement's single source
-    :class:`~core.CasillaId` value from each. The
+    :class:`~core.casilla_id.CasillaId` value from each. The
     returned tuple carries one value per ``requirement.periods`` entry, in
     declaration order, ready for :func:`fold_observed_requirement_values`.
     """
@@ -126,7 +126,7 @@ def fold_sum_or_copy(
     (e.g. the Modelo 130 ``prior_pagos_fraccionados`` identity) before delegating.
 
     Used by both :func:`fold_observed_requirement_values` and
-    :func:`domain.calculations.registry.resolve_previous_filing_binding_values`.
+    :func:`domain.calculations.registry.bindings_previous_filing.resolve_previous_filing_binding_values`.
     """
     if op == "copy":
         if len(values) != 1:
@@ -145,7 +145,7 @@ def fold_observed_requirement_values(
 
     ``copy`` requires exactly one gathered value and returns it; ``sum`` adds the
     gathered values. This is the one fold both relation paths apply to a
-    :class:`~domain.calculations.registry.RegistryFoldRequirement`; the
+    :class:`~domain.calculations.registry.relations.RegistryFoldRequirement`; the
     period match is :func:`gather_observed_requirement_values`.
     """
     aggregation_op = requirement.aggregation_op
@@ -176,7 +176,7 @@ def resolve_observed_requirement_value(
     """Gather and fold one requirement to a single :class:`~decimal.Decimal`.
 
     Convenience wrapper for callers that already hold the normalized
-    :class:`~domain.calculations.registry.RegistryModeloObservation` rows.
+    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` rows.
     """
     return fold_observed_requirement_values(
         requirement,

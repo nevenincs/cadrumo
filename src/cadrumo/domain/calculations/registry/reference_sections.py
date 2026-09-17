@@ -1,7 +1,7 @@
 """Specialized snapshot-reference section walkers.
 
 Per-section walkers that traverse the typed-ID fields of a
-:class:`~cadrumo.domain.calculations.registry.ModeloRevision` and call into an
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` and call into an
 :class:`~cadrumo.domain.calculations.registry.reference_checker.IdReferenceChecker`
 to accumulate dangling-reference diagnostics.
 
@@ -64,7 +64,7 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
 def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     """Check construct member references for one revision.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
     construct declarations. The
     :class:`~cadrumo.domain.calculations.registry.reference_checker.IdReferenceChecker`
     supplies the typed member-id sets and legal/source-ref closure checks.
@@ -79,7 +79,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 def check_dependency_classification_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     """Check dependency-classification construct and binding refs.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
     dependency classifications. The checker verifies target constructs,
     binding refs, and legal/source refs against the snapshot id sets.
     """
@@ -93,7 +93,7 @@ def check_dependency_classification_refs(checker: IdReferenceChecker, revision: 
 def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
     """Check export-layout record and field references for one revision.
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
+    The :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` supplies
     export layouts. The checker validates dictionary source refs, record
     positive-casilla gates, row-field casillas, field casilla/binding refs, and
     field legal/source refs.
@@ -132,7 +132,7 @@ def check_binding_selector_shapes(checker: IdReferenceChecker, revision: ModeloR
         checker: The reference checker whose failures list accumulates
             any selector-shape validation errors found.
         revision: The
-            :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
+            :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision` whose
             binding selectors are validated.
     """
     from .bindings import validate_binding_selector_shape

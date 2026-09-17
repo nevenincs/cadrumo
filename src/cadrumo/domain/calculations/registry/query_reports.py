@@ -1,7 +1,7 @@
 """Typed report contracts for registry query surfaces.
 
 These frozen pydantic DTOs are emitted by
-:class:`~domain.calculations.registry.RegistryQueryService` for read-only
+:class:`~domain.calculations.registry.queries.RegistryQueryService` for read-only
 registry introspection: modelo listings, revision descriptions, casilla
 details, binding selector projections, formula dependency rows, support-matrix
 summaries, and the registry-wide binding-source inventory.
@@ -10,11 +10,11 @@ The contracts stay in the domain layer and are deliberately not CLI payload
 schemas. Application facades return these reports unchanged; CLI modules then
 project them into strict ``--json`` envelopes. The source-inventory report is
 also intentionally disposition-free: it records the committed
-:class:`~core.BindingSourceKind` declarations and leaves enrolled/deferred/
+:class:`~core.aggregation.BindingSourceKind` declarations and leaves enrolled/deferred/
 reserved mesh classification to application-layer gates.
 
 See Also:
-    :class:`~domain.calculations.registry.RegistryQueryService`
+    :class:`~domain.calculations.registry.queries.RegistryQueryService`
         Builder of every report class defined here.
     :mod:`~application.modelo.registry_discovery`
         Application facade used by CLI discovery commands.
@@ -22,10 +22,10 @@ See Also:
         Typer command group that renders these reports to text and JSON.
     :mod:`~entrypoints.cli._modelo_payloads`
         CLI-side ``OutputSchema`` projections for discovery command envelopes.
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Revision record from which casilla, binding, and formula rows are
         projected.
-    :class:`~domain.calculations.registry._support_matrix.ModeloEntry`
+    :class:`~domain.calculations.registry.support_matrix.ModeloEntry`
         Support-matrix row carried by :class:`ModeloSupportMatrixReport`.
 """
 
@@ -91,7 +91,7 @@ class ModeloDescribeReport(BaseModel):
 
     Every field here is regulatory grounding an operator may need to justify a
     revision selection, so the counts are bounded and ``filing_year`` shares the
-    :class:`~core.Period` year range: a describe view is projected verbatim into
+    :class:`~core.period.Period` year range: a describe view is projected verbatim into
     the CLI ``--json`` envelope, and a negative count or an out-of-range year
     reaching that surface is a defect in the projection, not a legitimate value.
     """
@@ -134,8 +134,8 @@ class CasillaGroundingReport(BaseModel):
 
     Before this base existed the list row typed its references as unconstrained
     ``tuple[str, ...]`` while the detail report used the canonical
-    :data:`~domain.calculations.registry.LegalRefId` /
-    :data:`~domain.calculations.registry.SourceRefId`, so a reference shape the
+    :data:`~domain.calculations.registry.ids.LegalRefId` /
+    :data:`~domain.calculations.registry.ids.SourceRefId`, so a reference shape the
     detail projection refused passed silently through operator list JSON.
 
     Subclasses add only what genuinely differs: the resolved formula reference

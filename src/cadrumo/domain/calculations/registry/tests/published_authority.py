@@ -73,12 +73,12 @@ def published_authored_revision(modelo_id: str, *, year: int) -> ModeloRevision:
         covering = [
             revision
             for revision in operation.modelo_directory(modelo_id).revisions
-            if revision.valid_from is not None
-            and revision.valid_from.year <= year
-            and (revision.valid_to is None or year <= revision.valid_to.year)
+            if revision.valid_from.year <= year and (revision.valid_to is None or year <= revision.valid_to.year)
         ]
         if len(covering) != 1:
-            raise LookupError(f"modelo {modelo_id}: expected one authored revision covering {year}, got {len(covering)}")
+            raise LookupError(
+                f"modelo {modelo_id}: expected one authored revision covering {year}, got {len(covering)}"
+            )
         return operation.revision(modelo_id, str(covering[0].id))
 
 

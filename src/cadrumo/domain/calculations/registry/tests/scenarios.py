@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
 from ..authority import bundled_indexed_authority
@@ -51,6 +52,7 @@ class RegistryScenarioExpectedOutput(RegistryScenarioModel):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _operand_casilla_refs_are_traced(self) -> RegistryScenarioExpectedOutput:
         missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
         if missing:
@@ -189,6 +191,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
         return {**data, "filing_period": filing_period}
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_scenario(self) -> RegistryCalculationScenario:
         _validate_scenario_identity(self)
         _validate_expected_output_targets(self.expected_outputs)
@@ -225,6 +228,7 @@ class RegistryScenarioRunReport(RegistryScenarioModel):
     calculation: RegistryCalculationResult
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _status_matches_comparisons(self) -> RegistryScenarioRunReport:
         expected_status: ScenarioStatus = (
             "match" if all(comparison.status == "match" for comparison in self.comparisons) else "mismatch"

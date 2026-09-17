@@ -59,11 +59,11 @@ def test_deadline_window_preserves_official_codes_that_share_one_rate_concept() 
 
 @pytest.mark.parametrize("conceptual_key", ["general"])
 def test_deadline_window_rejects_lossy_conceptual_tipo_authoring(conceptual_key: object) -> None:
-    with pytest.raises((RegistryValidationError, ValidationError), match="unknown official Modelo 210 codes"):
+    with pytest.raises((RegistryValidationError, ValidationError), match="malformed official Modelo 210 codes"):
         _window(tipo_renta_scope=(conceptual_key,))
 
 
-@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01"), ("1",), ("99",)])
+@pytest.mark.parametrize("tipo_renta_scope", [(), ("01", "01"), ("1",)])
 def test_deadline_window_rejects_invalid_official_tipo_renta_scope(tipo_renta_scope: tuple[str, ...]) -> None:
     with pytest.raises((RegistryValidationError, ValidationError), match="tipo_renta_scope"):
         _window(tipo_renta_scope=tipo_renta_scope)

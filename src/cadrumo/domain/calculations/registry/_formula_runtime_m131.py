@@ -1,26 +1,26 @@
 """M131 módulos formula-op evaluators for the registry runtime.
 
-Extracted from :mod:`~domain.calculations.registry._formula_runtime` to keep
+Extracted from :mod:`~domain.calculations.registry.formula_runtime` to keep
 that dispatcher under its size budget while preserving the existing registry op
 names. Dispatch still lives in ``_formula_runtime``; this module owns the
 Modelo 131 estimación-objetiva módulos Fase 1ª-3ª evaluators and advisory flag
 helpers.
 
 See Also:
-    :mod:`~domain.calculations.registry._formula_runtime`
+    :mod:`~domain.calculations.registry.formula_runtime`
         Central formula dispatcher that routes M131 operation names here.
-    :mod:`~domain.calculations.registry._formula_runtime_ops`
+    :mod:`~domain.calculations.registry.formula_runtime_ops`
         Shared numeric-casilla, parameter, and arithmetic helpers used by these
         evaluators.
-    :class:`~domain.calculations.registry.FormulaExpression`
+    :class:`~domain.calculations.registry.schema_formula.FormulaExpression`
         Registry-authored operation graph consumed by each evaluator.
-    :class:`~domain.calculations.registry.ParameterDefinition`
+    :class:`~domain.calculations.registry.schema_formula.ParameterDefinition`
         Keyed-bracket and scalar parameter rows that carry the módulo tables and
         index rates.
-    :func:`~domain.calculations.registry.calculate_registry_snapshot`
+    :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
         Public calculation entry point that records these evaluator results in
         registry calculation provenance.
-    :class:`~domain.calculations.registry.VerificationPredicateDefinition`
+    :class:`~domain.calculations.registry.schema_verification.VerificationPredicateDefinition`
         Advisory predicates that surface untabled or conflicting M131 módulo
         results instead of allowing silent zeros.
 """
@@ -147,7 +147,7 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
     declared IAE epígrafe (a text casilla) and up to seven módulo unit-count
     casillas (the highest signo count among the tabled activities), looks up
     each módulo's coefficient in the registry-declared
-    :class:`~domain.calculations.registry.ParameterDefinition`
+    :class:`~domain.calculations.registry.schema_formula.ParameterDefinition`
     (``data_type='keyed_bracket_table'``, key ``"<epígrafe>:<módulo>"``), and
     sums the per-módulo products.
 

@@ -1,17 +1,17 @@
 """Text-input validation for registry formula evaluation.
 
 Text casilla inputs are canonicalised into
-:class:`~core.CasillaId` keys before
-:func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`
+:class:`~core.casilla_id.CasillaId` keys before
+:func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
 checks that they target text-capable
-:class:`~domain.calculations.registry.CasillaDefinition` rows.
+:class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` rows.
 
 See Also:
-    :mod:`domain.calculations.registry._formula_runtime`
+    :mod:`domain.calculations.registry.formula_runtime`
         Runtime caller that consumes the validated text input mapping.
-    :mod:`domain.calculations.registry._formula_runtime_ops`
+    :mod:`domain.calculations.registry.formula_runtime_ops`
         Numeric input companion that validates decimal casilla inputs.
-    :mod:`domain.calculations.registry._schema`
+    :mod:`domain.calculations.registry.schema`
         Registry schema layer declaring casilla identifiers and data types.
 """
 
@@ -34,7 +34,7 @@ def validated_text_input_casilla_ids[InputKey, InputValue](
     """Canonicalise raw text input keys and strip operator-supplied strings.
 
     Raw mapping keys become validated
-    :class:`~core.CasillaId` values; values must be
+    :class:`~core.casilla_id.CasillaId` values; values must be
     non-empty strings after whitespace trimming so text leaves enter the formula
     runtime in canonical form.
     """
@@ -77,7 +77,7 @@ def validate_text_input_targets(
     """Validate and canonicalise text-family inputs against declared casillas.
 
     The runtime passes the revision's
-    :class:`~domain.calculations.registry.CasillaDefinition` map so callers
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition` map so callers
     cannot supply unknown casillas or route text into numeric registry targets.
     """
     text_casilla_ids = {

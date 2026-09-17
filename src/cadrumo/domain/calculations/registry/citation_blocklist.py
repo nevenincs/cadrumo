@@ -129,6 +129,7 @@ def find_known_bad(
     role_text: str,
     *,
     effective_date: date,
+    effective_to: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> KnownBadCitation | None:
     """Return the first blocklist entry that matches the supplied citation, or ``None``.
@@ -143,7 +144,15 @@ def find_known_bad(
         article: The article number string as written in registry TOML.
         role_text: The free-text ``role`` field of the casilla being validated.
         effective_date: The legal reference's effective date, used on the
-            catalogue's filing-period date axis.
+            catalogue's filing-period date axis. A date before the registry's
+            supported filing-year floor is evaluated at the floor instead: the
+            catalogue cannot open a window earlier than the floor, and a norm
+            already in force before the floor is still checked at the earliest
+            coordinate the registry can represent.
+        effective_to: The legal reference's own expiry, when known. A
+            reference whose entire validity ends before the floor is skipped
+            rather than clamped: the registry has no representable coordinate
+            at which that citation could ever be checked.
         authority: Optional validated authority; omitted callers use the
             bundled published authority.
 
@@ -156,8 +165,12 @@ def find_known_bad(
         raise RegistryValidationError("known-bad citation lookup requires an explicit authority operation or scope")
     if source not in _CITATION_SOURCE_VALUES:
         raise RegistryValidationError(f"known-bad citation lookup has unknown source {source!r}")
+    floor = authority.supported_filing_years().date_envelope().floor
+    if effective_to is not None and effective_to < floor:
+        return None
+    evaluation_date = max(effective_date, floor)
     folded = _fold_diacritics(role_text)
-    for entry in _known_bad_citations(authority=authority, effective_date=effective_date):
+    for entry in _known_bad_citations(authority=authority, effective_date=evaluation_date):
         if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:
             return entry
     return None

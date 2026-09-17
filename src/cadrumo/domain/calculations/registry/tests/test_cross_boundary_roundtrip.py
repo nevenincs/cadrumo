@@ -192,7 +192,7 @@ def test_registry_filing_observation_refuses_mismatched_filing_period() -> None:
 
 
 def test_registry_filing_observation_refuses_bare_display_period_drift() -> None:
-    with pytest.raises(ValueError, match="period must be a bare registry period token"):
+    with pytest.raises(ValueError, match="invalid period code '2025 1T'"):
         RegistryModeloObservation(
             modelo="303",
             filing_year=2025,

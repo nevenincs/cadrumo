@@ -18,7 +18,7 @@ class RegistryRoundingCode(StrEnum):
     type can be bound by different legal rounding rules.
 
     * ``MONEY_2`` — two decimals, half-up, per the AEAT Instrucciones
-      (:func:`core.money.round_to_cents`).
+      (:func:`core.money.rounding.round_to_cents`).
     * ``INTEGER`` — whole units, half-up. The neutral integer mode for a
       target the law does not direct a specific way (e.g. a count of
       perceptores).

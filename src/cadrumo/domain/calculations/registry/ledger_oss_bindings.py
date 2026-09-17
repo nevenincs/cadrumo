@@ -63,7 +63,7 @@ class OssIossLedgerObservation(BaseModel):
         rate_kind: Substrate rate tier (general / reduced / etc.).
         invoice_direction: Whether the autónomo issued or received
             the invoice.
-        transaction_kind: Substrate :class:`cadrumo.domain.iva.TransactionKind`
+        transaction_kind: Substrate :class:`cadrumo.domain.iva.classification.TransactionKind`
             the line resolves to.
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR (already applied at the

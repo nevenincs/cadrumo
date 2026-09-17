@@ -13,6 +13,7 @@ from ....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
 )
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.iva_deduction_fact import IvaDeductionFactKind
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
@@ -199,12 +200,13 @@ class IvaLedgerObservation(BaseModel):
         return require_input_classification(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
         require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
         require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
         if self.exemption_article is not None:
             require_iva_exemption_article(self.exemption_article)
-        category_catalogue = resolve_iva_category_catalogue(effective_date=today_madrid())
+        category_catalogue = resolve_iva_category_catalogue(effective_date=self.transaction_date)
         if self.exemption_article is not None and self.category != category_catalogue.require("domestic_exempt"):
             raise RegistryValidationError(
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "

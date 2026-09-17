@@ -12,7 +12,7 @@ from ..schema_base import filing_period_from_scope
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.mark.parametrize("token", ("comunicacion", "variacion", "ALTA", "baja"))
+@pytest.mark.parametrize("token", ("comunicacion", "variacion", "ALTA", "baja", "EVENT-N"))
 def test_administrative_registry_token_has_no_filing_period(token: str) -> None:
     assert filing_period_from_scope(2026, token) is None
 
@@ -25,7 +25,6 @@ def test_filing_period_token_builds_its_period() -> None:
     ("filing_year", "token"),
     (
         pytest.param(2026, "garbage", id="unknown-token"),
-        pytest.param(2026, "EVENT-N", id="symbolic-event-selector"),
         pytest.param(1970, "4T", id="year-outside-period-range"),
     ),
 )

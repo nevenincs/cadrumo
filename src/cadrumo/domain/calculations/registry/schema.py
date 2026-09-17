@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, TypeGuard
 
 from pydantic import (
     BeforeValidator,
@@ -545,7 +545,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     manifest-only placement guarantee — it is a claim about the whole revision,
     so it must be readable in ``revision.toml`` rather than merged in from a
     fragment thousands deep — and it shares the fail-closed shape, reading as
-    :data:`~cadrumo.core.UNDECLARED_REGISTRY_AUTHORITY_GRADE` when absent. It is
+    :data:`~cadrumo.core.authority_grade.UNDECLARED_REGISTRY_AUTHORITY_GRADE` when absent. It is
     deliberately optional rather than defaulted on the field, so an ungraded
     revision stays distinguishable from one explicitly graded at that same
     floor; :attr:`effective_authority_grade` is the reading, and
@@ -803,7 +803,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         """Return the authority reach to act on, reading absence fail-closed.
 
         An undeclared grade reads as
-        :data:`~cadrumo.core.UNDECLARED_REGISTRY_AUTHORITY_GRADE` — the lowest
+        :data:`~cadrumo.core.authority_grade.UNDECLARED_REGISTRY_AUTHORITY_GRADE` — the lowest
         rung — so a revision nobody has graded confers scheduling reach and
         nothing more. Consumers read the reach here rather than each deciding
         for itself what a missing declaration means.
@@ -1023,13 +1023,18 @@ MODELO_REVISION_IDS_CONTEXT: Final = "modelo_revision_ids"
 """Validation-context key naming every revision of the modelo a selected view was taken from."""
 
 
+def _is_object_frozenset(value: object) -> TypeGuard[frozenset[object]]:
+    """Narrow an unparameterised runtime frozenset to untrusted entries."""
+    return isinstance(value, frozenset)
+
+
 def _context_revision_ids(modelo_id: str, info: ValidationInfo) -> frozenset[str] | None:
     """Return the owning directory's revision identities supplied to a selected-view validation."""
     context = info.context
     if not is_object_mapping(context) or MODELO_REVISION_IDS_CONTEXT not in context:
         return None
     declared = context[MODELO_REVISION_IDS_CONTEXT]
-    if not isinstance(declared, frozenset) or not all(isinstance(item, str) for item in declared):
+    if not _is_object_frozenset(declared) or not all(isinstance(item, str) for item in declared):
         raise RegistryValidationError(f"modelo {modelo_id!r} revision identity context must be a frozenset of ids")
     return frozenset(item for item in declared if isinstance(item, str))
 

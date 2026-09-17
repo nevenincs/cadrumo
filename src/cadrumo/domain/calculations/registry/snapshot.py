@@ -478,7 +478,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     the temporal test applied to it depends on WHAT KIND of authority it is --
     this is the same "form approval is presentation-scoped, substantive law is
     devengo-scoped" distinction
-    :func:`~cadrumo.domain.calculations.registry.validate_orden_aplicabilidad.validate_orden_aplicabilidad`
+    :func:`~cadrumo.domain.calculations.registry.orden_applicability.validate_orden_aplicabilidad.validate_orden_aplicabilidad`
     already draws for the ``orden_aplicabilidad`` field:
 
     - A substantive-law reference (``kind`` in :data:`SUBSTANTIVE_LAW_KINDS` --

@@ -54,7 +54,7 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
 
     The registry only needs these four attributes to resolve
     ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings; the full
-    :class:`~cadrumo.domain.renta.RentaDeductibleExpenseObservation` satisfies
+    :class:`~cadrumo.domain.renta.ledger_expenses.RentaDeductibleExpenseObservation` satisfies
     this protocol without any explicit declaration.
 
     Properties are declared read-only so that concrete attributes satisfy the

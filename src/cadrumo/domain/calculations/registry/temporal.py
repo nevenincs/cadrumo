@@ -264,28 +264,33 @@ def _nearest_authored_candidates[RevisionT: _SelectableRevision](
     """Select authored anchors nearest the request; equal distance prefers earlier."""
     if support is not None and not support.admits_filing_year(filing_year):
         return [], filing_year
+    # A pinned revision must be the one the law selects; the anchor year is
+    # chosen across every revision before the pin narrows it, so a pin never
+    # projects a revision the nearest authored edition displaces.
     exact = [
         revision
         for revision in revisions
-        if (revision_id is None or revision.id == revision_id)
-        and revision.period_selector.includes_year(filing_year)
+        if revision.period_selector.includes_year(filing_year)
         and (
             period is None
             or selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period) is not None
         )
     ]
     if exact or support is None:
-        return exact, filing_year
+        return [revision for revision in exact if revision_id is None or revision.id == revision_id], filing_year
     anchors = [
         (year, revision)
         for revision in revisions
-        if revision_id is None or revision.id == revision_id
         for year in _eligible_authored_years(revision, requested_year=filing_year, period=period)
     ]
     if not anchors:
         return [], filing_year
     authored_year = min((year for year, _ in anchors), key=lambda year: (abs(year - filing_year), year))
-    return [revision for year, revision in anchors if year == authored_year], authored_year
+    return [
+        revision
+        for year, revision in anchors
+        if year == authored_year and (revision_id is None or revision.id == revision_id)
+    ], authored_year
 
 
 def revision_temporal_resolution[RevisionT: _SelectableRevision](

@@ -3,11 +3,11 @@
 A development compiler reads the registry authoring surface into the immutable
 artifact. This runtime module retains only the resulting treaty authority types
 that any IRNR rate formula consumes through the
-:class:`~domain.calculations.registry.RegistrySnapshot` — so a second consumer
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` — so a second consumer
 (M216 retenciones a no residentes) reads treaty data without reaching across a
 modelo boundary.
 
-Each override row carries a typed :class:`~core.ConvenioOverrideKind` so the
+Each override row carries a typed :class:`~core.irnr.ConvenioOverrideKind` so the
 "más favorable" / limitation-of-benefits decision is computed rather than
 coincidental: ``flat`` replaces the domestic rate, ``ceiling`` applies
 ``min(domestic, treaty)``, ``allocation_domestic_tariff`` delegates the amount to
@@ -75,9 +75,9 @@ def _validated_override_rate(
 
 
 class ConvenioOverrideRow(RegistryModel):
-    """One per-income-type treaty override keyed by :class:`~core.TipoRentaIrnr`.
+    """One per-income-type treaty override keyed by :class:`~core.irnr.TipoRentaIrnr`.
 
-    The typed :class:`~core.ConvenioOverrideKind` decides how the row acts on
+    The typed :class:`~core.irnr.ConvenioOverrideKind` decides how the row acts on
     the domestic IRNR rate. ``flat`` and ``ceiling`` rows MUST declare a ``rate``
     in ``[0, 1]``; ``allocation_domestic_tariff`` and ``exempt`` rows MUST NOT (the
     amount is delegated to the domestic tariff or driven to zero). The
@@ -185,7 +185,7 @@ class ConvenioAuthority(RegistryModel):
 
     Owns the ``{country_code: ConvenioTreaty}`` map and the single
     :meth:`resolve` lookup any IRNR rate formula consumes. Projected onto the
-    :class:`~domain.calculations.registry.RegistrySnapshot` the same way the
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot` the same way the
     shared ``legal/`` catalogue is, so the treaty override is one branch of the
     single tipo-de-gravamen resolution path, never a parallel rate mechanism.
     """
@@ -295,11 +295,10 @@ def resolve_convenio_override(
         selectors=selectors,
     )
     fact = operation.governed_fact(CONVENIO_OVERRIDE_FACT_ID)
+    windows = fact.materialized_windows(operation.supported_filing_years().date_envelope())
     if not any(
         variant.date_axis is DateAxis.DEVENGO_DATE
-        and variant.valid_from is not None
-        and variant.valid_from <= devengo_date
-        and (variant.valid_to is None or devengo_date <= variant.valid_to)
+        and windows[variant.variant_id].contains_date(devengo_date)
         and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
         == selector_identity
         for variant in fact.variants

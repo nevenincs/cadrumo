@@ -4,8 +4,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from .....core.hashing import content_hash_hex
-from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin
+from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin, SnapshotGlobalsComponentQuery
+from ..schema import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
+
+FIXTURE_SNAPSHOT_GLOBALS = SnapshotGlobalCatalogues(
+    supported_filing_years=SupportedFilingYearsCatalogue(floor=FILING_YEAR_MIN, horizon=FILING_YEAR_MAX),
+)
+"""Registry globals admitting every representable filing year.
+
+A fixture that declares no snapshot globals still needs the single support
+envelope governed-fact resolution reads; this one neither gates nor projects
+any coordinate the fixture chooses.
+"""
 
 
 @dataclass(slots=True)
@@ -27,6 +39,8 @@ class FakeAuthorityComponentReader:
         try:
             return self.components[query]
         except KeyError as exc:
+            if isinstance(query, SnapshotGlobalsComponentQuery):
+                return FIXTURE_SNAPSHOT_GLOBALS
             raise LookupError(f"authority component is unavailable for query {query!r}") from exc
 
     def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:

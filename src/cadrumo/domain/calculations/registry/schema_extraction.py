@@ -1,6 +1,6 @@
 """Extraction-profile schema contracts for registry revisions.
 
-These :class:`~domain.calculations.registry._schema_base.RegistryModel`
+These :class:`~domain.calculations.registry.schema_base.RegistryModel`
 definitions describe how a registry revision maps declaration PDFs, submitted
 files, justificantes, and official workbooks into target casillas. The contract
 records parser identity, accepted artefact kind, match strategy, confidence,
@@ -10,25 +10,22 @@ round-trip flags that prevent silent provisional extraction.
 The schema remains declarative authority only: it does not import parser
 adapters, read artefacts, or run extraction. Registry validation checks local
 reference closure and evidence sufficiency before
-:class:`~domain.calculations.registry.RegistrySnapshot` exposes the profiles to
+:class:`~domain.calculations.registry.schema.RegistrySnapshot` exposes the profiles to
 application and adapter consumers.
 
 See Also:
-    :class:`~domain.calculations.registry.ModeloRevision`
+    :class:`~domain.calculations.registry.schema.ModeloRevision`
         Revision record that owns committed extraction-profile rows.
-    :class:`~domain.calculations.registry.RegistrySnapshot`
+    :class:`~domain.calculations.registry.schema.RegistrySnapshot`
         Validated filing-context view that exposes extraction profiles by id.
-    :func:`~domain.calculations.registry._validate_record_sections.validate_extraction_profile_section`
-        Record-section validator that checks casilla, export-field, legal, and
-        source closure for each profile.
-    :mod:`~domain.calculations.registry._validate_extraction_profiles`
-        Artefact-kind, dotted-parser, bbox-anchor, specimen, and round-trip
-        validator helpers for these contracts.
-    :class:`~domain.calculations.registry.CasillaDefinition`
+    Registry-build validation checks casilla, export-field, legal, and source
+    closure for each profile, together with artefact kind, dotted parser, bbox
+    anchor, specimen, and round-trip conformance for these contracts.
+    :class:`~domain.calculations.registry.schema_surfaces.CasillaDefinition`
         Target casilla metadata each extraction target must reference.
-    :class:`~domain.calculations.registry.LegalReference`
+    :class:`~domain.calculations.registry.schema_references.LegalReference`
         Legal evidence rows cited through ``legal_refs``.
-    :class:`~domain.calculations.registry.SourceReference`
+    :class:`~domain.calculations.registry.schema_references.SourceReference`
         Source evidence rows cited through ``source_refs``.
 """
 

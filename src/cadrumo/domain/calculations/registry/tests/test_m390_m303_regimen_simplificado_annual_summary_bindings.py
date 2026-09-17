@@ -84,5 +84,6 @@ def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
 
     failures = validate_m303_regimen_simplificado_annual_summary_revision(partial_revision)
 
+    target_number = next(casilla.number for casilla in revision.casillas if casilla.id == target_casilla_id)
     assert failures
-    assert target_casilla_id in "\n".join(failures)
+    assert repr(target_number) in "\n".join(failures)
