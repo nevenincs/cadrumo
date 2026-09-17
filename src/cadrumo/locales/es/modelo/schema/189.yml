@@ -1,6 +1,105 @@
 modelo:
   schema:
     '189':
+      casilla:
+        continuidad:
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              de declaración.'
+            label: Ejercicio de declaración
+          irpf-declarante-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del declarante.'
+            label: NIF del declarante
+          m189-clave-identificacion:
+            help: 'Consulte la información correspondiente a la casilla: Clave de
+              identificacion.'
+            label: Clave de identificacion
+          m189-clave-mercado:
+            help: 'Consulte la información correspondiente a la casilla: Clave de
+              mercado.'
+            label: Clave de mercado
+          m189-clave-representacion:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Clave de representacion
+          m189-clave-titularidad:
+            help: 'Consulte la información correspondiente a la casilla: Clave de
+              titularidad.'
+            label: Clave de titularidad
+          m189-clave-valor:
+            help: 'Consulte la información correspondiente a la casilla: Clave de
+              valor.'
+            label: Clave de valor
+          m189-codigo-pais:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Codigo pais
+          m189-codigo-provincia:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Codigo provincia
+          m189-declaracion-complementaria-sustitutiva:
+            help: 'Consulte la información correspondiente a la casilla: Declaración
+              complementaria o sustitutiva.'
+            label: Declaración complementaria o sustitutiva
+          m189-declarado-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del declarado.'
+            label: NIF del declarado
+          m189-declarado-nombre:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Apellidos y nombre, razon social o denominacion del declarado
+          m189-declarante-razon-social:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Razon social del declarante
+          m189-identificacion-valores:
+            help: 'Consulte la información correspondiente a la casilla: Identificacion
+              de los valores.'
+            label: Identificacion de los valores
+          m189-nominal-unitario-valores:
+            help: 'Consulte la información correspondiente a la casilla: Nominal unitario
+              de los valores.'
+            label: Nominal unitario de los valores
+          m189-numero-identificativo-anterior:
+            help: 'Consulte la información correspondiente a la casilla: Número identificativo
+              de la declaración anterior.'
+            label: Número identificativo de la declaración anterior
+          m189-numero-justificante:
+            help: 'Consulte la información correspondiente a la casilla: Número de
+              justificante de la declaración.'
+            label: Número de justificante de la declaración
+          m189-numero-total-declarados:
+            help: 'Consulte la información correspondiente a la casilla: Número total
+              de declarados.'
+            label: Número total de declarados
+          m189-numero-valores:
+            help: 'Consulte la información correspondiente a la casilla: Número de
+              valores.'
+            label: Numero de valores
+          m189-persona-relacion:
+            help: 'Consulte la información correspondiente a la casilla: Persona con
+              quien relacionarse.'
+            label: Persona con quien relacionarse
+          m189-porcentaje-participacion:
+            help: 'Consulte la información correspondiente a la casilla: Porcentaje
+              de participacion.'
+            label: Porcentaje de participacion
+          m189-representante-legal-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del representante
+              legal.'
+            label: NIF del representante legal
+          m189-tipo-soporte:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de soporte.'
+            label: Tipo de soporte
+          m189-valoracion:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Valoracion
+          m189-valoracion-total:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              189.
+            label: Valoracion total
       field:
         official_name: Modelo 189. Declaración informativa anual acerca de valores,
           seguros y rentas.

@@ -3,14 +3,2098 @@ modelo:
     '220':
       casilla:
         continuidad:
+          base-imponible-tramo-dos:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Tramo de base imponible 2.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tramo
+              de base imponible 2
+          base-imponible-tramo-uno:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Tramo de base imponible 1.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tramo
+              de base imponible 1
+          documento-ingreso-devolucion-abono-activos-diferidos:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Abono/Compensación. Abono por conversión de
+              activos por impuesto diferido (art. 130 LIS).'
+            label: Documento de ingreso o devolución. Abono/Compensación. Abono por
+              conversión de activos por impuesto diferido (art. 130 LIS)
+          documento-ingreso-devolucion-apellidos-razon-social:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Identificación. Apellidos o razón social.'
+            label: Documento de ingreso o devolución. Identificación. Apellidos o
+              razón social
+          documento-ingreso-devolucion-banco-extranjero:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Resto de países: banco.'
+            label: 'Documento de ingreso o devolución. Devolución. Resto de países:
+              banco'
+          documento-ingreso-devolucion-ciudad-banco:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Resto de países: ciudad.'
+            label: 'Documento de ingreso o devolución. Devolución. Resto de países:
+              ciudad'
+          documento-ingreso-devolucion-codigo-pais-banco:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Resto de países: código de país.'
+            label: 'Documento de ingreso o devolución. Devolución. Resto de países:
+              código de país'
+          documento-ingreso-devolucion-compensacion-activos-diferidos:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Abono/Compensación. Compensación por conversión
+              de activos por impuesto diferido (art. 130 LIS).'
+            label: Documento de ingreso o devolución. Abono/Compensación. Compensación
+              por conversión de activos por impuesto diferido (art. 130 LIS)
+          documento-ingreso-devolucion-cuenta-corriente-tributaria:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Cuenta corriente tributaria.'
+            label: Documento de ingreso o devolución. Cuenta corriente tributaria
+          documento-ingreso-devolucion-cuota-cero:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Cuota cero.'
+            label: Documento de ingreso o devolución. Cuota cero
+          documento-ingreso-devolucion-direccion-banco:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Resto de países: dirección del
+              banco.'
+            label: 'Documento de ingreso o devolución. Devolución. Resto de países:
+              dirección del banco'
+          documento-ingreso-devolucion-ejercicio:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devengo. Ejercicio.'
+            label: Documento de ingreso o devolución. Devengo. Ejercicio
+          documento-ingreso-devolucion-fecha-fin:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devengo. Período impositivo, fecha fin (AAAAMMDD).'
+            label: Documento de ingreso o devolución. Devengo. Período impositivo,
+              fecha fin (AAAAMMDD)
+          documento-ingreso-devolucion-fecha-inicio:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devengo. Período impositivo, fecha de inicio
+              (AAAAMMDD).'
+            label: Documento de ingreso o devolución. Devengo. Período impositivo,
+              fecha de inicio (AAAAMMDD)
+          documento-ingreso-devolucion-iban-devolucion:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Código IBAN - bloque.'
+            label: Documento de ingreso o devolución. Devolución. Código IBAN - bloque
+          documento-ingreso-devolucion-iban-ingreso:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Ingreso. Código IBAN - bloque.'
+            label: Documento de ingreso o devolución. Ingreso. Código IBAN - bloque
+          documento-ingreso-devolucion-importe-devolucion:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Importe a devolver.'
+            label: Documento de ingreso o devolución. Devolución. Importe a devolver
+          documento-ingreso-devolucion-importe-ingreso:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Ingreso. Importe a ingresar.'
+            label: Documento de ingreso o devolución. Ingreso. Importe a ingresar
+          documento-ingreso-devolucion-marca-sepa:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Marca SEPA.'
+            label: Documento de ingreso o devolución. Devolución. Marca SEPA
+          documento-ingreso-devolucion-modalidad-devolucion:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Modalidad de devolución.'
+            label: Documento de ingreso o devolución. Devolución. Modalidad de devolución
+          documento-ingreso-devolucion-modalidad-ingreso:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Ingreso. Modalidad de ingreso.'
+            label: Documento de ingreso o devolución. Ingreso. Modalidad de ingreso
+          documento-ingreso-devolucion-nif:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Identificación. N.I.F.'
+            label: Documento de ingreso o devolución. Identificación. N.I.F.
+          documento-ingreso-devolucion-nombre:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Identificación. Nombre.'
+            label: Documento de ingreso o devolución. Identificación. Nombre
+          documento-ingreso-devolucion-pais-banco:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Resto de países: país.'
+            label: 'Documento de ingreso o devolución. Devolución. Resto de países:
+              país'
+          documento-ingreso-devolucion-periodo:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devengo. Período impositivo.'
+            label: Documento de ingreso o devolución. Devengo. Período impositivo
+          documento-ingreso-devolucion-swift-bic:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devolución. Código SWIFT-BIC (solo resto de
+              países / no SEPA).'
+            label: Documento de ingreso o devolución. Devolución. Código SWIFT-BIC
+              (solo resto de países / no SEPA)
+          documento-ingreso-devolucion-tipo-ejercicio:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Devengo. Tipo de ejercicio.'
+            label: Documento de ingreso o devolución. Devengo. Tipo de ejercicio
+          extracooperativo-base-tramo-dos:
+            help: 'Consulte la información correspondiente a la casilla: Tramo 2 -
+              Base imponible 2 (resultados extracooperativos) | Nota 3.'
+            label: Tramo 2 - Base imponible 2 (resultados extracooperativos) | Nota
+              3
+          extracooperativo-base-tramo-uno:
+            help: 'Consulte la información correspondiente a la casilla: Tramo 1 -
+              Base imponible (resultados extracooperativos) | Nota 3.'
+            label: Tramo 1 - Base imponible (resultados extracooperativos) | Nota
+              3
+          extracooperativo-tipo-tramo-dos:
+            help: 'Consulte la información correspondiente a la casilla: Tramo 2 -
+              Tipo de gravamen (resultados extracooperativos) | 2 enteros, 4 decimales.
+              Nota 3.'
+            label: Tramo 2 - Tipo de gravamen (resultados extracooperativos) | 2 enteros,
+              4 decimales. Nota 3
+          extracooperativo-tipo-tramo-uno:
+            help: 'Consulte la información correspondiente a la casilla: Tramo 1 -
+              Tipo de gravamen (resultados extracooperativos) | 2 enteros, 4 decimales.
+              Nota 3.'
+            label: Tramo 1 - Tipo de gravamen (resultados extracooperativos) | 2 enteros,
+              4 decimales. Nota 3
           filing-year:
             help: 'Consulte la información correspondiente a la casilla: Ejercicio
               al que se refiere la declaración.'
             label: Casilla— ejercicio fiscal
+          liquidacion-complementaria-abono-conversion-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Abono por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL Estado.'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Abono
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL Estado
+          liquidacion-complementaria-abono-conversion-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Abono por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL  D Forales / Navarra.'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Abono
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL  D Forales
+              / Navarra
+          liquidacion-complementaria-abono-conversion-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Abono por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL (Estado + D Forales / Navarra).'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Abono
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado
+              + D Forales / Navarra)
+          liquidacion-complementaria-abono-regularizacion-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Abono.
+              Estado.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Abono. Estado'
+          liquidacion-complementaria-abono-regularizacion-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Abono.  D.
+              Forales / Navarra.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Abono.  D. Forales / Navarra'
+          liquidacion-complementaria-abono-regularizacion-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Abono.
+              Total (Estado + D. Forales / Navarra).'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Abono. Total (Estado + D. Forales / Navarra)'
+          liquidacion-complementaria-cambio-residencia-base-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Importe integrado en la base imponible. Estado.'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Importe integrado en la base imponible.
+              Estado
+          liquidacion-complementaria-cambio-residencia-base-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Importe integrado en la base imponible. D. Forales / Navarra
+              (totales).'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Importe integrado en la base imponible.
+              D. Forales / Navarra (totales)
+          liquidacion-complementaria-cambio-residencia-deuda-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1
+              LIS. Estado.'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento
+              art. 19,1 LIS. Estado
+          liquidacion-complementaria-cambio-residencia-deuda-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Deuda tributaria resultante del fraccionamiento art. 19,1
+              LIS. D. Forales / Navarra (totales).'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Deuda tributaria resultante del fraccionamiento
+              art. 19,1 LIS. D. Forales / Navarra (totales)
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). 1º fraccionamiento. Estado.'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). 1º fraccionamiento. Estado
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). 1º fraccionamiento. D. Forales / Navarra (totales).'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). 1º fraccionamiento. D. Forales / Navarra
+              (totales)
+          liquidacion-complementaria-compensacion-conversion-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Compensación por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL Estado.'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Compensación
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL Estado
+          liquidacion-complementaria-compensacion-conversion-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Compensación por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL  D. Forales/Navarra.'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Compensación
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL  D. Forales/Navarra
+          liquidacion-complementaria-compensacion-conversion-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Compensación por conversión
+              de activos por impuesto diferido en crédito exigible frente a la Administración
+              tributaria (art. 130 LIS). TOTAL (Estado + D. Forales/Navarra).'
+            label: Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Compensación
+              por conversión de activos por impuesto diferido en crédito exigible
+              frente a la Administración tributaria (art. 130 LIS). TOTAL (Estado
+              + D. Forales/Navarra)
+          liquidacion-complementaria-compensacion-regularizacion-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Compensación.
+              Estado.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Compensación. Estado'
+          liquidacion-complementaria-compensacion-regularizacion-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Compensación.  D.
+              Forales / Navarra.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Compensación.  D. Forales / Navarra'
+          liquidacion-complementaria-compensacion-regularizacion-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. Compensación.
+              Total (Estado + D. Forales / Navarra).'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              Compensación. Total (Estado + D. Forales / Navarra)'
+          liquidacion-complementaria-devolucion-anterior-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas
+              procedentes de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. Estado.'
+            label: Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2025. Estado
+          liquidacion-complementaria-devolucion-anterior-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. Complementaria. Devoluciones acordadas
+              procedentes de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. D. Forales / Navarra (totales).'
+            label: Liquidación. Líquido a ingresar o a devolver. Complementaria. Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2025. D. Forales / Navarra (totales)
+          liquidacion-complementaria-devolucion-compensada-anterior-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Complementaria: Devolución acordada / compensada. Estado.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Complementaria: Devolución acordada / compensada.
+              Estado'
+          liquidacion-complementaria-devolucion-compensada-anterior-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Complementaria: Devolución acordada / compensada. D. Forales
+              / Navarra.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Complementaria: Devolución acordada / compensada.
+              D. Forales / Navarra'
+          liquidacion-complementaria-devolucion-compensada-anterior-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Complementaria: Devolución acordada / compensada. Total
+              (Estado + D. Forales / Navarra).'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Complementaria: Devolución acordada / compensada.
+              Total (Estado + D. Forales / Navarra)'
+          liquidacion-complementaria-ingreso-fraccionamiento-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento
+              del art. 19.1 LIS. Estado.'
+            label: Liquidación. Líquido a ingresar. Liquido a ingresar incluido el
+              1º fraccionamiento del art. 19.1 LIS. Estado
+          liquidacion-complementaria-ingreso-fraccionamiento-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar. Liquido a ingresar incluido el 1º fraccionamiento
+              del art. 19.1 LIS. D. Forales / Navarra (totales).'
+            label: Liquidación. Líquido a ingresar. Liquido a ingresar incluido el
+              1º fraccionamiento del art. 19.1 LIS. D. Forales / Navarra (totales)
+          liquidacion-complementaria-ingreso-regularizacion-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. A ingresar.
+              Estado.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              A ingresar. Estado'
+          liquidacion-complementaria-ingreso-regularizacion-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. A ingresar.
+              D. Forales / Navarra.'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              A ingresar. D. Forales / Navarra'
+          liquidacion-complementaria-ingreso-regularizacion-total:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Conversión de activos por impuesto diferido en  crédito exigible frente
+              a la Administración tributaria (art. 130 LIS). Líquido a ingresar o
+              a devolver: Resultado de conversión de AID tras regularización. A ingresar.
+              Total (Estado + D. Forales / Navarra).'
+            label: 'Liquidación. Conversión de activos por impuesto diferido en  crédito
+              exigible frente a la Administración tributaria (art. 130 LIS). Líquido
+              a ingresar o a devolver: Resultado de conversión de AID tras regularización.
+              A ingresar. Total (Estado + D. Forales / Navarra)'
+          liquidacion-complementaria-resultado-anterior-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar
+              procedentes de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. Estado.'
+            label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
+              Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2025. Estado'
+          liquidacion-complementaria-resultado-anterior-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. Complementaria: Resultados a ingresar
+              procedentes de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. D. Forales/Navarra (totales)..'
+            label: 'Liquidación. Líquido a ingresar o a devolver. Complementaria:
+              Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2025. D. Forales/Navarra (totales).'
+          liquidacion-complementaria-resultado-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. Estado.'
+            label: Liquidación. Líquido a ingresar o a devolver. Estado
+          liquidacion-complementaria-resultado-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar o a devolver. D. Forales / Navarra.'
+            label: Liquidación. Líquido a ingresar o a devolver. D. Forales / Navarra
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar: Complementaria: Resultado de la autoliquidación
+              incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2025. Estado.'
+            label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
+              la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. Estado'
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Líquido a ingresar: Complementaria: Resultado de la autoliquidación
+              incluido el 1º fraccionamiento del art. 19,1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2025. D. Forales /
+              Navarra (totales).'
+            label: 'Liquidación. Líquido a ingresar: Complementaria: Resultado de
+              la autoliquidación incluido el 1º fraccionamiento del art. 19,1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2025. D. Forales / Navarra (totales)'
+          liquidacion-complementaria-resultado-fraccionamiento-estado:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento
+              del art. 19.1 LIS. Estado..'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido
+              el 1º fraccionamiento del art. 19.1 LIS. Estado.
+          liquidacion-complementaria-resultado-fraccionamiento-forales:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Opción de fraccionamiento en supuestos de cambios de residencia (art.
+              19,1 LIS). Resultado de la autoliquidación incluido el 1º fraccionamiento
+              del art. 19.1 LIS. Estado..'
+            label: Liquidación. Opción de fraccionamiento en supuestos de cambios
+              de residencia (art. 19,1 LIS). Resultado de la autoliquidación incluido
+              el 1º fraccionamiento del art. 19.1 LIS. Estado.
+          t22007000-00043:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma de bases imponibles individuales de
+              las entidades del grupo fiscal (excluidas las bases en estimación objetiva
+              por el régimen de entidades navieras) (Pág. 7A).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              de bases imponibles individuales de las entidades del grupo fiscal (excluidas
+              las bases en estimación objetiva por el régimen de entidades navieras)
+              (Pág. 7A)
+          t22007000-00047:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: suma de bases imponibles
+              individuales por resultados cooperativos (Pág. 7A).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: suma de bases imponibles individuales por resultados
+              cooperativos (Pág. 7A)'
+          t22007000-00048:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: suma de bases imponibles
+              individuales por resultados extracooperativos (Pág. 7A).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: suma de bases imponibles individuales por resultados
+              extracooperativos (Pág. 7A)'
+          t22007000-00049:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos con entidades navieras en régimen
+              especial: suma de bases imponibles en función del tonelaje, determinadas
+              en estimación objetiva (Pág. 7A)(*).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              con entidades navieras en régimen especial: suma de bases imponibles
+              en función del tonelaje, determinadas en estimación objetiva (Pág. 7A)(*)'
+          t22007000-00079:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Total correcciones a la suma de bases imponibles
+              por diferimiento de resultados internos.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Total
+              correcciones a la suma de bases imponibles por diferimiento de resultados
+              internos
+          t22007000-00080:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Otras correcciones a la suma de bases imponibles
+              (**). Eliminación de dividendos internos del grupo fiscal (Pág. 7D).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Otras
+              correcciones a la suma de bases imponibles (**). Eliminación de dividendos
+              internos del grupo fiscal (Pág. 7D)
+          t22007000-00082:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Otras correcciones a la suma de bases imponibles
+              (**). Incorporación de deterioros de valor de participaciones en fondos
+              propios de entidades del grupo fiscal, eliminados en períodos anteriores
+              (Pág. 7E).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Otras
+              correcciones a la suma de bases imponibles (**). Incorporación de deterioros
+              de valor de participaciones en fondos propios de entidades del grupo
+              fiscal, eliminados en períodos anteriores (Pág. 7E)
+          t22007000-00083:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Otras correcciones a la suma de bases imponibles
+              (**). Grupos de cooperativas: eliminaciones de "retornos intragrupo",
+              "ayudas económicas intragrupo" y "resultados distribuidos por la entidad
+              cabeza del grupo" (RD 1345/1992) (Pág. 7G).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Otras
+              correcciones a la suma de bases imponibles (**). Grupos de cooperativas:
+              eliminaciones de "retornos intragrupo", "ayudas económicas intragrupo"
+              y "resultados distribuidos por la entidad cabeza del grupo" (RD 1345/1992)
+              (Pág. 7G)'
+          t22007000-00085:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Otras correcciones a la suma de bases imponibles
+              (**). Otras correcciones a la suma de bases imponibles individuales
+              o a la base imponible del grupo fiscal (Pág. 7H).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Otras
+              correcciones a la suma de bases imponibles (**). Otras correcciones
+              a la suma de bases imponibles individuales o a la base imponible del
+              grupo fiscal (Pág. 7H)
+          t22007000-00086:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Otras correcciones a la suma de bases imponibles
+              (**). Total otras correcciones a la suma de bases imponibles.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Otras
+              correcciones a la suma de bases imponibles (**). Total otras correcciones
+              a la suma de bases imponibles
+          t22007000-00225:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Base imponible previa del grupo.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Base
+              imponible previa del grupo
+          t22007000-00291:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Aplicación del límite del art. 11.12 LIS
+              (art. 62.1 e) LIS). Disminución.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Aplicación
+              del límite del art. 11.12 LIS (art. 62.1 e) LIS). Disminución
+          t22007000-00362:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Compensación de bases imponibles negativas
+              del grupo de períodos anteriores (Pág. 7K)(***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Compensación
+              de bases imponibles negativas del grupo de períodos anteriores (Pág.
+              7K)(***)
+          t22007000-00363:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: compensación de
+              cuotas negativas del grupo de períodos anteriores (Pág. 7K bis)(***).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: compensación de cuotas negativas del grupo de períodos
+              anteriores (Pág. 7K bis)(***)'
+          t22007000-00398:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Dotaciones a que hace referencia el art.
+              11.12 LIS de períodos anteriores a la incorporación al grupo (art. 67
+              d) y 74.3 d) LIS)(***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Dotaciones
+              a que hace referencia el art. 11.12 LIS de períodos anteriores a la
+              incorporación al grupo (art. 67 d) y 74.3 d) LIS)(***)
+          t22007000-00540:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Aplicación del límite del art. 11.12 LIS
+              y DA 7a de la Ley 20/1990. Disminución.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Aplicación
+              del límite del art. 11.12 LIS y DA 7a de la Ley 20/1990. Disminución
+          t22007000-00541:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Dotaciones a que hace referencia el art.
+              11.12 LIS y DA 7a de la Ley 20/1990, de períodos anteriores a que la
+              entidad se incorporara al grupo (***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Dotaciones
+              a que hace referencia el art. 11.12 LIS y DA 7a de la Ley 20/1990, de
+              períodos anteriores a que la entidad se incorporara al grupo (***)
+          t22007000-00547:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Compensación de bases imponibles negativas
+              de entidades, de períodos anteriores a la incorporación al grupo (art.
+              67 e) y 74.3 e) LIS) (Pág. 7L)(***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Compensación
+              de bases imponibles negativas de entidades, de períodos anteriores a
+              la incorporación al grupo (art. 67 e) y 74.3 e) LIS) (Pág. 7L)(***)
+          t22007000-00550:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Base imponible del grupo, previa a la aplicación
+              de las reservas de capitalización y a la compensación de bases imponibles
+              negativas de períodos anteriores.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Base
+              imponible del grupo, previa a la aplicación de las reservas de capitalización
+              y a la compensación de bases imponibles negativas de períodos anteriores
+          t22007000-00552:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Base imponible del grupo.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Base
+              imponible del grupo
+          t22007000-00553:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: suma de bases imponibles
+              individuales menos eliminaciones, por resultados cooperativos.'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: suma de bases imponibles individuales menos eliminaciones,
+              por resultados cooperativos'
+          t22007000-00554:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: suma de bases imponibles
+              individuales menos eliminaciones, por resultados extracooperativos.'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: suma de bases imponibles individuales menos eliminaciones,
+              por resultados extracooperativos'
+          t22007000-00558:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Tipo de gravamen (%).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tipo
+              de gravamen (%)
+          t22007000-00560:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma de cuotas íntegras de las cooperativas
+              del grupo.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              de cuotas íntegras de las cooperativas del grupo
+          t22007000-00561:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Grupos de cooperativas: compensación de
+              cuotas negativas de entidades, de períodos anteriores a la incorporación
+              al grupo (Pág. 7L bis)(***).'
+            label: 'Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Grupos
+              de cooperativas: compensación de cuotas negativas de entidades, de períodos
+              anteriores a la incorporación al grupo (Pág. 7L bis)(***)'
+          t22007000-00562:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Cuota íntegra del grupo.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Cuota
+              íntegra del grupo
+          t22007000-01021:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma de bases imponibles negativas individuales
+              de períodos anteriores integradas (DA 19a LIS). Régimen general (Pág.
+              7A bis).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              de bases imponibles negativas individuales de períodos anteriores integradas
+              (DA 19a LIS). Régimen general (Pág. 7A bis)
+          t22007000-01263:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma del 50% de las bases imponibles negativas
+              individuales del período, no integradas (DA 19a LIS). Régimen general
+              (Pág. 7A).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              del 50% de las bases imponibles negativas individuales del período,
+              no integradas (DA 19a LIS). Régimen general (Pág. 7A)
+          t22007000-01264:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma del 50% de las bases imponibles negativas
+              individuales del período, no integradas (DA 19a LIS). Régimen especial
+              de buques y empresas navieras en Canarias (Pág. 7A).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              del 50% de las bases imponibles negativas individuales del período,
+              no integradas (DA 19a LIS). Régimen especial de buques y empresas navieras
+              en Canarias (Pág. 7A)
+          t22007000-01935:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Suma de bases imponibles negativas de períodos
+              anteriores integradas (DA 19a LIS). Régimen especial de buques y empresas
+              navieras en Canarias (Pág. 7A bis).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Suma
+              de bases imponibles negativas de períodos anteriores integradas (DA
+              19a LIS). Régimen especial de buques y empresas navieras en Canarias
+              (Pág. 7A bis)
+          t22007000-02542:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Pérdidas por deterioro del art. 13.1 LIS
+              y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el
+              art. 11.12 LIS, y dotaciones de la DT 33a.1 LIS. Aumento.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Pérdidas
+              por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y
+              14.2 LIS) a los que se refiere el art. 11.12 LIS, y dotaciones de la
+              DT 33a.1 LIS. Aumento
+          t22007000-02543:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Pérdidas por deterioro del art. 13.1 LIS
+              y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el
+              art. 11.12 LIS. Disminución.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Pérdidas
+              por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y
+              14.2 LIS) a los que se refiere el art. 11.12 LIS. Disminución
+          t22007000-02544:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Aplicación del límite del art. 11.12 LIS
+              (art. 62.1 e) LIS). Aumento.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Aplicación
+              del límite del art. 11.12 LIS (art. 62.1 e) LIS). Aumento
+          t22007000-02545:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación. Aumento.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación. Aumento
+          t22007000-02546:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación. Disminución.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación. Disminución
+          t22007000-02547:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación de entidades de períodos
+              anteriores a la incorporación al grupo (art. 67 f) y 74.3 f) LIS).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación de entidades de períodos anteriores a la incorporación
+              al grupo (art. 67 f) y 74.3 f) LIS)
+          t22007000-02548:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Pérdidas por deterioro del art. 13.1 LIS
+              y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el
+              art. 11.12 LIS. Aumento (cooperativas).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Pérdidas
+              por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y
+              14.2 LIS) a los que se refiere el art. 11.12 LIS. Aumento (cooperativas)
+          t22007000-02549:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Pérdidas por deterioro del art. 13.1 LIS
+              y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el
+              art. 11.12 LIS. Disminución (cooperativas).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Pérdidas
+              por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y
+              14.2 LIS) a los que se refiere el art. 11.12 LIS. Disminución (cooperativas)
+          t22007000-02890:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Aplicación del límite del art. 11.12 LIS
+              y DA 7a de la Ley 20/1990. Aumento.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Aplicación
+              del límite del art. 11.12 LIS y DA 7a de la Ley 20/1990. Aumento
+          t22007000-02891:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación. Aumento.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación. Aumento
+          t22007000-02892:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación. Disminución.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación. Disminución
+          t22007000-02893:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de nivelación de entidades de períodos
+              anteriores a la incorporación al grupo.'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de nivelación de entidades de períodos anteriores a la incorporación
+              al grupo
+          t22007000-02963:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de capitalización (***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de capitalización (***)
+          t22007000-03140:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Reserva de capitalización de entidades,
+              de períodos anteriores a la incorporación al grupo, aplicadas (art.
+              67 c) y 74.3 c) LIS)(***).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Reserva
+              de capitalización de entidades, de períodos anteriores a la incorporación
+              al grupo, aplicadas (art. 67 c) y 74.3 c) LIS)(***)
+          t22007000-03241:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Correcciones a la suma de bases imponibles
+              por diferimiento de resultados internos (**). Total eliminación de resultados
+              por operaciones internas (Pág. 7C).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Correcciones
+              a la suma de bases imponibles por diferimiento de resultados internos
+              (**). Total eliminación de resultados por operaciones internas (Pág.
+              7C)
+          t22007000-03242:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Correcciones a la suma de bases imponibles
+              por diferimiento de resultados internos (**). Total incorporación de
+              resultados por operaciones internas (Pág. 7C).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Correcciones
+              a la suma de bases imponibles por diferimiento de resultados internos
+              (**). Total incorporación de resultados por operaciones internas (Pág.
+              7C)
+          t22009000-00186:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones I + D + i excluídas del límite art 39 2 LIS
+              (pág 14 quinquies).'
+            label: Otras deducciones. Cuota liquida. Deducciones I + D + i excluídas
+              del límite art 39 2 LIS (pág 14 quinquies)
+          t22009000-00399:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones específicas de las entidades sometidas a
+              normativa foral.'
+            label: Otras deducciones. Cuota liquida. Deducciones específicas de las
+              entidades sometidas a normativa foral
+          t22009000-00436:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS) (pág 14 quinquies), total. Diputaciones
+              Forales y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones I+D+i por
+              insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), total.
+              Diputaciones Forales y Navarra
+          t22009000-00562:
+            help: 'Consulte la información correspondiente a la casilla: Cuota íntegra.'
+            label: Cuota íntegra
+          t22009000-00563:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificación de rendimientos por venta bienes corporales producidos
+              en Canarias (art 26 Ley 19/1994) (pág 11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificación de rendimientos por venta bienes corporales
+              producidos en Canarias (art 26 Ley 19/1994) (pág 11)
+          t22009000-00565:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción donaciones a entidades sin fines de lucro (Ley
+              49/2002) (pág 14 quater).'
+            label: Otras deducciones. Cuota liquida. Deducción donaciones a entidades
+              sin fines de lucro (Ley 49/2002) (pág 14 quater)
+          t22009000-00566:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota íntegra ajustada positiva.
+              Bonificaciones sociedades cooperativas (Ley 20/1990) (pág 11).'
+            label: Bonificaciones y deducciones por doble imposición. Cuota íntegra
+              ajustada positiva. Bonificaciones sociedades cooperativas (Ley 20/1990)
+              (pág 11)
+          t22009000-00567:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificación por rentas obtenidas en Ceuta y Melilla (art 33 LIS) (pág
+              11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificación por rentas obtenidas en Ceuta y Melilla
+              (art 33 LIS) (pág 11)
+          t22009000-00568:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificaciones por prestación de servicios (art 34 LIS) (pág 11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificaciones por prestación de servicios (art 34
+              LIS) (pág 11)
+          t22009000-00569:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Otras bonificaciones (pág 11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Otras bonificaciones (pág 11)
+          t22009000-00570:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              D I DI interna de períodos anteriores aplicada en el ejercicio (art
+              30 RDLEG 4/2004) (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. D I DI interna de períodos anteriores aplicada en
+              el ejercicio (art 30 RDLEG 4/2004) (pág 12)
+          t22009000-00571:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              DI interna generada y aplicada en el período (DT 23ª 1 LIS) (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. DI interna generada y aplicada en el período (DT
+              23ª 1 LIS) (pág 12)
+          t22009000-00572:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              DI internacional de períodos anteriores aplicada en el período (arts
+              31 y 32 RDLEG 4/2004) (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. DI internacional de períodos anteriores aplicada
+              en el período (arts 31 y 32 RDLEG 4/2004) (pág 12)
+          t22009000-00575:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Transparencia fiscal internacional (art 100 10 LIS) (pág 10).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Transparencia fiscal internacional (art 100 10 LIS)
+              (pág 10)
+          t22009000-00576:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap
+              III Tit VII LIS) (pág 11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificaciones entidades dedicadas al arrendamiento
+              de viviendas (Cap III Tit VII LIS) (pág 11)
+          t22009000-00577:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              D I Interna intersocietaria al 5/10% (cooperativas) (pág 10).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. D I Interna intersocietaria al 5/10% (cooperativas)
+              (pág 10)
+          t22009000-00581:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificaciones empresas navieras en Canarias (art 76 Ley 19/1994) (pág
+              11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificaciones empresas navieras en Canarias (art
+              76 Ley 19/1994) (pág 11)
+          t22009000-00582:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota íntegra ajustada positiva.'
+            label: Bonificaciones y deducciones por doble imposición. Cuota íntegra
+              ajustada positiva
+          t22009000-00583:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Apoyo fiscal a la inversión y otras deducciones.'
+            label: Otras deducciones. Cuota liquida. Apoyo fiscal a la inversión y
+              otras deducciones
+          t22009000-00584:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones DT 24ª 1 LIS (pág 13).'
+            label: Otras deducciones. Cuota liquida. Deducciones DT 24ª 1 LIS (pág
+              13)
+          t22009000-00585:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción DT 24ª 7 LIS, art 42 RDLeg 4/2004 (pág 13).'
+            label: Otras deducciones. Cuota liquida. Deducción DT 24ª 7 LIS, art 42
+              RDLeg 4/2004 (pág 13)
+          t22009000-00588:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones para incentivar det Actividades (Cap IV Tit
+              VI, DT 24ª 3 LIS y art 27 3 primero Ley 49/2002) (pág 14, 14 bis).'
+            label: Otras deducciones. Cuota liquida. Deducciones para incentivar det
+              Actividades (Cap IV Tit VI, DT 24ª 3 LIS y art 27 3 primero Ley 49/2002)
+              (pág 14, 14 bis)
+          t22009000-00590:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones Inversión Canarias (pág 13 bis).'
+            label: Otras deducciones. Cuota liquida. Deducciones Inversión Canarias
+              (pág 13 bis)
+          t22009000-00592:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota líquida. Cuota líquida.'
+            label: Otras deducciones. Cuota líquida. Cuota líquida
+          t22009000-00595:
+            help: Información fiscal sobre información fiscal de la casilla 00595
+              del Modelo 220.
+            label: Cuota del ejercicio a ingresar o a devolver. Retenciones e ingresos
+              a cuenta/pagos a cuenta participaciones I I C
+          t22009000-00596:
+            help: Información fiscal sobre información fiscal de la casilla 00596
+              del Modelo 220.
+            label: Cuota del ejercicio a ingresar o a devolver. Retenciones e ingresos
+              a cuenta /pagos a cuenta participaciones I I C Imputados por agrupaciones
+              de interés económico y uniones temporales de empresas
+          t22009000-00597:
+            help: Información fiscal sobre información fiscal de la casilla 00597
+              del Modelo 220.
+            label: Cuota del ejercicio a ingresar o a devolver. Retenciones sobre
+              los premios de determinadas loterías y apuestas
+          t22009000-00599:
+            help: 'Consulte la información correspondiente a la casilla: Cuota del
+              ejercicio a ingresar o a devolver. Cuota del período a ingresar o devolver.
+              Estado.'
+            label: Cuota del ejercicio a ingresar o a devolver. Cuota del período
+              a ingresar o devolver. Estado
+          t22009000-00600:
+            help: 'Consulte la información correspondiente a la casilla: Cuota del
+              ejercicio a ingresar o a devolver. Cuota del período a ingresar o devolver.
+              Diputaciones Forales y Navarra.'
+            label: Cuota del ejercicio a ingresar o a devolver. Cuota del período
+              a ingresar o devolver. Diputaciones Forales y Navarra
+          t22009000-00601:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 1. Estado.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 1. Estado
+          t22009000-00602:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 1. Diputaciones Forales y Navarra.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 1. Diputaciones
+              Forales y Navarra
+          t22009000-00603:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 2. Estado.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 2. Estado
+          t22009000-00604:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 2. Diputaciones Forales y Navarra.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 2. Diputaciones
+              Forales y Navarra
+          t22009000-00605:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 3. Estado.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 3. Estado
+          t22009000-00606:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Pago fracionado 3. Diputaciones Forales y Navarra.'
+            label: Pagos fraccionados. Cuota diferencial. Pago fracionado 3. Diputaciones
+              Forales y Navarra
+          t22009000-00611:
+            help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados.
+              Cuota diferencial. Cuota diferencial. Estado.'
+            label: Pagos fraccionados. Cuota diferencial. Cuota diferencial. Estado
+          t22009000-00612:
+            help: 'Consulte la información correspondiente a la casilla: Cuota diferencial.
+              Diputaciones Forales y Navarra.'
+            label: Cuota diferencial. Diputaciones Forales y Navarra
+          t22009000-00615:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Incremento por pérdida beneficios fiscales periodos
+              anteriores. Estado.'
+            label: Resultado de la autoliquidación. Incremento por pérdida beneficios
+              fiscales periodos anteriores. Estado
+          t22009000-00616:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Incremento por pérdida beneficios fiscales periodos
+              anteriores. Diputaciones Forales y Navarra.'
+            label: Resultado de la autoliquidación. Incremento por pérdida beneficios
+              fiscales periodos anteriores. Diputaciones Forales y Navarra
+          t22009000-00617:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Intereses de demora. Estado.'
+            label: Resultado de la autoliquidación. Intereses de demora. Estado
+          t22009000-00618:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Intereses de demora. Diputaciones Forales y Navarra.'
+            label: Resultado de la autoliquidación. Intereses de demora. Diputaciones
+              Forales y Navarra
+          t22009000-01375:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              Bonificación rendimientos por venta bienes corporales producidos en
+              Illes Balears (DA 70 Cinco Ley 31/2022) (pág 11).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. Bonificación rendimientos por venta bienes corporales
+              producidos en Illes Balears (DA 70 Cinco Ley 31/2022) (pág 11)
+          t22009000-01629:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Cuota líquida mínima (art 30 bis LIS).'
+            label: Otras deducciones. Cuota liquida. Cuota líquida mínima (art 30
+              bis LIS)
+          t22009000-01631:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994), Estado.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+              19/1994), Estado
+          t22009000-01632:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994), Diputaciones
+              Forales y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+              19/1994), Diputaciones Forales y Navarra
+          t22009000-01737:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994), total.
+              Diputaciones Forales y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley
+              19/1994), total. Diputaciones Forales y Navarra
+          t22009000-01965:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              DI interna de períodos anteriores aplicada en el período (DT 23ª 1 LIS)
+              (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. DI interna de períodos anteriores aplicada en el
+              periodo (DT 23ª 1 LIS) (pág 12)
+          t22009000-02188:
+            help: Información fiscal sobre información fiscal de la casilla 02188
+              del Modelo 220.
+            label: Cuota del período a ingresar o a devolver. Total retenciones e
+              ingresos a cuenta
+          t22009000-02353:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción por producciones cinematográficas extranjeras
+              en Canarias (art 36 2 LIS y DA 14ª Ley 14/1994) pág 13 ter).'
+            label: Otras deducciones. Cuota liquida. Deducción por producciones cinematográficas
+              extranjeras en Canarias (art 36 2 LIS y DA 14ª Ley 14/1994) pág 13 ter)
+          t22009000-02354:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducciones por inversiones y gastos realizados por las
+              autoridades portuarias (art 38 bis LIS) (pág 14 ter).'
+            label: Otras deducciones. Cuota liquida. Deducciones por inversiones y
+              gastos realizados por las autoridades portuarias (art 38 bis LIS) (pág
+              14 ter)
+          t22009000-02538:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Resultado de la autoliquidación. Estado.'
+            label: Liquidacion. Resultado de la autoliquidación. Estado
+          t22009000-02539:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación.
+              Resultado de la autoliquidación. Diputaciones Forales y Navarra.'
+            label: Liquidacion. Resultado de la autoliquidación. Diputaciones Forales
+              y Navarra
+          t22009000-03251:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              DI internacional de periodos anteriores aplicada en el período (art
+              31 y 32 LIS) (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. DI internacional de periodos anteriores aplicada
+              en el periodo (art 31 y 32 LIS) (pág 12)
+          t22009000-03261:
+            help: 'Consulte la información correspondiente a la casilla: Bonificaciones
+              y deducciones por doble imposición. Cuota integra ajustada positiva.
+              DI internacional generada y aplicada en el período (art 31 y 32 LIS)
+              (pág 12).'
+            label: Bonificaciones y deducciones por doble imposicion. Cuota integra
+              ajustada positiva. DI internacional generada y aplicada en el periodo
+              (art 31 y 32 LIS) (pág 12)
+          t22009000-03344:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción por reversión de medidas temporales DT 37ª
+              1 LIS (pág 14 sexies).'
+            label: Otras deducciones. Cuota liquida. Deducción por reversión de medidas
+              temporales DT 37ª 1 LIS (pág 14 sexies)
+          t22009000-03356:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción por reversión de medidas temporales DT 37ª
+              2 LIS (pág 14 sexies).'
+            label: Otras deducciones. Cuota liquida. Deducción por reversión de medidas
+              temporales DT 37ª 2 LIS (pág 14 sexies)
+          t22009000-03358:
+            help: 'Consulte la información correspondiente a la casilla: Cuota integra.
+              Regularización reserva de nivelación (Art 105 6 LIS).'
+            label: Cuota integra. Regularización reserva de nivelación (Art 105 6
+              LIS)
+          t22009000-03359:
+            help: 'Consulte la información correspondiente a la casilla: Otras deducciones.
+              Cuota liquida. Deducción por producciones cinematográficas extranjeras
+              (art 36 2 LIS) (pág 14 ter).'
+            label: Otras deducciones. Cuota liquida. Deducción por producciones cinematográficas
+              extranjeras (art 36 2 LIS) (pág 14 ter)
+          t22009000-03360:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS) (pág 14 ter), total. Diputaciones Forales
+              y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), total. Diputaciones
+              Forales y Navarra
+          t22009000-03393:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS) (pág 14 quinquies), Diputaciones Forales
+              y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones I+D+i por
+              insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), Diputaciones
+              Forales y Navarra
+          t22009000-03398:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS) (pág 14 ter), Diputaciones Forales y Navarra.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), Diputaciones
+              Forales y Navarra
+          t22009000-03399:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS) (pág 14 quinquies), Estado.'
+            label: Resultado de la autoliquidación. Abono de deducciones I+D+i por
+              insuficiencia de cuota (opción art 39 2 LIS) (pág 14 quinquies), Estado
+          t22009000-03400:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              de la autoliquidación. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS) (pág 14 ter), Estado.'
+            label: Resultado de la autoliquidación. Abono de deducciones por producciones
+              cinematográficas extranjeras (art 39 3 LIS) (pág 14 ter), Estado
+          t22016000-00052:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Total. Araba.'
+            label: Reparto entre Administraciones forales. Total. Araba
+          t22016000-00053:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Total. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Total. Gipuzkoa
+          t22016000-00054:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Total. Bizkaia.'
+            label: Reparto entre Administraciones forales. Total. Bizkaia
+          t22016000-00055:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Total. Navarra.'
+            label: Reparto entre Administraciones forales. Total. Navarra
+          t22016000-00056:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Total. Territorio común.'
+            label: Reparto entre Administraciones forales. Total. Territorio común
+          t22016000-00402:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 1º pago fraccionado. Araba.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 1º
+              pago fraccionado. Araba
+          t22016000-00420:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota del ejercicio a ingresar o devolver.
+              Araba.'
+            label: Reparto entre Administraciones forales. Cuota del ejercicio a ingresar
+              o devolver. Araba
+          t22016000-00421:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota del ejercicio a ingresar o devolver.
+              Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Cuota del ejercicio a ingresar
+              o devolver. Gipuzkoa
+          t22016000-00426:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota del ejercicio a ingresar o devolver.
+              Bizkaia.'
+            label: Reparto entre Administraciones forales. Cuota del ejercicio a ingresar
+              o devolver. Bizkaia
+          t22016000-00427:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota del ejercicio a ingresar o devolver.
+              Navarra.'
+            label: Reparto entre Administraciones forales. Cuota del ejercicio a ingresar
+              o devolver. Navarra
+          t22016000-00442:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 1º pago fraccionado. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 1º
+              pago fraccionado. Gipuzkoa
+          t22016000-00443:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 1º pago fraccionado. Bizkaia.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 1º
+              pago fraccionado. Bizkaia
+          t22016000-00444:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 1º pago fraccionado. Navarra.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 1º
+              pago fraccionado. Navarra
+          t22016000-00445:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 2º pago fraccionado. Araba.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 2º
+              pago fraccionado. Araba
+          t22016000-00446:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 2º pago fraccionado. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 2º
+              pago fraccionado. Gipuzkoa
+          t22016000-00447:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 2º pago fraccionado. Bizkaia.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 2º
+              pago fraccionado. Bizkaia
+          t22016000-00448:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 2º pago fraccionado. Navarra.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 2º
+              pago fraccionado. Navarra
+          t22016000-00449:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 3º pago fraccionado. Araba.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 3º
+              pago fraccionado. Araba
+          t22016000-00450:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 3º pago fraccionado. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 3º
+              pago fraccionado. Gipuzkoa
+          t22016000-00451:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 3º pago fraccionado. Bizkaia.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 3º
+              pago fraccionado. Bizkaia
+          t22016000-00465:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 3º pago fraccionado. Navarra.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 3º
+              pago fraccionado. Navarra
+          t22016000-00474:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota diferencial. Araba.'
+            label: Reparto entre Administraciones forales. Cuota diferencial. Araba
+          t22016000-00475:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota diferencial. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Cuota diferencial. Gipuzkoa
+          t22016000-00476:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota diferencial. Bizkaia.'
+            label: Reparto entre Administraciones forales. Cuota diferencial. Bizkaia
+          t22016000-00477:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota diferencial. Navarra.'
+            label: Reparto entre Administraciones forales. Cuota diferencial. Navarra
+          t22016000-00482:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Incremento por pérdida beneficios fiscales
+              períodos anteriores. Araba.'
+            label: Reparto entre Administraciones forales. Incremento por pérdida
+              beneficios fiscales períodos anteriores. Araba
+          t22016000-00483:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Incremento por pérdida beneficios fiscales
+              períodos anteriores. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Incremento por pérdida
+              beneficios fiscales períodos anteriores. Gipuzkoa
+          t22016000-00484:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Incremento por pérdida beneficios fiscales
+              períodos anteriores. Bizkaia.'
+            label: Reparto entre Administraciones forales. Incremento por pérdida
+              beneficios fiscales períodos anteriores. Bizkaia
+          t22016000-00485:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Incremento por pérdida beneficios fiscales
+              períodos anteriores. Navarra.'
+            label: Reparto entre Administraciones forales. Incremento por pérdida
+              beneficios fiscales períodos anteriores. Navarra
+          t22016000-00486:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Intereses de demora. Araba.'
+            label: Reparto entre Administraciones forales. Intereses de demora. Araba
+          t22016000-00487:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Intereses de demora. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Intereses de demora. Gipuzkoa
+          t22016000-00488:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Intereses de demora. Bizkaia.'
+            label: Reparto entre Administraciones forales. Intereses de demora. Bizkaia
+          t22016000-00489:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Intereses de demora. Navarra.'
+            label: Reparto entre Administraciones forales. Intereses de demora. Navarra
+          t22016000-00494:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar o a devolver. Araba.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar o a
+              devolver. Araba
+          t22016000-00495:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar o a devolver. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar o a
+              devolver. Gipuzkoa
+          t22016000-00496:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar o a devolver. Bizkaia.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar o a
+              devolver. Bizkaia
+          t22016000-00497:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar o a devolver. Navarra.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar o a
+              devolver. Navarra
+          t22016000-00600:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota del ejercicio a ingresar o devolver.
+              Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Cuota del ejercicio a ingresar
+              o devolver. Total de territorios forales
+          t22016000-00602:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 1º pago fraccionado. Total
+              de territorios forales.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 1º
+              pago fraccionado. Total de territorios forales
+          t22016000-00604:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 2º pago fraccionado. Total
+              de territorios forales.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 2º
+              pago fraccionado. Total de territorios forales
+          t22016000-00606:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Pagos fraccionados. 3º pago fraccionado. Total
+              de territorios forales.'
+            label: Reparto entre Administraciones forales. Pagos fraccionados. 3º
+              pago fraccionado. Total de territorios forales
+          t22016000-00612:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Cuota diferencial. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Cuota diferencial. Total
+              de territorios forales
+          t22016000-00616:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Incremento por pérdida beneficios fiscales
+              períodos anteriores. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Incremento por pérdida
+              beneficios fiscales períodos anteriores. Total de territorios forales
+          t22016000-00618:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Intereses de demora. Total de territorios
+              forales.'
+            label: Reparto entre Administraciones forales. Intereses de demora. Total
+              de territorios forales
+          t22016000-00622:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar o a devolver. Total de
+              territorios forales.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar o a
+              devolver. Total de territorios forales
+          t22016000-00625:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Porcentajes de tributación. Territorio común.'
+            label: Reparto entre Administraciones forales. Porcentajes de tributación.
+              Territorio común
+          t22016000-00626:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Porcentajes de tributación. Araba.'
+            label: Reparto entre Administraciones forales. Porcentajes de tributación.
+              Araba
+          t22016000-00627:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Porcentajes de tributación. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Porcentajes de tributación.
+              Gipuzkoa
+          t22016000-00628:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Porcentajes de tributación. Bizkaia.'
+            label: Reparto entre Administraciones forales. Porcentajes de tributación.
+              Bizkaia
+          t22016000-00629:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Porcentajes de tributación. Navarra.'
+            label: Reparto entre Administraciones forales. Porcentajes de tributación.
+              Navarra
+          t22016000-01632:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994). Total de
+              territorios forales.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras en Canarias (art 39 3 LIS
+              y DA 14ª Ley 19/1994). Total de territorios forales
+          t22016000-02066:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994). Araba.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras en Canarias (art 39 3 LIS
+              y DA 14ª Ley 19/1994). Araba
+          t22016000-02067:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994). Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras en Canarias (art 39 3 LIS
+              y DA 14ª Ley 19/1994). Gipuzkoa
+          t22016000-02068:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994). Bizkaia.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras en Canarias (art 39 3 LIS
+              y DA 14ª Ley 19/1994). Bizkaia
+          t22016000-02069:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras en Canarias (art 39 3 LIS y DA 14ª Ley 19/1994). Navarra.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras en Canarias (art 39 3 LIS
+              y DA 14ª Ley 19/1994). Navarra
+          t22016000-02539:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de la autoliquidación. Total de
+              territorios forales.'
+            label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
+              Total de territorios forales
+          t22016000-02541:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultados a ingresar procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultados
+              a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Total de territorios forales'
+          t22016000-02789:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devoluciones acordadas procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Total de territorios forales'
+          t22016000-02791:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Importe
+              integrado en la base imponible. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Importe integrado en la base imponible. Total de territorios
+              forales
+          t22016000-02793:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Deuda
+              tributaria resultante del fraccionamiento art 19 1 LIS. Total de territorios
+              forales.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Deuda tributaria resultante del fraccionamiento art 19
+              1 LIS. Total de territorios forales
+          t22016000-02795:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS 1er
+              fraccionamiento. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS 1er fraccionamiento. Total de territorios forales
+          t22016000-02797:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS.
+              Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Resultado de la autoliquidación incluido el 1er fraccionamiento
+              del art 19 1 LIS. Total de territorios forales
+          t22016000-02799:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultado de la autoliquidación
+              incluido el 1er fraccionamiento del art 19 1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2024. quinta columna,
+              territorio no nombrado en el diseno.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2024. quinta columna, territorio no nombrado en el diseno'
+          t22016000-02801:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento
+              del art 19 1 LIS. quinta columna, territorio no nombrado en el diseno.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar incluido
+              el 1er fraccionamiento del art 19 1 LIS. quinta columna, territorio
+              no nombrado en el diseno
+          t22016000-03192:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de la autoliquidación. Araba.'
+            label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
+              Araba
+          t22016000-03193:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de la autoliquidación. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
+              Gipuzkoa
+          t22016000-03194:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de la autoliquidación. Bizkaia.'
+            label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
+              Bizkaia
+          t22016000-03195:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de la autoliquidación. Navarra.'
+            label: Reparto entre Administraciones forales. Resultado de la autoliquidación.
+              Navarra
+          t22016000-03293:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultados a ingresar procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Araba.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultados
+              a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Araba'
+          t22016000-03294:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultados a ingresar procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultados
+              a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Gipuzkoa'
+          t22016000-03295:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultados a ingresar procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultados
+              a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Bizkaia'
+          t22016000-03296:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultados a ingresar procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Navarra.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultados
+              a ingresar procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Navarra'
+          t22016000-03297:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devoluciones acordadas procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Araba.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Araba'
+          t22016000-03298:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devoluciones acordadas procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Gipuzkoa'
+          t22016000-03299:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devoluciones acordadas procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Bizkaia'
+          t22016000-03300:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devoluciones acordadas procedentes
+              de autoliquidaciones anteriores correspondientes al período impositivo
+              2024. Navarra.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devoluciones
+              acordadas procedentes de autoliquidaciones anteriores correspondientes
+              al período impositivo 2024. Navarra'
+          t22016000-03301:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Importe
+              integrado en la base imponible. Araba.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Importe integrado en la base imponible. Araba
+          t22016000-03302:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Importe
+              integrado en la base imponible. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Importe integrado en la base imponible. Gipuzkoa
+          t22016000-03303:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Importe
+              integrado en la base imponible. Bizkaia.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Importe integrado en la base imponible. Bizkaia
+          t22016000-03304:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Importe
+              integrado en la base imponible. Navarra.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Importe integrado en la base imponible. Navarra
+          t22016000-03305:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Deuda
+              tributaria resultante del fraccionamiento art 19 1 LIS. Araba.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Deuda tributaria resultante del fraccionamiento art 19
+              1 LIS. Araba
+          t22016000-03306:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Deuda
+              tributaria resultante del fraccionamiento art 19 1 LIS. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Deuda tributaria resultante del fraccionamiento art 19
+              1 LIS. Gipuzkoa
+          t22016000-03307:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Deuda
+              tributaria resultante del fraccionamiento art 19 1 LIS. Bizkaia.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Deuda tributaria resultante del fraccionamiento art 19
+              1 LIS. Bizkaia
+          t22016000-03308:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Deuda
+              tributaria resultante del fraccionamiento art 19 1 LIS. Navarra.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Deuda tributaria resultante del fraccionamiento art 19
+              1 LIS. Navarra
+          t22016000-03309:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS 1er
+              fraccionamiento. Araba.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS 1er fraccionamiento. Araba
+          t22016000-03310:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS 1er
+              fraccionamiento. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS 1er fraccionamiento. Gipuzkoa
+          t22016000-03311:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS 1er
+              fraccionamiento. Bizkaia.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS 1er fraccionamiento. Bizkaia
+          t22016000-03312:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS 1er
+              fraccionamiento. Navarra.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS 1er fraccionamiento. Navarra
+          t22016000-03313:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS.
+              Araba.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Resultado de la autoliquidación incluido el 1er fraccionamiento
+              del art 19 1 LIS. Araba
+          t22016000-03314:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS.
+              Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Resultado de la autoliquidación incluido el 1er fraccionamiento
+              del art 19 1 LIS. Gipuzkoa
+          t22016000-03315:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS.
+              Bizkaia.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Resultado de la autoliquidación incluido el 1er fraccionamiento
+              del art 19 1 LIS. Bizkaia
+          t22016000-03316:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Opción de fraccionamiento art 19 1 LIS Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS.
+              Navarra.'
+            label: Reparto entre Administraciones forales. Opción de fraccionamiento
+              art 19 1 LIS Resultado de la autoliquidación incluido el 1er fraccionamiento
+              del art 19 1 LIS. Navarra
+          t22016000-03317:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultado de la autoliquidación
+              incluido el 1er fraccionamiento del art 19 1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2024. Araba.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2024. Araba'
+          t22016000-03318:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultado de la autoliquidación
+              incluido el 1er fraccionamiento del art 19 1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2024. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2024. Gipuzkoa'
+          t22016000-03319:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultado de la autoliquidación
+              incluido el 1er fraccionamiento del art 19 1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2024. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2024. Bizkaia'
+          t22016000-03320:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Resultado de la autoliquidación
+              incluido el 1er fraccionamiento del art 19 1 LIS procedente de autoliquidaciones
+              anteriores correspondientes al período impositivo 2024. Navarra.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Resultado
+              de la autoliquidación incluido el 1er fraccionamiento del art 19 1 LIS
+              procedente de autoliquidaciones anteriores correspondientes al período
+              impositivo 2024. Navarra'
+          t22016000-03321:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento
+              del art 19 1 LIS. Araba.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar incluido
+              el 1er fraccionamiento del art 19 1 LIS. Araba
+          t22016000-03322:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento
+              del art 19 1 LIS. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar incluido
+              el 1er fraccionamiento del art 19 1 LIS. Gipuzkoa
+          t22016000-03323:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento
+              del art 19 1 LIS. Bizkaia.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar incluido
+              el 1er fraccionamiento del art 19 1 LIS. Bizkaia
+          t22016000-03324:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento
+              del art 19 1 LIS. Navarra.'
+            label: Reparto entre Administraciones forales. Líquido a ingresar incluido
+              el 1er fraccionamiento del art 19 1 LIS. Navarra
+          t22016000-03389:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS). Araba.'
+            label: Reparto entre Administraciones forales. Abono de deducciones I+D+i
+              por insuficiencia de cuota (opción art 39 2 LIS). Araba
+          t22016000-03390:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS). Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Abono de deducciones I+D+i
+              por insuficiencia de cuota (opción art 39 2 LIS). Gipuzkoa
+          t22016000-03391:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS). Bizkaia.'
+            label: Reparto entre Administraciones forales. Abono de deducciones I+D+i
+              por insuficiencia de cuota (opción art 39 2 LIS). Bizkaia
+          t22016000-03392:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS). Navarra.'
+            label: Reparto entre Administraciones forales. Abono de deducciones I+D+i
+              por insuficiencia de cuota (opción art 39 2 LIS). Navarra
+          t22016000-03393:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones I+D+i por insuficiencia
+              de cuota (opción art 39 2 LIS). Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Abono de deducciones I+D+i
+              por insuficiencia de cuota (opción art 39 2 LIS). Total de territorios
+              forales
+          t22016000-03394:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS). Araba.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras (art 39 3 LIS). Araba
+          t22016000-03395:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS). Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras (art 39 3 LIS). Gipuzkoa
+          t22016000-03396:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS). Bizkaia.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras (art 39 3 LIS). Bizkaia
+          t22016000-03397:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS). Navarra.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras (art 39 3 LIS). Navarra
+          t22016000-03398:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono de deducciones por producciones cinematográficas
+              extranjeras (art 39 3 LIS). Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Abono de deducciones por
+              producciones cinematográficas extranjeras (art 39 3 LIS). Total de territorios
+              forales
+          t22016001-02173:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devolución acordada/compensada.
+              Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devolución
+              acordada/compensada. Gipuzkoa'
+          t22016001-02174:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devolución acordada/compensada.
+              Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devolución
+              acordada/compensada. Bizkaia'
+          t22016001-02175:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devolución acordada/compensada.
+              Navarra.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devolución
+              acordada/compensada. Navarra'
+          t22016001-02176:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Abono. Araba.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Abono. Araba'
+          t22016001-02177:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Abono. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Abono. Gipuzkoa'
+          t22016001-02178:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Abono. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Abono. Bizkaia'
+          t22016001-02179:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Abono. Navarra.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Abono. Navarra'
+          t22016001-02180:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Compensación. Araba.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Compensación. Araba'
+          t22016001-02181:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Compensación. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Compensación. Gipuzkoa'
+          t22016001-02182:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Compensación. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Compensación. Bizkaia'
+          t22016001-02183:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Compensación. Navarra.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Compensación. Navarra'
+          t22016001-02184:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              A ingresar. Araba.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: A ingresar. Araba'
+          t22016001-02185:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              A ingresar. Gipuzkoa.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: A ingresar. Gipuzkoa'
+          t22016001-02186:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              A ingresar. Bizkaia.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: A ingresar. Bizkaia'
+          t22016001-02187:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              A ingresar. Navarra.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: A ingresar. Navarra'
+          t22016001-02804:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devolución acordada/compensada.
+              Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devolución
+              acordada/compensada. Total de territorios forales'
+          t22016001-02807:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Abono. Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Abono. Total de territorios forales'
+          t22016001-02810:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              Compensación. Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: Compensación. Total de territorios forales'
+          t22016001-02813:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Resultado de conversión de AID tras regularización:
+              A ingresar. Total de territorios forales.'
+            label: 'Reparto entre Administraciones forales. Resultado de conversión
+              de AID tras regularización: A ingresar. Total de territorios forales'
+          t22016001-03325:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Complementaria: Devolución acordada/compensada.
+              Araba.'
+            label: 'Reparto entre Administraciones forales. Complementaria: Devolución
+              acordada/compensada. Araba'
+          t22016001-03362:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono por conversión de activos por impuesto
+              diferido. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Abono por conversión de
+              activos por impuesto diferido. Total de territorios forales
+          t22016001-03364:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Compensación por conversión de activos por
+              impuesto diferido. Total de territorios forales.'
+            label: Reparto entre Administraciones forales. Compensación por conversión
+              de activos por impuesto diferido. Total de territorios forales
+          t22016001-03373:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono por conversión de activos por impuesto
+              diferido. Araba.'
+            label: Reparto entre Administraciones forales. Abono por conversión de
+              activos por impuesto diferido. Araba
+          t22016001-03374:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono por conversión de activos por impuesto
+              diferido. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Abono por conversión de
+              activos por impuesto diferido. Gipuzkoa
+          t22016001-03375:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono por conversión de activos por impuesto
+              diferido. Bizkaia.'
+            label: Reparto entre Administraciones forales. Abono por conversión de
+              activos por impuesto diferido. Bizkaia
+          t22016001-03376:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Abono por conversión de activos por impuesto
+              diferido. Navarra.'
+            label: Reparto entre Administraciones forales. Abono por conversión de
+              activos por impuesto diferido. Navarra
+          t22016001-03377:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Compensación por conversión de activos por
+              impuesto diferido. Araba.'
+            label: Reparto entre Administraciones forales. Compensación por conversión
+              de activos por impuesto diferido. Araba
+          t22016001-03378:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Compensación por conversión de activos por
+              impuesto diferido. Gipuzkoa.'
+            label: Reparto entre Administraciones forales. Compensación por conversión
+              de activos por impuesto diferido. Gipuzkoa
+          t22016001-03379:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Compensación por conversión de activos por
+              impuesto diferido. Bizkaia.'
+            label: Reparto entre Administraciones forales. Compensación por conversión
+              de activos por impuesto diferido. Bizkaia
+          t22016001-03380:
+            help: 'Consulte la información correspondiente a la casilla: Reparto entre
+              Administraciones forales. Compensación por conversión de activos por
+              impuesto diferido. Navarra.'
+            label: Reparto entre Administraciones forales. Compensación por conversión
+              de activos por impuesto diferido. Navarra
+          t220did00-00562:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Liquidación. Cuota íntegra del grupo.'
+            label: Documento de ingreso o devolución. Liquidación. Cuota íntegra del
+              grupo
+          t220did00-00621:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Liquidación. Resultado: Estado.'
+            label: 'Documento de ingreso o devolución. Liquidación. Resultado: Estado'
+          t220did00-02800:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Liquidación. Opción de fraccionamiento art.
+              19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del art.
+              19.1 LIS: Estado.'
+            label: 'Documento de ingreso o devolución. Liquidación. Opción de fraccionamiento
+              art. 19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del
+              art. 19.1 LIS: Estado'
+          t220did00-02806:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Abono/Compensación. Resultado de conversión
+              de AID tras regularización: abono.'
+            label: 'Documento de ingreso o devolución. Abono/Compensación. Resultado
+              de conversión de AID tras regularización: abono'
+          t220did00-02809:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Abono/Compensación. Resultado de conversión
+              de AID tras regularización: compensación.'
+            label: 'Documento de ingreso o devolución. Abono/Compensación. Resultado
+              de conversión de AID tras regularización: compensación'
+          t220did00-02812:
+            help: 'Consulte la información correspondiente a la casilla: Documento
+              de ingreso o devolución. Abono/Compensación. Resultado de conversión
+              de AID tras regularización: a ingresar.'
+            label: 'Documento de ingreso o devolución. Abono/Compensación. Resultado
+              de conversión de AID tras regularización: a ingresar'
           tipo-declaracion:
             help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
               (originaria / sustitutiva / complementaria).'
             label: 'Casilla tipo-declaración: tipo declaración'
+          tipo-gravamen-tramo-dos:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Tramo de tipo de gravamen 2 (tres enteros,
+              dos decimales).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tramo
+              de tipo de gravamen 2 (tres enteros, dos decimales)
+          tipo-gravamen-tramo-uno:
+            help: 'Dato del modelo 220, ejercicio 2024: Base imponible y cuota íntegra
+              del grupo (pág. 7 hoja 00). Tramo de tipo de gravamen 1 (tres enteros,
+              dos decimales).'
+            label: Base imponible y cuota íntegra del grupo (pág. 7 hoja 00). Tramo
+              de tipo de gravamen 1 (tres enteros, dos decimales)
+          tonelaje-base-imponible:
+            help: 'Consulte la información correspondiente a la casilla: Régimen especial
+              entidades navieras en función del tonelaje - Base imponible | Nota 2..'
+            label: Régimen especial entidades navieras en función del tonelaje - Base
+              imponible | Nota 2.
+          tonelaje-tipo-gravamen:
+            help: 'Consulte la información correspondiente a la casilla: Régimen especial
+              entidades navieras en función del tonelaje - Tipo de gravamen | 2 enteros,
+              4 decimales. Nota 2.'
+            label: Régimen especial entidades navieras en función del tonelaje - Tipo
+              de gravamen | 2 enteros, 4 decimales. Nota 2
       field:
         official_name: Modelo 220. Impuesto sobre Sociedades. Régimen de consolidación
           fiscal. Declaración.

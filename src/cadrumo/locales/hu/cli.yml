@@ -408,6 +408,10 @@ cli:
         provenance_not_electable: 'A {provenance!r} forrás nem az üzemeltető által
           megadható; elfogadott: {accepted}. Az art. 105.Cinco szerinti megszakítási
           százalékot a nyilvántartásból számoljuk.'
+        provenance_requires_evidence: A kézzel megadott százalékhoz --provenance {accepted}
+          és a hozzá tartozó --reference szükséges. Az előző év végleges százalékát
+          (LIVA art. 105.Dos) a benyújtott bizonylata alapján az 'aeat app ledger
+          prorrata seed' rögzíti.
         reference_help: Az AEAT engedély (art. 105.Dos) vagy a tevékenység-kezdési
           javaslat (art. 105.Tres) hivatkozása.
         reference_not_permitted: A --reference csak aeat_autorizada vagy inicio_actividad

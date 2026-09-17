@@ -410,6 +410,10 @@ cli:
         provenance_not_electable: 'L''origen {provenance!r} no és declarable per l''operador;
           acceptats: {accepted}. El percentatge d''interrupció de l''art. 105.Cinco
           es calcula des del registre.'
+        provenance_requires_evidence: Un percentatge introduït a mà requereix --provenance
+          {accepted} amb la seva --reference. El percentatge definitiu de l'any anterior
+          (LIVA art. 105.Dos) es registra a partir de la seva evidència presentada
+          amb 'aeat app ledger prorrata seed'.
         reference_help: Referència de l'autorització de l'AEAT (art. 105.Dos) o de
           la proposta d'inici (art. 105.Tres).
         reference_not_permitted: --reference només es permet amb un origen aeat_autorizada

@@ -123,6 +123,10 @@ modelo:
           rg-tipo-08:
             help: 'Información de la casilla: Casilla 08: rg tipo 08.'
             label: 'Casilla 08: rg tipo 08'
+          transmitente-apellidos-nombre-razon-social:
+            help: 'Consulte la información correspondiente a la casilla: Transmitente
+              - Apellidos y nombre o razón social.'
+            label: Transmitente - Apellidos y nombre o razón social
           transmitente-nif:
             help: 'Información de la casilla: Casilla 25: transmitente nif.'
             label: 'Casilla 25: transmitente nif'
@@ -130,6 +134,9 @@ modelo:
             help: 'Información de la casilla: Casilla 1025-1039: transmitente nif
               iva.'
             label: 'Casilla 1025-1039: transmitente nif iva'
+          transmitente-pais:
+            help: Casilla 198-199 del modelo 309, ejercicio 2016-2017.
+            label: Transmitente (3) - País
           vehiculo-bastidor:
             help: 'Información de la casilla: Casilla 220: vehiculo bastidor.'
             label: 'Casilla 220: vehiculo bastidor'

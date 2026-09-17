@@ -1,6 +1,103 @@
 modelo:
   schema:
     '136':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            help: 'Consulte la información correspondiente a la casilla: Resultado
+              a ingresar.'
+            label: Resultado a ingresar
+          m136-autoliquidacion-complementaria:
+            help: 'Consulte la información correspondiente a la casilla: Autoliquidación
+              complementaria.'
+            label: Autoliquidación complementaria
+          m136-base-imponible-gravamen:
+            help: 'Consulte la información correspondiente a la casilla: Base imponible.'
+            label: Base imponible
+          m136-codigo-iban:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Codigo IBAN
+          m136-cuantia-exenta-gravamen:
+            help: 'Consulte la información correspondiente a la casilla: Cuantia exenta
+              del gravamen especial.'
+            label: Cuantia exenta del gravamen especial
+          m136-cuota-gravamen-especial:
+            help: 'Consulte la información correspondiente a la casilla: Cuota del
+              gravamen especial.'
+            label: Cuota del gravamen especial
+          m136-declarante-nif:
+            help: 'Consulte la información correspondiente a la casilla: Número de
+              identificacion fiscal (NIF).'
+            label: Número de identificacion fiscal (NIF)
+          m136-declarante-nombre:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Apellidos y nombre o razon social
+          m136-ejercicio-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio.'
+            label: Ejercicio
+          m136-fecha-celebracion:
+            help: 'Consulte la información correspondiente a la casilla: Fecha de
+              celebracion.'
+            label: Fecha de celebracion
+          m136-fecha-cobro-premio:
+            help: 'Consulte la información correspondiente a la casilla: Fecha de
+              cobro del premio.'
+            label: Fecha de cobro del premio
+          m136-forma-pago:
+            help: 'Consulte la información correspondiente a la casilla: Forma de
+              pago.'
+            label: Forma de pago
+          m136-importe-ingresado:
+            help: 'Consulte la información correspondiente a la casilla: Importe ingresado
+              a favor del Tesoro Publico.'
+            label: Importe ingresado a favor del Tesoro Publico
+          m136-importe-premio-declarante:
+            help: 'Consulte la información correspondiente a la casilla: Importe o
+              valor del premio que corresponde individualmente al declarante.'
+            label: Importe o valor del premio que corresponde individualmente al declarante
+          m136-importe-premio-total:
+            help: 'Consulte la información correspondiente a la casilla: Importe del
+              premio obtenido por el boleto, cupon o apuesta premiado.'
+            label: Importe del premio obtenido por el boleto, cupon o apuesta premiado
+          m136-justificante-anterior:
+            help: 'Consulte la información correspondiente a la casilla: Número de
+              justificante identificativo de la autoliquidación anterior.'
+            label: Número de justificante identificativo de la autoliquidación anterior
+          m136-loteria-apuesta-denominacion:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Denominacion de la loteria o apuesta
+          m136-organizador-codigo-pais:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Codigo pais del organismo o entidad organizadora
+          m136-organizador-denominacion:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Denominacion o razon social del organismo o entidad organizadora
+          m136-organizador-pais:
+            help: 'Consulte la información correspondiente a la casilla: Pais del
+              organismo o entidad organizadora.'
+            label: Pais del organismo o entidad organizadora
+          m136-periodo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Período.'
+            label: Periodo
+          m136-precio-unitario:
+            help: 'Consulte la información correspondiente a la casilla: Precio unitario.'
+            label: Precio unitario
+          m136-provincia-residencia-irpf:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              136.
+            label: Codigo de la provincia de residencia habitual del contribuyente
+              IRPF
+          m136-resultados-anteriores-mismo-premio:
+            help: 'Consulte la información correspondiente a la casilla: Resultados
+              a ingresar de anteriores autoliquidaciones por el mismo concepto y correspondientes
+              al mismo premio.'
+            label: Resultados a ingresar de anteriores autoliquidaciones por el mismo
+              concepto y correspondientes al mismo premio
       field:
         official_name: Modelo 136. IRPF e IRNR. Gravamen Especial sobre los Premios
           de determinadas Loterías y Apuestas. Autoliquidación.

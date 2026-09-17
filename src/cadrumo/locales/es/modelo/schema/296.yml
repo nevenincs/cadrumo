@@ -1,6 +1,21 @@
 modelo:
   schema:
     '296':
+      casilla:
+        continuidad:
+          irnr-resumen-base:
+            help: Suma algebraica de las bases de retención e ingreso a cuenta de
+              los registros de perceptor.
+            label: Base retenciones e ingresos a cuenta
+          irnr-resumen-retenciones:
+            help: Suma de las retenciones e ingresos a cuenta de los registros de
+              perceptor.
+            label: Retenciones e ingresos a cuenta
+          irnr-resumen-retenciones-ingresadas:
+            help: 'Parte de las retenciones efectivamente ingresadas: sólo los perceptores
+              con clave 3 a 25, y los de clave 1 o 2 con pago 1. Puede ser inferior
+              a la casilla 03.'
+            label: Retenciones e ingresos a cuenta ingresados
       field:
         official_name: Modelo 296. Impuesto sobre la Renta de no Residentes. No residentes
           sin establecimiento permanente. Declaración anual de retenciones e ingresos

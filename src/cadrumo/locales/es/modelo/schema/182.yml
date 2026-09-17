@@ -1,6 +1,44 @@
 modelo:
   schema:
     '182':
+      casilla:
+        continuidad:
+          donante-nif:
+            help: 'Consulte la información correspondiente a la casilla: NIF del donante
+              (persona fisica, juridica o entidad sin fines lucrativos donataria de
+              referencia).'
+            label: NIF del donante (persona fisica, juridica o entidad sin fines lucrativos
+              donataria de referencia)
+          donante-nombre:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              182.
+            label: Apellidos y nombre, o razon social, del donante
+          donativo-recurrente:
+            help: 'Consulte la información correspondiente a la casilla: Indicador
+              de donativo recurrente (donativo plurianual a la misma entidad donataria,
+              dos o mas ejercicios consecutivos).'
+            label: Indicador de donativo recurrente (donativo plurianual a la misma
+              entidad donataria, dos o mas ejercicios consecutivos)
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Ejercicio al que se refiere la declaración
+          importe-donativo:
+            help: 'Consulte la información correspondiente a la casilla: Importe del
+              donativo, donacion o aportacion recibida en el ejercicio (sin signo,
+              en euros).'
+            label: Importe del donativo, donacion o aportacion recibida en el ejercicio
+              (sin signo, en euros)
+          porcentaje-deduccion:
+            help: 'Consulte la información correspondiente a la casilla: Porcentaje
+              de deducción aplicable al donativo (régimen fiscal del donante, art.
+              68.3 LIRPF / régimen especial Ley 49/2002).'
+            label: Porcentaje de deducción aplicable al donativo (regimen fiscal del
+              donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: Tipo de declaración (originaria / sustitutiva / complementaria)
       field:
         official_name: Modelo 182. Impuesto sobre la Renta de las Personas Físicas,
           Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración
