@@ -67,7 +67,19 @@ _isolated_backend = active_profile_isolated_backend_fixture(
 
 __all__ = ["_isolated_backend"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
+
+#: A manual election names the art. 105 source it stands on; the carried prior
+#: definitive percentage is recorded by ``seed`` from its filed evidence.
+_AUTHORISED_PROVENANCE = ("--provenance", "aeat_autorizada", "--reference", "AEAT-PRORRATA-2025-0001")
+
+
+def test_a_bare_election_refuses_and_points_to_its_evidenced_routes() -> None:
+    result = _invoke(["app", "ledger", "prorrata", "elect-general", "--ejercicio", "2025", "--percentage", "75"])
+
+    assert result.exit_code != 0
+    assert "--provenance" in result.output
+    assert "prorrata seed" in result.output
 
 
 def _prorrata_list() -> dict[str, object]:
@@ -103,6 +115,7 @@ def test_elect_especial_persists_especial_register_entry() -> None:
             "modelo-303-2025-prorrata-opcion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -110,7 +123,7 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     assert payload["entry"]["regime"] == ProrrataRegisterRegime.from_registry("especial").value
     assert payload["entry"]["provisional_percentage"] == "60"
     assert payload["entry"]["provisional_provenance"] == (
-        ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva").value
+        ProrrataProvisionalProvenance.from_registry("aeat_autorizada").value
     )
     assert payload["entry"]["especial_transition"] == {
         "kind": ProrrataEspecialTransitionKind.from_registry("opcion").value,
@@ -147,6 +160,7 @@ def test_evidence_reference_persists_the_explicit_option_and_revocation() -> Non
             "60",
             "--evidence-reference",
             "operator-option-2025",
+            *_AUTHORISED_PROVENANCE,
         ]
     )
     assert option.exit_code == 0, option.output
@@ -169,6 +183,7 @@ def test_evidence_reference_persists_the_explicit_option_and_revocation() -> Non
             "60",
             "--evidence-reference",
             "operator-revocation-2026",
+            *_AUTHORISED_PROVENANCE,
         ]
     )
     assert revocation.exit_code == 0, revocation.output
@@ -195,6 +210,7 @@ def test_elect_especial_without_evidence_records_an_explicit_continuation() -> N
             "60",
             "--evidence-reference",
             "operator-option-2025",
+            *_AUTHORISED_PROVENANCE,
         ]
     )
     assert first.exit_code == 0, first.output
@@ -211,6 +227,7 @@ def test_elect_especial_without_evidence_records_an_explicit_continuation() -> N
             "2026",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ]
     )
     assert continuation.exit_code == 0, continuation.output
@@ -230,6 +247,7 @@ def test_elect_general_persists_general_register_entry() -> None:
             "2025",
             "--percentage",
             "75",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -257,6 +275,7 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
             "40",
             "--sector",
             "alquiler",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -279,6 +298,7 @@ def test_elect_especial_requires_nonblank_evidence_reference() -> None:
             "2025",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert missing.exit_code != 0
@@ -296,6 +316,7 @@ def test_elect_especial_requires_nonblank_evidence_reference() -> None:
             " ",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert blank.exit_code != 0
@@ -315,6 +336,7 @@ def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
             "modelo-303-2026-prorrata-revocacion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert refused.exit_code != 0
@@ -332,6 +354,7 @@ def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
             "modelo-303-2025-prorrata-opcion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert option.exit_code == 0, option.output
@@ -350,6 +373,7 @@ def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
             "modelo-303-2026-prorrata-revocacion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert revoked.exit_code == 0, revoked.output
@@ -382,6 +406,7 @@ def test_especial_transitions_refuse_conflicting_evidence_references() -> None:
             "modelo-303-2025-retail-opcion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert first.exit_code == 0, first.output
@@ -400,6 +425,7 @@ def test_especial_transitions_refuse_conflicting_evidence_references() -> None:
             "modelo-303-2025-wholesale-opcion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert conflicting.exit_code != 0
@@ -620,6 +646,7 @@ def test_input_classification_with_especial_election_is_not_inert() -> None:
             "modelo-303-2026-prorrata-opcion",
             "--percentage",
             "60",
+            *_AUTHORISED_PROVENANCE,
         ],
     )
     assert elected.exit_code == 0, elected.output
