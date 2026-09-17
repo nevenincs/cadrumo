@@ -4,24 +4,37 @@ modelo:
       casilla:
         continuidad:
           '00042':
+            help: Adja meg az időszak átlagos nem állandó alkalmazotti létszámát [00042].
             label: Alkalmazotti létszám (az időszak átlagos száma) nem állandó személyzet
               [00042]
           '00051':
+            help: Adja meg az állam és a forális közigazgatások közötti, gazdasági
+              megállapodás szerinti közös adózás külföldi ügyleteinek volumenét [00051].
             label: Közös adózás az állam és a forális közigazgatások között - gazdasági
               megállapodás - külföldi ügyletek volumene [00051]
           '00052':
+            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+              Araba/Álava ügyleteinek volumenét [00052].
             label: Közös adózás állam és forális közigazgatások között - gazdasági
               megállapodás - Araba/Álava ügyleteinek volumene [00052]
           '00053':
+            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+              Gipuzkoa ügyleteinek volumenét [00053].
             label: Közös adózás állam és forális közigazgatások között - gazdasági
               megállapodás - Gipuzkoa ügyleteinek volumene [00053]
           '00054':
+            help: Adja meg a gazdasági megállapodás szerinti közös adózáshoz kapcsolódó
+              Bizkaia ügyleteinek volumenét [00054].
             label: Közös adózás állam és forális közigazgatások között - gazdasági
               megállapodás - Bizkaia ügyleteinek volumene [00054]
           '00055':
+            help: Adja meg a gazdasági egyezmény szerinti közös adózáshoz kapcsolódó
+              navarrai ügyletek volumenét [00055].
             label: Közös adózás állam és forális közigazgatások között - gazdasági
               egyezmény - navarrai ügyletek volumene [00055]
           00068:
+            help: Jelölő olyan nem hitelintézet szervezetek esetén, amelyek a hitelintézetekre
+              alkalmazandó beszámolókat használják [00068].
             label: 'Hitelintézeti beszámolók: nem hitelintézet szervezetek, amelyek
               a hitelintézetekre alkalmazandó beszámolókat használják [00068]'
           00081:
@@ -6266,6 +6279,8 @@ modelo:
               területeken végzett beruházások és reklám- és hirdetési kiadások (19/1994.
               törvény 27 bis cikk) (TAP) - a levonás összege [03068]
           base-imponible-negativa-is:
+            help: Negatív vagy nulla adóalap a kiigazítások vagy kompenzációk előtt
+              [00027].
             label: Negatív vagy nulla adóalap [00027]
           canary-fixed-assets-2010-remaining:
             label: Kanári-szigeteki beruházási levonások - Tárgyi eszközök 2010 -
@@ -6386,8 +6401,10 @@ modelo:
             label: Egyes tevékenységeket ösztönző levonások - összesen - ebben az
               elszámolásban felhasználva [00588]
           is-agrupacion-de-interes-economico-espanola:
+            help: Jelölő spanyol gazdasági érdekcsoportosulás esetén [00013].
             label: Spanyol gazdasági érdekcsoportosulás [00013]
           is-agrupacion-europea-de-interes-economico:
+            help: Jelölő európai gazdasági érdekcsoportosulás esetén [00014].
             label: Európai gazdasági érdekcsoportosulás [00014]
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Az entitás által le nem vont nettó pénzügyi ráfordítások - B)
@@ -6914,18 +6931,25 @@ modelo:
             label: Negatív adóalapok kompenzálásának részletezése - ÖSSZESEN - Az
               időszak elején alkalmazásra vár/az időszakban keletkezett [00670]
           is-bonificacion-personal-investigador-rd-475-2014:
+            help: Jelölő a 475/2014. királyi rendelet szerinti kutatószemélyzeti kedvezményhez
+              [00065].
             label: Kutatószemélyzeti kedvezmény (475/2014. királyi rendelet) [00065]
           is-capital-riesgo-saldo-pendiente-aumento:
             label: Kockázatitőke-társaságok és -alapok, valamint regionális ipari
               fejlesztési társaságok (LIS VII. cím IV. fejezet) - Növekedés - Az időszak
               elején fennálló egyenleg [03134]
           is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis:
+            help: Jelölő az újonnan létrehozott szervezetek negatív adóalapjainak
+              a társasági adóról szóló törvény 26.3 cikke szerinti beszámításához
+              [00070].
             label: Negatív adóalapok beszámítása újonnan létrehozott szervezeteknél
               (LIS 26.3 cikk) [00070]
           is-compensacion-bases-negativas:
             label: Negatív adóalapok kompenzálásának részletezése - 1999 - Ebben az
               elszámolásban alkalmazva [00647]
           is-comunidades-titulares-de-montes-vecinales-en-mano-comun:
+            help: Jelölő közös használatú szomszédsági erdők tulajdonos közösségei
+              esetén [00005].
             label: Közös használatú szomszédsági erdők tulajdonos közösségei [00005]
           is-consolidacion-fiscal-eliminacion:
             label: Elszámolás II - Adókonszolidációs csoportokhoz tartozó szervezetek
@@ -6937,9 +6961,15 @@ modelo:
             label: A LIS 36.1. és 36.3. cikke szerinti levonásra jogosító produkciókat
               finanszírozó adózó [00074]
           is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes:
+            help: Jelölő olyan adózó esetén, aki a társasági adóról szóló törvény
+              36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
+              hozza létre [00044].
             label: A LIS 36.1 és 36.3 cikke szerinti kedvezményeket más adózók finanszírozásával
               létrehozó adózó [00044]
           is-cooperativa-base-imponible:
+            help: Jelölő a szövetkezeti rendszer adóalap-meghatározásához a Baleár-szigeteki
+              beruházási tartalékhoz és a szövetkezeten kívüli eredményekhez kapcsolódóan
+              [00016].
             label: Szövetkezeti rendszer - adóalap meghatározása - 11. Baleár-szigeteki
               beruházási tartalék - szövetkezeten kívüli eredmények [00016]
           is-cooperativa-compensacion-cuotas:
@@ -6949,8 +6979,10 @@ modelo:
             label: Elszámolás III - Adóalap - Csak szövetkezetek - Kiegyenlítési tartalék
               utáni előzetes teljes adókötelezettség [01331]
           is-cooperativa-especialmente-protegida:
+            help: Jelölő különösen védett szövetkezet esetén [00018].
             label: Különösen védett szövetkezet [00018]
           is-cooperativa-protegida:
+            help: Jelölő védett szövetkezet esetén [00017].
             label: Védett szövetkezet [00017]
           is-cooperativa-reserva-nivelacion-cuota:
             label: Elszámolás III - Adóalap - Csak szövetkezetek - Adókötelezettséggé
@@ -8801,26 +8833,38 @@ modelo:
             label: Saját tőke változásainak kimutatása (I) - Átvezetések az eredménykimutatásba
               - Egyéb bevételek/ráfordítások [00348]
           is-entidad-aseguradora:
+            help: Jelölő biztosító szervezet esetén [00025].
             label: Biztosító szervezet [00025]
           is-entidad-de-credito:
+            help: Jelölő hitelintézet esetén [00024].
             label: Hitelintézet [00024]
           is-entidad-de-tenencia-de-valores-extranjeros:
+            help: Jelölő külföldi értékpapírokat tartó szervezet esetén [00011].
             label: Külföldi értékpapírokat tartó szervezet [00011]
           is-entidad-dedicada-al-arrend-viviendas:
+            help: Jelölő lakások bérbeadásával foglalkozó szervezet esetén [00038].
             label: Lakások bérbeadásával foglalkozó szervezet [00038]
           is-entidad-dependiente-de-grupo-fiscal:
+            help: Jelölő adócsoport függő szervezete esetén [00010].
             label: Adócsoport függő szervezete [00010]
           is-entidad-dominante-de-grupo-fiscal:
+            help: Jelölő adócsoport uralkodó szervezete esetén [00009].
             label: Adócsoport uralkodó szervezete [00009]
           is-entidad-en-reg-atribuc-de-rentas-constituida-en-el-extranjero-con-presencia-en-territorio-espanol:
+            help: Jelölő külföldön alapított, spanyol területen jelen lévő jövedelem-hozzárendelési
+              rendszerű szervezet esetén [00046].
             label: Külföldön alapított, Spanyolországban jelen lévő jövedelem-hozzárendelési
               rendszerű szervezet [00046]
           is-entidad-en-regimen-de-atribucion-de-rentas-con-tributacion-por-el-impuesto-sobre-sociedades:
+            help: Jelölő társasági adó szerint adózó jövedelem-hozzárendelési rendszerű
+              szervezet esetén [00056].
             label: Társasági adó szerint adózó jövedelem-hozzárendelési rendszerű
               szervezet [00056]
           is-entidad-inactiva:
+            help: Jelölő inaktív szervezet esetén [00026].
             label: Inaktív szervezet [00026]
           is-entidad-parcialmente-exenta:
+            help: Jelölő, hogy a szervezet részlegesen mentesített [00002].
             label: Részlegesen mentesített szervezet [00002]
           is-entidad-parcialmente-exenta-aumento:
             label: Részlegesen mentes jogalanyok szabályozása (LIS VII. cím XIV. fejezet)
@@ -8829,11 +8873,16 @@ modelo:
             label: Részlegesen mentes jogalanyok szabályozása (LIS VII. cím XIV. fejezet)
               - Csökkenés - Évi korrekciók - Időleges (az évben keletkezett) [03237]
           is-entidad-patrimonial:
+            help: Jelölő vagyonkezelő jellegű szervezet esetén [00066].
             label: Vagyonkezelő jellegű szervezet [00066]
           is-entidad-que-forma-parte-de-un-grupo-mercantil-art-42-del-cod-comercio:
+            help: Jelölő a Kereskedelmi törvénykönyv 42. cikke szerinti kereskedelmi
+              csoporthoz tartozó szervezet esetén [00039].
             label: Kereskedelmi csoporthoz tartozó szervezet (a Kereskedelmi törvénykönyv
               42. cikke) [00039]
           is-entidad-sin-animo-de-lucro-acogida-regimen-fiscal-titulo-ii-ley-49-2002:
+            help: Jelző, amely azt mutatja, hogy a szervezet nonprofit-e és a 49/2002.
+              törvény II. címe szerinti adórendszer alá tartozik-e [00001].
             label: Nonprofit szervezet a 49/2002. törvény II. címe szerinti különleges
               adórendszerben [00001]
           is-entidad-sin-fines-lucrativos-correccion-ejercicio-aumento:
@@ -8848,10 +8897,13 @@ modelo:
           is-entidad-zec-en-consolidacion-fiscal:
             label: ZEC jogalany adókonszolidációban [00079]
           is-entidad-zec-sin-consolidacion-fiscal:
+            help: Jelölő adóügyi konszolidáció nélküli ZEC szervezet esetén [00015].
             label: ZEC szervezet (adóügyi konszolidáció nélkül) [00015]
           is-entidades-de-capital-riesgo:
+            help: Jelölő kockázatitőke-szervezetek esetén [00031].
             label: Kockázatitőke-szervezetek [00031]
           is-entidades-sometidas-a-normativa-foral:
+            help: Jelölő forális szabályozás alá tartozó szervezetek esetén [00047].
             label: Forális szabályozás alá tartozó szervezetek [00047]
           is-erd-amortizacion-acelerada-aumento:
             label: 'Kisvállalkozások: gyorsított értékcsökkenés (LIS 103. cikk és
@@ -8879,6 +8931,7 @@ modelo:
             label: 'Kisvállalkozások: szabad értékcsökkenés (LIS 102. cikk) - Növekedés
               - Az időszak elején fennálló egyenleg [03184]'
           is-establecimiento-permanente:
+            help: Jelölő állandó telephely esetén [00021].
             label: Állandó telephely [00021]
           is-etv-ajuste-aumento:
             label: Külföldi értékpapír-tartó jogalanyok adózási szabályozása (LIS
@@ -8899,9 +8952,12 @@ modelo:
           is-extincion-de-entidad:
             label: Jogalany megszűnése [00072]
           is-fondo-de-pensiones-real-decreto-legislativo-1-2002-de-29-de-noviembre:
+            help: Jelölő a november 29-i 1/2002. királyi törvényerejű rendelet szerinti
+              nyugdíjalap esetén [00048].
             label: Nyugdíjalap a november 29-i 1/2002. királyi törvényerejű rendelet
               szerint [00048]
           is-fondos-o-activos-de-titulizacion:
+            help: Jelölő értékpapírosítási alapok vagy eszközök esetén [00060].
             label: Értékpapírosítási alapok vagy eszközök [00060]
           is-fraccionamiento-cambio-residencia-bi:
             label: Elszámolás IV - Részletfizetési lehetőség lakóhely-változás esetén
@@ -8923,8 +8979,11 @@ modelo:
               pénzügyi ráfordítások - Keletkezési év 2021 - Időszak elején alkalmazásra
               váró - Korlát alapján [01098]
           is-gran-empresa:
+            help: Jelölő nagyvállalat esetén [00023].
             label: Nagyvállalat [00023]
           is-grupo-fiscal-numero:
+            help: Adja meg az adócsoport számát, ha a 00009 vagy 00010 kód alkalmazandó
+              [00040].
             label: Adócsoport - 00009 vagy 00010 kódok - adócsoport száma [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
             label: 'Szénhidrogének: immateriális beruházások és kutatási ráfordítások
@@ -8939,15 +8998,24 @@ modelo:
               értékcsökkenése (LIS 99. cikk) - Csökkenés - Az időszak elején fennálló
               egyenleg [03169]'
           is-identificacion-regimen-flag:
+            help: Jelölő olyan szervezetek esetén, amelyek a kollektív befektetési
+              intézményekre alkalmazandó beszámolókat használják, a 00003, 00004 és
+              00008 kódok kivételével [00061].
             label: 'Kollektív befektetési intézmények beszámolói: a KBI-kre alkalmazandó
               beszámolókat használó szervezetek (kivéve 00003, 00004 és 00008 kódok)
               [00061]'
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
+            help: Jelölő pozitív jövedelmek adóalapba történő beszámításához a társasági
+              adóról szóló törvény 100. cikke szerint [00007].
             label: Pozitív jövedelmek beszámítása az adóalapba a LIS 100. cikke szerint
               [00007]
           is-incentivos-entidad-de-reducida-dimension-cap-xi-tit-vii-lis:
+            help: Jelölő a társasági adóról szóló törvény VII. cím XI. fejezete szerinti
+              kis méretű vállalkozási ösztönzők alkalmazásához [00006].
             label: Kis méretű vállalkozások ösztönzői (LIS VII. cím XI. fejezet) [00006]
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
+            help: Jelölő a 19/1994. törvény 27.11 cikke szerinti Kanári-szigeteki
+              beruházási tartalékhoz kapcsolódó előzetes beruházásokhoz [00045].
             label: Előzetes beruházások - Kanári-szigeteki beruházási tartalék (19/1994.
               törvény 27.11 cikke) [00045]
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
@@ -9016,9 +9084,13 @@ modelo:
               cikk) - Csökkenés - Évi korrekciók - Időleges (az évben keletkezett)
               [03157]'
           is-mutua-de-seguros-o-mutualidad-de-prevision-social:
+            help: Jelölő biztosítási kölcsönös pénztár vagy szociális ellátási kölcsönös
+              pénztár esetén [00058].
             label: Biztosítási kölcsönös pénztár vagy szociális ellátási kölcsönös
               pénztár [00058]
           is-naviera-regimen-flag:
+            help: Jelölő a hajók és hajózási társaságok Kanári-szigeteki különleges
+              rendszere esetén [00069].
             label: Hajók és hajózási társaságok Kanári-szigeteki különleges rendszere
               [00069]
           is-naviera-tonelaje-ajuste-aumento:
@@ -9033,6 +9105,8 @@ modelo:
             label: Tonnatartalom alapú hajózási társasági szabályozás (LIS VII. cím
               XVI. fejezet) - Csökkenés - Az időszak elején fennálló egyenleg [03259]
           is-obligacion-informacion-dt-5a-ris:
+            help: Jelölő a társaságiadó-rendelet 5. átmeneti rendelkezése szerinti
+              tájékoztatási kötelezettséghez [00043].
             label: Tájékoztatási kötelezettség a RIS 5. átmeneti rendelkezése szerint
               [00043]
           is-obra-benefico-social-aumento:
@@ -9044,24 +9118,29 @@ modelo:
               (LIS 24. cikk) - Csökkenés - Évi korrekciók - Időleges (az évben keletkezett)
               [03047]
           is-opcion-art-39-2-lis:
+            help: Jelölő a társasági adóról szóló törvény 39.2 cikke szerinti opcióhoz
+              [00059].
             label: Opció a LIS 39.2 cikke szerint [00059]
           is-opcion-art-39-3-lis:
             label: Választási lehetőség a LIS 39.3. cikke alapján [00090]
           is-opcion-de-fraccionamiento-art-19-1-lis:
+            help: Jelölő a társasági adóról szóló törvény 19.1 cikke szerinti részletfizetési
+              opcióhoz [00037].
             label: Részletfizetési opció a LIS 19.1 cikke szerint [00037]
           is-opcion-del-0-7-de-la-cuota-integra-para-fines-sociales:
             label: A teljes adókötelezettség 0,7%-ának szociális célokra történő felajánlása
               [00073]
           is-otros-regimenes-especiales:
+            help: Jelölő egyéb különleges rendszerek esetén [00020].
             label: Egyéb különleges rendszerek [00020]
           is-pagos-fraccionados:
             label: Állam és forális közigazgatások együttes adóztatása - 2. részletfizetések
               - Bizkaia [00447]
           is-participaciones-directas-b-reversion-de-perdidas-por-deterioro-de-valores:
             help: b) Értékpapírok értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
-              - B.1. Participaciones declarante en otras entidades
-            label: B.1. Participaciones declarante en otras entidades. b) Értékpapírok
-              értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
+              - B.1. A nyilatkozattevő részesedései más gazdálkodó egységekben
+            label: B.1. A nyilatkozattevő részesedései más gazdálkodó egységekben.
+              b) Értékpapírok értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
           is-participaciones-directas-d-a-correccion-de-valor-incluida-en-perdidas-y-ganancias-ejerc:
             help: A 200-as modelo éves társasági adóbevallásának 1504. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
@@ -9104,6 +9183,7 @@ modelo:
             label: Gazdasági érdekcsoportosulás vagy vállalkozások ideiglenes társulásának
               résztvevője [00089]
           is-personal-asalariado-cifra-media:
+            help: Adja meg az időszak átlagos állandó alkalmazotti létszámát [00041].
             label: Alkalmazotti létszám (az időszak átlagos száma) állandó személyzet
               [00041]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
@@ -9406,29 +9486,42 @@ modelo:
             label: Eredménykimutatás (II) - Megszűnt tevékenységek - AZ EREDMÉNYKIMUTATÁS
               EREDMÉNYE [00500]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
+            help: Jelölő a 8/2012. törvény szerinti, eszközkezelési társaságokba történő
+              eszköz-hozzájárulások adórendszere esetén [00062].
             label: Eszközkezelési társaságokba történő eszköz-hozzájárulások adórendszere
               (8/2012. törvény) [00062]
           is-regimen-entidades-navieras-en-funcion-del-tonelaje:
+            help: Jelölő a hajózási társaságok tonnatartalom szerinti rendszere esetén
+              [00022].
             label: Hajózási társaságok tonnatartalom szerinti rendszere [00022]
           is-regimen-especial-canarias:
+            help: Jelölő a Kanári-szigeteki különleges rendszer esetén [00029].
             label: Kanári-szigeteki különleges rendszer [00029]
           is-regimen-especial-de-disolucion-y-liquidacion-de-sicav-dt-41a-lis:
             label: SICAV-ok megszüntetésének és felszámolásának különös rendszere
               (LIS 41. átmeneti rendelkezés) [00084]
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
+            help: Jelölő az egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
+              VII. fejezet, VII. cím szerinti különleges rendszere esetén [00035].
             label: Egyesülések, szétválások, eszköz-hozzájárulások és értékpapírcserék
               különleges rendszere (VII. fejezet, VII. cím) [00035]
           is-regimen-especial-hidrocarburos:
+            help: Jelölő a szénhidrogének különleges rendszere esetén [00034].
             label: Szénhidrogének különleges rendszere [00034]
           is-regimen-especial-illes-balears:
             label: Baleár-szigetek különös rendszere [00086]
           is-regimen-especial-mineria:
+            help: Jelölő a bányászati különleges rendszer esetén [00033].
             label: Bányászati különleges rendszer [00033]
           is-regimen-fiscal-entrada-socimi:
+            help: Jelölő a SOCIMI belépési adórendszer esetén [00064].
             label: SOCIMI belépési adórendszer [00064]
           is-regimen-fiscal-salida-socimi:
+            help: Jelölő a SOCIMI kilépési adórendszer esetén [00057].
             label: SOCIMI kilépési adórendszer [00057]
           is-regimenes-especiales-de-normativa-foral:
+            help: Jelölő forális szabályozás szerinti különleges rendszerek esetén
+              [00049].
             label: Forális szabályozás szerinti különleges rendszerek [00049]
           is-reserva-capitalizacion-derecho-generado:
             label: Tőkésítési tartalék - Összesen - Időszakban keletkezett/időszak
@@ -9471,6 +9564,7 @@ modelo:
               - Időszaki adóalap-csökkentés összege/időszak elején hozzáadásra vár
               [01406]
           is-resto-cooperativas:
+            help: Jelölő egyéb szövetkezetek esetén [00019].
             label: Egyéb szövetkezetek [00019]
           is-resultado-ingresar-o-devolver:
             label: Elszámolás IV - Az időszak befizetendő vagy visszatérítendő adója
@@ -9483,18 +9577,29 @@ modelo:
             label: Elszámolás III - Adóalap - Munkavállalói társaságok - Különleges
               tartalék képzése (44/2015. törvény 14. cikk) [SAL_RESERVA_DOTACION]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
+            help: Jelölő kölcsönös garanciavállaló vagy viszontgarancia-társaság esetén
+              [00036].
             label: Kölcsönös garanciavállaló vagy viszontgarancia-társaság [00036]
           is-sociedad-de-inversion-de-capital-variable-o-fondo-de-inversion-de-caracter-financiero:
+            help: Jelölő változó tőkéjű befektetési társaság vagy pénzügyi befektetési
+              alap esetén [00003].
             label: Változó tőkéjű befektetési társaság vagy pénzügyi befektetési alap
               [00003]
           is-sociedad-de-inversion-de-capital-variable-que-no-cumpla-los-requisitos-del-art-29-4-a-lis:
+            help: Jelölő olyan változó tőkéjű befektetési társaság esetén, amely nem
+              teljesíti a társasági adóról szóló törvény 29.4 a) cikkének feltételeit
+              [00008].
             label: A LIS 29.4 a) cikkének feltételeit nem teljesítő változó tőkéjű
               befektetési társaság [00008]
           is-sociedad-de-inversion-inmobiliaria-o-fondo-de-inversion-inmobiliaria:
+            help: Jelölő ingatlanbefektetési társaság vagy ingatlanbefektetési alap
+              esetén [00004].
             label: Ingatlanbefektetési társaság vagy ingatlanbefektetési alap [00004]
           is-sociedades-desarrollo-industrial-regional:
+            help: Jelölő regionális iparfejlesztési társaságok esetén [00032].
             label: Regionális iparfejlesztési társaságok [00032]
           is-socimi:
+            help: Jelölő SOCIMI szervezet esetén [00012].
             label: SOCIMI (spanyol tőzsdei ingatlanbefektetési társaság) [00012]
           is-tfi-ajuste-disminucion:
             label: Nemzetközi adózási átláthatóság (LIS 100. cikk) - Csökkenés - Évi
@@ -9506,6 +9611,8 @@ modelo:
             label: Nemzetközi adózási átláthatóság (LIS 100. cikk) - Növekedés - Az
               időszak elején fennálló egyenleg [03174]
           is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis:
+            help: Jelölő a társasági adóról szóló törvény 22. átmeneti rendelkezése
+              szerinti, újonnan létrehozott szervezetek csökkentett adókulcsához [00063].
             label: Újonnan létrehozott szervezetek csökkentett adókulcsa (LIS 22.
               átmeneti rendelkezés) [00063]
           is-tipo-gravamen-reducido-para-empresa-emergente:
@@ -9517,6 +9624,8 @@ modelo:
             label: Kedvezményes adókulcs újonnan létrehozott jogalanyok számára (LIS
               29.1. cikk) [00071]
           is-transmision-elementos-patrimoniales-arts-27-2-d-y-77-1-l-i-s:
+            help: Jelölő vagyonelemeknek a társasági adóról szóló törvény 27.2.d)
+              és 77.1 cikke szerinti átruházása esetén [00030].
             label: Vagyonelemek átruházása a LIS 27.2.d) és 77.1 cikke szerint [00030]
           is-tributacion-conjunta-abono-cinematografica:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Külföldi
@@ -9531,6 +9640,8 @@ modelo:
             label: Állam és forális közigazgatások együttes adóztatása - Különbözeti
               adókötelezettség - Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
+            help: Jelölő az állam, a tartományi tanácsok és a forális közösségek közötti
+              közös adózás esetén [00028].
             label: 'Közös adózás: állam / tartományi tanácsok / forális közösségek
               [00028]'
           is-tributacion-conjunta-fraccionamiento-importe:
@@ -9552,6 +9663,8 @@ modelo:
             label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
               százalékok számítása - Állami közigazgatás [00625]
           is-tributacion-conjunta-proporcion:
+            help: Adja meg az állam és a forális közigazgatások közötti, gazdasági
+              megállapodás szerinti közös adózás ügyleteinek teljes volumenét [00050].
             label: Közös adózás az állam és a forális közigazgatások között - gazdasági
               megállapodás - ügyletek teljes volumene [00050]
           is-tributacion-conjunta-resultado:
@@ -13093,7 +13206,9 @@ modelo:
                 (LIS 18. kiegészítő rendelkezés RDL 4/2024) - Növekedés - Évi korrekciók
                 - Átmeneti (korábbi időszakokból eredő)
             01824:
-              label: Az űrlap adóadata
+              label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A kikötői hatóságok által a tárgyi eszközök átruházásából
+                szerzett jövedelmek (DA 68ª Ley 6/2018) - Disminuc...
             01868:
               label: Tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
                 értékvesztési korrekciói (LIS DT 16.1 és 2. cikk) - Csökkenés - Évi
@@ -13103,7 +13218,9 @@ modelo:
                 negatív adóalapok kompenzációjának bontása - Különleges adóalap-kompenzáció
                 részösszege - Időszak elején alkalmazásra váró'
             01887:
-              label: Az űrlap adóadata
+              label: III. elszámolás - Adóalap - Kanári-szigeteki hajók és hajózási
+                vállalatok különleges rendszere - A korábbi időszakok negatív adóalapjainak
+                beszámítása az adóalap rendszer...
             01888:
               label: 'Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának bontása - Különleges adóalap-kompenzáció
@@ -13113,7 +13230,9 @@ modelo:
                 negatív adóalapok kompenzációjának bontása - Egyéb tevékenységek adóalap-kompenzációjának
                 részösszege - Jövőbeli időszakokban alkalmazandó'
             01890:
-              label: Az űrlap adóadata
+              label: III. elszámolás - Adóalap - Kanári-szigeteki hajók és hajózási
+                vállalatok különleges rendszere - A korábbi időszakok negatív adóalapjainak
+                beszámítása az adóalap fennmaradó rész...
             01891:
               label: 'Kanári-szigeteki hajók és hajózási vállalkozások különös rendszere:
                 negatív adóalapok kompenzációjának bontása - Egyéb tevékenységek adóalap-kompenzációjának
@@ -13214,17 +13333,25 @@ modelo:
                 130. cikk - Keletkezés éve - 2019 - Jövőbeli időszakokban alkalmazásra
                 váró DTA...
             02181:
-              label: Az űrlap adóadata
+              label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Nem rezidens jogalanyok osztalékainak vagy nyereségrészesedéseinek
+                mentessége (art. 21.1, 21.10 y DT 40ª LIS) - Di...
             02182:
-              label: Az űrlap adóadata
+              label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Rezidens jogalanyok értékpapírjainak átruházásából
+                szerzett jövedelem mentessége (art. 21.3, 21.10 y DT 40ª LIS) - Aume...
             02183:
-              label: Az űrlap adóadata
+              label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Rezidens jogalanyok értékpapírjainak átruházásából
+                szerzett jövedelem mentessége (art. 21.3, 21.10 y DT 40ª LIS) - Dism...
             02184:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - Nem belföldi illetőségű jogalanyok értékpapír-átruházásából származó
                 jövedelem mentessége (LIS 21.3, 21.10. cikk és DT 40. cikk) - A...
             02185:
-              label: Az űrlap adóadata
+              label: II. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - Nem rezidens jogalanyok értékpapírjainak átruházásából
+                szerzett jövedelem mentessége (art. 21.3, 21.10 y DT 40ª LIS) - D...
             02186:
               label: Elszámolás II - Az eredménykimutatás eredményének korrekciói
                 - A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
@@ -13301,11 +13428,17 @@ modelo:
                 eredményének korrekciói - Az adóévben keletkezett ideiglenes korrekció
                 - Csökkentések
             '02307':
-              label: Az űrlap adóadata
+              label: Az eredménykimutatás eredményét érintő korrekciók részletezése
+                - Az adóévi eredménykimutatás eredményét érintő korrekciók - Korábbi
+                adóévekből eredő időbeli korrekció - Növekmények...
             02308:
-              label: Az űrlap adóadata
+              label: Az eredménykimutatás eredményét érintő korrekciók részletezése
+                - Az adóévi eredménykimutatás eredményét érintő korrekciók - Korábbi
+                adóévekből eredő időbeli korrekció - Disminuc...
             '02311':
-              label: Az űrlap adóadata
+              label: I. elszámolás - Az eredménykimutatás eredményét érintő korrekciók
+                részletezése - A kikötői hatóságok által végrehajtott beruházások
+                utáni levonás tárgyát képező kiadások (art. 15 n) LIS) - Aument...
             02369:
               label: Pénzügyi ráfordítások levonhatóságának korlátozása - LIS 16.1
                 és 16.2 cikk szerinti korlát - k) A nettó pénzügyi ráfordítások levonásának
@@ -13651,9 +13784,13 @@ modelo:
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
                 - Csökkenés - Évi korrekciók - Végleges
             '03007':
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, rezidens
+                jogalanyok értékpapírjainak átruházásától eltérő esetekben szerzett
+                jövedelem mentessége - Csökkenés - Az adóévi korrekciók - Temporaria...
             03008:
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, rezidens
+                jogalanyok értékpapírjainak átruházásától eltérő esetekben szerzett
+                jövedelem mentessége - Csökkenés - Az adóévi korrekciók - Temporaria...
             03009:
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, belföldi jogalanyok
                 értékpapír-átruházásától eltérő esetekben szerzett jövedelem mentessége
@@ -13663,9 +13800,15 @@ modelo:
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
                 mentessége - Növekedés - Évi korrekciók - Végleges
             '03012':
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, nem
+                rezidens jogalanyok értékpapírjainak átruházásától eltérő esetekben
+                szerzett jövedelem mentessége - Növekmény - Az adóévi korrekciók -
+                Időbeli...
             '03013':
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, nem
+                rezidens jogalanyok értékpapírjainak átruházásától eltérő esetekben
+                szerzett jövedelem mentessége - Növekmény - Az adóévi korrekciók -
+                Időbeli...
             '03014':
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
@@ -13675,9 +13818,15 @@ modelo:
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
                 mentessége - Csökkenés - Évi korrekciók - Végleges
             '03017':
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, nem
+                rezidens jogalanyok értékpapírjainak átruházásától eltérő esetekben
+                szerzett jövedelem mentessége - Csökkenés - Az adóévi korrekciók -
+                Tempora...
             03018:
-              label: Az űrlap adóadata
+              label: A LIS 21.3, 21.10 cikke és DT 40.ª rendelkezése szerinti, nem
+                rezidens jogalanyok értékpapírjainak átruházásától eltérő esetekben
+                szerzett jövedelem mentessége - Csökkenés - Az adóévi korrekciók -
+                Tempora...
             03019:
               label: A LIS 21.3, 21.10. cikke és DT 40. cikke szerinti, nem belföldi
                 jogalanyok értékpapír-átruházásától eltérő esetekben szerzett jövedelem
@@ -13731,9 +13880,15 @@ modelo:
                 formákban való részvételből származó mentes jövedelmek korrekciói
                 (LIS 45.2. cikk) - Növekedés - Évi korrekciók - Végleges
             '03102':
-              label: Az űrlap adóadata
+              label: Vállalati ideiglenes társulás, a külföldön az UTE-hoz hasonló
+                együttműködési formákban való részvételből eredő mentesített jövedelmek
+                kiigazításai (art. 45.2 LIS) - Növekmény - Az adóévi korrekciók -
+                Tempor...
             '03103':
-              label: Az űrlap adóadata
+              label: Vállalati ideiglenes társulás, a külföldön az UTE-hoz hasonló
+                együttműködési formákban való részvételből eredő mentesített jövedelmek
+                kiigazításai (art. 45.2 LIS) - Növekmény - Az adóévi korrekciók -
+                Tempor...
             '03104':
               label: Ideiglenes vállalati társulás, az UTE-hoz hasonló külföldi együttműködési
                 formákban való részvételből származó mentes jövedelmek korrekciói
@@ -13743,11 +13898,20 @@ modelo:
                 formákban való részvételből származó mentes jövedelmek korrekciói
                 (LIS 45.2. cikk) - Növekedés - Év végén függőben lévő egyenleg
             '03106':
-              label: Az űrlap adóadata
+              label: Vállalati ideiglenes társulás, a külföldön az UTE-hoz hasonló
+                együttműködési formákban való részvételből eredő mentesített jövedelmek
+                kiigazításai (art. 45.2 LIS) - Csökkenés - Az adóévi korrekciók -
+                Pe...
             '03107':
-              label: Az űrlap adóadata
+              label: Vállalati ideiglenes társulás, a külföldön az UTE-hoz hasonló
+                együttműködési formákban való részvételből eredő mentesített jövedelmek
+                kiigazításai (art. 45.2 LIS) - Csökkenés - Az adóévi korrekciók -
+                Te...
             03108:
-              label: Az űrlap adóadata
+              label: Vállalati ideiglenes társulás, a külföldön az UTE-hoz hasonló
+                együttműködési formákban való részvételből eredő mentesített jövedelmek
+                kiigazításai (art. 45.2 LIS) - Csökkenés - Az adóévi korrekciók -
+                Te...
             03109:
               label: Ideiglenes vállalati társulás, az UTE-hoz hasonló külföldi együttműködési
                 formákban való részvételből származó mentes jövedelmek korrekciói
@@ -13810,11 +13974,17 @@ modelo:
                 Helyesbítő: Elrendelt/kompenzált visszatérítés - Tartományi (foral)
                 közigazgatás / Navarra'
             '03317':
-              label: Az űrlap adóadata
+              label: 'Halasztott adóeszközök átalakítása az adóhatósággal szembeni
+                követelhető hitellé (art. 130 LIS) - Helyesbítő bevallás - Az AID
+                átalakításának eredménye a szabályozás után: Jóváírás - To...'
             03318:
-              label: Az űrlap adóadata
+              label: 'Halasztott adóeszközök átalakítása az adóhatósággal szembeni
+                követelhető hitellé (art. 130 LIS) - Helyesbítő bevallás - Az AID
+                átalakításának eredménye a szabályozás után: Jóváírás - Es...'
             03319:
-              label: Az űrlap adóadata
+              label: 'Halasztott adóeszközök átalakítása az adóhatósággal szembeni
+                követelhető hitellé (art. 130 LIS) - Helyesbítő bevallás - Az AID
+                átalakításának eredménye a szabályozás után: Jóváírás - D...'
             '03320':
               label: 'Halasztott adókövetelések átalakítása az adóhatósággal szemben
                 érvényesíthető követeléssé (LIS 130. cikk) - Helyesbítő bevallás -

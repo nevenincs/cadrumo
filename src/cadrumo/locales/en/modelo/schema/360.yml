@@ -700,7 +700,8 @@ modelo:
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
               label: 4. Refund requested. Period. Period start date
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
-              label: 5. Amendment of the previous year's prorrata. Definitive prorrata
+              label: 5. Amendment of the previous year's pro rata. Definitive pro
+                rata
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               label: 5. Amendment of the previous year's prorrata. Tax year
           field:

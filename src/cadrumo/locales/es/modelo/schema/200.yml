@@ -4,24 +4,39 @@ modelo:
       casilla:
         continuidad:
           '00042':
+            help: Consigne la cifra media de personal asalariado no fijo del ejercicio
+              [00042].
             label: Personal asalariado (cifra media del ejercicio) Personal no fijo
               [00042]
           '00051':
+            help: Consigne el volumen de operaciones en el extranjero para la tributación
+              conjunta entre el Estado y las administraciones forales conforme al
+              Concierto Económico [00051].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en el extranjero [00051]
           '00052':
+            help: Consigne el volumen de operaciones en Araba/Álava para la tributación
+              conjunta conforme al Concierto Económico [00052].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Araba/Álava [00052]
           '00053':
+            help: Consigne el volumen de operaciones en Gipuzkoa para la tributación
+              conjunta conforme al Concierto Económico [00053].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Gipuzkoa [00053]
           '00054':
+            help: Consigne el volumen de operaciones en Bizkaia para la tributación
+              conjunta conforme al Concierto Económico [00054].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen operaciones en Bizkaia [00054]
           '00055':
+            help: Consigne el volumen de operaciones en Navarra para la tributación
+              conjunta conforme al Convenio Económico [00055].
             label: Tributación conjunta Estado y Adm.Forales - Convenio económico
               - Volumen operaciones en Navarra [00055]
           00068:
+            help: Indicador de entidades que, sin ser entidades de crédito, utilizan
+              los estados de cuentas aplicables a las entidades de crédito [00068].
             label: 'Estados de cuentas de Entidades de Crédito: Entidades que sin
               ser Entidades de Crédito utilicen los estados de cuentas aplicables
               a éstas [00068]'
@@ -6239,6 +6254,8 @@ modelo:
               Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
               (TAP) - Importe de la deducción [03068]
           base-imponible-negativa-is:
+            help: Base imponible negativa o cero antes de ajustes o compensaciones
+              [00027].
             label: Base imponible negativa o cero [00027]
           canary-fixed-assets-2010-remaining:
             label: Deducciones inversión Canarias - Activos fijos 2010 - Pendiente
@@ -6356,8 +6373,10 @@ modelo:
             label: Deducc. para incentivar determ.actividades - Total - Aplicado en
               esta liquidación [00588]
           is-agrupacion-de-interes-economico-espanola:
+            help: Indicador de agrupación de interés económico española [00013].
             label: Agrupación de interés económico española [00013]
           is-agrupacion-europea-de-interes-economico:
+            help: Indicador de agrupación europea de interés económico [00014].
             label: Agrupación europea de interés económico [00014]
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Gastos financieros netos no deducidos por la entidad - B) Datos
@@ -6894,18 +6913,24 @@ modelo:
             label: Detalle compensación bases imponibles negativas - TOTAL - Pendiente
               aplicación a principio del período/generada en el período [00670]
           is-bonificacion-personal-investigador-rd-475-2014:
+            help: Indicador de la bonificación del personal investigador conforme
+              al Real Decreto 475/2014 [00065].
             label: Bonificación personal investigador (RD 475/2014) [00065]
           is-capital-riesgo-saldo-pendiente-aumento:
             label: Sociedades y fondos de capital-riesgo y sociedades de desarrollo
               industrial regional (capítulo IV del título VII LIS) - Aumento - Saldo
               pendiente a principio de ejercicio [03134]
           is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis:
+            help: Indicador de compensación de bases imponibles negativas para entidades
+              de nueva creación conforme al artículo 26.3 de la LIS [00070].
             label: Compensación bases imponibles negativas para entidades de nueva
               creación (art. 26.3 LIS) [00070]
           is-compensacion-bases-negativas:
             label: Detalle compensación bases imponibles negativas - 1999 - Aplicado
               en esta liquidación [00647]
           is-comunidades-titulares-de-montes-vecinales-en-mano-comun:
+            help: Indicador de comunidades titulares de montes vecinales en mano común
+              [00005].
             label: Comunidades titulares de montes vecinales en mano común [00005]
           is-consolidacion-fiscal-eliminacion:
             label: Liquidación II - Entidades que forman parte de grupos de consolidac.fiscal
@@ -6917,9 +6942,15 @@ modelo:
             label: Contribuyente que financia producciones con derecho a la deducción
               del art. 36.1 y 36.3 LIS [00074]
           is-contribuyente-que-genera-deducciones-del-art-36-1-y-36-3-lis-con-financiacion-realizada-por-otros-contribuyentes:
+            help: Indicador de contribuyente que genera deducciones de los artículos
+              36.1 y 36.3 de la LIS con financiación realizada por otros contribuyentes
+              [00044].
             label: Contribuyente que genera deducciones del art. 36.1 y 36.3 LIS con
               financiación realizada por otros contribuyentes [00044]
           is-cooperativa-base-imponible:
+            help: Indicador del régimen de cooperativas para la determinación de la
+              base imponible vinculada a la reserva para inversiones en las Illes
+              Balears y a los resultados extracooperativos [00016].
             label: Rég. cooperativas - Determ. base imponible - 11. Reserva inversiones
               Illes Balears - Resultados extracooperativos [00016]
           is-cooperativa-compensacion-cuotas:
@@ -6929,8 +6960,10 @@ modelo:
             label: Liquidación III - Base imponible - Sólo sociedades cooperativas
               - Cuota íntegra previa después de la reserva de nivelación [01331]
           is-cooperativa-especialmente-protegida:
+            help: Indicador de cooperativa especialmente protegida [00018].
             label: Cooperativa especialmente protegida [00018]
           is-cooperativa-protegida:
+            help: Indicador de cooperativa protegida [00017].
             label: Cooperativa protegida [00017]
           is-cooperativa-reserva-nivelacion-cuota:
             label: Liquidación III - Base imponible - Sólo sociedades cooperativas
@@ -8828,26 +8861,38 @@ modelo:
             label: Estado de cambios patrimonio neto (I) - Transferencias a la cta.
               pérdidas y ganancias - Otros ingresos/gastos [00348]
           is-entidad-aseguradora:
+            help: Indicador de entidad aseguradora [00025].
             label: Entidad aseguradora [00025]
           is-entidad-de-credito:
+            help: Indicador de entidad de crédito [00024].
             label: Entidad de crédito [00024]
           is-entidad-de-tenencia-de-valores-extranjeros:
+            help: Indicador de entidad de tenencia de valores extranjeros [00011].
             label: Entidad de tenencia de valores extranjeros [00011]
           is-entidad-dedicada-al-arrend-viviendas:
+            help: Indicador de entidad dedicada al arrendamiento de viviendas [00038].
             label: Entidad dedicada al arrend. viviendas [00038]
           is-entidad-dependiente-de-grupo-fiscal:
+            help: Indicador de entidad dependiente de un grupo fiscal [00010].
             label: Entidad dependiente de grupo fiscal [00010]
           is-entidad-dominante-de-grupo-fiscal:
+            help: Indicador de entidad dominante de un grupo fiscal [00009].
             label: Entidad dominante de grupo fiscal [00009]
           is-entidad-en-reg-atribuc-de-rentas-constituida-en-el-extranjero-con-presencia-en-territorio-espanol:
+            help: Indicador de entidad en régimen de atribución de rentas constituida
+              en el extranjero con presencia en territorio español [00046].
             label: Entidad en rég. Atribuc. de rentas constituida en el extranjero
               con presencia en territorio español [00046]
           is-entidad-en-regimen-de-atribucion-de-rentas-con-tributacion-por-el-impuesto-sobre-sociedades:
+            help: Indicador de entidad en régimen de atribución de rentas con tributación
+              por el Impuesto sobre Sociedades [00056].
             label: Entidad en régimen de atribución de rentas con tributación por
               el Impuesto sobre Sociedades [00056]
           is-entidad-inactiva:
+            help: Indicador de entidad inactiva [00026].
             label: Entidad inactiva [00026]
           is-entidad-parcialmente-exenta:
+            help: Indicador de que la entidad está parcialmente exenta [00002].
             label: Entidad parcialmente exenta [00002]
           is-entidad-parcialmente-exenta-aumento:
             label: Régimen de entidades parcialmente exentas (capítulo XIV del título
@@ -8858,11 +8903,16 @@ modelo:
               VII LIS) - Disminución - Correcciones del ejercicio - Temporarias (con
               origen en el ejercicio) [03237]
           is-entidad-patrimonial:
+            help: Indicador de entidad patrimonial [00066].
             label: Entidad patrimonial [00066]
           is-entidad-que-forma-parte-de-un-grupo-mercantil-art-42-del-cod-comercio:
+            help: Indicador de entidad que forma parte de un grupo mercantil conforme
+              al artículo 42 del Código de Comercio [00039].
             label: Entidad que forma parte de un grupo mercantil (art. 42 del Cód.
               Comercio) [00039]
           is-entidad-sin-animo-de-lucro-acogida-regimen-fiscal-titulo-ii-ley-49-2002:
+            help: Indicador de si la entidad es sin ánimo de lucro y está acogida
+              al régimen del Título II de la Ley 49/2002 [00001].
             label: Entidad sin ánimo de lucro acogida régimen fiscal Título II Ley
               49/2002 [00001]
           is-entidad-sin-fines-lucrativos-correccion-ejercicio-aumento:
@@ -8879,10 +8929,13 @@ modelo:
           is-entidad-zec-en-consolidacion-fiscal:
             label: Entidad ZEC en consolidación fiscal [00079]
           is-entidad-zec-sin-consolidacion-fiscal:
+            help: Indicador de entidad ZEC sin consolidación fiscal [00015].
             label: Entidad ZEC (sin consolidación fiscal) [00015]
           is-entidades-de-capital-riesgo:
+            help: Indicador de entidades de capital riesgo [00031].
             label: Entidades de capital-riesgo [00031]
           is-entidades-sometidas-a-normativa-foral:
+            help: Indicador de entidades sometidas a normativa foral [00047].
             label: Entidades sometidas a normativa foral [00047]
           is-erd-amortizacion-acelerada-aumento:
             label: 'Empresas de reducida dimensión: amortización acelerada (art. 103
@@ -8912,6 +8965,7 @@ modelo:
             label: 'Empresas de reducida dimensión: libertad de amortización (art.
               102 LIS) - Aumento - Saldo pendiente a principio de ejercicio [03184]'
           is-establecimiento-permanente:
+            help: Indicador de establecimiento permanente [00021].
             label: Establecimiento permanente [00021]
           is-etv-ajuste-aumento:
             label: Régimen fiscal entidades de tenencia de valores extranjeros (capítulo
@@ -8932,9 +8986,12 @@ modelo:
           is-extincion-de-entidad:
             label: Extinción de entidad [00072]
           is-fondo-de-pensiones-real-decreto-legislativo-1-2002-de-29-de-noviembre:
+            help: Indicador de fondo de pensiones conforme al Real Decreto Legislativo
+              1/2002, de 29 de noviembre [00048].
             label: Fondo de Pensiones Real Decreto Legislativo 1/2002 de 29 de noviembre
               [00048]
           is-fondos-o-activos-de-titulizacion:
+            help: Indicador de fondos o activos de titulización [00060].
             label: Fondos o activos de titulización [00060]
           is-fraccionamiento-cambio-residencia-bi:
             label: Liquidación IV - Opción de fraccionamiento en supuestos de cambios
@@ -8957,8 +9014,11 @@ modelo:
               pendientes deducir - Ejercicio generación 2021 - Pendiente aplicación
               a principio del período - Por límite [01098]
           is-gran-empresa:
+            help: Indicador de gran empresa [00023].
             label: Gran empresa [00023]
           is-grupo-fiscal-numero:
+            help: Consigne el número de grupo fiscal cuando resulten aplicables las
+              claves 00009 o 00010 [00040].
             label: Grupo fiscal - Claves 00009 ó 00010 - Nº de grupo fiscal [00040]
           is-hidrocarburos-amortizacion-intangibles-aumento:
             label: 'Hidrocarburos: Amortización de inversiones intangibles y gastos
@@ -8973,15 +9033,24 @@ modelo:
               de investigación (art. 99 LIS) - Disminución - Saldo pendiente a principio
               de ejercicio [03169]'
           is-identificacion-regimen-flag:
+            help: Indicador de entidades que utilizan los estados de cuentas aplicables
+              a las instituciones de inversión colectiva, excepto las claves 00003,
+              00004 y 00008 [00061].
             label: 'Estados de cuentas de Instituciones de Inversión Colectiva: Entidades
               que utilicen los estados de cuentas aplicables a las IIC (excepto claves
               00003, 00004 y 00008) [00061]'
           is-imputacion-en-base-imponible-rentas-positivas-art-100-lis:
+            help: Indicador de imputación en la base imponible de rentas positivas
+              conforme al artículo 100 de la LIS [00007].
             label: Imputación en base imponible rentas positivas art. 100 LIS [00007]
           is-incentivos-entidad-de-reducida-dimension-cap-xi-tit-vii-lis:
+            help: Indicador de aplicación de los incentivos de entidad de reducida
+              dimensión del capítulo XI, título VII de la LIS [00006].
             label: Incentivos entidad de reducida dimensión ( cap XI, tít. VII LIS
               ) [00006]
           is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994:
+            help: Indicador de inversiones anticipadas para la reserva para inversiones
+              en Canarias conforme al artículo 27.11 de la Ley 19/1994 [00045].
             label: Inversiones anticipadas - reserva inversiones en Canarias (art.
               27.11 Ley 19/1994) [00045]
           is-inversiones-anticipadas-reserva-inversiones-en-illes-balears-da-70a-cuatro-10-ley-31-2022:
@@ -9050,8 +9119,11 @@ modelo:
               - Disminución - Correcciones del ejercicio - Temporarias (con origen
               en el ejercicio) [03157]'
           is-mutua-de-seguros-o-mutualidad-de-prevision-social:
+            help: Indicador de mutua de seguros o mutualidad de previsión social [00058].
             label: Mutua de seguros o Mutualidad de previsión social [00058]
           is-naviera-regimen-flag:
+            help: Indicador del régimen especial de buques y empresas navieras en
+              Canarias [00069].
             label: Régimen especial de buques y empresas navieras en Canarias [00069]
           is-naviera-tonelaje-ajuste-aumento:
             label: Régimen de entidades navieras en función del tonelaje (capítulo
@@ -9066,6 +9138,8 @@ modelo:
               XVI del título VII LIS) - Disminución - Saldo pendiente a principio
               de ejercicio [03259]
           is-obligacion-informacion-dt-5a-ris:
+            help: Indicador de la obligación de información de la disposición transitoria
+              quinta del RIS [00043].
             label: Obligación información DT 5ª RIS [00043]
           is-obra-benefico-social-aumento:
             label: Obra benéfico-social de las cajas de ahorro y fundaciones bancarias
@@ -9076,14 +9150,18 @@ modelo:
               (art. 24 LIS) - Disminución - Correcciones del ejercicio - Temporarias
               (con origen en el ejercicio) [03047]
           is-opcion-art-39-2-lis:
+            help: Indicador de la opción del artículo 39.2 de la LIS [00059].
             label: Opción art. 39.2 LIS [00059]
           is-opcion-art-39-3-lis:
             label: Opción art. 39.3 LIS [00090]
           is-opcion-de-fraccionamiento-art-19-1-lis:
+            help: Indicador de la opción de fraccionamiento conforme al artículo 19.1
+              de la LIS [00037].
             label: Opción de fraccionamiento art. 19.1 LIS [00037]
           is-opcion-del-0-7-de-la-cuota-integra-para-fines-sociales:
             label: Opción del 0,7% de la cuota íntegra para fines sociales [00073]
           is-otros-regimenes-especiales:
+            help: Indicador de otros regímenes especiales [00020].
             label: Otros regímenes especiales [00020]
           is-pagos-fraccionados:
             label: Tributación conjunta Estado y Adm.Forales - Pagos fraccionados
@@ -9143,6 +9221,8 @@ modelo:
             label: Partícipe de agrupación de interés económico o de unión temporal
               de empresas [00089]
           is-personal-asalariado-cifra-media:
+            help: Consigne la cifra media de personal asalariado fijo del ejercicio
+              [00041].
             label: Personal asalariado (cifra media del ejercicio) Personal fijo [00041]
           is-pyg-continuadas-amortizacion-del-inmovilizado:
             label: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -
@@ -9457,29 +9537,41 @@ modelo:
             label: Cuenta de pérdidas y ganancias (II) - Operaciones interrumpidas
               - RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS [00500]
           is-reg-fiscal-de-operac-de-aportacion-de-activos-a-sdades-para-la-gestion-de-activos-ley-8-2012:
+            help: Indicador del régimen fiscal de operaciones de aportación de activos
+              a sociedades para la gestión de activos conforme a la Ley 8/2012 [00062].
             label: Reg.fiscal de operac.de aportación de activos a sdades. para la
               gestión de activos (ley 8/2012) [00062]
           is-regimen-entidades-navieras-en-funcion-del-tonelaje:
+            help: Indicador del régimen de entidades navieras en función del tonelaje
+              [00022].
             label: Régimen entidades navieras en función del tonelaje [00022]
           is-regimen-especial-canarias:
+            help: Indicador del régimen especial de Canarias [00029].
             label: Régimen especial Canarias [00029]
           is-regimen-especial-de-disolucion-y-liquidacion-de-sicav-dt-41a-lis:
             label: Régimen especial de disolución y liquidación de SICAV (DT 41ª LIS)
               [00084]
           is-regimen-especial-fusiones-escisiones-aportaciones-activos-y-canjes-valores-cap-vii-tit-vii:
+            help: Indicador del régimen especial de fusiones, escisiones, aportaciones
+              de activos y canjes de valores del capítulo VII, título VII [00035].
             label: Régimen especial fusiones, escisiones, aportaciones activos y canjes
               valores (Cap.VII, Tit. VII) [00035]
           is-regimen-especial-hidrocarburos:
+            help: Indicador del régimen especial de hidrocarburos [00034].
             label: Régimen especial hidrocarburos [00034]
           is-regimen-especial-illes-balears:
             label: Régimen especial Illes Balears [00086]
           is-regimen-especial-mineria:
+            help: Indicador del régimen especial de minería [00033].
             label: Régimen especial minería [00033]
           is-regimen-fiscal-entrada-socimi:
+            help: Indicador del régimen fiscal de entrada SOCIMI [00064].
             label: Régimen fiscal entrada SOCIMI [00064]
           is-regimen-fiscal-salida-socimi:
+            help: Indicador del régimen fiscal de salida SOCIMI [00057].
             label: Régimen fiscal salida SOCIMI [00057]
           is-regimenes-especiales-de-normativa-foral:
+            help: Indicador de regímenes especiales de normativa foral [00049].
             label: Regímenes especiales de normativa foral [00049]
           is-reserva-capitalizacion-derecho-generado:
             label: Reserva Capitalización - Total - Derecho reducir B.I. generado
@@ -9523,6 +9615,7 @@ modelo:
               2022 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo
               [01406]
           is-resto-cooperativas:
+            help: Indicador del resto de cooperativas [00019].
             label: Resto cooperativas [00019]
           is-resultado-ingresar-o-devolver:
             label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver -
@@ -9534,19 +9627,29 @@ modelo:
             label: Liquidación III - Base Imponible - Sociedades Laborales - Reserva
               especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]
           is-sociedad-de-garantia-reciproca-o-de-reafianzamiento:
+            help: Indicador de sociedad de garantía recíproca o de reafianzamiento
+              [00036].
             label: Sociedad de garantía recíproca o de reafianzamiento [00036]
           is-sociedad-de-inversion-de-capital-variable-o-fondo-de-inversion-de-caracter-financiero:
+            help: Indicador de sociedad de inversión de capital variable o fondo de
+              inversión de carácter financiero [00003].
             label: Sociedad de inversión de capital variable o fondo de inversión
               de carácter financiero [00003]
           is-sociedad-de-inversion-de-capital-variable-que-no-cumpla-los-requisitos-del-art-29-4-a-lis:
+            help: Indicador de sociedad de inversión de capital variable que no cumple
+              los requisitos del artículo 29.4 a) de la LIS [00008].
             label: Sociedad de inversión de capital variable que no cumpla los requisitos
               del art. 29.4 a) LIS [00008]
           is-sociedad-de-inversion-inmobiliaria-o-fondo-de-inversion-inmobiliaria:
+            help: Indicador de sociedad de inversión inmobiliaria o fondo de inversión
+              inmobiliaria [00004].
             label: Sociedad de inversión inmobiliaria o fondo de inversión inmobiliaria
               [00004]
           is-sociedades-desarrollo-industrial-regional:
+            help: Indicador de sociedades de desarrollo industrial regional [00032].
             label: Sociedades desarrollo industrial regional [00032]
           is-socimi:
+            help: Indicador de entidad SOCIMI [00012].
             label: SOCIMI [00012]
           is-tfi-ajuste-disminucion:
             label: Transparencia fiscal internacional (art. 100 LIS) - Disminución
@@ -9559,6 +9662,9 @@ modelo:
             label: Transparencia fiscal internacional (art. 100 LIS) - Aumento - Saldo
               pendiente a principio de ejercicio [03174]
           is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis:
+            help: Indicador del tipo de gravamen reducido para entidades de nueva
+              creación conforme a la disposición transitoria vigesimosegunda de la
+              LIS [00063].
             label: Tipo de gravamen reducido para entidades de nueva creación (DT
               22ª LIS) [00063]
           is-tipo-gravamen-reducido-para-empresa-emergente:
@@ -9570,6 +9676,8 @@ modelo:
             label: Tipo gravamen reducido para entidades de nueva creación (art. 29.1
               LIS) [00071]
           is-transmision-elementos-patrimoniales-arts-27-2-d-y-77-1-l-i-s:
+            help: Indicador de transmisión de elementos patrimoniales conforme a los
+              artículos 27.2.d) y 77.1 de la LIS [00030].
             label: Transmisión elementos patrimoniales arts. 27.2.d) y 77.1 L.I.S.
               [00030]
           is-tributacion-conjunta-abono-cinematografica:
@@ -9585,6 +9693,8 @@ modelo:
             label: Tributación conjunta Estado y Adm.Forales - Cuota diferencial -
               Araba/Álava [00474]
           is-tributacion-conjunta-estado-diput-cdad-forales:
+            help: Indicador de tributación conjunta entre el Estado, las diputaciones
+              y las comunidades forales [00028].
             label: Tributación conjunta Estado/Diput.Cdad.Forales [00028]
           is-tributacion-conjunta-fraccionamiento-importe:
             label: Tributación conjunta Estado y Adm.Forales - Opción de fraccionamiento
@@ -9605,6 +9715,9 @@ modelo:
             label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
               tributación - Admón.del Estado [00625]
           is-tributacion-conjunta-proporcion:
+            help: Consigne el volumen total de operaciones para la tributación conjunta
+              entre el Estado y las administraciones forales conforme al Concierto
+              Económico [00050].
             label: Tributación conjunta Estado y Adm.Forales - Concierto económico
               - Volumen total de operaciones [00050]
           is-tributacion-conjunta-resultado:

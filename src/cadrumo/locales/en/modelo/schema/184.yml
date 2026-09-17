@@ -266,8 +266,8 @@ modelo:
       construct:
         modelo-184-informative:
           field:
-            title: Modelo 184 informative return of entidades en régimen de atribución
-              de rentas
+            title: Modelo 184 informative return for entities under the income attribution
+              regime
       field:
         official_name: Modelo 184. Annual informative return of income-attribution
           entities.

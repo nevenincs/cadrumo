@@ -969,6 +969,8 @@ application:
         has no operator override to clear.
       local_observation_reason_blank: A manual observation override must state the
         reason for it.
+      local_observation_spreadsheet_malformed_rows: 'The spreadsheet has %{malformed_row_count}
+        unusable rows: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
         profile than the bucket it would be recorded in
       m210_ledger_manual_agrupacion_rows: Modelo 210 ledger source mode derives annual

@@ -1490,8 +1490,8 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 127 del
                 Modelo 322 Referències: [127].'
             '128':
-              help: 'Consulteu la informació de la casella: Operacions intragrupo
-                valoradas conforme a lo dispuesto en los arts. 78 i 79 LIVA [128].'
+              help: 'Consulteu la informació de la casella: Operacions intragrup valorades
+                d''acord amb el que disposen els arts. 78 i 79 LIVA [128].'
             '13':
               help: 'Informació fiscal sobre informació fiscal de la casella 13 del
                 Modelo 322 Referències: [13].'
@@ -1663,7 +1663,7 @@ modelo:
                 Modelo 322 Referències: [39].'
             '40':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes soportadas en operacions intragrupo corrientes. Quota [40].'
+                per quotes suportades en operacions intragrup corrents. Quota [40].'
             '41':
               help: 'Informació fiscal sobre informació fiscal de la casella 41 del
                 Modelo 322 Referències: [41].'
@@ -1694,7 +1694,7 @@ modelo:
                 Modelo 322 Referències: [49].'
             '50':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes soportadas en las importacions de béns corrientes. Quota
+                per quotes suportades en les importacions de béns corrents. Quota
                 [50].'
             '500':
               help: 'Consulteu la informació de la casella: Prorratas - 1 - Codi CNAE
@@ -1818,8 +1818,8 @@ modelo:
               help: 'Consulteu la informació de la casella: Liquidació (continuación).
                 Atribuïble a la Administració del Estat. [65].'
             '66':
-              help: 'Consulteu la informació de la casella: Liquidació (continuación).
-                Quotes a compensar de períodos anteriors a la incorporación al grup.
+              help: 'Consulteu la informació de la casella: Liquidació (continuació).
+                Quotes a compensar de períodes anteriors a la incorporació al grup.
                 [66].'
             '67':
               help: 'Informació fiscal sobre informació fiscal de la casella 67 del
@@ -1897,8 +1897,8 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 719 del
                 Modelo 322 Referències: [719].'
             '72':
-              help: 'Consulteu la informació de la casella: Información adicional.
-                Exportacions i operacions asimiladas. [72].'
+              help: 'Consulteu la informació de la casella: Informació addicional.
+                Exportacions i operacions assimilades. [72].'
             '720':
               help: 'Informació fiscal sobre informació fiscal de la casella 720 del
                 Modelo 322 Referències: [720].'
@@ -1968,13 +1968,13 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 84 del
                 Modelo 322 Referències: [84].'
             '86':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
-                en el exercici. Operacions en règim simplificado [86].'
+              help: 'Consulteu la informació de la casella: Operacions realitzades
+                en el exercici. Operacions en règim simplificat [86].'
             '88':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
-                en el exercici. Total volumen de operacions (Art. 121 Ley IVA) (80
-                + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86 + 95 + 96 +
-                97 + 98 - 79 - 99) [88].'
+              help: 'Consulteu la informació de la casella: Operacions realitzades
+                en el exercici. Volum total d''operacions (Art. 121 Llei de l''IVA)
+                (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86 + 95 + 96
+                + 97 + 98 - 79 - 99) [88].'
             '89':
               help: 'Informació fiscal sobre informació fiscal de la casella 89 del
                 Modelo 322 Referències: [89].'
@@ -1994,16 +1994,16 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 94 del
                 Modelo 322 Referències: [94].'
             '95':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
-                en el exercici. Operacions en règim especial de la agricultura, ganadería
+              help: 'Consulteu la informació de la casella: Operacions realitzades
+                en el exercici. Operacions en règim especial de l''agricultura, ramaderia
                 i pesca [95].'
             '96':
               help: 'Informació fiscal sobre informació fiscal de la casella 96 del
                 Modelo 322 Referències: [96].'
             '97':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
-                en el exercici. Operacions en Règim especial de béns usados, objetos
-                de arte, antigüedades i objetos de colección [97].'
+              help: 'Consulteu la informació de la casella: Operacions realitzades
+                en el exercici. Operacions en Règim especial de béns usats, objectes
+                d''art, antiguitats i objectes de col·lecció [97].'
             '98':
               help: 'Consulteu la informació de la casella: Operacions realizadas
                 en el exercici. Operacions en règim especial de Agencias de Viajes
@@ -2054,8 +2054,8 @@ modelo:
               label: Dret a deduir el pagament a compte de lliuraments de gasolines,
                 gasolis i biocarburants
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: 'Consulteu la informació de la casella: Destinatario de operacions
-                acogidas al criterio de caja.'
+              help: 'Consulteu la informació de la casella: Destinatari d''operacions
+                acollides al criteri de caixa.'
               label: Destinatari d'operacions acollides al criteri de caixa
             x-chim6r1ecll6asj3d5hmiro:
               help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
@@ -2090,8 +2090,8 @@ modelo:
               help: Informació fiscal de la casella del Modelo 322.
               label: Tributació exclusivament foral
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: 'Consulteu la informació de la casella: Volumen anual de operacions
-                distinto de cero.'
+              help: 'Consulteu la informació de la casella: Volum anual d''operacions
+                diferent de zero.'
               label: Volum anual d'operacions diferent de zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: 'Consulteu la informació de la casella: Quota IVA autorepercutida

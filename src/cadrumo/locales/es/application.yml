@@ -1064,6 +1064,8 @@ application:
         no tiene ninguna corrección manual del operador que eliminar.
       local_observation_reason_blank: Una corrección manual de una observación debe
         indicar su motivo.
+      local_observation_spreadsheet_malformed_rows: 'La hoja de cálculo tiene %{malformed_row_count}
+        filas inutilizables: %{malformed_rows}'
       m036_declaration_profile_bucket_mismatch: La declaración del modelo 036 indica
         un perfil distinto del bucket en el que se registraría
       m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo

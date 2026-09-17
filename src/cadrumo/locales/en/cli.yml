@@ -803,8 +803,6 @@ cli:
         filing_record_id_help: Stable filing-record identifier
         import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
-        import_declared_kind_file_error: --declared-kind is not accepted with --file;
-          import the correction with --set values.
         import_declared_kind_help: Declaration type AEAT records for this presentation
           (original, complementaria, sustitutiva, rectificativa); required when AEAT
           already holds a confirmed declaration for the period

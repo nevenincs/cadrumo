@@ -93,7 +93,7 @@ modelo:
         '2025':
           casilla:
             rendimientos-trabajo-superiores-60000:
-              label: Jövedelmek integros - trabajo superiores a 60000 euros
+              label: 60 000 eurót meghaladó bruttó munkajövedelem
           field:
             label: 345-ös modelo, 2025. adóév (HFP/823/2022 rendelet és HAC/1430/2025
               rendelet)

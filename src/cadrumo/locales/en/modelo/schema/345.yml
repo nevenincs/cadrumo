@@ -93,6 +93,6 @@ modelo:
         '2025':
           casilla:
             rendimientos-trabajo-superiores-60000:
-              label: Income integros of the trabajo superiores a 60000 euros
+              label: Gross employment income exceeding 60,000 euros
           field:
             label: Modelo 345, tax year 2025 (Order HFP/823/2022 and Order HAC/1430/2025)

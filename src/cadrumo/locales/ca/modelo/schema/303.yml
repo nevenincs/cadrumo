@@ -693,11 +693,70 @@ modelo:
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Exercici fiscal al qual es refereix l'autoliquidació.
+            x-chim6r1ee1in4qbfchng:
+              help: 'Període trimestral de l''autoliquidació: 1T, 2T, 3T o 4T.'
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
+              help: IVA autorepercutit deduïble en operacions interiors subjectes
+                a inversió del subjecte passiu.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
+              help: IVA autorepercutit meritat en operacions interiors subjectes a
+                inversió del subjecte passiu.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
+              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries subjectes
+                a inversió del subjecte passiu.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
+              help: IVA autorepercutit deduïble en adquisicions intracomunitàries
+                de béns i serveis.
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
+              help: IVA autorepercutit meritat en adquisicions intracomunitàries de
+                béns i serveis.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
+              help: Quotes pendents de períodes anteriors aplicades en aquest període.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
+              help: Saldo d'IVA a compensar disponible per traslladar a períodes posteriors.
+            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
+              help: Saldo d'IVA a compensar generat per l'autoliquidació d'aquest
+                període.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
+              help: Quotes d'IVA a compensar que resten pendents de períodes anteriors.
+            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
+              help: Compensacions d'IVA de períodes anteriors que resten pendents
+                per a períodes posteriors.
+            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
+              help: Total de la quota d'IVA deduïble, inclòs l'IVA suportat interior
+                i l'IVA autorepercutit deduïble.
+            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
+              help: Total de la quota d'IVA meritada, inclòs l'IVA repercutit i l'IVA
+                autorepercutit aplicable.
+            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
+              help: Percentatge de prorrata general calculat a partir del volum amb
+                dret a deducció sobre el volum total.
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
+              help: Volum anual d'operacions que originen dret a deduir l'IVA.
+            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
+              help: Volum anual total d'operacions emprat per al càlcul de la prorrata
+                general.
+            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
+              help: Regularització de l'IVA corresponent a béns d'inversió.
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: Total d'IVA repercutit calculat al tipus general del 21%.
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
+              help: Total d'IVA repercutit calculat al tipus reduït del 10%.
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
+              help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
+            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
+              help: Resultat del règim general calculat com IVA meritat menys IVA
+                deduïble.
+            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
+              help: IVA suportat deduïble en importacions de béns corrents.
+            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
+              help: Total d'IVA suportat pagat en compres interiors de béns i serveis
+                corrents.
           field:
             label: Modelo 303, exercici 2026 i següents

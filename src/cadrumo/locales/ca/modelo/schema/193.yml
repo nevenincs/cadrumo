@@ -22,6 +22,7 @@ modelo:
           devengo-year:
             label: EXERCICI DE MERITACIÓ
           gasto-contributor-nif:
+            help: 'Consulteu la informació d''aquesta casella: NIF del contribuent.'
             label: NIF del contribuent
           gasto-contributor-nombre:
             label: Cognoms i nom del contribuent o denominació

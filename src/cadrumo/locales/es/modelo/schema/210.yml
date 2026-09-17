@@ -24,6 +24,8 @@ modelo:
           irnr-deduccion-donativos:
             label: Deducción por donativos
           irnr-exencion-dividendos:
+            help: 'Consulte la información de esta casilla: Exención aplicada a dividendos
+              (límite anual de 1.500 euros).'
             label: Exención aplicada a dividendos (límite anual de 1.500 euros)
           irnr-exenciones-ley-irnr-indicador:
             label: Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)
@@ -50,6 +52,7 @@ modelo:
           irnr-ingreso-devolucion-anterior:
             label: Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)
           irnr-limite-convenio:
+            help: 'Consulte la información de esta casilla: Límite según convenio.'
             label: Límite según convenio
           irnr-mejora-diferencia:
             label: Mejora o 2ª adquisición. Diferencia (210 H)
@@ -63,6 +66,8 @@ modelo:
           irnr-porcentaje-convenio:
             label: Porcentaje Convenio (%)
           irnr-reduccion-convenio:
+            help: 'Consulte la información de esta casilla: Reducción por aplicación
+              del convenio.'
             label: Reducción por aplicación del convenio
           irnr-rendimientos-integros:
             label: Rendimientos íntegros

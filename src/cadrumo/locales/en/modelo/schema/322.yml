@@ -1894,8 +1894,8 @@ modelo:
               help: 'Tax information about tax information in casilla 719 of Modelo
                 322 References: [719].'
             '72':
-              help: 'Review the casilla information: Información adicional. Exports
-                and transactions asimiladas. [72].'
+              help: 'Review the casilla information: Additional information. Exports
+                and similar transactions. [72].'
             '720':
               help: 'Tax information about tax information in casilla 720 of Modelo
                 322 References: [720].'
