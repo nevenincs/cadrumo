@@ -24,7 +24,7 @@ from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.modelo import Modelo
-from ...core.period import Period
+from ...core.period import Period, is_filing_period_token
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
@@ -201,6 +201,10 @@ def cross_period_dependency_inventory(
             if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
             for period in revision.period_selector.periods_for_year(filing_year):
+                # A symbolic or administrative selector covers filings without
+                # naming one, so it has no single filing snapshot to inspect.
+                if not is_filing_period_token(str(period)):
+                    continue
                 snapshot = operation.snapshot(
                     modelo_id,
                     filing_year=filing_year,

@@ -10,7 +10,7 @@ from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutco
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
 from ..registry_preconditions import calculation_registry_failure_verdict
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.mark.parametrize(

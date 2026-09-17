@@ -61,7 +61,7 @@ from ....domain.calculations.registry.formula_runtime import RegistryCalculation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "210"
 _YEAR_N = 2025

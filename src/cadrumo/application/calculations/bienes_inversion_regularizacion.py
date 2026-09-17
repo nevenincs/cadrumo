@@ -123,10 +123,10 @@ def _target_binding_and_casilla(
     *,
     modelo: str,
 ) -> tuple[BindingId, CasillaId] | None:
-    outputs = _bindings_by_output(revision)
+    output_binding_ids = set(_bindings_by_output(revision).values())
     for binding in revision.bindings:
         provider = getattr(binding, "provider", None)
-        if binding.id not in outputs or str(getattr(provider, "source_modelo", "")) != modelo:
+        if binding.id not in output_binding_ids or str(getattr(provider, "source_modelo", "")) != modelo:
             continue
         casilla = next(
             (

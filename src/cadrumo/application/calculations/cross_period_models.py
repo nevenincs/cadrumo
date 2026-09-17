@@ -10,7 +10,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
@@ -201,6 +201,7 @@ class NoPriorObligationProvenance(BaseModel):
     provenance_kind: NoPriorObligationProvenanceKind = NoPriorObligationProvenanceKind.OPERATOR_DECLARED
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _provenance_kind_is_a_source_kind(self) -> Self:
         if self.provenance_kind is not NoPriorObligationProvenanceKind.OPERATOR_DECLARED:
             raise ValueError(
@@ -265,6 +266,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
     requires_member_fan_in: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_filing_year(self) -> Self:
         _require_period_year(self.period, self.filing_year, field_name="period")
         if self.required_source_casilla_ids is not None and not set(self.required_source_casilla_ids) <= set(
@@ -301,6 +303,7 @@ class CrossPeriodExpectedMemberSet(BaseModel):
     member_nifs: tuple[str, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_filing_year(self) -> Self:
         _require_period_year(self.period, self.filing_year, field_name="period")
         return self
@@ -323,6 +326,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
     dependencies: tuple[CrossPeriodDependencyRequirement, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_filing_year(self) -> Self:
         _require_period_year(
             self.target_period,
@@ -429,6 +433,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     @field_validator("observation_source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_observation_source_kind(cls, value: object) -> object:
         """Lift a raw provenance token to the closed observation-source taxonomy.
 
@@ -443,6 +448,7 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     @field_validator("external_evidence_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _parse_external_evidence_kind(cls, value: object) -> object:
         """Lift a raw evidence token to the closed external-evidence catalogue."""
         if isinstance(value, str) and not isinstance(value, ExternalEvidenceKind):
@@ -515,6 +521,7 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     dependencies: tuple[CrossPeriodDependencyEvidence, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_matches_filing_year(self) -> Self:
         _require_period_year(
             self.target_period,

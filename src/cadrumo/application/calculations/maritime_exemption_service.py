@@ -49,6 +49,7 @@ from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from ...domain.renta.errors import RentaValidationError
@@ -151,7 +152,7 @@ def resolve_maritime_exemption(
     # RETMAR completeness gate — callers catch and surface to operator.
     check_retmar_mandatory_filing(facts)
 
-    resolved_on = date.today()
+    resolved_on = today_madrid()
     filing_period = filing_period or resolved_on
     devengo_date = devengo_date or resolved_on
 

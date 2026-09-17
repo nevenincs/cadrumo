@@ -55,7 +55,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaLedgerObservationRole
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 #: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "322"

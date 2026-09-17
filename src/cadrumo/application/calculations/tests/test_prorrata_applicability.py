@@ -25,7 +25,7 @@ from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ..prorrata_regularizacion import ProrrataDeclaredVolumeLedgerRollup, derive_prorrata_applicability
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _entry(regime: ProrrataRegisterRegime) -> ProrrataRegisterEntry:

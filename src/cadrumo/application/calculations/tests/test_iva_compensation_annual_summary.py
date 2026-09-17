@@ -17,7 +17,7 @@ from ._iva_compensation_history_support import (
     _state,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
