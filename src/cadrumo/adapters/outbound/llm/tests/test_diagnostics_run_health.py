@@ -30,7 +30,7 @@ from .....core.directory_scan import scan_directory
 from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..run_telemetry import LLMRunRecord, LLMRunTelemetryDiagnosticsAdapter, LLMRunTelemetryRecorder
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "55555555-5555-4555-8555-555555555555"
 
@@ -530,7 +530,7 @@ def test_llm_provider_metric_authorities_have_no_retired_or_split_public_identit
     assert LlmRunHealthProviderMetrics.__module__ == "cadrumo.application.diagnostics_run_health"
     assert LlmUsageCostProviderMetrics.__module__ == "cadrumo.application.ledger.llm_diagnostics"
 
-    source_root = Path(__file__).parents[2]
+    source_root = Path(__file__).parents[4]
     owners = {
         "LlmRunHealthProviderMetrics": Path("application/diagnostics_run_health.py"),
         "LlmUsageCostProviderMetrics": Path("application/ledger/llm_diagnostics.py"),

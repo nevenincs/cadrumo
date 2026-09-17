@@ -31,7 +31,7 @@ from .....tests.inventory import non_test_package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_CANONICAL_MODULE = "_provenance_stamp.py"
+_CANONICAL_MODULE = "provenance_stamp.py"
 _STAMP_PREFIX = "llm:"
 
 
@@ -148,7 +148,7 @@ def test_the_scan_is_not_vacuous() -> None:
     above pass over nothing while reading exactly like a clean run -- the same
     silent-emptying failure the cloud-deletion gate guards against.
     """
-    canonical = Path(__file__).resolve().parents[2] / "core" / _CANONICAL_MODULE
+    canonical = Path(__file__).resolve().parents[4] / "core" / _CANONICAL_MODULE
     assert canonical.exists(), "the canonical stamp module has moved; this gate is pointed at nothing"
     assert _STAMP_PREFIX in canonical.read_text(encoding="utf-8")
 

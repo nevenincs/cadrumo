@@ -551,7 +551,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         snapshot = published_snapshot("390", filing_year=period.filing_year, period=str(period.code))
         rates: set[Decimal] = set()
         for binding in snapshot.revision.bindings:
-            applied = getattr(getattr(binding, "selector", None), "applied_rates", None)
+            applied = getattr(binding.provider, "applied_rates", None)
             if applied:
                 rates.update(Decimal(str(value)) * Decimal("100") for value in applied)
         return rates

@@ -41,6 +41,7 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ....core.config import Settings
 from ....core.config_support import LLMProvider
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from .errors import LLMConsentError
@@ -202,6 +203,7 @@ class EvidenceConsentToken(BaseModel):
     )
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def reject_a_placeholder_address(self) -> Self:
         """Refuse a blank-in-substance content address.
 

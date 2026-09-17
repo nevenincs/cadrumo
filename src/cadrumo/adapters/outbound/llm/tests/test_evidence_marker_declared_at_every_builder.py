@@ -44,7 +44,7 @@ _REQUEST_MODEL = "LLMRequest"
 _MARKER = "evidence_derived"
 
 _BUILDERS_DECLARING_NO_EVIDENCE = {
-    "llm/column_role_mapping.py": (
+    "adapters/outbound/llm/column_role_mapping.py": (
         "Column-role mapping transmits the header row -- the file's schema labels -- and never a "
         "cell value: the prompt builder accepts headers and nothing else, and the instruction it "
         "compiles forbids the model to reproduce data. Marking this request evidence-derived would "
@@ -92,11 +92,11 @@ def test_the_scan_finds_the_known_request_builders() -> None:
     found = {relative for relative, _, _ in _request_construction_sites()}
 
     for expected in (
-        "llm/column_role_mapping.py",
-        "llm/evidence_draft_text.py",
-        "llm/evidence_draft_vision.py",
-        "llm/text_classifier.py",
-        "llm/vision_classifier.py",
+        "adapters/outbound/llm/column_role_mapping.py",
+        "adapters/outbound/llm/evidence_draft_text.py",
+        "adapters/outbound/llm/evidence_draft_vision.py",
+        "adapters/outbound/llm/text_classifier.py",
+        "adapters/outbound/llm/vision_classifier.py",
     ):
         assert expected in found, f"the request-construction scan did not find the known builder in {expected}"
 

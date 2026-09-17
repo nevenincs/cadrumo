@@ -74,7 +74,7 @@ _LEGENDS = _resolve_legends()
 
 #: The bundled consolidated text of the invoicing regulation's art. 6.
 _REGULATION: Final[pathlib.Path] = (
-    pathlib.Path(__file__).resolve().parents[2] / "_data" / "corpus" / "normatives" / "html" / "rd-1619-2012-art-6.html"
+    pathlib.Path(__file__).resolve().parents[4] / "_data" / "corpus" / "normatives" / "html" / "rd-1619-2012-art-6.html"
 )
 
 _GUILLEMET_QUOTED: Final[re.Pattern[str]] = re.compile("«([^»]+)»")

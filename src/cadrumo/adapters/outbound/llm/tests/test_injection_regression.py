@@ -87,7 +87,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: The bundled adversarial specimen: a real invoice whose text also carries a
 #: SYSTEM OVERRIDE paragraph naming a JSON payload of its own.
 _INJECTION_FIXTURE = (
-    Path(__file__).parents[2]
+    Path(__file__).parents[4]
     / "application"
     / "ledger"
     / "tests"

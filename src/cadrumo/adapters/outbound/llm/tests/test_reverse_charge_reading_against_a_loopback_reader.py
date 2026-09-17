@@ -102,7 +102,7 @@ def _text_layer_ports_for_pages(pages: tuple[str, ...]) -> EvidenceTextLayerPort
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture

@@ -52,7 +52,7 @@ from ..errors import LLMConfigError, LLMValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_FIXTURE_DIR = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "financial" / "tabular-dialects"
+_FIXTURE_DIR = Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "financial" / "tabular-dialects"
 _LIBRO_REGISTRO = _FIXTURE_DIR / "libro_facturas_expedidas_2025_2026.csv"
 
 #: The motivating case: every field the product needs is present, and not one
