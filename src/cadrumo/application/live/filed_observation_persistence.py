@@ -1,14 +1,14 @@
 """Persist filed AEAT observations into calculation-history repositories.
 
 Filed Sede rows are promoted to registry-grounded :class:`CasillaObservation`
-records, matching :class:`ModeloRecord` filings are stamped with justificante
-evidence, and the enrolment is appended through
-:class:`BucketEventHistoryRepository`.
+records in the official observation layer, and every matching justificante is
+reconciled with the period's filing chain through the single reconciliation
+service; nothing here stamps AEAT acceptance itself.
 
 The module treats AEAT live captures as official external evidence only after
-the captured justificante matches the filed observation. A complete all-numeric
-casilla manifest can create its own amendable external baseline; justificante
-metadata alone remains a scaffold and never claims casilla completeness.
+the captured justificante matches the filed observation. An all-numeric casilla
+manifest lets the reconciliation compare or record AEAT's content; justificante
+metadata alone never claims casilla completeness.
 
 See Also:
     :class:`~ExternalEvidenceKind`
@@ -24,31 +24,25 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 
 from ...application.calculations.observations_repository import ObservationSourceKind, observation_key
 from ...core.aeat_csv import normalise_aeat_csv
+from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
-from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
-from ...domain.modelos.filing_record import (
-    AeatConfirmationState,
-    ExternalEvidence,
-    ExternalEvidenceKind,
-    ModeloRecord,
-    ModeloRecordCatalogue,
-    is_justificante_backed_external_evidence,
-)
-from ...domain.modelos.filing_repository import upsert_filing_record
-from ..modelo.external_import_actions import (
-    ExternalFilingBaselineSource,
+from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
+from ..modelo.filing_chain_reconciliation import (
+    AeatRegisterEntry,
+    FilingReconciliationOutcome,
+    FilingReconciliationResult,
 )
 from .errors import (
     LiveApplicationError,
@@ -96,53 +90,6 @@ class FiledJustificanteUnreachedReason(StrEnum):
     FILING_TARGET_MISMATCH = "filing_target_mismatch"
 
 
-def import_complete_filed_observation_baseline(
-    observation: FiledObservationProtocol,
-    *,
-    bucket_id: str,
-    justificante_csvs: tuple[str, ...],
-    ports: FiledObservationPersistencePorts,
-) -> ModeloRecord | None:
-    """Persist an amendable baseline when live capture carries complete content.
-
-    A justificante-only observation is intentionally a metadata scaffold. The
-    current baseline model is numeric, so any observed non-numeric casilla also
-    leaves the capture on the observation path rather than silently dropping
-    source content. Modelo 303 keeps its dedicated filing-evidence policy.
-    """
-    if (
-        not justificante_csvs
-        or not observation.casillas
-        or observation.modelo == Modelo("303")
-        or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas)
-    ):
-        return None
-    lexicals = {casilla.casilla_id: casilla.value for casilla in observation.casillas}
-    if len(lexicals) != len(observation.casillas):
-        raise LiveApplicationInputError(
-            translated_message="application.live.filed_observations.errors.duplicate_casilla",
-            context={
-                "modelo": observation.modelo,
-                "ejercicio": observation.ejercicio,
-                "period": observation.period.registry_token,
-            },
-        )
-    return ports.baseline_import.import_source(
-        ExternalFilingBaselineSource(
-            modelo=observation.modelo,
-            filing_year=observation.ejercicio,
-            period=observation.period,
-            evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-            evidence_reference_id=justificante_csvs[0],
-            tax_id=observation.authenticated_identity,
-            casilla_lexicals=lexicals,
-        ),
-        bucket_id=bucket_id,
-        actor="aeat-live-filed-pull",
-        clock=observation.presented_at,
-    )
-
-
 #: Notice code for an artefact that was present but yielded no evidence.
 FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE = "live.filed.justificante_unreached"
 
@@ -157,12 +104,13 @@ class _FiledJustificanteParse:
 
 @dataclass(frozen=True)
 class FiledJustificanteEnrollmentResult:
-    """Justificante metadata and current filing records enrolled from filed history."""
+    """Justificante metadata enrolled from filed history and the chain decisions it drove."""
 
     justificante_csvs: tuple[str, ...] = ()
     filing_record_ids: tuple[str, ...] = ()
     conflicting_filing_record_ids: tuple[str, ...] = ()
     notices: tuple[Notice, ...] = ()
+    reconciliation_results: tuple[FilingReconciliationResult, ...] = ()
 
 
 def persist_filed_calculation_observation(
@@ -270,112 +218,31 @@ def select_latest_filed_observations_in_history_order(
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _FilingStampOutcome:
-    """What stamping one parsed justificante did to the filing catalogue.
-
-    The id tuples carry at most one entry each; they are tuples so the caller
-    folds them in without re-testing which of the two outcomes occurred.
-    """
-
-    catalogue: ModeloRecordCatalogue
-    stamped_record_ids: tuple[str, ...] = ()
-    conflicting_record_ids: tuple[str, ...] = ()
-
-
-def _stamp_filing_with_filed_justificante(
-    justificante: Justificante,
-    *,
-    observation: FiledObservationProtocol,
-    artefact: FiledObservationArtefactProtocol,
-    bucket_id: str,
-    catalogue: ModeloRecordCatalogue,
-    ports: FiledObservationPersistencePorts,
-) -> _FilingStampOutcome:
-    """Stamp the current filing record with this justificante's evidence.
-
-    The filing is stamped only when the justificante matches the observation and
-    the current :class:`ModeloRecord`. Existing matching evidence is accepted
-    idempotently; conflicting evidence is reported rather than overwritten.
-    """
-    current = catalogue.current_for(
-        bucket_id=bucket_id,
-        modelo=observation.modelo,
-        filing_year=observation.ejercicio,
-        period=observation.period,
-    )
-    if current is None:
-        return _FilingStampOutcome(catalogue)
-    if not _filed_justificante_can_stamp_filing(
-        justificante,
-        observation=observation,
-        filing=current,
-    ):
-        return _FilingStampOutcome(catalogue)
-    if current.aeat_accepted and current.external_evidence is not None:
-        if _existing_justificante_evidence_matches(current, justificante):
-            return _FilingStampOutcome(catalogue, stamped_record_ids=(current.filing_record_id,))
-        logger.warning(
-            "refusing to overwrite existing AEAT evidence on filing record %s from filed-history csv %s",
-            current.filing_record_id,
-            justificante.csv,
-        )
-        return _FilingStampOutcome(catalogue, conflicting_record_ids=(current.filing_record_id,))
-    stamped = current.model_copy(
-        update={
-            "external_evidence": ExternalEvidence(
-                kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-                reference_id=justificante.csv,
-                imported_at=artefact.captured_at,
-            ),
-            "confirmation": AeatConfirmationState.CONFIRMADA,
-        },
-    )
-    updated = upsert_filing_record(catalogue, stamped)
-    _emit_filed_justificante_evidence_event(
-        bucket_id=bucket_id,
-        filing=stamped,
-        observation=observation,
-        justificante=justificante,
-        occurred_at=artefact.captured_at,
-        ports=ports,
-    )
-    return _FilingStampOutcome(updated, stamped_record_ids=(stamped.filing_record_id,))
-
-
 def enroll_filed_justificante_evidence(
     observation: FiledObservationProtocol,
     *,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
 ) -> FiledJustificanteEnrollmentResult:
-    """Persist matching justificante metadata and stamp matching current filings.
+    """Persist matching justificante metadata and reconcile the filing chain with it.
 
-    A filing is stamped only when the parsed :class:`Justificante` matches the
-    observation, the authenticated identity, and the current
-    :class:`ModeloRecord`. Existing matching evidence is accepted idempotently;
-    conflicting evidence is reported rather than overwritten.
+    Every parsed receipt that matches the observation becomes one AEAT register
+    entry for :func:`~cadrumo.application.modelo.filing_chain_reconciliation.reconcile_aeat_register_entry`,
+    carrying the observation's numeric casillas when all of them are numeric.
+    A chain whose in-force entry belongs to another taxpayer identity is left
+    untouched.
 
     Returns:
-        A :class:`FiledJustificanteEnrollmentResult` of saved CSVs and stamped
-        filing records.
+        A :class:`FiledJustificanteEnrollmentResult` of saved CSVs, the chain
+        entries the reconciliations settled on, contradicted pending entries,
+        and every reconciliation result.
     """
     if not _is_active_filed_observation(observation):
         return FiledJustificanteEnrollmentResult()
 
-    justificante_repo = ports.justificante_repository
-    filing_repo = ports.filing_repository
     saved_csvs: list[str] = []
-    stamped_record_ids: list[str] = []
-    conflicting_record_ids: list[str] = []
     notices: list[Notice] = []
-    # Parsing is done FIRST and the stamping afterwards, rather than interleaved
-    # with the catalogue write, because the catalogue is a singleton row: reading
-    # it here and writing it after N PDFs have been parsed leaves a window wide
-    # enough for another caller's filing record to land and be discarded. The
-    # parsed receipts are collected instead, and every stamping is applied inside
-    # one guarded unit of work below.
-    stampable: list[tuple[Justificante, FiledObservationArtefactProtocol]] = []
+    receipts: list[tuple[Justificante, FiledObservationArtefactProtocol]] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue
@@ -384,46 +251,116 @@ def enroll_filed_justificante_evidence(
             if parsed.reason is not None:
                 notices.append(_unreached_justificante_notice(observation, parsed.reason))
             continue
-        justificante = parsed.justificante
-        # The receipt lands before any record cites it, so a failure between the
-        # two leaves an orphan receipt rather than a filing record pointing at
+        # The receipt lands before any chain entry cites it, so a failure between
+        # the two leaves an orphan receipt rather than a filing record pointing at
         # evidence that does not load.
-        justificante_repo.save(justificante)
-        saved_csvs.append(justificante.csv)
-        stampable.append((justificante, artefact))
+        ports.justificante_repository.save(parsed.justificante)
+        saved_csvs.append(parsed.justificante.csv)
+        receipts.append((parsed.justificante, artefact))
 
-    if stampable:
-
-        def _stamp_all(current: ModeloRecordCatalogue) -> ModeloRecordCatalogue:
-            """Re-apply every stamping to whichever catalogue this attempt read.
-
-            Pure in the catalogue it is handed and in the already-parsed
-            receipts, so a retry re-stamps against the catalogue the write
-            actually lands on without re-reading or re-parsing a single PDF.
-            """
-            stamped_record_ids.clear()
-            conflicting_record_ids.clear()
-            catalogue = current
-            for justificante, artefact in stampable:
-                outcome = _stamp_filing_with_filed_justificante(
-                    justificante,
-                    observation=observation,
-                    artefact=artefact,
-                    bucket_id=bucket_id,
-                    catalogue=catalogue,
-                    ports=ports,
-                )
-                catalogue = outcome.catalogue
-                stamped_record_ids.extend(outcome.stamped_record_ids)
-                conflicting_record_ids.extend(outcome.conflicting_record_ids)
-            return catalogue
-
-        filing_repo.mutate(_stamp_all)
+    results: list[FilingReconciliationResult] = []
+    if receipts and _chain_identity_matches(observation, bucket_id=bucket_id, ports=ports):
+        casilla_values = _numeric_register_casillas(observation, ports=ports)
+        for justificante, artefact in receipts:
+            results.append(
+                ports.filing_reconciliation.reconcile(
+                    _register_entry(observation, justificante, bucket_id=bucket_id, casilla_values=casilla_values),
+                    actor="aeat-filed-history",
+                    clock=artefact.captured_at,
+                ),
+            )
     return FiledJustificanteEnrollmentResult(
         justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
-        filing_record_ids=tuple(dict.fromkeys(stamped_record_ids)),
-        conflicting_filing_record_ids=tuple(dict.fromkeys(conflicting_record_ids)),
+        filing_record_ids=tuple(
+            dict.fromkeys(
+                result.filing_record_id
+                for result in results
+                if result.filing_record_id is not None
+                and result.outcome is not FilingReconciliationOutcome.UNVERIFIABLE
+            ),
+        ),
+        conflicting_filing_record_ids=tuple(
+            dict.fromkeys(
+                record_id
+                for result in results
+                if result.outcome is FilingReconciliationOutcome.CONTRADICTED
+                for record_id in result.affected_filing_record_ids
+            ),
+        ),
         notices=tuple(notices),
+        reconciliation_results=tuple(results),
+    )
+
+
+def _chain_identity_matches(
+    observation: FiledObservationProtocol,
+    *,
+    bucket_id: str,
+    ports: FiledObservationPersistencePorts,
+) -> bool:
+    """Return whether the period's in-force entry belongs to the authenticated taxpayer."""
+    from .justificante import expected_tax_id_for_filing_record
+
+    current = ports.filing_repository.load().current_for(
+        bucket_id=bucket_id,
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
+    )
+    if current is None:
+        return True
+    try:
+        expected_tax_id = expected_tax_id_for_filing_record(current)
+    except LiveApplicationInputError:
+        logger.warning(
+            "filed observation: could not resolve profile tax identity for filing record %s",
+            current.filing_record_id,
+            exc_info=True,
+        )
+        return False
+    return same_tax_identifier(observation.authenticated_identity, expected_tax_id)
+
+
+def _numeric_register_casillas(
+    observation: FiledObservationProtocol,
+    *,
+    ports: FiledObservationPersistencePorts,
+) -> dict[CasillaId, Decimal] | None:
+    """Return the registry-grounded values AEAT holds, when every observed casilla is numeric."""
+    if not observation.casillas or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas):
+        return None
+    registry_observation = ports.transformation.registry_observation(observation)
+    values = {
+        row.casilla_id: row.value for row in registry_observation.observations if isinstance(row.value, Decimal)
+    }
+    return values or None
+
+
+def _register_entry(
+    observation: FiledObservationProtocol,
+    justificante: Justificante,
+    *,
+    bucket_id: str,
+    casilla_values: dict[CasillaId, Decimal] | None,
+) -> AeatRegisterEntry:
+    tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip() or None
+    presented_at = observation.presented_at if observation.presented_at.tzinfo is not None else None
+    return AeatRegisterEntry(
+        bucket_id=bucket_id,
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
+        register=AeatRegisterRef(
+            expediente_id=observation.expediente_id,
+            csv=justificante.csv,
+            justificante_number=justificante.presentation_id,
+            tipo_solicitud=tipo_solicitud,
+            presented_at=presented_at,
+        ),
+        evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        tax_id=observation.authenticated_identity,
+        justificante=justificante,
+        casilla_values=casilla_values,
     )
 
 
@@ -482,45 +419,6 @@ def latest_declarations_by_period(
             key=lambda item: _filed_observation_history_period_sort_key(item[1].modelo, item[0]),
         )
     )
-
-
-def _emit_filed_justificante_evidence_event(
-    *,
-    bucket_id: str,
-    filing: ModeloRecord,
-    observation: FiledObservationProtocol,
-    justificante: Justificante,
-    occurred_at: datetime,
-    ports: FiledObservationPersistencePorts,
-) -> None:
-    event_payload = {
-        "work_unit_id": filing.work_unit_id,
-        "modelo": observation.modelo,
-        "filing_year": str(observation.ejercicio),
-        "period": observation.period.registry_token,
-        "evidence_kind": ExternalEvidenceKind.AEAT_LIVE_CAPTURE.value,
-        "evidence_reference_id": justificante.csv,
-        "expediente_id": observation.expediente_id,
-        "presented_at": observation.presented_at.isoformat(),
-    }
-    emit_bucket_event(
-        repository=ports.bucket_event_repository,
-        bucket_id=bucket_id,
-        event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
-        occurred_at=occurred_at,
-        actor="aeat-filed-history",
-        object_type=BucketEventObjectType.FILING_RECORD,
-        object_id=filing.filing_record_id,
-        payload=event_payload,
-        payload_version=1,
-    )
-
-
-def _existing_justificante_evidence_matches(filing: ModeloRecord, justificante: Justificante) -> bool:
-    evidence = filing.external_evidence
-    if evidence is None or not is_justificante_backed_external_evidence(evidence.kind):
-        return False
-    return normalise_aeat_csv(evidence.reference_id) == normalise_aeat_csv(justificante.csv)
 
 
 def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> tuple[int, str]:
@@ -647,32 +545,6 @@ def _justificante_matches_filed_observation(
         filing_year=observation.ejercicio,
         period=observation.period,
         tax_id=observation.authenticated_identity,
-    )
-
-
-def _filed_justificante_can_stamp_filing(
-    justificante: Justificante,
-    *,
-    observation: FiledObservationProtocol,
-    filing: ModeloRecord,
-) -> bool:
-    from .justificante import expected_tax_id_for_filing_record, justificante_matches_filing_record
-
-    try:
-        expected_tax_id = expected_tax_id_for_filing_record(filing)
-    except LiveApplicationInputError:
-        logger.warning(
-            "filed observation: could not resolve profile tax identity for filing record %s",
-            filing.filing_record_id,
-            exc_info=True,
-        )
-        return False
-    if not same_tax_identifier(observation.authenticated_identity, expected_tax_id):
-        return False
-    return justificante_matches_filing_record(
-        justificante,
-        filing,
-        expected_tax_id=expected_tax_id,
     )
 
 

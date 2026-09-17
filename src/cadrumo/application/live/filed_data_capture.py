@@ -81,6 +81,7 @@ from ..storage.sync_runs.records import (
     sync_run_record_key,
 )
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .filed_data import (
     BulkFiledDataListingReport,
@@ -98,7 +99,6 @@ from .filed_data_ports import (
 from .filed_observation_persistence import (
     enroll_filed_justificante_evidence,
     filed_observation_identity_key,
-    import_complete_filed_observation_baseline,
 )
 from .filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
 from .notification_ports import NotificationsPorts
@@ -416,6 +416,7 @@ class _CaptureReportFields(TypedDict):
     filing_evidence_conflict_record_ids: tuple[str, ...]
     evidence_notices: tuple[Notice, ...]
     casilla_count: int
+    reconciliation_results: tuple[FilingReconciliationResult, ...]
 
 
 class _RecaptureObservationRepository(Protocol):
@@ -433,7 +434,7 @@ class FiledCaptureAccumulator:
     Holds the persisted-artefact ledgers shared by the single-shot, bulk, and
     source capture paths. :meth:`absorb` folds one captured observation into the
     run (persist manifest, collect artefact refs, enrol justificante evidence,
-    stamp filing records); :meth:`capture_report_fields` projects the deduped
+    reconcile the filing chain); :meth:`capture_report_fields` projects the deduped
     report fields every capture report shares. The ``dict.fromkeys`` dedup
     ordering is preserved verbatim so report values stay byte-identical.
     """
@@ -444,6 +445,7 @@ class FiledCaptureAccumulator:
     justificante_csvs: list[str] = field(default_factory=list)
     filing_record_ids: list[str] = field(default_factory=list)
     conflicting_filing_record_ids: list[str] = field(default_factory=list)
+    reconciliation_results: list[FilingReconciliationResult] = field(default_factory=list)
     observations_for_calculation: list[FiledObservationProtocol] = field(default_factory=list)
     evidence_notices: list[Notice] = field(default_factory=list)
     #: Recapture-divergence advisories, one per re-captured filing whose casilla
@@ -532,6 +534,7 @@ class FiledCaptureAccumulator:
         )
         self.filing_record_ids.extend(enrollment.filing_record_ids)
         self.conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
+        self.reconciliation_results.extend(enrollment.reconciliation_results)
         # The enrolment already produced one typed WARNING per artefact that
         # yielded no evidence, each naming its own reason. They were being
         # discarded here, which is what let a capture extract casillas and report
@@ -539,14 +542,6 @@ class FiledCaptureAccumulator:
         # never merged -- because two distinguishable dead ends folded into one
         # notice recreates the collapse the reasons exist to undo.
         self.evidence_notices.extend(enrollment.notices)
-        imported_baseline = import_complete_filed_observation_baseline(
-            observation,
-            bucket_id=bucket_id,
-            justificante_csvs=enrollment.justificante_csvs,
-            ports=ports,
-        )
-        if imported_baseline is not None:
-            self.filing_record_ids.append(imported_baseline.filing_record_id)
         self.casilla_count += len(observation.casillas)
         self.observations_for_calculation.append(observation)
 
@@ -565,6 +560,7 @@ class FiledCaptureAccumulator:
             "filing_evidence_conflict_record_ids": tuple(dict.fromkeys(self.conflicting_filing_record_ids)),
             "evidence_notices": tuple(self.evidence_notices),
             "casilla_count": self.casilla_count,
+            "reconciliation_results": tuple(self.reconciliation_results),
         }
 
 

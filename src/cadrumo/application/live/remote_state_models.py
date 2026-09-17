@@ -25,6 +25,7 @@ from ...core.json_contract import Notice
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
+from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ..storage.sync_runs.records import SyncRunRecordReference
 from .errors import LiveIvaAcquisitionFailureMode
 
@@ -86,6 +87,8 @@ class FiledCaptureEvidenceTally(BaseModel):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
+    #: One filing-chain decision per reconciled AEAT register entry, in capture order.
+    reconciliation_results: tuple[FilingReconciliationResult, ...] = ()
 
 
 class FiledDataCaptureReport(FiledCaptureEvidenceTally):
