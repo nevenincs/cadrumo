@@ -8,7 +8,7 @@ malformed digest out of persisted records and wire payloads, where the
 mismatch would otherwise surface only when a later verification pass
 recomputes the hash.
 
-The alias derives from :data:`core.Hex64Str`, the one canonical hex-64
+The alias derives from :data:`core.hex.Hex64Str`, the one canonical hex-64
 constrained primitive every unrelated hex-64 identity concept is defined
 from, and lives beside :data:`SnapshotId` in :mod:`cadrumo.core.identity`
 because digest-bearing records span the application, adapter, and

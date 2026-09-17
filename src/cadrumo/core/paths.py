@@ -190,7 +190,7 @@ def windows_storage_root_long_path_margin(root: Path, *, object_path_suffix_leng
     the caller lets the owning layer derive it from its own registry —
     structurally, over the whole domain — without inverting the dependency
     graph. See
-    :func:`~adapters.outbound.storage.windows_worst_case_object_path_suffix_length`.
+    :func:`~adapters.outbound.storage.path_budget.windows_worst_case_object_path_suffix_length`.
 
     Args:
         root: The candidate storage root (``cadrumo_local_storage_root`` or

@@ -12,7 +12,7 @@ budgets are consumed by :mod:`application.live.iva_remote_state`,
 :mod:`application.live.filed_data_capture`, and the
 :func:`~entrypoints.cli._app_live._run_live_iva_evidence_pull_command`
 watchdog. The exchange-rate lookup budget is consumed by
-:class:`~adapters.outbound.fx.EcbReferenceRateProvider`.
+:class:`~adapters.outbound.fx.ecb_provider.EcbReferenceRateProvider`.
 """
 
 from __future__ import annotations

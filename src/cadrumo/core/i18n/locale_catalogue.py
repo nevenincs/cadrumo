@@ -191,7 +191,7 @@ def capture_locale_catalogue(translation_key: str, /, *, locale: str) -> LocaleC
     """Read one catalogue entry over a window in which the catalogue did not move.
 
     The shard digest is taken either side of the sole
-    :func:`~cadrumo.core.i18n.lookup_translation_entry` reader, so a catalogue
+    :func:`~cadrumo.core.i18n.render.lookup_translation_entry` reader, so a catalogue
     rewritten mid-read is retried rather than published as an entry paired with
     a coordinate from another catalogue state.
     """

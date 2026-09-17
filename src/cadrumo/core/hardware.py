@@ -8,8 +8,8 @@ on bare strings.
 The members are consumed by
 :class:`~application.provisioning.AcceleratorReading`,
 :class:`~application.provisioning.HardwareProfile` and
-:class:`~application.provisioning.ContentionSnapshot`. They sit beside, not
-inside, :class:`~core.ServiceCapability`: a capability records whether the
+:class:`~application.provisioning_runtime.ContentionSnapshot`. They sit beside, not
+inside, :class:`~core.capabilities.ServiceCapability`: a capability records whether the
 operator *permits* local inference, whereas these values record what the machine
 *is* and what is holding its memory right now.
 """

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from contextvars import copy_context
+from typing import override
 
 import pytest
 
@@ -19,6 +20,7 @@ class _Holder:
     def __init__(self, name: str) -> None:
         self.name = name
 
+    @override
     def __repr__(self) -> str:
         return f"_Holder({self.name!r})"
 

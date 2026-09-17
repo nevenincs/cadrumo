@@ -19,7 +19,7 @@ from .errors.hierarchy import CadrumoError
 class LockAcquisitionError(CadrumoError):
     """Raised when an exclusive file lock cannot be acquired within the timeout.
 
-    Bound to a registered :class:`core.errors.ErrorCode` so callers
+    Bound to a registered :class:`core.errors.error_codes.ErrorCode` so callers
     can present a stable error identifier rather than a raw message.
     The registry classifies it as ``LOCKED`` and retryable, meaning a later
     bounded retry may succeed after another process releases the OS lock.

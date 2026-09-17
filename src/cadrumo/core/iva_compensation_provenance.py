@@ -1,7 +1,7 @@
 """Closed provenance taxonomy for Modelo 303 IVA compensation period states.
 
 Names the five supplying paths that can construct an
-:class:`~domain.iva_compensation.IvaCompensationPeriodState`, one member each,
+:class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`, one member each,
 with no catch-all: a future supplying path is added here rather than absorbed
 into an approximate member.
 
@@ -14,7 +14,7 @@ indistinguishable from an AEAT-issued one. The model constrains the pair, so
 that impersonation is no longer expressible.
 
 **This is deliberately NOT**
-:class:`~application.calculations.ObservationSourceKind`, and the two coexist.
+:class:`~application.calculations.observations_repository.ObservationSourceKind`, and the two coexist.
 That enum classifies the origin of a persisted calculation OBSERVATION and
 carries ``is_official_aeat``, the predicate deciding filing-grade authority. A
 compensation period state is not an observation -- it is a derived per-period
@@ -36,7 +36,7 @@ class IvaCompensationStateProvenance(StrEnum):
     """Which supplying path constructed one IVA compensation period state.
 
     Consumed by
-    :class:`~domain.iva_compensation.IvaCompensationPeriodState`, which
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`, which
     requires it with no default: a default would let a new supplying path
     inherit a provenance it never declared.
     """

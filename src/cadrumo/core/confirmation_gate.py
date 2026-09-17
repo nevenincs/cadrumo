@@ -1,8 +1,8 @@
 """The closed axes of the human review gate at the confirm boundary.
 
 Two axes, both closed, both declared here beside
-:class:`~core.DraftDiscrepancyKind`, :class:`~core.FieldOrigin` and
-:class:`~core.FieldGroundingOutcome` for the same reason those are: a review gate
+:class:`~core.draft_discrepancy.DraftDiscrepancyKind`, :class:`~core.field_origin.FieldOrigin` and
+:class:`~core.field_grounding.FieldGroundingOutcome` for the same reason those are: a review gate
 that admits a free-text reason is a gate whose refusals cannot be enumerated, and
 one that admits a free-text resolution is a gate an operator can satisfy by
 typing anything.

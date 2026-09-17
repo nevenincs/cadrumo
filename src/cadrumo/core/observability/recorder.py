@@ -4,7 +4,7 @@ Routes structured :class:`cadrumo.core.observability.models.RunEvent`
 records through the standard :mod:`logging` machinery so any handler
 attached to the root logger — notably the per-run
 :class:`cadrumo.core.observability.sink.JsonlRunSink` — picks them up
-automatically while a :func:`cadrumo.core.observability.run_context` is
+automatically while a :func:`cadrumo.core.observability.context.run_context` is
 active.
 """
 
@@ -56,9 +56,9 @@ def record_event(
     unless the caller wraps the target with
     :func:`contextvars.copy_context`. A call to :func:`record_event`
     from a detached thread therefore raises
-    :exc:`cadrumo.core.observability.RunContextMissingError`. Callers that
+    :exc:`cadrumo.core.observability.errors.RunContextMissingError`. Callers that
     need the event recorded in such a thread must either re-enter
-    :func:`cadrumo.core.observability.run_context` inside the worker or
+    :func:`cadrumo.core.observability.context.run_context` inside the worker or
     copy the context explicitly.
 
     Args:

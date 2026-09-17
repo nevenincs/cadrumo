@@ -6,12 +6,12 @@ tier, then the per-invocation acknowledgement, all ANDed) so the codebase's
 off-host consent gates stay uniform. Settings is imported lazily inside the
 function body to avoid the circular import that would result from
 ``core.config`` importing :mod:`~core.telemetry` for
-:class:`~core.telemetry.TelemetryTier` at module scope.
+:class:`~core.telemetry.tier.TelemetryTier` at module scope.
 
 See Also:
-    :func:`~core.telemetry.emit_telemetry_event`
+    :func:`~core.telemetry.emit.emit_telemetry_event`
         Applies this gate before dispatching any remote-eligible payload.
-    :class:`~core.telemetry.TelemetryTier`
+    :class:`~core.telemetry.tier.TelemetryTier`
         Closed tier enum consulted by the gate.
 """
 
@@ -41,7 +41,7 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
        conditions.
     2. The deployment has opted in (``settings.cadrumo_telemetry_opt_in`` is
        ``True``).
-    3. The configured tier is not :attr:`~core.telemetry.TelemetryTier.OFF`.
+    3. The configured tier is not :attr:`~core.telemetry.tier.TelemetryTier.OFF`.
     4. The operator acknowledged this specific invocation
        (``acknowledged`` is ``True``). The acknowledgement is never sticky;
        it must be re-affirmed at every call site, mirroring

@@ -1,6 +1,6 @@
 """Stable pseudonymous workspace identifier for telemetry payloads.
 
-Every :class:`~core.telemetry.TelemetryEventPayload` must carry a
+Every :class:`~core.telemetry.schema.TelemetryEventPayload` must carry a
 ``workspace_hash`` rather than the operator's profile id or NIF. This
 module derives that hash deterministically from the local storage root path
 -- a value that already exists per-deployment, is never the taxpayer's

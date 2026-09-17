@@ -1,7 +1,7 @@
-"""Ordered domain :class:`~core.errors.ErrorCode` registry shard.
+"""Ordered domain :class:`~core.errors.error_codes.ErrorCode` registry shard.
 
 Rows map authority-registry and previous-filing domain exception qualnames to
-stable :class:`~core.errors.ErrorCategory` values and canonical message keys.
+stable :class:`~core.errors.error_codes.ErrorCategory` values and canonical message keys.
 """
 
 from ..error_codes import ErrorCategory, ErrorCode

@@ -4,8 +4,12 @@ The Settings model in ``cadrumo.core.config`` is the single source of truth for 
 environment variable the application reads.  These tests enforce that:
 
 1. Every Settings field has a matching line in ``env/.env.example``.
-2. Every variable in ``env/.env.example`` has a matching Settings field.
-3. Settings can be instantiated with no env vars at all (all fields have defaults).
+2. Settings can be instantiated with no env vars at all (all fields have defaults).
+
+The reverse direction -- every ``env/.env.example`` variable resolves to either a
+Settings field or a known development-tooling override -- is enforced by a
+separate development-tooling gate, which owns the exemption list and therefore
+that half of the parity check.
 
 There is no ``.env`` file support: production reads configuration from the process
 environment only. ``env/.env.example`` documents the accepted variable names for a
@@ -24,7 +28,6 @@ from types import UnionType
 from typing import Union, get_args, get_origin
 
 import pytest
-from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 from ...tests.env_scope import scoped_env_var, settings_without_env_file
@@ -46,10 +49,6 @@ from ..storage_taxonomy_locations import storage_location
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
 
 ENV_EXAMPLE_PATH = REPO_ROOT / "env" / ".env.example"
-
-#: Variables the example documents for development tooling, which reads them
-#: itself rather than through the product ``Settings``.
-_DEVELOPMENT_TOOLING_VARS = frozenset({DEV_CACHE_ROOT_ENV})
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -75,13 +74,14 @@ class TestEnvExampleAlignment:
         assert ENV_EXAMPLE_PATH.exists(), f".env.example not found at {ENV_EXAMPLE_PATH}"
 
     def test_the_env_parity_corpora_did_not_collapse(self) -> None:
-        """A green parity result above must mean 'compared', not 'compared nothing'.
+        """A green parity result below must mean 'compared', not 'compared nothing'.
 
-        Both directions below are set differences asserted empty. If either side
-        resolved to an empty set -- the example file moved, or the line matcher
-        stopped matching -- the differences are empty too and both gates report
-        exactly what a correct tree reports. The floors are deliberately low:
-        the point is to distinguish a populated corpus from a collapsed one, not
+        The set difference asserted empty below only means something if both
+        corpora it draws from are actually populated. If either side resolved
+        to an empty set -- the example file moved, or the line matcher stopped
+        matching -- the difference is empty too and the gate reports exactly
+        what a correct tree reports. The floors are deliberately low: the
+        point is to distinguish a populated corpus from a collapsed one, not
         to pin a count that drifts with every new setting.
         """
         settings_vars = Settings.env_var_names()
@@ -102,16 +102,6 @@ class TestEnvExampleAlignment:
         missing = sorted(settings_vars - example_vars)
         assert not missing, (
             f"Settings fields not documented in .env.example: {missing}. Add an entry for each to .env.example."
-        )
-
-    def test_env_example_vars_defined_in_settings(self) -> None:
-        """Every .env.example variable must have a corresponding Settings field."""
-        settings_vars = Settings.env_var_names()
-        example_vars = _parse_env_example_vars()
-        extra = sorted(example_vars - settings_vars - _DEVELOPMENT_TOOLING_VARS)
-        assert not extra, (
-            f"env/.env.example variables with no Settings field: {extra}. "
-            "Add a corresponding field to Settings in config.py."
         )
 
     def test_settings_instantiate_without_env(self) -> None:

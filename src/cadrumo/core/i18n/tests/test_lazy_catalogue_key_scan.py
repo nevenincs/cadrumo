@@ -19,9 +19,9 @@ from .. import _lazy_catalogue
 from .._lazy_catalogue import (
     LazyLocaleCatalogue,
     _flatten_dict,
-    _load_yaml_handle,
     _scan_shard_for_key,
     _UnscannableShardError,
+    load_yaml_handle,
 )
 
 pytestmark = [pytest.mark.hex_core]
@@ -64,7 +64,7 @@ modelo:
 
 def _full_load(path: Path) -> dict[str, str | None]:
     with path.open(encoding="utf-8") as handle:
-        return _flatten_dict(_load_yaml_handle(handle))
+        return _flatten_dict(load_yaml_handle(handle))
 
 
 def _scan(path: Path, key: str) -> str | None:
@@ -113,7 +113,7 @@ def test_a_shard_asked_many_keys_is_streamed_once_then_loaded_once(
     full = _full_load(shard)
     calls: list[str] = []
     real_scan = _lazy_catalogue._scan_shard_for_key
-    real_load = _lazy_catalogue._load_yaml_handle
+    real_load = _lazy_catalogue.load_yaml_handle
 
     def counting_scan(handle: IO[str], key: str) -> str | None:
         calls.append("scan")
@@ -124,7 +124,7 @@ def test_a_shard_asked_many_keys_is_streamed_once_then_loaded_once(
         return real_load(handle)
 
     monkeypatch.setattr(_lazy_catalogue, "_scan_shard_for_key", counting_scan)
-    monkeypatch.setattr(_lazy_catalogue, "_load_yaml_handle", counting_load)
+    monkeypatch.setattr(_lazy_catalogue, "load_yaml_handle", counting_load)
     catalogue = LazyLocaleCatalogue("es", shard_dir=tmp_path / "es")
 
     answers = {key: catalogue.get(key) for key in full}

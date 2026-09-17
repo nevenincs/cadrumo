@@ -6,8 +6,8 @@ One subdirectory per ``run_id`` under
 strict pydantic models in :mod:`core.observability.models`.
 
 Run traces are DIAGNOSTIC class. The redaction rule set returned by
-:func:`core.redaction.default_rules_for_class` for
-:class:`~core.classification.SensitivityClass.DIAGNOSTIC` walks
+:func:`core.redaction.rules.default_rules_for_class` for
+:class:`~core.classification.policies.SensitivityClass.DIAGNOSTIC` walks
 every string leaf — NIFs SHA-256-prefixed, URLs reduced to host-only,
 bearer-shaped tokens fingerprinted, opaque bearers fingerprinted —
 before serialisation. The core redaction helper is imported lazily so
@@ -107,7 +107,7 @@ def _require_trace_identity(trace: RunTrace, *, expected_run_id: str) -> RunTrac
 def runs_dir(settings: Settings | None = None) -> Path:
     """Return the configured runs directory. Resolution only; never creates it.
 
-    Resolved through :func:`~core.storage_path` for
+    Resolved through :func:`~core.storage_taxonomy_locations.storage_path` for
     ``StorageCategory.RUNS`` rather than by reading ``cadrumo_runs_dir``
     directly here. Both answer the same today, because the settings field is
     what the accessor consults first -- but only one of them stays correct if
@@ -165,7 +165,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``.
 
     Every string leaf passes through
-    :func:`core.redaction.redact_structured` at DIAGNOSTIC class
+    :func:`core.redaction.rules.redact_structured` at DIAGNOSTIC class
     before serialisation so the on-disk record never carries a
     plaintext NIF, bearer token, or sensitive URL path even if a caller
     fed one into ``arguments``.
@@ -252,11 +252,11 @@ def save_envelope(
 
     The document is the verbatim, already-CLI-redacted
     :class:`~core.json_contract.SchemaEnvelope` mapping captured by
-    :func:`core.observability.capture_envelopes` during the run. It
+    :func:`core.observability.capture.capture_envelopes` during the run. It
     is stored key-sorted so the on-disk artifact is byte-stable, and it
     is durable evidence for the recorded run. Re-validation into a typed
     envelope happens on load via
-    :func:`core.observability.validate_captured_envelope`; this
+    ``core.observability.validate_captured_envelope``; this
     writer stays free of any JSON-contract dependency.
 
     Args:
@@ -288,7 +288,7 @@ def load_envelope_document(
 
     Read-only: does not create the per-run directory, nor the runs root
     itself. Returns the raw mapping; type it with
-    :func:`core.observability.validate_captured_envelope`.
+    ``core.observability.validate_captured_envelope``.
 
     Args:
         run_id: 16-char lowercase hex run identifier.

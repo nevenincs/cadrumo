@@ -4,7 +4,7 @@ A Handbook concept fragment (``_data/terminology/concepts/*.toml``) declares
 one ``lifecycle`` token, and that axis is read on both sides of the shipping
 boundary: the build-time glossary generator and Pagefind card projector select
 ``approved`` concepts for publication, and the shipped product reader
-(:func:`~application.corpus_search.search_terminology`) filters the runtime
+(:func:`~application.corpus_search.terminology.search_terminology`) filters the runtime
 terminology search on the same token. Only the value set lives here — deciding
 which concepts *hold* which lifecycle stays an authoring judgement (the
 ``aeat-documentation`` discipline reserves ``approved`` for

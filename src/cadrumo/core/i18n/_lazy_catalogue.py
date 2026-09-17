@@ -11,7 +11,7 @@ import logging
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, override
+from typing import IO, Protocol, cast, override
 
 import yaml
 
@@ -31,7 +31,7 @@ if not yaml.__with_libyaml__:
     )
 
 
-def _load_yaml_handle(handle: IO[str]) -> object:
+def load_yaml_handle(handle: IO[str]) -> object:
     """Load YAML content with libyaml's safe loader."""
     return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
 
@@ -62,6 +62,24 @@ class _UnscannableShardError(yaml.YAMLError):
     """
 
 
+class _ScalarTagResolver(Protocol):
+    """Narrows ``yaml.resolver.BaseResolver.resolve``, unannotated in the PyYAML stubs."""
+
+    def resolve(self, kind: type[yaml.Node], value: str, implicit: tuple[bool, bool]) -> str: ...
+
+
+class _DocumentConstructor(Protocol):
+    """Narrows ``yaml.constructor.BaseConstructor.construct_document``, unannotated in the PyYAML stubs."""
+
+    def construct_document(self, node: yaml.Node) -> object: ...
+
+
+class _EventStream(Protocol):
+    """Narrows ``yaml.parse``, unannotated in the PyYAML stubs."""
+
+    def parse(self, stream: IO[str], Loader: type[yaml.CSafeLoader] = ...) -> Iterator[yaml.Event]: ...
+
+
 _SCAN_RESOLVER = yaml.resolver.Resolver()
 
 
@@ -69,13 +87,14 @@ def _scalar_value(event: yaml.ScalarEvent) -> object:
     """Construct one scalar exactly as the safe loader's composer and constructor do."""
     tag = event.tag
     if tag is None or tag == "!":
-        tag = _SCAN_RESOLVER.resolve(yaml.ScalarNode, event.value, event.implicit)
+        tag = cast(_ScalarTagResolver, _SCAN_RESOLVER).resolve(yaml.ScalarNode, event.value, event.implicit)
     if tag == "tag:yaml.org,2002:merge":
         raise _UnscannableShardError
     node = yaml.ScalarNode(tag, event.value, style=event.style)
     # A fresh constructor per scalar: ``construct_document`` resets its memo, and
     # nothing is shared between threads resolving keys at once.
-    return yaml.constructor.SafeConstructor().construct_document(node)
+    constructor = yaml.constructor.SafeConstructor()
+    return cast(_DocumentConstructor, constructor).construct_document(node)
 
 
 @dataclass(slots=True)
@@ -98,7 +117,7 @@ def _scan_shard_for_key(handle: IO[str], key: str) -> str | None:
     # A sequence flattens to one stringified value, so nothing under it is a key.
     opaque_depth = 0
     documents = 0
-    for event in yaml.parse(handle, Loader=yaml.CSafeLoader):
+    for event in cast(_EventStream, yaml).parse(handle, Loader=yaml.CSafeLoader):
         if isinstance(event, yaml.AliasEvent) or getattr(event, "anchor", None) is not None:
             raise _UnscannableShardError
         if isinstance(event, yaml.DocumentStartEvent):
@@ -178,7 +197,7 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
             return
         try:
             with shard_file.open("r", encoding=UTF_8_ENCODING) as handle:
-                parsed = _load_yaml_handle(handle)
+                parsed = load_yaml_handle(handle)
             flattened = _flatten_dict(parsed)
             self._key_cache.update(flattened)
         except Exception:

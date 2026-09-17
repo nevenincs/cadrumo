@@ -16,7 +16,7 @@ domain boundary rather than enumerated in this core module:
   catalogue's value set here.
 
 Both IRNR axes are consumed by the cross-cutting ``irnr.convenio.override``
-authored fact and its :class:`~domain.calculations.registry.ConvenioAuthority`
+authored fact and its :class:`~domain.calculations.registry.convenio.ConvenioAuthority`
 projection. The registry TOML stays free-form (a plain string token); the
 loader hydrates typed tokens at the boundary.
 """

@@ -24,7 +24,7 @@ sensitive in a tax / PII sense:
 * :class:`ArgumentRecord` values are recorded verbatim. This layer
   performs no redaction of its own, so any producer populating
   :attr:`RunTrace.arguments` must redact secret-named parameters
-  against :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS`
+  against :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS`
   *before* constructing the record — once a value reaches this model it
   is written to the JSONL trace as given.
 * :attr:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
@@ -323,7 +323,7 @@ class RunEventPayload(BaseModel):
 def _require_tz_aware(value: datetime) -> datetime:
     """Reject naive or non-UTC datetimes at the pydantic boundary.
 
-    The sort in :func:`cadrumo.core.observability.iter_runs` crashes with
+    The sort in :func:`cadrumo.core.observability.store.iter_runs` crashes with
     ``TypeError: can't compare offset-naive and offset-aware datetimes``
     if the runs directory mixes both shapes. Every writer inside the
     observability layer constructs datetimes with ``tzinfo=UTC``, but a

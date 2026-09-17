@@ -15,7 +15,7 @@ and it carries the full consequences of a notification the taxpayer read.
 
 :class:`NotificacionEstadoServicio` is the closed axis of that service state.
 It is deliberately ORTHOGONAL to
-:class:`~cadrumo.core.PostFilingEventKind`, which closes the *procedural
+:class:`~cadrumo.core.post_filing_event.PostFilingEventKind`, which closes the *procedural
 category* axis (requerimiento, liquidación, providencia de apremio). The two
 answer unrelated questions: a requerimiento can independently be accessed,
 inside its window, or deemed served, so cross-producting category by state

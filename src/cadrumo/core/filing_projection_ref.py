@@ -842,7 +842,7 @@ class M296PerceptorField(StrEnum):
     Modelo 296 is the IRNR annual withholding summary, and AEAT repeats the whole
     PERCEPTOR RECORD once per payee rather than repeating fields inside one record. The
     row's data already exists in the registry as
-    :class:`~cadrumo.domain.calculations.registry.Withholding296Observation` -- perceptor
+    :class:`~cadrumo.domain.calculations.registry.withholding296_bindings.Withholding296Observation` -- perceptor
     tax id, legal name, naturaleza, clave, subclave, base and retención -- so these fields
     are projected from that observation set rather than supplied as operator header facts.
 

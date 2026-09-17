@@ -11,7 +11,7 @@ Three declarations per candidate carry the weight:
 
 ``memory_requirement_bytes``
     The publisher's stated weight size, the figure
-    :func:`~application.provisioning.assess_model_load_contention` compares
+    :func:`~application.provisioning_runtime.assess_model_load_contention` compares
     against measured free headroom. It is the requirement BEFORE the configured
     safety margin, never after -- the margin is deployment policy and lives on
     :class:`~core.config.Settings`.
@@ -38,7 +38,7 @@ selection logic that consumes it lives in the application layer at
 :func:`~application.provisioning.select_model_for_role`.
 
 See Also:
-    :class:`~core.AcceleratorKind`
+    :class:`~core.hardware.AcceleratorKind`
         The measured-hardware axis selection filters candidates against.
     :class:`~application.provisioning.HardwareProfile`
         The measured profile whose free figures decide whether a candidate fits.
@@ -194,7 +194,7 @@ class ModelSelectionAdvisory(StrEnum):
             safety margin exceeds measured free memory.
         FIT_UNVERIFIED: Free memory could not be measured, so fit was not
             checked here. The load itself still fails closed at
-            :func:`~application.provisioning.assess_model_load_contention`.
+            :func:`~application.provisioning_runtime.assess_model_load_contention`.
     """
 
     LICENCE_COMMERCIAL_USE_BARRED = "licence_commercial_use_barred"

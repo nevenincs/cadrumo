@@ -1,14 +1,14 @@
 """Closed remote-telemetry metric-key registry and the allowlisted payload.
 
 Every telemetry emission is shaped by
-:class:`~core.telemetry.TelemetryEventPayload`, a ``pydantic`` model whose
+:class:`~core.telemetry.schema.TelemetryEventPayload`, a ``pydantic`` model whose
 field set IS the entire content allowlist: there is no ``extra`` passthrough,
 no free-text ``message``/``context`` field, and no string field wide enough to
 carry operator-controlled financial or identity content. A producer's counters
 and timings are validated against
-:data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY` — a closed, code-authored
+:data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY` — a closed, code-authored
 mapping from command dotted-path to its declared metric keys — so an
-unregistered key raises :class:`~core.telemetry.TelemetrySchemaError` rather
+unregistered key raises :class:`~core.telemetry.errors.TelemetrySchemaError` rather
 than silently passing through, and a registered-but-not-``remote_allowed`` key
 is silently dropped from the outgoing payload (it may still exist for
 local-only diagnostics; it is simply never remote-eligible).
@@ -18,9 +18,9 @@ command's schema entry, or flipping a key's ``remote_allowed`` — never an
 implicit consequence of adding a new local metric elsewhere in the codebase.
 
 See Also:
-    :func:`~core.telemetry.build_telemetry_payload`
+    :func:`~core.telemetry.schema.build_telemetry_payload`
         Validates producers against this registry before emission.
-    :func:`~core.telemetry.emit_telemetry_event`
+    :func:`~core.telemetry.emit.emit_telemetry_event`
         The only remote-eligible dispatch point for a validated payload.
 """
 
@@ -85,11 +85,11 @@ class MetricSchema(BaseModel):
     Attributes:
         command: Dotted-path command identifier the schema governs (e.g.
             ``"diagnostics.run_health"``). Matches
-            :attr:`~core.telemetry.TelemetryEventPayload.command`.
+            :attr:`~core.telemetry.schema.TelemetryEventPayload.command`.
         counters: Closed mapping of counter key ->
-            :class:`~core.telemetry.CounterSpec`.
+            :class:`~core.telemetry.schema.CounterSpec`.
         timings_ms: Closed mapping of timing key ->
-            :class:`~core.telemetry.TimingSpec`.
+            :class:`~core.telemetry.schema.TimingSpec`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -169,13 +169,13 @@ TELEMETRY_METRIC_REGISTRY: Mapping[str, MetricSchema] = MappingProxyType(
 Every entry declares only non-sensitive operational counters/timings: CLI
 command-invocation counts and duration, local-LLM-run counts and duration, and
 error-kind occurrence frequency. ``error_kind`` on
-:class:`~core.telemetry.TelemetryEventPayload` is always a short closed label
+:class:`~core.telemetry.schema.TelemetryEventPayload` is always a short closed label
 (an exception class name such as ``"LLMClassifierError"``, mirroring
-:attr:`~adapters.outbound.llm.LLMRunRecord.error_kind`) -- never raw
+:attr:`~adapters.outbound.llm.run_telemetry.error_kind`) -- never raw
 exception text, a file path, a NIF, or any other operator-controlled content.
 No entry here declares a counter/timing keyed by anything financial, personal,
 or free-text; extending this registry with such a key is refused structurally
-by :class:`~core.telemetry.TelemetryEventPayload`'s ``extra="forbid"``
+by :class:`~core.telemetry.schema.TelemetryEventPayload`'s ``extra="forbid"``
 allowlist regardless of what a producer attempts to pass.
 """
 
@@ -246,9 +246,9 @@ def build_telemetry_payload(
     """Build an allowlisted payload for ``command``.
 
     Validates every counter/timing key against
-    :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`: a key that is not
+    :data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY`: a key that is not
     declared for ``command`` at all raises
-    :class:`~core.telemetry.TelemetrySchemaError` (an authoring error -- the
+    :class:`~core.telemetry.errors.TelemetrySchemaError` (an authoring error -- the
     producer must register the key first); a key that IS declared but not
     ``remote_allowed`` is silently dropped from the returned payload (it stays
     a valid local-only metric; it is simply never remote-eligible).
@@ -262,16 +262,16 @@ def build_telemetry_payload(
         error_kind: Optional short closed error-kind label.
         captured_at: ISO-8601 UTC capture timestamp.
         registry: Metric-schema registry to validate against. Defaults to the
-            production :data:`~core.telemetry.TELEMETRY_METRIC_REGISTRY`; tests
+            production :data:`~core.telemetry.schema.TELEMETRY_METRIC_REGISTRY`; tests
             may inject a substitute registry to exercise the validation
             contract without depending on production entries.
 
     Returns:
-        The allowlisted :class:`~core.telemetry.TelemetryEventPayload`, carrying
+        The allowlisted :class:`~core.telemetry.schema.TelemetryEventPayload`, carrying
         only registered, ``remote_allowed`` counter/timing keys.
 
     Raises:
-        :class:`~core.telemetry.TelemetrySchemaError`: When a counter or timing
+        :class:`~core.telemetry.errors.TelemetrySchemaError`: When a counter or timing
             key is not declared in the command's :class:`MetricSchema` at all.
     """
     active_registry = registry if registry is not None else TELEMETRY_METRIC_REGISTRY

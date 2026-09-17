@@ -27,7 +27,7 @@ from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VA
 from ..logging import get_logger
 from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
 from ..type_guards import is_object_mapping
-from ._lazy_catalogue import _load_yaml_handle
+from ._lazy_catalogue import load_yaml_handle
 
 if TYPE_CHECKING:
     from ._lazy_catalogue import LazyLocaleCatalogue
@@ -558,7 +558,7 @@ def locale_map(locale: str) -> Mapping[str, str | None]:
         monolith = override / f"{locale}.yml"
         if monolith.is_file():
             with monolith.open("r", encoding="utf-8") as handle:
-                return _flatten_translations(_load_yaml_handle(handle))
+                return _flatten_translations(load_yaml_handle(handle))
     return _packaged_locale_map(locale)
 
 

@@ -12,9 +12,9 @@ See Also:
         path fields.
     :func:`~core.config.load_settings`
         Runtime entry point used by integration consumers to read these fields.
-    :mod:`~adapters.outbound.storage._factory`
+    :mod:`~adapters.outbound.storage.factory`
         Outbound storage factory that consumes the Google Drive vault defaults.
-    :mod:`~adapters.inbound.financial.providers._csv`
+    :mod:`~adapters.inbound.financial.providers.csv`
         CSV financial-ingest provider that reads the default CSV encoding.
 """
 

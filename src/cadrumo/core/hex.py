@@ -2,8 +2,8 @@
 
 One canonical home for the two hex shapes the signing and encryption
 boundaries validate at, consumed by
-:class:`application.modelo.SignedReviewPackage` and
-:class:`application.modelo.CounterSignedReceipt`. Keeping the patterns in
+:class:`application.modelo.review_package_signing.SignedReviewPackage` and
+:class:`application.modelo.review_package_counter_sign.CounterSignedReceipt`. Keeping the patterns in
 ``core`` lets the review-package signing and receipt-encryption boundaries
 share one declaration without either importing the other.
 
@@ -36,7 +36,7 @@ HEX_PATTERN_16 = r"^[0-9a-f]{16}$"
 """Exactly 16 lowercase hex characters: a SHA-256 digest truncated to 8 bytes.
 
 The shape of a short CONTENT ADDRESS rather than a full digest -- notably
-:func:`domain.filing.compute_modelo_draft_id`, which content-addresses a
+:func:`domain.filing.schema.compute_modelo_draft_id`, which content-addresses a
 filing draft by the first 16 hex characters of its payload hash. A truncated
 digest is a weaker collision claim than the full 64 and must never be used
 where a cryptographic digest is required; it exists so a human-quotable

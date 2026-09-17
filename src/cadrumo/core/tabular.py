@@ -32,9 +32,9 @@ decoded at all, or that yields no usable header, raises
 its own operator-facing error taxonomy.
 
 See Also:
-    :class:`~core.FieldRole`
+    :class:`~core.field_role.FieldRole`
         The closed vocabulary a normalized column's meaning is mapped onto.
-    :class:`~domain.transactions.RawTransaction`
+    :class:`~domain.transactions.raw_transaction.RawTransaction`
         The record a projected tabular row eventually becomes.
 """
 

@@ -1,7 +1,7 @@
-"""Ordered core :class:`~core.errors.ErrorCode` registry shard.
+"""Ordered core :class:`~core.errors.error_codes.ErrorCode` registry shard.
 
 Rows map core exception qualnames to stable
-:class:`~core.errors.ErrorCategory` values and locale message keys.
+:class:`~core.errors.error_codes.ErrorCategory` values and locale message keys.
 """
 
 from ..error_codes import ErrorCategory, ErrorCode

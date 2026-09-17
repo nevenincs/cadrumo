@@ -1,11 +1,11 @@
 """Redaction-rule registry and the :func:`redact` helper family.
 
-The :class:`core.classification.RedactionRule` shape lives in
+The :class:`core.classification.policies.RedactionRule` shape lives in
 :mod:`core.classification` so the :class:`SensitivityClass` policy
 table can reference rule names without a circular import. This module ships:
 
 * a small in-memory registry of default
-  :class:`core.classification.RedactionRule` instances keyed by
+  :class:`core.classification.policies.RedactionRule` instances keyed by
   name (NIF, URL, OAuth bearer token, opaque bearer token);
 * :func:`redact`, the flat-string helper that applies a tuple of
   rules in declared order;
@@ -18,12 +18,12 @@ table can reference rule names without a circular import. This module ships:
   profile for rendered text and JSON-shaped payloads;
 * :func:`default_rules_for` and :func:`default_rules_for_class`, the
   resolvers that turn rule names stored on a
-  :class:`core.classification.ClassificationPolicy` into the
-  underlying :class:`core.classification.RedactionRule`
+  :class:`core.classification.policies.ClassificationPolicy` into the
+  underlying :class:`core.classification.policies.RedactionRule`
   instances.
 
 The redaction strategies, defined in
-:class:`core.classification.RedactionStrategy`, are:
+:class:`core.classification.policies.RedactionStrategy`, are:
 
 ``SHA256_PREFIX``
     Replace the matched span with ``sha256:<first-8-hex>`` of its
@@ -495,11 +495,11 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     obvious rather than silent.
 
     Args:
-        policy: A :class:`core.classification.ClassificationPolicy`
+        policy: A :class:`core.classification.policies.ClassificationPolicy`
             whose ``redaction_rules`` field carries rule names.
 
     Returns:
-        A tuple of :class:`core.classification.RedactionRule`
+        A tuple of :class:`core.classification.policies.RedactionRule`
         instances in the order they were declared on the policy.
 
     Raises:
@@ -529,7 +529,7 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
 
     Args:
         sensitivity: The
-            :class:`core.classification.SensitivityClass` whose
+            :class:`core.classification.policies.SensitivityClass` whose
             default rules should apply.
 
     Returns:
@@ -832,7 +832,7 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         value: The candidate string. Non-string inputs raise
             :exc:`TypeError`; consumers must stringify upstream.
         rules: Ordered tuple of
-            :class:`core.classification.RedactionRule` instances.
+            :class:`core.classification.policies.RedactionRule` instances.
             Each rule's pattern is compiled with :data:`re.MULTILINE`
             and its strategy is applied to every match.
 
@@ -1073,11 +1073,11 @@ _CLI_STRING_CACHE_MAX_LENGTH = 512
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
         return _redact_cli_string_uncached(text, reveal_identifiers)
-    return _redact_cli_string_cached(text, reveal_identifiers, tax_identity_admission())
+    return _redact_cli_string_cached(text, reveal_identifiers, id(tax_identity_admission()))
 
 
 @lru_cache(maxsize=16384)
-def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: object) -> str:
+def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission_identity: int) -> str:
     """Return the redaction of ``text``, reusing an earlier answer for the same input.
 
     The cache holds each input string in PLAINTEXT, next to its redaction, for
@@ -1087,10 +1087,11 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: ob
     one-shot CLI process exits moments later; the TUI and MCP hosts are
     long-lived and keep the entries for as long as they run.
 
-    ``admission`` is part of the key only: an answer computed under one
-    identity gate must not be reused under another.
+    ``admission_identity`` is part of the key only: an answer computed under
+    one identity gate must not be reused under another. The admission gate
+    itself is never a required-hashable value, only its object identity.
     """
-    del admission
+    del admission_identity
     return _redact_cli_string_uncached(text, reveal_identifiers)
 
 
@@ -1240,7 +1241,7 @@ def redact_for_log(text: str) -> str:
 
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
-    fingerprints. The :class:`core.classification.SensitivityClass`
+    fingerprints. The :class:`core.classification.policies.SensitivityClass`
     identity and diagnostic classes are named for at-rest identity data
     and observability sinks respectively; ``AUDIT`` is the canonical
     class for the log/error path.

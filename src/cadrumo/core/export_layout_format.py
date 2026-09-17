@@ -1,6 +1,6 @@
 """Closed wire-shape vocabulary for modelo registry export layouts.
 
-Every :class:`~domain.calculations.registry.ExportLayoutDefinition` declares the
+Every :class:`~domain.calculations.registry.schema_exports.ExportLayoutDefinition` declares the
 WIRE SHAPE its records take. :class:`ExportLayoutFormat` closes that value set so
 loader hydration rejects an unknown token at registry-load time rather than at a
 downstream branch on the string, and so the roughly twenty sites that switch on
@@ -26,7 +26,7 @@ Not to be confused with two same-shaped vocabularies that name different things:
   rendering switch and has nothing to do with AEAT filing artefacts.
 
 Hydration happens at the registry boundary:
-:func:`~domain.calculations.registry.load_registry_tree` hands the TOML token to
+``domain.calculations.registry.load_registry_tree`` hands the TOML token to
 strict schema validation, which resolves it to a member here.
 """
 

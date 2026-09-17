@@ -13,7 +13,7 @@ string tokens, threading them through
 :data:`cadrumo.entrypoints.cli._app_ledger_command_specs.LEDGER_COMMAND_SPECS`,
 :func:`cadrumo.entrypoints.cli._ledger_read_cli.ledger_list`,
 :func:`cadrumo.entrypoints.cli._ledger_list.project_ledger_list`, and the stable
-:func:`cadrumo.entrypoints.cli._ledger_list._sort_results` helper.
+``cadrumo.entrypoints.cli._ledger_list._sort_results`` helper.
 
 This module deliberately declares tokens only. It does not project
 transactions, compare rows, page results, or decide missing-key ordering; those
@@ -39,9 +39,9 @@ class LedgerSortField(StrEnum):
     last under both orders, never crashing the sort.
 
     The value set is consumed by the command-spec runtime and by
-    :func:`cadrumo.entrypoints.cli._ledger_list._sort_field_value`, so any new
+    :func:`cadrumo.application.ledger.list_query._sort_field_value`, so any new
     member must be added with a projection over
-    :class:`~cadrumo.domain.transactions.Transaction` and covered by the real
+    :class:`~cadrumo.domain.transactions.models.Transaction` and covered by the real
     repository sort tests.
 
     Attributes:
@@ -73,7 +73,7 @@ class LedgerSortOrder(StrEnum):
     :class:`LedgerSortOrder` controls only the primary axis selected by
     :class:`LedgerSortField`; the final content-addressed ``transaction_id``
     tie-break remains ascending in
-    :func:`cadrumo.entrypoints.cli._ledger_list._sort_results`.
+    ``cadrumo.entrypoints.cli._ledger_list._sort_results``.
 
     Attributes:
         ASC: Sort the primary axis ascending.

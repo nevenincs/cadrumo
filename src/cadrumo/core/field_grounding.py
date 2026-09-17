@@ -1,13 +1,13 @@
 """What verification one extracted field's value actually passed.
 
-The second half of the provenance pair. :class:`~core.FieldOrigin` records HOW a
+The second half of the provenance pair. :class:`~core.field_origin.FieldOrigin` records HOW a
 value was obtained; this axis records WHAT CHECKING it survived afterwards.
 Neither substitutes for the other: a value read by an exact structured parser
 can still fail an arithmetic identity, and a value read by a vision model can
 still be corroborated verbatim against the transcription it came from.
 
 Declared as a :class:`enum.StrEnum` in ``core`` for the same reason
-:class:`~core.FieldOrigin` is: the readers that ground values, the application
+:class:`~core.field_origin.FieldOrigin` is: the readers that ground values, the application
 layer that projects them and the CLI that shows them to the operator sit in
 three different packages, and ``core`` is the only home all three reach without
 one depending on another.

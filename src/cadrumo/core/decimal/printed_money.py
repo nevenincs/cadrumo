@@ -50,7 +50,7 @@ Relationship to the sibling grammars
 :func:`try_parse_canonical_decimal` owns the *hand-typed* dot-decimal grammar;
 this module owns the *AEAT-printed* comma-tailed one. Pick by provenance.
 
-:data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP` is the UNANCHORED capture
+:data:`~adapters.inbound.pdf.label_regex.SPANISH_AMOUNT_GROUP` is the UNANCHORED capture
 group for this same convention, used to FIND an amount inside a longer printed
 line. The two are deliberately **not** interchangeable: anchoring that capture
 group would refuse an ungrouped ``1234,56``, which this grammar accepts.
@@ -75,7 +75,7 @@ value of naming the set: admitting ASCII space would let a grammar walk across
 the gap between a label and its value and read two adjacent numbers as one.
 
 Declared here so the anchored grammar in this module and the unanchored capture
-group :data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP` cannot drift on which
+group :data:`~adapters.inbound.pdf.label_regex.SPANISH_AMOUNT_GROUP` cannot drift on which
 code points AEAT actually prints. They differ on anchoring, deliberately; they
 must not differ on this.
 """

@@ -21,7 +21,7 @@ __all__ = [
 class ClassifierInputSource(StrEnum):
     """Where one classifier input came from, which decides how it can be audited.
 
-    Deliberately separate from :class:`~core.FieldOrigin`. That enum answers
+    Deliberately separate from :class:`~core.field_origin.FieldOrigin`. That enum answers
     "how was this value obtained **from a source document**" and every one of
     its members names a way of reading a page. A taxpayer's own censo-registered
     regime is not read from the page at all — it is a system-authoritative fact
@@ -61,7 +61,7 @@ class CounterpartyTaxablePersonStatus(StrEnum):
     invites absence to be read as it, which would silently reclassify every
     simplified ticket.
 
-    **This is deliberately not** :class:`~domain.iva.CustomerTaxStatus`, and the
+    **This is deliberately not** :class:`~domain.iva.classification.CustomerTaxStatus`, and the
     gap between them is a legal one rather than a modelling preference. That
     enum's ``B2B_IVA_REGISTERED`` is the trigger for the intra-community supply
     rule, which classifies the operation EXEMPT under LIVA art. 25 — and that

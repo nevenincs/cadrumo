@@ -1,6 +1,6 @@
 """Closed taxonomy for how :mod:`~adapters.outbound.google` obtains credentials.
 
-:class:`~core.GoogleCredentialSourceKind` is the accepted-value set governing
+:class:`~core.google_credential_source.GoogleCredentialSourceKind` is the accepted-value set governing
 which mechanism :mod:`~adapters.outbound.google` uses to produce a
 ``google.oauth2.credentials.Credentials``-shaped object for the Sheets/Drive
 export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
@@ -9,12 +9,12 @@ export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
 belongs in the central authority, not scattered string literals).
 
 See Also:
-    :func:`~adapters.outbound.google.resolve_impersonated_credentials`
+    :func:`~adapters.outbound.google.impersonation.resolve_impersonated_credentials`
         Resolves
-        :attr:`~core.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`
+        :attr:`~core.google_credential_source.GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION`
         into a real, short-lived-token ``Credentials`` object.
-    :func:`~adapters.outbound.storage.build_google_credentials`
-        Resolves :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP`, the
+    :func:`~adapters.outbound.storage.factory.build_google_credentials`
+        Resolves :attr:`~core.google_credential_source.GoogleCredentialSourceKind.OAUTH_DESKTOP`, the
         existing per-profile interactive-consent credential source.
 """
 
@@ -30,15 +30,15 @@ class GoogleCredentialSourceKind(StrEnum):
         OAUTH_DESKTOP: The existing, default per-profile interactive OAuth
             Desktop consent flow (``aeat config google register`` /
             ``login``). Persists a long-lived refresh token per profile via
-            :class:`~adapters.outbound.google.OAuthClient` and
-            :class:`~adapters.outbound.google.OAuthToken`.
+            :class:`~adapters.outbound.google.records.OAuthClient` and
+            :class:`~adapters.outbound.google.records.OAuthToken`.
         SERVICE_ACCOUNT_IMPERSONATION: A shared Google service-account
             identity is impersonated via Application Default Credentials
             (ADC) plus IAM ``roles/iam.serviceAccountTokenCreator``. No
             long-lived credential is persisted by this application; a
             short-lived access token is re-derived from ADC and IAM on
             every use. See
-            :class:`~adapters.outbound.google.GoogleImpersonationConfig`.
+            :class:`~adapters.outbound.google.impersonation.GoogleImpersonationConfig`.
     """
 
     OAUTH_DESKTOP = "oauth_desktop"
