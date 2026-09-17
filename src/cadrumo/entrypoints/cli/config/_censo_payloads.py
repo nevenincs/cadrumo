@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from pydantic import model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.json_contract import OutputSchema
 from ....domain.user_profile.values import UserProfileFact
 
@@ -36,6 +37,7 @@ class CensoFactPayload(OutputSchema):
     source: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_canonical_profile_fact(self) -> CensoFactPayload:
         """Keep the presentation row on the domain's profile path/provenance contract."""
         UserProfileFact(path=self.path, value=self.value, source=self.source)

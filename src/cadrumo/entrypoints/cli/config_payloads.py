@@ -37,6 +37,7 @@ from ...application.diagnostic_models import (
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatusValue, ProfileSource
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
@@ -502,6 +503,7 @@ class ConfigResetTargetPayload(OutputSchema):
     completed_at: str | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_completed_at(self) -> ConfigResetTargetPayload:
         if self.completed_at is not None:
             validate_utc_aware(datetime.fromisoformat(self.completed_at))
@@ -518,6 +520,7 @@ class ConfigResetSummaryPayload(OutputSchema):
     completed_at: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_summary(self) -> ConfigResetSummaryPayload:
         validate_utc_aware(datetime.fromisoformat(self.completed_at))
         if self.deleted_count + self.already_absent_count != self.target_count:
@@ -540,6 +543,7 @@ class ConfigResetOperationPayload(OutputSchema):
     summary: ConfigResetSummaryPayload | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_operation(self) -> ConfigResetOperationPayload:
         started_at = datetime.fromisoformat(self.started_at)
         updated_at = datetime.fromisoformat(self.updated_at)

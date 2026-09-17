@@ -39,7 +39,7 @@ def test_google_specs_declare_the_complete_operator_subtree() -> None:
 def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
     package = Path(__file__).parents[1]
     modules = (
-        "_google.py",
+        "google.py",
         "_google_credential_source_cli.py",
         "_google_folder.py",
     )

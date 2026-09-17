@@ -13,7 +13,7 @@ from .._app_live_borrador_payloads import (
     Borrador100ViewResult,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "f64de004-6f34-406e-8e02-58be01c6157c"  # was 'borrador-bucket'
 _SNAPSHOT_ID = "a" * 64

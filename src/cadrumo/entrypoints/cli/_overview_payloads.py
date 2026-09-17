@@ -39,6 +39,7 @@ from ...application.overview.calendar_models import (
 )
 from ...application.overview.data_prep import DataPrepStepId, DataPrepStepState
 from ...application.overview.pipeline_health import ModeloReadinessState
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.aeat_csv import AeatCsv
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.identity.profile import ProfileId
@@ -94,6 +95,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     evidence_source: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_csv_for_verified_justificante(self) -> OverviewCalendarFilingEvidencePayload:
         verified_state = self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
         if self.justificante_verified != verified_state:
@@ -137,6 +139,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     verified_justificante_csv: AeatCsv | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_event_csv_for_verified_justificante(self) -> OverviewCalendarEventPayload:
         verified_state = self.aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
         if self.justificante_verified is True and not verified_state:
@@ -234,6 +237,7 @@ class OverviewCalendarRangePayload(OutputSchema):
     to_date: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_inclusive_date_order(self) -> OverviewCalendarRangePayload:
         try:
             from_date = require_iso8601_date(self.from_date)
@@ -382,6 +386,7 @@ class OverviewCalendarResult(OutputSchema):
     coverage: OverviewObligationCoveragePayload | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_single_profile_coverage(self) -> Self:
         if self.range is not None and self.coverage is None:
             raise ValueError("single-profile calendar results must include obligation coverage")

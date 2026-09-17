@@ -66,10 +66,8 @@ _PUBLISHER_SOURCE = dedent(
     from contextlib import ExitStack
     from pathlib import Path
 
-    from cadrumo.adapters.persistence.storage import (
-        build_profile_custody_port,
-        build_profile_login_session_port,
-    )
+    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
+    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
     from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 

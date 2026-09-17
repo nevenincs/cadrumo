@@ -19,6 +19,7 @@ from __future__ import annotations
 from pydantic import field_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.bucket import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr
@@ -62,6 +63,7 @@ class RatiosRowPayload(OutputSchema):
 
     @field_validator("ratio")
     @classmethod
+    @pydantic_validation_boundary
     def _check_ratio(cls, value: str) -> str:
         return _validated_ratio_text(value, field="ratio")
 
@@ -81,6 +83,7 @@ class RatiosEligibleRowPayload(OutputSchema):
 
     @field_validator("default_ratio")
     @classmethod
+    @pydantic_validation_boundary
     def _check_default_ratio(cls, value: str | None) -> str | None:
         if value is None or value == "":
             return value
@@ -118,6 +121,7 @@ class RatiosSetResult(OutputSchema):
 
     @field_validator("ratio")
     @classmethod
+    @pydantic_validation_boundary
     def _check_ratio(cls, value: str) -> str:
         return _validated_ratio_text(value, field="ratio")
 

@@ -32,6 +32,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...core.type_guards import is_str_keyed_dict
 
@@ -124,6 +125,7 @@ class RootStatusResult(OutputSchema):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_canonical_branch(cls, value: object) -> dict[str, object]:
         return _canonical_branch_payload(
             value,
@@ -153,5 +155,6 @@ class AppRootResult(OutputSchema):
 
     @model_validator(mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_help_document(cls, value: object) -> dict[str, object]:
         return _canonical_branch_payload(value, branches=(_help_document_branch,))

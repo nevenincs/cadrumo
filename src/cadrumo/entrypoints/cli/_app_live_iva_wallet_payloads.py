@@ -18,6 +18,7 @@ from ...application.live.remote_state_models import (
     LiveIvaReadSurface,
 )
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import OutputSchema
 from ...core.period import Period
@@ -125,6 +126,7 @@ class IvaWalletHistoryResult(OutputSchema):
 
     @field_validator("unallocated_applied_amount")
     @classmethod
+    @pydantic_validation_boundary
     def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
         """Re-assert on the wire the bound the record carries in Decimal form.
 
@@ -166,6 +168,7 @@ class IvaWalletCaptureHistoryResult(OutputSchema):
     failed_declarations: list[str] = []
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _failure_count_agrees_with_named_failures(self) -> IvaWalletCaptureHistoryResult:
         """A reported failure count must be backed by the declarations it counts.
 

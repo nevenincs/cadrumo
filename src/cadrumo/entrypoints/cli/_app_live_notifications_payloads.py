@@ -11,6 +11,7 @@ from pydantic import (
 )
 
 from ...application.live.notification_documents import NotificationParseRefusal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.identity.aeat_clave_liquidacion import AeatClaveLiquidacion
 from ...core.identity.bucket import BucketId
@@ -184,6 +185,7 @@ class NotificationDocumentPayload(OutputSchema):
     mode: Literal["read"] = "read"
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _the_reading_flag_agrees_with_the_reading(self) -> NotificationDocumentPayload:
         """Keep a derived wire field honest against the field it is derived from.
 

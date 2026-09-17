@@ -174,7 +174,7 @@ _EXPECTED_PARAMETERS = {
         _option("retention_amount", "builtins:str", None, "cli.app.ledger.invoice.retention_amount_help"),
         _option(
             "invoice_class",
-            "cadrumo.domain.invoices.enums:InvoiceClass",
+            "builtins:str",
             None,
             "cli.app.ledger.invoice.invoice_class_help",
         ),
@@ -215,7 +215,7 @@ _EXPECTED_PARAMETERS = {
         _option("retention_amount", "builtins:str", None, "cli.app.ledger.invoice.retention_amount_help"),
         _option(
             "invoice_class",
-            "cadrumo.domain.invoices.enums:InvoiceClass",
+            "builtins:str",
             None,
             "cli.app.ledger.invoice.invoice_class_help",
         ),
@@ -267,7 +267,7 @@ _EXPECTED_PARAMETERS = {
         _option("retention_amount", "builtins:str", None, "cli.app.ledger.invoice.retention_amount_help"),
         _option(
             "invoice_class",
-            "cadrumo.domain.invoices.enums:InvoiceClass",
+            "builtins:str",
             None,
             "cli.app.ledger.invoice.invoice_class_help",
         ),

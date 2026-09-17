@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
-import threading
-from contextlib import suppress
 
 from click.testing import Result
 
@@ -25,57 +22,46 @@ def seed_profile(name: str, **facts: str) -> str:
 
 
 def create_quiet_profile(name: str, *options: str) -> Result:
-    # `create` MINTS a custody envelope, so it needs the operator passphrase and
-    # its confirmation -- unlike `edit`, which opens an existing one and refuses a
-    # payload carrying the confirmation field. A test runner is not a terminal, so
-    # the bounded strict-JSON channel is the only one either verb accepts.
+    return invoke_profile_create(
+        (
+            "config",
+            "profile",
+            "create",
+            name,
+            "--quiet",
+            "--accept-defaults",
+            *_filing_identity_defaults(name, options),
+            *options,
+        ),
+    )
+
+
+def invoke_profile_create(argv: tuple[str, ...]) -> Result:
+    """Run a ``config profile create`` argv with its credential and recovery channels.
+
+    ``create`` MINTS a custody envelope, so it needs the operator passphrase and
+    its confirmation -- unlike ``edit``, which opens an existing one and refuses a
+    payload carrying the confirmation field. A test runner is not a terminal, so
+    the bounded strict-JSON channel is the only one either verb accepts.
+    """
     from ....core.config import load_settings
 
     secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    handoff_reader, handoff_writer = os.pipe()
-    verification_reader, verification_writer = os.pipe()
+    return invoke_cached_cli(
+        (*argv, "--secrets-stdin"),
+        input=json.dumps({"passphrase": secret, "passphrase_confirmation": secret}),
+    )
 
-    def supervise_recovery() -> None:
-        payload = bytearray()
-        try:
-            while chunk := os.read(handoff_reader, 8193 - len(payload)):
-                payload.extend(chunk)
-            if payload:
-                os.write(verification_writer, payload)
-        finally:
-            payload[:] = b"\x00" * len(payload)
-            for descriptor in (handoff_reader, verification_writer):
-                with suppress(OSError):
-                    os.close(descriptor)
 
-    supervisor = threading.Thread(target=supervise_recovery, daemon=True)
-    supervisor.start()
-    try:
-        return invoke_cached_cli(
-            (
-                "config",
-                "profile",
-                "create",
-                name,
-                "--quiet",
-                "--accept-defaults",
-                *_filing_identity_defaults(name, options),
-                *options,
-                "--secrets-stdin",
-                "--recovery-handoff-fd",
-                str(handoff_writer),
-                "--recovery-verification-fd",
-                str(verification_reader),
-            ),
-            input=json.dumps({"passphrase": secret, "passphrase_confirmation": secret}),
-        )
-    finally:
-        for descriptor in (handoff_writer, verification_reader):
-            with suppress(OSError):
-                os.close(descriptor)
-        supervisor.join(timeout=5)
-        if supervisor.is_alive():
-            raise RuntimeError("profile recovery handoff supervisor did not terminate")
+def login_profile(name: str) -> Result:
+    """Open ``name``'s session over the bounded strict-JSON passphrase channel."""
+    from ....core.config import load_settings
+
+    secret = load_settings().cadrumo_dev_test_database_password.get_secret_value()
+    return invoke_cached_cli(
+        ("--format", "json", "config", "login", name, "--secrets-stdin"),
+        input=json.dumps({"passphrase": secret}),
+    )
 
 
 def edit_quiet_profile(name: str, *options: str) -> Result:

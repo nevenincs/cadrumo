@@ -24,7 +24,7 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.period import Period
+from ...core.period import Period, PeriodError
 from ...core.type_guards import is_object_dict
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
@@ -78,7 +78,7 @@ def resolve_credentials_and_root(profile: str) -> tuple[Credentials, str]:
 def filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
     try:
         return Period.from_year_and_code(year, period)
-    except ValueError as exc:
+    except PeriodError as exc:
         raise CliRefusedBoundaryError(
             translated_message="cli.app.modelo.spreadsheet.push.snapshot_failure",
             context={"modelo": modelo, "period": period, "year": year},

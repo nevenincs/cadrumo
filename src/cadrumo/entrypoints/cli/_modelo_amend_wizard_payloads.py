@@ -14,6 +14,7 @@ from __future__ import annotations
 from pydantic import model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
@@ -60,6 +61,7 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _amendment_names_the_record_it_supersedes(self) -> WorkAmendWizardResult:
         """Refuse a wizard result that does not name the record it amends.
 

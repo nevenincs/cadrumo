@@ -25,6 +25,7 @@ from typing import Final
 
 import pytest
 
+from ....core.errors.hierarchy import InternalInvariantError
 from .._command_target import resolve_deferred_target
 from ..command_spec import DeferredTarget
 from ..command_specs import COMMAND_GRAPH
@@ -90,5 +91,5 @@ def test_every_declared_command_target_resolves() -> None:
 )
 def test_the_resolver_rejects_a_dangling_target(module: str, qualname: str) -> None:
     """Anti-tautology: prove the resolver this gate leans on actually refuses."""
-    with pytest.raises((RuntimeError, ImportError)):
+    with pytest.raises((InternalInvariantError, ImportError)):
         resolve_deferred_target(DeferredTarget(module, qualname))

@@ -20,6 +20,7 @@ from ....adapters.persistence.storage.master_key.active_session import close_act
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
 from ....tests.inventory import SRC_CADRUMO
 from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
 
@@ -261,11 +262,11 @@ _WINDOWS_HANDLE_HARNESS = (
 )
 
 
-def _settings(storage_root: Path, *, output_language: str = "en") -> dict[str, object]:
+def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLanguage.EN) -> dict[str, object]:
     return {
         "cadrumo_local_storage_root": str(storage_root),
         "cadrumo_secret_store_dir": str(storage_root / "fallback-store"),
-        "cadrumo_output_language": output_language,
+        "cadrumo_output_language": output_language.value,
     }
 
 
@@ -358,7 +359,7 @@ def _run(
     hostile_env: dict[str, str] | None = None,
     preauthenticate_label: str | None = None,
     assert_dispatch_state_unchanged: bool = False,
-    output_language: str = "en",
+    output_language: OutputLanguage = OutputLanguage.EN,
     assert_unread_indices: Sequence[int] = (),
     assert_stdin_unread: bool = False,
     unread_payload: str = _REFUSAL_INPUT,
@@ -426,7 +427,7 @@ def _run_windows_handles(
     hostile_env: dict[str, str] | None,
     preauthenticate_label: str | None,
     assert_dispatch_state_unchanged: bool,
-    output_language: str,
+    output_language: OutputLanguage,
     assert_descriptors_unread: bool,
     assert_stdin_unread: bool,
     unread_payload: str,

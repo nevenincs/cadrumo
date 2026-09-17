@@ -21,6 +21,7 @@ from pydantic import Field, model_validator
 from ...application.modelo.result_summary_payload import ResultSummaryRowPayload
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
@@ -74,6 +75,7 @@ class ObservationPayload(OutputSchema):
     absent_by_design: bool = False
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _operand_casilla_refs_are_traced(self) -> ObservationPayload:
         """Require every casilla operand ref to remain present in the full operand trace."""
         missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)

@@ -18,7 +18,7 @@ from ....core.operator_action_enums import ActionConditionality, ActionEvidenceP
 from .. import errors
 from ..common import cli_policy_refusal_projection
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[3]

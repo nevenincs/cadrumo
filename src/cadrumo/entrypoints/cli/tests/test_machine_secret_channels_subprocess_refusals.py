@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
 from ._machine_secret_channels_support import (
     _NEW_PROFILE_INPUT,
     _OVERSIZE_INPUT,
@@ -544,7 +545,7 @@ def test_four_locale_conflict_snapshots_are_localized_and_secret_free(
             "999999",
         ],
         stdin=_REFUSAL_INPUT,
-        output_language=locale,
+        output_language=OutputLanguage(locale),
     )
     combined = _assert_refused(result, root, before={})
     assert expected in combined

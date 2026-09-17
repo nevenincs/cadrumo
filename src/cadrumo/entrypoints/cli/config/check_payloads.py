@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.profile import ProfileId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
@@ -90,6 +91,7 @@ class CheckPreflightPayload(OutputSchema):
     precondition_action: ResolvedPreconditionAction | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _unhealthy_rows_have_one_outcome(self) -> CheckPreflightPayload:
         if self.healthy and self.precondition_action is not None:
             raise ValueError("healthy preflight rows cannot carry a recovery projection")

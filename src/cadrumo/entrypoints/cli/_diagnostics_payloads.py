@@ -28,6 +28,7 @@ from datetime import datetime
 from pydantic import NonNegativeInt, field_validator, model_validator
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...core.telemetry.schema import TelemetryEventPayload
 from ...core.telemetry.tier import TelemetryTier
@@ -86,6 +87,7 @@ class RunHealthResult(OutputSchema):
     total_failed: NonNegativeInt
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> RunHealthResult:
         """Carry the canonical window invariant onto the wire boundary.
 
@@ -144,6 +146,7 @@ class RunsListResult(OutputSchema):
     has_run_data: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> RunsListResult:
         """Carry the canonical window invariant onto the wire boundary.
 
@@ -196,6 +199,7 @@ class LatencyResult(OutputSchema):
     has_run_data: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> LatencyResult:
         """Carry the canonical window invariant onto the wire boundary.
 
@@ -240,6 +244,7 @@ class ErrorsBreakdownResult(OutputSchema):
     has_failures: bool
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> ErrorsBreakdownResult:
         """Carry the canonical window invariant onto the wire boundary.
 
@@ -319,6 +324,7 @@ class LlmUsageResult(OutputSchema):
     by_provider: list[LlmRunHealthProviderPayload]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _window_is_not_empty(self) -> LlmUsageResult:
         """Carry the canonical window invariant onto the wire boundary.
 

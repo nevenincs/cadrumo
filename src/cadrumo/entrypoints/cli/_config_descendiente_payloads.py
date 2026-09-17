@@ -37,6 +37,7 @@ from typing import Annotated
 
 from pydantic import NonNegativeInt, StringConstraints, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.json_contract import OutputSchema
 from ...core.text_bounds import is_canonical_month_set
 from ...core.time.clock import today_madrid
@@ -69,6 +70,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
 
     @field_validator("meses_madre_trabajo")
     @classmethod
+    @pydantic_validation_boundary
     def _validate_meses_madre_trabajo(cls, value: tuple[int, ...]) -> tuple[int, ...]:
         """Mirror the canonical month-set rules on the wire.
 
@@ -84,6 +86,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_guarderia_spend(self) -> ProfileDescendientePayload:
         """Mirror the canonical one-spend-authority-per-child rule on the wire.
 
@@ -110,6 +113,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_entry_event_dates(self) -> ProfileDescendientePayload:
         """Mirror the canonical entry-date ordering AND the relación coherence rules.
 
@@ -142,6 +146,7 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
         return self
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_alta_posterior_coherence(self) -> ProfileDescendientePayload:
         """Mirror the canonical alta-posterior/worked-months coherence rule on the wire.
 

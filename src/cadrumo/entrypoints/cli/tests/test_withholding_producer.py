@@ -35,7 +35,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtu
 _RAW = (
     '{"source_id": "row-1", "perceptor_tax_id": "12345678A", "transaction_date": "2024-06-01",'
     ' "clave": "A", "subclave": "01", "percibido_dinerario": "1000.00",'
-    ' "retencion_practicada": "190.00"}'
+    ' "retencion_practicada": "190.00", "base_retenciones": "1000.00",'
+    ' "incapacity_cash_perception": "0.00", "incapacity_cash_withholding": "0.00",'
+    ' "incapacity_kind_value": "0.00", "incapacity_kind_ingreso_a_cuenta": "0.00",'
+    ' "incapacity_kind_repercutido": "0.00", "foral_retention_estatal": "0.00",'
+    ' "foral_retention_navarra": "0.00", "foral_retention_araba": "0.00",'
+    ' "foral_retention_gipuzkoa": "0.00", "foral_retention_bizkaia": "0.00"}'
 )
 
 

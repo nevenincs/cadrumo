@@ -25,7 +25,7 @@ from .._modelo_review_package_payloads import (
     ModeloReviewPackageVerifyResult,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _BUILT_AT = datetime(2026, 6, 1, 8, 0, tzinfo=UTC)
 

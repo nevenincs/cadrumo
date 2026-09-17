@@ -18,6 +18,7 @@ from __future__ import annotations
 from pydantic import NonNegativeInt, model_validator
 
 from ...application.ledger.llm_diagnostics import LlmProviderName
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
@@ -54,6 +55,7 @@ class ClassificationRulePayload(OutputSchema):
     created_at: UtcInstant
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_canonical_rule(self) -> ClassificationRulePayload:
         LedgerClassificationRule(
             rule_id=self.rule_id,

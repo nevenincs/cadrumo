@@ -16,6 +16,7 @@ from ....application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.bucket_pointer import read_pointer
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ..verb_input_schema import build_verb_input_schemas
+from ._profile_cli_support import invoke_profile_create, login_profile
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -136,7 +137,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         assert set(missing_argument_names) <= recovery_input.keys()
         recovery_argv = cli_argv_for(live_schema, recovery_input)
 
-        recovery = invoke_cached_cli(recovery_argv, catch_exceptions=False)
+        recovery = invoke_profile_create(tuple(recovery_argv))
 
         assert recovery.exit_code == 0, recovery.output
         recovery_document = _json_object(recovery.stdout)
@@ -156,6 +157,17 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         close_active_bucket_session()
         assert read_pointer(storage_root) == active_pointer
 
+        # A closed session is itself a guarded refusal whose projected action is
+        # the login that reopens it; the chain follows that action before retrying.
+        locked = invoke_cached_cli(("--format", "json", *_ORIGINAL_ARGUMENTS), catch_exceptions=False)
+        assert locked.exit_code != 0
+        locked_error = cast(dict[str, object], _json_object(locked.stderr)["error"])
+        locked_verdict = cast(dict[str, object], locked_error["action"])
+        locked_action = cast(dict[str, object], locked_verdict["action"])
+        assert locked_action["target_command_key"] == "config.login"
+        login = login_profile("recovered")
+        assert login.exit_code == 0, login.output
+
         retry = invoke_cached_cli(
             ("--format", "json", *_ORIGINAL_ARGUMENTS),
             catch_exceptions=False,
@@ -173,6 +185,8 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
         }
 
         close_active_bucket_session()
+        relogin = login_profile("recovered")
+        assert relogin.exit_code == 0, relogin.output
         persisted = invoke_cached_cli(
             ("--format", "json", "app", "ledger", "ratios", "list"),
             catch_exceptions=False,

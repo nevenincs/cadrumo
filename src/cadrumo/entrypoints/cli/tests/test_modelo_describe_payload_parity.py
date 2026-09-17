@@ -25,7 +25,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.query_reports import ModeloDescribeReport
 from ..modelo_aux_payloads import ModeloDescribeResult
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _LEGAL_REF = "ley-35-2006:art-27"
 _SOURCE_REF = "aeat-manual-renta-2024"
