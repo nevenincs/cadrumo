@@ -163,6 +163,9 @@ def resolve_bienes_inversion_regularizacion_parameters(
         BienesInversionParameterResolutionError: When the revision declares none
             of the family, only part of it, or a value that does not resolve for
             ``filing_period_date``.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     declared = {
         parameter.id.split(_ID_STEM, 1)[1]: parameter for parameter in revision.parameters if _ID_STEM in parameter.id

@@ -88,8 +88,8 @@ from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
 from . import country_vocabulary as _country_vocabulary
 from .classification import (
     IvaTerritorialScope,
-    territorial_scope_alias,
     require_iva_territorial_scope,
+    territorial_scope_alias,
 )
 
 if TYPE_CHECKING:

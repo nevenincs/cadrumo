@@ -564,7 +564,11 @@ def create_user_profile_snapshot(
     snapshot_id: str | None = None,
     created_at: datetime | None = None,
 ) -> UserProfileSnapshot:
-    """Create an immutable encrypted-persistence snapshot under one schema."""
+    """Create an immutable encrypted-persistence snapshot under one schema.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     checked = _context_for_schema(context)
     create_context_type, _ = _authority_context_types()
     if not isinstance(checked, create_context_type):
