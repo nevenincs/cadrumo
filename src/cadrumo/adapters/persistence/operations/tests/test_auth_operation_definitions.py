@@ -12,9 +12,15 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
+from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from cadrumo.adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
@@ -26,22 +32,23 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
-    AUTH_OPERATION_DEFINITIONS,
     AUTH_RESET_OPERATION_DEFINITION_ID,
     AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
     PROFILE_LOGIN_OPERATION_DEFINITION_ID,
     PROFILE_ROTATION_OPERATION_DEFINITION_ID,
     AuthConfigureOperationRequest,
+    AuthOperationPorts,
     AuthSessionAcquireOperationRequest,
     AuthTeardownOperationRequest,
     ProfileLoginOperationRequest,
     ProfilePassphraseRotationOperationRequest,
+    build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
+from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -51,6 +58,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .supervision_support import run_to_settlement
 
@@ -60,9 +68,24 @@ _CURRENT = "s39-current-profile-passphrase"
 _REPLACEMENT = "s39-replacement-profile-passphrase"
 
 
+_AUTH_DEFINITIONS = build_auth_operation_definitions(
+    ports=AuthOperationPorts(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_probe_ports=OperatorProbePorts(
+            active_profile_session=ActiveProfileSessionPresenceAdapter(),
+            certificate_health=CertificateHealthProbeAdapter(),
+            clave_identity=ClaveIdentityProbeAdapter(),
+        ),
+        operator_scope_ports=build_operator_scope_ports(),
+    ),
+)
+
+
 def _supervisor(
     root: Path,
     *,
+    operation: PinnedAuthorityOperation,
     profile_objects: SecureObjectRepository | None = None,
     clock: Callable[[], datetime] | None = None,
     owner_id: str = "1" * 64,
@@ -71,10 +94,10 @@ def _supervisor(
     journal = OperationJournalRepository(storage_root=root)
     operands = None if profile_objects is None else operation_secure_reference_repository(objects=profile_objects)
     return OperationSupervisor(
-        authority_operation=unread_authority_operation(),
+        authority_operation=operation,
         registry=OperationRegistry(
-            definitions=AUTH_OPERATION_DEFINITIONS,
-            public_registrations=build_auth_operation_registrations(AUTH_OPERATION_DEFINITIONS),
+            definitions=_AUTH_DEFINITIONS,
+            public_registrations=build_auth_operation_registrations(_AUTH_DEFINITIONS),
         ),
         journal=journal,
         event_stream=journal,
@@ -126,7 +149,9 @@ def _run_secret_operation(
     return asyncio.run(run_to_settlement(supervisor, created_id))
 
 
-def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_bytes(tmp_path: Path) -> None:
+def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_bytes(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
@@ -137,7 +162,7 @@ def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_by
         )
         assert logout_active_profile() == str(profile_id)
         terminal = _run_secret_operation(
-            supervisor=_supervisor(root),
+            supervisor=_supervisor(root, operation=operation),
             definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{profile_id}",
             payload=ProfileLoginOperationRequest(profile_id=profile_id),
@@ -152,9 +177,11 @@ def test_profile_login_uses_a_requirement_bound_secret_without_durable_secret_by
         _assert_not_durable(root, _CURRENT.encode("utf-8"))
 
 
-def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restart_before_entry(tmp_path: Path) -> None:
+def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restart_before_entry(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     observed_at = [datetime(2026, 8, 24, 12, tzinfo=UTC)]
-    supervisor = _supervisor(tmp_path, clock=lambda: observed_at[0])
+    supervisor = _supervisor(tmp_path, operation=operation, clock=lambda: observed_at[0])
     profile_id = UUID("11111111-1111-4111-8111-111111111111")
     request = OperationRequest(
         definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
@@ -180,6 +207,7 @@ def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restar
     observed_at[0] += timedelta(minutes=7)
     replacement = _supervisor(
         tmp_path,
+        operation=operation,
         clock=lambda: observed_at[0],
         owner_id="c" * 64,
         lease_token="d" * 64,
@@ -190,7 +218,9 @@ def test_profile_login_secret_wait_rejects_mismatch_and_settles_cancel_or_restar
     _assert_not_durable(tmp_path, _CURRENT.encode("utf-8"))
 
 
-def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(tmp_path: Path) -> None:
+def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
@@ -208,7 +238,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
         ).encode("utf-8")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
             assert isinstance(objects, SecureObjectRepository)
-            supervisor = _supervisor(root, profile_objects=objects)
+            supervisor = _supervisor(root, operation=operation, profile_objects=objects)
             terminal = _run_secret_operation(
                 supervisor=supervisor,
                 definition_id=PROFILE_ROTATION_OPERATION_DEFINITION_ID,
@@ -225,7 +255,7 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
         assert logout_active_profile() == str(profile_id)
 
         relogin = _run_secret_operation(
-            supervisor=_supervisor(root),
+            supervisor=_supervisor(root, operation=operation),
             definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{profile_id}",
             payload=ProfileLoginOperationRequest(profile_id=profile_id),
@@ -237,9 +267,11 @@ def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody
         _assert_not_durable(root, _REPLACEMENT.encode("utf-8"))
 
 
-def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_storage(tmp_path: Path) -> None:
+def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_storage(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor = _supervisor(profile.storage_root, profile_objects=profile.repository)
+        supervisor = _supervisor(profile.storage_root, operation=operation, profile_objects=profile.repository)
         subject_ref = f"profile:{profile.bucket_id}"
 
         configured_id = asyncio.run(
