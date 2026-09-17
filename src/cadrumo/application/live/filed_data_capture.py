@@ -70,6 +70,7 @@ from ...domain.calculations.registry.verification_tolerance import verification_
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 from ..calculations.ports import ObservedCasillaValueProtocol
+from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ..operations.events import OperationLogSeverity
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs.persist import record_sync_run
@@ -81,7 +82,6 @@ from ..storage.sync_runs.records import (
     sync_run_record_key,
 )
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
-from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .filed_data import (
     BulkFiledDataListingReport,

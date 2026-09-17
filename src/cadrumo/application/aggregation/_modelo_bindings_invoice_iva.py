@@ -626,7 +626,7 @@ class ScreenedInvoiceIva:
     annotation fell out of step with the returns on the way, and every widening
     broke unpack sites in unrelated test modules.
 
-    Fields:
+    Attributes:
         observations: the IVA observations the screen built.
         invoice_ids: source invoice ids behind those observations.
         compared: invoices whose IVA was compared against the ledger, so the
