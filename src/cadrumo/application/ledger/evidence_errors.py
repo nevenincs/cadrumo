@@ -3,7 +3,7 @@
 These live apart from the evidence records and their CRUD service because the
 inference package raises and catches them while holding no repository handle
 of its own. ``evidence`` reaches
-:class:`~cadrumo.adapters.persistence.storage.AttachmentStore` and the bucket
+:class:`~cadrumo.adapters.persistence.storage.attachment.AttachmentStore` and the bucket
 event history, so importing a refusal from there pulled the whole persistence
 subtree into every consumer that only needed the exception type -- including
 the outbound LLM adapter, whose distance from persistence is what the operator's

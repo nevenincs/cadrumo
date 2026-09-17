@@ -5,7 +5,7 @@ CSV bulk classification parses
 fields into :class:`~application.ledger.models.ManualLedgerTransactionPatch`,
 and applies them through
 :func:`~application.ledger.actions_manual.update_manual_transaction_fields`. Rule
-application evaluates :class:`~domain.transactions.LedgerClassificationRule`
+application evaluates :class:`~domain.transactions.classification_rule.LedgerClassificationRule`
 instances over active transactions and returns
 :class:`~application.ledger.models.ApplyRulesResult`.
 
@@ -429,11 +429,11 @@ def add_classification_rule(
     twice produces the same id and the repository save overwrites the
     prior entry (idempotent creation).
 
-    Returns a :class:`~domain.transactions.LedgerClassificationRule`.
+    Returns a :class:`~domain.transactions.classification_rule.LedgerClassificationRule`.
 
     Raises :exc:`ValueError` when ``description_pattern`` is not a valid
     regex, as validated by
-    :class:`~domain.transactions.LedgerClassificationRule`.
+    :class:`~domain.transactions.classification_rule.LedgerClassificationRule`.
     """
     from ...domain.transactions.classification_rule import LedgerClassificationRule
     from .rule_repository import ledger_classification_rule_repository

@@ -1,9 +1,9 @@
 """Application export service for bucket-scoped manual ledger snapshots.
 
 The export action reads a loaded
-:class:`~cadrumo.domain.transactions.TransactionCatalogue`, projects
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`, projects
 :class:`~cadrumo.application.ledger.models.LedgerExportRow` instances, serializes them
-with :func:`~cadrumo.application.export.serialize_tabular_rows`, emits a
+with :func:`~cadrumo.application.export.tabular.serialize_tabular_rows`, emits a
 ``LEDGER_TRANSACTION_EXPORTED`` bucket event, and returns
 :class:`~cadrumo.application.ledger.models.LedgerExportResult`.
 """

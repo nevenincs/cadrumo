@@ -1,6 +1,6 @@
 """LLM-assisted ledger classification: suggest / apply / provider availability.
 
-Wires the existing :class:`~domain.transactions.LLMClassifier` engine into
+Wires the existing :class:`~domain.transactions.llm.LLMClassifier` engine into
 the operator suggest -> review -> confirm / override / reject loop without
 rebuilding the classifier. The contract is deliberately thin:
 
@@ -11,7 +11,7 @@ rebuilding the classifier. The contract is deliberately thin:
   **without persisting anything**. Rejecting a suggestion is simply not
   applying it.
 * :func:`apply_llm_classification` persists an accepted suggestion through the
-  established classification write (:func:`~domain.transactions.set_classification`),
+  established classification write (:func:`~domain.transactions.service.set_classification`),
   stamping ``classified_by`` with the classifier's ``decided_by`` (``llm:<model>``
   provenance, distinct from manual / ``rule:``) and recording the model's
   ``confidence`` and ``reason``. The accepted decision is appended to the
@@ -20,7 +20,7 @@ rebuilding the classifier. The contract is deliberately thin:
 
 Hallucination containment stays inside the engine: the classifier's
 ``classify`` runs the allow-list-guarded
-:func:`~domain.transactions.parse_response`, so an out-of-allow-list
+:func:`~domain.transactions.llm.parse_response`, so an out-of-allow-list
 value is rejected before it ever reaches this module.
 
 **Stage-1 constraint.** :func:`suggest_llm_classification` /
@@ -566,11 +566,11 @@ def apply_llm_classification(
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted LLM suggestion with ``llm:`` provenance.
 
-    Writes the decision through :func:`~domain.transactions.set_classification`,
+    Writes the decision through :func:`~domain.transactions.service.set_classification`,
     stamping ``classified_by`` with the suggestion's ``provenance`` (the
     classifier's ``decided_by``, e.g. ``llm:<model>``) and recording the
     model's ``confidence`` and ``reason``. Persists the catalogue and emits a
-    :attr:`~domain.buckets.BucketEventType.LEDGER_TRANSACTION_CLASSIFIED`
+    :attr:`~domain.buckets.event.BucketEventType.LEDGER_TRANSACTION_CLASSIFIED`
     event atomically.
 
     The MVP persists only the non-regulated ``business_classification`` and
@@ -670,9 +670,9 @@ def _derive_iva_substrate(
     """Derive ``(iva_rate, taxable_base, iva_amount, derivable, note)`` for a category.
 
     Resolves the registry rate for ``iva_category`` via
-    :func:`~domain.iva.resolve_category_rate` and, when derivable, splits
+    :func:`~domain.iva.saturation.resolve_category_rate` and, when derivable, splits
     the absolute ``gross`` at that rate with
-    :func:`~domain.iva.split_gross_at_rate`. The model never supplies these
+    :func:`~domain.iva.saturation.split_gross_at_rate`. The model never supplies these
     numbers; they trace to the registry rate and a deterministic inverse split.
 
     Returns the derived rate/base/amount (or ``None`` for each when the
@@ -725,7 +725,7 @@ def saturate_llm_classification(
 
     Loads the transaction, runs the injected classifier (default-resolved with
     the saturation prompt spec), then DERIVES the regulated tax substrate from
-    the model's selected :class:`~domain.iva.IvaCategory` using the registry
+    the model's selected :class:`~domain.iva.schema.IvaCategory` using the registry
     rate and a deterministic inverse split. **Persists nothing** — this is the
     suggest step; rejecting a suggestion is simply not applying it.
 
@@ -934,12 +934,12 @@ def derive_operator_iva_substrate(
     """Derive and persist the IVA substrate for an OPERATOR-chosen category.
 
     The same grounded derivation the saturating LLM path uses
-    (:func:`~domain.iva.resolve_category_rate` +
-    :func:`~domain.iva.split_gross_at_rate`), but initiated by the operator
+    (:func:`~domain.iva.saturation.resolve_category_rate` +
+    :func:`~domain.iva.saturation.split_gross_at_rate`), but initiated by the operator
     rather than the model — the fallback for when the model declines (returns
     ``unknown``) or the operator simply knows the category. Given a transaction
     already classified BUSINESS or MIXED and the selected
-    :class:`~domain.iva.IvaCategory`, it resolves the registry rate, splits
+    :class:`~domain.iva.schema.IvaCategory`, it resolves the registry rate, splits
     the gross into taxable base and IVA amount, and persists them through the
     manual write with ``derived:`` provenance. Only the IVA substrate is
     touched; the business classification stays as-is. A non-derivable category

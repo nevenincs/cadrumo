@@ -1,7 +1,7 @@
 """Shared ledger action helpers for repositories, events, and guards.
 
 This module validates injected ledger persistence ports; builds
-:class:`~cadrumo.domain.buckets.BucketEvent` audit entries;
+:class:`~cadrumo.domain.buckets.event.BucketEvent` audit entries;
 mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
 atomically; and verifies evidence, attachment, usage-ratio, and
 finalized-modelo blockers for the public ledger action services.
@@ -363,7 +363,7 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     because it cannot disturb any finalized revision that cites the row. Three
     independent project contracts establish that:
 
-    * :func:`~cadrumo.domain.transactions.derive_transaction_id` hashes the
+    * :func:`~cadrumo.domain.transactions.models.derive_transaction_id` hashes the
       provider identity, effective value date, amount, and narrative only, so an
       evidence-only edit re-derives the SAME id. A finalized revision's
       ``source_transaction_ids`` citation therefore keeps resolving.

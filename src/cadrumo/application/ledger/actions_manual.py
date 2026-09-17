@@ -1,11 +1,11 @@
 """Manual ledger transaction services and read projections.
 
-The services build :class:`~cadrumo.domain.transactions.Transaction` records from
+The services build :class:`~cadrumo.domain.transactions.models.Transaction` records from
 :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionCommand`, persist them
 in a loaded :class:`TransactionCatalogue`, append bucket events, and return
 :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult` values.
 Evidence paths validate purchase-invoice, attachment, and
-:class:`~cadrumo.domain.usage_ratios.UsageRatioProfile` references before
+:class:`~cadrumo.domain.usage_ratios.model.UsageRatioProfile` references before
 persistence.
 """
 
@@ -334,19 +334,19 @@ def link_manual_transaction_invoice(
     This is the sole invoice-linkage writer. It resolves the transaction,
     enforces the invoice's missing and cross-bucket policy up front, then
     delegates the bidirectional catalogue mutation and persistence to
-    :func:`~cadrumo.application.invoices.link_invoice_transaction_repositories`.
+    :func:`~cadrumo.application.invoices.transaction_linking.link_invoice_transaction_repositories`.
     It never touches purchase evidence or attachments: evidence mutation is
     reserved for :func:`attach_manual_transaction_evidence`. Every rejection
     fires before any catalogue write, so a refused link leaves the transaction,
     invoice catalogue, and event history unchanged. The accepted path is
     equally all-or-nothing: the two catalogues and the
-    :attr:`~cadrumo.domain.buckets.BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED`
+    :attr:`~cadrumo.domain.buckets.event.BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED`
     audit event are co-committed in one secure-object batch, so no failure can
     leave one side citing the other without being cited back, and no event can
     record a link that did not land.
 
     Returns an
-    :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.
+    :class:`~cadrumo.application.invoices.transaction_linking.InvoiceTransactionLinkResult`.
     """
     from ..invoices.transaction_linking import link_invoice_transaction_repositories
 
@@ -748,7 +748,7 @@ def update_manual_transaction(
 
     The replacement is built from
     :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionCommand` and saved
-    as a new :class:`~cadrumo.domain.transactions.Transaction` revision.
+    as a new :class:`~cadrumo.domain.transactions.models.Transaction` revision.
 
     ``_evidence_authority`` is a private flag threaded only by the evidence
     attach authority (:func:`attach_manual_transaction_evidence`) and the
@@ -854,7 +854,7 @@ def _record_attachment_back_references(
 
     Runs after the transaction is durably persisted, so a failure here can only
     leave the manifest side behind, never a manifest pointing at a transaction
-    that was never written. :func:`~domain.attachments.link_attachment_transaction`
+    that was never written. :func:`~domain.attachments.service.link_attachment_transaction`
     is idempotent, so a re-attach re-converges the pair rather than duplicating
     the reference.
     """

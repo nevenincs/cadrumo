@@ -35,7 +35,7 @@ read correctly -- punishing the reader that copied more literally, which is what
 the field-form contract asks for. A wrong verdict is worse than an absent one,
 because an absent verdict prompts review and a wrong one forecloses it.
 
-The parse is :func:`~core.decimal.coerce_finite_european_decimal`, the repository's
+The parse is :func:`~core.decimal.coercion.coerce_finite_european_decimal`, the repository's
 one extraction-side decimal contract, reused rather than re-spelled. It drops an
 ambiguous thousands reading instead of guessing, which is exactly the behaviour
 wanted here: an anchor whose reading cannot be settled does not ground.
@@ -55,7 +55,7 @@ figure really is on the page.
 
 The guarantee is therefore **the conjunction of two legs, never this one alone**:
 the anchor check establishes presence, and
-:func:`~application.ledger.closure_findings` establishes that the monetary set
+:func:`~application.ledger.closure_findings.closure_findings` establishes that the monetary set
 closes. An injected total that is anchored still reds the arithmetic identity,
 because the other figures on the document do not reach it. A suite that gated
 only the anchor property would imply a guarantee the code does not provide, and
@@ -70,7 +70,7 @@ See Also:
         The envelope this module produces, carrying the anchor it verified.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         The acquisition stage whose verbatim output this checks against.
-    :class:`~core.FieldGroundingOutcome`
+    :class:`~core.field_grounding.FieldGroundingOutcome`
         The closed outcome axis; this module never widens it.
 """
 
@@ -618,7 +618,7 @@ def ground_structured_value(
             check exists to avoid.
 
     Returns:
-        The envelope, stamped :attr:`~core.FieldOrigin.EXACT_STRUCTURED`.
+        The envelope, stamped :attr:`~core.field_origin.FieldOrigin.EXACT_STRUCTURED`.
     """
     if anchor is None:
         anchor = value if isinstance(value, str) else str(value)

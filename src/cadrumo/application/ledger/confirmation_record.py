@@ -8,7 +8,7 @@ and the transcription the decision was taken against.
 
 **A correction is an assertion, not an edit.** When the operator overrides a
 field, the document-derived value is never overwritten in place. The draft's
-envelope for that field is re-stamped :attr:`~core.FieldOrigin.OPERATOR` --- so
+envelope for that field is re-stamped :attr:`~core.field_origin.FieldOrigin.OPERATOR` --- so
 nothing downstream can read an operator's figure as something the document
 stated --- while this record retains the PRIOR value and the PRIOR origin beside
 the asserted one. That pairing is the whole point: the record can always answer
@@ -26,7 +26,7 @@ See Also:
         The findings whose resolutions this record carries.
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         The reading the assertions are recorded against.
-    :class:`~domain.invoices.Invoice`
+    :class:`~domain.invoices.models.Invoice`
         The record the confirmation minted.
 """
 
@@ -390,7 +390,7 @@ def re_stamped_provenance(
     :class:`InvoiceConfirmationRecord`, which is the record that exists to hold
     them.
 
-    An asserted field's outcome is :attr:`~core.FieldGroundingOutcome.UNANCHORED`
+    An asserted field's outcome is :attr:`~core.field_grounding.FieldGroundingOutcome.UNANCHORED`
     and never ``ANCHORED``: an operator's value is not a reading of the document
     at all, so there is no verbatim occurrence it could be anchored to, and
     stamping one would launder an assertion into a corroborated reading.

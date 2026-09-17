@@ -5,8 +5,8 @@ on-host extraction through
 :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`,
 applies any operator-supplied field overrides (extraction is best-effort, so
 every field may be corrected), and delegates the actual write to
-:func:`~application.invoices.create_catalogue_invoice` -- the sole sanctioned
-:class:`~domain.invoices.Invoice` writer (``aeat-architecture-boundaries``).
+:func:`~application.invoices.catalogue_creation.create_catalogue_invoice` -- the sole sanctioned
+:class:`~domain.invoices.models.Invoice` writer (``aeat-architecture-boundaries``).
 This module never writes the :class:`InvoiceCatalogue` itself.
 
 The confirm runs in three stages, each a function of its own so the guards
@@ -31,9 +31,9 @@ minting a second catalogue record that would aggregate twice into Modelo 303,
 347 and 390.
 
 Confirming also auto-links the source evidence to the resulting invoice:
-:func:`~domain.attachments.link_attachment_invoice` appends the invoice's id
-to the backing :class:`~domain.attachments.Attachment`'s
-:attr:`~domain.attachments.Attachment.linked_invoice_ids`, closing the
+:func:`~domain.attachments.service.link_attachment_invoice` appends the invoice's id
+to the backing :class:`~domain.attachments.models.Attachment`'s
+:attr:`~domain.attachments.models.Attachment.linked_invoice_ids`, closing the
 provenance loop in both directions. The link is re-asserted on a guarded no-op
 confirm too, so a re-confirm never regresses a provenance link that was never
 wired for older evidence, and the append itself is idempotent.
@@ -45,7 +45,7 @@ See Also:
         The printed-versus-recorded cross-check carried on every result.
     :class:`~application.ledger.confirmation_record.InvoiceConfirmationRecord`
         The durable account of who confirmed what, written by every confirm.
-    :func:`~application.invoices.create_catalogue_invoice`
+    :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`
         Sole sanctioned writer for the resulting catalogue invoice.
 """
 
@@ -120,7 +120,7 @@ class InvoiceConfirmationResult(BaseModel):
 
     Attributes:
         invoice: The persisted (or already-existing, on a guarded no-op)
-            :class:`~domain.invoices.Invoice`.
+            :class:`~domain.invoices.models.Invoice`.
         draft: The re-run on-host extraction the confirmation was based on
             (before overrides were applied), kept so the operator can see what
             was actually read from the document versus what they overrode.
@@ -152,7 +152,7 @@ class InvoiceConfirmationResult(BaseModel):
             same reason the printed-total discrepancy does: a second derivation
             is a second answer, and the two can disagree about a filing.
         confirmed_provenance: The draft's envelopes with every operator-asserted
-            field re-stamped :attr:`~core.FieldOrigin.OPERATOR`. Carried BESIDE
+            field re-stamped :attr:`~core.field_origin.FieldOrigin.OPERATOR`. Carried BESIDE
             ``draft`` rather than replacing its envelopes, because a correction
             is an assertion and not an edit: ``draft.provenance`` stays the
             document's own account of itself, this is the confirmed view, and
@@ -182,7 +182,7 @@ def _with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> 
     Stamped as an ordinary :class:`DraftDiscrepancyFinding` rather than raised,
     and that is the ruling rather than an implementation convenience. Every
     discrepancy kind maps to a
-    :class:`~core.ConfirmationBlockReason`, so the disagreement becomes a
+    :class:`~core.confirmation_gate.ConfirmationBlockReason`, so the disagreement becomes a
     resolvable blocker the operator answers per-document with a stated reason --
     which is the right shape for a conflict between two honest readings. A
     refusal would leave an operator who is RIGHT, and a document whose layout
@@ -199,7 +199,7 @@ def _with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> 
     Returns:
         The draft unchanged when the document settled nothing or agrees, or a
         copy carrying one additional
-        :attr:`~core.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` finding.
+        :attr:`~core.draft_discrepancy.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` finding.
     """
     suggested = draft.suggested_kind
     if suggested is None or suggested is kind:
@@ -250,7 +250,7 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
 
     Derived from the model rather than a hand-listed field set: the failure this
     exists to prevent is a match that omits a field, and a hand-listed set is
-    exactly how that omission arrives. A new :class:`~domain.invoices.Invoice`
+    exactly how that omission arrives. A new :class:`~domain.invoices.models.Invoice`
     field is compared the moment it is declared.
     """
     compared = candidate.model_dump(mode="json")
@@ -463,7 +463,7 @@ def _invoice_ids_this_document_already_minted(
     """Return the invoices already minted from the document at *attachment_id*.
 
     Read off the attachment manifest's ``linked_invoice_ids``, which the confirm
-    path itself writes through :func:`~domain.attachments.link_attachment_invoice`.
+    path itself writes through :func:`~domain.attachments.service.link_attachment_invoice`.
     No second index is introduced: the manifest already records the link, and the
     attachment id IS the SHA-256 of the document's bytes, so the identity is
     clock-free and the same file re-attached under a fresh evidence id resolves
@@ -884,13 +884,13 @@ def confirm_invoice_draft_from_evidence(
     stay in memory only), then layers any operator-supplied override on top of
     each extracted field -- extraction is best-effort, so every field may be
     corrected before the record is minted. The resulting identity fields are
-    handed to :func:`~application.invoices.create_catalogue_invoice`, the
+    handed to :func:`~application.invoices.catalogue_creation.create_catalogue_invoice`, the
     single sanctioned :class:`Invoice` writer
     (``aeat-architecture-boundaries``); this function never
     writes the catalogue itself.
 
     Idempotent-guarded (``aeat-cli-contract``): the
-    persisted :attr:`~domain.invoices.Invoice.invoice_id` is a stable hash of
+    persisted :attr:`~domain.invoices.models.Invoice.invoice_id` is a stable hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)`` — a confirm carrying identical resolved fields to an
     already-persisted invoice returns that invoice unchanged
@@ -904,7 +904,7 @@ def confirm_invoice_draft_from_evidence(
             stage derives which party's block prints the filer's own identifier
             and stamps a suggestion -- and a document that settles a direction
             contradicting this one raises a resolvable
-            :attr:`~core.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` blocker
+            :attr:`~core.draft_discrepancy.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` blocker
             rather than being overridden or silently accepted.
         counterparty_country: ISO 3166-1 alpha-2 counterparty country code.
             Defaults to ``"ES"``; override for a non-Spanish counterparty.

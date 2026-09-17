@@ -29,11 +29,11 @@ that documents dated inside the same period genuinely print, and the prompt woul
 then be telling a model that a rate it can see on the page is not registered.
 
 See Also:
-    :class:`~core.Period`
+    :class:`~core.period.Period`
         The law-determined coordinate rates are resolved against. It is the
         caller's ``(filing_year, code)``, never a stored revision id fed back
         into resolution.
-    :class:`~domain.iva.IvaCategory`
+    :class:`~domain.iva.schema.IvaCategory`
         The closed set the no-printed-tax vocabulary is derived from.
 """
 
@@ -83,7 +83,7 @@ class InvoiceExtractionAuthorityValues(BaseModel):
             document prints a percentage.
         retencion_rate_pcts: Every distinct RIRPF art. 95 retención percentage,
             ascending.
-        no_printed_tax_categories: The :class:`~domain.iva.IvaCategory` members
+        no_printed_tax_categories: The :class:`~domain.iva.schema.IvaCategory` members
             whose documents carry no tax figure at all. Typed members rather
             than rendered text, so the renderer owns presentation and this
             object stays the closed-set fact.
@@ -106,7 +106,7 @@ def default_invoice_extraction_period() -> Period:
     A document arriving for reading may not yet be bound to a filing period, so
     the reader needs a coordinate to resolve values against. The current civil
     year's annual period (``0A``) is the honest default: it is derived from the
-    canonical civil-date authority (:func:`~core.time.today_madrid`) rather than
+    canonical civil-date authority (:func:`~core.time.clock.today_madrid`) rather than
     guessed, and it spans the whole year, so its enumeration is the UNION of
     every value in force at any point in it -- never a mid-year window that would
     omit a rate a document legitimately prints.
@@ -115,7 +115,7 @@ def default_invoice_extraction_period() -> Period:
     narrower, more useful enumeration.
 
     Returns:
-        :class:`~core.Period`: The current civil year's annual period.
+        :class:`~core.period.Period`: The current civil year's annual period.
     """
     from ...core.time.clock import today_madrid
 

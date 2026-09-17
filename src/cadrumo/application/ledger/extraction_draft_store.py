@@ -12,7 +12,7 @@ exactly what the confirmed invoice would, so it is stored at the same
 
 **A draft is not an invoice and this store must never become a second writer of
 one.** It holds what a reader proposed, pending the operator's confirm; the sole
-sanctioned :class:`~domain.invoices.Invoice` writer stays where it is. Keeping
+sanctioned :class:`~domain.invoices.models.Invoice` writer stays where it is. Keeping
 the draft here is what lets an operator leave a review half-finished and return
 to it without the extraction being re-run -- which is also why the store is keyed
 by the evidence reference the draft came from rather than by the draft's own

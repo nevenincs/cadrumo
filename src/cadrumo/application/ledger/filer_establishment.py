@@ -26,16 +26,16 @@ population, so defaulting there is invisible in testing while silently placing
 Canarian and Ceutan filers inside a territory their operations are not subject
 to. Nothing here has a branch that answers without evidence -- the refusal is
 the only exit when the fact cannot be read, which is the same asymmetry
-:func:`~domain.iva.territorial_scope_for_spanish_postal_code` documents on its
+:func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code` documents on its
 own return.
 
 See Also:
-    :func:`~domain.iva.territorial_scope_for_spanish_postal_code`
+    :func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code`
         The territorial derivation this module delegates to; it owns the
         five-digit judgment and refuses an unreadable code to ``None``.
-    :class:`~domain.iva.IvaTerritorialScope`
+    :class:`~domain.iva.classification.IvaTerritorialScope`
         The closed territorial classification a resolved fact produces.
-    :func:`~application.user_profile.fact_value`
+    :func:`~application.user_profile.projections.fact_value`
         The canonical single-fact reader on a
         :class:`~domain.user_profile.values.UserProfileRecord`.
 """
@@ -105,7 +105,7 @@ def resolve_filer_territorial_scope(
             the Spanish postal territory.
 
     Returns:
-        :class:`~domain.iva.IvaTerritorialScope`: The filer's own territory.
+        :class:`~domain.iva.classification.IvaTerritorialScope`: The filer's own territory.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When the profile carries no readable

@@ -22,7 +22,7 @@ __all__ = ["derive_child_amounts"]
 def derive_child_amounts(gross: Decimal, proportions: Sequence[Decimal]) -> tuple[Decimal, ...]:
     """Split ``gross`` into per-child amounts matching ``proportions``.
 
-    Each amount is :func:`~cadrumo.core.money.round_to_cents` applied to
+    Each amount is :func:`~cadrumo.core.money.rounding.round_to_cents` applied to
     ``gross * proportion``; the final child absorbs the rounding remainder so the
     amounts sum to ``gross`` exactly. Flow direction is inherited from the parent
     transaction outside this helper, never encoded in the amount sign.

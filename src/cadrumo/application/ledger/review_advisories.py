@@ -28,11 +28,11 @@ find the documents they can act on.
 See Also:
     :func:`~application.ledger.party_attribution.party_attribution_advisory`
         The attribution advisory this projects.
-    :func:`~application.ledger.country_vocabulary_advisory`
+    :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory`
         The country-vocabulary advisory this projects.
-    :class:`~core.ReviewAdvisoryKind`
+    :class:`~core.confirmation_gate.ReviewAdvisoryKind`
         The closed axis the kinds are drawn from.
-    :class:`~core.ConfirmationBlockReason`
+    :class:`~core.confirmation_gate.ConfirmationBlockReason`
         The blocking sibling axis, which answers the other half of a queue row.
 """
 

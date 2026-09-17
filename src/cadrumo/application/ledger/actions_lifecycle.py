@@ -4,7 +4,7 @@ Archive, stash, restore, remove, and reset operations mutate a loaded
 :class:`TransactionCatalogue`, append bucket events, and return typed
 application reports. Removal and reset paths can also update an
 :class:`InvoiceCatalogue` through an
-:class:`~cadrumo.domain.invoices.InvoiceCatalogueRepositoryProtocol` when
+:class:`~cadrumo.domain.invoices.protocols.InvoiceCatalogueRepositoryProtocol` when
 purchase-invoice evidence must be detached.
 
 The public services return
@@ -201,7 +201,7 @@ def mark_transaction_reviewed_excluded(
     """Mark one active ledger transaction as reviewed and excluded from filing.
 
     Sets the transaction's ``business_classification`` to
-    :attr:`~cadrumo.domain.transactions.BusinessClassification.REVIEWED_EXCLUDED` —
+    :attr:`~cadrumo.domain.transactions.enums.BusinessClassification.REVIEWED_EXCLUDED` —
     the operator's assertion "I reviewed this, it is not filing-relevant, stop
     surfacing it." The row stays ``ACTIVE`` and visible in the ledger with review
     status ``excluded``, drops out of the review queue, and is omitted from every

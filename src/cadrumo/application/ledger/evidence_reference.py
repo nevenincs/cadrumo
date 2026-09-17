@@ -1,6 +1,6 @@
 """The one definition of what a transaction's evidence reference may name.
 
-:attr:`~cadrumo.domain.transactions.Transaction.purchase_invoice_evidence_id`
+:attr:`~cadrumo.domain.transactions.models.Transaction.purchase_invoice_evidence_id`
 addresses TWO bucket-scoped id spaces, and this module is the single place that
 says so, in what order they are consulted, and which outcomes are acceptable:
 
@@ -9,8 +9,8 @@ says so, in what order they are consulted, and which outcomes are acceptable:
    the encrypted attachment store. This is the only space that can supply document
    BYTES, so it is the only one an on-host reader can extract from.
 2. An imported received-invoice id in the rich
-   :class:`~cadrumo.domain.invoices.InvoiceCatalogue` -- bucket-matched and
-   :attr:`~cadrumo.domain.iva.InvoiceKind.RECEIVED`. This space carries the fiscal
+   :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue` -- bucket-matched and
+   :attr:`~cadrumo.domain.iva.classification.InvoiceKind.RECEIVED`. This space carries the fiscal
    TOTALS a calculation can fold in, but no bytes.
 
 The PIE space is consulted first, so an id minted by ``evidence add`` is accepted

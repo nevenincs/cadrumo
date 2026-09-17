@@ -6,7 +6,7 @@ operator-facing report:
 * the encrypted LLM usage log (per call: provider, model, input/output tokens,
   estimated cost, cache-hit flag); and
 * the classification confidence stamped on each ledger
-  :class:`~domain.transactions.Transaction` whose active decision came
+  :class:`~domain.transactions.models.Transaction` whose active decision came
   from an LLM classifier (``classified_by`` shaped ``llm:<provider>:<model>``
   with a ``classification_confidence`` in ``[0, 1]``), loaded from the active
   bucket when supplied by the outer transaction diagnostics reader.

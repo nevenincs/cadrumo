@@ -175,7 +175,7 @@ class PrintedTotalDiscrepancy(BaseModel):
     The confirm path never persists a model-read or text-read figure as the
     invoice total: ``grand_total`` is DERIVED from the taxable base and the
     registry-resolved rate slot
-    (:func:`~application.invoices.build_catalogue_invoice`). That derivation is
+    (:func:`~application.invoices.catalogue_creation.build_catalogue_invoice`). That derivation is
     the correct behaviour and this record does not change it -- the printed
     figure stays an advisory cross-check and never overwrites the derived value,
     exactly as the evidence-reading discipline requires.

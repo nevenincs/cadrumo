@@ -10,14 +10,14 @@ one until somebody looks.
 
 Nothing unsafe follows from it, which is why this is a visibility problem rather
 than a correctness one:
-:func:`~domain.iva.territorial_scope_for_spanish_postal_code` answers ``None``
+:func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code` answers ``None``
 for anything that is not five digits rather than defaulting to the peninsula, so
 an unreadable code costs an answer and never invents one.
 
 **The judgement is borrowed, not restated.** Whether a code is readable is asked
 by handing it to that resolver and seeing whether it answers; whether the country
 already settled the territory is asked of
-:func:`~domain.iva.territorial_scope_for_country`. Neither rule is spelled here.
+:func:`~domain.iva.establishment.territorial_scope_for_country`. Neither rule is spelled here.
 A second copy of "five digits" sitting upstream of the authority that owns it is
 the drift this module is placed to avoid, and it would be the weaker copy.
 
@@ -40,9 +40,9 @@ for the plainer reason. Those two are exactly the parties whose postal code was
 load-bearing, and exactly the ones this reports.
 
 See Also:
-    :func:`~application.ledger.deterministic_findings`
+    :func:`~application.ledger.deterministic_findings.deterministic_findings`
         The one list this check is enrolled in, which both readers call.
-    :func:`~domain.iva.territorial_scope_for_spanish_postal_code`
+    :func:`~domain.iva.establishment.territorial_scope_for_spanish_postal_code`
         The authority on whether a printed code can be read at all.
 """
 

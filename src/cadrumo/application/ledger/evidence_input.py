@@ -65,7 +65,7 @@ class EvidenceInput(BaseModel):
         evidence_id: Originating purchase-invoice ``evidence_id`` when the bytes
             came from a :class:`PurchaseInvoiceEvidence` record, else ``None``.
         attachment_id: Originating ``attachment_id`` when the bytes came from an
-            :class:`~cadrumo.domain.attachments.Attachment`, else ``None``.
+            :class:`~cadrumo.domain.attachments.models.Attachment`, else ``None``.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -161,7 +161,7 @@ def resolve_attachment_evidence_input(
 
     The single read path for every evidence byte payload: bytes live in exactly
     one place (the content-addressed
-    :class:`~cadrumo.domain.attachments.AttachmentStoreProtocol` blob for the
+    :class:`~cadrumo.domain.attachments.protocols.AttachmentStoreProtocol` blob for the
     active bucket), so both evidence tiers reach them through this one function.
     Loads the attachment manifest and its encrypted blob into memory. No file is
     written.

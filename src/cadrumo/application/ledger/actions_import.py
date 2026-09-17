@@ -3,7 +3,7 @@
 Provider rows arrive through the
 :class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol` port.
 This module classifies them against a loaded :class:`TransactionCatalogue`,
-persists imported :class:`~cadrumo.domain.transactions.Transaction` instances,
+persists imported :class:`~cadrumo.domain.transactions.models.Transaction` instances,
 records ``LEDGER_TRANSACTION_IMPORTED`` bucket events, and returns
 :class:`~cadrumo.application.ledger.models.LedgerImportOperationResult` or
 :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
@@ -129,7 +129,7 @@ def _apply_fx_conversion(
 
     EUR-native rows and non-EUR rows with no normalizer / a missing rate yield
     all ``None``, preserving the coupling invariant on
-    :class:`~cadrumo.domain.transactions.Transaction`.
+    :class:`~cadrumo.domain.transactions.models.Transaction`.
     """
     if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
         return (None, None, None, None)
@@ -154,15 +154,15 @@ def evaluate_import_rows(
     """Classify every parsed row as imported / skipped / likely-duplicate.
 
     Each :class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol`
-    carries the magnitude :class:`~cadrumo.domain.transactions.RawTransaction`
+    carries the magnitude :class:`~cadrumo.domain.transactions.raw_transaction.RawTransaction`
     and the authoritative ``direction`` the provider derived from the source
     sign at the parse boundary; this classifier never re-derives flow from a
     sign. Deduplication keys on
-    :func:`~cadrumo.domain.transactions.derive_import_fingerprint` - a direction-
+    :func:`~cadrumo.domain.transactions.models.derive_import_fingerprint` - a direction-
     and currency-qualified identity that is stable across both later edits of a
     transaction and a re-export of the same movement in a different file format.
     The import/skip verdict itself comes from
-    :func:`~cadrumo.application.transactions.classify_import_row`, which the
+    :func:`~cadrumo.application.transactions.import_classification.classify_import_row`, which the
     ``--verify`` diagnostics path consumes too, so the persisting path, the
     ``--dry-run`` preview and the verify report all agree on what a row is.
     """
@@ -405,7 +405,7 @@ def import_ledger_transactions(
     """Import provider rows into one bucket catalogue and emit events.
 
     Each :class:`~cadrumo.application.ledger.protocols.ParsedLedgerRowProtocol`
-    carries the magnitude :class:`~cadrumo.domain.transactions.RawTransaction`
+    carries the magnitude :class:`~cadrumo.domain.transactions.raw_transaction.RawTransaction`
     plus the authoritative ``direction`` the provider derived at the parse
     boundary, so the import path never re-derives flow from a sign.
 

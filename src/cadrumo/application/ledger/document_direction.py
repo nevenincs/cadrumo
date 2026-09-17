@@ -14,7 +14,7 @@ surfaced by the review command -- with nothing on the reading path writing it.
 
 **The question asked is a ROLE question, not an identity one.** Whether the
 document names the filer at all is a different check, already owned:
-:func:`~application.invoices.counterparty_is_the_filer` answers "is the recorded
+:func:`~application.invoices.self_counterparty.counterparty_is_the_filer` answers "is the recorded
 counterparty us", and :func:`~application.ledger.identity_roles.resolve_counterparty_identity`
 excludes the filer's own identifier from counterparty candidacy. Neither says
 which ROLE the filer occupies, and that is the whole of the direction question:
