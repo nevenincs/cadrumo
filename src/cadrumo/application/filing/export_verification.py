@@ -202,7 +202,11 @@ def verify_export(
     file_path: Path,
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionVerifyResult:
-    """Verify parser-covered bytes and root identity against an approved draft."""
+    """Verify parser-covered bytes and root identity against an approved draft.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     provider = schema_provider or build_runtime_schema_provider(
         modelos=(draft.modelo,),
         filing_year=draft.period.filing_year,
@@ -309,7 +313,11 @@ def _verify_export_file(
 
 
 def verify_written_export(draft: ModeloDraft, *, file_path: Path, schema_provider: RegistrySchemaAccessor) -> None:
-    """Fail closed unless the just-written declaration re-parses as a match."""
+    """Fail closed unless the just-written declaration re-parses as a match.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
+    """
     verification = verify_export(draft, file_path=file_path, schema_provider=schema_provider)
     if verification.verdict is DeclaracionVerifyVerdict.MATCH:
         return

@@ -517,6 +517,9 @@ def schema_provider_from_authority(
         :class:`~domain.filing.errors.ModeloBuilderError`: When the registry is
             empty, a requested modelo is missing, the period arguments are
             invalid, or no snapshot exists for the requested filing context.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
     validated_period = _validate_period_arguments(filing_year=filing_year, period=period)
     selected_tuple = _selected_modelo_tuple(modelos)
@@ -800,7 +803,11 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
 
 
 def subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
-    """Project a validated snapshot into the modelo subview the filing handoff carries."""
+    """Project a validated snapshot into the modelo subview the filing handoff carries.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     reconciliation_total_casilla_ids = fold_reconciliation_total_casilla_ids(
         snapshot.revision.verification_expectations,
     )

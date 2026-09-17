@@ -444,6 +444,9 @@ def read_local_aeat_sync_workspace_projection(
     none of those fields, which still produces a full set of rows carrying
     observed blanks. The two are different answers and the census zone shows
     them differently.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
     """
     # Refused before any fact is built: a row carrying a blank subject would
     # otherwise fail as a bare ValueError instead of the projection refusal.

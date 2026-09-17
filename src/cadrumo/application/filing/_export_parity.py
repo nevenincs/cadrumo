@@ -193,6 +193,9 @@ def boe_representable_casilla_ids(
     from a demand unless the casilla declares WHY it files no slot. Absence here
     therefore carries a reviewed reason behind it rather than being
     indistinguishable from a forgotten annotation.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(

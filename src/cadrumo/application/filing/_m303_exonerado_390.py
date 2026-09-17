@@ -26,7 +26,11 @@ def project_m303_exonerado_390_value_arrival(
     evidence: M303Exonerado390FilingEvidence,
     record_design: SourceReference,
 ) -> M303Exonerado390RecordProjection | None:
-    """Project the atomic DP30304 owner through the selected snapshot only."""
+    """Project the atomic DP30304 owner through the selected snapshot only.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
     snapshot_source = registry_snapshot.sources.get(record_design.id)
     if snapshot_source is None or snapshot_source.kind != "record_design":
         raise FilingExportError(

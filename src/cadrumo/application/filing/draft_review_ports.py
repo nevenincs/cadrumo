@@ -3,6 +3,9 @@
 The draft-review lifecycle fingerprints several persisted authorities.  This
 module keeps that use case independent from the encrypted-storage adapters and
 gives composition roots one cohesive bundle to bind for a profile bucket.
+
+Core types:
+:class:`~cadrumo.domain.filing.schema.ModeloDraft`.
 """
 
 from __future__ import annotations

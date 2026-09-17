@@ -3,6 +3,9 @@
 The filing-history service owns the payload and repository semantics.  An outer
 composition supplies the encrypted persistence capability through this module;
 the application surface never names the storage implementation or its errors.
+
+Core types:
+:class:`~cadrumo.core.classification.policies.SensitivityClass`.
 """
 
 from __future__ import annotations

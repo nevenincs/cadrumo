@@ -200,7 +200,11 @@ class FilingRetentionAuthority:
         records: Iterable[ModeloRecord],
         observed_at: datetime,
     ) -> FilingRetentionSnapshot:
-        """Persist actual filing facts; retention verdict remains domain-derived."""
+        """Persist actual filing facts; retention verdict remains domain-derived.
+
+        Core types:
+        :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+        """
         materialized = tuple(records)
         if any(str(record.bucket_id) != str(profile_id) for record in materialized):
             raise ValueError("filing retention facts must belong to their profile")
@@ -331,6 +335,9 @@ def try_record_filing_retention_snapshot(
         ``True`` when the snapshot was written, ``False`` when it was not. The
         caller is expected to ignore it; it exists so a test can assert the
         write happened rather than inferring it.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
     """
     try:
         FilingRetentionAuthority().record_filing_catalogue(

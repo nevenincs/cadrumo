@@ -6,6 +6,9 @@ classify the snapshot's bindings by kind, validate operator input keys against
 that classification, coerce raw input into typed values, assemble the draft
 record, and validate the built draft. None of these helpers are called from
 outside this pipeline; :func:`build_draft` is the direct public entry point.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

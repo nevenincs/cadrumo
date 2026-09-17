@@ -3,6 +3,9 @@
 This module owns the filing-instance facts that export consumers need before
 they translate them into a revision-specific registry vocabulary.  It does not
 own export keys, layout offsets, or rendered record fragments.
+
+Core types:
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
 """
 
 from __future__ import annotations
