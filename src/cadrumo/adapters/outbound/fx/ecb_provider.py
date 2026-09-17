@@ -1,12 +1,12 @@
 """ECB euro reference-rate exchange-rate provider.
 
-Implements the :class:`domain.currency.ExchangeRateProvider` protocol against the
+Implements the :class:`domain.currency.service.ExchangeRateProvider` protocol against the
 European Central Bank Data Portal, resolving each rate from the published series
 at lookup time. The ECB rates are the official exchange rate of Spanish law (Ley
 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion.
 
 The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
-:class:`domain.currency.CurrencyNormalizationService` expects ``get_eur_rate`` to
+:class:`domain.currency.service.CurrencyNormalizationService` expects ``get_eur_rate`` to
 return CCY->EUR (so ``eur = amount * rate``), so this provider returns
 ``1 / ecb_rate``.
 
@@ -16,7 +16,7 @@ window backwards by :data:`LOOKBACK_DAYS` and takes the most recent published
 observation on or before the requested date.
 
 A transport or protocol failure raises
-:exc:`domain.currency.ExchangeRateProviderError` rather than returning ``None``:
+:exc:`domain.currency.errors.ExchangeRateProviderError` rather than returning ``None``:
 an unreachable ECB must not be indistinguishable from a currency the ECB does
 not publish, which would silently degrade ledger rows to a zero EUR value.
 
