@@ -15,8 +15,6 @@ thing.
 
 from __future__ import annotations
 
-import typing
-
 import pytest
 from pydantic import ValidationError
 
@@ -26,7 +24,7 @@ from ..harness_tools import HarnessFloorPayload, WhoamiIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_DECLARED_STATUSES = typing.cast(tuple[ProfileHealthStatus, ...], typing.get_args(ProfileHealthStatus))
+_DECLARED_STATUSES: tuple[ProfileHealthStatus, ...] = tuple(ProfileHealthStatus)
 
 
 @pytest.mark.parametrize("bad", ["bogus", "", "READY", "ready ", "unknown_status"])
@@ -42,7 +40,7 @@ def test_every_declared_health_status_is_accepted(status: ProfileHealthStatus) -
     A degraded-pointer status is as legitimate a readiness as ``ready``: the
     whoami tool exists to report those cases.
     """
-    assert WhoamiIdentity(readiness=status).readiness == status  # type: ignore[arg-type]
+    assert WhoamiIdentity(readiness=status).readiness == status
 
 
 def test_the_taxonomy_is_the_health_projections_own() -> None:
@@ -63,7 +61,7 @@ def test_readiness_stays_required() -> None:
 
 def test_client_deserialization_refuses_a_widened_readiness() -> None:
     """A payload rebuilt from a client's JSON carries the same contract."""
-    valid = WhoamiIdentity(readiness="ready", active_profile="Erika", precondition_action=None)
+    valid = WhoamiIdentity(readiness=ProfileHealthStatus.READY, active_profile="Erika", precondition_action=None)
     assert WhoamiIdentity.model_validate_json(valid.model_dump_json()) == valid
 
     widened = valid.model_dump()
@@ -77,10 +75,10 @@ def test_the_nested_floor_identity_inherits_the_contract() -> None:
     floor = HarnessFloorPayload(
         off_host_consent="consent",
         operator_rules="rules",
-        identity=WhoamiIdentity(readiness="ready"),
+        identity=WhoamiIdentity(readiness=ProfileHealthStatus.READY),
     )
     assert floor.identity is not None
-    assert floor.identity.readiness == "ready"
+    assert floor.identity.readiness is ProfileHealthStatus.READY
 
     with pytest.raises(ValidationError):
         HarnessFloorPayload.model_validate(
