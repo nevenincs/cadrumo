@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, model_validator
 
 from ...core.bucket_pointer import BucketPointer
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import bounded_canonical_json_bytes
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -52,6 +53,7 @@ class ProfileLoginHandoverJournal(BaseModel):
     activation_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_journal(self) -> ProfileLoginHandoverJournal:
         validate_utc_aware(self.activation_at)
         if self.pointer_after.bucket_id != self.profile_b:

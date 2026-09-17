@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
 from ...core.identity.profile import ProfileId
@@ -104,6 +105,7 @@ class CensalReviewedFieldIntent(BaseModel):
 
     @field_validator("path")
     @classmethod
+    @pydantic_validation_boundary
     def _require_adoptable_path(cls, value: str) -> str:
         if value not in CENSAL_ADOPTABLE_PATHS:
             raise ValueError("censal field intent must target a canonical adoptable profile path")
@@ -149,6 +151,7 @@ class CensalReviewedOperand(BaseModel):
 
     @field_validator("field_intents")
     @classmethod
+    @pydantic_validation_boundary
     def _require_unique_field_intents(
         cls,
         value: tuple[CensalReviewedFieldIntent, ...],
@@ -162,6 +165,7 @@ class CensalReviewedOperand(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _bind_proposed_effect(self) -> CensalReviewedOperand:
         expected = self._expected_proposed_effect_digest()
         if not self.proposed_effect_digest:
@@ -192,6 +196,7 @@ class CensalOperationRequest(BaseModel):
 
     @field_validator("field_intents")
     @classmethod
+    @pydantic_validation_boundary
     def _require_complete_intents(
         cls, value: tuple[CensalReviewedFieldIntent, ...]
     ) -> tuple[CensalReviewedFieldIntent, ...]:

@@ -30,7 +30,7 @@ schema's own declaration rather than from a list of field names kept
 here, so a newly-declared secret is masked the moment it is declared.
 
 See Also:
-    :class:`~cadrumo.application.user_profile.ProfilePreflightService`
+    :class:`~cadrumo.application.user_profile.preflight.ProfilePreflightService`
         Per-modelo requirements; this module reports schema-level
         completeness, which is the broader "is the profile filled in"
         question rather than "can I file THIS modelo".
@@ -120,7 +120,7 @@ would silently unmask every compound key field. It stays a local
 addition and must NOT be promoted to the shared base, where it would
 match ``header_key``, ``producer_key`` and ``casilla_key`` tree-wide.
 
-The set composes :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS`
+The set composes :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS`
 rather than redeclaring terms beside it. It previously did not, and was
 missing eight base terms -- ``nif``, ``tax_id``, ``nie``, ``bearer``,
 ``certificate``, ``cookie``, ``authorization``, ``pkcs12`` -- so an

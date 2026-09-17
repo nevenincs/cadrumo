@@ -4,7 +4,7 @@ The archive is the operator's answer to "this machine is gone". It carries a
 published capsule's custody material and its encrypted database, and it
 restores through the SAME publication path a directory restore uses: both
 readers produce a
-:class:`~cadrumo.application.user_profile.ProfileCapsuleSource`, and exactly
+:class:`~cadrumo.application.user_profile.capsule_restore.ProfileCapsuleSource`, and exactly
 one thing knows how to turn that into a published profile.
 
 **Nothing here encrypts anything, and that is the design rather than an

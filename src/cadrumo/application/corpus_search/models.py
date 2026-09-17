@@ -22,6 +22,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -155,6 +156,7 @@ class RetrievalResponse(BaseModel):
     citation: CitationResolution | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _mode_and_result_agree(self) -> RetrievalResponse:
         if self.mode is RetrievalMode.CITATION:
             if self.citation is None:

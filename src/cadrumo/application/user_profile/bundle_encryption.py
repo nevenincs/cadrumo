@@ -8,6 +8,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.user_profile.portable_export import UserProfilePortableExport
@@ -68,6 +69,7 @@ class EncryptedProfileBundleExport(BaseModel):
 
     @field_validator("salt_b64")
     @classmethod
+    @pydantic_validation_boundary
     def _check_salt_b64(cls, value: str) -> str:
         """Refuse a salt that is not canonical base64."""
         try:
@@ -77,6 +79,7 @@ class EncryptedProfileBundleExport(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _check_kdf_window(self) -> EncryptedProfileBundleExport:
         """Refuse KDF costs and salt lengths outside the composed policy."""
         salt = base64.b64decode(self.salt_b64.encode("ascii"), validate=True)

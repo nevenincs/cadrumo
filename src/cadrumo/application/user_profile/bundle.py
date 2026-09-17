@@ -9,7 +9,7 @@ The v3 shape additionally carries the generic secure-object custody
 schema and coverage manifest, default-empty until the transport-aware
 phases populate them.
 The ledger category is loaded as a
-:class:`~cadrumo.domain.transactions.TransactionCatalogue` through its
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue` through its
 application-owned repository port.
 
 Bundles carry typed domain-model payloads, not encrypted blobs, key
@@ -57,7 +57,7 @@ def serialize_profile_bundle(
     Args:
         bucket_id: Profile bucket whose domain repositories are exported.
         custody_profile: Secure-object custody scope to apply, as a
-            :class:`~cadrumo.core.StorageCustodyProfile`
+            :class:`~cadrumo.core.storage_taxonomy.StorageCustodyProfile`
             or one of its string values.
         profile_decode_context: Decode context supplied by the enclosing
             pinned authority operation for the encrypted profile rows.

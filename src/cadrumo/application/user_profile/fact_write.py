@@ -5,7 +5,7 @@ capability and descendiente verbs all publish exact profile-fact
 replacements through one shared writer, and each names itself with one
 closed :class:`ProfileFactWriteDoor` member.  The door is a payload
 descriptor, never an event type: every write emits exactly one
-:class:`~cadrumo.domain.buckets.BucketEventType.PROFILE_VALUES_UPDATED`
+:class:`~cadrumo.domain.buckets.event.BucketEventType.PROFILE_VALUES_UPDATED`
 bucket event, and the surface identity travels beside the change in the
 event payload.
 """
@@ -29,7 +29,7 @@ class ProfileFactWriteDoor(StrEnum):
     The door is a payload descriptor, never an event type.  A profile-fact
     write emits exactly one bucket event, that event's id becomes the record
     row's lineage witness, and the event names the DATA CHANGE:
-    :attr:`~cadrumo.domain.buckets.BucketEventType.PROFILE_VALUES_UPDATED`.
+    :attr:`~cadrumo.domain.buckets.event.BucketEventType.PROFILE_VALUES_UPDATED`.
     Which operator surface collected the answers is a separate axis, so it
     travels beside the change rather than displacing its identity — a history
     query asking "when did these values last change" reads the event type,
@@ -37,7 +37,7 @@ class ProfileFactWriteDoor(StrEnum):
 
     Encoding the door in the event type instead is what broke the edit path:
     every wizard write stamped a surface-shaped string that the closed
-    :class:`~cadrumo.domain.buckets.BucketEventType` does not contain, and the
+    :class:`~cadrumo.domain.buckets.event.BucketEventType` does not contain, and the
     capsule writer refused the whole command rather than recording anything.
 
     The taxonomy spans every surface that writes profile facts, not only the
@@ -86,7 +86,7 @@ def apply_profile_fact_changes(
     This is not the only door onto profile facts -- registration opens the
     initial record and the cotejo censal adopts certificate values -- so what
     is shared is not the door but the JUDGE: every one of them refuses through
-    :func:`~cadrumo.application.user_profile.reject_invalid_profile_facts`
+    :func:`~cadrumo.application.user_profile.validation.reject_invalid_profile_facts`
     before publishing.  An engine-derived path, an unknown path and a value of
     the wrong shape are refused at whichever write reaches them rather than at
     the surface that happened to collect the answer: a check living only in
@@ -152,15 +152,17 @@ def _mirror_output_language_hint(published: UserProfileRecord) -> None:
     nothing and the operator's chosen language could not survive a lock.
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
+    from ...core.config_support import coerce_output_language_setting
     from .language_resolver import mirror_profile_output_language_hint
     from .projections import record_to_path_values
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         return
+    stored = record_to_path_values(published).get(PROFILE_OUTPUT_LANGUAGE_PATH)
     mirror_profile_output_language_hint(
         bucket_id,
-        record_to_path_values(published).get(PROFILE_OUTPUT_LANGUAGE_PATH),
+        None if stored is None else coerce_output_language_setting(stored),
     )
 
 

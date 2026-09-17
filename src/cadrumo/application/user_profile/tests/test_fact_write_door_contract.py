@@ -2,7 +2,7 @@
 
 Every surface that writes profile facts publishes through one shared writer
 and names itself with a closed
-:class:`~cadrumo.application.user_profile.ProfileFactWriteDoor` member.  The
+:class:`~cadrumo.application.user_profile.fact_write.ProfileFactWriteDoor` member.  The
 lifecycle event that write emits is the same for all of them, so the door key
 in the event payload is the ONLY axis a history query has for telling the
 wizard, the manager screens and the ``config profile`` verbs apart.

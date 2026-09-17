@@ -5,7 +5,7 @@ active profile's ``preferences.output_language`` preference through a registered
 callback. Each executable host explicitly calls :func:`register_language_resolver`
 when it composes profile persistence. That function registers
 :func:`resolve_active_profile_output_language` with
-:func:`cadrumo.core.i18n.register_profile_language_resolver`.
+:func:`cadrumo.core.i18n.render.register_profile_language_resolver`.
 
 Rendering never reads storage. The profile's language is read once into a
 process-wide snapshot by :func:`refresh_active_profile_output_language` -- when
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import threading
 
+from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import clear_output_language_cache, register_profile_language_resolver
 from ...core.logging import get_logger
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -143,7 +144,7 @@ def register_language_resolver() -> None:
     refresh_active_profile_output_language()
 
 
-def mirror_profile_output_language_hint(bucket_id: str, language: str | None) -> None:
+def mirror_profile_output_language_hint(bucket_id: str, language: OutputLanguage | None) -> None:
     """Mirror a profile's language preference into its non-secret bucket hint.
 
     The hint answers one question the encrypted preference cannot: which
@@ -171,7 +172,7 @@ def mirror_profile_output_language_hint(bucket_id: str, language: str | None) ->
         if not trimmed:
             return
         storage_root = load_settings().cadrumo_local_storage_root
-        if language is None or not str(language).strip():
+        if language is None:
             clear_profile_output_language_hint(storage_root=storage_root, bucket_id=trimmed)
             return
         write_profile_output_language_hint(

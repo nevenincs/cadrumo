@@ -6,7 +6,10 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
-from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
+from ...domain.calculations.registry.renta_codes_catalogue import (
+    fiscal_residency_requires_country,
+    resolve_fiscal_residency_catalogue,
+)
 from ...domain.contribuyente.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
@@ -79,7 +82,12 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
         # rather than merely redundant.
         required.append(LEGAL_NAME_PATH)
 
-    if not fiscal_residency_requires_country(_token(values.get(FISCAL_RESIDENCY_PATH))):
+    residency = _token(values.get(FISCAL_RESIDENCY_PATH))
+    # An undeclared token is refused by value validation; it cannot say whether
+    # a country of residence is owed, so it adds no conditional requirement.
+    if residency and residency not in {str(token) for token in resolve_fiscal_residency_catalogue().all_residencies}:
+        return tuple(required)
+    if not fiscal_residency_requires_country(residency):
         return tuple(required)
 
     country = _token(values.get(COUNTRY_OF_FISCAL_RESIDENCE_PATH)).upper()

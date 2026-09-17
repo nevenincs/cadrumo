@@ -20,6 +20,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, SecretStr, StringConstraints, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.identifier_grammar import NamespacedId
@@ -227,6 +228,7 @@ class WorkbenchModeloAddress(BaseModel):
     period: Period
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches_address(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("Modelo address filing_year must match period.filing_year")
@@ -245,6 +247,7 @@ class WorkbenchRevisionAddress(BaseModel):
     calculation_revision_id: CalculationRevisionId
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches_address(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("revision address filing_year must match period.filing_year")
@@ -263,6 +266,7 @@ class WorkbenchFilingAddress(BaseModel):
     filing_record_id: FilingRecordId
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _period_year_matches_address(self) -> Self:
         if self.period.filing_year != self.filing_year:
             raise ValueError("filing address filing_year must match period.filing_year")
@@ -285,6 +289,7 @@ class WorkbenchDestinationAdmission(BaseModel):
     reason_code: NamespacedId | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _reason_matches_state(self) -> Self:
         if self.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.reason_code is not None:
             raise ValueError("an available destination cannot carry an admission reason")
@@ -393,12 +398,14 @@ class WorkbenchSearchDocument(BaseModel):
 
     @field_validator("identity_basis")
     @classmethod
+    @pydantic_validation_boundary
     def _identity_basis_has_no_control_characters(cls, value: SecretStr | None) -> SecretStr | None:
         if value is not None:
             _reject_control_characters(value.get_secret_value())
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _projection_is_consistent(self) -> Self:
         _validate_projection(
             kind=self.kind,
@@ -424,6 +431,7 @@ class WorkbenchSearchRequest(BaseModel):
 
     @field_validator("query")
     @classmethod
+    @pydantic_validation_boundary
     def _query_has_searchable_content(cls, value: str) -> str:
         _reject_control_characters(value)
         if not _tokens(value):
@@ -448,6 +456,7 @@ class WorkbenchSearchResult(BaseModel):
     score: float = Field(gt=0.0, allow_inf_nan=False)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _projection_is_consistent(self) -> Self:
         _validate_projection(
             kind=self.kind,
@@ -470,6 +479,7 @@ class WorkbenchSearchResponse(BaseModel):
     total_matches: NonNegativeInt = 0
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _result_page_is_canonical(self) -> Self:
         if self.total_matches < len(self.results):
             raise ValueError("total_matches cannot be smaller than the returned result count")

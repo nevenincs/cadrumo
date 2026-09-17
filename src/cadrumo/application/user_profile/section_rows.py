@@ -3,11 +3,11 @@
 A repeatable section's rows live at ``section.INDEX.field``, and the write
 door judges a whole fact batch at once: every required field of a row must
 arrive together or none of it lands. That judgement is
-:func:`~cadrumo.application.user_profile.reject_invalid_profile_facts`, which
+:func:`~cadrumo.application.user_profile.validation.reject_invalid_profile_facts`, which
 every door shares and which judges "the whole resulting fact sequence rather
 than the incoming change alone, so a patch is never left half-applied by a
 later field's refusal"; row writes reach it through
-:func:`~cadrumo.application.user_profile.apply_profile_fact_changes`.
+:func:`~cadrumo.application.user_profile.fact_write.apply_profile_fact_changes`.
 That makes row creation a batch operation rather than a sequence of field
 edits, so what a surface needs is the index a new row may occupy and the
 facts that fill it -- both derived from the schema's own
@@ -49,7 +49,7 @@ class ProfileRepeatableRowMutationOutcome:
 def next_section_row_index(section_key: str, present: Iterable[str]) -> int:
     """Return the row index a new row of ``section_key`` may occupy.
 
-    Row identity is :func:`~cadrumo.application.user_profile.profile_section_rows`,
+    Row identity is :func:`~cadrumo.application.user_profile.completeness.profile_section_rows`,
     the same reading the completeness check and the manager's page already
     share, so a new row is numbered against the rows those two surfaces
     agree exist rather than against a fresh scan of the fact paths.

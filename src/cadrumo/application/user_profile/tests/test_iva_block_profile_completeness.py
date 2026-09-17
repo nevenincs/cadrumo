@@ -27,7 +27,7 @@ from ....domain.deadlines.profiles import (
 from ..completeness import conditional_profile_missing_required
 from ..keys_validation import validate_profile_values
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 _SATISFIED_IVA_BLOCK: dict[str, str] = {

@@ -151,7 +151,7 @@ def active_profile_pointer_transaction(
     Re-entry is valid only for the same canonical root, process, and thread.
     Nested use for another root and inherited ownership after ``fork`` fail
     closed. The outermost call waits only for the bounded timeout enforced by
-    :func:`~cadrumo.adapters.persistence.storage.custody.profile_custody_local_lock`.
+    :func:`~cadrumo.adapters.persistence.storage.custody.filesystem.profile_custody_local_lock`.
 
     Args:
         root: Local storage root. The configured root is used when omitted.

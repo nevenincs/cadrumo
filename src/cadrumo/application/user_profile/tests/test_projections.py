@@ -33,7 +33,7 @@ from ..projections import (
 
 __all__ = ["_wizard_catalogue"]
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE_UUID = "66666666-6666-4666-8666-666666666666"
 _SCHEMA = published_profile_schema()

@@ -170,7 +170,7 @@ COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
 A profile born ``SETUP_INCOMPLETE`` defers exactly these; every other
 blocking issue (bad shape, bad value, unknown path) still refuses at
 registration. They come due in full at the promotion out of setup — see
-:meth:`~cadrumo.application.user_profile.ProfileRecordRepository.complete_setup`,
+:meth:`~cadrumo.application.user_profile.profile_record_repository.ProfileRecordRepository.complete_setup`,
 which judges with ``require_complete=True`` precisely because COMPLETE is the
 claim that nothing required is missing.
 """

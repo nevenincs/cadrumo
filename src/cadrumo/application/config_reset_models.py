@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.bucket_pointer import BucketPointer
+from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hex import Hex64Str
 from ..core.identity.bucket import BucketId
 from ..core.identity.digest import ContentDigest
@@ -80,6 +81,7 @@ class ConfigResetRetentionDecision(BaseModel):
     override_reason: str | None = Field(default=None, min_length=1, max_length=512)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_decision(self) -> ConfigResetRetentionDecision:
         validate_utc_aware(self.assessed_at)
         if self.latest_safe_erase_date is not None:
@@ -130,6 +132,7 @@ class ConfigResetAuthClearance(BaseModel):
     removed_out_of_bucket_secret_records: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_clearance(self) -> ConfigResetAuthClearance:
         validate_utc_aware(self.cleared_at)
         if self.cleared_lock_provider_ids != tuple(sorted(set(self.cleared_lock_provider_ids))):
@@ -157,6 +160,7 @@ class ConfigResetDeletionMarker(BaseModel):
     marked_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_marked_at(self) -> ConfigResetDeletionMarker:
         validate_utc_aware(self.marked_at)
         return self
@@ -241,6 +245,7 @@ class ConfigResetSummary(BaseModel):
     completed_at: datetime
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_summary(self) -> ConfigResetSummary:
         validate_utc_aware(self.completed_at)
         if self.deleted_count + self.already_absent_count != self.target_count:
