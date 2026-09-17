@@ -28,6 +28,7 @@ Anti-tautology proofs (the gate is not trivially rejecting everything):
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -84,13 +85,36 @@ def _build_binding(
     if base is None:
         modelo, _catalogues = _committed_modelo_130()
         base = modelo.revisions["2019-y-siguientes"].bindings[0]
-    return base.model_copy(
-        update={
-            "source": source,
-            "selector": selector,
+    # The provider member is built from the kind and its keys, so a malformed
+    # key set that the member still admits reaches the family gate as authored.
+    value = (
+        {"data_type": "money", "channel": "row_set", "row_grouping": _ROW_GROUPING_BY_SOURCE[source]}
+        if op is BindingAggregationOp.ROWS
+        else base.value
+    )
+    return BindingDefinition.model_validate(
+        {
+            "id": base.id,
+            "provider": {"kind": source, **selector},
+            "value": value,
             "aggregation": BindingAggregation(op=op),
+            "legal_refs": base.legal_refs,
+            "source_refs": base.source_refs,
+            "source_citations": base.source_citations,
         },
     )
+
+
+# The row grouping each row-emitting family declares on its value contract.
+_ROW_GROUPING_BY_SOURCE: dict[str, str | None] = {
+    "related_party_operation": "related_party",
+    "foreign_asset": "foreign_asset",
+    "atribucion_member": "atribucion",
+    "refund_operation": "refund",
+    "donativo_donor": "donativo",
+    "withholding": "withholding",
+    "inventory": None,
+}
 
 
 # Per-family build-validation cases. Each case carries a well-formed selector
@@ -140,25 +164,6 @@ _FAMILY_CASES: tuple[
             "fact": "iva_amount_sum",
         },
         BindingAggregationOp.COPY,
-    ),
-    (
-        "ledger_renta_income_aggregation",
-        "ledger_renta_income_aggregation",
-        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
-        BindingAggregationOp.SUM,
-        # An unknown fact value trips the typed selector Literal at build time
-        # (a shape violation is also a build-time rejection, not resolve-only).
-        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "not_a_real_fact"},
-        BindingAggregationOp.SUM,
-    ),
-    (
-        "ledger_renta_gastos_pago_fraccionado_aggregation",
-        "ledger_renta_gastos_pago_fraccionado_aggregation",
-        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
-        BindingAggregationOp.SUM,
-        # An unknown fact value trips the typed selector Literal at build time.
-        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "not_a_real_fact"},
-        BindingAggregationOp.SUM,
     ),
     (
         "related_party_operation",
@@ -213,31 +218,42 @@ _FAMILY_CASES: tuple[
     (
         "previous_filing",
         "previous_filing",
-        {"source_modelo": "130", "source_casilla_id": _M130_PAGOS_FRACCIONADOS_CASILLA},
+        {
+            "source_modelo": "130",
+            "source_casilla_id": _M130_PAGOS_FRACCIONADOS_CASILLA,
+            "temporal": {"kind": "target_period_offset", "periods": -1, "within_filing_year": True},
+        },
         BindingAggregationOp.COPY,
         # copy requires exactly one source casilla; two violates the invariant.
         {
             "source_modelo": "130",
-            "period": "0A",
             "source_casilla_ids": (_M130_PAGOS_FRACCIONADOS_CASILLA, _M130_RESULTADO_PREVIO_CASILLA),
+            "temporal": {"kind": "target_period_offset", "periods": -1, "within_filing_year": True},
         },
         BindingAggregationOp.COPY,
     ),
+)
+
+# Families whose provider member states the invariant itself: the malformed
+# declaration is refused as the member is built, so it never reaches the gate.
+_CONSTRUCTION_REFUSED_CASES: tuple[
+    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
+] = (
     (
         "m303_regimen_simplificado_annual_summary",
         "m303_regimen_simplificado_annual_summary",
         {
             "source_modelo": "303",
-            "source_period": "4T",
             "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
+            "temporal": {"kind": "filed_current_period", "source_period": "4T"},
         },
         BindingAggregationOp.COPY,
         {
             "source_modelo": "303",
-            "source_period": "3T",
             "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
+            "temporal": {"kind": "filed_current_period", "source_period": "3T"},
         },
         BindingAggregationOp.COPY,
     ),
@@ -246,7 +262,6 @@ _FAMILY_CASES: tuple[
         "inventory",
         {
             "modelo": "100",
-            "filing_year": 2025,
             "projection_grain": "taxpayer_year_activity",
             "fact": "row_field",
             "record": "inventory_activity",
@@ -259,7 +274,6 @@ _FAMILY_CASES: tuple[
         # increase cannot be projected into the decrease casilla.
         {
             "modelo": "100",
-            "filing_year": 2025,
             "projection_grain": "taxpayer_year_activity",
             "fact": "row_field",
             "record": "inventory_activity",
@@ -298,18 +312,49 @@ def test_binding_family_build_gate_contract(
     assert malformed.id in message
 
 
-def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
-    binding = _build_binding(
-        source="ledger_renta_gastos_pago_fraccionado_aggregation",
-        selector={"modelo": "130", "target_casilla": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
-        op=BindingAggregationOp.SUM,
-    )
+_TYPED_FACT_CASES: tuple[
+    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
+] = (
+    (
+        "ledger_renta_income_aggregation",
+        "ledger_renta_income_aggregation",
+        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
+        BindingAggregationOp.SUM,
+        # The provider member types the fact, so an unknown one cannot be built.
+        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "not_a_real_fact"},
+        BindingAggregationOp.SUM,
+    ),
+    (
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
+        BindingAggregationOp.SUM,
+        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "not_a_real_fact"},
+        BindingAggregationOp.SUM,
+    ),
+    (
+        "legacy target_casilla key",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
+        BindingAggregationOp.SUM,
+        {"modelo": "130", "target_casilla": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
+        BindingAggregationOp.SUM,
+    ),
+)
+_MEMBER_REFUSED_CASES = (*_CONSTRUCTION_REFUSED_CASES, *_TYPED_FACT_CASES)
 
-    diagnostics = validate_binding_selector_shape(binding)
 
-    assert len(diagnostics) == 1
-    assert "target_casilla_id" in diagnostics[0]
-    assert "target_casilla" in diagnostics[0]
+@pytest.mark.parametrize("case", _MEMBER_REFUSED_CASES, ids=tuple(case[0] for case in _MEMBER_REFUSED_CASES))
+def test_provider_member_refuses_a_malformed_declaration_at_construction(
+    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
+) -> None:
+    """A well-formed declaration passes the gate; the malformed one cannot be built."""
+    _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
+
+    well_formed = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op)
+    assert validate_binding_selector_shape(well_formed) == []
+    with pytest.raises(ValidationError, match=f"provider.{source}"):
+        _build_binding(source=source, selector=malformed_selector, op=malformed_op)
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:

@@ -160,6 +160,18 @@ def _compose_revision_limb(
             work_item="aeat-export-fragment-generator-authority:reviewed-layout",
             reconsideration_condition="Record a valid review for the exact revision and its official layout authority.",
         )
+    if not revision_selection_coordinates(
+        revision,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+        assessment_floor=coverage_assessment_floor(authority.catalogues),
+    ):
+        # Wholly below the supported floor: no coordinate the product files.
+        return RegistryClosureLimb(
+            modelo=modelo_id,
+            revision=revision.id,
+            name="filing_export",
+            outcome=RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
+        )
     layout_result = _filing_layout_evidence(
         authority=authority,
         modelo_id=modelo_id,

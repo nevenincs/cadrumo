@@ -2,7 +2,6 @@ schema_version = 2
 source_path = "src/cadrumo/core/external_constants.py"
 declaration_count = 0
 consumer_count = 0
-deletion_step = "W04.P16.S31"
 
 # Negative census for the legal values retired after authoritative fact enrollment.
 retired_statutory_symbols = [

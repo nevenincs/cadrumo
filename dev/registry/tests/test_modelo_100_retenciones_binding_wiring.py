@@ -53,11 +53,12 @@ _DATE_CONTEXT_2024 = {"filing_period": date(2024, 12, 31)}
 _DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 _DATE_CONTEXT_2025 = {"filing_period": date(2025, 12, 31)}
 _DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
+# The scenarios model no maritime worker under the art. 75 Ley 19/1994 path.
+_BOOLEAN_BINDINGS_2025: dict[BindingId, bool] = {"renta-maritime-path-rebeca": False}
 
+# A relation id is its binding id, so the retenciones sources each scenario
+# supplies as bindings are not restated here as relation zeros.
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-modelo-130-pagos-fraccionados": Decimal("0"),
     "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
@@ -127,6 +128,10 @@ def _base_binding_values_2025(
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No maritime-worker income in these scenarios.
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
     if m111 is not None:
         values["renta-modelo-111-retenciones-periodicas"] = m111
@@ -160,6 +165,7 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
         binding_values=_base_binding_values_2025(m190=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        boolean_binding_values=_BOOLEAN_BINDINGS_2025,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
@@ -231,6 +237,7 @@ def test_salary_certificate_retenciones_binding_populates_2025_casilla_0596(
         binding_values=_base_binding_values_2025(certificado_trabajo=suffered_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        boolean_binding_values=_BOOLEAN_BINDINGS_2025,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
@@ -250,6 +257,7 @@ def test_conflicting_2025_m111_and_m190_retenciones_refuse_before_calculation(
             binding_values=_base_binding_values_2025(m111=Decimal("4200.00"), m190=Decimal("4100.00")),
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
+            boolean_binding_values=_BOOLEAN_BINDINGS_2025,
         )
 
 
@@ -267,6 +275,7 @@ def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
         binding_values=_base_binding_values_2025(m193=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
+        boolean_binding_values=_BOOLEAN_BINDINGS_2025,
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
@@ -291,6 +300,7 @@ def test_conflicting_2025_m123_and_m193_retenciones_refuse_before_calculation(
             binding_values=_base_binding_values_2025(m123=Decimal("975.31"), m193=Decimal("975.30")),
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
+            boolean_binding_values=_BOOLEAN_BINDINGS_2025,
         )
 
 

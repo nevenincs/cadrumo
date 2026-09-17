@@ -40,6 +40,7 @@ from .export_ref_symmetry import screen_authority as export_ref_screen
 from .fabricated_required_ness import screen_authority as fabricated_required_screen
 from .footnote_only_wire_facts import screen_authority as footnote_only_screen
 from .grade_earned import screen_authority as grade_screen
+from .hand_authored_type_column import screen_authority as hand_authored_type_column_screen
 from .manifest_uncited_references import screen_authority as manifest_uncited_screen
 from .modelo_capability import screen_authority as modelo_capability_screen
 from .monetary_scale import screen_authority as monetary_scale_screen
@@ -49,6 +50,7 @@ from .provenance_consistency import outside_reference_index
 from .provenance_consistency import screen_authority as provenance_screen
 from .revision_name_window import screen_authority as revision_name_screen
 from .rule_grounding_coverage import screen_authority as rule_grounding_screen
+from .sign_position_coverage import screen_authority as sign_position_coverage_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
@@ -216,6 +218,14 @@ def _fields_without_grounding(authority: ValidatedRegistryAuthority, modelo_ids:
     return [item for item in rule_grounding_screen(authority, modelo_ids) if item.kind == "ungrounded"]
 
 
+def _hand_authored_type_contradictions(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return only the contradictions; the alignment census is what the screen examined."""
+    _alignments, contradictions = hand_authored_type_column_screen(authority, modelo_ids)
+    return contradictions
+
+
 def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
     """Return only the modelos using more than one identifier grammar."""
     return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
@@ -268,6 +278,16 @@ SCREENS: tuple[ScreenEntry, ...] = (
         fabricated_required_screen,
         "fields declared optional because the design was silent rather than because it said so",
         entry_returns="census",
+    ),
+    ScreenEntry(
+        "hand_authored_type_column",
+        _hand_authored_type_contradictions,
+        "hand-authored fields the official design types signed but the layout ships unsigned",
+    ),
+    ScreenEntry(
+        "sign_position_coverage",
+        sign_position_coverage_screen,
+        "money fields starting on a design SIGNO byte that declare no sign_position",
     ),
     ScreenEntry(
         "revision_name_window",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import shutil
 from datetime import date
 from decimal import Decimal
@@ -14,12 +15,14 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.core.toml import freeze_toml, parse_toml, render_toml
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
+from cadrumo.domain.calculations.registry.schema import SupportedFilingYearsCatalogue
 
-from ..compiler.authority import compile_validated_authority
+from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ..compiler.loader_cache import registry_disk_cache_dir
 from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 from ..conformance.loader_directory_mode_support import (
@@ -28,6 +31,8 @@ from ..conformance.loader_directory_mode_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SYNTHETIC_LEGAL_REF = "test-ley-001:art-1"
 
 
 def _install_committed_profile_schema(root: Path) -> None:
@@ -38,11 +43,61 @@ def _install_committed_profile_schema(root: Path) -> None:
     """
     target = root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
     target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"), target)
+    # The profile's legal references must resolve against this tree's own
+    # catalogue, which carries a single synthetic provision.
+    schema_text = bundled_path("registry", "cadrumo", "user_profile", "schema.toml").read_text(encoding="utf-8")
+    target.write_text(
+        re.sub(r"legal_refs\s*=\s*\[[^\]]*\]", f'legal_refs = ["{_SYNTHETIC_LEGAL_REF}"]', schema_text),
+        encoding="utf-8",
+    )
     facts_dir = root / "registry" / "aeat" / "facts"
     facts_dir.mkdir(parents=True, exist_ok=True)
     fact_name = "0102-spanish-tax-identifier-format.toml"
     shutil.copyfile(bundled_path("registry", "aeat", "facts", fact_name), facts_dir / fact_name)
+    # The runtime catalogues every compilation reads beside the modelos.
+    for parts in (
+        ("iva", "country_names.toml"),
+        ("iva", "territories.toml"),
+        ("iva", "territory_carve_outs.toml"),
+        ("iva", "catalogues.toml"),
+        ("iva", "place_of_supply.toml"),
+        ("apoderamientos", "scopes.toml"),
+        ("legal", "ley-58-2003-recargo-bands.toml"),
+    ):
+        catalogue = root.joinpath("registry", "aeat", *parts)
+        catalogue.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(bundled_path("registry", "aeat", *parts), catalogue)
+    _install_cited_catalogue_entries(root)
+
+
+def _install_cited_catalogue_entries(root: Path) -> None:
+    """Carry the legal and source entries the installed inputs cite, with their corpus files.
+
+    The closure is read from the installed files themselves, so an input that
+    starts citing another provision brings that provision along instead of
+    this helper restating a list.
+    """
+    catalogues = compiled_bundled_authority().catalogues
+    installed_text = "\n".join(
+        path.read_text(encoding="utf-8") for path in (root / "registry").rglob("*.toml") if path.is_file()
+    )
+    legal = {key: entry for key, entry in catalogues.legal.items() if f'"{key}"' in installed_text}
+    sources = {key: entry for key, entry in catalogues.sources.items() if f'"{key}"' in installed_text}
+    document = {
+        "legal": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in legal.items()},
+        "sources": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in sources.items()},
+    }
+    legal_dir = root / "registry" / "aeat" / "legal"
+    legal_dir.mkdir(parents=True, exist_ok=True)
+    (legal_dir / "cited-inputs.toml").write_text(render_toml(freeze_toml(document)), encoding="utf-8")
+    corpus_paths = {entry.corpus_ref.split("#", 1)[0] for entry in legal.values() if entry.corpus_ref}
+    corpus_paths.update(entry.corpus_path for entry in sources.values() if entry.corpus_path)
+    for corpus_path in corpus_paths:
+        bundled_file = bundled_path(*corpus_path.split("/"))
+        for sibling in bundled_file.parent.glob(f"{bundled_file.name}*"):
+            target = root.joinpath(*corpus_path.split("/")).with_name(sibling.name)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(sibling, target)
 
 
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
@@ -57,16 +112,16 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15", surface="_M1
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
 
 
-def test_authority_returns_isolated_validated_snapshots_for_repeated_filing_context(
+def test_authority_returns_the_shared_immutable_snapshot_for_a_repeated_filing_context(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
+    """One admitted filing context resolves to one immutable snapshot, not a fresh copy per call."""
     authority = registry_authority
     first = authority.snapshot("130", filing_year=2026, period="1T")
     second = authority.snapshot("130", filing_year=2026, period="1T")
 
-    assert first is not second
-    assert first == second
-    assert first.legal is not second.legal
+    assert first is second
+    assert first.model_config.get("frozen") is True
     assert first.revision.period_selector.includes_year(2026)
     assert "1T" in first.revision.period_selector.periods
 
@@ -74,8 +129,12 @@ def test_authority_returns_isolated_validated_snapshots_for_repeated_filing_cont
 def test_authority_exposes_validated_legal_corpus_provenance(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The authority returns the canonical classifier's result after registry validation."""
-    assert registry_authority.evidence.legal_provenance("rd-1065-2007:art-9") is NormativeCorpusProvenance.BOE_ATTESTED
+    """The published generation carries the canonical classifier's result for a BOE provision."""
+    snapshot = registry_authority.snapshot("130", filing_year=2026, period="1T")
+    boe_reference = next(reference_id for reference_id, entry in snapshot.legal.items() if entry.authority == "boe")
+    with bundled_indexed_authority().operation() as operation:
+        evidence = operation.legal_evidence(boe_reference)
+    assert evidence.provenance is NormativeCorpusProvenance.BOE_ATTESTED
 
 
 def test_authority_snapshot_runs_real_modelo_calculation(registry_authority: ValidatedRegistryAuthority) -> None:
@@ -146,14 +205,29 @@ def test_authority_deadline_windows_are_validated_and_sorted(registry_authority:
     assert [window.closes_on for _, _, window in windows] == sorted(window.closes_on for _, _, window in windows)
 
 
-_MINIMAL_CATALOGUE_TOML = """\
-[supported_filing_years]
-years = [2025]
-
-[sociedades_annual_manual_coverage]
-dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals",
-observed_at = 2026-09-10, acquisition_condition_key =
-"application.registry.manuals.coverage.recheck_aeat_publication" }]
+# The support envelope is the registry's own declaration, never restated here;
+# the manual-coverage census must answer for exactly the years it admits.
+_SUPPORT_DECLARATION = bundled_path("registry", "aeat", "legal", "supported-filing-years.toml").read_text(
+    encoding="utf-8"
+)
+_SUPPORTED_YEARS = SupportedFilingYearsCatalogue.model_validate(
+    parse_toml(_SUPPORT_DECLARATION)["supported_filing_years"]
+).years
+_MANUAL_COVERAGE_TOML = "".join(
+    f"""
+[[sociedades_annual_manual_coverage.dispositions]]
+year = {year}
+status = "unpublished"
+official_locator = "https://example.com/manuals"
+observed_at = 2026-09-10
+acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication"
+"""
+    for year in _SUPPORTED_YEARS
+)
+_MINIMAL_CATALOGUE_TOML = (
+    _SUPPORT_DECLARATION
+    + _MANUAL_COVERAGE_TOML
+    + """
 
 [legal."test-ley-001:art-1"]
 evidence_tier = "legal_authority"
@@ -189,6 +263,7 @@ retrieved_at = 2025-01-01
 source_url = "https://example.com/test-source-002"
 review_status = "pending_review"
 """
+)
 
 _MINIMAL_MANIFEST_TOML = """\
 [modelo]
@@ -270,7 +345,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
@@ -322,7 +397,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
@@ -376,7 +451,7 @@ def test_authority_cache_invalidates_when_source_evidence_changes(
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
@@ -412,7 +487,7 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
@@ -474,7 +549,7 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
     corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)

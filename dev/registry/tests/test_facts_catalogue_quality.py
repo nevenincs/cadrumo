@@ -238,14 +238,11 @@ def _live_iva_retirement_ledger() -> dict[str, object]:
     )
 
 
-def test_only_named_open_s80_s85_holds_are_admitted() -> None:
-    ledger = _live_iva_retirement_ledger()
-    open_steps = {"W04.P15.S81", "W04.P15.S82", "W04.P15.S83", "W04.P15.S84", "W04.P17.S85"}
-
-    assert migration_retirement_findings(ledger, open_steps=open_steps) == ()
+def test_the_live_retirement_ledger_admits_only_named_complete_holds() -> None:
+    assert migration_retirement_findings(_live_iva_retirement_ledger()) == ()
 
 
-def test_unowned_or_stale_retirement_hold_bites() -> None:
+def test_unowned_or_stale_retirement_hold_bites(tmp_path: Path) -> None:
     ledger = _live_iva_retirement_ledger()
     tables = ledger["remaining_structured_tables"]
     assert isinstance(tables, list)
@@ -259,10 +256,13 @@ def test_unowned_or_stale_retirement_hold_bites() -> None:
         },
     )
 
-    findings = migration_retirement_findings(
-        ledger,
-        open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84", "W04.P17.S85"},
-    )
+    held = {str(table["data_path"]) for table in tables if isinstance(table, dict)}
+    retired = sorted(held)[0]
+    for data_path in held - {retired}:
+        (tmp_path / data_path).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / data_path).write_text("", encoding="utf-8")
+
+    findings = migration_retirement_findings(ledger, repository_root=tmp_path)
 
     assert {finding.kind for finding in findings} == {
         FactQualityKind.UNAPPROVED_MIGRATION_HOLD,
@@ -270,7 +270,7 @@ def test_unowned_or_stale_retirement_hold_bites() -> None:
     }
 
 
-def test_closed_s80_s85_holds_must_be_removed_but_need_not_remain_in_the_ledger() -> None:
+def test_retired_holds_need_not_remain_in_the_ledger() -> None:
     ledger = _live_iva_retirement_ledger()
     tables = ledger["remaining_structured_tables"]
     lanes = ledger["lanes"]
@@ -281,13 +281,7 @@ def test_closed_s80_s85_holds_must_be_removed_but_need_not_remain_in_the_ledger(
     ]
     ledger["lanes"] = [lane for lane in lanes if lane["lane_id"] != "iva-local-grounding"]
 
-    assert (
-        migration_retirement_findings(
-            ledger,
-            open_steps={"W04.P15.S82", "W04.P15.S83", "W04.P15.S84"},
-        )
-        == ()
-    )
+    assert migration_retirement_findings(ledger) == ()
 
 
 def _declare_supported_years(registry_root: Path) -> None:

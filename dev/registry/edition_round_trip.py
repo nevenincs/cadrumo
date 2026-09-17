@@ -680,8 +680,8 @@ def localization_differences(
     differences: list[str] = []
     if reference.localization_key != live.localization_key:
         differences.append(f"edition key {reference.localization_key!r} became {live.localization_key!r}")
-    reference_constructs = [(construct.id, construct.localization_key) for construct in reference.constructs]
-    live_constructs = [(construct.id, construct.localization_key) for construct in live.constructs]
+    reference_constructs = [(construct.id, construct.localization_keys) for construct in reference.constructs]
+    live_constructs = [(construct.id, construct.localization_keys) for construct in live.constructs]
     if reference_constructs != live_constructs:
         differences.append("construct keys changed")
     live_by_id = {casilla.id: casilla for casilla in live.casillas}

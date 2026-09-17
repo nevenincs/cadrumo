@@ -28,6 +28,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
+    construct_lineage_locale_key,
     construct_locale_key,
     modelo_locale_key,
     revision_locale_key,
@@ -364,6 +365,7 @@ def _project_revision_locale_keys(
             raise RegistryLoadError(f"{subject}: duplicate construct id {construct_id!r}")
         seen_construct_ids.add(construct_id)
         keys.add(construct_locale_key(modelo_id, revision_id, construct_id))
+        keys.add(construct_lineage_locale_key(modelo_id, construct_id))
 
     casillas = _raw_array(revision, "casillas", f"{source_path}: revision {revision_id!r}")
     seen_casilla_ids: set[str] = set()
