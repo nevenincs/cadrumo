@@ -80,6 +80,8 @@ _PLACEHOLDER: Final = re.compile(
 
 #: A value that a length limit cut mid-text and closed with an ellipsis.
 _TRUNCATED: Final = re.compile(r"\w(?:\.\.\.|…)\s*$")
+#: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
+_IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
 #: Per locale, the marks a word-by-word glossary pass leaves: Hungarian suffix
 #: alternations standing alone, and Spanish function words left untranslated.
 _GLOSSARY_ARTIFACT: Final[dict[str, re.Pattern[str]]] = {
@@ -236,6 +238,8 @@ class CatalogueFindings:
     """Per locale, translations a word-by-word glossary pass produced."""
     truncated_text: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, values cut short and closed with an ellipsis."""
+    irregular_whitespace: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, values with repeated spaces or surrounding whitespace copied from a source."""
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -261,6 +265,7 @@ class CatalogueFindings:
             "placeholders": total(self.placeholders),
             "glossary_artifacts": total(self.glossary_artifacts),
             "truncated_text": total(self.truncated_text),
+            "irregular_whitespace": total(self.irregular_whitespace),
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
@@ -296,6 +301,7 @@ class CatalogueFindings:
                 any(self.placeholders.values()),
                 any(self.glossary_artifacts.values()),
                 any(self.truncated_text.values()),
+                any(self.irregular_whitespace.values()),
                 any(self.translation_drift.values()),
                 any(self.stranded_translations.values()),
                 any(self.stale_translations.values()),
@@ -430,6 +436,9 @@ class ModeloCasillaCatalogue:
             )
             found.truncated_text[locale] = tuple(
                 sorted(key for key, value in leaves.items() if value and _TRUNCATED.search(value))
+            )
+            found.irregular_whitespace[locale] = tuple(
+                sorted(key for key, value in leaves.items() if value and _IRREGULAR_WHITESPACE.search(value))
             )
             found.redundant_values[locale] = tuple(
                 sorted(key for key, reason in plan.plan.removals.get(locale, {}).items() if reason == "redundant")
