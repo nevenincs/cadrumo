@@ -1,6 +1,10 @@
 modelo:
   schema:
     '216':
+      construct:
+        modelo-216-calculation-construct:
+          field:
+            title: 'Model 216: càlcul de les retencions de l''IRNR'
       field:
         official_name: Modelo 216. Impost sobre la Renda de no Residents. Rendes obtingudes
           sense mediació d'establiment permanent. Retencions i ingressos a compte.
@@ -76,9 +80,5 @@ modelo:
             '21':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-216-calculation-construct:
-              field:
-                title: Modelo 216 calculation construct
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAC/56/2024, exercicis 2024 i següents

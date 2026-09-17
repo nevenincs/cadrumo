@@ -1,6 +1,10 @@
 modelo:
   schema:
     '115':
+      construct:
+        modelo-115-quarterly-rental-withholding:
+          field:
+            title: '115-ös modelo: városi ingatlanok bérbeadásának negyedéves adóelőleg-levonása'
       field:
         official_name: Adóelőleg-levonások és -befizetések. Városi ingatlanok bérbeadásából
           vagy albérletbe adásából származó jövedelmek.
@@ -23,9 +27,6 @@ modelo:
             '05':
               help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő eredmény
-          construct:
-            modelo-115-quarterly-rental-withholding:
-              field:
-                title: Modelo 115 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 115-ös modelo hatályos (2000. november 20-i rendelet, BOE-A-2000-21430),
+              2019. adóévtől

@@ -1,6 +1,10 @@
 modelo:
   schema:
     '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: Modelo 181 bevallás tájékoztató
       field:
         official_name: Modelo 181. Hitelek és kölcsönök, valamint ingatlanokhoz kapcsolódó
           pénzügyi ügyletek adatszolgáltatási bevallása.
@@ -136,9 +140,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A Modelo 181 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-          construct:
-            modelo-181-informative:
-              field:
-                title: Modelo 181 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 181-es modelo (EHA/3514/2009 rendelet), 2009. adóévtől

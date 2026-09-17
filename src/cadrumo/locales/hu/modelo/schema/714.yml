@@ -397,6 +397,10 @@ modelo:
             help: A Modelo 714 60. casilla adóügyi adatai.
             label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
               mentességre jogosító teljes értéke
+      construct:
+        m714-patrimonio-calculation:
+          field:
+            title: 714-es nyomtatvány vagyonadó-kötelezettség
       field:
         official_name: Vagyonadó. Bevallás
         title: Modelo 714
@@ -417,10 +421,6 @@ modelo:
                 alá esik
             identificacion-8:
               label: 2020. évi lakóhely szerinti autonóm közösség vagy város
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2021. évi vagyonadó
         '2022':
@@ -439,10 +439,6 @@ modelo:
                 alá esik
             identificacion-8:
               label: 2022. évi lakóhely szerinti autonóm közösség vagy város
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2022. évi vagyonadó
         '2023':
@@ -461,10 +457,6 @@ modelo:
                 alá esik
             identificacion-8:
               label: 2023. évi lakóhely szerinti autonóm közösség vagy város
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2023. évi vagyonadó
         '2024':
@@ -483,10 +475,6 @@ modelo:
                 alá esik
             identificacion-8:
               label: 2024. évi lakóhely szerinti autonóm közösség vagy város
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2024. évi vagyonadó
         '2025':
@@ -506,9 +494,5 @@ modelo:
                 alá esik
             identificacion-8:
               label: 2025. évi lakóhely szerinti autonóm közösség vagy város
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: 714-es nyomtatvány vagyonadó-kötelezettség
           field:
             label: 2025. évi vagyonadó

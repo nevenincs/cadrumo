@@ -1,6 +1,10 @@
 modelo:
   schema:
     '111':
+      construct:
+        modelo-111-withholding-workflow:
+          field:
+            title: 'Model 111: retencions i ingressos a compte'
       field:
         official_name: Retencions i ingressos a compte de l'IRPF. Rendiments del treball
           i d'activitats econòmiques, premis i determinats guanys patrimonials i imputacions
@@ -119,9 +123,5 @@ modelo:
             '30':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-111-withholding-workflow:
-              field:
-                title: Modelo 111 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Ordre EHA/586/2011, exercicis 2019 i següents

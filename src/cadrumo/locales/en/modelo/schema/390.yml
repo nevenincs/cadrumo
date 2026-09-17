@@ -1587,6 +1587,10 @@ modelo:
           tipo-declaracion:
             help: Tax information about tax information in casilla  of Modelo 390.
             label: Return type
+      construct:
+        modelo-390-iva-resumen-anual:
+          field:
+            title: Annual VAT summary return
       field:
         official_name: Modelo 390. Annual summary return for Value Added Tax.
         title: VAT. Annual summary return
@@ -1620,12 +1624,9 @@ modelo:
           field:
             label: Modelo 390 tax year 2021 (Orden EHA/3111/2009)
         '2022':
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 390, tax year 2022 (Order EHA/3111/2009, amended by successive
+              orders including HAP/2373/2014)
         '2023':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -2514,12 +2515,9 @@ modelo:
               help: Turnover under the simplified scheme
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total turnover
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 390, tax year 2023 (Order EHA/3111/2009, amended by successive
+              orders including HAP/2373/2014)
         '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -3404,12 +3402,9 @@ modelo:
               help: Turnover under the simplified scheme
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total turnover
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 390, tax year 2024 (Order EHA/3111/2009, amended by successive
+              orders including HAP/2373/2014)
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -4318,9 +4313,6 @@ modelo:
               help: Turnover under the simplified scheme
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total turnover
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 390, tax year 2025 (Order EHA/3111/2009, amended by successive
+              orders including HAP/2373/2014)

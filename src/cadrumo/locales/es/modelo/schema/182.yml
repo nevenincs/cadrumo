@@ -4,23 +4,28 @@ modelo:
       casilla:
         continuidad:
           donante-nif:
-            label: NIF del donante (persona fisica, juridica o entidad sin fines lucrativos
+            label: NIF del donante (persona física, jurídica o entidad sin fines lucrativos
               donataria de referencia)
           donante-nombre:
-            label: Apellidos y nombre, o razon social, del donante
+            label: Apellidos y nombre, o razón social, del donante
           donativo-recurrente:
             label: Indicador de donativo recurrente (donativo plurianual a la misma
-              entidad donataria, dos o mas ejercicios consecutivos)
+              entidad donataria, dos o más ejercicios consecutivos)
           filing-year:
             label: Ejercicio al que se refiere la declaración
           importe-donativo:
-            label: Importe del donativo, donacion o aportacion recibida en el ejercicio
+            label: Importe del donativo, donación o aportación recibida en el ejercicio
               (sin signo, en euros)
           porcentaje-deduccion:
-            label: Porcentaje de deducción aplicable al donativo (regimen fiscal del
-              donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)
+            label: Porcentaje de deducción aplicable al donativo (régimen fiscal del
+              donante, art. 68.3 LIRPF / régimen especial Ley 49/2002)
           tipo-declaracion:
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
+      construct:
+        modelo-182-informative:
+          field:
+            title: 'Modelo 182: declaración informativa de donativos, donaciones y
+              aportaciones recibidas'
       field:
         official_name: Modelo 182. Impuesto sobre la Renta de las Personas Físicas,
           Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración
@@ -29,11 +34,9 @@ modelo:
         title: Donativos, donaciones y aportaciones recibidas y disposiciones realizadas
           (informativa anual)
       revision:
+        '2024':
+          field:
+            label: Modelo 182, ejercicio 2024
         '2025':
-          construct:
-            modelo-182-informative:
-              field:
-                title: Modelo 182 informative declaration of donativos, donaciones
-                  y aportaciones recibidas
           field:
             label: Modelo 182, ejercicio 2025 (Orden HAC/1430/2025)

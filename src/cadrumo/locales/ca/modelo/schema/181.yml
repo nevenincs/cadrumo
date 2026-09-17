@@ -1,6 +1,10 @@
 modelo:
   schema:
     '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: Modelo 181 declaració informativa
       field:
         official_name: Modelo 181. Declaració informativa de préstecs i crèdits, i
           operacions financeres relacionades amb béns immobles.
@@ -154,9 +158,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Informació fiscal de la casella del Modelo 181.
               label: Tipus de declaració (originària / substitutiva / complementària)
-          construct:
-            modelo-181-informative:
-              field:
-                title: Modelo 181 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 181 (Ordre EHA/3514/2009), exercicis 2009 i següents

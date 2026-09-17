@@ -93,9 +93,6 @@ adapters:
           AEAT seleccionado.
         scope_missing: La pantalla de consentimiento de Google se cerró sin conceder
           todos los ámbitos requeridos.
-        unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
-          está en modo inseguro y el perfil activo lleva un identificador fiscal español
-          real.
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.

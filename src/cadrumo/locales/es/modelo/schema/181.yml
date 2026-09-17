@@ -1,6 +1,10 @@
 modelo:
   schema:
     '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: Modelo 181 declaración informativa
       field:
         official_name: Modelo 181. Declaración informativa de préstamos y créditos,
           y operaciones financieras relacionadas con bienes inmuebles.
@@ -96,9 +100,5 @@ modelo:
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
-          construct:
-            modelo-181-informative:
-              field:
-                title: Modelo 181 declaración informativa
           field:
             label: Modelo 181 (orden-eha-3514-2009), ejercicios 2009 y siguientes

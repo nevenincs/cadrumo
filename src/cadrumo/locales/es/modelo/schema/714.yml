@@ -266,6 +266,10 @@ modelo:
           patrimonio-vivienda-habitual-susceptible-exencion:
             label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Valor
               total vivienda habitual susceptible exención
+      construct:
+        m714-patrimonio-calculation:
+          field:
+            title: Modelo 714 Impuesto sobre el Patrimonio cuota
       field:
         official_name: Impuesto sobre el Patrimonio. Declaración
         title: Modelo 714
@@ -287,10 +291,6 @@ modelo:
                 artículo 93 Ley 35/2006, IRPF
             identificacion-8:
               label: Comunidad o Ciudad Autónoma de residencia en 2020
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2021
         '2022':
@@ -310,10 +310,6 @@ modelo:
                 artículo 93 Ley 35/2006, IRPF
             identificacion-8:
               label: Comunidad o Ciudad Autónoma de residencia en 2022
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2022
         '2023':
@@ -333,10 +329,6 @@ modelo:
                 artículo 93 Ley 35/2006, IRPF
             identificacion-8:
               label: Comunidad o Ciudad Autónoma de residencia en 2023
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2023
         '2024':
@@ -356,10 +348,6 @@ modelo:
                 artículo 93 Ley 35/2006, IRPF
             identificacion-8:
               label: Comunidad o Ciudad Autónoma de residencia en 2024
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2024
         '2025':
@@ -379,9 +367,5 @@ modelo:
                 artículo 93 Ley 35/2006, IRPF
             identificacion-8:
               label: Comunidad o Ciudad Autónoma de residencia en 2025
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Impuesto sobre el Patrimonio 2025

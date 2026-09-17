@@ -4,13 +4,13 @@ modelo:
       casilla:
         continuidad:
           m345-anio-nacimiento:
-            label: Ano de nacimiento
+            label: Año de nacimiento
           m345-beneficiario-nif:
             label: NIF del beneficiario persona con discapacidad
           m345-clave:
             label: Clave
           m345-codigo-provincia:
-            label: Codigo provincia
+            label: Código provincia
           m345-datos-adicionales-clave-i:
             label: Datos adicionales para la clave I
           m345-datos-adicionales-clave-m:
@@ -19,7 +19,7 @@ modelo:
             label: Datos adicionales para las claves A, B y C
           m345-datos-identificativos-empleador:
             label: Datos identificativos del empleador promotor o tomador del sistema
-              de prevision social
+              de previsión social
           m345-declaracion-complementaria-sustitutiva:
             label: Declaración complementaria o sustitutiva
           m345-declarado-nif:
@@ -29,7 +29,7 @@ modelo:
           m345-declarante-nif:
             label: NIF del declarante
           m345-declarante-razon-social:
-            label: Apellidos y nombre o razon social del declarante
+            label: Apellidos y nombre o razón social del declarante
           m345-devoluciones-excesos:
             label: Devoluciones o reintegros por excesos de aportaciones
           m345-ejercicio-declaracion:
@@ -37,7 +37,7 @@ modelo:
           m345-empleador-nif:
             label: NIF del empleador promotor o tomador
           m345-empleador-nombre:
-            label: Apellidos y nombre o razon social del empleador
+            label: Apellidos y nombre o razón social del empleador
           m345-entidad-aseguradora-nif:
             label: NIF de la entidad aseguradora
           m345-fondo-pensiones-nif:
@@ -55,9 +55,9 @@ modelo:
           m345-pepp-cuenta-subcuenta:
             label: Cuenta/subcuenta
           m345-pepp-denominacion:
-            label: Denominacion del PEPP
+            label: Denominación del PEPP
           m345-pepp-numero-inscripcion:
-            label: Número de inscripcion del PEPP
+            label: Número de inscripción del PEPP
           m345-persona-relacion:
             label: Persona con quien relacionarse
           m345-pias-fecha-primera-prima:
@@ -65,7 +65,7 @@ modelo:
           m345-pias-importe-acumulado:
             label: Importe acumulado PIAS
           m345-plan-pensiones-denominacion:
-            label: Denominacion del plan de pensiones
+            label: Denominación del plan de pensiones
           m345-rendimientos-trabajo-no-superiores-60000:
             label: Rendimientos íntegros del trabajo no superiores a 60.000 euros
           m345-representante-legal-nif:
@@ -80,6 +80,15 @@ modelo:
         title: Declaración informativa anual de planes y fondos de pensiones, partícipes,
           aportaciones y contribuciones
       revision:
+        '2022':
+          field:
+            label: Modelo 345, ejercicio 2022
+        '2023':
+          field:
+            label: Modelo 345, ejercicio 2023
+        '2024':
+          field:
+            label: Modelo 345, ejercicio 2024
         '2025':
           casilla:
             rendimientos-trabajo-superiores-60000:

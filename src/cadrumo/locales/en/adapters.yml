@@ -84,8 +84,6 @@ adapters:
           profile state.
         scope_missing: The Google consent screen returned without granting every required
           scope.
-        unsecured_mode_refused: Google OAuth refused because the secret store is running
-          in unsecured mode and the active profile carries a real Spanish tax identifier.
     profile_binding:
       errors:
         no_active_profile: No active Cadrumo profile is bound for Google OAuth.

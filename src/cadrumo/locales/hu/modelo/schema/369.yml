@@ -30,7 +30,10 @@ modelo:
                 title: Modelo 369 - Esquema Exterior (rendszer especial szolgáltatások
                   prestados szerinti no establecidos)
           field:
-            label: Casilla— adóügyi információ
+            label: 369-es modelo - Unión kívüli rendszer - a Közösségben nem letelepedett
+              adóalanyok által nyújtott szolgáltatásokra vonatkozó különös szabályozás
+              (LIVA 163. cikk octiesdecies-vicies). Negyedéves, a HAC/610/2021 rendelet
+              2(a) cikke szerint.
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -52,12 +55,14 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Importacion (rendszer especial IOSS)
           field:
-            label: Casilla— adóügyi információ
+            label: 369-es modelo - Importrendszer (IOSS) - importált áruk távértékesítésére
+              vonatkozó különös szabályozás (LIVA 163. cikk quinvicies-octovicies).
+              Havi, a HAC/610/2021 rendelet 2(c)/(d) cikke szerint.
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: 'A Modelo 369 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás tárgyát képező adóév
+              label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a casilla adatait: Időszak - bevallás.'
               label: A bevallás időszaka
@@ -83,4 +88,7 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Union (rendszer especial OSS Union)
           field:
-            label: Casilla— adóügyi információ
+            label: 369-es modelo - Uniós rendszer - a Közösségen belüli távértékesítésre,
+              elektronikus felületekre és a Közösségben letelepedett szolgáltatásokra
+              vonatkozó különös szabályozás (LIVA 163. cikk unvicies-quatervicies).
+              Negyedéves, a HAC/610/2021 rendelet 2(b) cikke szerint.

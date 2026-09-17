@@ -394,6 +394,10 @@ modelo:
             help: Tax information for casilla 60 of Modelo 714.
             label: Assets and rights - A1. Urban immovable property - Total value
               of the habitual dwelling eligible for exemption
+      construct:
+        m714-patrimonio-calculation:
+          field:
+            title: Form 714 Wealth Tax liability
       field:
         official_name: Wealth Tax. Return
         title: Modelo 714
@@ -412,10 +416,6 @@ modelo:
                 regime of article 93 of Law 35/2006 on personal income tax was elected
             identificacion-8:
               label: Autonomous Community or City of residence in 2020
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2021
         '2022':
@@ -432,10 +432,6 @@ modelo:
                 regime of article 93 of Law 35/2006 on personal income tax was elected
             identificacion-8:
               label: Autonomous Community or City of residence in 2022
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2022
         '2023':
@@ -452,10 +448,6 @@ modelo:
                 regime of article 93 of Law 35/2006 on personal income tax was elected
             identificacion-8:
               label: Autonomous Community or City of residence in 2023
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2023
         '2024':
@@ -472,10 +464,6 @@ modelo:
                 regime of article 93 of Law 35/2006 on personal income tax was elected
             identificacion-8:
               label: Autonomous Community or City of residence in 2024
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2024
         '2025':
@@ -492,9 +480,5 @@ modelo:
                 regime of article 93 of Law 35/2006 on personal income tax was elected
             identificacion-8:
               label: Autonomous Community or City of residence in 2025
-          construct:
-            m714-patrimonio-calculation:
-              field:
-                title: Form 714 Wealth Tax liability
           field:
             label: Wealth Tax 2025

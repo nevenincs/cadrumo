@@ -13,6 +13,9 @@ aggregation:
         vagy hibákat hordozhat, sosem mindkettőt és sosem egyiket sem.
   irnr_income_ledger:
     diagnostics:
+      foreign_source_out_of_scope: A(z) %{source_jurisdiction} source_jurisdiction
+        kívül esik a kiválasztott Modelo 210 változat által meghatározott forrás-hatókörön;
+        a TRLIRNR 13. cikke csak spanyolországi forrású jövedelmet enged.
       incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
         kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
         hivatalos tipo-renta kódra az irpf_category mezőből.
@@ -22,6 +25,16 @@ aggregation:
       tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
         tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
         és benyújtási időszakhoz.
+    errors:
+      income_type_codes_missing: A kiválasztott Modelo 210 revízió egyetlen, erre
+        a bevallási időszakra érvényes jövedelemtípus-kódot sem deklarál.
+      income_type_namespace_missing: A kiválasztott Modelo 210 revízió nem pontosan
+        egy kulcsolt jövedelemtípus-kód névteret deklarál.
+      registry_revision_mismatch: A beadott Modelo 210 revízió nem egyezik azzal a
+        revízióval, amelyet a rögzített jogosultság választ ki ehhez a modelóhoz,
+        adóévhez és időszakhoz.
+      source_scope_missing: A kiválasztott Modelo 210 változat nem határoz meg egyetlen
+        forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -35,10 +48,6 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
-      injected_repositories_missing_bienes_inversion_authority: A beadott áfa-tárolókhoz
-        kifejezett tárgyi eszköz jogosultság szükséges.
-      input_facts_missing_deduction_authority: A levonható áfa tényeihez pontos levonási
-        jogosultság szükséges.
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
@@ -47,8 +56,6 @@ aggregation:
         állapít meg, és az áfa-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
-      output_facts_carry_deduction_authority: A fizetendő áfa tényei nem hordozhatnak
-        levonási jogosultságot.
       rectification_consumed_more_than_once: Egy már helyesbített áfa-főkönyvi tény
         csak egyszer helyesbíthető.
       sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
@@ -61,7 +68,6 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
-      unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás
@@ -159,13 +165,8 @@ aggregation:
       observations_mismatch: Megfigyelések nem adhatók meg a kért modelóhoz.
       per_modelo_modelos_not_unique: A modelónkénti aggregáció modelóit pontosan egy
         szolgáltatónak kell birtokolnia.
-      per_modelo_providers_not_unique: A modelónkénti aggregáció szolgáltatóinak egyedinek
-        kell lenniük.
-      provider_modelos_not_unique: A szolgáltató modelóinak egyedinek kell lenniük.
       result_source_kinds_not_unique: Az eredmény forrástípusainak egyedinek kell
         lenniük.
-      source_kinds_mismatch: A forrástípusoknak meg kell egyezniük az elfogadott négyelemű
-        taxonómiával.
   source_mesh:
     errors:
       annual_summary_handoff_duplicate: 'Egynél több feloldó adta meg a 303-as modell
@@ -447,8 +448,6 @@ core:
     errors:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
-      registration_duplicate_callable: A projektválaszok implementációja kétszer lett
-        regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár

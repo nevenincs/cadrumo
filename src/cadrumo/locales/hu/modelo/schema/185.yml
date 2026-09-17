@@ -7,6 +7,10 @@ modelo:
             label: Az adóbevallás vonatkozási éve
           tipo-declaracion:
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+      construct:
+        modelo-185-informative:
+          field:
+            title: Modelo 185 bevallás tájékoztató
       field:
         official_name: Modelo 185. A tagok és önsegélyező-tagok járulékainak havi
           adatszolgáltatási bevallása.
@@ -98,9 +102,5 @@ modelo:
                 legalább 50%, 3 részmunkaidő 50% alatt, 4 nem alkalmazandó. A -2.
                 hónapra vonatkozik.'
               label: A -2. HÓNAP MUNKAIDŐ-TÍPUSA
-          construct:
-            modelo-185-informative:
-              field:
-                title: Modelo 185 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 185-ös modelo (HAC/1197/2025 rendelet), 2025. adóévtől

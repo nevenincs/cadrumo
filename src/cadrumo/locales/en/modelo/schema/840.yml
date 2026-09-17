@@ -1,6 +1,11 @@
 modelo:
   schema:
     '840':
+      construct:
+        modelo-840-iae-declaration:
+          field:
+            title: 'Modelo 840: IAE census declaration (registration, modification,
+              deregistration)'
       field:
         official_name: Modelo 840. Tax on Economic Activities return (registration,
           amendment, deregistration).
@@ -441,9 +446,5 @@ modelo:
                 840.
               label: Contact telephone number of the taxable person, dialling code
                 included
-          construct:
-            modelo-840-iae-declaration:
-              field:
-                title: Modelo 840 — tax information
           field:
-            label: Casilla— tax information
+            label: Modelo 840, tax years 2003 onwards (Order HAC/2572/2003)

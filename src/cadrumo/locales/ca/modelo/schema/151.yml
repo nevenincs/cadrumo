@@ -65,15 +65,27 @@ modelo:
           m151-58-provincia:
             help: Informació fiscal sobre informació fiscal de la casella 473-474
               del Modelo 151.
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
             help: 'Informació fiscal sobre informació fiscal de la casella 469-473
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
             help: 'Informació fiscal sobre informació fiscal de la casella 481-500
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
             help: 'Informació fiscal sobre informació fiscal de la casella 474-478
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           m151-descripcion-de-la-ganancia-patrimonial:
             help: Informació fiscal de la casella 15-114 del Modelo 151.
           m151-descripcion-del-elemento-patrimonial:
@@ -84,6 +96,7 @@ modelo:
           m151-ganancia-patrimonial-total-obtenida-10:
             help: 'Informació fiscal sobre informació fiscal de la casella 164-180
               del Modelo 151 Referències: [10].'
+            label: Guany Patrimonial total obtingut [10]
           m151-numero-de-protocolo:
             help: Informació fiscal de la casella 601-620 del Modelo 151.
           m151-numero-justificante-del-modelo-211:
@@ -139,30 +152,66 @@ modelo:
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 225-229
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 713-717
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 957-961
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 230-234
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 718-722
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 962-966
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p02-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 237-256
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 725-744
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 969-988
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
           p02-pagador-apellidos-o-razon-social-01:
             help: 'Consulteu la informació de la casella: Pagador. Cognoms o Raó social.'
             label: Pagador. Cognoms o raó social
@@ -190,39 +239,87 @@ modelo:
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 225-229
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
             help: 'Informació fiscal sobre informació fiscal de la casella 469-473
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 713-717
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 957-961
               del Modelo 151 Referències: [10].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 230-234
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
             help: 'Informació fiscal sobre informació fiscal de la casella 474-478
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 718-722
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 962-966
               del Modelo 151 Referències: [11].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
           p03-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'Informació fiscal sobre informació fiscal de la casella 237-256
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-02:
             help: 'Informació fiscal sobre informació fiscal de la casella 481-500
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'Informació fiscal sobre informació fiscal de la casella 725-744
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'Informació fiscal sobre informació fiscal de la casella 969-988
               del Modelo 151 Referències: [14].'
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
           p03-pagador-apellidos-o-razon-social-01:
             help: 'Consulteu la informació de la casella: Pagador. Cognoms o Raó social.'
             label: Pagador. Cognoms o raó social
@@ -250,6 +347,7 @@ modelo:
           p03-total-rendimientos-int-nmobiliaria-imputada-15:
             help: 'Consulteu la informació de la casella: Total rendiments íntegros/Renda
               immobiliària imputada [15].'
+            label: Total rendiments íntegres / Renda immobiliària imputada [15]
           p03-total-retenciones-o-ingresos-a-cuenta-16:
             help: 'Consulteu la informació de la casella: Total retencions o ingressos
               a compte [16].'
@@ -291,6 +389,7 @@ modelo:
           p06-ganancia-patrimonial-total-obtenida-10-02:
             help: 'Informació fiscal sobre informació fiscal de la casella 772-788
               del Modelo 151 Referències: [10].'
+            label: Guany Patrimonial total obtingut [10]
           p06-numero-de-protocolo-02:
             help: Informació fiscal de la casella 1209-1228 del Modelo 151.
           p06-numero-justificante-del-modelo-211-02:
@@ -298,6 +397,7 @@ modelo:
           p06-resto-ganancia-patrimonial-total-obtenida-10:
             help: 'Informació fiscal sobre informació fiscal de la casella 1229-1245
               del Modelo 151 Referències: [10].'
+            label: RESTA. Guany Patrimonial total obtingut [10]
           p06-resto-retencion-o-ingreso-a-cuenta-11:
             help: 'Informació fiscal sobre informació fiscal de la casella 1246-1262
               del Modelo 151 Referències: [11].'
@@ -362,6 +462,8 @@ modelo:
             help: 'Consulteu la informació de la casella: Quotes del impuesto sobre
               la Renda de no residents pagadas respecto de las rendes incloses en
               la declaració [34].'
+            label: Quotes de l'impost sobre la Renda de no Residents pagades respecte
+              de les rendes incloses en la declaració [34]
           p08-deduccion-por-doble-im-anjero-parte-estatal-28:
             help: 'Informació fiscal sobre informació fiscal de la casella 978-994
               del Modelo 151 Referències: [28].'
@@ -433,6 +535,10 @@ modelo:
           tipo-de-declaracion:
             help: 'Consulteu la informació de la casella: Tipus de declaració.'
             label: Tipus de declaració
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: Model 151 IRPF règim d'impatriats quota
       field:
         official_name: Modelo 151. Declaració de l'IRPF per a contribuents del règim
           especial aplicable als treballadors desplaçats a territori espanyol.
@@ -637,82 +743,30 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
               help: 'Consulteu la informació de la casella: Representant. NIF.'
               label: Representant. NIF
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'Informació fiscal sobre informació fiscal de la casella 236 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'Informació fiscal sobre informació fiscal de la casella 480 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'Informació fiscal sobre informació fiscal de la casella 724 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'Informació fiscal sobre informació fiscal de la casella 968 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'Informació fiscal sobre informació fiscal de la casella 235 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 479 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 723 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 967 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'Informació fiscal sobre informació fiscal de la casella 208-224
                 del Modelo 151 Referències: [9].'
@@ -881,82 +935,30 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 748-764
                 del Modelo 151 Referències: [3].'
               label: Valoració [3]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'Informació fiscal sobre informació fiscal de la casella 236 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'Informació fiscal sobre informació fiscal de la casella 480 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'Informació fiscal sobre informació fiscal de la casella 724 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'Informació fiscal sobre informació fiscal de la casella 968 del
                 Modelo 151 Referències: [13].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'Informació fiscal sobre informació fiscal de la casella 235 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 479 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 723 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 967 del
                 Modelo 151 Referències: [12].'
-              label: Dades addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'Informació fiscal sobre informació fiscal de la casella 208-224
                 del Modelo 151 Referències: [9].'
@@ -1117,8 +1119,6 @@ modelo:
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
               help: 'Consulteu la informació de la casella: Tipus de Renda [1].'
               label: Tipus de renda [1]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
-              label: Total rendiments íntegres / renda immobiliària imputada [15]
             x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
               help: 'Informació fiscal sobre informació fiscal de la casella 16-32
                 del Modelo 151 Referències: [3].'
@@ -1706,10 +1706,6 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 755-771
                 del Modelo 151 Referències: [9].'
               label: Guany o pèrdua (millora o 2a adquisició) [9]
-            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1h:
-              label: Guany patrimonial total obtingut [10]
-            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
-              label: Guany patrimonial total obtingut [10]
             x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
               help: 'Consulteu la informació de la casella: Notario o fedetario.'
               label: Notari o fedatari
@@ -1724,8 +1720,6 @@ modelo:
               label: Número de justificant del model 211
             x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
               label: Número de justificant del model 211
-            x-e0o3cbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              label: RESTA. Guany patrimonial total obtingut [10]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               help: 'Consulteu la informació de la casella: Tipus de Renda [1].'
               label: Tipus de renda [1]
@@ -1951,9 +1945,6 @@ modelo:
             x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d8:
               help: 'Consulteu la informació de la casella: Valor de transmissió [2].'
               label: Valor de transmissió [2]
-            x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
-              label: Quotes de l'impost sobre la renda de no residents pagades respecte
-                de les rendes incloses en la declaració [34]
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
               label: Descripció de l'element patrimonial
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
@@ -2058,10 +2049,6 @@ modelo:
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               help: 'Consulteu la informació de la casella: Valor de transmissió [2].'
               label: Valor de transmissió [2]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Model 151 IRPF règim d'impatriats quota
           field:
             label: Model 151 exercicis 2015 a 2022 (règim d'impatriats, escala general
               plana 24/47 després de la Llei 26/2014; la part de l'estalvi no està
@@ -2393,82 +2380,30 @@ modelo:
               help: 'Consulteu la informació de la casella: Representant. Tipus de
                 vía [26].'
               label: Representant. Tipus de via [26]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 479-479
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 723-723
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 967-967
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 480-480
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 724-724
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 968-968
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'Informació fiscal sobre informació fiscal de la casella 235-235
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'Informació fiscal sobre informació fiscal de la casella 236-236
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'Informació fiscal sobre informació fiscal de la casella 452-468
                 del Modelo 151 Referències: [09].'
@@ -2649,82 +2584,30 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 748-764
                 del Modelo 151 Referències: [03].'
               label: Valoració [03]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 479-479
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 723-723
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 967-967
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'Informació fiscal sobre informació fiscal de la casella 480-480
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'Informació fiscal sobre informació fiscal de la casella 724-724
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'Informació fiscal sobre informació fiscal de la casella 968-968
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Propietat (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Usdefruit (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'Informació fiscal sobre informació fiscal de la casella 235-235
                 del Modelo 151 Referències: [12].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Origen [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'Informació fiscal sobre informació fiscal de la casella 236-236
                 del Modelo 151 Referències: [13].'
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Situació [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Dades Addicionals de les rendes derivades de béns i immobles.
-                Referència cadastral [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'Informació fiscal sobre informació fiscal de la casella 452-468
                 del Modelo 151 Referències: [09].'
@@ -2897,8 +2780,6 @@ modelo:
             x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
               help: 'Consulteu la informació de la casella: Tipus de Renda [01].'
               label: Tipus de Renda [01]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmn4pbeehgiqqbedlnm4qbcd5gn4qb15lkmqs3lehgm8o9d64qg:
-              label: Total rendiments íntegres / Renda immobiliària imputada [15]
             x-e0o36bjmc5m6usj1cdkmurhd60pg:
               help: 'Informació fiscal sobre informació fiscal de la casella 16-32
                 del Modelo 151 Referències: [03].'
@@ -3841,10 +3722,6 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 755-771
                 del Modelo 151 Referències: [09].'
               label: Guany o pèrdua (Millora o 2a adquisició) [09]
-            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o0:
-              label: Guany Patrimonial total obtingut [10]
-            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
-              label: Guany Patrimonial total obtingut [10]
             x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6s:
               help: 'Consulteu la informació de la casella: Localidad/Población [37].'
               label: Localitat/Població [37]
@@ -3923,8 +3800,6 @@ modelo:
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: 'Consulteu la informació de la casella: Referencia Catastral [53].'
               label: Referència cadastral [53]
-            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              label: RESTA. Guany Patrimonial total obtingut [10]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: 'Consulteu la informació de la casella: Tipus de numeración [28].'
               label: Tipus de numeració [28]
@@ -4178,9 +4053,6 @@ modelo:
             x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1l:
               help: 'Consulteu la informació de la casella: Valor de transmissió [02].'
               label: Valor de transmissió [02]
-            x-e0oj0bj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdth74p9ddhgiqsj5dpq62bb4ckmmsrpde9in6qb4cln78pbj5lo62pr1cgmj6d0:
-              label: Quotes de l'impost sobre la Renda de no Residents pagades respecte
-                de les rendes incloses en la declaració [34]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: 'Informació fiscal sobre informació fiscal de la casella 15-114
                 del Modelo 151 Referències: [67].'
@@ -4293,9 +4165,7 @@ modelo:
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
               help: 'Consulteu la informació de la casella: Valor de transmissió [02].'
               label: Valor de transmissió [02]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Model 151 IRPF règim d'impatriats quota
           field:
-            label: Casella— informació fiscal
+            label: Model 151, exercicis 2025 i següents (règim d'impatriats; escala
+              general plana 24/47 art. 93.2.e.1 més escala de l'estalvi art. 93.2.e.2,
+              redacció vigent segons la Llei 7/2024)

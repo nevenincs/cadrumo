@@ -27,24 +27,19 @@ modelo:
           tipo-declaracion:
             help: Tax information for casilla of Modelo 721.
             label: Type of return (original / supplementary / replacement)
+      construct:
+        modelo-721-informative:
+          field:
+            title: 'Modelo 721: informative return of virtual currencies held abroad
+              through a custodian'
       field:
         official_name: Modelo 721. Informative return on virtual currencies located
           abroad.
         title: Virtual currencies located abroad (annual informative return)
       revision:
         '2023':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Modelo 721 declaration reporting virtual currencies held abroad
-                  through a custodian
           field:
-            label: Casilla — tax field
+            label: Modelo 721, tax year 2023 (Order HFP/886/2023)
         '2024':
-          construct:
-            modelo-721-informative:
-              field:
-                title: Modelo 721 declaration reporting virtual currencies held abroad
-                  through a custodian
           field:
-            label: Casilla — tax field
+            label: Modelo 721, tax year 2024 (annex replaced by Order HAC/1504/2024)

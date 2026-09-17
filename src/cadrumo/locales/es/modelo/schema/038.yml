@@ -7,6 +7,10 @@ modelo:
             label: Ejercicio al que se refiere la declaración
           tipo-declaracion:
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
+      construct:
+        modelo-038-informative:
+          field:
+            title: Modelo 038 declaración informativa
       field:
         official_name: Modelo 038. Relación de operaciones realizadas por entidades
           inscritas en registros públicos. Declaración informativa.
@@ -14,16 +18,8 @@ modelo:
           mensual)
       revision:
         2024-desde-06:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 declaración informativa
           field:
             label: Modelo 038, desde junio de 2024
         2025-y-siguientes:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 declaración informativa
           field:
             label: Modelo 038, ejercicios 2025 y siguientes

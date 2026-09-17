@@ -202,6 +202,8 @@ application:
           a Modelo 303 esetén építhető újra; a megadott modelo: {modelo}.'
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
+        persistence: Az áfa-kompenzációs előzmények tárolása meghiúsult a(z) %{operation}
+          művelet során (%{cause_type}).
         repository_backend_split: A Modelo 303 megfigyelési tárnak és az IVA-kompenzációs
           előzménytárnak egyetlen titkosított háttértárat kell megosztania, hogy mindkét
           írás együtt véglegesüljön.
@@ -234,21 +236,30 @@ application:
           nem egyeznek a nyilvántartási képlet operandusaival ({registry_operands}).
           Ezt csak a nyilvántartás javítása oldhatja meg; nincs biztonságos automatikus
           helyreállítás.
-        declaration_type_code_invalid: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
-          a(z) {value} értéket tartalmazza, amely nem eredményrendelkezési kód.
-        declaration_type_code_not_admitted: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
-          a(z) {value} kódot tartalmazza, amelyet a Modelo 303 diseño de registros
-          nem enged meg.
-        disposition_resultado_sign_incompatible: A megadott rendelkezés ({disposition})
+        casilla_id_invalid: A nyilvántartás érvénytelen mezőt ad meg a 303-as modelo
+          áthozatalának {mapping_key} leképezési kulcsához.
+        disposition_code_not_admitted: A(z) {code} eredményrendelkezési kód nem engedélyezett
+          a 303-as modelo áthozatalához.
+        disposition_code_undeclared: A nyilvántartás nem ad meg kódot a(z) {disposition}
+          eredményrendelkezéshez.
+        disposition_result_sign_incompatible: A megadott rendelkezés ({disposition})
           nem választható a(z) {resultado} benyújtott eredményhez. Csak az adózó döntheti
           el, melyik a helyes; nincs biztonságos automatikus helyreállítás.
-        duplicate_declaration_type_headers: A Modelo 303 átviteli bizonyíték {header_count}
-          darab {header_key} forrásfejlécet tartalmaz; pontosan egy szükséges.
+        duplicate_header_facts: A Modelo 303 átviteli bizonyíték {header_count} darab
+          {header_key} forrásfejlécet tartalmaz; pontosan egy szükséges.
         envelope_not_normalized: A Modelo 303 átvitel-előzmény már normalizált, a
           rendelkezést figyelembe vevő rendelkezésre álló és keletkezett párost igényel.
           Töltse be újra a benyújtott megfigyelést.
+        formula_mapping_required: A(z) {revision_id} változat nem ad meg 303-as modelo
+          áthozatali leképezést, így a rendelkezésre álló kompenzáció nem hivatkozhat
+          a képletére.
         generated_compensation_amount_missing: A validált Modelo 303 átviteli boríték
           nem tartalmaz keletkezett kompenzációs összeget a(z) {casilla_id} casillában.
+        header_code_invalid: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
+          a(z) {value} értéket tartalmazza, amely nem eredményrendelkezési kód.
+        header_code_not_admitted: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
+          a(z) {value} kódot tartalmazza, amelyet a Modelo 303 diseño de registros
+          nem enged meg.
         incomplete_supported_operands: 'A Modelo 303 átvitel normalizálása nem tudja
           levezetni a rendelkezésre álló kompenzációt a jelen lévő casillákból: {casilla_ids}.'
         invalid_registry_observation: 'A Modelo 303 átvitel bemenete nyilvántartási
@@ -262,22 +273,28 @@ application:
           {source_kind} bizonyíték egyet sem tartalmaz.
         local_filing_provenance_required: 'A helyi Modelo 303 benyújtás rendelkezésének
           meg kell őriznie az app_filing eredetét; jelenleg ez szerepel: {provenance_kind}.'
-        non_m303_envelope: 'A Modelo 303 átvitel-előzmény csak Modelo 303 megfigyeléseket
-          fogad el; a megadott modelo: {modelo}.'
-        official_declaration_type_header_required: A hivatalos Modelo 303 átviteli
-          bizonyítéknak pontosan egy {header_key} forrásfejlécet kell tartalmaznia;
-          a(z) {source_kind} bizonyíték egyet sem tartalmaz.
+        non_target_modelo_envelope: 'A Modelo 303 átvitel-előzmény csak Modelo 303
+          megfigyeléseket fogad el; a megadott modelo: {modelo}.'
         official_disposition_header_disagreement: A tipizált eredményrendelkezés ({typed_disposition})
           nem egyezik az AEAT nyilatkozattípus-fejlécével ({header_disposition}).
           Csak az adózó döntheti el, melyiket nyújtották be; nincs biztonságos automatikus
           helyreállítás.
-        resultado_casilla_required: A Modelo 303 átvitel normalizálásához szükséges
-          a benyújtott resultado casilla ({casilla_id}), amelyet a megfigyelés nem
-          tartalmaz.
+        official_header_required: A hivatalos Modelo 303 átviteli bizonyítéknak pontosan
+          egy {header_key} forrásfejlécet kell tartalmaznia; a(z) {source_kind} bizonyíték
+          egyet sem tartalmaz.
+        registry_resolution_unavailable: A nyilvántartás nem tudta feloldani a(z)
+          {modelo} modelo áthozatali leképezését a(z) {filing_year}. adóév {period}
+          időszakára.
+        registry_scope_invalid: 'A 303-as modelo áthozatalához modelo és időszak szükséges;
+          a kapott érték: {modelo} modelo, {filing_year}. adóév, {period} időszak.'
+        result_casilla_required: A Modelo 303 átvitel normalizálásához szükséges a
+          benyújtott resultado casilla ({casilla_id}), amelyet a megfigyelés nem tartalmaz.
         supplied_available_contradicts_derivation: A megadott rendelkezésre álló kompenzáció
           ({supplied_available}) ellentmond a(z) {basis} levezetésnek ({derived_available}).
           Csak az adózó döntheti el, melyik összeget nyújtották be; nincs biztonságos
           automatikus helyreállítás.
+        supplied_disposition_not_admitted: A megadott {disposition} eredményrendelkezés
+          nem engedélyezett a 303-as modelo áthozatalához.
         supplied_pair_contradicts_derivation: A megadott rendelkezésre álló és keletkezett
           páros ({supplied_available} és {supplied_generated}) ellentmond a(z) {basis}
           levezetésnek ({derived_generated}). Csak az adózó döntheti el, mely összegeket
@@ -368,9 +385,9 @@ application:
           megadott adattípusnak.
         text_casilla_not_string: A casilla szöveges bemenetének szöveges értéknek
           kell lennie.
-        unsupported_filing_year: 'A(z) {filing_year} adóév nincs támogatottként deklarálva.
-          A registry a következőket deklarálja: {supported_filing_years}. Vegye fel
-          az évet ide: {declaration}, miután megalapozta az előfeltételeit.'
+    errors:
+      persistence: A benyújtási előzmények tárolása meghiúsult a(z) %{operation} művelet
+        során (%{adapter_error}).
     export:
       errors:
         draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.
@@ -454,13 +471,9 @@ application:
         blank_modelo_selection: A kért modellválasztás nem tartalmazhat üres modellazonosítókat.
         filing_year_period_mismatch: 'Belső hiba: a(z) {filing_year} bevallási év
           nem egyezik a megadott {period} időszakkal.'
-        filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
-        modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
         period_type: 'Belső hiba: a futásidejű sémaszolgáltatóhoz Period objektum
           szükséges; {period_type} érkezett.'
-        provider_year_missing: A(z) %{modelo} modell %{revision} reviziójához nincs
-          szolgáltatói év.
         registry_empty: A(z) %{registry_root_name} registry gyökérben nincsenek modell
           definíciók.
         registry_empty_for_period: A nyilvántartási gyökérben nincs modell definíció
@@ -1094,6 +1107,14 @@ application:
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     findings:
+      art20_reduccion_possible: A(z) %{rnt_id} rovat %{rnt_value} EUR munkajövedelmet
+        (rendimiento neto del trabajo) tartalmaz az Art. 20 LIRPF felső határán belül,
+        ezért a(z) %{reduccion_id} rovat jogosult lehet egy jelenleg nullán deklarált
+        csökkentésre.
+      art52_reduccion_individual_sublimit_possible: A(z) %{reduccion_id} rovat %{reduccion_value}
+        EUR szociális előgondoskodási csökkentést tartalmaz az Art. 52 LIRPF %{sublimit}
+        EUR egyéni albehatárán felül, munkáltatói hozzájárulás szerinti bontás nélkül;
+        erősítse meg, hogy az egyéni albehatárt alkalmazták.
       attribution_received_uncaptured: A(z) %{filing_year} évi %{casilla_id} rovat
         %{casilla_value} EUR rögzítetlen hozzárendelt jövedelmet tartalmaz.
       attribution_received_unfolded: A(z) %{filing_year} évi %{total_base} EUR hozzárendelt
@@ -1125,6 +1146,12 @@ application:
         %{target_period}.'
       cuota_less_ledger_row_base_missing: A(z) %{transaction_id} tranzakciónak a(z)
         %{iva_category_code} áfakategóriában nincs bevallható alapja.
+      dt12a_reduccion_antiquity_possible: A(z) %{reduccion_id} rovat %{reduccion_value}
+        EUR DT 12.ª csökkentést tartalmaz; erősítse meg, hogy teljesül az általa megkövetelt
+        régiségi feltétel.
+      dt12a_reduccion_possible: A(z) %{ingreso_id} rovat %{ingreso_value} EUR munkajövedelmet
+        tartalmaz a DT 12.ª küszöbön felül, ezért a(z) %{reduccion_id} rovat jogosult
+        lehet egy jelenleg nullán deklarált csökkentésre.
       foreign_asset_redeclaration: '%{modelo_code} modelo %{filing_year}: a(z) %{group_code}
         csoportba tartozó %{position_key} külföldi vagyonelem értéke %{prior_value_eur}
         EUR összegről %{current_value_eur} EUR összegre nőtt, ami %{delta_value_eur}
@@ -1141,6 +1168,9 @@ application:
         kedvezménykorlátozó záradék vonatkozhat (%{document_id}).
       m210_rate_unavailable: Nem sikerült feloldani a 210-es modelo adókulcsát a(z)
         %{tipo_renta_code} jövedelemtípushoz a(z) %{filing_year} évre (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: A Modelo 303 közösségen belüli összege
+        (%{m303_total} EUR) és a Modelo 349 összege (%{m349_total} EUR) %{gap} EUR-val
+        eltér a(z) %{period_code} %{filing_year} időszakra.
       madrid_nacimiento_adopcion_eligibility_advisory: A(z) %{casilla_id} rovat %{weighted_count}
         súlyozott számmal jogosult lehet a madridi születési vagy örökbefogadási kedvezményre.
       missing_required_casilla: A kötelező %{casilla_id} rovat nem tartalmaz értéket.

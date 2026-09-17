@@ -1,6 +1,10 @@
 modelo:
   schema:
     '216':
+      construct:
+        modelo-216-calculation-construct:
+          field:
+            title: 'Modelo 216: cálculo de las retenciones del IRNR'
       field:
         official_name: Modelo 216. Impuesto sobre la Renta de no Residentes. Rentas
           obtenidas sin mediación de establecimiento permanente. Retenciones e ingresos
@@ -53,9 +57,5 @@ modelo:
                 concepto, ejercicio y período
             '21':
               label: Resultado a ingresar
-          construct:
-            modelo-216-calculation-construct:
-              field:
-                title: Modelo 216 calculation construct
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes

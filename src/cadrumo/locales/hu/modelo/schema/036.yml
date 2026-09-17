@@ -1305,6 +1305,10 @@ modelo:
           suc-f-nif:
             help: 'A Modelo 036 940. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutod vagy kedvezmenyezett adoazonosito szama (NIF) (13f jogutod)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: '036-os modelo: alap cenzusadatok'
       field:
         official_name: Modelo 036. Nyilvántartásba-vételi bevallás a vállalkozók,
           szakemberek és adólevonásra kötelezettek nyilvántartásába való bejelentkezésről,
@@ -1377,7 +1381,7 @@ modelo:
               label: A jogutod vagy kedvezmenyezett felszamolasi, reszesedesi vagy
                 oroklesi szazaleka (13f jogutod)
           field:
-            label: null
+            label: 036-os modelo, 2023-tól 2025. február 2-ig
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
@@ -3607,9 +3611,5 @@ modelo:
                 tenyleges tulajdonos azonositasara nem koteles szervezet.'
               label: Tenyleges tulajdonosok. A tenyleges tulajdonos azonositasara
                 nem koteles szervezet
-          construct:
-            modelo-036-censo-foundation:
-              field:
-                title: Modelo 036 censo foundation
           field:
-            label: Casilla— adóügyi információ
+            label: 036-os modelo 2025. február 3-tól

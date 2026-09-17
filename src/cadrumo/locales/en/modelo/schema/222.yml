@@ -344,25 +344,21 @@ modelo:
             help: Tax information about tax information in casilla  of Modelo 222.
             label: Instalment payment method (art. 40.2 gross tax liability / art.
               40.3 taxable base)
+      construct:
+        modelo-222-declaration-construct:
+          field:
+            title: 'Modelo 222: instalment payment under the tax consolidation regime'
       field:
         official_name: Modelo 222. Corporate Income Tax. Tax consolidation regime.
           Instalment payment.
         title: IS instalment payment under the tax consolidation regime (groups)
       revision:
         '2023':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Modelo 222 instalment payment under the tax consolidation regime
           field:
-            label: null
+            label: Modelo 222, tax year 2023
         '2024':
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Modelo 222 instalment payment under the tax consolidation regime
           field:
-            label: null
+            label: Modelo 222, tax year 2024
         2025-y-siguientes:
           casilla:
             '61':
@@ -395,9 +391,5 @@ modelo:
               help: Box 67 of the tax group's instalment payment settlement (Mod.
                 40.3 LIS).
               label: Mod. 40.3 LIS - Complementary tax (IC) correction - Increases
-          construct:
-            modelo-222-declaration-construct:
-              field:
-                title: Modelo 222— tax information
           field:
-            label: Casilla— tax information
+            label: Order HFP/227/2017 (Modelo 222), tax years 2025 onwards

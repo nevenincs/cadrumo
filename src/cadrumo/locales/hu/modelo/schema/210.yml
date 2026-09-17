@@ -5,115 +5,115 @@ modelo:
         continuidad:
           irnr-base-imponible:
             help: 'A casilla adatai: Casilla 8: irnr adóalap.'
-            label: 'Casilla 8: irnr adóalap'
+            label: Adóalap
           irnr-base-imponible-directa-g:
             help: 'A casilla adatai: Casilla 18: irnr adóalap directa g.'
-            label: 'Casilla 18: irnr adóalap directa g'
+            label: Adóalap (210 G)
           irnr-base-imponible-directa-i:
             help: 'A casilla adatai: Casilla 4: irnr adóalap directa i.'
-            label: 'Casilla 4: irnr adóalap directa i'
+            label: Adóalap (210 I)
           irnr-base-imponible-ganancias-h:
             help: 'A casilla adatai: Casilla 17: irnr adóalap ganancias h.'
-            label: 'Casilla 17: irnr adóalap ganancias h'
+            label: Adóalap ([12]+[16]) (210 H)
           irnr-convenio-indicador:
             help: 'A casilla adatai: Casilla 20: irnr convenio jelző.'
-            label: 'Casilla 20: irnr convenio jelző'
+            label: Egyezmény
           irnr-cuota-diferencial:
             help: 'A Modelo 210 31. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 31 — adóügyi információ
+            label: Differenciál adó
           irnr-cuota-integra:
             help: 'A casilla adatai: Casilla 22: irnr adóösszeg integra.'
-            label: 'Casilla 22: irnr adóösszeg integra'
+            label: Bruttó adó
           irnr-cuota-integra-reducida:
             help: 'A casilla adatai: Casilla 28: irnr adóösszeg integra reducida.'
-            label: 'Casilla 28: irnr adóösszeg integra reducida'
+            label: Csökkentett bruttó adó ([24]-[27])
           irnr-cuota-ley-irnr:
             help: 'A casilla adatai: Casilla 24: irnr adóösszeg ley irnr.'
-            label: 'Casilla 24: irnr adóösszeg ley irnr'
+            label: IRNR törvény szerinti adó ([22]-[23])
           irnr-deduccion-donativos:
             help: A Modelo 210 23. casilla adóügyi adatai.
-            label: Casilla 23 — adóügyi mező
+            label: Adományok utáni levonás
           irnr-exencion-dividendos:
             help: 'Lásd a mezőre vonatkozó tájékoztatást: Alkalmazott osztalékmentesség
               (évi 1500 eurós határ).'
             label: Alkalmazott osztalékmentesség (évi 1500 eurós határ)
           irnr-exenciones-ley-irnr-indicador:
             help: 'A casilla adatai: Casilla 19: irnr exenciones ley irnr jelző.'
-            label: 'Casilla 19: irnr exenciones ley irnr jelző'
+            label: Az IRNR törvény szerinti mentességek, az osztalékok kivételével
+              (éves korlát 1500 euró)
           irnr-ganancia-diferencia:
             help: 'A Modelo 210 11. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 11 — adóügyi információ
           irnr-ganancia-importe:
             help: 'A Modelo 210 12. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 12 — adóügyi információ
+            label: Megszerzés. Nyereség (210 H)
           irnr-ganancia-valor-adquisicion:
             help: 'A Modelo 210 10. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 10 — adóügyi információ
+            label: Megszerzés. Beszerzési érték (aktualizált) (210 H)
           irnr-ganancia-valor-transmision:
             help: 'A Modelo 210 9. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 9 — adóügyi információ
+            label: Megszerzés. Átruházási érték (210 H)
           irnr-gastos-deducibles:
             help: 'A Modelo 210 7. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 7 — adóügyi információ
+            label: Levonható költségek
           irnr-imputacion-inmobiliaria-coeficiente:
             help: 'A casilla adatai: Casilla coeficiente_imputacion_inmobiliaria:
               irnr ingatlanjövedelem imputációja coeficiente.'
-            label: 'Casilla coeficiente_imputacion_inmobiliaria: irnr ingatlanjövedelem
-              imputációja coeficiente'
+            label: Ingatlan-tulajdonlás utáni vélelmezett jövedelem együtthatója
           irnr-imputacion-inmobiliaria-dias:
             help: 'A casilla adatai: Casilla dias_imputacion: irnr ingatlanjövedelem
               imputációja dias.'
-            label: 'Casilla dias_imputacion: irnr ingatlanjövedelem imputációja dias'
+            label: Az imputálás napjai
           irnr-imputacion-inmobiliaria-valor-adquisicion:
             help: 'A casilla adatai: Casilla valor_adquisicion: irnr ingatlanjövedelem
               imputációja valor beszerzés.'
-            label: 'Casilla valor_adquisicion: irnr ingatlanjövedelem imputációja
-              valor beszerzés'
+            label: Beszerzési érték
           irnr-imputacion-inmobiliaria-valor-catastral:
             help: 'A casilla adatai: Casilla valor_catastral: irnr ingatlanjövedelem
               imputációja valor catastral.'
-            label: 'Casilla valor_catastral: irnr ingatlanjövedelem imputációja valor
-              catastral'
+            label: Kataszteri érték
           irnr-imputacion-inmobiliaria-valor-comprobado-administracion:
             help: A Modelo 210 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            label: Az adóhatóság által megállapított érték
           irnr-ingreso-devolucion-anterior:
             help: A Modelo 210 30. casilla adóügyi adatai.
-            label: Casilla 30 — adóügyi mező
+            label: Korábbi befizetés/visszatérítés (kizárólag kiegészítő önadózás
+              esetén)
           irnr-limite-convenio:
             help: 'Lásd a mezőre vonatkozó tájékoztatást: Egyezmény szerinti korlát.'
             label: Egyezmény szerinti korlát
           irnr-mejora-diferencia:
             help: 'A casilla adatai: Casilla 15: irnr mejora diferencia.'
-            label: 'Casilla 15: irnr mejora diferencia'
+            label: 15. rovat — adóadat
           irnr-mejora-ganancia:
             help: 'A Modelo 210 16. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 16 — adóügyi információ
+            label: Felújítás vagy 2. megszerzés. Nyereség (210 H)
           irnr-mejora-valor-adquisicion:
             help: 'A casilla adatai: Casilla 14: irnr mejora valor beszerzés.'
-            label: 'Casilla 14: irnr mejora valor beszerzés'
+            label: Felújítás vagy 2. megszerzés. Beszerzési érték (aktualizált) (210
+              H)
           irnr-mejora-valor-transmision:
             help: 'A casilla adatai: Casilla 13: irnr mejora valor átruházás.'
-            label: 'Casilla 13: irnr mejora valor átruházás'
+            label: Felújítás vagy 2. megszerzés. Átruházási érték (210 H)
           irnr-porcentaje-convenio:
             help: 'A casilla adatai: Casilla 25: irnr százalék convenio.'
-            label: 'Casilla 25: irnr százalék convenio'
+            label: Egyezményes százalék (%)
           irnr-reduccion-convenio:
             help: 'Lásd a mezőre vonatkozó tájékoztatást: Egyezmény alkalmazásából
               eredő csökkentés.'
             label: Egyezmény alkalmazásából eredő csökkentés
           irnr-rendimientos-integros:
             help: 'A casilla adatai: Casilla 5: irnr jövedelmek integros.'
-            label: 'Casilla 5: irnr jövedelmek integros'
+            label: Bruttó jövedelem
           irnr-retencion-practicada:
             help: 'A casilla adatai: Casilla 29: irnr retencion practicada.'
-            label: 'Casilla 29: irnr retencion practicada'
+            label: 29. rovat — adóadat
           irnr-tipo-gravamen:
             help: 'A casilla adatai: Casilla 21: irnr kulcs gravamen.'
-            label: 'Casilla 21: irnr kulcs gravamen'
+            label: Adókulcs
           irnr-tipo-renta:
             help: 'A casilla adatai: Casilla tipo_renta: irnr kulcs jövedelem.'
-            label: 'Casilla tipo_renta: irnr kulcs jövedelem'
+            label: Jövedelemtípus
       field:
         official_name: Modelo 210. A külföldi illetőségűek jövedelemadója. Állandó
           telephellyel nem rendelkező külföldi illetőségűek. Önbevallás.
@@ -126,50 +126,36 @@ modelo:
               field:
                 title: A 210-es modelo IRNR-számítása
           field:
-            label: null
+            label: 210-es modelo, 2023. adóév
         '2024':
           construct:
             m210-irnr-calculation:
               field:
                 title: A 210-es modelo IRNR-számítása
           field:
-            label: null
+            label: 210-es modelo, 2024. adóév
         '2025':
           casilla:
             base_imponible:
               help: 'Tekintse át a casilla adatait: Adóalap.'
-              label: Adóalap
             base_imponible_directa_g:
               help: 'Tekintse át a casilla adatait: Adóalap (210 G).'
-              label: Adóalap (210 G)
             base_imponible_directa_i:
               help: 'Tekintse át a casilla adatait: Adóalap (210 I).'
-              label: Adóalap (210 I)
             base_imponible_ganancias_h:
               help: 'Tekintse át a casilla adatait: Adóalap ([12]+[16]) (210 H).'
-              label: Adóalap ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
               help: 'A Modelo 210 . casilla adóügyi adatai: adóügyi információ.'
-              label: Ingatlan-tulajdonlás utáni vélelmezett jövedelem együtthatója
             convenio_indicador:
               help: 'Tekintse át a casilla adatait: Convenio.'
-              label: Egyezmény
-            cuota_diferencial:
-              label: Differenciál adó
             cuota_integra:
               help: 'Tekintse át a casilla adatait: Adóösszeg teljes.'
-              label: Bruttó adó
             cuota_integra_reducida:
               help: 'Tekintse át a casilla adatait: Adóösszeg teljes reducida ([24]-[27]).'
-              label: Csökkentett bruttó adó ([24]-[27])
             cuota_ley_irnr:
               help: 'Tekintse át a casilla adatait: Adóösszeg Ley IRNR ([22]-[23]).'
-              label: IRNR törvény szerinti adó ([22]-[23])
-            deduccion_donativos:
-              label: Adományok utáni levonás
             dias_imputacion:
               help: 'A Modelo 210 . casilla adóügyi adatai: adóügyi információ.'
-              label: Az imputálás napjai
             exencion_dividendos:
               help: A Modelo 210 6. casilla adóügyi adatai.
               label: Osztalékokra alkalmazott mentesség (éves korlát 1500 euró) (210
@@ -177,138 +163,94 @@ modelo:
             exenciones_ley_irnr_indicador:
               help: 'Tekintse át a casilla adatait: Exenciones Ley IRNR, kivéve dividendos
                 (límite éves 1.500 euros).'
-              label: Az IRNR törvény szerinti mentességek, az osztalékok kivételével
-                (éves korlát 1500 euró)
             ganancia_diferencia:
               help: 'Tekintse át a casilla adatait: Beszerzés. Diferencia (210 H).'
               label: Megszerzés. Különbözet (210 H)
-            ganancia_importe:
-              label: Megszerzés. Nyereség (210 H)
-            ganancia_valor_adquisicion:
-              label: Megszerzés. Beszerzési érték (aktualizált) (210 H)
-            ganancia_valor_transmision:
-              label: Megszerzés. Átruházási érték (210 H)
-            gastos_deducibles:
-              label: Levonható költségek
             ingreso_devolucion_anterior:
               help: 'Tekintse át a casilla adatait: Befizetés/Visszatérítés korábbi
                 (exclusivamente önadózási bevallás kiegészítő).'
-              label: Korábbi befizetés/visszatérítés (kizárólag kiegészítő önadózás
-                esetén)
             limite_convenio:
               help: 'Tekintse át a casilla adatait: Límite Convenio.'
               label: Egyezményes korlát
             mejora_diferencia:
               help: 'A Modelo 210 15. casilla adóügyi adatai: adóügyi információ.'
               label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
-            mejora_ganancia:
-              label: Felújítás vagy 2. megszerzés. Nyereség (210 H)
             mejora_valor_adquisicion:
               help: 'A Modelo 210 14. casilla adóügyi adatai: adóügyi információ.'
-              label: Felújítás vagy 2. megszerzés. Beszerzési érték (aktualizált)
-                (210 H)
             mejora_valor_transmision:
               help: 'A Modelo 210 13. casilla adóügyi adatai: adóügyi információ.'
-              label: Felújítás vagy 2. megszerzés. Átruházási érték (210 H)
             porcentaje_convenio:
               help: 'Tekintse át a casilla adatait: Százalék Convenio (%).'
-              label: Egyezményes százalék (%)
             reduccion_convenio:
               help: 'Tekintse át a casilla adatait: Reducción szerinti Convenio ([24]-[26]).'
               label: Egyezményes csökkentés ([24]-[26])
             rendimientos_integros:
               help: 'Tekintse át a casilla adatait: Jövedelmek íntegros.'
-              label: Bruttó jövedelem
             retencion_practicada:
               help: 'Tekintse át a casilla adatait: Retención practicada.'
               label: Alkalmazott forrásadó
             tipo_gravamen:
               help: 'A Modelo 210 21. casilla adóügyi adatai: adóügyi információ.'
-              label: Adókulcs
             tipo_renta:
               help: 'A Modelo 210 . casilla adóügyi adatai: adóügyi információ.'
-              label: Jövedelemtípus
             valor_adquisicion:
               help: 'A Modelo 210 . casilla adóügyi adatai: adóügyi információ.'
-              label: Beszerzési érték
             valor_catastral:
               help: 'Tekintse át a casilla adatait: Valor catastral.'
-              label: Kataszteri érték
             valor_comprobado_administracion:
               help: 'A Modelo 210 . casilla adóügyi adatai: adóügyi információ.'
-              label: Az adóhatóság által megállapított érték
           construct:
             m210-irnr-calculation:
               field:
-                title: Modelo 210 IRNR calculation
+                title: '210-es modelo: a nem rezidensek jövedelemadójának (IRNR) számítása'
           field:
             label: Adóév 2025 és következő
         2026-y-siguientes:
           casilla:
             base_imponible:
               help: A 210-es modelo 8. rovata, 2026. adóév.
-              label: Adóalap
             base_imponible_directa_g:
               help: A 210-es modelo 18. rovata, 2026. adóév.
-              label: Adóalap (210 G)
             base_imponible_directa_i:
               help: A 210-es modelo 4. rovata, 2026. adóév.
-              label: Adóalap (210 I)
             base_imponible_ganancias_h:
               help: A 210-es modelo 17. rovata, 2026. adóév.
-              label: Adóalap ([12]+[16]) (210 H)
             coeficiente_imputacion_inmobiliaria:
               help: 'A 210-es modelo adata, 2026. adóév: Ingatlan-tulajdonlás utáni
                 vélelmezett jövedelem együtthatója.'
-              label: Ingatlan-tulajdonlás utáni vélelmezett jövedelem együtthatója
             convenio_indicador:
               help: A 210-es modelo 20. rovata, 2026. adóév.
-              label: Egyezmény
             cuota_diferencial:
               help: A 210-es modelo 31. rovata, 2026. adóév.
-              label: Differenciál adó
             cuota_integra:
               help: A 210-es modelo 22. rovata, 2026. adóév.
-              label: Bruttó adó
             cuota_integra_reducida:
               help: A 210-es modelo 28. rovata, 2026. adóév.
-              label: Csökkentett bruttó adó ([24]-[27])
             cuota_ley_irnr:
               help: A 210-es modelo 24. rovata, 2026. adóév.
-              label: IRNR törvény szerinti adó ([22]-[23])
             deduccion_donativos:
               help: A 210-es modelo 23. rovata, 2026. adóév.
-              label: Adományok utáni levonás
             dias_imputacion:
               help: 'A 210-es modelo adata, 2026. adóév: Az imputálás napjai.'
-              label: Az imputálás napjai
             exencion_dividendos:
               help: A 210-es modelo 6. rovata, 2026. adóév.
               label: Osztalékokra alkalmazott mentesség (éves korlát 1500 euró) (210
                 R)
             exenciones_ley_irnr_indicador:
               help: A 210-es modelo 19. rovata, 2026. adóév.
-              label: Az IRNR törvény szerinti mentességek, az osztalékok kivételével
-                (éves korlát 1500 euró)
             ganancia_diferencia:
               help: A 210-es modelo 11. rovata, 2026. adóév.
               label: Megszerzés. Különbözet (210 H)
             ganancia_importe:
               help: A 210-es modelo 12. rovata, 2026. adóév.
-              label: Megszerzés. Nyereség (210 H)
             ganancia_valor_adquisicion:
               help: A 210-es modelo 10. rovata, 2026. adóév.
-              label: Megszerzés. Beszerzési érték (aktualizált) (210 H)
             ganancia_valor_transmision:
               help: A 210-es modelo 9. rovata, 2026. adóév.
-              label: Megszerzés. Átruházási érték (210 H)
             gastos_deducibles:
               help: A 210-es modelo 7. rovata, 2026. adóév.
-              label: Levonható költségek
             ingreso_devolucion_anterior:
               help: A 210-es modelo 30. rovata, 2026. adóév.
-              label: Korábbi befizetés/visszatérítés (kizárólag kiegészítő önadózás
-                esetén)
             limite_convenio:
               help: A 210-es modelo 26. rovata, 2026. adóév.
               label: Egyezményes korlát
@@ -317,42 +259,31 @@ modelo:
               label: Felújítás vagy 2. megszerzés. Különbözet (210 H)
             mejora_ganancia:
               help: A 210-es modelo 16. rovata, 2026. adóév.
-              label: Felújítás vagy 2. megszerzés. Nyereség (210 H)
             mejora_valor_adquisicion:
               help: A 210-es modelo 14. rovata, 2026. adóév.
-              label: Felújítás vagy 2. megszerzés. Beszerzési érték (aktualizált)
-                (210 H)
             mejora_valor_transmision:
               help: A 210-es modelo 13. rovata, 2026. adóév.
-              label: Felújítás vagy 2. megszerzés. Átruházási érték (210 H)
             porcentaje_convenio:
               help: A 210-es modelo 25. rovata, 2026. adóév.
-              label: Egyezményes százalék (%)
             reduccion_convenio:
               help: A 210-es modelo 27. rovata, 2026. adóév.
               label: Egyezményes csökkentés ([24]-[26])
             rendimientos_integros:
               help: A 210-es modelo 5. rovata, 2026. adóév.
-              label: Bruttó jövedelem
             retencion_practicada:
               help: A 210-es modelo 29. rovata, 2026. adóév.
               label: Alkalmazott forrásadó
             tipo_gravamen:
               help: A 210-es modelo 21. rovata, 2026. adóév.
-              label: Adókulcs
             tipo_renta:
               help: 'A 210-es modelo adata, 2026. adóév: Jövedelemtípus.'
-              label: Jövedelemtípus
             valor_adquisicion:
               help: 'A 210-es modelo adata, 2026. adóév: Beszerzési érték.'
-              label: Beszerzési érték
             valor_catastral:
               help: 'A 210-es modelo adata, 2026. adóév: Kataszteri érték.'
-              label: Kataszteri érték
             valor_comprobado_administracion:
               help: 'A 210-es modelo adata, 2026. adóév: Az adóhatóság által megállapított
                 érték.'
-              label: Az adóhatóság által megállapított érték
           construct:
             m210-irnr-calculation:
               field:

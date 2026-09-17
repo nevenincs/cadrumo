@@ -1,6 +1,11 @@
 modelo:
   schema:
     '840':
+      construct:
+        modelo-840-iae-declaration:
+          field:
+            title: '840-es modelo: az IAE cenzusbejelentése (bejelentkezés, módosítás,
+              kijelentkezés)'
       field:
         official_name: Modelo 840. A gazdasági tevékenységek adójának bevallása (bejelentkezés,
           adatmódosítás, kijelentkezés).
@@ -393,9 +398,5 @@ modelo:
             x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
               help: 'A Modelo 840 13. casilla adóügyi adatai: adóügyi információ.'
               label: Az adóalany kapcsolattartási telefonszáma, körzetszámmal
-          construct:
-            modelo-840-iae-declaration:
-              field:
-                title: Modelo 840 — adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 840-es modelo, 2003. adóévtől (HAC/2572/2003 rendelet)

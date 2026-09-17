@@ -1,6 +1,10 @@
 modelo:
   schema:
     '128':
+      construct:
+        modelo-128-calculation-construct:
+          field:
+            title: 'Model 128: càlcul de l''autoliquidació'
       field:
         official_name: Modelo 128. Retencions i ingressos a compte. Rendes o rendiments
           del capital mobiliari procedents d'operacions de capitalització i de contractes
@@ -36,9 +40,5 @@ modelo:
             '07':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-128-calculation-construct:
-              field:
-                title: Modelo 128 calculation construct
           field:
-            label: Casella— informació fiscal
+            label: Ordre EHA/3435/2007, exercicis 2019 i següents

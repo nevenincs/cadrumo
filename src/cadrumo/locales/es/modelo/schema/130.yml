@@ -1,6 +1,10 @@
 modelo:
   schema:
     '130':
+      construct:
+        modelo-130-direct-estimation-instalment:
+          field:
+            title: 'Modelo 130: pago fraccionado en estimación directa'
       field:
         official_name: Impuesto sobre la Renta de las Personas Físicas. Actividades
           económicas en estimación directa. Pago fraccionado.
@@ -49,9 +53,5 @@ modelo:
             saldo-negativo-fin-periodo:
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 17)
-          construct:
-            modelo-130-direct-estimation-instalment:
-              field:
-                title: Modelo 130 direct-estimation instalment filing
           field:
             label: Orden HAP/258/2015, ejercicios 2019 y siguientes

@@ -1,6 +1,10 @@
 modelo:
   schema:
     '126':
+      construct:
+        modelo-126-calculation-construct:
+          field:
+            title: 'Modelo 126: cálculo de la autoliquidación'
       field:
         official_name: Modelo 126. Retenciones e ingresos a cuenta. Rendimientos del
           capital mobiliario derivados de la contraprestación de toda clase de cuentas
@@ -36,9 +40,5 @@ modelo:
                 concepto, ejercicio y periodo
             '12':
               label: Resultado a ingresar
-          construct:
-            modelo-126-calculation-construct:
-              field:
-                title: Modelo 126 calculation construct
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

@@ -264,6 +264,11 @@ modelo:
             help: Importe declarado en el modelo 184. El diseno lo divide en parte
               entera y parte decimal.
             label: 'Valor liquidativo / ajustes: aumentos'
+      construct:
+        modelo-184-informative:
+          field:
+            title: Modelo 184 declaración informativa de entidades en régimen de atribución
+              de rentas
       field:
         official_name: Modelo 184. Declaración informativa anual de Entidades en régimen
           de atribución de rentas.
@@ -391,11 +396,6 @@ modelo:
               help: Casilla 94-95 del modelo 184, ejercicios 2023 y 2024.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casilla 76 del modelo 184, ejercicios 2023 y 2024.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Modelo 184 declaración informativa de entidades en régimen
-                  de atribución de rentas
           field:
             label: Modelo 184, ejercicios 2023 y 2024
         2025-y-siguientes:
@@ -492,10 +492,5 @@ modelo:
               help: Casilla 94-95 del modelo 184, ejercicio 2025.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casilla 76 del modelo 184, ejercicio 2025.
-          construct:
-            modelo-184-informative:
-              field:
-                title: Modelo 184 declaración informativa de entidades en régimen
-                  de atribución de rentas
           field:
             label: Modelo 184, ejercicios 2025 y siguientes

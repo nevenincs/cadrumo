@@ -279,6 +279,10 @@ modelo:
             label: Representante. 61 - Nº de Fax.
           tipo-de-declaracion:
             label: Tipo de declaración
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: Modelo 151 IRPF régimen impatriados cuota
       field:
         official_name: Modelo 151. Declaración del IRPF para contribuyentes del Régimen
           especial aplicable a los trabajadores desplazados a territorio español.
@@ -1151,10 +1155,6 @@ modelo:
               label: Valor de transmisión [2]
             x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
               label: Valor de transmisión [2]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Modelo 151 IRPF régimen impatriados cuota
           field:
             label: Modelo 151 ejercicios 2015 a 2022 (régimen impatriados, escala
               general plana 24/47 tras Ley 26/2014; parte del ahorro no modelada en
@@ -2330,10 +2330,6 @@ modelo:
               label: Valor de transmisión [02]
             x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
               label: Valor de transmisión [02]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Modelo 151 IRPF régimen impatriados cuota
           field:
             label: Modelo 151 ejercicios 2025 y siguientes (régimen impatriados; escala
               general plana 24/47 art. 93.2.e.1º + escala del ahorro art. 93.2.e.2º

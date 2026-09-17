@@ -137,6 +137,10 @@ modelo:
               de tipo 2. Si un mismo perceptor figura en varios registros, se computa
               tantas veces como figure relacionado.
             label: Número total de registros de perceptor declarados
+      construct:
+        modelo-270-informative:
+          field:
+            title: Modelo 270 declaración informativa
       field:
         official_name: Modelo 270. Resumen anual de retenciones e ingresos a cuenta.
           Gravamen especial sobre los premios de determinadas loterías y apuestas.
@@ -144,16 +148,8 @@ modelo:
           loterías
       revision:
         2013-2022:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 declaración informativa
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 a 2022
         2023-y-siguientes:
-          construct:
-            modelo-270-informative:
-              field:
-                title: Modelo 270 declaración informativa
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2023 a 2024

@@ -69,6 +69,11 @@ modelo:
             label: Retenciones e ingresos a cuenta total
           total-perceptores-count:
             label: Número total de perceptores
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: Resumen anual del Modelo 180 a partir de las declaraciones trimestrales
+              del Modelo 115
       field:
         official_name: Modelo 180. Declaración Informativa. Retenciones e ingresos
           a cuenta. Rendimientos procedentes del arrendamiento de inmuebles urbanos.
@@ -76,16 +81,8 @@ modelo:
         title: Resumen anual de retenciones sobre arrendamientos urbanos
       revision:
         2019-2022:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Modelo 180 annual summary from Modelo 115 quarterly filings
           field:
             label: Orden HAP/1732/2014, ejercicios 2019 a 2022
         2023-y-siguientes:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Modelo 180 annual summary from Modelo 115 quarterly filings
           field:
             label: Orden HAP/1732/2014 actualizada por Orden HFP/1284/2023

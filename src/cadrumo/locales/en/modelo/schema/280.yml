@@ -91,7 +91,8 @@ modelo:
       revision:
         2022-2024:
           field:
-            label: null
+            label: Modelo 280, tax years 2022 to 2024
         '2025':
           field:
-            label: Casilla — tax field
+            label: Modelo 280, tax year 2025 (Order HAP/2118/2015; Orders HFP/1822/2016,
+              HAC/1276/2019 and HFP/1192/2022)

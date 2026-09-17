@@ -28,11 +28,11 @@ modelo:
                 title: Modelo 296 annual information return on IRNR withholding and
                   payments on account without a permanent establishment
           field:
-            label: null
+            label: Modelo 296, tax year 2023
         2024-y-siguientes:
           construct:
             modelo-296-calculation-construct:
               field:
-                title: Modelo 296 calculation construct
+                title: 'Modelo 296: annual summary of IRNR withholdings'
           field:
-            label: Casilla— tax information
+            label: Order HAC/56/2024, tax years 2024 onwards

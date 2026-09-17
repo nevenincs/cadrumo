@@ -16072,6 +16072,9 @@ modelo:
             help: Adja meg vagy ellenőrizze a(z) „Korlátból kizárt K+F+i levonások
               - Kiegészítő információ a levonási korlátok kiszámításához - Az adómegállapítási
               időszak kutatás-fejlesztési kiadásai [00814]” értékét ehhez az önadózáshoz.
+            label: Korlátból kizárt K+F+i levonások - Kiegészítő információk a levonási
+              korlátok számításához - Az adóidőszak kutatás-fejlesztési ráfordításai
+              [00814]
           is-deduccion-idi-excluida-limite-innovacion:
             help: Adja meg vagy ellenőrizze a(z) „Korlátból kizárt K+F+i levonások
               - 2014 Technológiai innováció - Ebben az elszámolásban alkalmazva [00850]”
@@ -16433,6 +16436,60 @@ modelo:
               az önadózáshoz.
             label: Saját tőke változásainak kimutatása (II) - EGYENLEG, IDŐSZAK VÉGÉN
               - Tőke - Jegyzett [00632]
+          is-ecpn-total-cambios-ajuste-criterio-resultados-ejercicios-anteriores:
+            label: Saját tőke változásainak kimutatása (II) - Előző időszakok számviteli
+              elveinek változása miatti kiigazítások - Előző időszakok eredményei
+              [00399]
+          is-ecpn-total-cambios-combinacion-negocios-capital-escriturado:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése (csökkenése)
+              - Tőke - Jegyzett [00590]
+          is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
+            label: Elszámolás III - Adóalap - Adóalap [00552]
+          is-ecpn-total-cambios-conversion-pasivos-prima-emision:
+            label: Elszámolás III - Adóalap - Adóalap a negatív adóalapok kompenzálása
+              előtt [00550]
+          is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - (-) Osztalékfizetés - Saját részvények és üzletrészek
+              [00566]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
+            label: Elszámolás III - Adóalap - Teljes adókötelezettség [00562]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - (-) Osztalékfizetés - Tőke - Be nem hívott [00563]
+          is-ecpn-total-cambios-distribucion-dividendos-otras-aportaciones-socios:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - (-) Osztalékfizetés - Tagok egyéb hozzájárulásai [00568]
+          is-ecpn-total-cambios-distribucion-dividendos-reservas:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - (-) Osztalékfizetés - Tartalékok [00565]
+          is-ecpn-total-cambios-distribucion-dividendos-resultados-ejercicios-anteriores:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - (-) Osztalékfizetés - Előző időszakok eredményei [00567]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Tőke - Jegyzett [00576]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-no-exigido:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Tőke - Be nem hívott [00577]
+          is-ecpn-total-cambios-operaciones-acciones-propias-otras-aportaciones-socios:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Tagok egyéb hozzájárulásai [00582]
+          is-ecpn-total-cambios-operaciones-acciones-propias-resultados-ejercicios-anteriores:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
+              - Előző időszakok eredményei [00581]
+          is-ecpn-total-cambios-otras-operaciones-socios-capital-no-exigido:
+            label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal vagy
+              tulajdonosokkal - Egyéb műveletek tagokkal vagy tulajdonosokkal - Tőke
+              - Be nem hívott [00605]
+          is-ecpn-total-cambios-otras-variaciones-capital-no-exigido:
+            label: Saját tőke változásainak kimutatása (II) - Saját tőke egyéb változásai
+              - Tőke - Be nem hívott [00619]
           is-ecpn-total-ingresos-gastos-reconocidos:
             help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
               (I) - Átvezetések az eredménykimutatásba - ELSZÁMOLT BEVÉTELEK ÉS RÁFORDÍTÁSOK
@@ -18698,6 +18755,11 @@ modelo:
               alkalmazandó [02260]” értékét ehhez az önadózáshoz.
             label: Alkalmazatlan üzemi eredménykorlát miatti hozzáadás függőben -
               Exercici generació 2020 - Jövőbeli időszakokban alkalmazandó [02260]
+      construct:
+        modelo-200-foundation:
+          field:
+            title: '200-as modelo: éves társasági adó elszámolás (2024-től), a részletfizetések
+              levonási lánca'
       field:
         official_name: Társasági adó. A külföldi illetőségűek jövedelemadója (állandó
           telephelyek, valamint külföldön alapított, spanyol területen jelenléttel
@@ -18827,10 +18889,6 @@ modelo:
                 130. cikk - Keletkezés éve - 2025(*) - Jövőbeli időszakokban felhasználásra
                 váró halasztott adókövetelések - Érvényesíthető követeléssé alakítás
                 jogával, adótöbblet [00812]
-            00814:
-              label: Korlátból kizárt K+F+i levonások - Kiegészítő információ a levonási
-                korlátok kiszámításához - Az adómegállapítási időszak kutatás-fejlesztési
-                kiadásai [00814]
             00816:
               help: Adja meg vagy ellenőrizze a(z) „Halasztott adókövetelések átalakítása
                 az adóhatósággal szemben érvényesíthető követeléssé - Halasztott adókövetelések
@@ -22727,11 +22785,6 @@ modelo:
               label: Külföldön alapított, jövedelem-tulajdonítási rendszerben működő,
                 spanyol területen jelen lévő jogalanyok (TRLIRNR 38. cikk) - Csökkenés
                 - Évi korrekciók - Átmeneti (korábbi időszakokból eredő) [03368]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 és következő)
-                  - részletfizetések deduction chain
           field:
             label: Modelo 200 adóévs 2024 és következő (DR200e25.xls)
         2025-y-siguientes:
@@ -22821,10 +22874,6 @@ modelo:
               label: Halasztott adókövetelések adóhatósággal szemben követelhető hitellé
                 alakítása - Halasztott adókövetelések (AID). LIS 130. cikk - Keletkezés
                 időszaka - 2025(*) - Jövőbeli időszakokban alkalmazandó AID...
-            00814:
-              label: Korlátból kizárt K+F+i levonások - Kiegészítő információk a levonási
-                korlátok számításához - Az adóidőszak kutatás-fejlesztési ráfordításai
-                [00814]
             00816:
               help: Adja meg vagy ellenőrizze a(z) „Az űrlap adóadata” értékét ehhez
                 az önadózáshoz.
@@ -26874,109 +26923,68 @@ modelo:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Előző időszakok számviteli elveinek változása miatti kiigazítások
                 - Előző időszakok eredményei [00399]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Előző időszakok számviteli
-                elveinek változása miatti kiigazítások - Előző időszakok eredményei
-                [00399]
             x-8h834c1g60oj0ehg60qjac0:
               help: Adja meg vagy ellenőrizze a(z) „Elszámolás III - Adóalap - Adóalap
                 a negatív adóalapok kompenzálása előtt [00550]” értékét ehhez az önadózáshoz.
-              label: Elszámolás III - Adóalap - Adóalap a negatív adóalapok kompenzálása
-                előtt [00550]
             x-8h834c1g60oj0ehg60qjacg:
               help: Adja meg vagy ellenőrizze a(z) „Elszámolás III - Adóalap - Adóalap
                 [00552]” értékét ehhez az önadózáshoz.
-              label: Elszámolás III - Adóalap - Adóalap [00552]
             x-8h834c1g60oj0ehg60qjccg:
               help: Adja meg vagy ellenőrizze a(z) „Elszámolás III - Adóalap - Teljes
                 adókötelezettség [00562]” értékét ehhez az önadózáshoz.
-              label: Elszámolás III - Adóalap - Teljes adókötelezettség [00562]
             x-8h834c1g60oj0ehg60qjcco:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - (-) Osztalékfizetés
                 - Tőke - Be nem hívott [00563]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - (-) Osztalékfizetés - Tőke - Be nem hívott
-                [00563]
             x-8h834c1g60oj0ehg60qjcd8:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - (-) Osztalékfizetés
                 - Tartalékok [00565]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - (-) Osztalékfizetés - Tartalékok [00565]
             x-8h834c1g60oj0ehg60qjcdg:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - (-) Osztalékfizetés
                 - Saját részvények és üzletrészek [00566]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - (-) Osztalékfizetés - Saját részvények és üzletrészek
-                [00566]
             x-8h834c1g60oj0ehg60qjcdo:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - (-) Osztalékfizetés
                 - Előző időszakok eredményei [00567]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - (-) Osztalékfizetés - Előző időszakok eredményei
-                [00567]
             x-8h834c1g60oj0ehg60qjce0:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - (-) Osztalékfizetés
                 - Tagok egyéb hozzájárulásai [00568]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - (-) Osztalékfizetés - Tagok egyéb hozzájárulásai
-                [00568]
             x-8h834c1g60oj0ehg60qjedg:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Műveletek saját részvényekkel
                 vagy üzletrészekkel - Tőke - Jegyzett [00576]” értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Tőke - Jegyzett [00576]
             x-8h834c1g60oj0ehg60qjedo:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Műveletek saját részvényekkel
                 vagy üzletrészekkel - Tőke - Be nem hívott [00577]” értékét ehhez
                 az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Tőke - Be nem hívott [00577]
             x-8h834c1g60oj0ehg60qjgc8:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Műveletek saját részvényekkel
                 vagy üzletrészekkel - Előző időszakok eredményei [00581]” értékét
                 ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Előző időszakok eredményei [00581]
             x-8h834c1g60oj0ehg60qjgcg:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Műveletek saját részvényekkel
                 vagy üzletrészekkel - Tagok egyéb hozzájárulásai [00582]” értékét
                 ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Műveletek saját részvényekkel vagy üzletrészekkel
-                - Tagok egyéb hozzájárulásai [00582]
             x-8h834c1g60oj0ehg60qjic0:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Üzleti kombinációból
                 eredő saját tőke növekedése (csökkenése) - Tőke - Jegyzett [00590]”
                 értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Üzleti kombinációból eredő saját tőke növekedése
-                (csökkenése) - Tőke - Jegyzett [00590]
             x-8h834c1g60oj0ehg60r30d8:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Műveletek tagokkal vagy tulajdonosokkal - Egyéb műveletek tagokkal
                 vagy tulajdonosokkal - Tőke - Be nem hívott [00605]” értékét ehhez
                 az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Műveletek tagokkal
-                vagy tulajdonosokkal - Egyéb műveletek tagokkal vagy tulajdonosokkal
-                - Tőke - Be nem hívott [00605]
             x-8h834c1g60oj0ehg60r32e8:
               help: Adja meg vagy ellenőrizze a(z) „Saját tőke változásainak kimutatása
                 (II) - Saját tőke egyéb változásai - Tőke - Be nem hívott [00619]”
                 értékét ehhez az önadózáshoz.
-              label: Saját tőke változásainak kimutatása (II) - Saját tőke egyéb változásai
-                - Tőke - Be nem hívott [00619]
             x-8h834c1g60oj2ehg60q32do:
               help: Adja meg vagy ellenőrizze a(z) „Elszámolás II - Az eredménykimutatás
                 eredményének korrekciói - Az eredménykimutatás eredményének összes
@@ -27087,10 +27095,5 @@ modelo:
                 ehhez az önadózáshoz.
               label: Saját tőke változásainak kimutatása (III) - Saját tőke egyéb
                 változásai - Időszak eredménye [00625]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 és következő)
-                  - részletfizetések deduction chain
           field:
             label: Modelo 200 adóévs 2024 és következő (DR200e25.xls)

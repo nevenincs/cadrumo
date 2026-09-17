@@ -23,6 +23,11 @@ modelo:
             help: Suma de las retenciones e ingresos a cuenta practicados sobre las
               rentas declaradas.
             label: Retenciones e ingresos a cuenta
+      construct:
+        modelo-194-calculation-construct:
+          field:
+            title: 'Modelo 194: resumen anual de retenciones sobre rendimientos del
+              capital mobiliario'
       field:
         official_name: Modelo 194. Impuesto sobre la Renta de las Personas Físicas,
           Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos
@@ -33,23 +38,11 @@ modelo:
         title: Retenciones capital mobiliario y transmisión de activos - resumen anual
       revision:
         '2019':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, ejercicio 2019
         '2023':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, ejercicio 2023
         '2024':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, ejercicio 2024

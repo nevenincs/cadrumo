@@ -5,6 +5,11 @@ modelo:
         continuidad:
           filing-year:
             label: Ejercicio de devengo
+      construct:
+        modelo-576-autoliquidacion:
+          field:
+            title: Autoliquidación del Impuesto Especial sobre Determinados Medios
+              de Transporte
       field:
         official_name: Modelo 576. Impuesto Especial sobre Determinados Medios de
           Transporte. Autoliquidación.
@@ -102,10 +107,5 @@ modelo:
               label: Liquidación. Resultado de la liquidación
             x-dhkn2bjkd5o6u:
               label: Liquidación. Tipo %
-          construct:
-            modelo-576-autoliquidacion:
-              field:
-                title: Autoliquidación del Impuesto Especial sobre Determinados Medios
-                  de Transporte
           field:
             label: Orden EHA/3851/2007, ejercicios 2008 y siguientes

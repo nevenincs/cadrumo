@@ -1019,6 +1019,9 @@ cli:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
+        no_m130_revisions: Nincs negyedéves Modelo 130 piszkozat revízió a(z) %{year}
+          adóévre.
+        no_m130_units: Nincs Modelo 130 piszkozat munkaegység a(z) %{year} adóévre.
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -3539,16 +3542,6 @@ cli:
         forfait számítási motor még nem elérhető; beadás előtt ellenőrizze az egyszerűsített
         rezsim casillait.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
-  registry:
-    manuals:
-      verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik:
-        %{target}'
-      verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik:
-        %{target}'
-      verify_missing_manifest: '%{manifest_path} hiányzik; futtasd a ''aeat manual
-        fetch'' parancsot a létrehozásához'
-      verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name}
-        fordítási kulcsa'
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'

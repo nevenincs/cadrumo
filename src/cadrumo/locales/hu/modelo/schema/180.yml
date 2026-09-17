@@ -104,6 +104,11 @@ modelo:
           total-perceptores-count:
             help: A Modelo 180 136-144. casilla adóügyi adatai.
             label: Kedvezményezettek teljes száma
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: A 180-as modelo éves összesítője a 115-ös modelo negyedéves bevallásai
+              alapján
       field:
         official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
           és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves
@@ -111,18 +116,8 @@ modelo:
         title: Városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások éves összesítője
       revision:
         2019-2022:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: A 180. számú nyomtatvány éves összesítése a 115. számú nyomtatvány
-                  negyedéves bevallásaiból
           field:
-            label: Casilla— adóügyi információ
+            label: HAP/1732/2014 rendelet, 2019-2022. adóévek
         2023-y-siguientes:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: A 180. számú nyomtatvány éves összesítése a 115. számú nyomtatvány
-                  negyedéves bevallásaiból
           field:
-            label: Casilla— adóügyi információ
+            label: HAP/1732/2014 rendelet a HFP/1284/2023 rendelettel módosítva

@@ -5,12 +5,17 @@ modelo:
         continuidad:
           actividad-cnae:
             help: Tax information for casilla of Modelo 232.
-            label: NACE code of the principal activity
+            label: CNAE code of the main activity
           filing-year:
             help: Tax information for casilla of Modelo 232.
-            label: Accrual year
+            label: Accrual tax year
           tipo-ejercicio-232:
             help: Tax information for casilla of Modelo 232.
+      construct:
+        modelo-232-informative:
+          field:
+            title: 'Modelo 232: informative return of related-party transactions and
+              tax haven dealings'
       field:
         official_name: Modelo 232. Informative return of related-party transactions
           and of transactions and situations relating to countries or territories
@@ -227,13 +232,8 @@ modelo:
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Financial year type (12 calendar months / 12 months of 365 days
                 / less than 12 months)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of transactions vinculadas
-                  and paraisos fiscales
           field:
-            label: Casilla— tax information
+            label: Modelo 232, tax years 2016-2017 (Order HFP/816/2017 v13)
         2018-y-siguientes:
           casilla:
             vinculada-1-fjo:
@@ -383,17 +383,10 @@ modelo:
               label: 'Related party 5: Type of relationship'
             x-chim6r1ecdn62p8:
               help: NACE code of the principal activity
-              label: CNAE code of the main activity
             x-chim6r1ecll6asj3d5hmiro:
               help: Accrual year
-              label: Accrual tax year
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Type of tax year (12 calendar months / 12 months of 365 days
                 / fewer than 12 months)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of transactions vinculadas
-                  and paraisos fiscales
           field:
-            label: Casilla— tax information
+            label: Modelo 232, tax years 2018 onwards (Order HFP/816/2017 v14)

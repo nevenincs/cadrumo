@@ -32,7 +32,9 @@ modelo:
                 title: Modelo 369 - Esquema Exterior (règim especial serveis prestados
                   per no establecidos)
           field:
-            label: Casella — informació fiscal
+            label: Model 369 - Règim exterior a la Unió - règim especial de serveis
+              prestats per subjectes passius no establerts a la Comunitat (LIVA art.
+              163 octiesdecies a vicies). Trimestral segons l'HAC/610/2021 art. 2(a).
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -93,4 +95,7 @@ modelo:
               field:
                 title: Modelo 369 - Esquema Union (règim especial OSS Union)
           field:
-            label: Casella — informació fiscal
+            label: Model 369 - Règim de la Unió - règim especial de vendes intracomunitàries
+              a distància, interfícies electròniques i serveis establerts a la Comunitat
+              (LIVA art. 163 unvicies a quatervicies). Trimestral segons l'HAC/610/2021
+              art. 2(b).

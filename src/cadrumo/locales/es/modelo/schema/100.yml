@@ -3353,6 +3353,38 @@ modelo:
           resultado-ingresar-o-devolver-irpf:
             label: Resultado a ingresar o a devolver (casilla [0670] o casilla [0695]
               de la declaración)
+      construct:
+        renta-anexo-c-base-liquidable-negativa-general:
+          field:
+            title: Modelo 100 Anexo C base liquidable general negativa carry-forward
+        renta-cuota-chain:
+          field:
+            title: 'Modelo 100: cadena de cálculo de la cuota del IRPF'
+        renta-economic-activities:
+          field:
+            title: Modelo 100 economic-activity dependency evidence
+        renta-mini-model-deduccion-madrid-nacimiento-adopcion:
+          field:
+            title: Modelo 100 2025 Comunidad de Madrid nacimiento/adopción deducción
+              (casilla 1039)
+        renta-movable-capital:
+          field:
+            title: Modelo 100 movable-capital dependency evidence
+        renta-observation-parsing:
+          field:
+            title: Modelo 100 filed-data observation capture
+        renta-payments-retentions:
+          field:
+            title: Modelo 100 retentions and payments on account
+        renta-real-estate-capital:
+          field:
+            title: Modelo 100 real-estate capital dependency evidence
+        renta-source-foundation:
+          field:
+            title: Modelo 100 source, layout, and simulator evidence
+        renta-work-income:
+          field:
+            title: 'Modelo 100: evidencia de dependencia de los rendimientos del trabajo'
       field:
         official_name: Modelo 100. Declaración del Impuesto sobre la Renta de las
           Personas Físicas.
@@ -5313,13 +5345,10 @@ modelo:
             '1648':
               label: Reducción aplicable (D.T. 9.ª de la Ley del Impuesto)
           construct:
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2020 retenciones, pagos fraccionados and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2020: retenciones, pagos fraccionados y retenciones
+                  de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2020 estimacion directa aggregators
@@ -6656,13 +6685,10 @@ modelo:
             '1789':
               label: Código País/Country code
           construct:
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2021 retenciones, pagos fraccionados and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2021: retenciones, pagos fraccionados y retenciones
+                  de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2021 estimacion directa aggregators
@@ -8056,13 +8082,10 @@ modelo:
               label: Incremento por gastos en guarderías o centros de educación infantil
                 autorizados (cantidades no aplicadas en el ejercicio 2021)
           construct:
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2022 retenciones, pagos fraccionados and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2022: retenciones, pagos fraccionados y retenciones
+                  de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2022 estimacion directa aggregators
@@ -9437,13 +9460,10 @@ modelo:
             '1977':
               label: Tipo de operación
           construct:
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2023 retenciones, pagos fraccionados and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2023: retenciones, pagos fraccionados y retenciones
+                  de otros modelos relacionados'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2023 estimacion directa aggregators
@@ -11081,16 +11101,10 @@ modelo:
               label: Prestaciones públicas por maternidad y paternidad exentas percibidas
                 del INSS
           construct:
-            renta-anexo-c-base-liquidable-negativa-general:
-              field:
-                title: Modelo 100 Anexo C base liquidable general negativa carry-forward
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2024 retenciones, pagos fraccionados and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2024: retenciones, pagos fraccionados y retenciones
+                  de otros modelos relacionados'
             renta-final-settlement:
               field:
                 title: Modelo 100 2024 final settlement result
@@ -11120,7 +11134,7 @@ modelo:
                 title: Modelo 100 2024 rendimientos del trabajo aggregators
             renta-personal-family:
               field:
-                title: Modelo 100 2024 personal and family profile inputs
+                title: 'Modelo 100 2024: datos del perfil personal y familiar'
           field:
             label: Ejercicio 2024
         '2025':
@@ -13410,18 +13424,9 @@ modelo:
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
                 por el operador - véase la casilla [1554])
           construct:
-            renta-anexo-c-base-liquidable-negativa-general:
-              field:
-                title: Modelo 100 Anexo C base liquidable general negativa carry-forward
-            renta-cuota-chain:
-              field:
-                title: Modelo 100 cuota-chain calculation
             renta-dependent-modelos:
               field:
-                title: Modelo 100 dependent modelo inputs
-            renta-economic-activities:
-              field:
-                title: Modelo 100 economic-activity dependency evidence
+                title: 'Modelo 100: datos procedentes de modelos dependientes'
             renta-final-settlement:
               field:
                 title: Modelo 100 final settlement result
@@ -13437,36 +13442,14 @@ modelo:
             renta-mini-model-capital-mobiliario:
               field:
                 title: Modelo 100 2025 capital mobiliario aggregators
-            renta-mini-model-deduccion-madrid-nacimiento-adopcion:
-              field:
-                title: Modelo 100 2025 Comunidad de Madrid nacimiento/adopción deducción
-                  (casilla 1039)
             renta-mini-model-ganancias-patrimoniales:
               field:
                 title: Modelo 100 2025 ganancias y perdidas patrimoniales aggregators
             renta-mini-model-regimenes-especiales:
               field:
                 title: Modelo 100 2025 atribucion / imputacion de rentas aggregators
-            renta-movable-capital:
-              field:
-                title: Modelo 100 movable-capital dependency evidence
-            renta-observation-parsing:
-              field:
-                title: Modelo 100 filed-data observation capture
-            renta-payments-retentions:
-              field:
-                title: Modelo 100 retentions and payments on account
             renta-personal-family:
               field:
-                title: Modelo 100 personal and family profile inputs
-            renta-real-estate-capital:
-              field:
-                title: Modelo 100 real-estate capital dependency evidence
-            renta-source-foundation:
-              field:
-                title: Modelo 100 source, layout, and simulator evidence
-            renta-work-income:
-              field:
-                title: Modelo 100 work income dependency evidence
+                title: 'Modelo 100: datos del perfil personal y familiar'
           field:
             label: Ejercicio 2025

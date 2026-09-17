@@ -6,9 +6,9 @@ modelo:
           devengo-year:
             label: Ejercicio de devengo
           ingresos-a-cuenta-efectuados:
-            label: 'Casilla 122-134: ingresos a cuenta efectuados'
+            label: Ingresos a cuenta efectuados sobre las percepciones en especie
           ingresos-a-cuenta-repercutidos:
-            label: 'Casilla 135-147: ingresos a cuenta repercutidos'
+            label: Ingresos a cuenta
           m190-correo-electronico:
             label: Correo electrónico de la persona con quien relacionarse
           m190-declaracion-complementaria:
@@ -173,6 +173,11 @@ modelo:
             label: Casilla 145-160 — información fiscal
           total-percepciones-count:
             label: Casilla 136-144 — información fiscal
+      construct:
+        modelo-190-annual-summary:
+          field:
+            title: Resumen anual del Modelo 190 a partir de las declaraciones trimestrales
+              del Modelo 111
       field:
         official_name: Modelo 190. Declaración Informativa. Retenciones e ingresos
           a cuenta. Rendimientos del trabajo y de actividades económicas, premios
@@ -180,6 +185,12 @@ modelo:
           anual.
         title: Resumen anual de retenciones del trabajo y actividades
       revision:
+        '2022':
+          field:
+            label: Modelo 190, ejercicio 2022
+        '2023':
+          field:
+            label: Modelo 190, ejercicio 2023
         '2024':
           casilla:
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
@@ -345,12 +356,9 @@ modelo:
                 los importes en parte entera y parte decimal.
               label: Prestaciones derivadas de incapacidad laboral. Valoración de
                 la percepción en especie
-            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              label: Ingresos a cuenta efectuados sobre las percepciones en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Ingresos a cuenta
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -418,10 +426,6 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
               label: Titular de la unidad de convivencia
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Modelo 190 annual summary from Modelo 111 quarterly filings
           field:
             label: Modelo 190 ejercicio 2024 y siguientes
         2025-y-siguientes:
@@ -589,12 +593,9 @@ modelo:
                 los importes en parte entera y parte decimal.
               label: Prestaciones derivadas de incapacidad laboral. Valoración de
                 la percepción en especie
-            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              label: Ingresos a cuenta efectuados sobre las percepciones en especie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
-              label: Ingresos a cuenta
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
@@ -662,9 +663,5 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
               label: Titular de la unidad de convivencia
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Modelo 190 annual summary from Modelo 111 quarterly filings
           field:
             label: Modelo 190 ejercicio 2024 y siguientes

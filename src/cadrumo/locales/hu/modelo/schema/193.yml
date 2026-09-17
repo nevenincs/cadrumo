@@ -36,13 +36,13 @@ modelo:
             label: Az adózó adóazonosító száma (NIF)
           gasto-contributor-nombre:
             help: 'A casilla adatai: Casilla 36-75: gasto contributor név.'
-            label: 'Casilla 36-75: gasto contributor név'
+            label: Az adózó vezetékneve és utóneve, vagy elnevezése
           gasto-importe-anual:
             help: 'A casilla adatai: Casilla 195-207: gasto összeg éves.'
             label: Költségek összege
           gastos-total-declarante:
             help: A Modelo 193 220-234. casilla adóügyi adatai.
-            label: Casilla 220-234 — adóügyi mező
+            label: Levonható költségek (35/2006 törvény 26.1.a cikk)
           payee-base-retenciones-193:
             help: 'A Modelo 193 152-164. casilla adóügyi adatai: adóügyi információ.'
             label: A levonások és előlegfizetések alapja
@@ -156,6 +156,10 @@ modelo:
           total-perceptores-count:
             help: 'A Modelo 193 136-144. casilla adóügyi adatai: adóügyi információ.'
             label: A KEDVEZMÉNYEZETTEK SZÁMA
+      construct:
+        modelo-193-annual-summary:
+          field:
+            title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
       field:
         official_name: Modelo 193. Adatszolgáltatási bevallás. Egyes tőkejövedelmekre
           és egyes jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves
@@ -164,10 +168,10 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: 193-as modelo, 2022. adóév
         '2023':
           field:
-            label: null
+            label: 193-as modelo, 2023. adóév
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
@@ -178,7 +182,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
                 egesz es tizedes reszre bontja.
-              label: Levonható költségek (35/2006 törvény 26.1.a cikk)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2024. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -309,10 +312,6 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2024. adóév.
               label: JUTTATÁS TÍPUSA
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
           field:
             label: 193-as modelo, 2024. adóév
         2025-y-siguientes:
@@ -325,7 +324,6 @@ modelo:
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
               help: A 193-as modelo bevalloi rekordjaban bevallott vegosszeg. A nyomtatvany
                 egesz es tizedes reszre bontja.
-              label: Levonható költségek (35/2006 törvény 26.1.a cikk)
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: A 193-es modelo 235. rovata, 2025. adóév.
             x-chim6r1edpqmqbb9chimst39cpkm6obkd5r6u:
@@ -459,9 +457,5 @@ modelo:
             x-e1in4opeehkn0rpde1in4or5e1hmirre:
               help: A 193-es modelo 122. rovata, 2025. adóév.
               label: JUTTATÁS TÍPUSA
-          construct:
-            modelo-193-annual-summary:
-              field:
-                title: 193-as modelo, tőkejövedelem levonásainak éves összesítése
           field:
             label: 193-as modelo, 2025. adóévtől

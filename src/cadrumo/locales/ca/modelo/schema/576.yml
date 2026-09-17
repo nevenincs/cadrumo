@@ -6,6 +6,11 @@ modelo:
           filing-year:
             help: 'Consulteu la informació de la casella: Exercici de meritació.'
             label: Exercici de meritació
+      construct:
+        modelo-576-autoliquidacion:
+          field:
+            title: Autoliquidació de l'Impost Especial sobre Determinats Mitjans de
+              Transport
       field:
         official_name: Modelo 576. Impost Especial sobre Determinats Mitjans de Transport.
           Autoliquidació.
@@ -167,10 +172,5 @@ modelo:
             x-dhkn2bjkd5o6u:
               help: 'Consulteu la informació de la casella: Liquidació. Tipus %.'
               label: Liquidació. Tipus %
-          construct:
-            modelo-576-autoliquidacion:
-              field:
-                title: Autoliquidació de l'Impost Especial sobre Determinats Mitjans
-                  de Transport
           field:
             label: Ordre EHA/3851/2007, exercicis 2008 i següents

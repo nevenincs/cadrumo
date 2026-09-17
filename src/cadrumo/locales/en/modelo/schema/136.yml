@@ -1,6 +1,59 @@
 modelo:
   schema:
     '136':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Result payable
+          m136-autoliquidacion-complementaria:
+            label: Supplementary self-assessment
+          m136-base-imponible-gravamen:
+            label: Taxable base
+          m136-codigo-iban:
+            label: IBAN code
+          m136-cuantia-exenta-gravamen:
+            label: Amount exempt from the special levy
+          m136-cuota-gravamen-especial:
+            label: Special levy tax liability
+          m136-declarante-nif:
+            label: Tax identification number (NIF)
+          m136-declarante-nombre:
+            label: Surname and first name or company name
+          m136-ejercicio-declaracion:
+            label: Tax year
+          m136-fecha-celebracion:
+            label: Draw date
+          m136-fecha-cobro-premio:
+            label: Prize collection date
+          m136-forma-pago:
+            label: Payment method
+          m136-importe-ingresado:
+            label: Amount paid to the Public Treasury
+          m136-importe-premio-declarante:
+            label: Amount or value of the prize corresponding individually to the
+              declarant
+          m136-importe-premio-total:
+            label: Amount of the prize obtained from the winning ticket, coupon or
+              bet
+          m136-justificante-anterior:
+            label: Reference number of the previous self-assessment
+          m136-loteria-apuesta-denominacion:
+            label: Name of the lottery or bet
+          m136-organizador-codigo-pais:
+            label: Country code of the organising body or entity
+          m136-organizador-denominacion:
+            label: Name or company name of the organising body or entity
+          m136-organizador-pais:
+            label: Country of the organising body or entity
+          m136-periodo-declaracion:
+            label: Period
+          m136-precio-unitario:
+            label: Unit price
+          m136-provincia-residencia-irpf:
+            label: Code of the taxpayer's habitual residence province for IRPF purposes
+          m136-resultados-anteriores-mismo-premio:
+            label: Amounts payable from previous self-assessments for the same item
+              and relating to the same prize
       field:
         official_name: Modelo 136. Personal Income Tax and Non-Resident Income Tax.
           Special levy on prizes from certain lotteries and betting. Self-assessment.
@@ -12,91 +65,65 @@ modelo:
               field:
                 title: Modelo 136 special levy on certain lottery and betting prizes
           field:
-            label: null
+            label: Modelo 136, tax years 2022 to 2025
         '2026':
           casilla:
             '01':
               help: Tax information about tax information in casilla 01 of Modelo
                 136.
-              label: Amount of the prize obtained from the winning ticket, coupon
-                or bet
             '02':
               help: Tax information for casilla 02 of Modelo 136.
-              label: Amount or value of the prize corresponding individually to the
-                declarant
             '03':
               help: 'Review the casilla information: Cuantia exempt of the gravamen
                 especial.'
-              label: Amount exempt from the special levy
             '04':
               help: 'Review the casilla information: Tax base.'
-              label: Taxable base
             '05':
               help: 'Review the casilla information: Amount of the gravamen especial.'
-              label: Special levy tax liability
             '06':
               help: Tax information about tax information in casilla 06 of Modelo
                 136.
-              label: Amounts payable from previous self-assessments for the same item
-                and relating to the same prize
             '07':
               help: 'Review the casilla information: Result a ingresar.'
-              label: Result payable
             09:
               help: 'Review the casilla information: Amount ingresado a favor of the
                 Tesoro Publico.'
-              label: Amount paid to the Public Treasury
             autoliquidacion-complementaria:
               help: 'Review the casilla information: Self-assessment supplementary.'
-              label: Supplementary self-assessment
             declarante-nif:
               help: Tax information for casilla of Modelo 136.
-              label: Tax identification number (NIF)
             declarante-nombre:
               help: Tax information for casilla of Modelo 136.
-              label: Surname and first name or company name
             ejercicio-declaracion:
               help: Tax information for casilla of Modelo 136.
-              label: Tax year
             fecha-celebracion:
               help: Tax information about tax information in casilla  of Modelo 136.
-              label: Draw date
             fecha-cobro-premio:
               help: Tax information about tax information in casilla  of Modelo 136.
-              label: Prize collection date
             forma-pago:
               help: Tax information about tax information in casilla  of Modelo 136.
-              label: Payment method
             iban:
               help: Tax information for casilla of Modelo 136.
-              label: IBAN code
             justificante-anterior:
               help: Tax information for casilla of Modelo 136.
-              label: Reference number of the previous self-assessment
             loteria-apuesta-denominacion:
               help: Tax information for casilla of Modelo 136.
-              label: Name of the lottery or bet
             organizador-codigo-pais:
               help: Tax information for casilla of Modelo 136.
-              label: Country code of the organising body or entity
             organizador-denominacion:
               help: Tax information for casilla of Modelo 136.
-              label: Name or company name of the organising body or entity
             organizador-pais:
               help: Tax information about tax information in casilla  of Modelo 136.
-              label: Country of the organising body or entity
             periodo-declaracion:
               help: Tax information for casilla of Modelo 136.
-              label: Period
             precio-unitario:
               help: 'Review the casilla information: Precio unitario.'
-              label: Unit price
             provincia-residencia-irpf:
               help: Tax information for casilla of Modelo 136.
-              label: Code of the taxpayer's habitual residence province for IRPF purposes
           construct:
             modelo-136-calculation-construct:
               field:
-                title: Modelo 136 calculation construct for the special levy on prizes
+                title: 'Modelo 136: calculation of the special levy on lottery and
+                  betting prizes'
           field:
-            label: Casilla — tax field
+            label: Modelo 136 tax year 2026 (Order HAP/70/2013 and Order HAC/763/2018)

@@ -88,9 +88,6 @@ adapters:
           AEAT-profil állapotát.
         scope_missing: A Google hozzájárulási képernyő visszatért anélkül, hogy minden
           szükséges hatókört megadott volna.
-        unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
-          tár nem biztonságos módban fut, és az aktív profil valódi spanyol adóazonosítót
-          tartalmaz.
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.

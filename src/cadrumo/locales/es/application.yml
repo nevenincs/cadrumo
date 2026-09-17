@@ -212,6 +212,8 @@ application:
           IVA solo se reconstruye para el Modelo 303; se ha indicado el modelo {modelo}.
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
+        persistence: El almacenamiento del historial de compensación de IVA falló
+          durante %{operation} (%{cause_type}).
         repository_backend_split: El almacén de observaciones del Modelo 303 y el
           del historial de compensación de IVA deben compartir un único backend cifrado
           para que ambas escrituras se confirmen a la vez.
@@ -244,24 +246,31 @@ application:
           no coinciden con los operandos de la fórmula del registro {registry_operands}.
           Solo una corrección del registro puede resolverlo; no hay recuperación automática
           segura.
-        declaration_type_code_invalid: La cabecera de origen de tipo de declaración
-          en {source_locator} lleva {value}, que no es un código de disposición de
-          resultado.
-        declaration_type_code_not_admitted: La cabecera de origen de tipo de declaración
-          en {source_locator} lleva {value}, un código que el diseño de registros
-          del Modelo 303 no admite.
-        disposition_resultado_sign_incompatible: La disposición declarada {disposition}
+        casilla_id_invalid: El registro declara una casilla no válida para la clave
+          de correspondencia {mapping_key} del arrastre del Modelo 303.
+        disposition_code_not_admitted: El código de destino del resultado {code} no
+          está admitido para el arrastre del Modelo 303.
+        disposition_code_undeclared: El registro no declara ningún código para el
+          destino del resultado {disposition}.
+        disposition_result_sign_incompatible: La disposición declarada {disposition}
           no pudo haberse seleccionado para un resultado presentado de {resultado}.
           Solo el contribuyente puede decidir cuál es correcta; no hay recuperación
           automática segura.
-        duplicate_declaration_type_headers: La evidencia de arrastre del Modelo 303
-          lleva {header_count} cabeceras de origen {header_key}; se requiere exactamente
-          una.
+        duplicate_header_facts: La evidencia de arrastre del Modelo 303 lleva {header_count}
+          cabeceras de origen {header_key}; se requiere exactamente una.
         envelope_not_normalized: El historial de arrastre del Modelo 303 requiere
           un par disponible y generada ya normalizado y consciente de la disposición.
           Vuelva a ingerir la observación presentada.
+        formula_mapping_required: La revisión {revision_id} no declara la correspondencia
+          de arrastre del Modelo 303 necesaria para citar la fórmula de la compensación
+          disponible.
         generated_compensation_amount_missing: El sobre de arrastre validado del Modelo
           303 no lleva ningún importe de compensación generada en la casilla {casilla_id}.
+        header_code_invalid: La cabecera de origen de tipo de declaración en {source_locator}
+          lleva {value}, que no es un código de disposición de resultado.
+        header_code_not_admitted: La cabecera de origen de tipo de declaración en
+          {source_locator} lleva {value}, un código que el diseño de registros del
+          Modelo 303 no admite.
         incomplete_supported_operands: 'La normalización del arrastre del Modelo 303
           no puede derivar la compensación disponible a partir de las casillas presentes:
           {casilla_ids}.'
@@ -276,21 +285,29 @@ application:
           en el momento de la presentación; la evidencia {source_kind} no lleva ninguna.
         local_filing_provenance_required: La disposición de una presentación local
           del Modelo 303 debe conservar su procedencia app_filing; lleva {provenance_kind}.
-        non_m303_envelope: El historial de arrastre del Modelo 303 solo admite observaciones
-          del Modelo 303; se ha indicado el modelo {modelo}.
-        official_declaration_type_header_required: La evidencia oficial de arrastre
-          del Modelo 303 debe llevar exactamente una cabecera de origen {header_key};
-          la evidencia {source_kind} no lleva ninguna.
+        non_target_modelo_envelope: El historial de arrastre del Modelo 303 solo admite
+          observaciones del Modelo 303; se ha indicado el modelo {modelo}.
         official_disposition_header_disagreement: La disposición de resultado tipada
           {typed_disposition} no coincide con la cabecera de tipo de declaración de
           la AEAT {header_disposition}. Solo el contribuyente puede decidir cuál se
           presentó; no hay recuperación automática segura.
-        resultado_casilla_required: La normalización del arrastre del Modelo 303 requiere
+        official_header_required: La evidencia oficial de arrastre del Modelo 303
+          debe llevar exactamente una cabecera de origen {header_key}; la evidencia
+          {source_kind} no lleva ninguna.
+        registry_resolution_unavailable: No se pudo resolver en el registro la correspondencia
+          de arrastre del Modelo {modelo} para el ejercicio {filing_year}, periodo
+          {period}.
+        registry_scope_invalid: El arrastre del Modelo 303 necesita un modelo y un
+          periodo; se recibió el modelo {modelo}, ejercicio {filing_year}, periodo
+          {period}.
+        result_casilla_required: La normalización del arrastre del Modelo 303 requiere
           la casilla de resultado presentada {casilla_id}, que la observación no lleva.
         supplied_available_contradicts_derivation: La compensación disponible aportada
           {supplied_available} contradice la derivación {basis} {derived_available}.
           Solo el contribuyente puede decidir qué importe se presentó; no hay recuperación
           automática segura.
+        supplied_disposition_not_admitted: El destino del resultado indicado, {disposition},
+          no está admitido para el arrastre del Modelo 303.
         supplied_pair_contradicts_derivation: El par disponible y generada aportado
           {supplied_available} y {supplied_generated} contradice la derivación {basis}
           {derived_generated}. Solo el contribuyente puede decidir qué importes se
@@ -381,9 +398,9 @@ application:
           de dato declarado en el registro.
         text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
           de texto.
-        unsupported_filing_year: El ejercicio {filing_year} no está declarado como
-          soportado. El registro declara {supported_filing_years}. Admita el ejercicio
-          en {declaration} tras fundamentar sus requisitos.
+    errors:
+      persistence: El almacenamiento del historial de presentaciones falló durante
+        %{operation} (%{adapter_error}).
     export:
       errors:
         draft_not_approved: La exportación requiere un borrador aprobado.
@@ -472,14 +489,10 @@ application:
           identificadores vacios.
         filing_year_period_mismatch: 'Error interno: el ejercicio de declaración {filing_year}
           no coincide con el periodo indicado {period}.'
-        filing_year_period_pair: filing_year y period deben indicarse juntos.
         modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
           de cálculo.
-        modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
         period_type: 'Error interno: se requiere un objeto Period para el proveedor
           de esquema en tiempo de ejecución; se recibió {period_type}.'
-        provider_year_missing: El modelo %{modelo} revisión %{revision} no tiene ejercicio
-          de proveedor.
         registry_empty: La raíz del registro %{registry_root_name} no tiene definiciones
           de modelo.
         registry_empty_for_period: La raíz del registro no tiene definiciones de modelo
@@ -1148,6 +1161,13 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
+      art20_reduccion_possible: La casilla %{rnt_id} declara %{rnt_value} EUR de rendimiento
+        neto del trabajo dentro del límite del art. 20 LIRPF, por lo que la casilla
+        %{reduccion_id} puede optar a una reducción que ahora mismo declara en cero.
+      art52_reduccion_individual_sublimit_possible: La casilla %{reduccion_id} declara
+        %{reduccion_value} EUR de reducción por previsión social por encima del sublímite
+        individual de %{sublimit} EUR del art. 52 LIRPF, sin desglose de aportaciones
+        con contribución empresarial; confirme que se aplicó el sublímite individual.
       attribution_received_uncaptured: La casilla %{casilla_id} de %{filing_year}
         contiene %{casilla_value} EUR de renta atribuida sin registrar.
       attribution_received_unfolded: La renta atribuida de %{filing_year} por %{total_base}
@@ -1179,6 +1199,13 @@ application:
         %{target_period}.
       cuota_less_ledger_row_base_missing: La transacción %{transaction_id} de la categoría
         de IVA %{iva_category_code} no tiene base declarable.
+      dt12a_reduccion_antiquity_possible: La casilla %{reduccion_id} declara %{reduccion_value}
+        EUR de reducción de la DT 12ª; confirme que se cumple la condición de antigüedad
+        que exige.
+      dt12a_reduccion_possible: La casilla %{ingreso_id} declara %{ingreso_value}
+        EUR de rendimientos del trabajo por encima del umbral de la DT 12ª, por lo
+        que la casilla %{reduccion_id} puede optar a una reducción que ahora mismo
+        declara en cero.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: el bien
         en el extranjero %{position_key} del grupo %{group_code} pasó de %{prior_value_eur}
         EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
@@ -1195,6 +1222,9 @@ application:
         pueden estar sujetos a una cláusula de limitación de beneficios (%{document_id}).
       m210_rate_unavailable: No se ha podido resolver el tipo del modelo 210 para
         el tipo de renta %{tipo_renta_code} del ejercicio %{filing_year} (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: El total intracomunitario del Modelo
+        303 de %{m303_total} EUR y el total del Modelo 349 de %{m349_total} EUR difieren
+        en %{gap} EUR para el periodo %{period_code} %{filing_year}.
       madrid_nacimiento_adopcion_eligibility_advisory: La casilla %{casilla_id} con
         recuento ponderado %{weighted_count} puede optar a la deducción madrileña
         por nacimiento o adopción.

@@ -672,8 +672,6 @@ errors:
       segurs ha de ser com a mínim 1; s'ha rebut %{batch_size}.
     integrity_storage_secure_object_hashed_key_length: 'La clau hash de l''objecte
       segur té una longitud no vàlida: %{length} bytes.'
-    integrity_storage_secure_object_raw_bytes: 'Les metadades de bytes sense processar
-      de l''objecte segur tenen un tipus no admès: %{value_type}.'
     integrity_storage_secure_object_revision_ancestry_json: El camp d'ascendència
       de revisió d'un objecte segur emmagatzemat no conté JSON vàlid.
     integrity_storage_secure_object_revision_ancestry_shape: El camp d'ascendència
@@ -728,9 +726,6 @@ errors:
       per veure''n la causa.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
-    internal_profile_project_answers_not_registered: 'Error intern: les respostes
-      del projecte de perfil no estan registrades.'
-    internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
     internal_wipe_type: 'Error intern: l''operació d''esborrat segur ha rebut un valor
       que no pot sobreescriure.'
     internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha

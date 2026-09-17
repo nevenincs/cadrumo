@@ -1,6 +1,10 @@
 modelo:
   schema:
     '126':
+      construct:
+        modelo-126-calculation-construct:
+          field:
+            title: 'Model 126: càlcul de l''autoliquidació'
       field:
         official_name: Modelo 126. Retencions i ingressos a compte. Rendiments del
           capital mobiliari derivats de la contraprestació de tota classe de comptes
@@ -54,9 +58,5 @@ modelo:
             '12':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-126-calculation-construct:
-              field:
-                title: Modelo 126 calculation construct
           field:
-            label: Casella— informació fiscal
+            label: Ordre EHA/3435/2007, exercicis 2019 i següents

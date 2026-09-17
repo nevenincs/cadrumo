@@ -2225,6 +2225,8 @@ modelo:
             help: Enter or review “Deductions to incentivise certain activities -
               Total - Carried forward for application in future periods [00832]” for
               this self-assessment.
+            label: Deductions to incentivize certain activities - Total - Pending
+              application in future periods [00832]
           00833:
             help: Enter or review “Deduction for donations to non-profit entities
               - General donations - 2016 - With repeated donations to the same entity
@@ -15224,6 +15226,8 @@ modelo:
           is-deduccion-actividades-total-pendiente:
             help: Enter or review “Deductions to incentivise certain activities -
               Total - Deduction carried forward/generated [00831]” for this self-assessment.
+            label: Deductions to incentivize certain activities - Total - Pending/generated
+              deduction [00831]
           is-deduccion-autoridades-portuarias-importe:
             help: Enter or review “Deduction for investments and expenses made by
               port authorities (art. 38 bis LIS) - 2020 - Pending/generated deduction
@@ -15440,6 +15444,9 @@ modelo:
             help: Enter or review “R&D&I deductions excluded from limit - Additional
               information for calculating deduction limits - Research and development
               expenses for the tax period [00814]” for this self-assessment.
+            label: R&D&I deductions excluded from limit - Additional information for
+              calculating deduction limits - Research and development expenses for
+              the tax period [00814]
           is-deduccion-idi-excluida-limite-innovacion:
             help: Enter or review “R&D&I deductions excluded from limit - 2014 Technological
               innovation - Applied in this settlement [00850]” for this self-assessment.
@@ -15766,6 +15773,62 @@ modelo:
               END OF THE PERIOD - Capital - Subscribed [00632]” for this self-assessment.
             label: Statement of changes in equity (II) - BALANCE, END OF THE PERIOD
               - Capital - Subscribed [00632]
+          is-ecpn-total-cambios-ajuste-criterio-resultados-ejercicios-anteriores:
+            label: Statement of changes in equity (II) - Adjustments due to change
+              in accounting criteria from previous periods - Results from previous
+              periods [00399]
+          is-ecpn-total-cambios-combinacion-negocios-capital-escriturado:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Increase (reduction) in equity from business combination
+              - Capital - Subscribed [00590]
+          is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
+            label: Settlement III - Tax base - Tax base [00552]
+          is-ecpn-total-cambios-conversion-pasivos-prima-emision:
+            label: Settlement III - Tax base - Tax base before offsetting negative
+              tax bases [00550]
+          is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Own shares and equity interests
+              [00566]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
+            label: Settlement III - Tax base - Gross tax liability [00562]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Capital - Uncalled [00563]
+          is-ecpn-total-cambios-distribucion-dividendos-otras-aportaciones-socios:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Other shareholder contributions
+              [00568]
+          is-ecpn-total-cambios-distribucion-dividendos-reservas:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Reserves [00565]
+          is-ecpn-total-cambios-distribucion-dividendos-resultados-ejercicios-anteriores:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - (-) Distribution of dividends - Results from previous periods
+              [00567]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Capital
+              - Subscribed [00576]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-no-exigido:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Capital
+              - Uncalled [00577]
+          is-ecpn-total-cambios-operaciones-acciones-propias-otras-aportaciones-socios:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Other
+              shareholder contributions [00582]
+          is-ecpn-total-cambios-operaciones-acciones-propias-resultados-ejercicios-anteriores:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Transactions with own shares or equity interests - Results
+              from previous periods [00581]
+          is-ecpn-total-cambios-otras-operaciones-socios-capital-no-exigido:
+            label: Statement of changes in equity (II) - Transactions with shareholders
+              or owners - Other transactions with shareholders or owners - Capital
+              - Uncalled [00605]
+          is-ecpn-total-cambios-otras-variaciones-capital-no-exigido:
+            label: Statement of changes in equity (II) - Other changes in equity -
+              Capital - Uncalled [00619]
           is-ecpn-total-ingresos-gastos-reconocidos:
             help: Enter or review “Statement of changes in equity (I) - Transfers
               to the profit and loss account - TOTAL RECOGNIZED INCOME AND EXPENSES
@@ -17926,6 +17989,11 @@ modelo:
             label: Carried forward for addition due to unapplied operating-profit
               limit - Year of generation 2020 - Carried forward for application in
               future periods [02260]
+      construct:
+        modelo-200-foundation:
+          field:
+            title: 'Modelo 200: annual Corporate Tax settlement (2024 onwards), instalment
+              payment deduction chain'
       field:
         official_name: Corporate Income Tax. Non-Resident Income Tax (permanent establishments
           and income-attribution entities incorporated abroad with a presence in Spanish
@@ -18055,10 +18123,6 @@ modelo:
                 Generation year - 2025(*) - DTAs pending application in future periods
                 - With a right of conversion into a claimable credit, excess tax due
                 [00812]
-            00814:
-              label: R&D&i deductions excluded from the limit - Additional information
-                for calculating deduction limits - Research and development expenses
-                for the tax period [00814]
             00816:
               help: Enter or review “Conversion of deferred tax assets into enforceable
                 credit against the Tax Administration - Deferred tax assets (DTA).
@@ -18078,12 +18142,6 @@ modelo:
                 the Tax Administration - Excess positive net tax liability - Generation
                 year - 2025(*) - Excess positive net tax due outstanding at the start
                 of the period [00817]
-            00831:
-              label: Deductions to incentivise certain activities - Total - Deduction
-                carried forward/generated [00831]
-            00832:
-              label: Deductions to incentivise certain activities - Total - Carried
-                forward for application in future periods [00832]
             00878:
               help: Enter or review “Conversion of deferred tax assets into enforceable
                 credit against the Tax Administration - Excess positive net tax liability
@@ -21834,11 +21892,6 @@ modelo:
                 with a presence in Spanish territory (art. 38 TRLIRNR) - Decrease
                 - Adjustments for the tax year - Temporary (originating in prior tax
                 years) [03368]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 and following)
-                  - instalment payments deduction chain
           field:
             label: Modelo 200 tax years 2024 and following (DR200e25.xls)
         2025-y-siguientes:
@@ -21913,10 +21966,6 @@ modelo:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Deferred tax assets (DTA). Art. 130 LIS -
                 Generation period - 2025(*) - DTA pending application in future periods...
-            00814:
-              label: R&D&I deductions excluded from limit - Additional information
-                for calculating deduction limits - Research and development expenses
-                for the tax period [00814]
             00816:
               help: Enter or review “Tax information for this field” for this self-assessment.
               label: Conversion of deferred tax assets into receivable credit against
@@ -21927,12 +21976,6 @@ modelo:
               label: Conversion of deferred tax assets into receivable credit against
                 the tax administration - Excess positive net tax liability - Generation
                 period - 2025(*) - Excess positive net tax liability pending at beginning...
-            00831:
-              label: Deductions to incentivize certain activities - Total - Pending/generated
-                deduction [00831]
-            00832:
-              label: Deductions to incentivize certain activities - Total - Pending
-                application in future periods [00832]
             00878:
               help: Enter or review “Tax information for this field” for this self-assessment.
               label: Conversion of deferred tax assets into receivable credit against
@@ -25614,102 +25657,62 @@ modelo:
               help: Enter or review “Statement of changes in equity (II) - Adjustments
                 due to change in accounting criteria from previous periods - Results
                 from previous periods [00399]” for this self-assessment.
-              label: Statement of changes in equity (II) - Adjustments due to change
-                in accounting criteria from previous periods - Results from previous
-                periods [00399]
             x-8h834c1g60oj0ehg60qjac0:
               help: Enter or review “Settlement III - Tax base - Tax base before offsetting
                 negative tax bases [00550]” for this self-assessment.
-              label: Settlement III - Tax base - Tax base before offsetting negative
-                tax bases [00550]
             x-8h834c1g60oj0ehg60qjacg:
               help: Enter or review “Settlement III - Tax base - Tax base [00552]”
                 for this self-assessment.
-              label: Settlement III - Tax base - Tax base [00552]
             x-8h834c1g60oj0ehg60qjccg:
               help: Enter or review “Settlement III - Tax base - Gross tax liability
                 [00562]” for this self-assessment.
-              label: Settlement III - Tax base - Gross tax liability [00562]
             x-8h834c1g60oj0ehg60qjcco:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - (-) Distribution of dividends - Capital
                 - Uncalled [00563]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Capital - Uncalled [00563]
             x-8h834c1g60oj0ehg60qjcd8:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - (-) Distribution of dividends - Reserves
                 [00565]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Reserves [00565]
             x-8h834c1g60oj0ehg60qjcdg:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - (-) Distribution of dividends - Own
                 shares and equity interests [00566]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Own shares and equity
-                interests [00566]
             x-8h834c1g60oj0ehg60qjcdo:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - (-) Distribution of dividends - Results
                 from previous periods [00567]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Results from previous
-                periods [00567]
             x-8h834c1g60oj0ehg60qjce0:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - (-) Distribution of dividends - Other
                 shareholder contributions [00568]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - (-) Distribution of dividends - Other shareholder contributions
-                [00568]
             x-8h834c1g60oj0ehg60qjedg:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Transactions with own shares or equity
                 interests - Capital - Subscribed [00576]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Capital
-                - Subscribed [00576]
             x-8h834c1g60oj0ehg60qjedo:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Transactions with own shares or equity
                 interests - Capital - Uncalled [00577]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Capital
-                - Uncalled [00577]
             x-8h834c1g60oj0ehg60qjgc8:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Transactions with own shares or equity
                 interests - Results from previous periods [00581]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Results
-                from previous periods [00581]
             x-8h834c1g60oj0ehg60qjgcg:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Transactions with own shares or equity
                 interests - Other shareholder contributions [00582]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Transactions with own shares or equity interests - Other
-                shareholder contributions [00582]
             x-8h834c1g60oj0ehg60qjic0:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Increase (reduction) in equity from
                 business combination - Capital - Subscribed [00590]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Increase (reduction) in equity from business combination
-                - Capital - Subscribed [00590]
             x-8h834c1g60oj0ehg60r30d8:
               help: Enter or review “Statement of changes in equity (II) - Transactions
                 with shareholders or owners - Other transactions with shareholders
                 or owners - Capital - Uncalled [00605]” for this self-assessment.
-              label: Statement of changes in equity (II) - Transactions with shareholders
-                or owners - Other transactions with shareholders or owners - Capital
-                - Uncalled [00605]
             x-8h834c1g60oj0ehg60r32e8:
               help: Enter or review “Statement of changes in equity (II) - Other changes
                 in equity - Capital - Uncalled [00619]” for this self-assessment.
-              label: Statement of changes in equity (II) - Other changes in equity
-                - Capital - Uncalled [00619]
             x-8h834c1g60oj2ehg60q32do:
               help: Enter or review “Settlement II - Detail of corrections to profit
                 and loss account result - Total corrections to the profit and loss
@@ -25814,10 +25817,5 @@ modelo:
                 changes in equity - Result for the period [00625]” for this self-assessment.
               label: Statement of changes in equity (III) - Other changes in equity
                 - Result for the period [00625]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 and following)
-                  - instalment payments deduction chain
           field:
             label: Modelo 200 tax years 2024 and following (DR200e25.xls)

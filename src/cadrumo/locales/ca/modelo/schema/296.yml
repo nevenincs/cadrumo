@@ -27,11 +27,11 @@ modelo:
                 title: Model 296 declaració informativa anual de retencions i ingressos
                   a compte de l'IRNR sense establiment permanent
           field:
-            label: null
+            label: Model 296, exercici 2023
         2024-y-siguientes:
           construct:
             modelo-296-calculation-construct:
               field:
-                title: Modelo 296 calculation construct
+                title: 'Model 296: resum anual de les retencions de l''IRNR'
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAC/56/2024, exercicis 2024 i següents

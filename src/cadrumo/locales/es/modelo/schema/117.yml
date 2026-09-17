@@ -1,6 +1,10 @@
 modelo:
   schema:
     '117':
+      construct:
+        modelo-117-total-liquidacion-calculation:
+          field:
+            title: Modelo 117 total liquidación / resultado a ingresar
       field:
         official_name: Modelo 117. Retenciones e ingresos a cuenta. Rentas o ganancias
           patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos
@@ -41,9 +45,5 @@ modelo:
                 concepto, ejercicio y periodo
             '11':
               label: Resultado a ingresar
-          construct:
-            modelo-117-total-liquidacion-calculation:
-              field:
-                title: Modelo 117 total liquidación / resultado a ingresar
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

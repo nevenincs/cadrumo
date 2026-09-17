@@ -55,6 +55,10 @@ modelo:
           tipo-declaracion:
             help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
             label: Az önadózás elszámolási időszaka
+      construct:
+        modelo-341-autoliquidacion:
+          field:
+            title: Modelo 341 önadózási bevallás - IVA
       field:
         official_name: Modelo 341. Kompenzációk visszatérítésére vonatkozó kérelem
           a mezőgazdasági, állattenyésztési és halászati különleges szabályozás keretében.
@@ -62,16 +66,9 @@ modelo:
           szerinti kompenzációk visszatérítése
       revision:
         2005-2015:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 önadózási bevallás - IVA
           field:
-            label: Casilla— adóügyi információ
+            label: 341-es modelo (2000. december 15-i rendelet, M341), 2005-2015.
+              adóévek
         2016-y-siguientes:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 önadózási bevallás - IVA
           field:
-            label: Casilla— adóügyi információ
+            label: 341-es modelo (2000. december 15-i rendelet, M341), 2016. adóévtől

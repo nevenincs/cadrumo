@@ -1,6 +1,10 @@
 modelo:
   schema:
     '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: 'Model 187: càlcul de l''autoliquidació'
       field:
         official_name: Modelo 187. Declaració informativa d'accions i participacions
           representatives del capital o patrimoni de les institucions d'inversió col·lectiva
@@ -26,9 +30,5 @@ modelo:
               help: Suma de les retencions i ingressos a compte practicats sobre les
                 operacions declarades.
               label: Import total de les retencions i ingressos a compte
-          construct:
-            modelo-187-calculation-construct:
-              field:
-                title: Modelo 187 calculation construct
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAP/1608/2014, exercicis 2022 i següents

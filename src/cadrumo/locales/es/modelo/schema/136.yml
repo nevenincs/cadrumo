@@ -10,45 +10,45 @@ modelo:
           m136-base-imponible-gravamen:
             label: Base imponible
           m136-codigo-iban:
-            label: Codigo IBAN
+            label: Código IBAN
           m136-cuantia-exenta-gravamen:
-            label: Cuantia exenta del gravamen especial
+            label: Cuantía exenta del gravamen especial
           m136-cuota-gravamen-especial:
             label: Cuota del gravamen especial
           m136-declarante-nif:
-            label: Número de identificacion fiscal (NIF)
+            label: Número de identificación fiscal (NIF)
           m136-declarante-nombre:
-            label: Apellidos y nombre o razon social
+            label: Apellidos y nombre o razón social
           m136-ejercicio-declaracion:
             label: Ejercicio
           m136-fecha-celebracion:
-            label: Fecha de celebracion
+            label: Fecha de celebración
           m136-fecha-cobro-premio:
             label: Fecha de cobro del premio
           m136-forma-pago:
             label: Forma de pago
           m136-importe-ingresado:
-            label: Importe ingresado a favor del Tesoro Publico
+            label: Importe ingresado a favor del Tesoro Público
           m136-importe-premio-declarante:
             label: Importe o valor del premio que corresponde individualmente al declarante
           m136-importe-premio-total:
-            label: Importe del premio obtenido por el boleto, cupon o apuesta premiado
+            label: Importe del premio obtenido por el boleto, cupón o apuesta premiado
           m136-justificante-anterior:
             label: Número de justificante identificativo de la autoliquidación anterior
           m136-loteria-apuesta-denominacion:
-            label: Denominacion de la loteria o apuesta
+            label: Denominación de la lotería o apuesta
           m136-organizador-codigo-pais:
-            label: Codigo pais del organismo o entidad organizadora
+            label: Código país del organismo o entidad organizadora
           m136-organizador-denominacion:
-            label: Denominacion o razon social del organismo o entidad organizadora
+            label: Denominación o razón social del organismo o entidad organizadora
           m136-organizador-pais:
-            label: Pais del organismo o entidad organizadora
+            label: País del organismo o entidad organizadora
           m136-periodo-declaracion:
             label: Periodo
           m136-precio-unitario:
             label: Precio unitario
           m136-provincia-residencia-irpf:
-            label: Codigo de la provincia de residencia habitual del contribuyente
+            label: Código de la provincia de residencia habitual del contribuyente
               IRPF
           m136-resultados-anteriores-mismo-premio:
             label: Resultados a ingresar de anteriores autoliquidaciones por el mismo
@@ -65,10 +65,13 @@ modelo:
               field:
                 title: Modelo 136 gravamen especial sobre determinados premios de
                   loterías y apuestas
+          field:
+            label: Modelo 136, ejercicios 2022 a 2025
         '2026':
           construct:
             modelo-136-calculation-construct:
               field:
-                title: Modelo 136 gravamen especial premios calculation construct
+                title: 'Modelo 136: cálculo del gravamen especial sobre premios de
+                  loterías y apuestas'
           field:
             label: Modelo 136 ejercicio 2026 (Orden HAP/70/2013 y Orden HAC/763/2018)

@@ -676,6 +676,10 @@ modelo:
           tributacion-territorio-vizcaya-regularizacion-4t:
             label: Tributación por razón de territorio. Vizcaya. % del período objeto
               de regularización. 4T [105]
+      construct:
+        modelo-490-autoliquidacion:
+          field:
+            title: Modelo 490 impuesto sobre determinados servicios digitales, autoliquidación
       field:
         official_name: Modelo 490. Impuesto sobre Determinados Servicios Digitales.
           Autoliquidación.
@@ -944,22 +948,12 @@ modelo:
                 y periodo [18]'
             x-chim6r1ee1in4qbfchng:
               label: Periodo trimestral (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 impuesto sobre determinados servicios digitales,
-                  autoliquidación
           field:
             label: Modelo 490, ejercicio 2021
         2022-1t:
           casilla:
             x-chim6r1ee1in4qbfchng:
               label: Periodo trimestral (1T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 impuesto sobre determinados servicios digitales,
-                  autoliquidación
           field:
             label: Modelo 490, ejercicio 2022, período 1T
         2022-2t-4t:
@@ -1241,11 +1235,6 @@ modelo:
               label: Resultado de la liquidación [26]
             x-chim6r1ee1in4qbfchng:
               label: Periodo trimestral (2T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 impuesto sobre determinados servicios digitales,
-                  autoliquidación
           field:
             label: Modelo 490, ejercicio 2022, períodos 2T a 4T
         2023-y-siguientes:
@@ -1625,10 +1614,5 @@ modelo:
                 de regularización. 3T [86]
             x-chim6r1ee1in4qbfchng:
               label: Periodo trimestral (1T..4T)
-          construct:
-            modelo-490-autoliquidacion:
-              field:
-                title: Modelo 490 impuesto sobre determinados servicios digitales,
-                  autoliquidación
           field:
             label: Modelo 490, ejercicios 2023 y siguientes

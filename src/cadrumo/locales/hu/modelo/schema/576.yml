@@ -6,6 +6,10 @@ modelo:
           filing-year:
             help: 'A Modelo 576 . casilla adóügyi adatai: adóév.'
             label: Az adókötelezettség keletkezésének éve
+      construct:
+        modelo-576-autoliquidacion:
+          field:
+            title: Az egyes szállítóeszközöket terhelő különadó önadózása
       field:
         official_name: Modelo 576. Egyes közlekedési eszközök különadója. Önbevallás.
         title: IEDMT - önbevallás egyes közlekedési eszközök nyilvántartásba vétele
@@ -144,9 +148,5 @@ modelo:
             x-dhkn2bjkd5o6u:
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Kulcs %.'
               label: Adómegállapítás. Adókulcs %
-          construct:
-            modelo-576-autoliquidacion:
-              field:
-                title: Az egyes szállítóeszközöket terhelő különadó önadózása
           field:
             label: EHA/3851/2007. rendelet, 2008. adóévtől

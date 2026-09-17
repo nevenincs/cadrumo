@@ -1,6 +1,10 @@
 modelo:
   schema:
     '156':
+      construct:
+        modelo-156-informative:
+          field:
+            title: Modelo 156 bevallás tájékoztató
       field:
         official_name: Modelo 156. A magánszemélyek jövedelemadója. Tagok és önsegélyező-tagok
           járulékai az anyasági kedvezmény céljából. Éves adatszolgáltatási bevallás.
@@ -78,9 +82,5 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: A Modelo 156 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
-          construct:
-            modelo-156-informative:
-              field:
-                title: Modelo 156 bevallás tájékoztató
           field:
-            label: Casilla— adóügyi információ
+            label: 156-os modelo (HAC/3580/2003 rendelet), 2003. adóévtől

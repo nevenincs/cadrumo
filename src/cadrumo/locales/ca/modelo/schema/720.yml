@@ -1,6 +1,10 @@
 modelo:
   schema:
     '720':
+      construct:
+        modelo-720-informative:
+          field:
+            title: 'Model 720: declaració informativa de béns i drets a l''estranger'
       field:
         official_name: Modelo 720. Declaració informativa sobre béns i drets situats
           a l'estranger.
@@ -31,10 +35,5 @@ modelo:
             x-epgmorriclpistj1dhnn4ob3d5nms:
               help: Informació fiscal de la casella del Modelo 720.
               label: Valoració de valors, drets, assegurances o rendes situats a l'estranger
-          construct:
-            modelo-720-informative:
-              field:
-                title: Declaració informativa sobre béns i drets a l'estranger del
-                  Model 720
           field:
-            label: Casella— informació fiscal
+            label: Model 720, exercicis 2012 i següents (Ordre HAP/72/2013)

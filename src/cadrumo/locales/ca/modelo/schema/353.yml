@@ -65,6 +65,11 @@ modelo:
               353.
           m353-resultado-total-entidades:
             help: Informació fiscal de la casella 01 del Modelo 353.
+      construct:
+        modelo-353-iva-grupo-agregado:
+          field:
+            title: 'Model 353: autoliquidació mensual agregada del grup d''entitats
+              d''IVA'
       field:
         official_name: Modelo 353. Impost sobre el Valor Afegit. Grup d'entitats.
           Model agregat. Autoliquidació mensual.
@@ -99,10 +104,6 @@ modelo:
                 períodes previos pendientes per a períodes posteriors ([02] - [08]).'
               label: Quotes a compensar de períodes previs pendents per a períodes
                 posteriors ([02] - [08])
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — informació fiscal
           field:
             label: Model 353 exercicis 2008 a 2025 (Ordre EHA/3434/2007)
         2026-desde-02:
@@ -145,9 +146,5 @@ modelo:
                 Modelo 353 Referències: [10].'
               label: Pagament a compte de lliuraments de gasolines, gasoils i biocarburants
                 atribuïble a l'Administració de l'Estat [10]
-          construct:
-            modelo-353-iva-grupo-agregado:
-              field:
-                title: Modelo 353 — informació fiscal
           field:
             label: Model 353 exercici 2026 i següents (Ordre EHA/3434/2007)

@@ -666,8 +666,6 @@ errors:
       objetos seguros debe ser al menos 1; se recibió %{batch_size}.
     integrity_storage_secure_object_hashed_key_length: El digest de búsqueda sin procesar
       del objeto seguro debe tener 32 bytes; se recibieron %{length}.
-    integrity_storage_secure_object_raw_bytes: 'Los metadatos de bytes sin procesar
-      del objeto seguro tienen un tipo no admitido: %{value_type}.'
     integrity_storage_secure_object_revision_ancestry_json: El campo de ascendencia
       de revisión de un objeto seguro almacenado no contiene JSON válido.
     integrity_storage_secure_object_revision_ancestry_shape: El campo de ascendencia
@@ -722,9 +720,6 @@ errors:
       ver la causa.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
-    internal_profile_project_answers_not_registered: 'Error interno: las respuestas
-      del proyecto de perfil no están registradas.'
-    internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
     internal_wipe_type: 'Error interno: la operación de borrado seguro recibió un
       valor que no puede sobrescribir.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo

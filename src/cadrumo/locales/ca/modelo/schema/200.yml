@@ -2385,6 +2385,8 @@ modelo:
             help: Indiqueu o reviseu «Deducc. per incentivar determ. activitats -
               Total - Pendent d'aplicació en períodes futurs [00832]» per completar
               aquesta autoliquidació.
+            label: Deducc. per incentivar determ. activitats - Total - Pendent d'aplicació
+              en períodes futurs [00832]
           00833:
             help: Indiqueu o reviseu «Deducció donatius entitats sense fins lucratius
               - Donacions de caràcter general - 2016 - Amb reiteració de donacions
@@ -11864,6 +11866,8 @@ modelo:
           dp200014b-00583:
             help: Indiqueu o reviseu «Liquidació IV - Altres deduccions - Suport fiscal
               a l'inversió i altres deduccions [00583]» per completar aquesta autoliquidació.
+            label: Liquidació IV - Altres deduccions - Suport fiscal a l'inversió
+              i altres deduccions [00583]
           dp200014b-00584:
             help: Indiqueu o reviseu «Liquidació IV - Altres deduccions - Deduccions
               DT 24.1 LIS [00584]» per completar aquesta autoliquidació.
@@ -15573,6 +15577,8 @@ modelo:
           is-deduccion-actividades-total-pendiente:
             help: Indiqueu o reviseu «Deducc. per incentivar determ. activitats -
               Total - Deducció pendent/generada [00831]» per completar aquesta autoliquidació.
+            label: Deducc. per incentivar determ. activitats - Total - Deducció pendent/generada
+              [00831]
           is-deduccion-autoridades-portuarias-importe:
             help: Indiqueu o reviseu «Deducció per inversions i despeses realitzades
               per les autoritats portuàries (art. 38 bis LIS) - 2020 - Deducció pendent/generada
@@ -16138,6 +16144,61 @@ modelo:
               autoliquidació.
             label: Estat de canvis en el patrimoni net (II) - SALDO, FINAL DE L'EXERCICI
               - Capital - Escripturat [00632]
+          is-ecpn-total-cambios-ajuste-criterio-resultados-ejercicios-anteriores:
+            label: Estat de canvis en el patrimoni net (II) - Ajustos per canvi de
+              criteri d'exercicis anteriors - Resultats exercicis anteriors [00399]
+          is-ecpn-total-cambios-combinacion-negocios-capital-escriturado:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Increment (reducció) de patrim. net de combinació de
+              negocis - Capital - Escripturat [00590]
+          is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
+            label: Liquidació III - Base imposable - Base imposable [00552]
+          is-ecpn-total-cambios-conversion-pasivos-prima-emision:
+            label: Liquidació III - Base imposable - Base imposable abans de la compensació
+              de bases imposables negatives [00550]
+          is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Accions i participacions
+              en patrimoni pròpies [00566]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
+            label: Liquidació III - Base imposable - Quota íntegra [00562]
+          is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Capital - No exigit [00563]
+          is-ecpn-total-cambios-distribucion-dividendos-otras-aportaciones-socios:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Altres aportacions de
+              socis [00568]
+          is-ecpn-total-cambios-distribucion-dividendos-reservas:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Reserves [00565]
+          is-ecpn-total-cambios-distribucion-dividendos-resultados-ejercicios-anteriores:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Resultats exercicis anteriors
+              [00567]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-escriturado:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Capital
+              - Escripturat [00576]
+          is-ecpn-total-cambios-operaciones-acciones-propias-capital-no-exigido:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Capital
+              - No exigit [00577]
+          is-ecpn-total-cambios-operaciones-acciones-propias-otras-aportaciones-socios:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Altres
+              aportacions de socis [00582]
+          is-ecpn-total-cambios-operaciones-acciones-propias-resultados-ejercicios-anteriores:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Operacions amb accions o participacions pròpies - Resultats
+              exercicis anteriors [00581]
+          is-ecpn-total-cambios-otras-operaciones-socios-capital-no-exigido:
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Altres operacions amb socis o propietaris - Capital
+              - No exigit [00605]
+          is-ecpn-total-cambios-otras-variaciones-capital-no-exigido:
+            label: Estat de canvis en el patrimoni net (II) - Altres variacions del
+              patrimoni net - Capital - No exigit [00619]
           is-ecpn-total-ingresos-gastos-reconocidos:
             help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (I) - Transferències
               al compte de pèrdues i guanys - TOTAL D’INGRESSOS I DESPESES RECONEGUTS
@@ -16533,6 +16594,7 @@ modelo:
           is-liquidacion-iii-cuota-integra-ajustada-positiva:
             help: Indiqueu o reviseu «Informació fiscal de la casella» per completar
               aquesta autoliquidació [00582].
+            label: Informació fiscal de la casella [00582]
           is-liquidacion-iii-importe:
             help: Indiqueu o reviseu «Liquidació III - Bonificacions/Deduccions doble
               imposició - Deduccions per doble imposició - D.I. internacional generada
@@ -18389,6 +18451,11 @@ modelo:
               futurs [02260]» per completar aquesta autoliquidació.
             label: Pendent d'addició per límit de benefici operatiu no aplicat - Exercici
               de generació 2020 - Pendent d'aplicació en períodes futurs [02260]
+      construct:
+        modelo-200-foundation:
+          field:
+            title: 'Model 200: liquidació anual de l''impost sobre societats (2024
+              i següents), cadena de deduccions de pagaments fraccionats'
       field:
         official_name: Impost sobre Societats. Impost sobre la Renda de no Residents
           (establiments permanents i entitats en règim d'atribució de rendes constituïdes
@@ -18535,12 +18602,6 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2025(*) - Excés
                 de quota líquida positiva pendent a l'inici del període [00817]
-            00831:
-              label: Deduccions per incentivar determ. activitats - Total - Deducció
-                pendent/generada [00831]
-            00832:
-              label: Deduccions per incentivar determ. activitats - Total - Pendent
-                d'aplicació en períodes futurs [00832]
             00878:
               help: Indiqueu o reviseu «Conversió actius impost diferit crèdit exigible
                 davant Adm. tributària - Excés quota líquida positiva - Exercici generació
@@ -22238,17 +22299,6 @@ modelo:
               label: Entitats en règ. d'atribució de rendes const. a l'estranger amb
                 presència en territ. espanyol (art. 38 TRLIRNR) - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [03368]
-            x-8h834c1g60oj8ehg60qjgcg:
-              label: Liquidació III - Bonificacions/Deduccions doble imposició - Quota
-                íntegra ajustada positiva [00582]
-            x-8h834c1g60oj8ghq60o3ae1j:
-              label: Liquidació IV - Altres deduccions - Suport fiscal a la inversió
-                i altres deduccions [00583]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 i següents)
-                  - pagaments fraccionats deduction chain
           field:
             label: Modelo 200 exercicis 2024 i següents (DR200e25.xls)
         2025-y-siguientes:
@@ -22350,12 +22400,6 @@ modelo:
               label: Conversió actius impost diferit crèdit exigible davant Adm. tributària
                 - Excés quota líquida positiva - Exercici generació - 2025(*) - Excés
                 quota líquida positiva pendent a principi...
-            00831:
-              label: Deducc. per incentivar determ. activitats - Total - Deducció
-                pendent/generada [00831]
-            00832:
-              label: Deducc. per incentivar determ. activitats - Total - Pendent d'aplicació
-                en períodes futurs [00832]
             00878:
               help: Indiqueu o reviseu «Informació fiscal de la casella» per completar
                 aquesta autoliquidació.
@@ -26359,108 +26403,68 @@ modelo:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Ajustos per canvi de criteri d'exercicis anteriors - Resultats exercicis
                 anteriors [00399]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Ajustos per canvi
-                de criteri d'exercicis anteriors - Resultats exercicis anteriors [00399]
             x-8h834c1g60oj0ehg60qjac0:
               help: Indiqueu o reviseu «Liquidació III - Base imposable - Base imposable
                 abans de la compensació de bases imposables negatives [00550]» per
                 completar aquesta autoliquidació.
-              label: Liquidació III - Base imposable - Base imposable abans de la
-                compensació de bases imposables negatives [00550]
             x-8h834c1g60oj0ehg60qjacg:
               help: Indiqueu o reviseu «Liquidació III - Base imposable - Base imposable
                 [00552]» per completar aquesta autoliquidació.
-              label: Liquidació III - Base imposable - Base imposable [00552]
             x-8h834c1g60oj0ehg60qjccg:
               help: Indiqueu o reviseu «Liquidació III - Base imposable - Quota íntegra
                 [00562]» per completar aquesta autoliquidació.
-              label: Liquidació III - Base imposable - Quota íntegra [00562]
             x-8h834c1g60oj0ehg60qjcco:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - (-) Distribució de dividends
                 - Capital - No exigit [00563]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Capital - No exigit
-                [00563]
             x-8h834c1g60oj0ehg60qjcd8:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - (-) Distribució de dividends
                 - Reserves [00565]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Reserves [00565]
             x-8h834c1g60oj0ehg60qjcdg:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - (-) Distribució de dividends
                 - Accions i participacions en patrimoni pròpies [00566]» per completar
                 aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Accions i participacions
-                en patrimoni pròpies [00566]
             x-8h834c1g60oj0ehg60qjcdo:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - (-) Distribució de dividends
                 - Resultats exercicis anteriors [00567]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Resultats exercicis
-                anteriors [00567]
             x-8h834c1g60oj0ehg60qjce0:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - (-) Distribució de dividends
                 - Altres aportacions de socis [00568]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - (-) Distribució de dividends - Altres aportacions
-                de socis [00568]
             x-8h834c1g60oj0ehg60qjedg:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Operacions amb accions o participacions
                 pròpies - Capital - Escripturat [00576]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Capital - Escripturat [00576]
             x-8h834c1g60oj0ehg60qjedo:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Operacions amb accions o participacions
                 pròpies - Capital - No exigit [00577]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Capital - No exigit [00577]
             x-8h834c1g60oj0ehg60qjgc8:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Operacions amb accions o participacions
                 pròpies - Resultats exercicis anteriors [00581]» per completar aquesta
                 autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Resultats exercicis anteriors [00581]
             x-8h834c1g60oj0ehg60qjgcg:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Operacions amb accions o participacions
                 pròpies - Altres aportacions de socis [00582]» per completar aquesta
                 autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Operacions amb accions o participacions pròpies -
-                Altres aportacions de socis [00582]
             x-8h834c1g60oj0ehg60qjic0:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Increment (reducció) de patrim.
                 net de combinació de negocis - Capital - Escripturat [00590]» per
                 completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Increment (reducció) de patrim. net de combinació
-                de negocis - Capital - Escripturat [00590]
             x-8h834c1g60oj0ehg60r30d8:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Operacions amb socis o propietaris - Altres operacions amb socis o
                 propietaris - Capital - No exigit [00605]» per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
-                o propietaris - Altres operacions amb socis o propietaris - Capital
-                - No exigit [00605]
             x-8h834c1g60oj0ehg60r32e8:
               help: Indiqueu o reviseu «Estat de canvis en el patrimoni net (II) -
                 Altres variacions del patrimoni net - Capital - No exigit [00619]»
                 per completar aquesta autoliquidació.
-              label: Estat de canvis en el patrimoni net (II) - Altres variacions
-                del patrimoni net - Capital - No exigit [00619]
             x-8h834c1g60oj2ehg60q32do:
               help: Indiqueu o reviseu «Liquidació II - Detall correccions resultat
                 cta. pèrdues i guanys - Total correccions al resultat del compte de
@@ -26571,15 +26575,5 @@ modelo:
                 per completar aquesta autoliquidació.
               label: Estat de canvis en el patrimoni net (III) - Altres variacions
                 del patrimoni net - Resultat de l'exercici [00625]
-            x-8h834c1g60oj8ehg60qjgcg:
-              label: Informació fiscal de la casella [00582]
-            x-8h834c1g60oj8ghq60o3ae1j:
-              label: Liquidació IV - Altres deduccions - Suport fiscal a l'inversió
-                i altres deduccions [00583]
-          construct:
-            modelo-200-foundation:
-              field:
-                title: Modelo 200 IS annual settlement foundation (2024 i següents)
-                  - pagaments fraccionats deduction chain
           field:
             label: Modelo 200 exercicis 2024 i següents (DR200e25.xls)

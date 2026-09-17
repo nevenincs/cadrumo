@@ -8,10 +8,10 @@ modelo:
             label: Esedékesség éve
           ingresos-a-cuenta-efectuados:
             help: 'A casilla adatai: Casilla 122-134: előlegfizetések efectuados.'
-            label: 'Casilla 122-134: előlegfizetések efectuados'
+            label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
           ingresos-a-cuenta-repercutidos:
             help: 'A Modelo 190 135-147. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 135-147 — adóügyi információ
+            label: Előlegfizetések
           m190-correo-electronico:
             help: A Modelo 190 176-225. casilla adóügyi adatai.
             label: A kapcsolattartó e-mail címe
@@ -198,7 +198,7 @@ modelo:
             label: Casilla 169 — adóügyi információ
           perc-retenciones-practicadas:
             help: 'A casilla adatai: Casilla 95-107: adólevonások előlegfizetések.'
-            label: 'Casilla 95-107: adólevonások előlegfizetések'
+            label: 95-107. rovat — adóadat
           percepcion-integra-dineraria:
             help: 'A Modelo 190 82-94. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 82-94 — adóügyi információ
@@ -238,13 +238,18 @@ modelo:
             label: A törvényes képviselő NIF száma
           retenciones-ingresos-a-cuenta:
             help: 'A casilla adatai: Casilla 161-175: adólevonások előlegfizetések.'
-            label: 'Casilla 161-175: adólevonások előlegfizetések'
+            label: 161-175. rovat — adóadat
           total-percepciones-amount:
             help: 'A Modelo 190 145-160. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 145-160 — adóügyi információ
           total-percepciones-count:
             help: 'A Modelo 190 136-144. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 136-144 — adóügyi információ
+      construct:
+        modelo-190-annual-summary:
+          field:
+            title: A 190-es modelo éves összesítője a 111-es modelo negyedéves bevallásai
+              alapján
       field:
         official_name: Modelo 190. Adatszolgáltatási bevallás. Adóelőleg-levonások
           és -befizetések. Munkaviszonyból és gazdasági tevékenységből származó jövedelmek,
@@ -255,10 +260,10 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: 190-es modelo, 2022. adóév
         '2023':
           field:
-            label: null
+            label: 190-es modelo, 2023. adóév
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -437,11 +442,9 @@ modelo:
                 értékelése
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: 'A Modelo 190 122-134. casilla adóügyi adatai: adóügyi információ.'
-              label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Előlegfizetések
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -509,11 +512,6 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Az együttélési egység jogosultja
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: A 190. számú nyomtatvány éves összesítése a 111. számú nyomtatvány
-                  negyedéves bevallásaiból
           field:
             label: Modelo 190 adóév 2024 és következő
         2025-y-siguientes:
@@ -694,11 +692,9 @@ modelo:
                 értékelése
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: 'A Modelo 190 122-134. casilla adóügyi adatai: adóügyi információ.'
-              label: A természetbeni juttatásokra teljesített adóelőleg-befizetések
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
-              label: Előlegfizetések
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
@@ -766,10 +762,5 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
               label: Az együttélési egység jogosultja
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: A 190. számú nyomtatvány éves összesítése a 111. számú nyomtatvány
-                  negyedéves bevallásaiból
           field:
             label: Modelo 190 adóév 2024 és következő

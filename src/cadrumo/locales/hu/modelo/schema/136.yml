@@ -1,6 +1,58 @@
 modelo:
   schema:
     '136':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Befizetendő eredmény
+          m136-autoliquidacion-complementaria:
+            label: Kiegészítő önadózás
+          m136-base-imponible-gravamen:
+            label: Adóalap
+          m136-codigo-iban:
+            label: IBAN-kód
+          m136-cuantia-exenta-gravamen:
+            label: A különadó alól mentes összeg
+          m136-cuota-gravamen-especial:
+            label: A különadó összege
+          m136-declarante-nif:
+            label: Adóazonosító szám (NIF)
+          m136-declarante-nombre:
+            label: Családi és utónév vagy cégnév
+          m136-ejercicio-declaracion:
+            label: Adóév
+          m136-fecha-celebracion:
+            label: A húzás időpontja
+          m136-fecha-cobro-premio:
+            label: A nyeremény felvételének időpontja
+          m136-forma-pago:
+            label: Fizetési mód
+          m136-importe-ingresado:
+            label: Az Állami Kincstár javára befizetett összeg
+          m136-importe-premio-declarante:
+            label: A bevallót egyénileg megillető nyeremény összege vagy értéke
+          m136-importe-premio-total:
+            label: A nyertes sorsjegyért, szelvényért vagy fogadásért kapott nyeremény
+              összege
+          m136-justificante-anterior:
+            label: A korábbi önadózás azonosító bizonylatszáma
+          m136-loteria-apuesta-denominacion:
+            label: A sorsolás vagy fogadás megnevezése
+          m136-organizador-codigo-pais:
+            label: A szervező szerv vagy szervezet országkódja
+          m136-organizador-denominacion:
+            label: A szervező szerv vagy szervezet megnevezése vagy cégneve
+          m136-organizador-pais:
+            label: A szervező szerv vagy szervezet országa
+          m136-periodo-declaracion:
+            label: Időszak
+          m136-precio-unitario:
+            label: Egységár
+          m136-provincia-residencia-irpf:
+            label: Az SZJA-adózó szokásos tartózkodási helye szerinti tartomány kódja
+          m136-resultados-anteriores-mismo-premio:
+            label: Ugyanazon jogcímen és ugyanazon nyereményhez kapcsolódóan korábbi
+              önadózásokból befizetendő eredmények
       field:
         official_name: Modelo 136. IRPF és IRNR. Egyes lottó- és fogadási nyeremények
           különadója. Önbevallás.
@@ -12,89 +64,62 @@ modelo:
               field:
                 title: '136-os modelo: egyes lottó- és fogadási nyeremények különadója'
           field:
-            label: null
+            label: 136-os modelo, 2022-2025. adóévek
         '2026':
           casilla:
             '01':
               help: 'A Modelo 136 01. casilla adóügyi adatai: adóügyi információ.'
-              label: A nyertes sorsjegyért, szelvényért vagy fogadásért kapott nyeremény
-                összege
             '02':
               help: A Modelo 136 02. casilla adóügyi adatai.
-              label: A bevallót egyénileg megillető nyeremény összege vagy értéke
             '03':
               help: 'Tekintse át a casilla adatait: Cuantia adómentes - gravamen especial.'
-              label: A különadó alól mentes összeg
             '04':
               help: 'Tekintse át a casilla adatait: Adóalap.'
-              label: Adóalap
             '05':
               help: 'Tekintse át a casilla adatait: Adóösszeg - gravamen especial.'
-              label: A különadó összege
             '06':
               help: 'A Modelo 136 06. casilla adóügyi adatai: adóügyi információ.'
-              label: Ugyanazon jogcímen és ugyanazon nyereményhez kapcsolódóan korábbi
-                önadózásokból befizetendő eredmények
             '07':
               help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
-              label: Befizetendő eredmény
             09:
               help: 'Tekintse át a casilla adatait: Összeg ingresado a favor - Tesoro
                 Publico.'
-              label: Az Állami Kincstár javára befizetett összeg
             autoliquidacion-complementaria:
               help: 'Tekintse át a casilla adatait: Önadózási bevallás kiegészítő.'
-              label: Kiegészítő önadózás
             declarante-nif:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: Adóazonosító szám (NIF)
             declarante-nombre:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: Családi és utónév vagy cégnév
             ejercicio-declaracion:
               help: 'Tekintse át a casilla adatait: Adóév.'
-              label: Adóév
             fecha-celebracion:
               help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-              label: A húzás időpontja
             fecha-cobro-premio:
               help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-              label: A nyeremény felvételének időpontja
             forma-pago:
               help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-              label: Fizetési mód
             iban:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: IBAN-kód
             justificante-anterior:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: A korábbi önadózás azonosító bizonylatszáma
             loteria-apuesta-denominacion:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: A sorsolás vagy fogadás megnevezése
             organizador-codigo-pais:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: A szervező szerv vagy szervezet országkódja
             organizador-denominacion:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: A szervező szerv vagy szervezet megnevezése vagy cégneve
             organizador-pais:
               help: 'A Modelo 136 . casilla adóügyi adatai: adóügyi információ.'
-              label: A szervező szerv vagy szervezet országa
             periodo-declaracion:
               help: 'Tekintse át a casilla adatait: Időszak.'
-              label: Időszak
             precio-unitario:
               help: 'Tekintse át a casilla adatait: Precio unitario.'
-              label: Egységár
             provincia-residencia-irpf:
               help: A Modelo 136 . casilla adóügyi adatai.
-              label: Az SZJA-adózó szokásos tartózkodási helye szerinti tartomány
-                kódja
           construct:
             modelo-136-calculation-construct:
               field:
-                title: A 136. számú nyomtatvány nyereményekre kivetett különadójának
-                  számítási szerkezete
+                title: '136-os modelo: a lottó- és fogadásnyeremények különadójának
+                  számítása'
           field:
-            label: Casilla— adóügyi információ
+            label: 136-os modelo, 2026. adóév (HAP/70/2013 és HAC/763/2018 rendelet)

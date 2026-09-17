@@ -1,6 +1,18 @@
 modelo:
   schema:
     '188':
+      casilla:
+        continuidad:
+          capitalizacion-seguros-resumen-base-negativa:
+            label: Base de retencions i ingressos a compte negativa
+          capitalizacion-seguros-resumen-base-positiva:
+            label: Base de retencions i ingressos a compte
+          capitalizacion-seguros-resumen-perceptores-base-negativa:
+            label: Nombre total de perceptors amb base negativa
+          capitalizacion-seguros-resumen-perceptores-base-positiva:
+            label: Nombre total de perceptors amb base positiva
+          capitalizacion-seguros-resumen-retenciones:
+            label: Retencions i ingressos a compte
       field:
         official_name: Modelo 188. Retencions i ingressos a compte. Rendes del capital
           mobiliari d'operacions de capitalització i contractes d'assegurança de vida
@@ -14,32 +26,27 @@ modelo:
                 title: Model 188 declaració informativa de rendiments d'operacions
                   de capitalització i assegurances de vida o invalidesa
           field:
-            label: null
+            label: Model 188, exercici 2022
         2023-y-siguientes:
           casilla:
             '01':
               help: Nombre de perceptors (registres) la base de retencions dels quals
                 és positiva.
-              label: Nombre total de perceptors amb base positiva
             '02':
               help: Suma de les bases de retenció reflectides en els registres de
                 perceptor amb base positiva.
-              label: Base de retencions i ingressos a compte
             '03':
               help: Suma de les retencions i ingressos a compte practicats sobre les
                 rendes declarades.
-              label: Retencions i ingressos a compte
             '04':
               help: Nombre de perceptors (registres) la base de retencions dels quals
                 és negativa.
-              label: Nombre total de perceptors amb base negativa
             '05':
               help: Suma de les bases de retenció reflectides en els registres de
                 perceptor amb base negativa.
-              label: Base de retencions i ingressos a compte negativa
           construct:
             modelo-188-calculation-construct:
               field:
-                title: Modelo 188 calculation construct
+                title: 'Model 188: càlcul de l''autoliquidació'
           field:
-            label: Casella— informació fiscal
+            label: Ordre de 17 de novembre de 1999, exercicis 2019 i següents

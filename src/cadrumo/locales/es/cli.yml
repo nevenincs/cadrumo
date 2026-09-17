@@ -1035,6 +1035,10 @@ cli:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
+        no_m130_revisions: No existen revisiones borrador trimestrales del Modelo
+          130 para el ejercicio %{year}.
+        no_m130_units: No existen unidades de trabajo Modelo 130 en borrador para
+          el ejercicio %{year}.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -3590,16 +3594,6 @@ cli:
         cálculo forfait del régimen simplificado aún no está disponible; revise las
         casillas del régimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
-  registry:
-    manuals:
-      verify_dangling_rule_section_ref: la regla %{rule_id} referencia una sección
-        desconocida %{target}
-      verify_dangling_section_ref: la sección %{section_id} referencia una sección
-        desconocida %{target}
-      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual
-        fetch'' para materializarlo'
-      verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción
-        de %{field_name}'
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'

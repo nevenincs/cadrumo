@@ -10,48 +10,27 @@ modelo:
             help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
               763.
             label: Exercici a què es refereix l'autoliquidació
+      construct:
+        modelo-763-autoliquidacion:
+          field:
+            title: Modelo 763 autoliquidació del Impuesto sobre activitats de juego
       field:
         official_name: Modelo 763. Impost sobre activitats de joc en els supòsits
           d'activitats anuals o pluriennals. Autoliquidació.
         title: Impost sobre activitats de joc - autoliquidació (anuals/pluriennals)
       revision:
         2012-2014:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
-                  juego
           field:
             label: Modelo 763, exercici 2012 (2.º i 3.º trimestre)
         2015-2017:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
-                  juego
           field:
-            label: Casella— informació fiscal
+            label: Model 763, exercicis 2015 a 2017
         2018-1t-3t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
-                  juego
           field:
             label: Modelo 763, exercici 2018 (1.º a 3.º trimestre)
         2018-4t:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
-                  juego
           field:
             label: Modelo 763, exercici 2018 (4.º trimestre)
         2019-y-siguientes:
-          construct:
-            modelo-763-autoliquidacion:
-              field:
-                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
-                  juego
           field:
-            label: Casella— informació fiscal
+            label: Model 763, exercicis 2019 i següents

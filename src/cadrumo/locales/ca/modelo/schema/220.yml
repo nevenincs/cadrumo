@@ -120,10 +120,159 @@ modelo:
             help: Informació fiscal sobre informació fiscal de la casella  del Modelo
               220.
             label: Document d'ingrés o devolució. Meritació. Tipus d'exercici
+          extracooperativo-base-tramo-dos:
+            label: Tram 2 - Base imposable 2 (resultats extracooperatius) | Nota 3
+          extracooperativo-base-tramo-uno:
+            label: Tram 1 - Base imposable (resultats extracooperatius) | Nota 3
+          extracooperativo-tipo-tramo-dos:
+            label: Tram 2 - Tipus de gravamen (resultats extracooperatius) | 2 enters,
+              4 decimals. Nota 3
+          extracooperativo-tipo-tramo-uno:
+            label: Tram 1 - Tipus de gravamen (resultats extracooperatius) | 2 enters,
+              4 decimals. Nota 3
           filing-year:
             help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
               220.
             label: Exercici a què es refereix la declaració del grup fiscal
+          liquidacion-complementaria-abono-conversion-estado:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Abonament per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL Estat
+          liquidacion-complementaria-abono-conversion-forales:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Abonament per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL Diputacions Forals i Navarra
+          liquidacion-complementaria-abono-conversion-total:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Abonament per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL (Estat + Diputacions Forals i Navarra)
+          liquidacion-complementaria-abono-regularizacion-estado:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Abonament. Estat'
+          liquidacion-complementaria-abono-regularizacion-forales:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Abonament. Diputacions Forals i Navarra'
+          liquidacion-complementaria-abono-regularizacion-total:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Abonament. Total (Estat + Diputacions Forals i Navarra)'
+          liquidacion-complementaria-cambio-residencia-base-estado:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Import integrat en la base imposable. Estat
+          liquidacion-complementaria-cambio-residencia-base-forales:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Import integrat en la base imposable. Diputacions Forals
+              i Navarra (totals)
+          liquidacion-complementaria-cambio-residencia-deuda-estado:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Deute tributari resultant del fraccionament art. 19,1
+              LIS. Estat
+          liquidacion-complementaria-cambio-residencia-deuda-forales:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Deute tributari resultant del fraccionament art. 19,1
+              LIS. Diputacions Forals i Navarra (totals)
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-estado:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). 1r fraccionament. Estat
+          liquidacion-complementaria-cambio-residencia-primer-fraccionamiento-forales:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). 1r fraccionament. Diputacions Forals i Navarra (totals)
+          liquidacion-complementaria-compensacion-conversion-estado:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Compensació per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL Estat
+          liquidacion-complementaria-compensacion-conversion-forales:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Compensació per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL Diputacions Forals i Navarra
+          liquidacion-complementaria-compensacion-conversion-total:
+            label: Liquidació. Conversió d'actius per impost diferit (art. 130 LIS).
+              Compensació per conversió d'actius per impost diferit (art. 130 LIS).
+              TOTAL (Estat + Diputacions Forals i Navarra)
+          liquidacion-complementaria-compensacion-regularizacion-estado:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Compensació. Estat'
+          liquidacion-complementaria-compensacion-regularizacion-forales:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Compensació. Diputacions Forals i Navarra'
+          liquidacion-complementaria-compensacion-regularizacion-total:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. Compensació. Total (Estat + Diputacions Forals i
+              Navarra)'
+          liquidacion-complementaria-devolucion-anterior-estado:
+            label: Liquidació. Líquid a ingressar o a retornar. Complementària. Devolucions
+              acordades procedents d'autoliquidacions anteriors corresponents al període
+              impositiu 2025. Estat
+          liquidacion-complementaria-devolucion-anterior-forales:
+            label: Liquidació. Líquid a ingressar o a retornar. Complementària. Devolucions
+              acordades procedents d'autoliquidacions anteriors corresponents al període
+              impositiu 2025. Diputacions Forals i Navarra (totals)
+          liquidacion-complementaria-devolucion-compensada-anterior-estado:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Complementària: Devolució acordada
+              / compensada. Estat'
+          liquidacion-complementaria-devolucion-compensada-anterior-forales:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Complementària: Devolució acordada
+              / compensada. Diputacions Forals i Navarra'
+          liquidacion-complementaria-devolucion-compensada-anterior-total:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Complementària: Devolució acordada
+              / compensada. Total (Estat + Diputacions Forals i Navarra)'
+          liquidacion-complementaria-ingreso-fraccionamiento-estado:
+            label: Liquidació. Líquid a ingressar. Líquid a ingressar inclòs el 1r
+              fraccionament de l'art. 19.1 LIS. Estat
+          liquidacion-complementaria-ingreso-fraccionamiento-forales:
+            label: Liquidació. Líquid a ingressar. Líquid a ingressar inclòs el 1r
+              fraccionament de l'art. 19.1 LIS. Diputacions Forals i Navarra (totals)
+          liquidacion-complementaria-ingreso-regularizacion-estado:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. A ingressar. Estat'
+          liquidacion-complementaria-ingreso-regularizacion-forales:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. A ingressar. Diputacions Forals i Navarra'
+          liquidacion-complementaria-ingreso-regularizacion-total:
+            label: 'Liquidació. Conversió d''actius per impost diferit (art. 130 LIS).
+              Líquid a ingressar o a retornar: Resultat de conversió d''AID després
+              de regularització. A ingressar. Total (Estat + Diputacions Forals i
+              Navarra)'
+          liquidacion-complementaria-resultado-anterior-estado:
+            label: 'Liquidació. Líquid a ingressar o a retornar. Complementària: resultats
+              a ingressar procedents d''autoliquidacions anteriors corresponents al
+              període impositiu 2025. Estat'
+          liquidacion-complementaria-resultado-anterior-forales:
+            label: 'Liquidació. Líquid a ingressar o a retornar. Complementària: resultats
+              a ingressar procedents d''autoliquidacions anteriors corresponents al
+              període impositiu 2025. Diputacions Forals i Navarra (totals).'
+          liquidacion-complementaria-resultado-estado:
+            label: Liquidació. Líquid a ingressar o a retornar. Estat
+          liquidacion-complementaria-resultado-forales:
+            label: Liquidació. Líquid a ingressar o a retornar. Diputacions Forals
+              i Navarra
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
+            label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de l''autoliquidació
+              inclòs el 1r fraccionament de l''art. 19,1 LIS procedent d''autoliquidacions
+              anteriors corresponents al període impositiu 2025. Estat'
+          liquidacion-complementaria-resultado-fraccionamiento-anterior-forales:
+            label: 'Liquidació. Líquid a ingressar: Complementària: Resultat de l''autoliquidació
+              inclòs el 1r fraccionament de l''art. 19,1 LIS procedent d''autoliquidacions
+              anteriors corresponents al període impositiu 2025. Diputacions Forals
+              i Navarra (totals)'
+          liquidacion-complementaria-resultado-fraccionamiento-estado:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Resultat de l'autoliquidació inclòs el 1r fraccionament
+              de l'art. 19.1 LIS. Estat.
+          liquidacion-complementaria-resultado-fraccionamiento-forales:
+            label: Liquidació. Opció de fraccionament en supòsits de canvi de residència
+              (art. 19,1 LIS). Resultat de l'autoliquidació inclòs el 1r fraccionament
+              de l'art. 19.1 LIS. Estat.
           t22007000-00043:
             help: 'Dada del model 220, exercici 2024: Base imposable i quota íntegra
               del grup (pàg. 7 full 00). Suma de bases imposables individuals de les
@@ -1515,6 +1664,17 @@ modelo:
               dos decimals).'
             label: Base imposable i quota íntegra del grup (pàg. 7 full 00). Tram
               de tipus de gravamen 1 (tres enters, dos decimals)
+          tonelaje-base-imponible:
+            label: Règim especial d'entitats navilieres en funció del tonatge - Base
+              imposable | Nota 2.
+          tonelaje-tipo-gravamen:
+            label: Règim especial d'entitats navilieres en funció del tonatge - Tipus
+              de gravamen | 2 enters, 4 decimals. Nota 2
+      construct:
+        modelo-220-declaration-construct:
+          field:
+            title: Modelo 220 declaració anual del grup fiscal en règim de consolidació
+              fiscal
       field:
         official_name: Modelo 220. Impost sobre Societats. Règim de consolidació fiscal.
           Declaració.
@@ -9909,18 +10069,8 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
                 220.
               label: Representants legals. Representant legal 3. Notaria
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: Modelo 220 declaració anual del grup fiscal en règim de consolidació
-                  fiscal
           field:
             label: Orden HAC/657/2025 (modelo 220), exercici 2024
         '2025':
-          construct:
-            modelo-220-declaration-construct:
-              field:
-                title: Modelo 220 declaració anual del grup fiscal en règim de consolidació
-                  fiscal
           field:
             label: Orden HAC/529/2026 (modelo 220), exercicis 2025 i següents

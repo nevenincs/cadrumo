@@ -1,6 +1,10 @@
 modelo:
   schema:
     '349':
+      construct:
+        modelo-349-informative:
+          field:
+            title: 'Modelo 349: informative return of intra-Community transactions'
       field:
         official_name: Modelo 349. Informative return. Recapitulative statement of
           intra-Community transactions.
@@ -82,9 +86,5 @@ modelo:
                 349.
               label: Tax identification number (NIF) of the substitute final-recipient
                 trader or professional
-          construct:
-            modelo-349-informative:
-              field:
-                title: Modelo 349 informative declaration of intra-community transactions
           field:
-            label: Casilla — tax field
+            label: Modelo 349, tax year 2020 onwards (Order HAC/174/2020)

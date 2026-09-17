@@ -1864,6 +1864,10 @@ modelo:
           tipo-declaracion:
             help: 'Consulteu la informació de la casella: Tipus de declaració.'
             label: Tipus de declaració
+      construct:
+        modelo-390-iva-resumen-anual:
+          field:
+            title: Declaració-resum anual de IVA
       field:
         official_name: Modelo 390. Declaració-resum anual de l'Impost sobre el Valor
           Afegit.
@@ -1898,12 +1902,9 @@ modelo:
           field:
             label: Model 390 exercici 2021 (Orden EHA/3111/2009)
         '2022':
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaració-resum anual de IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 390, exercici 2022 (Ordre EHA/3111/2009, modificada per ordres
+              successives, inclosa l'HAP/2373/2014)
         '2023':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -2780,12 +2781,9 @@ modelo:
               help: Volum d'operacions en règim simplificat
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volum d'operacions
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaració-resum anual de IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 390, exercici 2023 (Ordre EHA/3111/2009, modificada per ordres
+              successives, inclosa l'HAP/2373/2014)
         '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -3658,12 +3656,9 @@ modelo:
               help: Volum d'operacions en règim simplificat
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volum d'operacions
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaració-resum anual de IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 390, exercici 2024 (Ordre EHA/3111/2009, modificada per ordres
+              successives, inclosa l'HAP/2373/2014)
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -4560,9 +4555,6 @@ modelo:
               help: Volum d'operacions en règim simplificat
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volum d'operacions
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaració-resum anual de IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 390, exercici 2025 (Ordre EHA/3111/2009, modificada per ordres
+              successives, inclosa l'HAP/2373/2014)

@@ -23,6 +23,11 @@ modelo:
             help: Suma de les retencions i ingressos a compte practicats sobre les
               rendes declarades.
             label: Retencions i ingressos a compte
+      construct:
+        modelo-194-calculation-construct:
+          field:
+            title: 'Model 194: resum anual de retencions sobre rendiments del capital
+              mobiliari'
       field:
         official_name: Modelo 194. Impost sobre la Renda de les Persones Físiques,
           Impost sobre Societats i Impost sobre la Renda de no Residents (establiments
@@ -33,23 +38,11 @@ modelo:
         title: Retencions de capital mobiliari i transmissió d'actius - resum anual
       revision:
         '2019':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, exercici 2019
         '2023':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, exercici 2023
         '2024':
-          construct:
-            modelo-194-calculation-construct:
-              field:
-                title: Modelo 194 calculation construct
           field:
             label: Diseño de registro del modelo 194, exercici 2024

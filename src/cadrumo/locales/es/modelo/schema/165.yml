@@ -37,6 +37,10 @@ modelo:
             label: Apellidos y nombre del socio o participe
           tipo-declaracion:
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 declaración informativa
       field:
         official_name: Modelo 165. Declaración informativa de certificaciones individuales
           emitidas a los socios o partícipes de entidades de nueva o reciente creación.
@@ -47,10 +51,6 @@ modelo:
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2016-2022:
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 declaración informativa
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2023-2025:
@@ -90,9 +90,5 @@ modelo:
               label: NIF del socio o participe
             socio-nombre:
               label: Apellidos y nombre del socio o participe
-          construct:
-            modelo-165-informative:
-              field:
-                title: Modelo 165 declaración informativa
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes

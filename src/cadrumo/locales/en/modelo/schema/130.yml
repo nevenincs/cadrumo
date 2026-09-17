@@ -1,6 +1,10 @@
 modelo:
   schema:
     '130':
+      construct:
+        modelo-130-direct-estimation-instalment:
+          field:
+            title: 'Modelo 130: instalment payment under direct estimation'
       field:
         official_name: Personal Income Tax. Business activities under direct assessment.
           Instalment payment.
@@ -85,9 +89,5 @@ modelo:
                 as deductible casilla 15 in a later quarter.
               label: Negative balance transferable to later periods (max 0, -casilla
                 17)
-          construct:
-            modelo-130-direct-estimation-instalment:
-              field:
-                title: Modelo 130 — tax information
           field:
-            label: Casilla— tax information
+            label: Order HAP/258/2015, tax years 2019 onwards

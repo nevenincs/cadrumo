@@ -92,9 +92,6 @@ adapters:
           Cadrumo seleccionat.
         scope_missing: La pantalla de consentiment de Google s'ha tancat sense concedir
           tots els àmbits requerits.
-        unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
-          està en mode insegur i el perfil actiu porta un identificador fiscal espanyol
-          real.
     profile_binding:
       errors:
         no_active_profile: No hi ha cap perfil Cadrumo actiu enllaçat per a Google

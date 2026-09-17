@@ -101,7 +101,8 @@ modelo:
       revision:
         2022-2024:
           field:
-            label: null
+            label: Model 280, exercicis 2022 a 2024
         '2025':
           field:
-            label: Casella— informació fiscal
+            label: Model 280, exercici 2025 (Ordre HAP/2118/2015; Ordres HFP/1822/2016,
+              HAC/1276/2019 i HFP/1192/2022)

@@ -1,6 +1,10 @@
 modelo:
   schema:
     '720':
+      construct:
+        modelo-720-informative:
+          field:
+            title: 'Modelo 720: informative return of assets and rights held abroad'
       field:
         official_name: Modelo 720. Informative return on assets and rights located
           abroad.
@@ -31,9 +35,5 @@ modelo:
               help: Tax information for casilla of Modelo 720.
               label: Valuation of securities, rights, insurance policies or income
                 located abroad
-          construct:
-            modelo-720-informative:
-              field:
-                title: Modelo 720 declaration reporting assets and rights held abroad
           field:
-            label: Casilla— tax information
+            label: Modelo 720, tax years 2012 onwards (Order HAP/72/2013)

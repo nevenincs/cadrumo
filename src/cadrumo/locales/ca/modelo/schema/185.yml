@@ -7,6 +7,10 @@ modelo:
             label: Exercici a què es refereix la declaració
           tipo-declaracion:
             label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-185-informative:
+          field:
+            title: Modelo 185 declaració informativa
       field:
         official_name: Modelo 185. Declaració informativa mensual de cotitzacions
           d'afiliats i mutualistes.
@@ -100,9 +104,5 @@ modelo:
                 igual o superior al 50%, 3 parcial inferior al 50%, 4 inaplicable.
                 Es refereix al mes -2.'
               label: TIPUS DE JORNADA DEL MES -2
-          construct:
-            modelo-185-informative:
-              field:
-                title: Modelo 185 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 185 (Ordre HAC/1197/2025), exercicis 2025 i següents

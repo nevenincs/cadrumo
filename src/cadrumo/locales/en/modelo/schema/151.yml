@@ -13,6 +13,7 @@ modelo:
             label: Taxpayer foreign address. 72 - Fax number
           cuota-cero:
             help: 'Review the casilla information: Amount cero.'
+            label: Zero tax amount
           did-devolucion-swift-bic:
             help: 'Review the casilla information: Refund. SWIFT-BIC.'
             label: Refund. SWIFT-BIC
@@ -21,7 +22,7 @@ modelo:
             label: Period (annual, 0A)
           filing-year:
             help: Tax information for casilla of Modelo 151.
-            label: Tax year the return refers to
+            label: Filing year to which the return relates
           impatriado-base-liquidable-ahorro:
             help: Tax information about tax information in casilla  of Modelo 151.
             label: 'Savings taxable base (the part of the taxable base from income
@@ -29,8 +30,8 @@ modelo:
               from Spanish sources)'
           impatriado-base-liquidable-general:
             help: Tax information about tax information in casilla  of Modelo 151.
-            label: General taxable base (impatriate regime, excluding the savings
-              component under art. 25.1.f TRLIRNR)
+            label: General taxable base (impatriate regime, excluding the savings-income
+              part under TRLIRNR art. 25.1.f)
           impatriado-cuota-diferencial:
             help: Tax information about tax information in casilla  of Modelo 151.
           impatriado-cuota-integra-ahorro:
@@ -39,11 +40,11 @@ modelo:
               on the savings taxable base, wording in force per Ley 7/2024)'
           impatriado-cuota-integra-general:
             help: Tax information about tax information in casilla  of Modelo 151.
-            label: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
-              to €600,000, 47% on the excess)'
+            label: 'Gross general tax liability (art. 93.2.e.1º scale: 24% up to EUR
+              600,000, 47% on the excess)'
           impatriado-retenciones:
             help: Tax information about tax information in casilla  of Modelo 151.
-            label: Withholdings and advance payments (art. 93.2.f)
+            label: Withholdings and advance payments (payments on account, art. 93.2.f)
           m151-44-tipo-de-via:
             help: Tax information about tax information in casilla 317-321 of Modelo
               151.
@@ -65,15 +66,27 @@ modelo:
           m151-cuota-de-participacion:
             help: Tax information about tax information in casilla 222-226 of Modelo
               151.
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
+            label: Additional details of income from property and real estate. Origin
+              [12]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
             help: 'Tax information about tax information in casilla 469-473 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
             help: 'Tax information about tax information in casilla 481-500 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
+            label: Additional details of income from property and real estate. Location
+              [13]
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
             help: 'Tax information about tax information in casilla 474-478 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           m151-descripcion-de-la-ganancia-patrimonial:
             help: Tax information for casilla 15-114 of Modelo 151.
           m151-descripcion-del-elemento-patrimonial:
@@ -183,30 +196,66 @@ modelo:
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'Tax information about tax information in casilla 225-229 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'Tax information about tax information in casilla 713-717 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'Tax information about tax information in casilla 957-961 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Additional details of income from property and real estate. Location
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Additional details of income from property and real estate. Location
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Additional details of income from property and real estate. Location
+              [13]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'Tax information about tax information in casilla 230-234 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'Tax information about tax information in casilla 718-722 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'Tax information about tax information in casilla 962-966 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p02-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'Tax information about tax information in casilla 237-256 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'Tax information about tax information in casilla 725-744 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
           p02-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'Tax information about tax information in casilla 969-988 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Additional details of income from property and real estate. Origin
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Additional details of income from property and real estate. Origin
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Additional details of income from property and real estate. Origin
+              [12]
           p02-pagador-apellidos-o-razon-social-01:
             help: Tax information about tax information in casilla 111-170 of Modelo
               151.
@@ -238,39 +287,87 @@ modelo:
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
             help: 'Tax information about tax information in casilla 225-229 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
             help: 'Tax information about tax information in casilla 469-473 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
             help: 'Tax information about tax information in casilla 713-717 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
             help: 'Tax information about tax information in casilla 957-961 of Modelo
               151 References: [10].'
+            label: Additional details of income from property and real estate. Ownership
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Additional details of income from property and real estate. Location
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
+            label: Additional details of income from property and real estate. Location
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Additional details of income from property and real estate. Location
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Additional details of income from property and real estate. Location
+              [13]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
             help: 'Tax information about tax information in casilla 230-234 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
             help: 'Tax information about tax information in casilla 474-478 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
             help: 'Tax information about tax information in casilla 718-722 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
             help: 'Tax information about tax information in casilla 962-966 of Modelo
               151 References: [11].'
+            label: Additional details of income from property and real estate. Usufruct
+              (%) [11]
           p03-datos-adicionales-de-l-referencia-catastral-14-01:
             help: 'Tax information about tax information in casilla 237-256 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-02:
             help: 'Tax information about tax information in casilla 481-500 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-03:
             help: 'Tax information about tax information in casilla 725-744 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
           p03-datos-adicionales-de-l-referencia-catastral-14-04:
             help: 'Tax information about tax information in casilla 969-988 of Modelo
               151 References: [14].'
+            label: Additional details of income from property and real estate. Cadastral
+              reference [14]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Additional details of income from property and real estate. Origin
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
+            label: Additional details of income from property and real estate. Origin
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Additional details of income from property and real estate. Origin
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Additional details of income from property and real estate. Origin
+              [12]
           p03-pagador-apellidos-o-razon-social-01:
             help: Tax information about tax information in casilla 111-170 of Modelo
               151.
@@ -302,6 +399,7 @@ modelo:
           p03-total-rendimientos-int-nmobiliaria-imputada-15:
             help: 'Review the casilla information: Total income íntegros/Income property
               imputada [15].'
+            label: Total gross returns / imputed real-estate income [15]
           p03-total-retenciones-o-ingresos-a-cuenta-16:
             help: 'Tax information about tax information in casilla 1040-1056 of Modelo
               151 References: [16].'
@@ -467,24 +565,32 @@ modelo:
           p08-cuota-integra-total-parte-autonomica-23:
             help: 'Review the casilla information: Amount full total. Regional share
               [23].'
+            label: Total gross tax. Regional portion [23]
           p08-cuota-integra-total-parte-estatal-22:
             help: 'Review the casilla information: Amount full total. State share
               [22].'
+            label: Total gross tax. State portion [22]
           p08-cuota-liquida-total-30:
             help: 'Review the casilla information: Amount líquida total [30].'
             label: Total net tax [30]
           p08-cuota-liquida-total-parte-autonomica-32:
             help: 'Review the casilla information: Amount líquida total. Regional
               share [32].'
+            label: Total net tax. Regional portion [32]
           p08-cuota-liquida-total-parte-estatal-31:
             help: 'Review the casilla information: Amount líquida total. State share
               [31].'
+            label: Total net tax. State portion [31]
           p08-cuotas-del-impuesto-so-as-en-la-declaracion-34:
             help: 'Tax information about tax information in casilla 1080-1096 of Modelo
               151 References: [34].'
+            label: Non-Resident Income Tax amounts paid on the income included in
+              the return [34]
           p08-deduccion-por-doble-im-anjero-parte-estatal-28:
             help: 'Tax information about tax information in casilla 978-994 of Modelo
               151 References: [28].'
+            label: Deduction for international double taxation on employment income
+              obtained and taxed abroad. State portion [28]
           p08-deduccion-por-doble-im-dos-en-el-extranjero-27:
             help: 'Tax information about tax information in casilla 961-977 of Modelo
               151 References: [27].'
@@ -493,6 +599,8 @@ modelo:
           p08-deduccion-por-doble-im-ero-parte-autonomica-29:
             help: 'Tax information about tax information in casilla 995-1011 of Modelo
               151 References: [29].'
+            label: Deduction for international double taxation on employment income
+              obtained and taxed abroad. Regional portion [29]
           p08-deduccion-por-donativos-24:
             help: 'Tax information about tax information in casilla 910-926 of Modelo
               151 References: [24].'
@@ -500,9 +608,11 @@ modelo:
           p08-deduccion-por-donativos-parte-autonomica-26:
             help: 'Tax information about tax information in casilla 944-960 of Modelo
               151 References: [26].'
+            label: Deduction for donations. Regional portion [26]
           p08-deduccion-por-donativos-parte-estatal-25:
             help: 'Tax information about tax information in casilla 927-943 of Modelo
               151 References: [25].'
+            label: Deduction for donations. State portion [25]
           p08-descripcion-del-elemento-patrimonial-02:
             help: Tax information for casilla 201-300 of Modelo 151.
           p08-descripcion-del-elemento-patrimonial-03:
@@ -512,6 +622,7 @@ modelo:
           p08-devoluciones-acordadas-or-la-administracion-42:
             help: 'Tax information about tax information in casilla 1216-1232 of Modelo
               151 References: [42].'
+            label: Refunds agreed by the Administration [42]
           p08-epigrafe-a1-35:
             help: 'Review the casilla information: Epígrafe A1 [35].'
             label: Heading A1 [35]
@@ -554,12 +665,18 @@ modelo:
           p08-resultados-a-ingresar-cion-administrativas-41:
             help: 'Tax information about tax information in casilla 1199-1215 of Modelo
               151 References: [41].'
+            label: Amounts payable from previous returns or administrative assessments
+              [41]
           representante-fax:
             help: Tax information about tax information in casilla 913-921 of Modelo
               151.
             label: Representative. 61 - Fax number.
           tipo-de-declaracion:
             label: Return type
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: Form 151 personal income tax, inbound expatriate regime, tax liability
       field:
         official_name: Modelo 151. Personal Income Tax return for taxpayers under
           the special regime applicable to workers posted to Spanish territory.
@@ -568,8 +685,6 @@ modelo:
       revision:
         2015-2022:
           casilla:
-            x-chkm8bj3elnn8o9dcdin4ro:
-              label: Zero tax due
             x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
               help: Tax information about tax information in casilla 13-46 of Modelo
                 151.
@@ -745,82 +860,30 @@ modelo:
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: Tax information about tax information in casilla 13 of Modelo
                 151.
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'Tax information about tax information in casilla 236 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'Tax information about tax information in casilla 480 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'Tax information about tax information in casilla 724 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'Tax information about tax information in casilla 968 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'Tax information about tax information in casilla 235 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'Tax information about tax information in casilla 479 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'Tax information about tax information in casilla 723 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'Tax information about tax information in casilla 967 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'Tax information about tax information in casilla 208-224 of Modelo
                 151 References: [9].'
@@ -989,82 +1052,30 @@ modelo:
               help: 'Tax information about tax information in casilla 748-764 of Modelo
                 151 References: [3].'
               label: Valuation [3]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              label: Additional data on income from property and real estate. Ownership
-                (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
               help: 'Tax information about tax information in casilla 236 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60p0:
               help: 'Tax information about tax information in casilla 480 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60pg:
               help: 'Tax information about tax information in casilla 724 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60q0:
               help: 'Tax information about tax information in casilla 968 of Modelo
                 151 References: [13].'
-              label: Additional data on income from property and real estate. Situation
-                [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              label: Additional data on income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              label: Additional data on income from property and real estate. Cadastral
-                reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
               help: 'Tax information about tax information in casilla 235 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko34:
               help: 'Tax information about tax information in casilla 479 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko36:
               help: 'Tax information about tax information in casilla 723 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko38:
               help: 'Tax information about tax information in casilla 967 of Modelo
                 151 References: [12].'
-              label: Additional data on income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               help: 'Tax information about tax information in casilla 208-224 of Modelo
                 151 References: [9].'
@@ -1225,8 +1236,6 @@ modelo:
               help: 'Tax information about tax information in casilla 745-746 of Modelo
                 151 References: [1].'
               label: Income type [1]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
-              label: Total gross income / imputed real-estate income [15]
             x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
               help: 'Tax information about tax information in casilla 16-32 of Modelo
                 151 References: [3].'
@@ -2068,27 +2077,6 @@ modelo:
               help: 'Tax information about tax information in casilla 1354-1370 of
                 Modelo 151 References: [2].'
               label: Transfer value [2]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              label: Total gross tax. Regional share [23]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              label: Total gross tax. State share [22]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              label: Total net tax. Regional share [32]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              label: Total net tax. State share [31]
-            x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
-              label: Non-resident income tax paid on the income included in this return
-                [34]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm2rjaclp6ubbgc5p78p9dclpn8obkc5m2qcho:
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad. State share [28]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmmasjf5lo62sjkckmm2tbkdtn6urb9cdgiqchp:
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad. Regional share [29]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              label: Deduction for donations. Regional share [26]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
-              label: Deduction for donations. State share [25]
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
               label: Description of the asset
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
@@ -2097,8 +2085,6 @@ modelo:
               label: Description of the asset
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
               label: Description of the asset
-            x-e0o3gbj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmmushddhgiqob4dlkmsqbjehp62or9dtn2qd1i:
-              label: Refunds granted by the Administration [42]
             x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
               help: 'Review the casilla information: Diferencia [4].'
               label: Difference [4]
@@ -2147,9 +2133,6 @@ modelo:
               help: 'Tax information about tax information in casilla 757-773 of Modelo
                 151 References: [5].'
               label: REMAINDER. Capital gain [5]
-            x-e0o3gbjiclpnar3kc5i6uspdc4mmirj7e9in6obi5lhmirre5lgm8rb9dpkn6t3ic5q6itj1ecmj8c8:
-              label: Amounts payable from earlier returns or administrative assessments
-                [41]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               help: 'Tax information about tax information in casilla 13-14 of Modelo
                 151 References: [1].'
@@ -2202,11 +2185,6 @@ modelo:
               help: 'Tax information about tax information in casilla 689-705 of Modelo
                 151 References: [2].'
               label: Transfer value [2]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Form 151 personal income tax, inbound expatriate regime, tax
-                  liability
           field:
             label: Form 151, tax years 2015 to 2022 (inbound expatriate regime, flat
               24/47 general scale following Law 26/2014; the savings component is
@@ -2215,11 +2193,8 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax year the return refers to
-              label: Filing year to which the return relates
             x-chim6r1ee1in4qbfchng:
               help: Period (annual, 0A)
-            x-chkm8bj3elnn8o9dcdin4ro:
-              label: Zero tax amount
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: Tax information about tax information in casilla 60-129 of Modelo
                 151.
@@ -2275,20 +2250,14 @@ modelo:
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: General taxable base (impatriate regime, excluding the savings
                 component under art. 25.1.f TRLIRNR)
-              label: General taxable base (impatriate regime, excluding the savings-income
-                part under TRLIRNR art. 25.1.f)
             x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
               label: Net tax payable (gross general tax liability plus gross savings
                 tax liability, minus withholdings)
             x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
               help: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
                 to €600,000, 47% on the excess)'
-              label: 'Gross general tax liability (art. 93.2.e.1º scale: 24% up to
-                EUR 600,000, 47% on the excess)'
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: Withholdings and advance payments (art. 93.2.f)
-              label: Withholdings and advance payments (payments on account, art.
-                93.2.f)
             x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj5kp34:
               help: 'Tax information about tax information in casilla 986-986 of Modelo
                 151 References: [22].'
@@ -2543,82 +2512,30 @@ modelo:
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: Tax information about tax information in casilla 13-13 of Modelo
                 151.
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'Tax information about tax information in casilla 479-479 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'Tax information about tax information in casilla 723-723 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'Tax information about tax information in casilla 967-967 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'Tax information about tax information in casilla 480-480 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'Tax information about tax information in casilla 724-724 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'Tax information about tax information in casilla 968-968 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'Tax information about tax information in casilla 235-235 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'Tax information about tax information in casilla 236-236 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
-            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'Tax information about tax information in casilla 452-468 of Modelo
                 151 References: [09].'
@@ -2803,82 +2720,30 @@ modelo:
               help: 'Tax information about tax information in casilla 748-764 of Modelo
                 151 References: [03].'
               label: Valuation [03]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
               help: 'Tax information about tax information in casilla 479-479 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko36:
               help: 'Tax information about tax information in casilla 723-723 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko38:
               help: 'Tax information about tax information in casilla 967-967 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko34:
               help: 'Tax information about tax information in casilla 480-480 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko36:
               help: 'Tax information about tax information in casilla 724-724 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9j5ko38:
               help: 'Tax information about tax information in casilla 968-968 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              label: Additional details of income from property and real estate. Ownership
-                (%) [10]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              label: Additional details of income from property and real estate. Usufruct
-                (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
               help: 'Tax information about tax information in casilla 235-235 of Modelo
                 151 References: [12].'
-              label: Additional details of income from property and real estate. Origin
-                [12]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2co:
               help: 'Tax information about tax information in casilla 236-236 of Modelo
                 151 References: [13].'
-              label: Additional details of income from property and real estate. Location
-                [13]
-            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              label: Additional details of income from property and real estate. Cadastral
-                reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
               help: 'Tax information about tax information in casilla 452-468 of Modelo
                 151 References: [09].'
@@ -3055,8 +2920,6 @@ modelo:
               help: 'Tax information about tax information in casilla 745-746 of Modelo
                 151 References: [01].'
               label: Income type [01]
-            x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmn4pbeehgiqqbedlnm4qbcd5gn4qb15lkmqs3lehgm8o9d64qg:
-              label: Total gross returns / imputed real-estate income [15]
             x-e0o36bjmc5m6usj1cdkmurhd60pg:
               help: 'Tax information about tax information in casilla 16-32 of Modelo
                 151 References: [03].'
@@ -4380,27 +4243,6 @@ modelo:
               help: 'Tax information about tax information in casilla 1354-1370 of
                 Modelo 151 References: [02].'
               label: Transfer value [02]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              label: Total gross tax. Regional portion [23]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              label: Total gross tax. State portion [22]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              label: Total net tax. Regional portion [32]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              label: Total net tax. State portion [31]
-            x-e0oj0bj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdth74p9ddhgiqsj5dpq62bb4ckmmsrpde9in6qb4cln78pbj5lo62pr1cgmj6d0:
-              label: Non-Resident Income Tax amounts paid on the income included in
-                the return [34]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e0:
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad. State portion [28]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e8:
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad. Regional portion [29]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              label: Deduction for donations. Regional portion [26]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
-              label: Deduction for donations. State portion [25]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: 'Tax information about tax information in casilla 15-114 of Modelo
                 151 References: [67].'
@@ -4417,8 +4259,6 @@ modelo:
               help: 'Tax information about tax information in casilla 573-672 of Modelo
                 151 References: [67].'
               label: Description of the asset [67]
-            x-e0oj0bj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmn0rri5lm62bb1chmmirj9edq74ob3d5nmsb9k68:
-              label: Refunds agreed by the Administration [42]
             x-e0oj0bj4d5j6asj5dphmio9d60q0:
               help: 'Review the casilla information: Diferencia [04].'
               label: Difference [04]
@@ -4483,9 +4323,6 @@ modelo:
               help: 'Tax information about tax information in casilla 757-773 of Modelo
                 151 References: [05].'
               label: REMAINDER. Capital gain [05]
-            x-e0oj0bjiclpnar3kc5i6uspdc4mmirj7e9in6obi5li6abbcc5piqobeehin4qbfe9in6bb4clhmoobic5hmirreclpiqrpddgmj8c8:
-              label: Amounts payable from previous returns or administrative assessments
-                [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
               help: 'Tax information about tax information in casilla 13-14 of Modelo
                 151 References: [01].'
@@ -4538,10 +4375,7 @@ modelo:
               help: 'Tax information about tax information in casilla 689-705 of Modelo
                 151 References: [02].'
               label: Transfer value [02]
-          construct:
-            m151-impatriado-calculation:
-              field:
-                title: Form 151 personal income tax, inbound expatriate regime, tax
-                  liability
           field:
-            label: Casilla— tax information
+            label: Modelo 151, tax years 2025 onwards (inbound expatriate regime;
+              flat general scale 24/47 art. 93.2.e.1 plus savings scale art. 93.2.e.2,
+              wording in force under Ley 7/2024)

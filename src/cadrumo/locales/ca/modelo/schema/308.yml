@@ -10,6 +10,10 @@ modelo:
             help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
               308.
             label: Exercici a què es refereix la sol·licitud
+      construct:
+        modelo-308-iva-solicitud-devolucion:
+          field:
+            title: 'Model 308: sol·licitud de devolució de l''IVA'
       field:
         official_name: 'Modelo 308. Impost sobre el Valor Afegit. Sol·licitud de devolució:
           recàrrec d''equivalència, article 30 bis del Reglament de l''IVA, article
@@ -18,26 +22,17 @@ modelo:
           bis, subjectes passius ocasionals)
       revision:
         2009-2011-junio:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
+              segons el tipus d'operador)
         2011-julio-2015:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
+              segons el tipus d'operador)
         2016-2018:
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
+              segons el tipus d'operador)
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -178,9 +173,6 @@ modelo:
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
               help: Casella 109 del model 308, exercici 2009.
               label: Tipus de tributació segons el subjecte passiu
-          construct:
-            modelo-308-iva-solicitud-devolucion:
-              field:
-                title: Modelo 308 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
+              segons el tipus d'operador)

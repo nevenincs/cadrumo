@@ -1,6 +1,10 @@
 modelo:
   schema:
     '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: 'Modelo 187: cálculo de la autoliquidación'
       field:
         official_name: Modelo 187. Declaración informativa de acciones y participaciones
           representativas del capital o patrimonio de las instituciones de inversión
@@ -26,9 +30,5 @@ modelo:
               help: Suma de las retenciones e ingresos a cuenta practicados sobre
                 las operaciones declaradas.
               label: Importe total de las retenciones e ingresos a cuenta
-          construct:
-            modelo-187-calculation-construct:
-              field:
-                title: Modelo 187 calculation construct
           field:
             label: Orden HAP/1608/2014, ejercicios 2022 y siguientes

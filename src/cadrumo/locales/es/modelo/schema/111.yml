@@ -1,6 +1,10 @@
 modelo:
   schema:
     '111':
+      construct:
+        modelo-111-withholding-workflow:
+          field:
+            title: 'Modelo 111: retenciones e ingresos a cuenta'
       field:
         official_name: Retenciones e ingresos a cuenta del IRPF. Rendimientos del
           trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales
@@ -73,9 +77,5 @@ modelo:
               label: Resultado de anteriores autoliquidaciones
             '30':
               label: Resultado a ingresar
-          construct:
-            modelo-111-withholding-workflow:
-              field:
-                title: Modelo 111 withholding filing workflow
           field:
             label: Orden EHA/586/2011, ejercicios 2019 y siguientes

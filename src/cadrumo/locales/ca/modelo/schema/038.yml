@@ -10,22 +10,18 @@ modelo:
           tipo-declaracion:
             help: Informació fiscal de la casella del Modelo 038.
             label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-038-informative:
+          field:
+            title: Modelo 038 declaració informativa
       field:
         official_name: Modelo 038. Relació d'operacions realitzades per entitats inscrites
           en registres públics. Declaració informativa.
         title: Operacions d'entitats inscrites en registres públics (informativa mensual)
       revision:
         2024-desde-06:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 038, des de juny de 2024
         2025-y-siguientes:
-          construct:
-            modelo-038-informative:
-              field:
-                title: Modelo 038 declaració informativa
           field:
-            label: Casella— informació fiscal
+            label: Model 038, exercicis 2025 i següents

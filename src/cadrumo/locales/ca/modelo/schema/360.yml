@@ -1,6 +1,11 @@
 modelo:
   schema:
     '360':
+      construct:
+        modelo-360-iva-devolucion-ue:
+          field:
+            title: 'Model 360: sol·licitud de devolució de l''IVA (8a Directiva) -
+              quotes suportades en altres estats membres'
       field:
         official_name: Modelo 360. Sol·licitud de devolució de l'Impost sobre el Valor
           Afegit suportat per empresaris o professionals establerts en el territori
@@ -711,9 +716,6 @@ modelo:
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               help: Informació fiscal de la casella 1903-1906 del Modelo 360.
               label: 5. Modificació de la Prorrata de l'any anterior. Exercici
-          construct:
-            modelo-360-iva-devolucion-ue:
-              field:
-                title: Modelo 360 — informació fiscal
           field:
-            label: Casella — informació fiscal
+            label: Model 360, exercicis 2010 i següents (Ordre EHA/789/2010, modificada
+              per l'HAP/841/2016). Ad hoc, desencadenat per una sol·licitud de devolució.

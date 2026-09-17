@@ -137,6 +137,11 @@ modelo:
           tipo-autoliquidacion:
             help: Tax information about tax information in casilla  of Modelo 604.
             label: 'Self-assessment type (I: payable, N: nil)'
+      construct:
+        modelo-604-autoliquidacion:
+          field:
+            title: Modelo 604 self-assessment of the Impuesto sobre las Transacciones
+              Financieras
       field:
         official_name: Modelo 604. Financial Transactions Tax. Self-assessment.
         title: Financial Transactions Tax - self-assessment
@@ -148,13 +153,8 @@ modelo:
                 References: [03].'
               label: Taxable non-exempt transactions for the period. Sign of the taxable
                 base [03]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 self-assessment of the Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casilla— tax information
+            label: Modelo 604 (Order HAC/510/2021), tax years 2021 to 2023
         2024-y-siguientes:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
@@ -326,10 +326,5 @@ modelo:
                 References: [24].'
               label: Taxation by territory. Bizkaia. Sign of the adjustment tax for
                 the period [24]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 self-assessment of the Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casilla— tax information
+            label: Modelo 604 (Order HAC/510/2021), tax years 2024 onwards

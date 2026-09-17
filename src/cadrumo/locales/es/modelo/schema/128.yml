@@ -1,6 +1,10 @@
 modelo:
   schema:
     '128':
+      construct:
+        modelo-128-calculation-construct:
+          field:
+            title: 'Modelo 128: cálculo de la autoliquidación'
       field:
         official_name: Modelo 128. Retenciones e ingresos a cuenta. Rentas o rendimientos
           del capital mobiliario procedentes de operaciones de capitalización y de
@@ -25,9 +29,5 @@ modelo:
                 concepto, ejercicio y periodo
             '07':
               label: Resultado a ingresar
-          construct:
-            modelo-128-calculation-construct:
-              field:
-                title: Modelo 128 calculation construct
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

@@ -149,6 +149,10 @@ modelo:
             help: Dada declarada al model 347, declaració anual d'operacions amb terceres
               persones.
             label: NOMBRE TOTAL DE PERSONES I ENTITATS
+      construct:
+        modelo-347-informative:
+          field:
+            title: Model 347 declaració anual d'operacions amb terceres persones
       field:
         official_name: Modelo 347. Declaració anual d'operacions amb terceres persones.
         title: Operacions amb terceres persones (informativa anual)
@@ -175,10 +179,6 @@ modelo:
               help: Casella ejercicio del model 347, exercici 2008.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 347, exercici 2008.
-          construct:
-            modelo-347-informative:
-              field:
-                title: Model 347 declaració anual d'operacions amb terceres persones
           field:
             label: Model 347, exercicis 2008 a 2024
         2025-y-siguientes:
@@ -225,9 +225,5 @@ modelo:
               help: Casella ejercicio del model 347, exercici 2025.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 347, exercici 2025.
-          construct:
-            modelo-347-informative:
-              field:
-                title: Model 347 declaració anual d'operacions amb terceres persones
           field:
             label: Model 347, exercicis 2025 i següents

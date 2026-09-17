@@ -167,6 +167,11 @@ modelo:
             help: 'Consulteu la informació de la casella: Tipus de autoliquidació
               (I: a ingresar, N: negativa).'
             label: 'Tipus d''autoliquidació (I: a ingressar, N: negativa)'
+      construct:
+        modelo-604-autoliquidacion:
+          field:
+            title: Modelo 604 autoliquidació del Impuesto sobre las Transacciones
+              Financieras
       field:
         official_name: Modelo 604. Impost sobre les Transaccions Financeres. Autoliquidació.
         title: Impost sobre les Transaccions Financeres - autoliquidació
@@ -176,13 +181,8 @@ modelo:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
               label: Operacions subjectes no exemptes realitzades en el període. Signe
                 de la base imposable [03]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 autoliquidació del Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casella— informació fiscal
+            label: Model 604 (Ordre HAC/510/2021), exercicis 2021 a 2023
         2024-y-siguientes:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsj5cdq6ipj9cdgm6qbfdpin6:
@@ -355,10 +355,5 @@ modelo:
                 Vizcaya. Signo de la quota de rectificaciones del període [24].'
               label: Tributació per territori. Biscaia. Signe de la quota de rectificacions
                 del període [24]
-          construct:
-            modelo-604-autoliquidacion:
-              field:
-                title: Modelo 604 autoliquidació del Impuesto sobre las Transacciones
-                  Financieras
           field:
-            label: Casella— informació fiscal
+            label: Model 604 (Ordre HAC/510/2021), exercicis 2024 i següents

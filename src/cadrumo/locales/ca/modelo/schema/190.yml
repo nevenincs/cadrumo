@@ -9,11 +9,11 @@ modelo:
           ingresos-a-cuenta-efectuados:
             help: Informació fiscal sobre informació fiscal de la casella 122-134
               del Modelo 190.
-            label: Casella 122-134 — informació fiscal
+            label: Ingressos a compte efectuats sobre les percepcions en espècie
           ingresos-a-cuenta-repercutidos:
             help: Informació fiscal sobre informació fiscal de la casella 135-147
               del Modelo 190.
-            label: Casella 135-147 — informació fiscal
+            label: Ingressos a compte
           m190-correo-electronico:
             help: Informació fiscal de la casella 176-225 del Modelo 190.
             label: Correu electrònic de la persona amb qui relacionar-se
@@ -303,6 +303,11 @@ modelo:
             help: Informació fiscal sobre informació fiscal de la casella 136-144
               del Modelo 190.
             label: Casella 136-144 — informació fiscal
+      construct:
+        modelo-190-annual-summary:
+          field:
+            title: Resum anual del Model 190 a partir de les declaracions trimestrals
+              del Model 111
       field:
         official_name: Modelo 190. Declaració informativa. Retencions i ingressos
           a compte. Rendiments del treball i d'activitats econòmiques, premis i determinats
@@ -311,10 +316,10 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: Model 190, exercici 2022
         '2023':
           field:
-            label: null
+            label: Model 190, exercici 2023
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -486,12 +491,9 @@ modelo:
                 els imports en part entera i part decimal.
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
-            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Ingressos a compte
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -562,11 +564,6 @@ modelo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
               label: Titular de la unitat de convivència
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Resum anual del Model 190 a partir de les declaracions trimestrals
-                  del Model 111
           field:
             label: Modelo 190 exercici 2024 i següents
         2025-y-siguientes:
@@ -740,12 +737,9 @@ modelo:
                 els imports en part entera i part decimal.
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
-            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
-              label: Ingressos a compte
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -816,10 +810,5 @@ modelo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
               label: Titular de la unitat de convivència
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Resum anual del Model 190 a partir de les declaracions trimestrals
-                  del Model 111
           field:
             label: Modelo 190 exercici 2024 i següents

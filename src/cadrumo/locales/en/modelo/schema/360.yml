@@ -1,6 +1,11 @@
 modelo:
   schema:
     '360':
+      construct:
+        modelo-360-iva-devolucion-ue:
+          field:
+            title: 'Modelo 360: VAT refund request under the 8th Directive (input
+              VAT borne in other Member States)'
       field:
         official_name: Modelo 360. Application for a refund of Value Added Tax incurred
           by entrepreneurs or professionals established in the territory where the
@@ -217,6 +222,7 @@ modelo:
               label: 1. Transaction number
             x-chim6r1edto32bbge9nn4sj1ehgg:
               help: Box 2728-2732 of modelo 360, tax year 2010.
+              label: 1. Pro rata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Field declared on modelo 360, taken from the official record design.
               label: Supplier details. Address
@@ -363,6 +369,7 @@ modelo:
               label: 2. Transaction number
             x-chim6r1edto34bbge9nn4sj1ehgg:
               help: Box 5828-5832 of modelo 360, tax year 2010.
+              label: 2. Pro rata %
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Box 6046-6193 of modelo 360, tax year 2010.
               label: 2. Details of the supplier of goods / provider of services. Address
@@ -711,9 +718,6 @@ modelo:
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
               help: Tax information for casilla 1903-1906 of Modelo 360.
               label: 5. Amendment of the previous year's prorrata. Tax year
-          construct:
-            modelo-360-iva-devolucion-ue:
-              field:
-                title: Modelo 360 — tax information
           field:
-            label: Casilla — tax field
+            label: Modelo 360, tax years 2010 onwards (Order EHA/789/2010, amended
+              by HAP/841/2016). Ad hoc, triggered by a refund request.

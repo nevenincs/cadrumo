@@ -961,6 +961,9 @@ cli:
           0513=1150 for age supplement). Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
+        no_m130_revisions: No Modelo 130 quarterly draft revisions exist for filing
+          year %{year}.
+        no_m130_units: No Modelo 130 borrador work units exist for filing year %{year}.
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -3313,16 +3316,6 @@ cli:
         simplificado forfait calculation engine is not yet available; review the simplified-regime
         casillas before filing.
     year_help: Filing year for --period (e.g. 2024).
-  registry:
-    manuals:
-      verify_dangling_rule_section_ref: rule %{rule_id} references unknown section
-        %{target}
-      verify_dangling_section_ref: section %{section_id} references unknown section
-        %{target}
-      verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch''
-        to materialise it'
-      verify_missing_translation: 'section %{section_id}: %{field_name} missing translation
-        key'
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'

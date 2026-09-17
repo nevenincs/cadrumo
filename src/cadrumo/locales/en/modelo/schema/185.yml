@@ -7,6 +7,10 @@ modelo:
             label: Filing year to which the return relates
           tipo-declaracion:
             label: Return type (original / substitute / supplementary)
+      construct:
+        modelo-185-informative:
+          field:
+            title: Modelo 185 return informative
       field:
         official_name: Modelo 185. Monthly informative return of contributions by
           members and mutual-society members.
@@ -98,9 +102,5 @@ modelo:
                 part time at or above 50%, 3 part time below 50%, 4 not applicable.
                 Refers to month -2.'
               label: WORKING-HOURS TYPE FOR MONTH -2
-          construct:
-            modelo-185-informative:
-              field:
-                title: Modelo 185 return informative
           field:
-            label: Casilla— tax information
+            label: Modelo 185 (Order HAC/1197/2025), tax years 2025 onwards

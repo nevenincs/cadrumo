@@ -1083,6 +1083,10 @@ modelo:
             label: Total volumen de operaciones
           tipo-declaracion:
             label: Tipo de declaración
+      construct:
+        modelo-390-iva-resumen-anual:
+          field:
+            title: Declaración-resumen anual de IVA
       field:
         official_name: Modelo 390. Declaración-resumen anual del Impuesto sobre el
           Valor Añadido.
@@ -1114,10 +1118,6 @@ modelo:
           field:
             label: Modelo 390 ejercicio 2021 (Orden EHA/3111/2009)
         '2022':
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaración-resumen anual de IVA
           field:
             label: Modelo 390 ejercicio 2022 (Orden EHA/3111/2009, modificada por
               sucesivas ordenes incluida HAP/2373/2014)
@@ -2003,10 +2003,6 @@ modelo:
               help: Volumen de operaciones en régimen simplificado
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volumen de operaciones
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaración-resumen anual de IVA
           field:
             label: Modelo 390 ejercicio 2023 (Orden EHA/3111/2009, modificada por
               sucesivas ordenes incluida HAP/2373/2014)
@@ -2888,10 +2884,6 @@ modelo:
               help: Volumen de operaciones en régimen simplificado
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volumen de operaciones
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaración-resumen anual de IVA
           field:
             label: Modelo 390 ejercicio 2024 (Orden EHA/3111/2009, modificada por
               sucesivas ordenes incluida HAP/2373/2014)
@@ -3797,10 +3789,6 @@ modelo:
               help: Volumen de operaciones en régimen simplificado
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Total volumen de operaciones
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Declaración-resumen anual de IVA
           field:
             label: Modelo 390 ejercicio 2025 (Orden EHA/3111/2009, modificada por
               sucesivas ordenes incluida HAP/2373/2014)

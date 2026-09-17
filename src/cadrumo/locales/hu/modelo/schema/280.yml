@@ -91,7 +91,8 @@ modelo:
       revision:
         2022-2024:
           field:
-            label: null
+            label: 280-as modelo, 2022–2024. adóévek
         '2025':
           field:
-            label: Casilla— adóügyi információ
+            label: 280-as modelo, 2025. adóév (HAP/2118/2015 rendelet; HFP/1822/2016,
+              HAC/1276/2019 és HFP/1192/2022 rendeletek)

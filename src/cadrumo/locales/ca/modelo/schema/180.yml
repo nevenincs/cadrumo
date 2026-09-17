@@ -114,6 +114,11 @@ modelo:
           total-perceptores-count:
             help: Informació fiscal de la casella 136-144 del Modelo 180.
             label: Nombre total de perceptors
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: Resum anual del Model 180 a partir de les declaracions trimestrals
+              del Model 115
       field:
         official_name: Modelo 180. Declaració informativa. Retencions i ingressos
           a compte. Rendiments procedents de l'arrendament d'immobles urbans. Resum
@@ -121,18 +126,8 @@ modelo:
         title: Resum anual de retencions sobre arrendaments urbans
       revision:
         2019-2022:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Resum anual del Model 180 a partir de les declaracions trimestrals
-                  del Model 115
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAP/1732/2014, exercicis 2019 a 2022
         2023-y-siguientes:
-          construct:
-            modelo-180-annual-summary:
-              field:
-                title: Resum anual del Model 180 a partir de les declaracions trimestrals
-                  del Model 115
           field:
-            label: Casella— informació fiscal
+            label: Ordre HAP/1732/2014 actualitzada per l'Ordre HFP/1284/2023

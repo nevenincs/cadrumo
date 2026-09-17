@@ -45,18 +45,35 @@ modelo:
               per a l'assignació exacta.
           irpf-pf-modulos-indice-inicio-actividad:
             help: Informació fiscal de la casella del Modelo 131.
-            label: Casella — informació fiscal
+            label: 'Índex corrector per inici de noves activitats (lletra b.4, activitat
+              iniciada des de l''1-1-2025 en local exclusiu). Índex declarat per l''operador
+              (0,80/0,90; 0,60/0,70 amb discapacitat ≥33%, Ordre HAC/1425/2025 Annex
+              II, instrucció 2.3.b.4); el motor no modela l''exercici d''inici ni
+              la discapacitat. Incompatible amb l''índex de temporada (b.2): si tots
+              dos es declaren, preval la temporada.'
           irpf-pf-modulos-indice-pequena-dimension:
             help: Informació fiscal de la casella del Modelo 131.
-            label: Casella — informació fiscal
+            label: Índex corrector per a empreses de petita dimensió (lletra b.1 -
+              municipi, local únic, sense personal o fins a 2 treballadors). Índex
+              declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1425/2025 Annex
+              II, instrucció 2.3.b.1); el motor no modela fets del contribuent. Mai
+              s'aplica a les activitats amb índex especial (721.2, 722).
           irpf-pf-modulos-indice-temporada:
             help: Informació fiscal de la casella del Modelo 131.
-            label: Casella — informació fiscal
+            label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
+              fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
+              segons durada, Ordre HAC/1425/2025 Annex II, instrucció 2.3.b.2); el
+              motor no modela la durada com a fet del contribuent. Incompatible amb
+              l''índex d''inici de noves activitats (b.4): si tots dos es declaren,
+              preval aquest.'
           irpf-pf-modulos-minoracion-inversion:
             help: Informació fiscal de la casella del Modelo 131.
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
             help: Informació fiscal de la casella del Modelo 131.
-            label: Casella — informació fiscal
+            label: 'Indicador intern (1/0): l''índex corrector per a empreses de petita
+              dimensió (b.1) declarat va ser ignorat per incompatibilitat amb l''índex
+              corrector especial de l''activitat (Ordre HAC/1425/2025 Annex II, instrucció
+              2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
             help: Informació fiscal de la casella del Modelo 131.
             label: 'Rendiment net de l''activitat (Fase 4a: mòduls − reducció general
@@ -87,7 +104,10 @@ modelo:
             label: Suma de rendiments nets
           irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
             help: Informació fiscal de la casella del Modelo 131.
-            label: Casella — informació fiscal
+            label: 'Indicador intern (1/0): es van declarar simultàniament l''índex
+              corrector de temporada (b.2) i l''índex corrector per inici de noves
+              activitats (b.4), incompatibles entre si (Ordre HAC/1425/2025 Annex
+              II, instrucció 2.3).'
           irpf-pf-modulos-total:
             help: 'Consulteu la informació de la casella: Total.'
           irpf-pf-modulos-volumen-agrario:
@@ -144,9 +164,10 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — informació fiscal
+                title: 'Model 131: pagament fraccionat en estimació objectiva (exercicis
+                  2019 a 2023)'
           field:
-            label: Casella— informació fiscal
+            label: Exercicis 2019 a 2023
         '2024':
           casilla:
             modulos-indice-inicio-actividad:
@@ -201,7 +222,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — informació fiscal
+                title: 'Model 131: pagament fraccionat en estimació objectiva (exercici
+                  2024)'
           field:
             label: Exercici 2024
         '2025':
@@ -255,7 +277,8 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — informació fiscal
+                title: 'Model 131: pagament fraccionat en estimació objectiva (exercici
+                  2025)'
           field:
             label: Exercici 2025
         '2026':
@@ -277,6 +300,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: Modelo 131 — informació fiscal
+                title: 'Model 131: pagament fraccionat en estimació objectiva (exercici
+                  2026)'
           field:
             label: Exercici 2026

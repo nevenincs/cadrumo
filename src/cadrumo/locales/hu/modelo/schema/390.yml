@@ -1642,6 +1642,10 @@ modelo:
           tipo-declaracion:
             help: 'A Modelo 390 . casilla adóügyi adatai: adóügyi információ.'
             label: Bevallás típusa
+      construct:
+        modelo-390-iva-resumen-anual:
+          field:
+            title: '390-es modelo: éves áfa-összesítő bevallás'
       field:
         official_name: Modelo 390. A hozzáadottérték-adó éves összesítő bevallása.
         title: IVA. Éves összesítő bevallás
@@ -1675,12 +1679,9 @@ modelo:
           field:
             label: 390-es modelo, 2021. adóév (Orden EHA/3111/2009)
         '2022':
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 390-es modelo, 2022. adóév (EHA/3111/2009 rendelet, a HAP/2373/2014
+              rendeletet is magába foglaló további rendeletekkel módosítva)
         '2023':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -2559,12 +2560,9 @@ modelo:
               help: Az egyszerűsített szabályok szerinti forgalom
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Teljes forgalom
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 390-es modelo, 2023. adóév (EHA/3111/2009 rendelet, a HAP/2373/2014
+              rendeletet is magába foglaló további rendeletekkel módosítva)
         '2024':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -3439,12 +3437,9 @@ modelo:
               help: Az egyszerűsített szabályok szerinti forgalom
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Teljes forgalom
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 390-es modelo, 2024. adóév (EHA/3111/2009 rendelet, a HAP/2373/2014
+              rendeletet is magába foglaló további rendeletekkel módosítva)
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
@@ -4343,9 +4338,6 @@ modelo:
               help: Az egyszerűsített szabályok szerinti forgalom
             x-d5r62bj1dpqm2r1eepnmotbdcln2st3fehgmo:
               help: Teljes forgalom
-          construct:
-            modelo-390-iva-resumen-anual:
-              field:
-                title: Modelo 390— adóügyi információ
           field:
-            label: Casilla— adóügyi információ
+            label: 390-es modelo, 2025. adóév (EHA/3111/2009 rendelet, a HAP/2373/2014
+              rendeletet is magába foglaló további rendeletekkel módosítva)

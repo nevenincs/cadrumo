@@ -1,6 +1,11 @@
 modelo:
   schema:
     '115':
+      construct:
+        modelo-115-quarterly-rental-withholding:
+          field:
+            title: 'Model 115: retencions trimestrals sobre arrendaments d''immobles
+              urbans'
       field:
         official_name: Retencions i ingressos a compte. Rendes o rendiments procedents
           de l'arrendament o subarrendament d'immobles urbans.
@@ -26,9 +31,6 @@ modelo:
             '05':
               help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
-          construct:
-            modelo-115-quarterly-rental-withholding:
-              field:
-                title: Modelo 115 — informació fiscal
           field:
-            label: Casella— informació fiscal
+            label: Model 115 vigent (Ordre de 20 de novembre de 2000, BOE-A-2000-21430),
+              exercicis 2019 i següents

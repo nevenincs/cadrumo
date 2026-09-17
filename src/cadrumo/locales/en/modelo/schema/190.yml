@@ -8,11 +8,11 @@ modelo:
             label: Accrual year
           ingresos-a-cuenta-efectuados:
             help: 'Casilla information: Casilla 122-134: payments on account efectuados.'
-            label: 'Casilla 122-134: payments on account efectuados'
+            label: Payments on account made on in-kind income
           ingresos-a-cuenta-repercutidos:
             help: Tax information about tax information in casilla 135-147 of Modelo
               190.
-            label: Casilla 135-147 — tax information
+            label: Payments on account
           m190-correo-electronico:
             help: Tax information for casilla 176-225 of Modelo 190.
             label: Contact person's email address
@@ -84,13 +84,13 @@ modelo:
             label: Child support supplement
           payee-computo-hijo-1:
             help: 'Casilla information: Casilla 251: payee computo hijo 1.'
-            label: 'Casilla 251: payee computo hijo 1'
+            label: Box 251 — tax information
           payee-computo-hijo-2:
             help: 'Casilla information: Casilla 252: payee computo hijo 2.'
-            label: 'Casilla 252: payee computo hijo 2'
+            label: Box 252 — tax information
           payee-computo-hijo-3:
             help: 'Casilla information: Casilla 253: payee computo hijo 3.'
-            label: 'Casilla 253: payee computo hijo 3'
+            label: Box 253 — tax information
           payee-contract-relation-clave:
             help: 'Casilla information: Casilla 168: payee contract relation clave.'
             label: Contract or relationship
@@ -155,7 +155,7 @@ modelo:
           payee-incapacidad-dineraria-retenciones:
             help: 'Casilla information: Casilla 269-281: payee incapacidad dineraria
               withholdings.'
-            label: 'Casilla 269-281: payee incapacidad dineraria withholdings'
+            label: Box 269-281 — tax information
           payee-incapacidad-especie-ingresos-a-cuenta:
             help: Tax information about tax information in casilla 296-308 of Modelo
               190.
@@ -170,7 +170,7 @@ modelo:
             label: Casilla 283-295 — tax information
           payee-name:
             help: 'Casilla information: Casilla 36-75: payee name.'
-            label: 'Casilla 36-75: payee name'
+            label: Recipient's name
           payee-nif:
             help: 'Casilla information: Casilla 18-26: payee nif.'
             label: Recipient's tax ID (NIF)
@@ -182,7 +182,7 @@ modelo:
             label: Casilla 254 — tax information
           payee-province:
             help: 'Casilla information: Casilla 76-77: payee province.'
-            label: 'Casilla 76-77: payee province'
+            label: Recipient's province
           payee-reducciones-aplicables:
             help: Tax information about tax information in casilla 171-183 of Modelo
               190.
@@ -210,7 +210,7 @@ modelo:
           payee-spouse-or-unit-titular-nif:
             help: 'Casilla information: Casilla 158-166: payee spouse or unit titular
               nif.'
-            label: 'Casilla 158-166: payee spouse or unit titular nif'
+            label: Box 158-166 — NIF of the spouse or of the holder of the unit
           payee-subclave-percepcion:
             help: Tax information about tax information in casilla 79-80 of Modelo
               190.
@@ -220,7 +220,7 @@ modelo:
             label: Casilla 169 — tax information
           perc-retenciones-practicadas:
             help: 'Casilla information: Casilla 95-107: withholdings payments on account.'
-            label: 'Casilla 95-107: withholdings payments on account'
+            label: Box 95-107 — tax information
           percepcion-integra-dineraria:
             help: Tax information about tax information in casilla 82-94 of Modelo
               190.
@@ -262,7 +262,7 @@ modelo:
           retenciones-ingresos-a-cuenta:
             help: 'Casilla information: Casilla 161-175: withholdings payments on
               account.'
-            label: 'Casilla 161-175: withholdings payments on account'
+            label: Box 161-175 — tax information
           total-percepciones-amount:
             help: Tax information about tax information in casilla 145-160 of Modelo
               190.
@@ -271,6 +271,10 @@ modelo:
             help: Tax information about tax information in casilla 136-144 of Modelo
               190.
             label: Casilla 136-144 — tax information
+      construct:
+        modelo-190-annual-summary:
+          field:
+            title: Annual summary of Modelo 190 from the quarterly Modelo 111 filings
       field:
         official_name: Modelo 190. Informative return. Withholdings and payments on
           account. Employment and business income, prizes and certain capital gains
@@ -279,10 +283,10 @@ modelo:
       revision:
         '2022':
           field:
-            label: null
+            label: Modelo 190, tax year 2022
         '2023':
           field:
-            label: null
+            label: Modelo 190, tax year 2023
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -455,10 +459,8 @@ modelo:
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: Tax information about tax information in casilla 122-134 of Modelo
                 190.
-              label: Payments on account made on in-kind income
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Payments on account
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Perceptor field declared in modelo 190's type 2 record.
             x-e1in4opedpkmc:
@@ -524,12 +526,8 @@ modelo:
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Holder of the cohabitation unit
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Modelo 190 annual summary based on quarterly Modelo 111 filings
           field:
-            label: Casilla — tax field
+            label: Modelo 190, tax year 2024 onwards
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -702,10 +700,8 @@ modelo:
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
               help: Tax information about tax information in casilla 122-134 of Modelo
                 190.
-              label: Payments on account made on in-kind income
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Perceptor field declared in modelo 190's type 2 record.
-              label: Payments on account
             x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
               help: Perceptor field declared in modelo 190's type 2 record.
             x-e1in4opedpkmc:
@@ -771,9 +767,5 @@ modelo:
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Holder of the cohabitation unit
-          construct:
-            modelo-190-annual-summary:
-              field:
-                title: Modelo 190 annual summary based on quarterly Modelo 111 filings
           field:
-            label: Casilla — tax field
+            label: Modelo 190, tax year 2024 onwards

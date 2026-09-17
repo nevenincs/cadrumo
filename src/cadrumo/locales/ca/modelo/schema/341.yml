@@ -61,6 +61,10 @@ modelo:
             help: Informació fiscal sobre informació fiscal de la casella  del Modelo
               341.
             label: Període de liquidació a què es refereix l'autoliquidació
+      construct:
+        modelo-341-autoliquidacion:
+          field:
+            title: Modelo 341 autoliquidació del IVA
       field:
         official_name: Modelo 341. Sol·licitud de reintegrament de compensacions en
           el règim especial de l'agricultura, la ramaderia i la pesca.
@@ -68,16 +72,10 @@ modelo:
           la ramaderia i la pesca de l'IVA
       revision:
         2005-2015:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 autoliquidació del IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 341 (Ordre de 15 de desembre de 2000, M341), exercicis 2005
+              a 2015
         2016-y-siguientes:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 autoliquidació del IVA
           field:
-            label: Casella— informació fiscal
+            label: Model 341 (Ordre de 15 de desembre de 2000, M341), exercicis 2016
+              i següents

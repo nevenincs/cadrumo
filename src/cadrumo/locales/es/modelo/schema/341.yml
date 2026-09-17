@@ -33,6 +33,10 @@ modelo:
             label: Porcentaje de compensación [04]
           tipo-declaracion:
             label: Periodo de liquidación al que se refiere la autoliquidación
+      construct:
+        modelo-341-autoliquidacion:
+          field:
+            title: Modelo 341 autoliquidación del IVA
       field:
         official_name: Modelo 341. Solicitud de reintegro de compensaciones en el
           régimen especial de la agricultura, ganadería y pesca.
@@ -40,16 +44,8 @@ modelo:
           y pesca del IVA
       revision:
         2005-2015:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 autoliquidación del IVA
           field:
             label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2005 a 2015
         2016-y-siguientes:
-          construct:
-            modelo-341-autoliquidacion:
-              field:
-                title: Modelo 341 autoliquidación del IVA
           field:
             label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2016 y siguientes

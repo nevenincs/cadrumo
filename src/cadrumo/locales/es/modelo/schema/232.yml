@@ -97,6 +97,11 @@ modelo:
             help: Dato de la operación vinculada número 4 declarada en el modelo 232.
           related-party-tipo-vinculacion-5:
             help: Dato de la operación vinculada número 5 declarada en el modelo 232.
+      construct:
+        modelo-232-informative:
+          field:
+            title: 'Modelo 232: declaración informativa de operaciones vinculadas
+              y paraísos fiscales'
       field:
         official_name: Modelo 232. Declaración informativa de operaciones vinculadas
           y de operaciones y situaciones relacionadas con países o territorios calificados
@@ -233,11 +238,6 @@ modelo:
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior
                 a 12 meses)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of operaciones vinculadas
-                  and paraisos fiscales
           field:
             label: Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)
         2018-y-siguientes:
@@ -339,10 +339,5 @@ modelo:
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
               label: Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior
                 a 12 meses)
-          construct:
-            modelo-232-informative:
-              field:
-                title: Modelo 232 informative declaration of operaciones vinculadas
-                  and paraisos fiscales
           field:
             label: Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)
