@@ -237,7 +237,11 @@ def compose_filed_observation_persistence_ports(
     output_root: Path,
     objects: SecureObjectRepository,
 ) -> FiledObservationPersistencePorts:
-    """Compose every filed-observation port against one secure backend."""
+    """Compose every filed-observation port against one secure backend.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    """
     work_unit_repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
     calculation_revision_repository = CalculationRevisionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     filing_repository = ModeloRecordCatalogueRepository(bucket_id=bucket_id, objects=objects)
@@ -277,7 +281,11 @@ def compose_live_state(
     bucket_id: str | None = None,
     objects: SecureObjectRepository | None = None,
 ) -> LiveStateComposition:
-    """Compose the shared live-state port and filed-observation ports once."""
+    """Compose the shared live-state port and filed-observation ports once.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    """
     settings = load_settings()
     resolved_bucket_id = (bucket_id or require_active_bucket_id()).strip()
     if not resolved_bucket_id:
@@ -352,7 +360,8 @@ class AppIvaRemoteStatePort:
 
     def persist_manifest(self, manifest: IvaRemoteStateAcquisitionManifest) -> None:
         """Persist one redacted remote-state acquisition manifest."""
-        IvaRemoteStateAcquisitionManifestRepository(objects=self._objects).save(manifest)
+        with self.active_storage_span():
+            IvaRemoteStateAcquisitionManifestRepository(objects=self._objects).save(manifest)
 
     async def active_verified_session(self, *, operation: str, target_url: str | None) -> tuple[AeatSession, Settings]:
         """Resolve the active authenticated AEAT session."""
@@ -549,7 +558,11 @@ def persist_and_reconcile_iva_compensation_wallet(
     decision_repository: IvaWalletDecisionRepository | None = None,
     decided_at: datetime | None = None,
 ) -> IvaWalletCaptureReport:
-    """Persist, reload, reconcile, and project one wallet observation."""
+    """Persist, reload, reconcile, and project one wallet observation.
+
+    Core types:
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+    """
     if repository is None and objects is None:
         raise LiveApplicationError(
             translated_message="application.live.iva_wallet.errors.observation_reload_diverged",
@@ -668,7 +681,11 @@ async def pull_filed_history_with_shared_composition(
     browser_session_factory: BrowserSessionFactoryPort,
     operator_scope_ports: OperatorScopePorts,
 ):
-    """Invoke the filed-history service with the explicitly composed bundle."""
+    """Invoke the filed-history service with the explicitly composed bundle.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     from ..application.live.filed_data_capture import pull_filed_history
 
     return await pull_filed_history(
