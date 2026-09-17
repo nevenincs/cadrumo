@@ -304,11 +304,11 @@ def test_the_release_path_workflows_exist() -> None:
 
     A release is cut by merging the release pull request: `release-please.yml`
     computes the version, writes the changelog, tags, creates the release and
-    dispatches `publish.yml`, which builds the distributions from that tag and
-    uploads them. Neither half is optional, and a missing one does not fail a
+    dispatches `release.yml`, which proves the release pull request and later
+    publishes the proven cohort from that tag. Neither half is optional, and a missing one does not fail a
     step — it removes the trigger, so nothing runs and nothing reports.
     """
-    for relative in (".github/workflows/release-please.yml", ".github/workflows/publish.yml"):
+    for relative in (".github/workflows/release-please.yml", ".github/workflows/release.yml"):
         workflow = repo_path(relative)
         assert workflow.is_file(), f"{workflow} is missing; the release path cannot run without it"
 
@@ -353,13 +353,7 @@ def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> No
     # The executable path: merge the release PR, then the two workflows it drives.
     assert "release PR" in text
     assert "release-please.yml" in text
-    assert "publish.yml" in text
-
-    # Evidence is minted by a dispatched campaign, and only ever off the release
-    # branch — the readiness gate binds each evidence row to the checked-out
-    # commit and to `v<VERSION>`, which a campaign run on the default branch
-    # cannot satisfy.
-    assert "packaging-smoke.yml" in text
+    assert "release.yml" in text
 
     # Live local surfaces the guide must still route the operator to.
     assert "## Diagnose and recover" in text
@@ -367,8 +361,16 @@ def test_releasing_doc_matches_the_executable_release_entry_and_recovery() -> No
     assert "just release-rollback-plan" in text
     assert "docs/_release_checklist.yaml" in text
 
-    # Retired ceremony. The orchestrator workflow, its dry-run flag and its
-    # resume argument were removed with the workflow itself; a guide still
+    # Retired ceremony. The orchestrator workflow, its dry-run flag, its resume
+    # argument and the separate packaging and publication workflows were removed; a guide still
     # naming them sends an operator to a command that does not exist.
-    for retired in ("release-orchestrator.yml", "dry_run", "resume_packaging_run_id", "release-candidate soak"):
+    for retired in (
+        "release-orchestrator.yml",
+        "dry_run",
+        "resume_packaging_run_id",
+        "release-candidate soak",
+        "packaging-smoke.yml",
+        "packaging-homebrew.yml",
+        "packaging-scoop.yml",
+    ):
         assert retired not in text.lower(), f"the guide still describes retired ceremony: {retired}"
