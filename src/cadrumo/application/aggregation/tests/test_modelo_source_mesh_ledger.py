@@ -61,7 +61,8 @@ from ..source_mesh import (
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
@@ -591,29 +592,26 @@ def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
     )
     invoice_repo.save(build_invoice_catalogue((invoice,)))
 
-    resolution = _ledger_iva_resolver(
-        transaction_repository=tx_repo,
-        invoice_repository=invoice_repo,
-        prorrata_register_repository=_empty_prorrata_repository(),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
-            modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
-            revision=revision,
-        ),
-    )
+    with pytest.raises(AggregationValidationError) as refusal:
+        _ledger_iva_resolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            prorrata_register_repository=_empty_prorrata_repository(),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=revision,
+            ),
+        )
 
-    assert resolution.source_transaction_ids == ()
-    assert resolution.binding_values.get("modelo-303-iva-soportado-interiores-cuota", Decimal("0")) == Decimal("0")
-    assert len(resolution.diagnostics) == 1
-    diagnostic = resolution.diagnostics[0]
-    assert diagnostic.reason == "source_issue"
-    assert diagnostic.source_ref == f"invoice:{invoice.invoice_id}"
-    assert "no exact deduction fact kind" in diagnostic.message
-    assert diagnostic.remedy is not None
-    assert "classified ledger transaction" in diagnostic.remedy
+    # The ledger carries none of the invoice's cuota, so withholding it silently
+    # would under-declare; the filing is refused and names the invoice.
+    assert refusal.value.context["reason"] == "invoice_deduction_authority_missing_from_transaction_ledger"
+    assert refusal.value.context["invoice_ids"] == (invoice.invoice_id,)
+    assert refusal.value.context["invoice_cuota_exceeding_ledger"] == "21.00"
 
 
 def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1() -> None:

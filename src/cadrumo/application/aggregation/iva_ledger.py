@@ -44,8 +44,8 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n.render import tr
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.render import tr as render_tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -55,6 +55,7 @@ from ...core.prorrata_register import (
     ProrrataRegisterRegime,
 )
 from ...core.prose_elision import IssueDetail
+from ...core.time.clock import today_madrid
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
@@ -83,7 +84,7 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.iva.classification import iva_territorial_scope_alias
+from ...domain.iva.classification import territorial_scope_alias
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
     StatedCountryCodeStatus,
@@ -444,7 +445,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     """
     if prorrata_register_repository.bucket_id != bucket_id:
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.bucket_mismatch"),
+            tr("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={
                 "bucket_id": bucket_id,
                 "repository_bucket_id": prorrata_register_repository.bucket_id,
@@ -453,7 +454,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.bucket_mismatch"),
+            tr("aggregation.iva_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     prorrata_apportionment = _active_prorrata_apportionment(
@@ -529,7 +530,7 @@ def _validate_investment_asset_authority(
         return
     if ledger_profile_id is None or investment_asset_register is None or investment_asset_profile_id is None:
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.investment_observations_missing_bienes_inversion_authority"),
+            tr("aggregation.iva_ledger.errors.investment_observations_missing_bienes_inversion_authority"),
             context={
                 "filing_year": period.filing_year,
                 "has_ledger_profile_id": ledger_profile_id is not None,
@@ -564,7 +565,7 @@ def _validate_rectifications_consumed_once(
     ]
     if len(rectified_ids) != len(set(rectified_ids)):
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.rectification_consumed_more_than_once"),
+            tr("aggregation.iva_ledger.errors.rectification_consumed_more_than_once"),
             context={"rectified_ledger_id_count": len(rectified_ids)},
         )
 
@@ -891,7 +892,7 @@ def _sector_apportionments_by_id(
     by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
     if len(by_sector) != len(apportionment.sector_apportionments):
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.sectorized_apportionment_duplicate_sectors"),
+            tr("aggregation.iva_ledger.errors.sectorized_apportionment_duplicate_sectors"),
             context={"declared_sector_count": len(apportionment.sector_apportionments)},
         )
     return by_sector
@@ -921,7 +922,7 @@ def _append_common_sector_observation(
 ) -> None:
     if observation.input_classification != default_input_classification(authority=operation):
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.sectorized_input_missing_sector_identity"),
+            tr("aggregation.iva_ledger.errors.sectorized_input_missing_sector_identity"),
             context={"ledger_id": observation.ledger_id},
         )
     partitions.setdefault(None, []).append(observation)
@@ -936,11 +937,11 @@ def _active_sector_apportionment(
     sector = sectors.get(sector_key)
     if sector is None:
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.sectorized_input_unknown_sector"), context={"sector_id": sector_key}
+            tr("aggregation.iva_ledger.errors.sectorized_input_unknown_sector"), context={"sector_id": sector_key}
         )
     if sector.regime == ninguna_prorrata_register_regime(authority=operation):
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.sectorized_input_inactive_sector"), context={"sector_id": sector_key}
+            tr("aggregation.iva_ledger.errors.sectorized_input_inactive_sector"), context={"sector_id": sector_key}
         )
     return sector
 
@@ -956,7 +957,7 @@ def _require_sector_input_classification(
         and observation.input_classification is None
     ):
         raise AggregationValidationError(
-            t("aggregation.iva_ledger.errors.sectorized_especial_missing_input_classification"),
+            tr("aggregation.iva_ledger.errors.sectorized_especial_missing_input_classification"),
             context={"sector_id": sector.sector_id, "ledger_id": observation.ledger_id},
         )
 
@@ -1120,16 +1121,16 @@ def _active_prorrata_apportionment(
             facts = {"sector_id": sector_id, "ejercicio": ejercicio}
             if entry is None:
                 raise AggregationValidationError(
-                    t("aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
+                    tr("aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
                     context=facts,
                 )
             if entry.interrupted or not regime_apportions_deduction(entry.regime, authority=operation):
                 raise AggregationValidationError(
-                    t("aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year"),
+                    tr("aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year"),
                     context=facts,
                 )
             raise AggregationValidationError(
-                t("aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage"),
+                tr("aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage"),
                 context=facts,
             )
         sector_apportionments_list.append(
@@ -1392,7 +1393,7 @@ def _export_establishment_is_answerable(
     ISO-unassigned pair, each of which genuinely establishes nothing about
     where the party is.
     """
-    if territorial_scope_for_country(counterparty_country, operation=operation) == iva_territorial_scope_alias(
+    if territorial_scope_for_country(counterparty_country, operation=operation) == territorial_scope_alias(
         "third_country",
         operation=operation,
     ):
@@ -1438,7 +1439,7 @@ def validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
-                detail=tr(
+                detail=render_tr(
                     "aggregation.iva_ledger.errors.missing_counterparty_identification_state",
                 ),
             )
@@ -1446,19 +1447,19 @@ def validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
-                detail=tr(
+                detail=render_tr(
                     "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
                 ),
             )
     if category in _registry_export_categories(
-        effective_date=effective_date or date.today(),
+        effective_date=effective_date or today_madrid(),
         operation=operation,
     ):
         if eu_member_state is not None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-                detail=tr(
+                detail=render_tr(
                     "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
                     member_state=eu_member_state.value,
                 ),
@@ -1473,7 +1474,7 @@ def validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
-                detail=tr(
+                detail=render_tr(
                     "aggregation.iva_ledger.errors.missing_counterparty_establishment_on_export",
                 ),
             )

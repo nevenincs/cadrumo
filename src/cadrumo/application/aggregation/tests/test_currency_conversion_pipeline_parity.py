@@ -122,7 +122,7 @@ from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gas
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
 from ..renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 

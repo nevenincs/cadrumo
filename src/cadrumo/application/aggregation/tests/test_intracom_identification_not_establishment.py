@@ -40,7 +40,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PERIOD = Period.from_year_and_code(2026, "2T")
 _CASILLA_59_BASE: BindingId = "modelo-303-casilla-59-entregas-intracomunitarias-base"

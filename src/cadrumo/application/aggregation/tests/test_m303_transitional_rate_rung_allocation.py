@@ -56,7 +56,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ..iva_ledger import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @pytest.fixture

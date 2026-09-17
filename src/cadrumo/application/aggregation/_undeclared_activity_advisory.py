@@ -158,10 +158,9 @@ def undeclared_activity_income_advisory_observations(
             message=(
                 f"casilla {census.target_casilla_id!r} on modelo {aggregation.modelo} resolved to zero "
                 f"while this period carries {census.row_count} income row(s) totalling "
-                f"{census.income_total} EUR that it did not admit. Not one of them declares a tipo de "
-                f"actividad, and a row declaring none is excluded by design, because silence about an "
-                f"activity cannot be read as a declaration of one. Whether any of this income belongs "
-                f"in the casilla is not established here: the ledger records no activity to decide it"
+                f"{census.income_total} EUR that it did not admit. None declares a tipo de actividad, "
+                "and a row without one is excluded by design, so whether this income belongs in the "
+                "casilla is not established"
             ),
             remedy=(
                 "Confirm before filing whether any of this income belongs in this casilla. No activity "

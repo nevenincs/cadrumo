@@ -13,7 +13,10 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import CalculationSourceLineageRole
@@ -21,8 +24,10 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.errors import NoRevisionForPeriodError
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
     IvaCompensationWalletObservationProtocol,
     reconcile_iva_compensation_wallet,
 )
@@ -62,6 +67,10 @@ _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
         "renta-profile-madrid-nacimiento-adopcion-eligible-count",
         "renta-profile-unidad-familiar-otros-miembros-base",
         "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-maritime-path-rebeca",
+        "renta-maritime-gross-navigation-income",
+        "renta-maritime-annual-salary",
+        "renta-maritime-qualifying-days",
     },
 )
 
@@ -207,12 +216,20 @@ def test_profile_source_resolver_respects_caller_owned_precedence(
     }
 
 
+def test_profile_source_snapshot_below_the_supported_floor_is_refused() -> None:
+    """A modelo 100 year below the published floor has no filing revision to project from."""
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    with pytest.raises(NoRevisionForPeriodError):
+        published_snapshot(
+            "100", filing_year=supported_years.floor - 1, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+        )
+
+
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period", "binding_id", "channel", "expected_value"),
     (
         ("036", 2026, "alta", "modelo-036-profile-censo-status", "enum", "alta"),
-        ("100", 2020, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
-        ("100", 2021, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
         ("100", 2022, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
         ("100", 2023, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
         ("100", 2024, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
@@ -286,6 +303,16 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
         target_registry_snapshot_ref=snapshot.snapshot_ref,
         wallet=_wallet(Decimal("1200")),
         local_recurrence_amount=Decimal("1200"),
+        local_recurrence_source=IvaCompensationAuthoritySource(
+            source_kind="local_recurrence",
+            amount=Decimal("1200"),
+            source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+            captured_at=_CLOCK,
+            source_modelo="303",
+            source_filing_year=2026,
+            source_periods=(Period.from_year_and_code(2026, "2T"),),
+            registry_snapshot_refs=(snapshot.snapshot_ref,),
+        ),
         decided_at=_CLOCK,
     )
 

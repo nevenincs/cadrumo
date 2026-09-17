@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -122,7 +122,7 @@ class RetencionesAggregationSourceResolver:
             # in the message. The typed action channel cannot express it -- the
             # wizard setup command projects no inputs to bind against.
             is_m111 = str(context.modelo) == Modelo("111").value
-            message = t(
+            message = tr(
                 "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
                 if is_m111
                 else "aggregation.retenciones.errors.perceptor_observations_missing",

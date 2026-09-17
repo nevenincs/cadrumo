@@ -55,7 +55,7 @@ from pydantic import BaseModel, model_validator
 from ...core.aggregation import BindingSourceKind, RetencionScheme
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva.components import category_components, registry_retencion_role_token
@@ -152,7 +152,7 @@ class InvoiceRetencionProjection(BaseModel):
         """Refuse a verdict that is neither clearly routed nor clearly excluded."""
         if (self.observation is None) != bool(self.defects):
             raise AggregationValidationError(
-                t("aggregation.invoice_retencion.errors.projection_outcome_ambiguous"),
+                tr("aggregation.invoice_retencion.errors.projection_outcome_ambiguous"),
                 context={
                     "invoice_id": self.invoice_id,
                     "has_observation": self.observation is not None,
@@ -161,7 +161,7 @@ class InvoiceRetencionProjection(BaseModel):
             )
         if len(set(self.defects)) != len(self.defects):
             raise AggregationValidationError(
-                t("aggregation.invoice_retencion.errors.projection_defects_repeat"),
+                tr("aggregation.invoice_retencion.errors.projection_defects_repeat"),
                 context={
                     "invoice_id": self.invoice_id,
                     "defect_count": len(self.defects),
@@ -234,12 +234,12 @@ def project_received_invoice_retencion(
     # are defects, so neither reaches this branch.
     if base is None or retencion is None:  # pragma: no cover - guarded by the defect sweep
         raise AggregationValidationError(
-            t("aggregation.invoice_retencion.errors.euro_figures_unavailable_after_defect_sweep"),
+            tr("aggregation.invoice_retencion.errors.euro_figures_unavailable_after_defect_sweep"),
             context={"invoice_id": invoice.invoice_id},
         )
     if invoice.counterparty_tax_id is None:  # pragma: no cover - guarded by the defect sweep
         raise AggregationValidationError(
-            t("aggregation.invoice_retencion.errors.perceptor_tax_id_unavailable_after_defect_sweep"),
+            tr("aggregation.invoice_retencion.errors.perceptor_tax_id_unavailable_after_defect_sweep"),
             context={"invoice_id": invoice.invoice_id},
         )
     return InvoiceRetencionProjection(
@@ -320,7 +320,7 @@ def merge_manual_and_routed_retencion_observations(
     )
     if colliding:
         raise AggregationValidationError(
-            t("aggregation.retenciones.errors.invoice_retencion_collision"),
+            tr("aggregation.retenciones.errors.invoice_retencion_collision"),
             context={"source_object_ids": ", ".join(colliding)},
         )
     return (*manual_observations, *routed_observations)

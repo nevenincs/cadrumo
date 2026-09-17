@@ -23,7 +23,7 @@ from ..ledger_filing_snapshot import (
     row_fingerprint,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 

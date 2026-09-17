@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
@@ -181,7 +181,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
     if uncovered_authority_evidence > Decimal("0"):
         missing_invoice_ids = tuple(sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing))
         raise AggregationValidationError(
-            t("errors.error.error_modelo_aggregation_binding"),
+            tr("errors.error.error_modelo_aggregation_binding"),
             context={
                 "reason": "invoice_deduction_authority_missing_from_transaction_ledger",
                 "modelo": str(context.modelo),
@@ -234,7 +234,7 @@ def _raise_if_screened_invoice_iva_would_be_silent(
             storage_degraded=screened.storage_degraded,
         )
     raise AggregationValidationError(
-        t("errors.error.error_modelo_aggregation_binding"),
+        tr("errors.error.error_modelo_aggregation_binding"),
         context={
             "reason": "invoice_domestic_iva_not_in_transaction_ledger",
             "modelo": str(context.modelo),

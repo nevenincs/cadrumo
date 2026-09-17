@@ -27,7 +27,7 @@ from typing import Protocol
 
 from ...core.aggregation import AggregationCaptureKind, RetencionScheme
 from ...core.errors.hierarchy import CadrumoError
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period
 from .errors import AggregationValidationError
 from .observation_window import hashed_tax_id_token
@@ -51,7 +51,7 @@ def retencion_observation_key(
     """
     if not 2000 <= filing_year <= 2099:
         raise AggregationValidationError(
-            t("aggregation.retenciones.errors.filing_year_out_of_range"),
+            tr("aggregation.retenciones.errors.filing_year_out_of_range"),
             context={"filing_year": str(filing_year), "min_year": "2000", "max_year": "2099"},
         )
     _validate_key_component(modelo, context="modelo")
@@ -73,7 +73,7 @@ def _validate_key_component(token: str, *, context: str) -> str:
     else:
         return token
     raise AggregationValidationError(
-        t("errors.integrity.integrity_storage_path_containment"),
+        tr("errors.integrity.integrity_storage_path_containment"),
         context={"path_context": context, "violation": violation},
     )
 

@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
@@ -129,7 +129,7 @@ def aggregate_impatriado_income_ledger_from_repositories(
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            tr("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     # Only the in-window ejercicio subset is decrypted and classified. The
@@ -198,7 +198,7 @@ def aggregate_impatriado_income_ledger(
     """
     if period.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.unsupported_period"),
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
     # The one boundary authority, not a second derivation of it: the repository

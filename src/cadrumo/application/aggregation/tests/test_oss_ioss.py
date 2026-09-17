@@ -49,7 +49,7 @@ from ..oss_ioss import (
     validate_oss_ioss_observations,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 # ---------------------------------------------------------------------------

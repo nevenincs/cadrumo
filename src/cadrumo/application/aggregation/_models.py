@@ -25,7 +25,7 @@ from pydantic import (
 
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
@@ -182,9 +182,9 @@ class LedgerAggregationResultBase[ObservationT: BaseModel, IssueT: BaseModel](Ba
     def _validate_casilla_period(self) -> Self:
         """Refuse a ``casilla_aggregation`` whose modelo/period drifts from the envelope's own."""
         if self.casilla_aggregation.modelo != self.modelo:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
+            raise AggregationValidationError(tr("aggregation.renta_ledger.errors.modelo_mismatch"))
         if self.casilla_aggregation.period != self.period:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
+            raise AggregationValidationError(tr("aggregation.renta_ledger.errors.period_mismatch"))
         return self
 
     @field_serializer("observations")

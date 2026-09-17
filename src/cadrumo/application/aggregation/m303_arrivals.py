@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
@@ -53,7 +53,7 @@ def _transition_period_applicability_from_registry(
     carries = periodic_carry_bindings_for_period(revision)
     if not schedules or not carries:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_declarations_unavailable"),
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_declarations_unavailable"),
             context={
                 "modelo": "303",
                 "filing_year": period.filing_year,
@@ -86,11 +86,11 @@ class M303SupplierRegimeArrival(BaseModel):
     def _source_ledger_ids_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not ledger_id.strip() for ledger_id in value):
             raise AggregationValidationError(
-                t("aggregation.m303_arrivals.errors.supplier_regime_blank_ledger_identity")
+                tr("aggregation.m303_arrivals.errors.supplier_regime_blank_ledger_identity")
             )
         if len(value) != len(set(value)):
             raise AggregationValidationError(
-                t("aggregation.m303_arrivals.errors.supplier_regime_duplicate_ledger_evidence")
+                tr("aggregation.m303_arrivals.errors.supplier_regime_duplicate_ledger_evidence")
             )
         return value
 
@@ -99,7 +99,7 @@ class M303SupplierRegimeArrival(BaseModel):
     def _recipient_fact_matches_its_evidence(self) -> M303SupplierRegimeArrival:
         if self.recipient_of_cash_accounting_operations != bool(self.source_ledger_ids):
             raise AggregationValidationError(
-                t("aggregation.m303_arrivals.errors.recipient_fact_disagrees_with_ledger_evidence"),
+                tr("aggregation.m303_arrivals.errors.recipient_fact_disagrees_with_ledger_evidence"),
                 context={
                     "recipient_of_cash_accounting_operations": self.recipient_of_cash_accounting_operations,
                     "source_ledger_id_count": len(self.source_ledger_ids),
@@ -142,7 +142,7 @@ class M303ProrrataTransitionArrival(BaseModel):
 def _require_non_applicable_transition(arrival: M303ProrrataTransitionArrival) -> None:
     if arrival.transition is not None or arrival.register_evidence:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_not_applicable_for_period"),
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_not_applicable_for_period"),
             context={"period": arrival.period.registry_token},
         )
 
@@ -150,14 +150,14 @@ def _require_non_applicable_transition(arrival: M303ProrrataTransitionArrival) -
 def _require_no_undeclared_transition_evidence(arrival: M303ProrrataTransitionArrival) -> None:
     if arrival.register_evidence:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_without_declared_transition")
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_evidence_without_declared_transition")
         )
 
 
 def _require_declared_transition_evidence(arrival: M303ProrrataTransitionArrival) -> None:
     if not arrival.register_evidence:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_missing_register_evidence")
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_missing_register_evidence")
         )
     for entry in arrival.register_evidence:
         _validate_transition_entry(arrival, entry)
@@ -169,17 +169,17 @@ def _validate_transition_entry(
 ) -> None:
     if entry.ejercicio != arrival.period.filing_year:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_wrong_filing_year"),
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_evidence_wrong_filing_year"),
             context={"entry_ejercicio": entry.ejercicio, "filing_year": arrival.period.filing_year},
         )
     if entry.especial_transition is None:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_entry_without_evidence"),
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_entry_without_evidence"),
             context={"sector_id": entry.sector_id or ""},
         )
     if entry.especial_transition.kind != arrival.transition:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_transition_contradictory_evidence"),
+            tr("aggregation.m303_arrivals.errors.prorrata_transition_contradictory_evidence"),
             context={
                 "declared_transition": arrival.transition.value if arrival.transition is not None else "",
                 "entry_transition": entry.especial_transition.kind.value,
@@ -202,7 +202,7 @@ def resolve_m303_supplier_regime_arrival(
     """
     if iva_aggregation.period != period:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.supplier_regime_aggregation_period_mismatch"),
+            tr("aggregation.m303_arrivals.errors.supplier_regime_aggregation_period_mismatch"),
             context={
                 "requested_period": period.registry_token,
                 "aggregation_period": iva_aggregation.period.registry_token,
@@ -214,7 +214,7 @@ def resolve_m303_supplier_regime_arrival(
     )
     if wrong_period_ledger_ids:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.supplier_regime_observations_outside_period"),
+            tr("aggregation.m303_arrivals.errors.supplier_regime_observations_outside_period"),
             context={
                 "requested_period": period.registry_token,
                 "ledger_ids": ", ".join(wrong_period_ledger_ids),
@@ -252,7 +252,7 @@ def _m303_prorrata_transition_kind(
     }
     if len(transition_kinds) > 1:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_register_contradictory_transition_evidence"),
+            tr("aggregation.m303_arrivals.errors.prorrata_register_contradictory_transition_evidence"),
             context={"transition_kinds": ", ".join(sorted(kind.value for kind in transition_kinds))},
         )
     return next(iter(transition_kinds), None)
@@ -271,7 +271,7 @@ def _validate_m303_prorrata_revocation_evidence(
             invalid_revocation_sectors.append(entry.sector_id)
     if invalid_revocation_sectors:
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_revocacion_without_prior_year_especial"),
+            tr("aggregation.m303_arrivals.errors.prorrata_revocacion_without_prior_year_especial"),
             context={
                 "filing_year": period.filing_year,
                 "prior_year": period.filing_year - 1,
@@ -298,7 +298,7 @@ def resolve_m303_prorrata_transition_arrival(
         return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
     if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
         raise AggregationValidationError(
-            t("aggregation.m303_arrivals.errors.prorrata_register_incomplete_current_year_declaration"),
+            tr("aggregation.m303_arrivals.errors.prorrata_register_incomplete_current_year_declaration"),
             context={"filing_year": period.filing_year},
         )
     evidence = _m303_prorrata_transition_evidence(period=period, prorrata_register=prorrata_register)

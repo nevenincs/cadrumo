@@ -46,7 +46,7 @@ from ..retenciones import RetencionObservation
 from ..service import _supported_per_modelo_modelos, provider_for_modelo
 from ..source_mesh import CalculationSourceContext
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 @dataclass(frozen=True)

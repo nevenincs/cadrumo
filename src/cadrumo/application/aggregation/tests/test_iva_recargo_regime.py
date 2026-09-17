@@ -25,7 +25,7 @@ from ..iva_ledger import IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import _period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 

@@ -39,7 +39,7 @@ from ..ledger_filing_snapshot import (
     row_fingerprint,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CAPTURED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 _LEGAL_REFS = ("ley-37-1992-art-97",)

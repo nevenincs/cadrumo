@@ -42,7 +42,7 @@ from decimal import Decimal
 from typing import NamedTuple, Protocol
 
 from ...core.casilla_id import CasillaId
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period, PeriodKind
 from ._models import CasillaAggregation, CasillaProvenance
 from .errors import AggregationPeriodError, AggregationUnsupportedModeloError
@@ -73,7 +73,7 @@ def cumulative_year_to_date_window(period: Period) -> CumulativeWindow:
     """
     if period.kind is not PeriodKind.QUARTERLY:
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.quarterly_period_required"),
+            tr("aggregation.renta_ledger.errors.quarterly_period_required"),
             context={"period": str(period)},
         )
     return CumulativeWindow(period=period, start=date(period.filing_year, 1, 1), end=period.end_date)
@@ -182,7 +182,7 @@ def filter_observations_for_modelo[T, AttrValue](
     """
     if modelo not in catalogue:
         raise AggregationUnsupportedModeloError(
-            t("aggregation.grouping.errors.unsupported_modelo"),
+            tr("aggregation.grouping.errors.unsupported_modelo"),
             context={"aggregator_label": aggregator_label, "modelo": modelo},
         )
     eligible = catalogue[modelo]

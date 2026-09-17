@@ -69,7 +69,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .iva_authority_support import aggregate_iva_ledger_observations
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _CLASSIFIED_AT = datetime(2025, 1, 6, 12, 0, tzinfo=UTC)
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
@@ -205,7 +205,7 @@ def test_the_aggregator_derives_the_tier_and_carries_the_rate(suffix: str, rate:
         obs.applied_rate: obs for obs in _aggregation().observations if obs.flow_direction.value == "repercutido"
     }
     observation = observations[Decimal(rate)]
-    assert observation.rate_kind is _EXPECTED_TIER[suffix]
+    assert observation.rate_kind == _EXPECTED_TIER[suffix]
     assert observation.applied_rate == Decimal(rate)
 
 
@@ -222,9 +222,9 @@ def test_the_tier_is_many_to_one_with_the_rate() -> None:
         for obs in _aggregation().observations
         if obs.flow_direction.value == "repercutido"
     }
-    assert tiers_by_rate[Decimal("0.10")] is tiers_by_rate[Decimal("0.075")]
-    assert tiers_by_rate[Decimal("0.10")] is tiers_by_rate[Decimal("0.05")]
-    assert tiers_by_rate[Decimal("0.04")] is tiers_by_rate[Decimal("0.02")]
+    assert tiers_by_rate[Decimal("0.10")] == tiers_by_rate[Decimal("0.075")]
+    assert tiers_by_rate[Decimal("0.10")] == tiers_by_rate[Decimal("0.05")]
+    assert tiers_by_rate[Decimal("0.04")] == tiers_by_rate[Decimal("0.02")]
 
 
 def test_no_sale_is_silently_gated_out_of_the_aggregation() -> None:

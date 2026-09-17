@@ -53,7 +53,7 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _OTHER_BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"

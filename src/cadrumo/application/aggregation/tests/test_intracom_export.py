@@ -44,7 +44,7 @@ from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .renta_income_aggregation_support import _period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 # Casilla 59/60 base imponible are resolved through the registry
 # ledger_iva_aggregation bindings (the canonical path production uses), not a

@@ -71,7 +71,7 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def modelo_130_revision():

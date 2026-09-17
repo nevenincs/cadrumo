@@ -30,6 +30,7 @@ from ...core.aggregation import (
     RetencionScheme,
     WorkIncomeRetencionTreatment,
 )
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -96,6 +97,7 @@ class RetencionObservation(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
         return _retenciones_source_kind(value)
 
@@ -115,6 +117,7 @@ class RetencionPerceptorRollup(BaseModel):
 
     @field_validator("source_kind", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kind_is_canonical(cls, value: object) -> BindingSourceKind:
         return _retenciones_source_kind(value)
 
@@ -137,6 +140,7 @@ class RetencionesAggregation(BaseModel):
     total_retencion: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _totals_match_rollups(self) -> RetencionesAggregation:
         assert_rollup_totals_match(
             self.rollups,

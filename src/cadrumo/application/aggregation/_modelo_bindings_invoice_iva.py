@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -730,7 +730,7 @@ def _screened_invoice_line_observations(
         iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
         if base_amount_eur is None or iva_amount_eur is None:
             raise AggregationValidationError(
-                t("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
+                tr("aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"),
                 context={
                     "invoice_id": invoice.invoice_id,
                     "invoice_number": invoice.invoice_number,

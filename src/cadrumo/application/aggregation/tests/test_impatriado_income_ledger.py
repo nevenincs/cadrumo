@@ -73,7 +73,7 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
 _M151_MODELO = Modelo("151").value
@@ -406,13 +406,7 @@ def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> No
     # A binding targeting a non-base casilla is rejected (anti-tautology: the
     # validator is not vacuously passing).
     off_target = binding.model_copy(
-        update={
-            "selector": {
-                "modelo": "151",
-                "target_casilla_id": "impatriado.retenciones",
-                "fact": "ingresos_integros_sum",
-            },
-        },
+        update={"provider": binding.provider.model_copy(update={"target_casilla_id": "impatriado.retenciones"})},
     )
     with pytest.raises(RegistryValidationError, match="outside the supported"):
         validate_ledger_impatriado_income_aggregation_binding_definition(off_target)

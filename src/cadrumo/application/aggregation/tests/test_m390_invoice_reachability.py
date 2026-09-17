@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.ledger_iva_bindings import invoice_ledger_screen_binding_ids
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "39393939-3939-4393-8393-393939393939"
 

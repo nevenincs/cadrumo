@@ -21,8 +21,8 @@ from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.country_code import CountryCodeAlpha2
-from ...core.i18n.render import tr
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.render import tr as render_tr
+from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -116,7 +116,7 @@ def _resolve_irnr_registry_revision(
     )
     if str(selected.id) != str(revision.id):
         raise AggregationValidationError(
-            t("aggregation.irnr_income_ledger.errors.registry_revision_mismatch"),
+            tr("aggregation.irnr_income_ledger.errors.registry_revision_mismatch"),
         )
     return revision
 
@@ -158,7 +158,7 @@ def aggregate_irnr_income_ledger_from_repositories(
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
-            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            tr("aggregation.renta_ledger.errors.bucket_mismatch"),
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     if not period.has_date_span():
@@ -229,7 +229,7 @@ def aggregate_irnr_income_ledger(
 
     if not period.has_date_span():
         raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.unsupported_period"),
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
 
@@ -242,7 +242,7 @@ def aggregate_irnr_income_ledger(
     declared_codes = _resolve_selected_income_type_codes(selected_revision, period)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
-            t("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
+            tr("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
             context={
                 "tipo_renta_code": selected_official_tipo_renta_code,
                 "period": str(period),
@@ -287,7 +287,7 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
     )
     if len(candidates) != 1:
         raise AggregationValidationError(
-            t("aggregation.irnr_income_ledger.errors.income_type_namespace_missing"),
+            tr("aggregation.irnr_income_ledger.errors.income_type_namespace_missing"),
         )
     coordinate = period.start_date
     declared = frozenset(
@@ -297,7 +297,7 @@ def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period
     )
     if not declared:
         raise AggregationValidationError(
-            t("aggregation.irnr_income_ledger.errors.income_type_codes_missing"),
+            tr("aggregation.irnr_income_ledger.errors.income_type_codes_missing"),
         )
     return declared
 
@@ -311,7 +311,7 @@ def _irnr_source_jurisdiction_issue(
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IrnrIncomeLedgerAggregationIssueReason.SOURCE_JURISDICTION_UNRESOLVED,
-            detail=tr(
+            detail=render_tr(
                 "aggregation.irnr_income_ledger.diagnostics.source_jurisdiction_unresolved",
             ),
             rejected_source_jurisdiction=None,
@@ -331,7 +331,7 @@ def _irnr_classification_issue(
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IrnrIncomeLedgerAggregationIssueReason.INCOMPLETE_M210_CLASSIFICATION,
-            detail=tr(
+            detail=render_tr(
                 "aggregation.irnr_income_ledger.diagnostics.incomplete_m210_classification",
             ),
         )
@@ -339,7 +339,7 @@ def _irnr_classification_issue(
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IrnrIncomeLedgerAggregationIssueReason.INCOMPLETE_M210_CLASSIFICATION,
-            detail=tr(
+            detail=render_tr(
                 "aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared",
                 tipo_renta_code=classification.official_tipo_renta_code,
                 period=str(period),

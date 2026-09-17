@@ -45,7 +45,7 @@ from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..errors import AggregationValidationError
 from ..oss_ioss import _candidate_for_invoice_line
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _DEVENGO = date(2025, 2, 10)
 

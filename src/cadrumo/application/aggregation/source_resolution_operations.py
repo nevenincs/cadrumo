@@ -17,7 +17,7 @@ from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.i18n.translatable import Translatable as t
+from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry.binding_provider_registration import registration_for
 from ...domain.calculations.registry.ids import BindingId, RelationId
@@ -173,7 +173,7 @@ class _SourceResolutionMergeState:
             return
         if self.m303_regimen_simplificado_annual_summary_handoff is not None:
             raise AggregationValidationError(
-                t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
+                tr("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
                 context={
                     "first_resolver": self.m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
                     "second_resolver": resolution.resolver_id,
@@ -374,7 +374,7 @@ def storage_degradation_resolution(
                 reason="storage_degraded",
                 source_kind=source_kind,
                 resolver_id=resolver_id,
-                message=t("errors.integrity.integrity_storage_secure_object_unreadable"),
+                message=tr("errors.integrity.integrity_storage_secure_object_unreadable"),
             )
             for source_kind in normalized_sources
         ),
@@ -387,7 +387,7 @@ def _claim_binding(owners: dict[BindingId, str], binding_id: BindingId, resolver
         owners[binding_id] = resolver_id
         return
     raise AggregationValidationError(
-        t("aggregation.source_mesh.errors.duplicate_binding_owner"),
+        tr("aggregation.source_mesh.errors.duplicate_binding_owner"),
         context={"binding_id": binding_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
 
@@ -399,7 +399,7 @@ def _claim_row_binding(owners: dict[RowBindingKey, str], row_binding_key: RowBin
         return
     binding_id, row_index = row_binding_key
     raise AggregationValidationError(
-        t("aggregation.source_mesh.errors.duplicate_row_binding_owner"),
+        tr("aggregation.source_mesh.errors.duplicate_row_binding_owner"),
         context={
             "binding_id": binding_id,
             "row_index": row_index,
@@ -416,7 +416,7 @@ def _claim_row_casilla(owners: dict[RowCasillaKey, str], row_casilla_key: RowCas
         return
     casilla_id, row_index = row_casilla_key
     raise AggregationValidationError(
-        t("aggregation.source_mesh.errors.duplicate_row_casilla_owner"),
+        tr("aggregation.source_mesh.errors.duplicate_row_casilla_owner"),
         context={
             "casilla_id": casilla_id,
             "row_index": row_index,
@@ -432,7 +432,7 @@ def _claim_bound_casilla(owners: dict[CasillaId, str], casilla_id: CasillaId, re
         owners[casilla_id] = resolver_id
         return
     raise AggregationValidationError(
-        t("aggregation.source_mesh.errors.duplicate_bound_casilla_owner"),
+        tr("aggregation.source_mesh.errors.duplicate_bound_casilla_owner"),
         context={"casilla_id": casilla_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
 
@@ -443,7 +443,7 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
         owners[relation_id] = resolver_id
         return
     raise AggregationValidationError(
-        t("aggregation.source_mesh.errors.duplicate_relation_owner"),
+        tr("aggregation.source_mesh.errors.duplicate_relation_owner"),
         context={"relation_id": relation_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
 

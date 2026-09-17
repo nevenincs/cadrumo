@@ -43,7 +43,7 @@ from ..invoice_retencion import (
 )
 from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFESIONAL = RetencionScheme("actividades_profesionales")
 _FX_RATE_SOURCE = "test_reference"
@@ -111,7 +111,7 @@ def test_received_invoice_routes_into_the_shared_observation_type() -> None:
     assert observation.source_kind is BindingSourceKind.PAYABLE_INVOICE
     assert observation.taxable_base == Decimal("1000.00")
     assert observation.retencion_amount == Decimal("150.00")
-    assert observation.scheme is _PROFESIONAL
+    assert observation.scheme == _PROFESIONAL
     assert observation.accrued_on == "2026-03-15"
 
 
