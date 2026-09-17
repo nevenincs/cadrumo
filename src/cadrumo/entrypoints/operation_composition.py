@@ -25,6 +25,7 @@ from ..adapters.persistence.storage.certificate_secret_backend import build_cert
 from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.operation_definitions import (
+    AuthOperationPorts,
     build_auth_operation_definitions,
     build_auth_operation_registrations,
 )
@@ -97,6 +98,7 @@ from .adapter_composition import (
     build_filing_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
+    build_operator_probe_ports,
     build_verification_repository_bundle,
 )
 from .live_state_composition import (
@@ -229,6 +231,16 @@ def _google_sheets_export_prepare_port(
     return prepare
 
 
+def build_auth_operation_ports(operator_scope_ports: OperatorScopePorts | None = None) -> AuthOperationPorts:
+    """Compose the outer capabilities the registered auth executors run against."""
+    return AuthOperationPorts(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_probe_ports=build_operator_probe_ports(),
+        operator_scope_ports=operator_scope_ports or build_operator_scope_ports(),
+    )
+
+
 def build_production_operation_registry(
     *,
     settings: Settings | None = None,
@@ -247,7 +259,11 @@ def build_production_operation_registry(
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
     resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
-    resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
+    resolved_auth_definitions = (
+        auth_definitions
+        if auth_definitions is not None
+        else build_auth_operation_definitions(ports=build_auth_operation_ports(resolved_operator_scope_ports))
+    )
     profile_definitions = build_user_profile_operation_definitions()
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
         certificate_secret_backend_factory=build_certificate_secret_backend,
