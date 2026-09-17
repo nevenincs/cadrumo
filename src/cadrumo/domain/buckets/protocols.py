@@ -59,8 +59,8 @@ class BucketEventHistoryRepositoryProtocol(Protocol):
 
         The port a caller uses to commit an event in the same unit of work as the
         state change it records: pair it with
-        :func:`~domain.buckets.build_bucket_event` and
-        :func:`~domain.buckets.append_bucket_event`, then pass the returned write
+        :func:`~domain.buckets.event_repository.build_bucket_event` and
+        :func:`~domain.buckets.event_repository.append_bucket_event`, then pass the returned write
         to the owning catalogue repository's ``save_with_secure_object_writes``.
         """
         ...

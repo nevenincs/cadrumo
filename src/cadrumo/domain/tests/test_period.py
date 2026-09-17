@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from ...core.period import Period
+from ...core.period import Period, PeriodError
 from ..period import (
     PeriodValidationError,
     RegistryPeriodError,
@@ -45,7 +45,7 @@ def test_bare_tokens_resolve_with_explicit_year() -> None:
 
 def test_period_refusals_stay_at_their_boundaries() -> None:
     for combined in ("2026Q1", "2026-1T", "2026-03", "2026A", "2026", "2026P1"):
-        with pytest.raises(ValueError, match=r"invalid period code"):
+        with pytest.raises(PeriodError, match=r"invalid period code"):
             Period.from_year_and_code(2026, combined)
 
     for boundary in (period_start_date, period_end_date):
