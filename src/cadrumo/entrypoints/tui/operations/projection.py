@@ -23,6 +23,7 @@ from ....application.operations.frontend_projection import (
     OperationUnsupportedInteractionV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationReference
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationClosePolicy,
@@ -90,6 +91,7 @@ class OperationModalViewModelV1(BaseModel):
     receipt_ref: OperationReference | None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_derivation(self) -> OperationModalViewModelV1:
         projection = self.projection
         terminal = projection.lifecycle is OperationLifecycle.TERMINAL

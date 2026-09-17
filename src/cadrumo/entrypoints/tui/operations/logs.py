@@ -23,6 +23,7 @@ from ....application.operations.frontend_requests import (
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
 from ....application.operations.persistence.replay import RESYNCHRONIZING_REPLAY_STATUSES, OperationReplayStatus
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationEventKind
 
@@ -56,6 +57,7 @@ class OperationModalLogViewV1(BaseModel):
     rows: tuple[OperationModalLogRowV1, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_view(self) -> OperationModalLogViewV1:
         if self.resynchronized != (self.status in RESYNCHRONIZING_REPLAY_STATUSES):
             raise ValueError("modal log resynchronization flag must mirror its replay status")

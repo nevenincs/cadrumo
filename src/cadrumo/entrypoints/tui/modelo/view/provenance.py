@@ -112,7 +112,6 @@ class ModeloWorkspaceProvenanceScreen(TypedAppAccess, AccountChromeScreen):
                 tr(
                     "flows.modelo_workspace_provenance.page_bounded",
                     shown=completeness.shown,
-                    page_size=completeness.page_size,
                 )
             )
             return

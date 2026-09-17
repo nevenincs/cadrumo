@@ -219,8 +219,13 @@ async def test_sign_out_is_deferred_to_the_injected_operation_factory() -> None:
 
 @pytest.mark.asyncio
 async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_opened() -> None:
-    """The production door shares S402 services and leaves start ownership to the modal."""
+    """The production door shares its services and starts the close it submits.
+
+    A submitted close that was never started would sit in its created state
+    while the modal reported it in progress, so opening the door does both.
+    """
     calls: list[tuple[OperationRequest[ProfileLogoutOperationRequest], str]] = []
+    started: list[object] = []
     submission = SimpleNamespace(receipt=SimpleNamespace(operation_id="operation-1"))
 
     class _Submission:
@@ -233,6 +238,10 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
             calls.append((request, actor_ref))
             return submission
 
+        async def start(self, operation_id: object) -> object:
+            started.append(operation_id)
+            return operation_id
+
     services = SimpleNamespace(submission=_Submission())
     factory = methodcaller(
         "__call__",
@@ -241,6 +250,7 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
     )(compose_profile_sign_out_factory)
 
     assert calls == []
+    assert started == []
     controller = await factory()
     assert isinstance(controller, OperationController)
 
@@ -248,6 +258,7 @@ async def test_profile_sign_out_factory_submits_the_canonical_request_only_when_
     assert controller.submission is submission
     assert controller.actor_ref == "operator:tui-account"
     assert len(calls) == 1
+    assert started == [controller.operation_id]
     request, actor_ref = calls[0]
     assert actor_ref == "operator:tui-account"
     assert request.definition_id == "user-profile.logout"

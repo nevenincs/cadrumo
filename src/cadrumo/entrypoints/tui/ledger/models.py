@@ -25,6 +25,7 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceEntryRefV1,
 )
 from ....application.operator_actions.models import ActionReference
+from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -388,7 +389,7 @@ class LedgerEvidenceConfirmationV1(BaseModel):
 
     evidence_id: str
     kind: InvoiceKind
-    country_code: str = Field(min_length=2, max_length=2)
+    country_code: CountryCodeAlpha2
     counterparty_name: str | None = None
 
 

@@ -40,6 +40,7 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceRecordLabelV1,
     ModeloWorkspaceRevisionAssertionDisposition,
 )
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.i18n.render import tr
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.revision_review import RevisionReviewStatus
@@ -147,6 +148,7 @@ class ModeloWorkspaceBoundedPageV1(_ViewModel):
     page_size: int
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_a_real_bound(self) -> ModeloWorkspaceBoundedPageV1:
         if self.shown > self.page_size:
             raise ValueError("a bounded workspace page cannot show more rows than its page size")
@@ -172,6 +174,7 @@ class ModeloWorkspaceCapabilityRowV1(_ViewModel):
     source: ModeloWorkspaceCapabilityV1
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _mirror_the_source_capability(self) -> ModeloWorkspaceCapabilityRowV1:
         # Read every mirrored field off the retained source directly rather
         # than through the builder's helper. Sharing that helper would make
@@ -280,6 +283,7 @@ class ModeloWorkspaceChromeV1(_ViewModel):
     work_unit_id: str | None = None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _require_honest_address(self) -> ModeloWorkspaceChromeV1:
         if not self.law_selected_revision_id:
             raise ValueError("workspace chrome must disclose the law-selected revision it is showing")

@@ -128,7 +128,6 @@ class ModeloWorkspaceResultsScreen(TypedAppAccess, AccountChromeScreen):
                 tr(
                     "flows.modelo_workspace_results.page_bounded",
                     shown=completeness.shown,
-                    page_size=completeness.page_size,
                 )
             )
             return
