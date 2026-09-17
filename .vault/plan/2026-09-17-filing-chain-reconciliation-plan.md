@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:9455a4cab52f3b9d328e75d779bd22bbe929fab369f69389c3efa4d636c3c8a2'
+body_hash: 'sha256:14617875bd84cd1766d1f4260d25710272cda3d4dc3af431dd838a07cd36f420'
 ---
 
 <!-- LINK RULES:
@@ -121,15 +121,16 @@ Ownership:
 - **Backend worker:** S01 to S04 (domain, application and persistence, plus their existing tests and error and event registries).
 - **Surfaces worker:** S05 to S07 (CLI, composition seam, TUI, CLI locales, the generated CLI reference and the scenario test).
 - **Orchestrator:** integration, scoped checks and commits.
+
 ## Steps
 
-- [ ] `S01` - Add chain-entry origin, confirmation, declaration kind and register ref to the filing record with catalogue helpers and forward migration; `src/cadrumo/domain/modelos/filing_record.py`.
-- [ ] `S02` - Add the reconciliation service with its register-entry input and five outcomes; `src/cadrumo/application/modelo/filing_chain_reconciliation.py`.
-- [ ] `S03` - Split the observation store into official and pending-local layers and replace the displacement guard with audited overrides; `src/cadrumo/adapters/persistence/profile/calculation_observations.py`.
-- [ ] `S04` - Rewire file, amend, import and live pull through the chain transitions and the reconciliation service; `src/cadrumo/application/modelo/amendment_actions.py`.
-- [ ] `S05` - Expose chain, outcomes, layers and overrides in the CLI and add the Sede port factory seam; `src/cadrumo/entrypoints/cli/_modelo_records_cli.py`.
-- [ ] `S06` - Show chain columns and reconciliation and override events in the TUI filing history; `src/cadrumo/entrypoints/tui/declarations/filing_history.py`.
-- [ ] `S07` - Add the multi-period CLI-driven reconciliation scenario with a recorded pull port; `src/cadrumo/entrypoints/cli/tests/test_filing_chain_reconciliation_cli.py`.
+- [x] `S01` - Add chain-entry origin, confirmation, declaration kind and register ref to the filing record with catalogue helpers and forward migration; `src/cadrumo/domain/modelos/filing_record.py`.
+- [x] `S02` - Add the reconciliation service with its register-entry input and five outcomes; `src/cadrumo/application/modelo/filing_chain_reconciliation.py`.
+- [x] `S03` - Split the observation store into official and pending-local layers and replace the displacement guard with audited overrides; `src/cadrumo/adapters/persistence/profile/calculation_observations.py`.
+- [x] `S04` - Rewire file, amend, import and live pull through the chain transitions and the reconciliation service; `src/cadrumo/application/modelo/amendment_actions.py`.
+- [x] `S05` - Expose chain, outcomes, layers and overrides in the CLI and add the Sede port factory seam; `src/cadrumo/entrypoints/cli/_modelo_records_cli.py`.
+- [x] `S06` - Show chain columns and reconciliation and override events in the TUI filing history; `src/cadrumo/entrypoints/tui/declarations/filing_history.py`.
+- [x] `S07` - Add the multi-period CLI-driven reconciliation scenario with a recorded pull port; `src/cadrumo/entrypoints/cli/tests/test_filing_chain_reconciliation_cli.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

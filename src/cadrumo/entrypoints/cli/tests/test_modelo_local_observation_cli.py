@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -25,8 +25,13 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
@@ -49,12 +54,20 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    with bundled_indexed_authority().operation() as operation:
+        record = _natural_person_record(runtime_profile, operation=operation)
+    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Local observation CLI test")
+
+
+def _natural_person_record(
+    runtime_profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> UserProfileRecord:
+    # The pinned authority supplies the profile schema, so the record validates
+    # against the canonical version rather than a copied literal.
+    return create_user_profile_record(
+        context=operation.profile_create_context(),
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -76,7 +89,6 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
-    seed_test_profile_record(record, root=runtime_profile.storage_root, label="Local observation CLI test")
 
 
 def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
