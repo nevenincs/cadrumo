@@ -27,7 +27,7 @@ from .._pipeline import sanitize_pdf
 from .._records import NameReplacement, NifReplacement, TokenMap
 from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 # A committed justificante whose SHA-256 is catalogued in
 # fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires against

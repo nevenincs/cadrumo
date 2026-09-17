@@ -42,7 +42,7 @@ from .._records import (
     _ReplacementBase,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
 
 _SHA = "0" * 64
@@ -210,7 +210,9 @@ def test_replacement_subclasses_reject_invalid_synthetic_values() -> None:
         errors = exc_info.value.errors()
         assert errors, case_id
         if expected_message.startswith("errors.identity."):
-            wrapped = errors[0]["ctx"]["error"]
+            # The validator boundary reports the registered refusal as the cause
+            # of the ValueError pydantic requires.
+            wrapped = errors[0]["ctx"]["error"].__cause__
             assert isinstance(wrapped, IdentityError), case_id
             assert wrapped.translated_message == expected_message, case_id
         else:

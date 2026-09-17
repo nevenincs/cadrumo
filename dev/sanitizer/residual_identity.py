@@ -45,6 +45,7 @@ from __future__ import annotations
 import io
 import re
 from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -54,6 +55,8 @@ import pikepdf
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.iban import IBAN_SHAPE_RE, iban_mod_97
 from cadrumo.core.identity.documents import IdentityDocument, IdentityError
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 
 
@@ -252,6 +255,28 @@ def checksum_valid_spans(text: str, kinds: frozenset[ResidualKind]) -> Iterator[
         kinds: The pattern classes to apply. Ordering of the yield is by class
             name then by offset, so callers get deterministic output.
     """
+    # The checksum tables are published authority facts; the verification runs
+    # under the caller's lease, or a short one released before anything yields.
+    with identity_authority_scope():
+        spans = tuple(_verified_spans(text, kinds))
+    yield from spans
+
+
+@contextmanager
+def identity_authority_scope() -> Iterator[None]:
+    """Keep the caller's governed-fact scope, else lease the published authority.
+
+    A caller scanning many texts enters this once around the whole sweep, so the
+    per-text verification reuses one lease instead of opening one per text.
+    """
+    if governed_facts_in_scope() is not None:
+        yield
+        return
+    with bundled_indexed_authority().operation():
+        yield
+
+
+def _verified_spans(text: str, kinds: frozenset[ResidualKind]) -> Iterator[tuple[ResidualKind, int, str]]:
     for kind in sorted(kinds, key=lambda candidate: candidate.value):
         pattern, is_valid = _VALIDATORS[kind]
         for match in pattern.finditer(text):
