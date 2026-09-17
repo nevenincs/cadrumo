@@ -3,19 +3,17 @@
 The gate these tests protect is the one a trigger model gets wrong by default:
 attributing a workflow's events to every job inside it. The defect is proved
 directly rather than asserted about the live tree alone -- a synthetic workflow
-shaped exactly like ``runner-fleet-health.yml`` must report its dispatch-gated
+with a push trigger and an opt-in dispatch-only job must report its dispatch-gated
 job as unreached by push, and the fork guard beside it must keep every event it
 has.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ..lane_reachability import ci_invoked_recipe_opt_in, ci_invoked_recipe_triggers
 from ..workflow_job_gates import (
     JobGate,
     dispatch_input_defaults,
@@ -33,7 +31,7 @@ _DEV_IMAGE_GUARD = "${{ github.event_name == 'workflow_dispatch' && inputs.inclu
 
 
 def _workflow() -> dict[str | bool, Any]:
-    """A workflow shaped like the live fleet-health lane: push plus an opt-in job."""
+    """A workflow with a push trigger plus an opt-in, dispatch-only job."""
     return {
         # YAML 1.1 parses `on:` as the boolean True, which is how a safe-loaded
         # workflow really arrives. Building the fixture the naive way would test
@@ -115,19 +113,3 @@ def test_the_trigger_block_is_read_from_the_yaml_boolean_key() -> None:
 def test_a_job_the_document_does_not_declare_reaches_nothing() -> None:
     """Absence is not silently the workflow's own event set."""
     assert job_gate(_workflow(), "absent", ("push",)) == JobGate(events=())
-
-
-def test_the_live_devcontainer_lane_is_manual_only_and_opt_in() -> None:
-    """The finding this module was written for, asserted against the real tree.
-
-    ``just test-devcontainer`` is the only thing that builds and probes the
-    contributor image, it is invoked exactly once, and both weakenings on that
-    one route are individually documented in the workflow. Their product is that
-    no automatic event and no ordinary dispatch runs it.
-    """
-    root = Path(__file__).resolve().parents[3]
-    triggers = ci_invoked_recipe_triggers(root)
-    assert triggers["devcontainer-test"] == ("workflow_dispatch",)
-    assert "devcontainer-test" in ci_invoked_recipe_opt_in(root)
-    # The sibling job in the same workflow is gated by nothing and keeps its push.
-    assert "push" in triggers["runner-image-test"]

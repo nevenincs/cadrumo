@@ -44,6 +44,7 @@ from ..workflow_runner_targets import is_unresolved, runner_targets
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
+#: A watchdog job id is this prefix, alone or followed by the phase it watches.
 _WATCHDOG_JOB_ID: Final = "runner-queue-watchdog"
 #: The watchdog is invoked as a module rather than a script path, so the lane
 #: runs the same code whether the checkout is a source tree or an install.
@@ -317,12 +318,12 @@ def test_occupancy_counts_only_running_jobs() -> None:
 
 
 #: Floor for the workflow census three gates in this module iterate. The
-#: directory carries sixteen today; the sibling change-class module floors
-#: the same walk at eight and states why, so this matches it. A bare
+#: directory carries six today (three lanes, three dispatch-only reports); the
+#: sibling change-class module floors the same walk at six. A bare
 #: truthiness stood here, and every assertion in those three gates runs
 #: INSIDE the loop over this list: a walk narrowed to one document leaves
 #: each of them passing with almost nothing executed.
-_MINIMUM_WORKFLOW_DOCUMENTS = 8
+_MINIMUM_WORKFLOW_DOCUMENTS = 6
 
 
 def _workflow_documents() -> list[tuple[Path, dict[str, Any]]]:
@@ -368,7 +369,7 @@ def test_every_workflow_with_an_off_lane_job_carries_the_watchdog() -> None:
     unwatched: list[tuple[str, list[str]]] = []
     for path, document in _workflow_documents():
         off_lane = _off_watchdog_lane_jobs(document)
-        if off_lane and _WATCHDOG_JOB_ID not in (document.get("jobs") or {}):
+        if off_lane and not _watchdog_ids(document):
             unwatched.append((path.name, off_lane))
     assert unwatched == [], f"workflows with an unwatched off-lane job: {unwatched}"
 
@@ -468,14 +469,13 @@ def test_every_watchdog_job_invokes_the_shared_module() -> None:
     """One implementation of the decision, not five hand-copied shell loops."""
     examined = 0
     for path, document in _workflow_documents():
-        job = (document.get("jobs") or {}).get(_WATCHDOG_JOB_ID)
-        if job is None:
-            continue
-        examined += 1
-        assert _watchdog_invokes_the_module(job), f"{path.name}: watchdog does not run {_WATCHDOG_MODULE}"
-        assert job.get("runs-on") is not None and tuple(sorted(job["runs-on"])) == _WATCHDOG_LABELS, (
-            f"{path.name}: the watchdog must run on a lane the fleet can always serve"
-        )
+        for job_id in _watchdog_ids(document):
+            job = document["jobs"][job_id]
+            examined += 1
+            assert _watchdog_invokes_the_module(job), f"{path.name}:{job_id} does not run {_WATCHDOG_MODULE}"
+            assert job.get("runs-on") is not None and tuple(sorted(job["runs-on"])) == _WATCHDOG_LABELS, (
+                f"{path.name}:{job_id}: the watchdog must run on a lane the fleet can always serve"
+            )
     assert examined, f"no workflow declares a {_WATCHDOG_JOB_ID} job; this gate examined nothing"
 
 
@@ -487,9 +487,9 @@ def test_a_watchdog_whose_invocation_is_commented_out_is_not_invoking_it() -> No
     the substring reading this replaced still finds the module name in it.
     """
     job = next(
-        (document.get("jobs") or {})[_WATCHDOG_JOB_ID]
+        document["jobs"][_watchdog_ids(document)[0]]
         for _, document in _workflow_documents()
-        if _WATCHDOG_JOB_ID in (document.get("jobs") or {})
+        if _watchdog_ids(document)
     )
 
     assert _watchdog_invokes_the_module(job)
@@ -502,6 +502,25 @@ def test_a_watchdog_whose_invocation_is_commented_out_is_not_invoking_it() -> No
 
     assert _WATCHDOG_MODULE in "".join(str(step.get("run", "")) for step in commented["steps"])
     assert not _watchdog_invokes_the_module(commented)
+
+
+def _watchdog_ids(document: dict[str, Any]) -> list[str]:
+    """The watchdog jobs a workflow declares, one per phase it runs."""
+    return [job_id for job_id in document.get("jobs") or {} if str(job_id).startswith(_WATCHDOG_JOB_ID)]
+
+
+def _unwatched_gated_jobs(document: dict[str, Any]) -> list[str]:
+    """Off-lane jobs no watchdog with the same job condition is co-created with."""
+    jobs = document.get("jobs") or {}
+    watchdogs = [jobs[job_id] for job_id in _watchdog_ids(document)]
+    return [
+        job_name
+        for job_name in _off_watchdog_lane_jobs(document)
+        if not any(
+            watchdog.get("if") == jobs[job_name].get("if") and _needs_of(jobs[job_name]) <= _needs_of(watchdog)
+            for watchdog in watchdogs
+        )
+    ]
 
 
 def _needs_of(job: dict[str, Any]) -> frozenset[str]:
@@ -528,18 +547,10 @@ def test_the_watchdog_is_created_no_later_than_the_lanes_it_watches() -> None:
     `packaging-smoke` already had this right; `packaging-homebrew` did not.
     """
     for path, document in _workflow_documents():
-        jobs = document.get("jobs") or {}
-        watchdog = jobs.get(_WATCHDOG_JOB_ID)
-        if watchdog is None:
-            continue
-        watchdog_needs = _needs_of(watchdog)
-        for job_name in _off_watchdog_lane_jobs(document):
-            watched_needs = _needs_of(jobs[job_name])
-            assert watched_needs <= watchdog_needs, (
-                f"{path.name}: '{job_name}' is gated on {sorted(watched_needs - watchdog_needs)}, "
-                f"which the watchdog does not wait for — the watchdog would begin (and could "
-                f"finish) its watch window before that job is created"
-            )
+        assert _unwatched_gated_jobs(document) == [], (
+            f"{path.name}: these off-lane jobs are gated on a dependency no watchdog of their phase "
+            "waits for, so the watchdog could begin (and finish) its watch window before they exist"
+        )
 
 
 def test_the_needs_parity_gate_refuses_an_ungated_watchdog(tmp_path: Path) -> None:
@@ -571,6 +582,9 @@ def test_the_needs_parity_gate_refuses_an_ungated_watchdog(tmp_path: Path) -> No
     assert not _needs_of(jobs["late-macos"]) <= _needs_of(jobs[_WATCHDOG_JOB_ID]), (
         "the gate must reject a watchdog that does not wait for a dependency its watched job waits for"
     )
+    assert _unwatched_gated_jobs(document) == ["late-macos"]
+    jobs[_WATCHDOG_JOB_ID]["needs"] = "build"
+    assert _unwatched_gated_jobs(document) == []
 
 
 def test_every_watchdog_job_can_read_jobs_and_cancel_the_run() -> None:
@@ -581,8 +595,7 @@ def test_every_watchdog_job_can_read_jobs_and_cancel_the_run() -> None:
     sit for GitHub's full 24-hour ceiling, which is the original defect.
     """
     for path, document in _workflow_documents():
-        if _WATCHDOG_JOB_ID not in (document.get("jobs") or {}):
-            continue
-        assert granted_level(document, _WATCHDOG_JOB_ID, "actions") == "write", (
-            f"{path.name}: watchdog needs actions: write to cancel"
-        )
+        for job_id in _watchdog_ids(document):
+            assert granted_level(document, job_id, "actions") == "write", (
+                f"{path.name}:{job_id}: watchdog needs actions: write to cancel"
+            )

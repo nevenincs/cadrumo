@@ -25,7 +25,7 @@ from ..workflow_python_selection import declared_python_selection, uv_python_env
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
-_COMPATIBILITY_WORKFLOW: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
+_COMPATIBILITY_WORKFLOW: Final = _WORKFLOWS_DIR / "release.yml"
 _PYTHON_VERSION_FILE: Final = REPO_ROOT / ".python-version"
 _EXACT_PATCH: Final = re.compile(r"\d+\.\d+\.\d+")
 _MATRIX_EXPRESSION: Final = re.compile(r"\$\{\{\s*matrix\.([A-Za-z][\w-]*)\s*\}\}")
@@ -149,7 +149,7 @@ def test_release_cohort_enforces_the_repository_python_pin() -> None:
 def test_matrix_override_is_rejected_outside_the_compatibility_workflow() -> None:
     """A second matrix lane cannot quietly replace the release-builder pin."""
     pin = _python_pin()
-    foreign = Path("ci.yml")
+    foreign = Path("foreign.yml")
     documents = [
         (
             foreign,
@@ -200,7 +200,7 @@ def test_a_uv_python_override_is_refused_at_every_env_scope(document: dict[str, 
     the selection moved behind one resolver it passed at all three scopes.
     """
     with pytest.raises(AssertionError, match=r"bypass \.python-version"):
-        _assert_setup_uv_consumers_follow_pin([(Path("ci.yml"), document)], pin=_python_pin())
+        _assert_setup_uv_consumers_follow_pin([(Path("foreign.yml"), document)], pin=_python_pin())
 
 
 def test_the_innermost_uv_python_declaration_wins() -> None:

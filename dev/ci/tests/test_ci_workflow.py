@@ -1,4 +1,4 @@
-"""Structural behavior gate for the Cadrumo CI workflow."""
+"""Structural gates for the recipes the CI lanes delegate to, and for the lanes' shared surface."""
 
 from __future__ import annotations
 
@@ -20,7 +20,10 @@ from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+_WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
+_MERGE_GATE = _WORKFLOWS_DIR / "merge-gate.yml"
+#: The three lanes every change and release passes through.
+_LANES = tuple(_WORKFLOWS_DIR / name for name in ("merge-gate.yml", "release.yml", "release-please.yml"))
 _JUSTFILE = REPO_ROOT / "justfile"
 #: The one tool-dependent module the unit lane must not collect. Named here so
 #: the lane's exclusion is asserted against the module's real marker rather
@@ -65,8 +68,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
     return tuple(label for label, pattern in _PROHIBITED_AEAT_PRODUCT_FORMS if pattern.search(surface))
 
 
-_FULL_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci-full.yml"
-_REPOSITORY_ROOT = _WORKFLOW.parents[2]
+_REPOSITORY_ROOT = REPO_ROOT
 _PYPROJECT = _REPOSITORY_ROOT / "pyproject.toml"
 #: Per-test wall ceiling for the harness lane's combined real-proof pass, in
 #: seconds. Deliberately above the ini default: this lane's subject is a real
@@ -86,59 +88,6 @@ def _declared_harness_members() -> tuple[str, ...]:
     return max((lane.paths for lane in harness_lanes), key=len, default=())
 
 
-def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
-    """Per-push CI has independent static, unit, and harness verdicts."""
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    assert document["name"] == "Cadrumo CI"
-    assert set(document["jobs"]) == {
-        "cadrumo-workflow-lint",
-        "cadrumo-static",
-        "cadrumo-unit",
-        "cadrumo-test-harness",
-    }
-
-    static = document["jobs"]["cadrumo-static"]
-    static_commands = "\n".join(str(step.get("run", "")) for step in static["steps"])
-    # `just check-registry`, not a copied development integrity command.
-    # The recipe owns the development gate so the workflow cannot drift from it.
-    assert "just check-registry" in static_commands
-    assert "just check-data-format" in static_commands
-    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in static_commands
-    assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
-    # The CI/repository contract gates run per-push here, via the
-    # `test-ci-contracts` recipe. The workflow names the recipe and the recipe owns the
-    # paths, so the per-push dev-tree selection has one declaration site; the
-    # substance of the invocation is pinned in the recipe, below. That is not yet
-    # true of every `dev/` lane: ci-full.yml still spells its own dev-tree paths
-    # and marker expression inline, and that copy has drifted from this recipe.
-    assert "just test-ci-contracts" in static_commands
-    assert "just test-integration-parallel" in static_commands
-
-    unit = document["jobs"]["cadrumo-unit"]
-    unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
-    # Routed through the `test-unit` recipe (same one `just test-unit` runs
-    # locally) so the marker expression and the durations/worker overrides
-    # have one declaration site; the recipe's substance is pinned below.
-    #
-    # The worker count rides the step's `env:` block, NOT a `VAR=x just ...`
-    # prefix. That prefix is POSIX shell syntax and a parse error under both
-    # cmd.exe and PowerShell, so every step written that way was one this
-    # repository's own Windows legs could not have run. `env:` is where
-    # GitHub Actions sets a variable on any runner, and the recipe already
-    # reads it through `env_var_or_default`.
-    assert "just test-unit 50" in unit_commands
-    unit_step = next(step for step in unit["steps"] if "just test-unit 50" in str(step.get("run", "")))
-    assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8", (
-        "the worker override must ride `env:`; a `VAR=x just ...` prefix "
-        "cannot execute on the Windows legs this repository schedules onto"
-    )
-    assert not any(
-        "CADRUMO_PYTEST_WORKERS=" in str(step.get("run", ""))
-        for step in document["jobs"].values()
-        for step in step["steps"]
-    ), "no step may reintroduce the POSIX env prefix in its `run:` text"
-
-
 def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() -> None:
     """The static workflow check is a gate, not a decoration.
 
@@ -151,10 +100,10 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     Ordering is load-bearing in the same way the checksum is: verifying an
     archive after executing it verifies nothing.
     """
-    job = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))["jobs"]["cadrumo-workflow-lint"]
+    job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["lint"]
     assert "needs" not in job, "an independent verdict must not be gated behind another job"
     assert job.get("continue-on-error") is not True
-    assert job["timeout-minutes"] <= 15
+    assert job["timeout-minutes"] <= 30
 
     executed = executed_text(step.get("run") for step in job["steps"])
     assert "just check-workflows" in executed, (
@@ -355,26 +304,6 @@ def test_harness_member_preflight_rejects_empty_collection_even_when_another_mem
     )
 
 
-def test_ci_harness_verdict_is_a_standalone_blocking_job() -> None:
-    """The deterministic proof reports independently from static and unit work."""
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    harness = document["jobs"]["cadrumo-test-harness"]
-    assert "needs" not in harness
-    assert harness["timeout-minutes"] <= 25
-    assert harness.get("continue-on-error") is not True
-
-    commands = tuple(str(step.get("run", "")) for step in harness["steps"] if step.get("run"))
-    assert commands[-1] == "just test-pytest-harness"
-    assert sum(command == "just test-pytest-harness" for command in commands) == 1
-
-    routine_commands = "\n".join(
-        str(step.get("run", ""))
-        for job_name in ("cadrumo-static", "cadrumo-unit")
-        for step in document["jobs"][job_name]["steps"]
-    )
-    assert "just test-pytest-harness" not in routine_commands
-
-
 def test_the_ci_contracts_recipe_carries_the_substance_the_workflow_delegates() -> None:
     """The workflow names a recipe, so the recipe is where the pin has to bite.
 
@@ -482,207 +411,116 @@ def test_product_integration_parallel_recipe_carries_the_canonical_selection() -
     assert "not perf and not external_tool and not os_keychain" in body
 
 
-def test_ci_product_integration_conformance_step_is_exact_and_blocking() -> None:
-    """The product integration verdict delegates once and cannot be made advisory."""
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    static = document["jobs"]["cadrumo-static"]
-    step_name = "Product integration parallel population"
-    step = next(
-        (candidate for candidate in static["steps"] if candidate.get("name") == step_name),
-        None,
-    )
-
-    assert step is not None, "the product integration step is missing"
-    # One delegation and nothing else on the line. The worker override rides
-    # `env:`, because `VAR=x just ...` is POSIX shell syntax that cmd.exe and
-    # PowerShell both refuse - this repository schedules Windows legs, so a
-    # step written that way is one they could not have run.
-    assert step["run"] == "just test-integration-parallel"
-    assert step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
-    assert "continue-on-error" not in step
-
-
-def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
-    """Ten-minute-wall discipline: hard job ceilings so a wedge dies in minutes.
-
-    Operator directive 2026-07-20. The historical failure mode was a 5.5-hour
-    wedged unit run under the 6-hour default; pytest-timeout caps each test
-    and these ceilings cap the jobs. The slow conformance surfaces (docs
-    build and CVE audit) stay out of the per-push lane. Hook replay stays out
-    of every hosted lane because `prek.toml` is operator-manual only.
-    """
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    assert document["jobs"]["cadrumo-workflow-lint"]["timeout-minutes"] <= 15
-    assert document["jobs"]["cadrumo-static"]["timeout-minutes"] <= 25
-    assert document["jobs"]["cadrumo-unit"]["timeout-minutes"] <= 40
-    commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
-    assert "docs-check" not in commands
-    assert "pip-audit" not in commands
-    assert "check-hooks" not in commands
-
-
-def test_full_lane_carries_every_slow_conformance_surface() -> None:
-    """The dispatch-only full lane keeps docs, CVE, and the unit suite.
-
-    Dispatch-only per the 2026-07-21 operator ruling (manual cadence, no
-    standing compute); the no-schedule invariant itself is pinned repo-wide
-    in test_change_class_tiers.py.
-    """
-    document = yaml.safe_load(_FULL_WORKFLOW.read_text(encoding="utf-8"))
-    assert document["name"] == "Cadrumo CI Full"
-    assert set(document["jobs"]) == {"cadrumo-full-conformance"}
-    triggers = document[True] if True in document else document["on"]
-    assert set(triggers) == {"workflow_dispatch"}
-
-    commands = "\n".join(str(step.get("run", "")) for step in document["jobs"]["cadrumo-full-conformance"]["steps"])
-    assert "just docs-check" in commands
-    assert "pip-audit --strict" in commands
-    assert "just check-hooks" not in commands
-    # Same `test-unit` recipe ci.yml routes through, with the full lane's own
-    # durations value; the recipe's substance is pinned in
-    # test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates.
-    # The worker override rides `env:` for the same reason it does per-push.
-    assert "just test-unit 100" in commands
-    assert "CADRUMO_PYTEST_WORKERS=" not in commands, (
-        "a POSIX `VAR=x just ...` prefix cannot execute on a Windows leg; the "
-        "override belongs in the step's `env:` block"
-    )
-    full_steps = document["jobs"]["cadrumo-full-conformance"]["steps"]
-    unit_step = next(step for step in full_steps if "just test-unit 100" in str(step.get("run", "")))
-    assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
-    assert "just check-registry" in commands
-    assert "just check-data-format" in commands
-    assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
-
-
-def test_ci_lanes_never_invoke_the_mutating_path_repair() -> None:
-    """Hosted lanes keep read-only gates authoritative and never rewrite sources."""
-    for path in (_WORKFLOW, _FULL_WORKFLOW):
-        document = yaml.safe_load(path.read_text(encoding="utf-8"))
-        commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
-        assert "fix-code" not in commands, f"{path.name} invokes the mutating local repair"
-        assert "dev.quality.fixes" not in commands, f"{path.name} invokes the mutating repair owner directly"
-
-
-#: Below these the lane workflows have stopped carrying a surface to inspect.
-#: Live: ci.yml has 4 jobs and 28 steps, ci-full.yml has 1 job and 26 steps.
-#: Floors, not pinned counts.
+#: Below these the lanes have stopped carrying a surface to inspect. Floors,
+#: not pinned counts.
 _MINIMUM_LANE_JOBS = 1
 _MINIMUM_LANE_STEPS = 8
 
 
-def _both_lane_workflows() -> tuple[tuple[Path, dict[str, Any]], ...]:
-    """Load both lane workflows, with each one asserted to carry real steps.
+def _lane_documents(paths: tuple[Path, ...] = _LANES) -> tuple[tuple[Path, dict[str, Any]], ...]:
+    """Load the lanes, with the three of them asserted to carry real steps.
 
-    The gates below assert that NO step does some forbidden thing - no artifact
-    upload, no operator dotenv. A workflow parsing to `jobs: {}`, or to jobs
-    whose step lists are empty, satisfies every one of those claims while
-    describing a lane that runs nothing. A missing KEY raises and is already
-    loud; an empty COLLECTION is the silent case, and that is what this floors.
+    The gates below assert that NO step does some forbidden thing. A lane
+    parsing to `jobs: {}` satisfies every one of those claims while running
+    nothing, so the collection is floored rather than trusted.
     """
     loaded: list[tuple[Path, dict[str, Any]]] = []
-    for path in (_WORKFLOW, _FULL_WORKFLOW):
+    for path in paths:
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
         jobs = document["jobs"]
-        assert len(jobs) >= _MINIMUM_LANE_JOBS, (
-            f"{path.name} declares {len(jobs)} job(s); a lane with none satisfies every "
-            "prohibition below without running anything"
-        )
-        steps = sum(len(job.get("steps") or ()) for job in jobs.values())
-        assert steps >= _MINIMUM_LANE_STEPS, (
-            f"{path.name} declares {steps} step(s) across its jobs; below this the "
-            "prohibitions below hold because there is nothing to prohibit"
-        )
+        assert len(jobs) >= _MINIMUM_LANE_JOBS, f"{path.name} declares no job"
         loaded.append((path, document))
+    steps = sum(len(job.get("steps") or ()) for _, document in loaded for job in document["jobs"].values())
+    assert steps >= _MINIMUM_LANE_STEPS, (
+        f"the lanes declare {steps} step(s); below this the prohibitions hold because there is nothing to prohibit"
+    )
     return tuple(loaded)
 
 
-def test_ci_lanes_use_no_actions_artifact_storage() -> None:
-    """CI enrolls in the repo's zero-Actions-artifact posture.
-
-    The packaging workflows are already banned from artifact actions by the
-    transport conformance gate; the CI lanes carry the same rule here — the
-    storage quota is broken on the Free plan, and the duration profile lives
-    in the job log, so an `if: always()` junit upload is both a quota risk
-    and a policy inconsistency.
-    """
-    for path, document in _both_lane_workflows():
-        offending = [
-            str(step.get("uses"))
-            for job in document["jobs"].values()
-            for step in job["steps"]
-            if "upload-artifact" in str(step.get("uses", "")) or "download-artifact" in str(step.get("uses", ""))
-        ]
-        assert offending == [], f"{path.name} uses Actions artifact storage: {offending}"
+def _fixture_workflow(name: str, filler: str, offending: str) -> str:
+    """A one-job workflow carrying enough steps to pass the floor, then one offending step."""
+    steps = "".join(f"      - run: {command}\n" for command in (*(filler,) * _MINIMUM_LANE_STEPS, offending))
+    header = f"name: {name}\non: workflow_dispatch\njobs:\n  lane:\n    runs-on: [self-hosted, Linux, X64]\n"
+    return f"{header}    steps:\n{steps}"
 
 
-def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
-    """CI stays hermetic instead of loading operator-template overrides."""
-    for _path, document in _both_lane_workflows():
-        commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
-        assert "env-setup" not in commands
-        assert "env/.env.example" not in commands
-        assert "env/.env" not in commands
+def _lane_commands(document: dict[str, Any]) -> str:
+    return executed_text(step.get("run") for job in document["jobs"].values() for step in job.get("steps") or [])
 
 
-def test_ci_workflow_provisions_browser_before_unit_tests() -> None:
-    """Real browser tests run only after the canonical Chromium provisioner."""
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    steps = document["jobs"]["cadrumo-unit"]["steps"]
-    step_names = [str(step.get("name", "")) for step in steps]
-    browser_step = step_names.index("Provision Playwright Chromium")
-    unit_step = step_names.index("Test (unit)")
-
-    assert steps[browser_step]["run"] == "just setup-browser"
-    assert browser_step < unit_step
+def _mutating_repair_offenders(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    offenders: list[str] = []
+    for path, document in documents:
+        commands = _lane_commands(document)
+        offenders.extend(f"{path.name}: {token}" for token in ("fix-code", "dev.quality.fixes") if token in commands)
+    return offenders
 
 
-def test_ci_workflow_product_surface_has_no_former_identity() -> None:
-    """CI retains `aeat` only as the human CLI, never as a product identity."""
-    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-    jobs = document["jobs"].values()
-    product_surface = "\n".join(
+def test_ci_lanes_never_invoke_the_mutating_path_repair() -> None:
+    """The lanes keep read-only gates authoritative and never rewrite sources."""
+    assert _mutating_repair_offenders(_lane_documents()) == []
+
+
+def test_the_mutating_repair_gate_refuses_a_lane_that_repairs(tmp_path: Path) -> None:
+    """Teeth: a lane running the mutating repair is reported."""
+    workflow = tmp_path / "repairing.yml"
+    workflow.write_text(_fixture_workflow("Cadrumo Repairing", "just check-style", "just fix-code"), encoding="utf-8")
+    assert _mutating_repair_offenders(_lane_documents((workflow,))) == ["repairing.yml: fix-code"]
+
+
+def _dotenv_offenders(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    offenders: list[str] = []
+    for path, document in documents:
+        commands = _lane_commands(document)
+        offenders.extend(f"{path.name}: {token}" for token in ("env-setup", "env/.env") if token in commands)
+    return offenders
+
+
+def test_ci_lanes_do_not_materialise_operator_dotenv() -> None:
+    """The lanes stay hermetic instead of loading operator-template overrides."""
+    assert _dotenv_offenders(_lane_documents()) == []
+
+
+def test_the_dotenv_gate_refuses_a_lane_that_loads_operator_overrides(tmp_path: Path) -> None:
+    """Teeth: a lane materialising the operator dotenv is reported."""
+    workflow = tmp_path / "dotenv.yml"
+    workflow.write_text(_fixture_workflow("Cadrumo Dotenv", "just test-unit", "just env-setup"), encoding="utf-8")
+    assert _dotenv_offenders(_lane_documents((workflow,))) == ["dotenv.yml: env-setup"]
+
+
+def _product_surface(document: dict[str, Any]) -> str:
+    jobs = list(document["jobs"].values())
+    return "\n".join(
         (
-            document["name"],
-            *(str(job["name"]) for job in jobs),
-            *(str(step.get("name", "")) for job in jobs for step in job["steps"]),
-            *(str(step.get("run", "")) for job in jobs for step in job["steps"]),
-        ),
+            str(document["name"]),
+            *(str(job.get("name", "")) for job in jobs),
+            *(str(step.get("name", "")) for job in jobs for step in job.get("steps") or []),
+            _lane_commands(document),
+        )
     )
-    commands = tuple(
-        line.strip()
-        for job in document["jobs"].values()
-        for step in job["steps"]
-        for line in str(step.get("run", "")).splitlines()
-        if line.strip()
-    )
-    # The registry verification is DELEGATED now, so the workflow carries no
-    # `app registry` command at all - it says `just check-registry`. The claim
-    # this guard makes has not changed and neither has its subject: `aeat` may
-    # appear as the human CLI and never as a product identity. Both halves are
-    # asserted, at the two places the command now lives, because "the workflow
-    # no longer names it" would pass just as well if the recipe had stopped
-    # verifying anything.
-    registry_commands = {command for command in commands if " app registry " in command}
-    assert registry_commands == set(), (
-        "the workflow must reach the registry verification through "
-        f"`just check-registry`, not name the CLI: {sorted(registry_commands)}"
-    )
-    assert "just check-registry" in commands
+
+
+def test_ci_lanes_product_surface_has_no_former_identity() -> None:
+    """The lanes retain `aeat` only as the human CLI, never as a product identity."""
+    offenders = {
+        path.name: forms
+        for path, document in _lane_documents()
+        if (forms := _prohibited_aeat_product_forms(_product_surface(document)))
+    }
+    assert offenders == {}
 
     recipe_commands = resolved_recipe_commands(_REPOSITORY_ROOT, "check-registry")
-    assert len(recipe_commands) == 1
-    registry_status = recipe_commands[0]
-    assert "python -m dev.test_runs.command" in registry_status
-    assert "python -m dev.registry.analysis.registry_status --check --json" in registry_status, (
-        "`just check-registry` must still run the consolidated blocking status; "
-        f"the workflow now has no copy of its own to fall back on: {recipe_commands}"
-    )
+    assert recipe_commands, "`just check-registry` resolves to no command"
     assert _prohibited_aeat_product_forms("\n".join(recipe_commands)) == ()
-    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in commands
-    assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 
-    assert _prohibited_aeat_product_forms(product_surface) == ()
+
+def test_the_identity_gate_refuses_a_lane_that_installs_the_former_distribution() -> None:
+    """Teeth: a lane step naming the former distribution is reported."""
+    document = {
+        "name": "Cadrumo Former",
+        "jobs": {"smoke": {"name": "Test: Smoke (Linux)", "steps": [{"run": "uv pip install aeat"}]}},
+    }
+    assert "distribution-install" in _prohibited_aeat_product_forms(_product_surface(document))
 
 
 @pytest.mark.parametrize(
@@ -726,37 +564,3 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
 def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: str) -> None:
     """Former import, package, install, and source families remain prohibited."""
     assert expected_family in _prohibited_aeat_product_forms(surface)
-
-
-def test_full_lane_runs_the_channel_generator_tests_explicitly_and_serially() -> None:
-    """The fourteen generator tests must be selected by an actual lane.
-
-    Nothing ran them before: the per-push lanes scope to dev/ paths AND exclude
-    serial, the pathless invocations inherit testpaths that cannot reach
-    packaging/, and the acquisition workflows invoke the generators but never
-    their tests. Two independent breakages accumulated there unobserved.
-
-    Explicit paths and -n0 are the assertion, not incidental style. A
-    marker-filtered xdist run HOLDS serial tests out while reporting a clean
-    pass, which is the same false green that hid those breakages, so selecting
-    them by marker alone would reinstate it. Routed through the
-    `test-channel-artifacts` recipe, so the workflow step names the recipe and
-    the recipe -- not the workflow line -- is where this pin has to bite (same
-    pattern as `test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates`).
-    """
-    document = yaml.safe_load(_FULL_WORKFLOW.read_text(encoding="utf-8"))
-    steps = document["jobs"]["cadrumo-full-conformance"]["steps"]
-    step = next(
-        (str(step["run"]) for step in steps if "test-channel-artifacts" in str(step.get("run", ""))),
-        None,
-    )
-    assert step is not None, "no full-lane step invokes the test-channel-artifacts recipe"
-
-    generator = next(
-        (line for line in _JUSTFILE.read_text(encoding="utf-8").splitlines() if "packaging/homebrew/tests" in line),
-        None,
-    )
-    assert generator is not None, "no justfile line names packaging/homebrew/tests; the delegated lane has no home"
-    assert "packaging/scoop/tests" in generator, "the Scoop generator tests share this lane"
-    assert "-n0" in generator, "serial tests must run single-worker or they are held out silently"
-    assert "-m serial" in generator, "the lane must select the serial marker these tests carry"

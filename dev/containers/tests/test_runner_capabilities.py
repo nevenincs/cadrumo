@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 #: The homebrew acquisition matrix this probe's table mirrors. Live: three legs.
-_HOMEBREW_WORKFLOW: Final = REPO_ROOT / ".github" / "workflows" / "packaging-homebrew.yml"
+_HOMEBREW_WORKFLOW: Final = REPO_ROOT / ".github" / "workflows" / "release.yml"
 _MINIMUM_BREW_LEGS: Final = 3
 
 
@@ -42,9 +42,11 @@ def _declared_brew_legs() -> dict[tuple[str, str], pathlib.Path]:
     document = yaml.safe_load(_HOMEBREW_WORKFLOW.read_text(encoding="utf-8"))
     legs: dict[tuple[str, str], pathlib.Path] = {}
     for job in (document.get("jobs") or {}).values():
-        rows = ((job.get("strategy") or {}).get("matrix") or {}).get("include") or []
+        matrix = (job.get("strategy") or {}).get("matrix")
+        # A matrix computed at run time is an expression string and declares no brew leg.
+        rows = (matrix.get("include") or []) if isinstance(matrix, dict) else []
         for row in rows:
-            if not isinstance(row, dict) or "brew" not in row:
+            if not isinstance(row, dict) or "brew" not in row or "expected_os" not in row:
                 continue
             legs[(str(row["expected_os"]), str(row["expected_arch"]))] = pathlib.Path(str(row["brew"]))
     return legs

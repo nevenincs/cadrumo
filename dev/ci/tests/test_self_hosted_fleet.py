@@ -11,7 +11,7 @@ gate refuses. Fail-closed: a matrix-referencing ``runs-on`` that resolves to
 zero concrete targets is itself a violation, never a silent pass.
 
 The release-path exemption is RETIRED. `HOSTED_WORKFLOWS` is empty, so
-`release-please.yml` and `publish.yml` are gated like everything else and the
+`release-please.yml` and `release.yml` are gated like everything else and the
 mandate above holds without a carve-out.
 
 The carve-out was granted on the ground that publication must not be gated on
@@ -43,6 +43,7 @@ from dev._paths import REPO_ROOT
 
 from ..workflow_runner_targets import (
     UNRESOLVED_ZERO_TARGETS,
+    calls_local_workflow,
     is_fleet_label_set,
     is_hosted_image,
     runner_targets,
@@ -69,12 +70,12 @@ HOSTED_WORKFLOWS: Final[frozenset[str]] = frozenset[str]()
 
 
 #: Floors for the workflow census this fleet gate reads. Two sibling modules
-#: floor the same directory at eight; this one carried only a truthiness.
-#: Live: sixteen workflows, all sixteen gated -- the release path included,
+#: floor the same directory at six; this one carried only a truthiness.
+#: Live: six workflows, all six gated -- the release path included,
 #: since nothing is excused. That equality is exactly why the gated floor
 #: cannot fail from the live tree while the total floor passes, and why
 #: `_census_shortfalls` takes the excused set rather than reading it.
-_MINIMUM_FLEET_WORKFLOWS = 8
+_MINIMUM_FLEET_WORKFLOWS = 6
 _MINIMUM_GATED_WORKFLOWS = 6
 
 
@@ -102,10 +103,15 @@ def _collect_violations(
 
 
 def _fleet_violations(workflow_name: str, document: dict[str, Any]) -> list[tuple[str, str, object]]:
-    """Return every target in ``document`` that is not a self-hosted label set."""
+    """Return every target in ``document`` that is not a self-hosted label set.
+
+    A job calling a workflow of this repository has no runner of its own; the
+    called workflow is in the same census and is gated there.
+    """
     return [
         (workflow_name, job_name, target)
         for job_name, job in (document.get("jobs") or {}).items()
+        if not calls_local_workflow(job)
         for target in runner_targets(job, document)
         if not is_fleet_label_set(target)
     ]
@@ -136,7 +142,7 @@ def test_the_release_path_is_gated_like_everything_else() -> None:
         {*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")}
     )
     names = {workflow.name for workflow in workflows}
-    for release_path in ("release-please.yml", "publish.yml"):
+    for release_path in ("release-please.yml", "release.yml"):
         assert release_path in names, f"{release_path} vanished from the census"
 
     violations = _collect_violations(_WORKFLOWS_DIR)
@@ -156,7 +162,7 @@ def _census_shortfalls(
     is deliberately dual-purpose: five teeth cases drive it over a temporary
     directory holding a single planted workflow, and a census floor inside it
     would refuse exactly the fixtures that prove the gate can fail. Two sibling
-    modules floor this same directory at eight.
+    modules floor this same directory at six.
 
     ``excused`` is a parameter for the same reason it is one on
     ``_collect_violations``, and the reason is sharper here. With
@@ -431,3 +437,24 @@ def test_a_runtime_matrix_cannot_prove_a_fleet_lane(tmp_path: Path) -> None:
     violations = _collect_violations(tmp_path)
 
     assert ("fleet.yml", "smoke", "self-hosted") in violations
+
+
+def test_a_local_reusable_workflow_call_is_gated_where_it_is_defined(tmp_path: Path) -> None:
+    """A call into this repository's own workflow is skipped; any other runner-less job is not.
+
+    The contrast is the claim: the local call passes because the called file is
+    in the same census, while a call into another repository names no runner
+    this gate can see and is refused.
+    """
+    (tmp_path / "caller.yml").write_text(
+        "name: caller\n"
+        "on: workflow_dispatch\n"
+        "jobs:\n"
+        "  local:\n"
+        "    uses: ./.github/workflows/called.yml\n"
+        "  remote:\n"
+        "    uses: someone/else/.github/workflows/called.yml@0123456789abcdef0123456789abcdef01234567\n",
+        encoding="utf-8",
+    )
+
+    assert _collect_violations(tmp_path) == [("caller.yml", "remote", None)]

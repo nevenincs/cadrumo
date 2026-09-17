@@ -39,7 +39,7 @@ from pathlib import Path
 
 from dev.packaging.command_execution import run_command
 
-# Homebrew prefixes exactly as `packaging-homebrew.yml`'s matrix declares them.
+# Homebrew prefixes exactly as `release.yml`'s Homebrew matrix declares them.
 _BREW_PATHS = {
     ("Darwin", "arm64"): Path("/opt/homebrew/bin/brew"),
     ("Linux", "x86_64"): Path("/home/linuxbrew/.linuxbrew/bin/brew"),

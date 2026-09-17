@@ -4,7 +4,7 @@ Run against an installed wheel to verify the package is importable, reports the
 expected version, and exposes both of its working command-line surfaces: the
 application and the MCP server that fronts it.
 
-Usage from CI (``.github/workflows/publish.yml``)::
+Usage from CI (``.github/workflows/release.yml``)::
 
     uv run --isolated --no-project --find-links dist \
       --with "cadrumo==${VERSION}" dev/smoke/smoke_check.py

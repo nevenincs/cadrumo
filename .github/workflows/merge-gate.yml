@@ -25,6 +25,14 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
     steps:
+      - name: Refuse fork pull requests
+        id: fork-guard
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        shell: bash
+        run: |
+          echo "Pull requests from forks are not run on self-hosted runners."
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
@@ -32,19 +40,19 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Style
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
         run: just check-style
 
       - name: Formatting
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
         run: just check-format
 
       - name: Type checks
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
         run: just check-types
 
       - name: Workflow definitions
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.fork-guard.outcome != 'failure' }}
         run: just check-workflows
 
   gate:
@@ -54,6 +62,7 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     env:
+      CADRUMO_PYTEST_WORKERS: "8"
       GATE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'origin/main' }}
     steps:
       - name: Require lint success

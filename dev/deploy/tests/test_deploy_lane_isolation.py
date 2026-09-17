@@ -9,7 +9,7 @@ Regrouping alone would be a label, and a label is not an isolation. What was
 measured at the time of the move is that nothing in the repository could reach a
 deploy verb at all -- no recipe named one as a prerequisite, no recipe body
 invoked one, and exactly one workflow step in eighteen workflow files ran a
-publisher, in a delivery-only workflow behind a protected environment. The
+publisher, in a delivery job behind a protected environment. The
 isolation was already true.
 
 It was true by accident. Nothing observed it, so nothing would notice it ending:
@@ -52,10 +52,10 @@ _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 #: other publishers -- so an unswept lane reads exactly like a clean one.
 _WORKFLOW_SUFFIXES = (".yml", ".yaml")
 
-#: Floor for the workflow corpus. Live it holds 16 documents. The pinned
+#: Floor for the workflow corpus. Live it holds 6 documents. The pinned
 #: equalities below fail loud on a sweep that found nothing, but not on
 #: one narrowed to the few files that happen to satisfy them.
-_MINIMUM_WORKFLOWS = 8
+_MINIMUM_WORKFLOWS = 6
 
 
 def _workflow_documents() -> tuple[Path, ...]:
@@ -150,7 +150,7 @@ def _recipes_invoked_in(text: str, names: frozenset[str] | set[str]) -> set[str]
 
 
 #: The one workflow permitted to publish, and the environment that gates it.
-_DELIVERY_WORKFLOW = "docs-publish.yml"
+_DELIVERY_WORKFLOW = "release.yml"
 _DELIVERY_ENVIRONMENT = "docs"
 
 

@@ -34,6 +34,7 @@ permissions:
 
 jobs:
   corpus-staleness:
+    name: "Check: Corpus staleness (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 

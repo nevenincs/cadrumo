@@ -954,6 +954,12 @@ test-test-policy:
 test-repository-contracts:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py
 
+[doc('Run the packaging and runner-image tooling contracts the release proof relies on, parallel then serial.')]
+[group('test')]
+test-release-tooling:
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+
 [doc('Run CI, repair-safety, deployment, release, and benchmark contracts with independent scheduler verdicts.')]
 [group('test')]
 test-ci-contracts:
