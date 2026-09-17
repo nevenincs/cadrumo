@@ -202,7 +202,7 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
         )
 
         def replace_text_scalar(envelope):
-            rows = envelope["payload"]["observation"]["observations"]
+            rows = envelope["payload"]["official"]["observation"]["observations"]
             period_row = next(row for row in rows if row["casilla_id"] == _M303_PERIOD_CASILLA)
             assert period_row["value_kind"] == "text" and period_row["value"] == "1T"
             period_row["value"] = "0"
@@ -491,7 +491,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
         )
 
         def mutate(envelope):
-            casillas = envelope["payload"]["observation"]["observations"]
+            casillas = envelope["payload"]["official"]["observation"]["observations"]
             assert casillas and casillas[1]["legal_refs"], (
                 "fixture must serialise legal_refs onto the computed casilla for this proof test to be meaningful"
             )
