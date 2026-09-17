@@ -659,7 +659,7 @@ class TestAmbientEnvNeutralisation:
         """
         import os
 
-        from cadrumo.application.provisioning import probe_playwright_browser
+        from cadrumo.application.provisioning_browser import probe_playwright_browser
 
         from ..runner import sequence_sandbox
 

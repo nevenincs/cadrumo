@@ -9,7 +9,7 @@ channel (``cadrumo.core.config.Settings.cadrumo_browser_channel``) rather than
 hardcoding ``"chrome"``, so it stays correct when an operator overrides the channel
 via ``CADRUMO_BROWSER_CHANNEL``.
 
-Unlike ``cadrumo.application.provisioning.probe_playwright_browser`` (a fast
+Unlike ``cadrumo.application.provisioning_browser.probe_playwright_browser`` (a fast
 filesystem-cache check used inside the interactive CLI process, where the
 Playwright sync driver can hang), this script performs a REAL headless launch and
 immediate close of the configured channel: it is a standalone dev/CI process, so a
