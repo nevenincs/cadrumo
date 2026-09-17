@@ -49,6 +49,11 @@ from pathlib import Path
 from ..product_identity import PRODUCT_IDENTITY
 
 _PACKAGE_DATA: Traversable = files(PRODUCT_IDENTITY.python_package).joinpath("_data")
+if isinstance(_PACKAGE_DATA, Path):
+    # A package imported through a relative ``sys.path`` entry resolves to a
+    # relative path, which a later settings validator would re-anchor under the
+    # data root. Anchor it while the import-time working directory still holds.
+    _PACKAGE_DATA = _PACKAGE_DATA.absolute()
 _RESOURCE_STACK: ExitStack = ExitStack()
 atexit.register(_RESOURCE_STACK.close)
 
