@@ -66,7 +66,7 @@ def _restorations(word: str, table: Mapping[str, str], known: Callable[[str], bo
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))
     for base in bases:
-        found = {base} if base != word and known(base) else set()
+        found: set[str] = {base} if base != word and known(base) else set()
         positions = [index for index, char in enumerate(base) if char.lower() in table]
         for size in range(1, _MAX_RESTORED + 1):
             for chosen in combinations(positions, size):

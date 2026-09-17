@@ -64,7 +64,7 @@ def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
     """The bind-refusal message tells the operator how to act on it.
 
     The bare ``CadrumoError subclass ... is missing a declared ErrorCode
-    registry entry`` ValueError gives no signal that the state could be
+    registry entry`` refusal gives no signal that the state could be
     transient (e.g. a concurrent process mid-edit of the registry), so an
     operator could chase it as a defect in their own working tree. This test
     pins the two hints the refusal MUST carry: a registry-side fix
@@ -72,17 +72,17 @@ def test_bind_error_code_refusal_carries_diagnostic_hints() -> None:
     pointing the operator at ``git status`` for the collision case.
     """
 
-    from cadrumo.core.errors.hierarchy import CadrumoError
+    from cadrumo.core.errors.hierarchy import CadrumoError, InternalInvariantError
 
     # bind_error_code fires from __init_subclass__ during class
-    # creation, so the diagnostic ValueError lands on the ``class``
+    # creation, so the diagnostic refusal lands on the ``class``
     # statement itself. Wrap the declaration in pytest.raises.
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(InternalInvariantError) as exc_info:
 
         class _UnregisteredDiagnosticTestError(CadrumoError):
             """Synthetic subclass with no registry entry; used by this test only."""
 
-        del _UnregisteredDiagnosticTestError  # unreachable when ValueError fires
+        del _UnregisteredDiagnosticTestError  # unreachable when the refusal fires
 
     message = str(exc_info.value)
     assert "missing a declared ErrorCode registry entry" in message

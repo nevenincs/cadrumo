@@ -576,7 +576,7 @@ def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> No
     """
     import ast
 
-    package = SRC_CADRUMO / "llm"
+    package = SRC_CADRUMO / "adapters" / "outbound" / "llm"
     discovered: set[str] = set()
     for path in scan_directory(package, pattern="*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))

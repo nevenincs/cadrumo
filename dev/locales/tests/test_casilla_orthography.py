@@ -6,6 +6,7 @@ import pytest
 
 from dev.locales import casilla_orthography
 from dev.locales.casilla_orthography import unaccented_words
+from dev.locales.modelo_casilla_catalogue import Values
 
 pytestmark = [pytest.mark.hex_domain]
 
@@ -32,7 +33,7 @@ def test_restorations_return_every_dictionary_form(
 @pytest.mark.integration
 @pytest.mark.external_tool
 def test_unaccented_words_are_reported_and_correct_text_is_not() -> None:
-    values = {
+    values: Values = {
         "es": {
             _KEY: "Régimen de estimación objetiva",
             "modelo.schema.100.casilla.continuidad.y.label": "Regimen de estimacion objetiva",
@@ -54,7 +55,7 @@ def test_unaccented_words_are_reported_and_correct_text_is_not() -> None:
 @pytest.mark.integration
 @pytest.mark.external_tool
 def test_a_reviewed_word_is_not_reported() -> None:
-    values = {"es": {_KEY: "Regimen especial"}}
+    values: Values = {"es": {_KEY: "Regimen especial"}}
 
     assert {item.word for item in unaccented_words(values)} == {"Regimen"}
     found = {item.word for item in unaccented_words(values, reviewed={"es": frozenset({"Regimen"})})}
@@ -65,6 +66,6 @@ def test_a_reviewed_word_is_not_reported() -> None:
 @pytest.mark.integration
 @pytest.mark.external_tool
 def test_quoted_identifiers_and_truncated_words_are_not_prose() -> None:
-    values = {"es": {_KEY: "Ver contraparte.pais-codigo y m131-modulos-coeficientes; ejerci... Codigo"}}
+    values: Values = {"es": {_KEY: "Ver contraparte.pais-codigo y m131-modulos-coeficientes; ejerci... Codigo"}}
 
     assert {item.word for item in unaccented_words(values)} == {"Codigo"}

@@ -1103,7 +1103,7 @@ test-tui-render:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
-    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
 
 [doc('Reindex the running resident search service, then run its retrieval contracts.')]
 [group('test')]
