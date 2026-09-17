@@ -1,282 +1,372 @@
 modelo:
   schema:
     '222':
+      casilla:
+        continuidad:
+          filing-year:
+            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+              222.
+            label: Exercici a què es refereix el pagament fraccionat
+          is-pf-grupo-info-aumento-capital-compensacion-creditos:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import exclòs per operacions d'augment
+              de capital o fons propis per compensació de crèdits no integrat en la
+              base imposable (art. 17.2 LIS)
+          is-pf-grupo-info-bonificacion-art-34:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import de la bonificació prevista a
+              l'art. 34 LIS
+          is-pf-grupo-info-bonificacion-ley-19-1994:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import corresponent a la bonificació
+              prevista a l'art. 26 de la Llei 19/1994
+          is-pf-grupo-info-minoracion-bonificacion-art-33:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import de la minoració corresponent
+              a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
+          is-pf-grupo-info-quita-espera-importe-excluido:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import exclòs per operacions de quitament
+              o espera
+          is-pf-grupo-info-quita-espera-integrado-base:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Part integrada en la base imposable
+              per operacions de quitament o espera
+          is-pf-grupo-info-quita-espera-integrado-cuota:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Part integrada en la base imposable
+              a nivell de quota per operacions de quitament o espera (només cooperatives)
+          is-pf-grupo-info-regimen-zec-no-computable:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import no computable per aplicació
+              del règim fiscal de la ZEC
+          is-pf-grupo-info-renta-exenta-cap-xiv-tit-vii:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import de renda exempta de les entitats
+              que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
+          is-pf-grupo-info-reserva-inversiones-canarias:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Import corresponent a la reserva per
+              a inversions a Canàries
+          is-pf-grupo-info-reversion-deterioros:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat del grup fiscal. Casella sense número imprès
+              al disseny oficial.
+            label: Informació addicional (6) - Rendes de reversió de deterioraments
+              que s'integren en la base imposable
+          is-pf-grupo-informacion-adicional-resultado-consolidado-del-periodo:
+            help: Casella 35 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Informació addicional (6) - Resultat consolidat del període
+          is-pf-grupo-mod-40-2-lis-a-ingresar:
+            help: Casella 03 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.2 LIS).
+            label: Mod. 40.2 LIS - A ingressar
+          is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado:
+            help: Casella 01 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.2 LIS).
+            label: Mod. 40.2 LIS - Base del pagament fraccionat
+          is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior:
+            help: Casella 02 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.2 LIS).
+            label: Mod. 40.2 LIS - Resultat de la declaració anterior (només si aquesta
+              és complementària)
+          is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones:
+            help: Casella 60 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Ajustos per a la determinació de la base imposable
+              del grup (DA 19a LIS) - Disminucions
+          is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos:
+            help: Casella 59 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Ajustos per a la determinació de la base imposable
+              del grup (DA 19a LIS) - Augments
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado:
+            help: Casella 16 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Base del pagament fraccionat
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-del-grupo-de-peri:
+            help: Casella 51 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Compensació de quotes negatives
+              del grup de períodes anteriors (només cooperatives)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-individuales-de-p:
+            help: Casella 58 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Compensació de quotes negatives
+              individuals de períodes anteriors a la incorporació al grup (només cooperatives)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-del-grupo:
+            help: Casella 49 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Dotacions de l'art. 11.12 LIS
+              del grup (DF 4a LIS)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-generadas-previa-a-la:
+            help: Casella 50 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Dotacions de l'art. 11.12 LIS
+              generades prèviament a la incorporació al grup (DF 4a LIS)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje:
+            help: Casella 17 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Percentatge
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-c-disminuciones:
+            help: Casella 53 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
+              105 LIS) convertida en quotes, només grups que compleixin els requisits
+              d'empresa de dimensió reduïda - Disminucions
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
+            help: Casella 52 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
+              105 LIS) convertida en quotes, només grups que compleixin els requisits
+              d'empresa de dimensió reduïda - Augments
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
+            help: Casella 18 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.1) Cas general - Resultat previ
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-1:
+            help: Casella 20 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Base a tipus 1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-2:
+            help: Casella 23 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Base a tipus 2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-fraccionado:
+            help: Casella 19 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Base del pagament fraccionat
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-bonificaciones-correspondientes-al-periodo-co:
+            help: Casella 27 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Bonificacions corresponents
+              al període computat (total)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingresar:
+            help: Casella 34 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Quantitat a ingressar
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-del-grupo-de:
+            help: Casella 42 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Compensació de quotes negatives
+              del grup de períodes anteriors (només cooperatives)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-individuales:
+            help: Casella 43 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Compensació de quotes negatives
+              individuals de períodes anteriors a la incorporació al grup (només cooperatives)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-del-grupo:
+            help: Casella 54 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Dotacions de l'art. 11.12
+              LIS del grup (DF 4a LIS)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-generadas-previa:
+            help: Casella 57 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Dotacions de l'art. 11.12
+              LIS generades prèviament a la incorporació al grup (DF 4a LIS)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-1:
+            help: Casella 22 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Import del pagament fraccionat
+              1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-2:
+            help: Casella 25 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Import del pagament fraccionat
+              2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-pagos-fraccionados-anteriores-correspondiente:
+            help: Casella 30 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Pagaments fraccionats anteriors
+              corresponents al període computat en Territori Comú (total)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1:
+            help: Casella 21 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Percentatge 1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2:
+            help: Casella 24 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Percentatge 2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado:
+            help: Casella 32 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Resultat
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-de-la-declaracion-anterior:
+            help: Casella 31 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Resultat de la declaració
+              anterior (només si aquesta és complementària)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-previo:
+            help: Casella 26 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Resultat previ
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-retenciones-e-ingresos-a-cuenta-practicados-s:
+            help: Casella 28 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Retencions i ingressos
+              a compte (totals) practicats sobre ingressos del període computat
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-operaciones-en-territorio-comun:
+            help: Casella 29 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) Casos específics - Volum d'operacions en Territori
+              Comú (%)
+          is-pf-grupo-mod-40-3-lis-b-2-minimo-a-ingresar:
+            help: Casella 33 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) - Mínim a ingressar (només per a empreses
+              amb XN igual o superior a 10 milions d'euros)
+          is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-solo-grupos-que-cumplan-los-disminuciones:
+            help: Casella 56 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS), només
+              grups que compleixin els requisits per als incentius d'empresa de dimensió
+              reduïda - Disminucions
+          is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
+            help: Casella 55 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS), només
+              grups que compleixin els requisits per als incentius d'empresa de dimensió
+              reduïda - Augments
+          is-pf-grupo-mod-40-3-lis-base-imponible-previa:
+            help: Casella 13 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Base imposable prèvia
+          is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos:
+            help: Casella 15 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Compensació de bases imposables negatives d'entitats
+              o de grups previs a la integració al grup (art. 67 i 74.3 LIS)
+          is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an:
+            help: Casella 14 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Compensació de bases imposables negatives del grup
+              de períodes anteriors
+          is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos:
+            help: Casella 05 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Correcció per Impost sobre Societats (IS) - Augments
+          is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones:
+            help: Casella 06 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Correcció per Impost sobre Societats (IS) - Disminucions
+          is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos:
+            help: Casella 11 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Correccions per diferiment de resultats interns
+              i altres correccions de consolidació - Augments
+          is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones:
+            help: Casella 12 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Correccions per diferiment de resultats interns
+              i altres correccions de consolidació - Disminucions
+          is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo:
+            help: Casella 44 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Dotacions de l'art. 11.12 de la LIS del grup
+          is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d:
+            help: Casella 45 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Dotacions de l'art. 11.12 de la LIS generades a
+              nivell individual o de grup previ a la incorporació al grup (art. 67
+              i 74.3 LIS)
+          is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d:
+            help: Casella 46 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Romanent de la reserva de capitalització no aplicada
+              per insuficiència de base
+          is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones:
+            help: Casella 48 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Reserva d'anivellament (art. 105 LIS), només grups
+              que compleixin els requisits per als incentius d'empresa de dimensió
+              reduïda (art. 101 LIS) i apliquin el tipus específic - Disminucions
+          is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos:
+            help: Casella 47 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Reserva d'anivellament (art. 105 LIS), només grups
+              que compleixin els requisits per als incentius d'empresa de dimensió
+              reduïda (art. 101 LIS) i apliquin el tipus específic
+          is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos:
+            help: Casella 07 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Resta de correccions al resultat comptable, excepte
+              compensació de BI negativa d'exercicis anteriors - Augments
+          is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones:
+            help: Casella 08 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Resta de correccions al resultat comptable, excepte
+              compensació de BI negativa d'exercicis anteriors - Disminucions
+          is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones:
+            help: Casella 37 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Reversió del 30% de l'import de les despeses d'amortització
+              (excepte empreses de dimensió reduïda) - Disminucions
+          is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega:
+            help: Casella 10 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Suma de bases imposables individuals abans de compensar
+              bases negatives de períodes anteriors
+          is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales:
+            help: Casella 04 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - Suma de resultats comptables individuals (després
+              de l'IS i l'IC)
+          is-pf-grupo-mod-40-3-lis-total-aumentos:
+            help: Casella 38 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - TOTAL - Augments
+          is-pf-grupo-mod-40-3-lis-total-disminuciones:
+            help: Casella 39 de la liquidació del pagament fraccionat del grup fiscal
+              (Mod. 40.3 LIS).
+            label: Mod. 40.3 LIS - TOTAL - Disminucions
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              222.
+            label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra / art.
+              40.3 base imposable)
       field:
         official_name: Modelo 222. Impost sobre Societats. Règim de consolidació fiscal.
           Pagament fraccionat.
         title: IS pagament fraccionat règim de consolidació fiscal (grups)
       revision:
+        '2023':
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Model 222 pagament fraccionat en règim de consolidació fiscal
+          field:
+            label: null
+        '2024':
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Model 222 pagament fraccionat en règim de consolidació fiscal
+          field:
+            label: null
         2025-y-siguientes:
           casilla:
-            '01':
-              help: Casella 01 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.2 LIS).
-              label: Mod. 40.2 LIS - Base del pagament fraccionat
-            '02':
-              help: Casella 02 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.2 LIS).
-              label: Mod. 40.2 LIS - Resultat de la declaració anterior (només si
-                aquesta és complementària)
-            '03':
-              help: Casella 03 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.2 LIS).
-              label: Mod. 40.2 LIS - A ingressar
-            '04':
-              help: Casella 04 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Suma de resultats comptables individuals (després
-                de l'IS i l'IC)
-            '05':
-              help: Casella 05 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Correcció per Impost sobre Societats (IS) - Augments
-            '06':
-              help: Casella 06 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Correcció per Impost sobre Societats (IS) - Disminucions
-            '07':
-              help: Casella 07 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Resta de correccions al resultat comptable, excepte
-                compensació de BI negativa d'exercicis anteriors - Augments
-            08:
-              help: Casella 08 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Resta de correccions al resultat comptable, excepte
-                compensació de BI negativa d'exercicis anteriors - Disminucions
-            '10':
-              help: Casella 10 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Suma de bases imposables individuals abans de
-                compensar bases negatives de períodes anteriors
-            '11':
-              help: Casella 11 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Correccions per diferiment de resultats interns
-                i altres correccions de consolidació - Augments
-            '12':
-              help: Casella 12 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Correccions per diferiment de resultats interns
-                i altres correccions de consolidació - Disminucions
-            '13':
-              help: Casella 13 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Base imposable prèvia
-            '14':
-              help: Casella 14 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Compensació de bases imposables negatives del
-                grup de períodes anteriors
-            '15':
-              help: Casella 15 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Compensació de bases imposables negatives d'entitats
-                o de grups previs a la integració al grup (art. 67 i 74.3 LIS)
-            '16':
-              help: Casella 16 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Base del pagament fraccionat
-            '17':
-              help: Casella 17 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Percentatge
-            '18':
-              help: Casella 18 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Resultat previ
-            '19':
-              help: Casella 19 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Base del pagament fraccionat
-            '20':
-              help: Casella 20 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Base a tipus 1
-            '21':
-              help: Casella 21 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Percentatge 1
-            '22':
-              help: Casella 22 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Import del pagament fraccionat
-                1
-            '23':
-              help: Casella 23 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Base a tipus 2
-            '24':
-              help: Casella 24 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Percentatge 2
-            '25':
-              help: Casella 25 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Import del pagament fraccionat
-                2
-            '26':
-              help: Casella 26 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Resultat previ
-            '27':
-              help: Casella 27 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Bonificacions corresponents
-                al període computat (total)
-            '28':
-              help: Casella 28 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Retencions i ingressos
-                a compte (totals) practicats sobre ingressos del període computat
-            '29':
-              help: Casella 29 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Volum d'operacions en
-                Territori Comú (%)
-            '30':
-              help: Casella 30 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Pagaments fraccionats
-                anteriors corresponents al període computat en Territori Comú (total)
-            '31':
-              help: Casella 31 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Resultat de la declaració
-                anterior (només si aquesta és complementària)
-            '32':
-              help: Casella 32 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Resultat
-            '33':
-              help: Casella 33 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Mínim a ingressar (només per a empreses
-                amb XN igual o superior a 10 milions d'euros)
-            '34':
-              help: Casella 34 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Quantitat a ingressar
-            '35':
-              help: Casella 35 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Informació addicional (6) - Resultat consolidat del període
-            '37':
-              help: Casella 37 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Reversió del 30% de l'import de les despeses
-                d'amortització (excepte empreses de dimensió reduïda) - Disminucions
-            '38':
-              help: Casella 38 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - TOTAL - Augments
-            '39':
-              help: Casella 39 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - TOTAL - Disminucions
-            '42':
-              help: Casella 42 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Compensació de quotes
-                negatives del grup de períodes anteriors (només cooperatives)
-            '43':
-              help: Casella 43 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Compensació de quotes
-                negatives individuals de períodes anteriors a la incorporació al grup
-                (només cooperatives)
-            '44':
-              help: Casella 44 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Dotacions de l'art. 11.12 de la LIS del grup
-            '45':
-              help: Casella 45 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Dotacions de l'art. 11.12 de la LIS generades
-                a nivell individual o de grup previ a la incorporació al grup (art.
-                67 i 74.3 LIS)
-            '46':
-              help: Casella 46 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Romanent de la reserva de capitalització no aplicada
-                per insuficiència de base
-            '47':
-              help: Casella 47 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Reserva d'anivellament (art. 105 LIS), només
-                grups que compleixin els requisits per als incentius d'empresa de
-                dimensió reduïda (art. 101 LIS) i apliquin el tipus específic
-            '48':
-              help: Casella 48 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Reserva d'anivellament (art. 105 LIS), només
-                grups que compleixin els requisits per als incentius d'empresa de
-                dimensió reduïda (art. 101 LIS) i apliquin el tipus específic - Disminucions
-            '49':
-              help: Casella 49 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Dotacions de l'art. 11.12
-                LIS del grup (DF 4a LIS)
-            '50':
-              help: Casella 50 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Dotacions de l'art. 11.12
-                LIS generades prèviament a la incorporació al grup (DF 4a LIS)
-            '51':
-              help: Casella 51 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Compensació de quotes negatives
-                del grup de períodes anteriors (només cooperatives)
-            '52':
-              help: Casella 52 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
-                105 LIS) convertida en quotes, només grups que compleixin els requisits
-                d'empresa de dimensió reduïda - Augments
-            '53':
-              help: Casella 53 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
-                105 LIS) convertida en quotes, només grups que compleixin els requisits
-                d'empresa de dimensió reduïda - Disminucions
-            '54':
-              help: Casella 54 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Dotacions de l'art. 11.12
-                LIS del grup (DF 4a LIS)
-            '55':
-              help: Casella 55 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS),
-                només grups que compleixin els requisits per als incentius d'empresa
-                de dimensió reduïda - Augments
-            '56':
-              help: Casella 56 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS),
-                només grups que compleixin els requisits per als incentius d'empresa
-                de dimensió reduïda - Disminucions
-            '57':
-              help: Casella 57 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Casos específics - Dotacions de l'art. 11.12
-                LIS generades prèviament a la incorporació al grup (DF 4a LIS)
-            '58':
-              help: Casella 58 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) Cas general - Compensació de quotes negatives
-                individuals de períodes anteriors a la incorporació al grup (només
-                cooperatives)
-            '59':
-              help: Casella 59 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Ajustos per a la determinació de la base imposable
-                del grup (DA 19a LIS) - Augments
-            '60':
-              help: Casella 60 de la liquidació del pagament fraccionat del grup fiscal
-                (Mod. 40.3 LIS).
-              label: Mod. 40.3 LIS - Ajustos per a la determinació de la base imposable
-                del grup (DA 19a LIS) - Disminucions
             '61':
               help: Casella 61 de la liquidació del pagament fraccionat del grup fiscal
                 (Mod. 40.3 LIS).
@@ -307,82 +397,6 @@ modelo:
               help: Casella 67 de la liquidació del pagament fraccionat del grup fiscal
                 (Mod. 40.3 LIS).
               label: Mod. 40.3 LIS - Correcció per Impost Complementari (IC) - Augments
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                222.
-              label: Exercici a què es refereix el pagament fraccionat
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                222.
-              label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra /
-                art. 40.3 base imposable)
-            x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import exclòs per operacions d'augment
-                de capital o fons propis per compensació de crèdits no integrat en
-                la base imposable (art. 17.2 LIS)
-            x-d5n6crpec9nmsqb6d5hm2or9dtn2qobiegmj6d0:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import de la bonificació prevista
-                a l'art. 34 LIS
-            x-d5n6crpec9nmsqb6d5hm2or9dtn2qr35f4mj2e9d64sjid0:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import corresponent a la bonificació
-                prevista a l'art. 26 de la Llei 19/1994
-            x-d5n6crpedlkmsrric5hmirre5lh6urj9cpkm6ob3d5nmsbb1e9q2qcpj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import de la minoració corresponent
-                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
-            x-d5n6crpee5qmit315lin6s35e9giqqbde1nn4t355lingorcelkm8ro:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import exclòs per operacions de quitament
-                o espera
-            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqoj1edig:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Part integrada en la base imposable
-                per operacions de quitament o espera
-            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqorldtq62:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Part integrada en la base imposable
-                a nivell de quota per operacions de quitament o espera (només cooperatives)
-            x-d5n6crpee9imeqbdcln2quj5ccmmsrpdcdnmqs3lehgm4r35:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import no computable per aplicació
-                del règim fiscal de la ZEC
-            x-d5n6crpee9imst315lingpbeehgiqor1e0mngqbm5lq6it1depkmi:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import de renda exempta de les entitats
-                que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
-            x-d5n6crpee9in6pbiepgiqqbeepin4sr9dtn6aspdcdgmsobid5gn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Import corresponent a la reserva
-                per a inversions a Canàries
-            x-d5n6crpee9incpbiedkmurhdchin8pbid5nn4rrj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat del grup fiscal. Casella sense número imprès
-                al disseny oficial.
-              label: Informació addicional (6) - Rendes de reversió de deterioraments
-                que s'integren en la base imposable
           construct:
             modelo-222-declaration-construct:
               field:

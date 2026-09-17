@@ -1302,10 +1302,7 @@ cli:
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
-          (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
-          revisions amb `aeat app modelo work revisions --modelo %{modelo} --year
-          %{year} --period %{period}` i torna a consultar aquesta amb `aeat app modelo
-          work revision %{revision_id}`.'
+          (estat: %{state}). Està persistit i es pot reprendre més tard.'
         calculate_source_advisory: 'AVÍS: %{message} El càlcul s''ha completat, però
           aquest import declarable no s''assigna a cap casella i no es declara en
           aquesta presentació; revisa''l abans de presentar.'
@@ -1671,9 +1668,7 @@ cli:
           modelo work calculate` directament i aporta els valors --binding / --relation
           restants a mà.
         wizard_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id} (estat:
-          %{state}). Està persistit i es pot represendre més tard; llista les revisions
-          amb `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
-          %{period}` i torna a consultar-la amb `aeat app modelo work revision %{revision_id}`.'
+          %{state}). Està persistit i es pot reprendre més tard.'
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)

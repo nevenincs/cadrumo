@@ -1,6 +1,14 @@
 modelo:
   schema:
     '308':
+      casilla:
+        continuidad:
+          filing-period:
+            help: Field declared on modelo 308, taken from the official record design.
+            label: Accrual. Period
+          filing-year:
+            help: Tax information for casilla of Modelo 308.
+            label: Filing year to which the request relates
       field:
         official_name: 'Modelo 308. Value Added Tax. Refund application: equivalence
           surcharge, Article 30 bis of the VAT Regulations, Article 21.4 of the VAT
@@ -9,13 +17,6 @@ modelo:
           taxable persons)
       revision:
         2009-2011-junio:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 308.
-              label: Filing year to which the request relates
-            x-chim6r1ee1in4qbfchng:
-              help: Field declared on modelo 308, taken from the official record design.
-              label: Accrual. Period
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -23,13 +24,6 @@ modelo:
           field:
             label: Casilla— tax information
         2011-julio-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 308.
-              label: Filing year to which the request relates
-            x-chim6r1ee1in4qbfchng:
-              help: Field declared on modelo 308, taken from the official record design.
-              label: Accrual. Period
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -37,13 +31,6 @@ modelo:
           field:
             label: Casilla— tax information
         2016-2018:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 308.
-              label: Filing year to which the request relates
-            x-chim6r1ee1in4qbfchng:
-              help: Field declared on modelo 308, taken from the official record design.
-              label: Accrual. Period
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -58,9 +45,6 @@ modelo:
             x-chim6r1echincrrcelhmirre5lkm4obe:
               help: Box 932-965 of modelo 308, tax year 2009.
               label: Refund - IBAN
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 308.
-              label: Filing year to which the request relates
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Box 119-178 of modelo 308, tax year 2009.
               label: NMT - Acquirer - Surnames or company name
@@ -150,9 +134,6 @@ modelo:
             x-chim6r1edpnmqojick:
               help: Box 83-102 of modelo 308, tax year 2009.
               label: Identification - First name
-            x-chim6r1ee1in4qbfchng:
-              help: Field declared on modelo 308, taken from the official record design.
-              label: Accrual. Period
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Box 798-814 of modelo 308, tax year 2009.
               label: Special equivalence surcharge regime (SESR) - Settlement - Taxable

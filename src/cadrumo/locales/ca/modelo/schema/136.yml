@@ -7,6 +7,14 @@ modelo:
         title: Gravamen especial sobre els premis de determinades loteries i apostes.
           Autoliquidació
       revision:
+        2022-2025:
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Model 136 gravamen especial sobre determinats premis de loteries
+                  i apostes
+          field:
+            label: null
         '2026':
           casilla:
             '01':

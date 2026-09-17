@@ -1,6 +1,15 @@
 modelo:
   schema:
     '308':
+      casilla:
+        continuidad:
+          filing-period:
+            help: Dada declarada al model 308, presa del disseny de registre oficial.
+            label: Meritació. Període
+          filing-year:
+            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+              308.
+            label: Exercici a què es refereix la sol·licitud
       field:
         official_name: 'Modelo 308. Impost sobre el Valor Afegit. Sol·licitud de devolució:
           recàrrec d''equivalència, article 30 bis del Reglament de l''IVA, article
@@ -9,14 +18,6 @@ modelo:
           bis, subjectes passius ocasionals)
       revision:
         2009-2011-junio:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                308.
-              label: Exercici a què es refereix la sol·licitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dada declarada al model 308, presa del disseny de registre oficial.
-              label: Meritació. Període
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -24,14 +25,6 @@ modelo:
           field:
             label: Casella— informació fiscal
         2011-julio-2015:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                308.
-              label: Exercici a què es refereix la sol·licitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dada declarada al model 308, presa del disseny de registre oficial.
-              label: Meritació. Període
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -39,14 +32,6 @@ modelo:
           field:
             label: Casella— informació fiscal
         2016-2018:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                308.
-              label: Exercici a què es refereix la sol·licitud
-            x-chim6r1ee1in4qbfchng:
-              help: Dada declarada al model 308, presa del disseny de registre oficial.
-              label: Meritació. Període
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
@@ -61,10 +46,6 @@ modelo:
             x-chim6r1echincrrcelhmirre5lkm4obe:
               help: Casella 932-965 del model 308, exercici 2009.
               label: Devolució - IBAN
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-                308.
-              label: Exercici a què es refereix la sol·licitud
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Casella 119-178 del model 308, exercici 2009.
               label: NMT - Adquirent - Cognoms o Raó social
@@ -155,9 +136,6 @@ modelo:
             x-chim6r1edpnmqojick:
               help: Casella 83-102 del model 308, exercici 2009.
               label: Identificació - Nom
-            x-chim6r1ee1in4qbfchng:
-              help: Dada declarada al model 308, presa del disseny de registre oficial.
-              label: Meritació. Període
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Casella 798-814 del model 308, exercici 2009.
               label: Règim Espec. recàrrec equival. (RERE) - Liquidació - Base Imposable

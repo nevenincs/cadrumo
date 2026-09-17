@@ -206,7 +206,6 @@ modelo:
               label: Casella dr-13 — informació fiscal
             x-e1in4or5e1q6ushedpkmc:
               help: 'Consulteu la informació de la casella: 1. NIF del perceptor.'
-              label: 1. NIF del perceptor
             x-e1in4or5e1q6ushedpnmqojick:
               help: 'Consulteu la informació de la casella: 1. Nom del perceptor.'
               label: 1. Nom del perceptor

@@ -6,10 +6,19 @@ modelo:
           base-retenciones-ingresos-a-cuenta:
             help: Informació fiscal sobre informació fiscal de la casella 145-160
               del Modelo 180.
-            label: Casella 145-160 — informació fiscal
+            label: Base total de retencions i ingressos a compte
+          declaracion-complementaria-sustitutiva:
+            help: Informació fiscal de la casella 121-122 del Modelo 180.
+            label: Declaració complementària o substitutiva
           devengo-year:
             help: 'Consulteu la informació de la casella: Exercici de meritació.'
             label: Exercici de meritació
+          numero-identificativo-declaracion:
+            help: Informació fiscal de la casella 108-120 del Modelo 180.
+            label: Número identificatiu de la declaració
+          numero-identificativo-declaracion-anterior:
+            help: Informació fiscal de la casella 123-135 del Modelo 180.
+            label: Número identificatiu de la declaració anterior
           payee-inmueble-bloque:
             help: Informació fiscal sobre informació fiscal de la casella 201-203
               del Modelo 180.
@@ -80,7 +89,6 @@ modelo:
             label: Cognoms i nom, raó social o denominació del perceptor
           payee-nif:
             help: 'Consulteu la informació de la casella: NIF del perceptor.'
-            label: NIF del perceptor
           payee-province:
             help: Informació fiscal de la casella 76-77 del Modelo 180.
             label: Codi de província del domicili del perceptor
@@ -91,18 +99,18 @@ modelo:
           perc-base:
             help: Informació fiscal sobre informació fiscal de la casella 79-92 del
               Modelo 180.
-            label: Casella 79-92 — informació fiscal
+            label: Base de retencions i ingressos a compte del perceptor
           perc-retenciones:
-            help: Informació fiscal sobre informació fiscal de la casella 97-109 del
-              Modelo 180.
-            label: Casella 97-109 — informació fiscal
+            help: 'Consulteu la informació de la casella: Retencions e ingressos a
+              compte del perceptor.'
+            label: Retencions i ingressos a compte del perceptor
           porcentaje-retencion:
             help: Informació fiscal de la casella 93-96 del Modelo 180.
             label: Percentatge de retenció aplicat
           retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 161-175
-              del Modelo 180.
-            label: Casella 161-175 — informació fiscal
+            help: 'Consulteu la informació de la casella: Retencions e ingressos a
+              compte total.'
+            label: Retencions i ingressos a compte totals
           total-perceptores-count:
             help: Informació fiscal de la casella 136-144 del Modelo 180.
             label: Nombre total de perceptors
@@ -113,110 +121,6 @@ modelo:
         title: Resum anual de retencions sobre arrendaments urbans
       revision:
         2019-2022:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              help: Informació fiscal sobre informació fiscal de la casella 145-160
-                del Modelo 180.
-              label: Base total de retencions i ingressos a compte
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: Informació fiscal de la casella 121-122 del Modelo 180.
-              label: Declaració complementària o substitutiva
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Informació fiscal de la casella 108-120 del Modelo 180.
-              label: Número identificatiu de la declaració
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Informació fiscal de la casella 123-135 del Modelo 180.
-              label: Número identificatiu de la declaració anterior
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte total.'
-              label: Retencions i ingressos a compte totals
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: Nombre total de perceptors
-              label: Nombre total de perceptors
-            x-e1in4opec9gn6p8:
-              help: Informació fiscal sobre informació fiscal de la casella 79-92
-                del Modelo 180.
-              label: Base de retencions i ingressos a compte del perceptor
-            x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: Exercici de meritació
-              label: Exercici de meritació
-            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: Bloc de l'immoble arrendat
-              label: Bloc de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: Qualificador del número de l'immoble arrendat
-              label: Qualificador del número de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: Codi de municipi de l'immoble arrendat
-              label: Codi de municipi de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: Codi postal de l'immoble arrendat
-              label: Codi postal de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: Complement de domicili de l'immoble arrendat
-              label: Complement de domicili de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: Escala de l'immoble arrendat
-              label: Escala de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: Localitat de l'immoble arrendat
-              label: Localitat de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: Municipi de l'immoble arrendat
-              label: Municipi de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: Nom de la via pública de l'immoble arrendat
-              label: Nom de la via pública de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: Número de casa de l'immoble arrendat
-              label: Número de casa de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: Planta de l'immoble arrendat
-              label: Planta de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: Portal de l'immoble arrendat
-              label: Portal de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: Codi de província de l'immoble arrendat
-              label: Codi de província de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: Porta de l'immoble arrendat
-              label: Porta de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: Tipus de numeració de l'immoble arrendat
-              label: Tipus de numeració de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: Tipus de via de l'immoble arrendat
-              label: Tipus de via de l'immoble arrendat
-            x-e1in4opedlnm8obcd5i62p0:
-              help: Modalitat de renda o rendiment
-              label: Modalitat de renda o rendiment
-            x-e1in4opedpkmc:
-              help: NIF del perceptor
-              label: NIF del perceptor
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: NIF del representant legal del perceptor
-              label: NIF del representant legal del perceptor
-            x-e1in4opedpnmqojick:
-              help: Cognoms i nom, raó social o denominació del perceptor
-              label: Cognoms i nom, raó social o denominació del perceptor
-            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: Percentatge de retenció aplicat
-              label: Percentatge de retenció aplicat
-            x-e1in4opee1p6utj9dphmio8:
-              help: Codi de província del domicili del perceptor
-              label: Codi de província del domicili del perceptor
-            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: Referència cadastral de l'immoble arrendat
-              label: Referència cadastral de l'immoble arrendat
-            x-e1in4opee9in8pbecdkmurj5ec:
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte del perceptor.'
-              label: Retencions i ingressos a compte del perceptor
-            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: Situació de l'immoble
-              label: Situació de l'immoble
           construct:
             modelo-180-annual-summary:
               field:
@@ -225,110 +129,6 @@ modelo:
           field:
             label: Casella— informació fiscal
         2023-y-siguientes:
-          casilla:
-            x-chim6r1ec9gn6p9dehnn8obc:
-              help: Informació fiscal sobre informació fiscal de la casella 145-160
-                del Modelo 180.
-              label: Base total de retencions i ingressos a compte
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: Informació fiscal de la casella 121-122 del Modelo 180.
-              label: Declaració complementària o substitutiva
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: Informació fiscal de la casella 108-120 del Modelo 180.
-              label: Número identificatiu de la declaració
-            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: Informació fiscal de la casella 123-135 del Modelo 180.
-              label: Número identificatiu de la declaració anterior
-            x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte total.'
-              label: Retencions i ingressos a compte totals
-            x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: Nombre total de perceptors
-              label: Nombre total de perceptors
-            x-e1in4opec9gn6p8:
-              help: Informació fiscal sobre informació fiscal de la casella 79-92
-                del Modelo 180.
-              label: Base de retencions i ingressos a compte del perceptor
-            x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: Exercici de meritació
-              label: Exercici de meritació
-            x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: Bloc de l'immoble arrendat
-              label: Bloc de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: Qualificador del número de l'immoble arrendat
-              label: Qualificador del número de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: Codi de municipi de l'immoble arrendat
-              label: Codi de municipi de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: Codi postal de l'immoble arrendat
-              label: Codi postal de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: Complement de domicili de l'immoble arrendat
-              label: Complement de domicili de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: Escala de l'immoble arrendat
-              label: Escala de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: Localitat de l'immoble arrendat
-              label: Localitat de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: Municipi de l'immoble arrendat
-              label: Municipi de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: Nom de la via pública de l'immoble arrendat
-              label: Nom de la via pública de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: Número de casa de l'immoble arrendat
-              label: Número de casa de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: Planta de l'immoble arrendat
-              label: Planta de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: Portal de l'immoble arrendat
-              label: Portal de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: Codi de província de l'immoble arrendat
-              label: Codi de província de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: Porta de l'immoble arrendat
-              label: Porta de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: Tipus de numeració de l'immoble arrendat
-              label: Tipus de numeració de l'immoble arrendat
-            x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: Tipus de via de l'immoble arrendat
-              label: Tipus de via de l'immoble arrendat
-            x-e1in4opedlnm8obcd5i62p0:
-              help: Modalitat de renda o rendiment
-              label: Modalitat de renda o rendiment
-            x-e1in4opedpkmc:
-              help: NIF del perceptor
-              label: NIF del perceptor
-            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: NIF del representant legal del perceptor
-              label: NIF del representant legal del perceptor
-            x-e1in4opedpnmqojick:
-              help: Cognoms i nom, raó social o denominació del perceptor
-              label: Cognoms i nom, raó social o denominació del perceptor
-            x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: Percentatge de retenció aplicat
-              label: Percentatge de retenció aplicat
-            x-e1in4opee1p6utj9dphmio8:
-              help: Codi de província del domicili del perceptor
-              label: Codi de província del domicili del perceptor
-            x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: Referència cadastral de l'immoble arrendat
-              label: Referència cadastral de l'immoble arrendat
-            x-e1in4opee9in8pbecdkmurj5ec:
-              help: 'Consulteu la informació de la casella: Retencions e ingressos
-                a compte del perceptor.'
-              label: Retencions i ingressos a compte del perceptor
-            x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: Situació de l'immoble
-              label: Situació de l'immoble
           construct:
             modelo-180-annual-summary:
               field:

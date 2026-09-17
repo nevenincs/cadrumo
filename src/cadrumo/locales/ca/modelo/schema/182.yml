@@ -9,6 +9,9 @@ modelo:
         title: Donatius, donacions i aportacions rebudes i disposicions realitzades
           (informativa anual)
       revision:
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:

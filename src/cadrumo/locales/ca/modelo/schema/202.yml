@@ -6,7 +6,43 @@ modelo:
           '25':
             help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
               202.
-            label: Casella 25 — informació fiscal
+            label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus 2
+          importe-bonificacion-art-26-ley-19-1994:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import corresponent a la bonificació
+              prevista a l'art. 26 de la Llei 19/1994
+          importe-bonificacion-art-34-lis:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import de la bonificació prevista a
+              l'art. 34 LIS
+          importe-excluido-aumento-capital-art-17-2-lis:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+          importe-excluido-quita-espera:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import exclòs per operacions de quitament
+              o espera
+          importe-integrado-base-imponible-quita-espera:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Part integrada en la base imposable
+              per operacions de quitament o espera
+          importe-integrado-cuota-quita-espera-cooperativas:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+          importe-no-computable-regimen-zec:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import no computable per aplicació
+              del règim fiscal de la ZEC
+          importe-reserva-inversiones-canarias:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import corresponent a la reserva per
+              a inversions a Canàries
           is-pf-mod-40-2-a-ingresar:
             help: 'Consulteu la informació de la casella: Mod. 40.2 LIS - A ingresar.'
             label: Modalitat art. 40.2 LIS - A ingressar
@@ -75,7 +111,7 @@ modelo:
           is-pf-mod-40-3-b2-importe-pago-fraccionado:
             help: Informació fiscal sobre informació fiscal de la casella 22 del Modelo
               202.
-            label: Casella 22 — informació fiscal
+            label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus 1
           is-pf-mod-40-3-b2-porcentaje-1:
             help: 'Consulteu la informació de la casella: Mod. 40.3 LIS B2 - Percentatge
               1.'
@@ -178,6 +214,19 @@ modelo:
               202.
             label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
               (%)
+          minoracion-rentas-bonificacion-art-33-lis:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Import de la minoració corresponent
+              a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
+          renta-exenta-cap-xiv-tit-vii-lis:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+          rentas-reversion-deterioros-integradas-base-imponible:
+            help: Import declarat al bloc d'informació addicional de la liquidació
+              del pagament fraccionat.
+            label: Informació addicional (5) - Rendes de reversió de deterioraments
+              que s'integren en la base imposable
           retenciones-ingresos-a-cuenta:
             help: 'Consulteu la informació de la casella: Mod. 40.3 LIS - Retencions
               e ingressos a compte sobre ingressos del període computado.'
@@ -191,225 +240,16 @@ modelo:
       revision:
         2019-2022:
           casilla:
-            '01':
-              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-            '02':
-              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
-              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
-                (complementàries)
-            '03':
-              help: Modalitat art. 40.2 LIS - A ingressar
-              label: Modalitat art. 40.2 LIS - A ingressar
-            '04':
-              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-            '05':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-            '06':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-            '07':
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-            08:
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-            '13':
-              help: Modalitat art. 40.3 LIS - Base imposable prèvia
-              label: Modalitat art. 40.3 LIS - Base imposable prèvia
-            '14':
-              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-            '16':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-            '17':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-            '18':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-            '19':
-              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-            '20':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-            '21':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
-            '22':
-              help: Informació fiscal sobre informació fiscal de la casella 22 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                1
-            '23':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-            '24':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
-            '25':
-              help: Informació fiscal sobre informació fiscal de la casella 25 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                2
-            '26':
-              help: Modalitat art. 40.3 LIS B2 - Resultat previ
-              label: Modalitat art. 40.3 LIS B2 - Resultat previ
-            '27':
-              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
-              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
-            '28':
-              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-            '29':
-              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-            '30':
-              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-            '31':
-              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
-              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
-                (complementària)
-            '32':
-              help: Modalitat art. 40.3 LIS - Resultat
-              label: Modalitat art. 40.3 LIS - Resultat
-            '33':
-              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-            '34':
-              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-            '37':
-              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-            '38':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-            '39':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-            '40':
-              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
-                (cooperatives)
-            '42':
-              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
-                (cooperatives)
-            '44':
-              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-            '45':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-            '46':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-            '47':
-              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-            '48':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-            '49':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-            '50':
-              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-            '51':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Augments
-            '52':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Disminucions
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la bonificació prevista
-                a l'art. 34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la bonificació
-                prevista a l'art. 26 de la Llei 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import exclòs per operacions d'augment
                 de capital o fons propis per compensació de crèdits no integrat en
                 la base imposable (art. 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import exclòs per operacions de quitament
-                o espera
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Part integrada en la base imposable
-                per operacions de quitament o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Part integrada en la base imposable
                 a nivell de quota per operacions de quitament o espera (només cooperatives)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la minoració corresponent
-                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import no computable per aplicació
-                del règim fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import de renda exempta de les entitats
                 que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Rendes de reversió de deterioraments
-                que s'integren en la base imposable
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la reserva
-                per a inversions a Canàries
           construct:
             modelo-202-foundation:
               field:
@@ -418,225 +258,16 @@ modelo:
             label: Casella— informació fiscal
         2023-2024:
           casilla:
-            '01':
-              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-            '02':
-              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
-              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
-                (complementàries)
-            '03':
-              help: Modalitat art. 40.2 LIS - A ingressar
-              label: Modalitat art. 40.2 LIS - A ingressar
-            '04':
-              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-            '05':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-            '06':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-            '07':
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-            08:
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-            '13':
-              help: Modalitat art. 40.3 LIS - Base imposable prèvia
-              label: Modalitat art. 40.3 LIS - Base imposable prèvia
-            '14':
-              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-            '16':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-            '17':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-            '18':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-            '19':
-              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-            '20':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-            '21':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
-            '22':
-              help: Informació fiscal sobre informació fiscal de la casella 22 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                1
-            '23':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-            '24':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
-            '25':
-              help: Informació fiscal sobre informació fiscal de la casella 25 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                2
-            '26':
-              help: Modalitat art. 40.3 LIS B2 - Resultat previ
-              label: Modalitat art. 40.3 LIS B2 - Resultat previ
-            '27':
-              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
-              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
-            '28':
-              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-            '29':
-              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-            '30':
-              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-            '31':
-              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
-              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
-                (complementària)
-            '32':
-              help: Modalitat art. 40.3 LIS - Resultat
-              label: Modalitat art. 40.3 LIS - Resultat
-            '33':
-              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-            '34':
-              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-            '37':
-              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-            '38':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-            '39':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-            '40':
-              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
-                (cooperatives)
-            '42':
-              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
-                (cooperatives)
-            '44':
-              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-            '45':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-            '46':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-            '47':
-              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-            '48':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-            '49':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-            '50':
-              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-            '51':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Augments
-            '52':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Disminucions
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la bonificació prevista
-                a l'art. 34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la bonificació
-                prevista a l'art. 26 de la Llei 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import exclòs per operacions d'augment
                 de capital o fons propis per compensació de crèdits no integrat en
                 la base imposable (art. 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import exclòs per operacions de quitament
-                o espera
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Part integrada en la base imposable
-                per operacions de quitament o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Part integrada en la base imposable
                 a nivell de quota per operacions de quitament o espera (només cooperatives)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la minoració corresponent
-                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import no computable per aplicació
-                del règim fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import de renda exempta de les entitats
                 que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Rendes de reversió de deterioraments
-                que s'integren en la base imposable
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la reserva
-                per a inversions a Canàries
           construct:
             modelo-202-foundation:
               field:
@@ -645,169 +276,6 @@ modelo:
             label: Casella— informació fiscal
         2025-y-siguientes:
           casilla:
-            '01':
-              help: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
-            '02':
-              help: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
-              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
-                (complementàries)
-            '03':
-              help: Modalitat art. 40.2 LIS - A ingressar
-              label: Modalitat art. 40.2 LIS - A ingressar
-            '04':
-              help: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
-            '05':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
-            '06':
-              help: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
-            '07':
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
-            08:
-              help: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
-            '13':
-              help: Modalitat art. 40.3 LIS - Base imposable prèvia
-              label: Modalitat art. 40.3 LIS - Base imposable prèvia
-            '14':
-              help: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
-                anteriors
-            '16':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
-            '17':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
-            '18':
-              help: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
-            '19':
-              help: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
-            '20':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
-            '21':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 1
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
-            '22':
-              help: Informació fiscal sobre informació fiscal de la casella 22 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                1
-            '23':
-              help: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
-            '24':
-              help: Modalitat art. 40.3 LIS B2 - Percentatge 2
-              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
-            '25':
-              help: Informació fiscal sobre informació fiscal de la casella 25 del
-                Modelo 202.
-              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
-                2
-            '26':
-              help: Modalitat art. 40.3 LIS B2 - Resultat previ
-              label: Modalitat art. 40.3 LIS B2 - Resultat previ
-            '27':
-              help: Modalitat art. 40.3 LIS - Bonificacions del període computat
-              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
-            '28':
-              help: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
-                ingressos del període computat
-            '29':
-              help: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
-                (%)
-            '30':
-              help: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
-                en Territori Comú
-            '31':
-              help: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
-              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
-                (complementària)
-            '32':
-              help: Modalitat art. 40.3 LIS - Resultat
-              label: Modalitat art. 40.3 LIS - Resultat
-            '33':
-              help: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
-                d'euros)
-            '34':
-              help: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
-                claus [32] i [33])
-            '37':
-              help: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
-            '38':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
-            '39':
-              help: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
-            '40':
-              help: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
-                (cooperatives)
-            '42':
-              help: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
-                (cooperatives)
-            '44':
-              help: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
-                no aplicada per insuficiència de base
-            '45':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Augments
-            '46':
-              help: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-            '47':
-              help: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
-            '48':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Augments
-            '49':
-              help: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
-                - Disminucions
-            '50':
-              help: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
-            '51':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Augments
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Augments
-            '52':
-              help: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
-                - Disminucions
-              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
-                LIS) - Disminucions
             '61':
               help: Informació fiscal sobre informació fiscal de la casella 61 del
                 Modelo 202.
@@ -839,62 +307,16 @@ modelo:
                 per Impuesto Complementario (IC) - Aumentos.'
               label: Modalitat art. 40.3 LIS - Correccions per l'Impost Complementari
                 (IC) - Augments
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la bonificació prevista
-                a l'art. 34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la bonificació
-                prevista a l'art. 26 de la Llei 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import exclòs per operacions d'augment
                 de capital o fons propis per compensació de crèdits no integrat en
                 la base imposable (art. 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import exclòs per operacions de quitament
-                o espera
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Part integrada en la base imposable
-                per operacions de quitament o espera
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Part integrada en la base imposable
                 a nivell de quota per operacions de quitament o espera (només cooperatives)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import de la minoració corresponent
-                a les rendes que tinguin dret a la bonificació de l'art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import no computable per aplicació
-                del règim fiscal de la ZEC
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
               label: Informació addicional (5) - Import de renda exempta de les entitats
                 que apliquen el règim fiscal especial del Cap. XIV del Tít. VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Rendes de reversió de deterioraments
-                que s'integren en la base imposable
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Import declarat al bloc d'informació addicional de la liquidació
-                del pagament fraccionat.
-              label: Informació addicional (5) - Import corresponent a la reserva
-                per a inversions a Canàries
           construct:
             modelo-202-foundation:
               field:

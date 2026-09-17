@@ -900,6 +900,11 @@ application:
         canònic de forma segura.
       calculate_semantic_role_missing: La revisió del model no conté cap casella amb
         el rol semàntic %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla per a %{key} (%{label})
+        correspon a un selector de declarant de data_type=%{data_type} no numèric
+        que identifica el contribuent que obté els rendiments, no un import. Introdueix
+        l'import a la seva pròpia casella numèrica i reserva aquesta casella per al
+        selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
       calculate_typed_text_input_invalid: El valor de --casilla no és vàlid per al

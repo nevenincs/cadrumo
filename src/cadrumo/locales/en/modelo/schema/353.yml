@@ -3,48 +3,56 @@ modelo:
     '353':
       casilla:
         continuidad:
-          '05':
-            help: Tax information about tax information in casilla 05 of Modelo 353.
-            label: Casilla 05 — tax information
-          08:
-            help: Tax information about tax information in casilla 08 of Modelo 353.
-            label: Casilla 08 — tax information
-          09:
-            help: Tax information about tax information in casilla 09 of Modelo 353.
-            label: Casilla 09 — tax information
           filing-period:
             help: Tax information for casilla of Modelo 353.
-            label: Casilla — tax field
+            label: Monthly period (01..12)
           filing-year:
             help: Tax information for casilla of Modelo 353.
-            label: Casilla — tax field
+            label: Tax year the self-assessment relates to
           iva-agregado-reconciliacion-deducible-322:
-            help: 'Casilla information: Casilla iva.reconciliacion.deductible-322:
-              iva agregado reconciliacion deductible 322.'
-            label: 'Casilla iva.reconciliacion.deductible-322: iva agregado reconciliacion
-              deductible 322'
+            help: Tax information about tax information in casilla  of Modelo 353.
+            label: Group aggregate deductible amount reconciled from members' Modelo
+              322 returns
           iva-agregado-reconciliacion-devengada-322:
-            help: 'Casilla information: Casilla iva.reconciliacion.accrued-322: iva
-              agregado reconciliacion accrued 322.'
-            label: 'Casilla iva.reconciliacion.accrued-322: iva agregado reconciliacion
-              accrued 322'
+            help: Tax information about tax information in casilla  of Modelo 353.
+            label: Group aggregate VAT due reconciled from members' Modelo 322 returns
           iva-agregado-reconciliacion-resultado-322:
-            help: 'Casilla information: Casilla iva.reconciliacion.result-322: iva
-              agregado reconciliacion result 322.'
-            label: 'Casilla iva.reconciliacion.result-322: iva agregado reconciliacion
-              result 322'
-          m353-a-deducir-autoliquidaciones-anteriores:
-            help: Tax information about tax information in casilla 04 of Modelo 353.
-            label: Casilla 04 — tax information
+            help: Tax information about tax information in casilla  of Modelo 353.
+            label: Group aggregate result reconciled from members' Modelo 322 returns
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: Tax information about tax information in casilla  of Modelo 353.
+            label: Self-charged VAT on intra-Community acquisitions - group aggregate
+          iva-cuota-deducible-total:
+            help: 'Review the casilla information: Total amount IVA deductible (agregado
+              of the group).'
+            label: Total deductible VAT (group aggregate)
+          iva-cuota-devengada-total:
+            help: 'Review the casilla information: Total amount Output VAT (agregado
+              of the group).'
+            label: Total VAT due (group aggregate)
+          iva-cuota-repercutida-general:
+            help: 'Review the casilla information: Amount Output VAT al rate general
+              (21%) - agregado of the group.'
+            label: VAT charged at the standard rate (21%) - group aggregate
+          iva-cuota-repercutida-reducido:
+            help: 'Review the casilla information: Amount Output VAT al rate reduced
+              (10%) - agregado of the group.'
+            label: VAT charged at the reduced rate (10%) - group aggregate
+          iva-cuota-repercutida-super-reducido:
+            help: 'Review the casilla information: Amount Output VAT al rate super-reduced
+              (4%) - agregado of the group.'
+            label: VAT charged at the super-reduced rate (4%) - group aggregate
+          iva-cuota-soportada-interiores:
+            help: Tax information about tax information in casilla  of Modelo 353.
+            label: VAT borne on ordinary domestic transactions - group aggregate
+          iva-resultado-regimen-general:
+            help: 'Review the casilla information: Result of the group (amount accrued
+              agregada - amount deductible agregada).'
+            label: Group result (aggregate VAT due minus aggregate deductible VAT)
           m353-cuotas-a-compensar:
             help: Tax information about tax information in casilla 02 of Modelo 353.
-            label: Casilla 02 — tax information
-          m353-resultado:
-            help: Tax information about tax information in casilla 03 of Modelo 353.
-            label: Casilla 03 — tax information
           m353-resultado-total-entidades:
             help: Tax information for casilla 01 of Modelo 353.
-            label: Casilla 01 — tax field
       field:
         official_name: Modelo 353. Value Added Tax. Group of entities. Aggregate form.
           Monthly self-assessment.
@@ -53,11 +61,8 @@ modelo:
         2021-2025:
           casilla:
             '01':
-              help: Tax information for casilla 01 of Modelo 353.
               label: Total result (sum of the entities' results)
             '02':
-              help: Tax information about tax information in casilla 02 of Modelo
-                353.
               label: Amounts to offset carried forward from earlier years
             '03':
               help: 'Review the casilla information: Result ([01] - [08]).'
@@ -78,52 +83,6 @@ modelo:
                 353 References: [02], [08].'
               label: Amounts to offset from earlier periods still pending for later
                 periods ([02] - [08])
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 353.
-              label: Tax year the self-assessment relates to
-            x-chim6r1ee1in4qbfchng:
-              help: Tax information for casilla of Modelo 353.
-              label: Monthly period (01..12)
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Self-charged VAT on intra-Community acquisitions - group aggregate
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: 'Review the casilla information: Total amount IVA deductible (agregado
-                of the group).'
-              label: Total deductible VAT (group aggregate)
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: 'Review the casilla information: Total amount Output VAT (agregado
-                of the group).'
-              label: Total VAT due (group aggregate)
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate deductible amount reconciled from members' Modelo
-                322 returns
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate VAT due reconciled from members' Modelo 322 returns
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate result reconciled from members' Modelo 322 returns
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: 'Review the casilla information: Amount Output VAT al rate general
-                (21%) - agregado of the group.'
-              label: VAT charged at the standard rate (21%) - group aggregate
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: 'Review the casilla information: Amount Output VAT al rate reduced
-                (10%) - agregado of the group.'
-              label: VAT charged at the reduced rate (10%) - group aggregate
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: 'Review the casilla information: Amount Output VAT al rate super-reduced
-                (4%) - agregado of the group.'
-              label: VAT charged at the super-reduced rate (4%) - group aggregate
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: 'Review the casilla information: Result of the group (amount accrued
-                agregada - amount deductible agregada).'
-              label: Group result (aggregate VAT due minus aggregate deductible VAT)
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: VAT borne on ordinary domestic transactions - group aggregate
           construct:
             modelo-353-iva-grupo-agregado:
               field:
@@ -167,22 +126,6 @@ modelo:
                 353 References: [10].'
               label: Payment on account for supplies of petrol, diesel and biofuels
                 attributable to the State Administration [10]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 353.
-              label: Tax year the self-assessment relates to
-            x-chim6r1ee1in4qbfchng:
-              help: Tax information for casilla of Modelo 353.
-              label: Monthly period (01..12)
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate deductible amount reconciled from members' Modelo
-                322 returns
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate VAT due reconciled from members' Modelo 322 returns
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: Tax information about tax information in casilla  of Modelo 353.
-              label: Group aggregate result reconciled from members' Modelo 322 returns
           construct:
             modelo-353-iva-grupo-agregado:
               field:

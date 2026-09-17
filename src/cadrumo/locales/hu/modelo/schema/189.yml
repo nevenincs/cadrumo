@@ -7,6 +7,12 @@ modelo:
         title: Éves adatszolgáltatási bevallás értékpapírokról, biztosításokról és
           járadékokról
       revision:
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             clave-identificacion:

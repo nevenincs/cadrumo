@@ -174,7 +174,6 @@ modelo:
               label: '1. Béns i serveis adquirits: descripció'
             x-chim6r1edto32bb4d5r6isr1:
               help: Casella 2748-2750 del model 360, exercici 2010.
-              label: 1. Divisa
             x-chim6r1edto32bb6c5hn8tbic4:
               help: Casella 20-69 del model 360, exercici 2010.
               label: 1. Número de factura o doc. d'importació
@@ -219,7 +218,6 @@ modelo:
               label: 1. Número d'operació
             x-chim6r1edto32bbge9nn4sj1ehgg:
               help: Casella 2728-2732 del model 360, exercici 2010.
-              label: 1. Prorrata %
             x-chim6r1edto32bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Dada declarada al model 360, presa del disseny de registre oficial.
               label: Dades del proveïdor. Adreça
@@ -249,7 +247,6 @@ modelo:
               label: 1. Dades del proveïdor de béns / prestador de serveis. Telèfon
             x-chim6r1edto32bbjd5mn0r39cpkm6ob4c4:
               help: Casella 2751-2751 del model 360, exercici 2010.
-              label: 1. Indicador de simplificada
             x-chim6r1edto32bbkd5o6u:
               help: Casella 17-19 del model 360, exercici 2010.
               label: Presentació en proves
@@ -321,7 +318,6 @@ modelo:
               label: '2. Béns i serveis adquirits: descripció'
             x-chim6r1edto34bb4d5r6isr1:
               help: Casella 5848-5850 del model 360, exercici 2010.
-              label: 2. Divisa
             x-chim6r1edto34bb6c5hn8tbic4:
               help: Casella 3120-3169 del model 360, exercici 2010.
               label: 2. Número de factura o doc. d'importació
@@ -366,7 +362,6 @@ modelo:
               label: 2. Número d'operació
             x-chim6r1edto34bbge9nn4sj1ehgg:
               help: Casella 5828-5832 del model 360, exercici 2010.
-              label: 2. Prorrata %
             x-chim6r1edto34bbge9nncpb5chnn4bb4d5p6aor3d5nms:
               help: Casella 6046-6193 del model 360, exercici 2010.
               label: 2. Dades del proveïdor de béns / prestador de serveis. Adreça
@@ -397,7 +392,6 @@ modelo:
               label: 2. Dades del proveïdor de béns / prestador de serveis. Telèfon
             x-chim6r1edto34bbjd5mn0r39cpkm6ob4c4:
               help: Casella 5851-5851 del model 360, exercici 2010.
-              label: 2. Indicador de simplificada
             x-chim6r1edto34bbkd5o6u:
               help: Dada declarada al model 360, presa del disseny de registre oficial.
               label: Tipus d'operació

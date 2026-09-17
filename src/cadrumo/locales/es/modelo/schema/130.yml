@@ -9,82 +9,44 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: 'Consulte la información correspondiente a la casilla: Ingresos.'
               label: Ingresos
             '02':
-              help: 'Consulte la información correspondiente a la casilla: Gastos.'
               label: Gastos
             '03':
-              help: 'Consulte la información correspondiente a la casilla: Rendimiento
-                neto.'
               label: Rendimiento neto
             '04':
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                del pago fraccionado.'
               label: Importe del pago fraccionado
             '05':
-              help: 'Consulte la información correspondiente a la casilla: Pagos fraccionados
-                anteriores.'
               label: Pagos fraccionados anteriores
             '06':
-              help: Información fiscal sobre información fiscal de la casilla 06 del
-                Modelo 130.
               label: Retenciones e ingresos a cuenta
             '07':
-              help: 'Consulte la información correspondiente a la casilla: Resultado
-                parcial apartado I.'
               label: Resultado parcial apartado I
             08:
-              help: 'Consulte la información correspondiente a la casilla: Volumen
-                de ingresos del trimestre.'
               label: Volumen de ingresos del trimestre
             09:
-              help: 'Consulte la información correspondiente a la casilla: Importe
-                del pago fraccionado.'
               label: Importe del pago fraccionado
             '10':
-              help: Información fiscal sobre información fiscal de la casilla 10 del
-                Modelo 130.
               label: Retenciones e ingresos a cuenta
             '11':
-              help: 'Consulte la información correspondiente a la casilla: Resultado
-                parcial apartado II.'
               label: Resultado parcial apartado II
             '12':
-              help: 'Consulte la información correspondiente a la casilla: Suma de
-                resultados parciales.'
               label: Suma de resultados parciales
             '13':
-              help: 'Consulte la información correspondiente a la casilla: Minoracion
-                por rendimientos netos.'
               label: Minoracion por rendimientos netos
             '14':
-              help: 'Consulte la información correspondiente a la casilla: Neto tras
-                minoracion.'
               label: Neto tras minoracion
             '15':
-              help: 'Consulte la información correspondiente a la casilla: Resultados
-                negativos de trimestres anteriores.'
               label: Resultados negativos de trimestres anteriores
             '16':
-              help: 'Consulte la información correspondiente a la casilla: Deducción
-                por inversión en vivienda habitual.'
               label: Deducción por inversion en vivienda habitual
             '17':
-              help: Información fiscal sobre información fiscal de la casilla 17 del
-                Modelo 130.
               label: Diferencia
             '18':
-              help: 'Consulte la información correspondiente a la casilla: Resultado
-                a ingresar de autoliquidaciones anteriores.'
               label: Resultado a ingresar de autoliquidaciones anteriores
             '19':
-              help: 'Consulte la información correspondiente a la casilla: Resultado
-                final.'
               label: Resultado final
             saldo-negativo-fin-periodo:
-              help: 'Consulte la información correspondiente a la casilla: Saldo negativo
-                trasladable a periodos posteriores (max 0, -casilla 17).'
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 17)
           construct:

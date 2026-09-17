@@ -1,282 +1,370 @@
 modelo:
   schema:
     '222':
+      casilla:
+        continuidad:
+          filing-year:
+            help: Tax information for casilla of Modelo 222.
+            label: Filing year to which the instalment payment relates
+          is-pf-grupo-info-aumento-capital-compensacion-creditos:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount excluded for capital or equity
+              increases by set-off of claims not integrated into the tax base (art.
+              17.2 LIS)
+          is-pf-grupo-info-bonificacion-art-34:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount of the allowance under art.
+              34 LIS
+          is-pf-grupo-info-bonificacion-ley-19-1994:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount corresponding to the allowance
+              under art. 26 of Law 19/1994
+          is-pf-grupo-info-minoracion-bonificacion-art-33:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount of the reduction for income
+              entitled to the allowance under art. 33 LIS
+          is-pf-grupo-info-quita-espera-importe-excluido:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount excluded for debt-relief or
+              deferral arrangements
+          is-pf-grupo-info-quita-espera-integrado-base:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Part integrated into the tax base
+              for debt-relief or deferral arrangements
+          is-pf-grupo-info-quita-espera-integrado-cuota:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Part integrated into the tax base
+              at liability level for debt-relief or deferral arrangements (cooperatives
+              only)
+          is-pf-grupo-info-regimen-zec-no-computable:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount not countable through application
+              of the ZEC tax regime
+          is-pf-grupo-info-renta-exenta-cap-xiv-tit-vii:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount of exempt income of entities
+              applying the special tax regime of Chapter XIV of Title VII LIS
+          is-pf-grupo-info-reserva-inversiones-canarias:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Amount corresponding to the Canary
+              Islands investment reserve
+          is-pf-grupo-info-reversion-deterioros:
+            help: Amount declared in the additional-information block of the tax group's
+              instalment payment settlement. The official design prints no box number
+              for this slot.
+            label: Additional information (6) - Income from reversal of impairments
+              integrated into the tax base
+          is-pf-grupo-informacion-adicional-resultado-consolidado-del-periodo:
+            help: Box 35 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Additional information (6) - Consolidated result for the period
+          is-pf-grupo-mod-40-2-lis-a-ingresar:
+            help: Box 03 of the tax group's instalment payment settlement (Mod. 40.2
+              LIS).
+            label: Mod. 40.2 LIS - To pay
+          is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado:
+            help: Box 01 of the tax group's instalment payment settlement (Mod. 40.2
+              LIS).
+            label: Mod. 40.2 LIS - Base of the instalment payment
+          is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior:
+            help: Box 02 of the tax group's instalment payment settlement (Mod. 40.2
+              LIS).
+            label: Mod. 40.2 LIS - Result of the previous return (only where that
+              return is supplementary)
+          is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones:
+            help: Box 60 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Adjustments to determine the group's tax base (DA
+              19ª LIS) - Decreases
+          is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos:
+            help: Box 59 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Adjustments to determine the group's tax base (DA
+              19ª LIS) - Increases
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado:
+            help: Box 16 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Base of the instalment payment
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-del-grupo-de-peri:
+            help: Box 51 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Offset of the group's negative
+              tax liabilities from earlier periods (cooperatives only)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-compensacion-de-cuotas-negativas-individuales-de-p:
+            help: Box 58 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Offset of individual negative
+              tax liabilities from periods before joining the group (cooperatives
+              only)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-del-grupo:
+            help: Box 49 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Provisions under art. 11.12
+              LIS of the group (DF 4ª LIS)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-dotaciones-del-art-11-12-lis-generadas-previa-a-la:
+            help: Box 50 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Provisions under art. 11.12
+              LIS generated before joining the group (DF 4ª LIS)
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-porcentaje:
+            help: Box 17 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Percentage
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-c-disminuciones:
+            help: Box 53 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
+              LIS) converted into tax liability, only groups meeting the reduced-size
+              undertaking requirements - Decreases
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
+            help: Box 52 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
+              LIS) converted into tax liability, only groups meeting the reduced-size
+              undertaking requirements - Increases
+          is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
+            help: Box 18 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.1) General case - Prior result
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-1:
+            help: Box 20 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Base at rate 1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-a-tipo-2:
+            help: Box 23 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Base at rate 2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-base-del-pago-fraccionado:
+            help: Box 19 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Base of the instalment payment
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-bonificaciones-correspondientes-al-periodo-co:
+            help: Box 27 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Allowances for the computed
+              period (total)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-cantidad-a-ingresar:
+            help: Box 34 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Amount to pay
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-del-grupo-de:
+            help: Box 42 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Offset of the group's negative
+              tax liabilities from earlier periods (cooperatives only)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-compensacion-de-cuotas-negativas-individuales:
+            help: Box 43 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Offset of individual negative
+              tax liabilities from periods before joining the group (cooperatives
+              only)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-del-grupo:
+            help: Box 54 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Provisions under art. 11.12
+              LIS of the group (DF 4ª LIS)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-dotaciones-del-art-11-12-lis-generadas-previa:
+            help: Box 57 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Provisions under art. 11.12
+              LIS generated before joining the group (DF 4ª LIS)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-1:
+            help: Box 22 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Instalment payment amount
+              1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-importe-del-pago-fraccionado-2:
+            help: Box 25 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Instalment payment amount
+              2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-pagos-fraccionados-anteriores-correspondiente:
+            help: Box 30 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Earlier instalment payments
+              for the computed period in Common Territory (total)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-1:
+            help: Box 21 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Percentage 1
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-porcentaje-2:
+            help: Box 24 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Percentage 2
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado:
+            help: Box 32 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Result
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-de-la-declaracion-anterior:
+            help: Box 31 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Result of the previous return
+              (only where that return is supplementary)
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-resultado-previo:
+            help: Box 26 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Prior result
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-retenciones-e-ingresos-a-cuenta-practicados-s:
+            help: Box 28 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Withholdings and payments
+              on account (totals) made on income of the computed period
+          is-pf-grupo-mod-40-3-lis-b-2-casos-especificos-volumen-de-operaciones-en-territorio-comun:
+            help: Box 29 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) Specific cases - Volume of operations in Common
+              Territory (%)
+          is-pf-grupo-mod-40-3-lis-b-2-minimo-a-ingresar:
+            help: Box 33 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) - Minimum to pay (only for undertakings with
+              net turnover of 10 million euro or more)
+          is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-solo-grupos-que-cumplan-los-disminuciones:
+            help: Box 56 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only groups
+              meeting the requirements for reduced-size undertaking incentives - Decreases
+          is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
+            help: Box 55 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only groups
+              meeting the requirements for reduced-size undertaking incentives - Increases
+          is-pf-grupo-mod-40-3-lis-base-imponible-previa:
+            help: Box 13 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Prior tax base
+          is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos:
+            help: Box 15 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Offset of negative tax bases of entities or groups
+              prior to joining the group (art. 67 and 74.3 LIS)
+          is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an:
+            help: Box 14 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Offset of the group's negative tax bases from earlier
+              periods
+          is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos:
+            help: Box 05 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Increases
+          is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones:
+            help: Box 06 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Decreases
+          is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos:
+            help: Box 11 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Corrections for deferral of internal results and
+              other consolidation corrections - Increases
+          is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones:
+            help: Box 12 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Corrections for deferral of internal results and
+              other consolidation corrections - Decreases
+          is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo:
+            help: Box 44 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS of the group
+          is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d:
+            help: Box 45 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS generated individually
+              or by a group before joining the group (art. 67 and 74.3 LIS)
+          is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d:
+            help: Box 46 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Remainder of the capitalisation reserve not applied
+              for insufficient base
+          is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones:
+            help: Box 48 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups meeting
+              the requirements for reduced-size undertaking incentives (art. 101 LIS)
+              that apply the specific rate - Decreases
+          is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos:
+            help: Box 47 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups meeting
+              the requirements for reduced-size undertaking incentives (art. 101 LIS)
+              that apply the specific rate
+          is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos:
+            help: Box 07 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
+              except offset of prior-year negative tax base - Increases
+          is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones:
+            help: Box 08 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
+              except offset of prior-year negative tax base - Decreases
+          is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones:
+            help: Box 37 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Reversal of 30% of the depreciation expense (except
+              reduced-size undertakings) - Decreases
+          is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega:
+            help: Box 10 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Sum of individual tax bases before offsetting negative
+              bases from earlier periods
+          is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales:
+            help: Box 04 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - Sum of individual accounting results (after IS
+              and IC)
+          is-pf-grupo-mod-40-3-lis-total-aumentos:
+            help: Box 38 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - TOTAL - Increases
+          is-pf-grupo-mod-40-3-lis-total-disminuciones:
+            help: Box 39 of the tax group's instalment payment settlement (Mod. 40.3
+              LIS).
+            label: Mod. 40.3 LIS - TOTAL - Decreases
+          tipo-declaracion:
+            help: Tax information about tax information in casilla  of Modelo 222.
+            label: Instalment payment method (art. 40.2 gross tax liability / art.
+              40.3 taxable base)
       field:
         official_name: Modelo 222. Corporate Income Tax. Tax consolidation regime.
           Instalment payment.
         title: IS instalment payment under the tax consolidation regime (groups)
       revision:
+        '2023':
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Modelo 222 instalment payment under the tax consolidation regime
+          field:
+            label: null
+        '2024':
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Modelo 222 instalment payment under the tax consolidation regime
+          field:
+            label: null
         2025-y-siguientes:
           casilla:
-            '01':
-              help: Box 01 of the tax group's instalment payment settlement (Mod.
-                40.2 LIS).
-              label: Mod. 40.2 LIS - Base of the instalment payment
-            '02':
-              help: Box 02 of the tax group's instalment payment settlement (Mod.
-                40.2 LIS).
-              label: Mod. 40.2 LIS - Result of the previous return (only where that
-                return is supplementary)
-            '03':
-              help: Box 03 of the tax group's instalment payment settlement (Mod.
-                40.2 LIS).
-              label: Mod. 40.2 LIS - To pay
-            '04':
-              help: Box 04 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Sum of individual accounting results (after IS
-                and IC)
-            '05':
-              help: Box 05 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Increases
-            '06':
-              help: Box 06 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Decreases
-            '07':
-              help: Box 07 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
-                except offset of prior-year negative tax base - Increases
-            08:
-              help: Box 08 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
-                except offset of prior-year negative tax base - Decreases
-            '10':
-              help: Box 10 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Sum of individual tax bases before offsetting
-                negative bases from earlier periods
-            '11':
-              help: Box 11 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Corrections for deferral of internal results
-                and other consolidation corrections - Increases
-            '12':
-              help: Box 12 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Corrections for deferral of internal results
-                and other consolidation corrections - Decreases
-            '13':
-              help: Box 13 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Prior tax base
-            '14':
-              help: Box 14 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Offset of the group's negative tax bases from
-                earlier periods
-            '15':
-              help: Box 15 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Offset of negative tax bases of entities or groups
-                prior to joining the group (art. 67 and 74.3 LIS)
-            '16':
-              help: Box 16 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Base of the instalment payment
-            '17':
-              help: Box 17 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Percentage
-            '18':
-              help: Box 18 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Prior result
-            '19':
-              help: Box 19 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Base of the instalment
-                payment
-            '20':
-              help: Box 20 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Base at rate 1
-            '21':
-              help: Box 21 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Percentage 1
-            '22':
-              help: Box 22 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Instalment payment amount
-                1
-            '23':
-              help: Box 23 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Base at rate 2
-            '24':
-              help: Box 24 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Percentage 2
-            '25':
-              help: Box 25 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Instalment payment amount
-                2
-            '26':
-              help: Box 26 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Prior result
-            '27':
-              help: Box 27 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Allowances for the computed
-                period (total)
-            '28':
-              help: Box 28 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Withholdings and payments
-                on account (totals) made on income of the computed period
-            '29':
-              help: Box 29 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Volume of operations in
-                Common Territory (%)
-            '30':
-              help: Box 30 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Earlier instalment payments
-                for the computed period in Common Territory (total)
-            '31':
-              help: Box 31 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Result of the previous
-                return (only where that return is supplementary)
-            '32':
-              help: Box 32 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Result
-            '33':
-              help: Box 33 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Minimum to pay (only for undertakings
-                with net turnover of 10 million euro or more)
-            '34':
-              help: Box 34 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Amount to pay
-            '35':
-              help: Box 35 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Additional information (6) - Consolidated result for the period
-            '37':
-              help: Box 37 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Reversal of 30% of the depreciation expense (except
-                reduced-size undertakings) - Decreases
-            '38':
-              help: Box 38 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - TOTAL - Increases
-            '39':
-              help: Box 39 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - TOTAL - Decreases
-            '42':
-              help: Box 42 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Offset of the group's negative
-                tax liabilities from earlier periods (cooperatives only)
-            '43':
-              help: Box 43 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Offset of individual negative
-                tax liabilities from periods before joining the group (cooperatives
-                only)
-            '44':
-              help: Box 44 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS of the group
-            '45':
-              help: Box 45 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS generated individually
-                or by a group before joining the group (art. 67 and 74.3 LIS)
-            '46':
-              help: Box 46 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Remainder of the capitalisation reserve not applied
-                for insufficient base
-            '47':
-              help: Box 47 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups
-                meeting the requirements for reduced-size undertaking incentives (art.
-                101 LIS) that apply the specific rate
-            '48':
-              help: Box 48 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups
-                meeting the requirements for reduced-size undertaking incentives (art.
-                101 LIS) that apply the specific rate - Decreases
-            '49':
-              help: Box 49 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Provisions under art. 11.12
-                LIS of the group (DF 4ª LIS)
-            '50':
-              help: Box 50 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Provisions under art. 11.12
-                LIS generated before joining the group (DF 4ª LIS)
-            '51':
-              help: Box 51 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Offset of the group's negative
-                tax liabilities from earlier periods (cooperatives only)
-            '52':
-              help: Box 52 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
-                LIS) converted into tax liability, only groups meeting the reduced-size
-                undertaking requirements - Increases
-            '53':
-              help: Box 53 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
-                LIS) converted into tax liability, only groups meeting the reduced-size
-                undertaking requirements - Decreases
-            '54':
-              help: Box 54 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Provisions under art. 11.12
-                LIS of the group (DF 4ª LIS)
-            '55':
-              help: Box 55 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only
-                groups meeting the requirements for reduced-size undertaking incentives
-                - Increases
-            '56':
-              help: Box 56 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only
-                groups meeting the requirements for reduced-size undertaking incentives
-                - Decreases
-            '57':
-              help: Box 57 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.2) Specific cases - Provisions under art. 11.12
-                LIS generated before joining the group (DF 4ª LIS)
-            '58':
-              help: Box 58 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - B.1) General case - Offset of individual negative
-                tax liabilities from periods before joining the group (cooperatives
-                only)
-            '59':
-              help: Box 59 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Adjustments to determine the group's tax base
-                (DA 19ª LIS) - Increases
-            '60':
-              help: Box 60 of the tax group's instalment payment settlement (Mod.
-                40.3 LIS).
-              label: Mod. 40.3 LIS - Adjustments to determine the group's tax base
-                (DA 19ª LIS) - Decreases
             '61':
               help: Box 61 of the tax group's instalment payment settlement (Mod.
                 40.3 LIS).
@@ -307,81 +395,6 @@ modelo:
               help: Box 67 of the tax group's instalment payment settlement (Mod.
                 40.3 LIS).
               label: Mod. 40.3 LIS - Complementary tax (IC) correction - Increases
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 222.
-              label: Filing year to which the instalment payment relates
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information about tax information in casilla  of Modelo 222.
-              label: Instalment payment method (art. 40.2 gross tax liability / art.
-                40.3 taxable base)
-            x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount excluded for capital or equity
-                increases by set-off of claims not integrated into the tax base (art.
-                17.2 LIS)
-            x-d5n6crpec9nmsqb6d5hm2or9dtn2qobiegmj6d0:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount of the allowance under art.
-                34 LIS
-            x-d5n6crpec9nmsqb6d5hm2or9dtn2qr35f4mj2e9d64sjid0:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount corresponding to the allowance
-                under art. 26 of Law 19/1994
-            x-d5n6crpedlkmsrric5hmirre5lh6urj9cpkm6ob3d5nmsbb1e9q2qcpj:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount of the reduction for income
-                entitled to the allowance under art. 33 LIS
-            x-d5n6crpee5qmit315lin6s35e9giqqbde1nn4t355lingorcelkm8ro:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount excluded for debt-relief
-                or deferral arrangements
-            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqoj1edig:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Part integrated into the tax base
-                for debt-relief or deferral arrangements
-            x-d5n6crpee5qmit315lin6s35e9giqqbeehimesj1chniqorldtq62:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Part integrated into the tax base
-                at liability level for debt-relief or deferral arrangements (cooperatives
-                only)
-            x-d5n6crpee9imeqbdcln2quj5ccmmsrpdcdnmqs3lehgm4r35:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount not countable through application
-                of the ZEC tax regime
-            x-d5n6crpee9imst315lingpbeehgiqor1e0mngqbm5lq6it1depkmi:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount of exempt income of entities
-                applying the special tax regime of Chapter XIV of Title VII LIS
-            x-d5n6crpee9in6pbiepgiqqbeepin4sr9dtn6aspdcdgmsobid5gn6:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Amount corresponding to the Canary
-                Islands investment reserve
-            x-d5n6crpee9incpbiedkmurhdchin8pbid5nn4rrj:
-              help: Amount declared in the additional-information block of the tax
-                group's instalment payment settlement. The official design prints
-                no box number for this slot.
-              label: Additional information (6) - Income from reversal of impairments
-                integrated into the tax base
           construct:
             modelo-222-declaration-construct:
               field:

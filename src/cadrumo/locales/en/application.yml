@@ -822,6 +822,10 @@ application:
         casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
+      calculate_text_casilla_numeric_value: The --casilla value for %{key} (%{label})
+        targets a non-numeric data_type=%{data_type} declarante selector that names
+        the contribuyente who obtains the income, not an amount. Enter the income
+        figure in its own numeric casilla and keep this casilla for the member selector.
       calculate_text_input_empty: The --casilla value targets a text casilla and must
         be a non-empty string.
       calculate_typed_text_input_invalid: The --casilla value is not valid for that

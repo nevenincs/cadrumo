@@ -8,6 +8,15 @@ modelo:
         title: Annual informative return of pension plans and funds, participants,
           contributions and employer contributions
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             anio-nacimiento:
@@ -18,7 +27,6 @@ modelo:
               label: Casilla— tax information
             clave:
               help: 'Review the casilla information: Clave.'
-              label: Clave
             codigo-provincia:
               help: Tax information for casilla of Modelo 345.
               label: Province code

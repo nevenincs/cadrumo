@@ -43,9 +43,9 @@ modelo:
             help: Informació fiscal de la casella 23 del Modelo 210.
             label: Casella 23 — informació fiscal
           irnr-exencion-dividendos:
-            help: Informació fiscal sobre informació fiscal de la casella 6 del Modelo
-              210.
-            label: Casella 6 — informació fiscal
+            help: 'Consulteu la informació d''aquesta casella: Exempció aplicada a
+              dividends (límit anual de 1.500 euros).'
+            label: Exempció aplicada a dividends (límit anual de 1.500 euros)
           irnr-exenciones-ley-irnr-indicador:
             help: Informació fiscal sobre informació fiscal de la casella 19 del Modelo
               210.
@@ -93,9 +93,8 @@ modelo:
             help: Informació fiscal de la casella 30 del Modelo 210.
             label: Casella 30 — informació fiscal
           irnr-limite-convenio:
-            help: Informació fiscal sobre informació fiscal de la casella 26 del Modelo
-              210.
-            label: Casella 26 — informació fiscal
+            help: 'Consulteu la informació d''aquesta casella: Límit segons conveni.'
+            label: Límit segons conveni
           irnr-mejora-diferencia:
             help: Informació fiscal sobre informació fiscal de la casella 15 del Modelo
               210.
@@ -117,9 +116,9 @@ modelo:
               210.
             label: Casella 25 — informació fiscal
           irnr-reduccion-convenio:
-            help: Informació fiscal sobre informació fiscal de la casella 27 del Modelo
-              210.
-            label: Casella 27 — informació fiscal
+            help: 'Consulteu la informació d''aquesta casella: Reducció per aplicació
+              del conveni.'
+            label: Reducció per aplicació del conveni
           irnr-rendimientos-integros:
             help: Informació fiscal sobre informació fiscal de la casella 5 del Modelo
               210.
@@ -141,19 +140,27 @@ modelo:
           sense establiment permanent. Autoliquidació.
         title: IRNR autoliquidació de no residents sense establiment permanent
       revision:
+        '2023':
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Càlcul de l'IRNR del model 210
+          field:
+            label: null
+        '2024':
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Càlcul de l'IRNR del model 210
+          field:
+            label: null
         '2025':
           casilla:
             base_imponible:
-              help: Informació fiscal sobre informació fiscal de la casella 8 del
-                Modelo 210.
               label: Base imposable
             base_imponible_directa_g:
-              help: Informació fiscal sobre informació fiscal de la casella 18 del
-                Modelo 210.
               label: Base imposable (210 G)
             base_imponible_directa_i:
-              help: Informació fiscal sobre informació fiscal de la casella 4 del
-                Modelo 210.
               label: Base imposable (210 I)
             base_imponible_ganancias_h:
               help: 'Informació fiscal sobre informació fiscal de la casella 17 del
@@ -167,8 +174,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Convenio.'
               label: Conveni
             cuota_diferencial:
-              help: Informació fiscal sobre informació fiscal de la casella 31 del
-                Modelo 210.
               label: Quota diferencial
             cuota_integra:
               help: 'Consulteu la informació de la casella: Quota íntegra.'
@@ -181,11 +186,8 @@ modelo:
               help: 'Consulteu la informació de la casella: Quota Ley IRNR ([22]-[23]).'
               label: Quota Llei IRNR ([22]-[23])
             deduccion_donativos:
-              help: Informació fiscal de la casella 23 del Modelo 210.
               label: Deducció per donatius
             dias_imputacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                210.
               label: Dies d'imputació
             exencion_dividendos:
               help: Informació fiscal de la casella 6 del Modelo 210.
@@ -199,8 +201,6 @@ modelo:
                 (210 H).'
               label: Adquisició. Diferència (210 H)
             ganancia_importe:
-              help: Informació fiscal sobre informació fiscal de la casella 12 del
-                Modelo 210.
               label: Adquisició. Guany (210 H)
             ganancia_valor_adquisicion:
               help: 'Consulteu la informació de la casella: Adquisició. Valor de adquisició
@@ -211,8 +211,6 @@ modelo:
                 (210 H).'
               label: Adquisició. Valor de transmissió (210 H)
             gastos_deducibles:
-              help: Informació fiscal sobre informació fiscal de la casella 7 del
-                Modelo 210.
               label: Despeses deduïbles
             ingreso_devolucion_anterior:
               help: 'Consulteu la informació de la casella: Ingrés/Devolució anterior
@@ -226,8 +224,6 @@ modelo:
                 Diferència (210 H).'
               label: Millora o 2a adquisició. Diferència (210 H)
             mejora_ganancia:
-              help: Informació fiscal sobre informació fiscal de la casella 16 del
-                Modelo 210.
               label: Millora o 2a adquisició. Guany (210 H)
             mejora_valor_adquisicion:
               help: 'Consulteu la informació de la casella: Mejora o 2ª adquisició.

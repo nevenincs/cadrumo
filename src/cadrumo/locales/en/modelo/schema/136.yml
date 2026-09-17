@@ -6,6 +6,13 @@ modelo:
           Special levy on prizes from certain lotteries and betting. Self-assessment.
         title: Special levy on prizes from certain lotteries and betting. Self-assessment
       revision:
+        2022-2025:
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Modelo 136 special levy on certain lottery and betting prizes
+          field:
+            label: null
         '2026':
           casilla:
             '01':

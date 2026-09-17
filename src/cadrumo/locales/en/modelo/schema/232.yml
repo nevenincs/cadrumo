@@ -9,179 +9,8 @@ modelo:
           filing-year:
             help: Tax information for casilla of Modelo 232.
             label: Accrual year
-          related-party-fjo-1:
-            help: 'Casilla information: Casilla 3.vinculada.1.fjo: related party fjo
-              1.'
-            label: 'Casilla 3.vinculada.1.fjo: related party fjo 1'
-          related-party-fjo-2:
-            help: 'Casilla information: Casilla 3.vinculada.2.fjo: related party fjo
-              2.'
-            label: 'Casilla 3.vinculada.2.fjo: related party fjo 2'
-          related-party-fjo-3:
-            help: 'Casilla information: Casilla 3.vinculada.3.fjo: related party fjo
-              3.'
-            label: 'Casilla 3.vinculada.3.fjo: related party fjo 3'
-          related-party-fjo-4:
-            help: 'Casilla information: Casilla 3.vinculada.4.fjo: related party fjo
-              4.'
-            label: 'Casilla 3.vinculada.4.fjo: related party fjo 4'
-          related-party-fjo-5:
-            help: 'Casilla information: Casilla 3.vinculada.5.fjo: related party fjo
-              5.'
-            label: 'Casilla 3.vinculada.5.fjo: related party fjo 5'
-          related-party-importe-1:
-            help: 'Casilla information: Casilla 3.vinculada.1.amount: related party
-              amount 1.'
-            label: 'Casilla 3.vinculada.1.amount: related party amount 1'
-          related-party-importe-2:
-            help: 'Casilla information: Casilla 3.vinculada.2.amount: related party
-              amount 2.'
-            label: 'Casilla 3.vinculada.2.amount: related party amount 2'
-          related-party-importe-3:
-            help: 'Casilla information: Casilla 3.vinculada.3.amount: related party
-              amount 3.'
-            label: 'Casilla 3.vinculada.3.amount: related party amount 3'
-          related-party-importe-4:
-            help: 'Casilla information: Casilla 3.vinculada.4.amount: related party
-              amount 4.'
-            label: 'Casilla 3.vinculada.4.amount: related party amount 4'
-          related-party-importe-5:
-            help: 'Casilla information: Casilla 3.vinculada.5.amount: related party
-              amount 5.'
-            label: 'Casilla 3.vinculada.5.amount: related party amount 5'
-          related-party-ingreso-pago-1:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-ingreso-pago-2:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-ingreso-pago-3:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-ingreso-pago-4:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-ingreso-pago-5:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-location-1:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-location-2:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-location-3:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-location-4:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-location-5:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-metodo-1:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-metodo-2:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-metodo-3:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-metodo-4:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-metodo-5:
-            help: Tax information about tax information in casilla  of Modelo 232.
-            label: Casilla— tax information
-          related-party-name-1:
-            help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
-          related-party-name-2:
-            help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
-          related-party-name-3:
-            help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
-          related-party-name-4:
-            help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
-          related-party-name-5:
-            help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
-          related-party-nif-1:
-            help: 'Casilla information: Casilla 3.vinculada.1.nif: related party nif
-              1.'
-            label: 'Casilla 3.vinculada.1.nif: related party nif 1'
-          related-party-nif-2:
-            help: 'Casilla information: Casilla 3.vinculada.2.nif: related party nif
-              2.'
-            label: 'Casilla 3.vinculada.2.nif: related party nif 2'
-          related-party-nif-3:
-            help: 'Casilla information: Casilla 3.vinculada.3.nif: related party nif
-              3.'
-            label: 'Casilla 3.vinculada.3.nif: related party nif 3'
-          related-party-nif-4:
-            help: 'Casilla information: Casilla 3.vinculada.4.nif: related party nif
-              4.'
-            label: 'Casilla 3.vinculada.4.nif: related party nif 4'
-          related-party-nif-5:
-            help: 'Casilla information: Casilla 3.vinculada.5.nif: related party nif
-              5.'
-            label: 'Casilla 3.vinculada.5.nif: related party nif 5'
-          related-party-tipo-operacion-1:
-            help: 'Casilla information: Casilla 3.vinculada.1.rate-operacion: related
-              party rate operacion 1.'
-            label: 'Casilla 3.vinculada.1.rate-operacion: related party rate operacion
-              1'
-          related-party-tipo-operacion-2:
-            help: 'Casilla information: Casilla 3.vinculada.2.rate-operacion: related
-              party rate operacion 2.'
-            label: 'Casilla 3.vinculada.2.rate-operacion: related party rate operacion
-              2'
-          related-party-tipo-operacion-3:
-            help: 'Casilla information: Casilla 3.vinculada.3.rate-operacion: related
-              party rate operacion 3.'
-            label: 'Casilla 3.vinculada.3.rate-operacion: related party rate operacion
-              3'
-          related-party-tipo-operacion-4:
-            help: 'Casilla information: Casilla 3.vinculada.4.rate-operacion: related
-              party rate operacion 4.'
-            label: 'Casilla 3.vinculada.4.rate-operacion: related party rate operacion
-              4'
-          related-party-tipo-operacion-5:
-            help: 'Casilla information: Casilla 3.vinculada.5.rate-operacion: related
-              party rate operacion 5.'
-            label: 'Casilla 3.vinculada.5.rate-operacion: related party rate operacion
-              5'
-          related-party-tipo-vinculacion-1:
-            help: 'Casilla information: Casilla 3.vinculada.1.rate-vinculacion: related
-              party rate vinculacion 1.'
-            label: 'Casilla 3.vinculada.1.rate-vinculacion: related party rate vinculacion
-              1'
-          related-party-tipo-vinculacion-2:
-            help: 'Casilla information: Casilla 3.vinculada.2.rate-vinculacion: related
-              party rate vinculacion 2.'
-            label: 'Casilla 3.vinculada.2.rate-vinculacion: related party rate vinculacion
-              2'
-          related-party-tipo-vinculacion-3:
-            help: 'Casilla information: Casilla 3.vinculada.3.rate-vinculacion: related
-              party rate vinculacion 3.'
-            label: 'Casilla 3.vinculada.3.rate-vinculacion: related party rate vinculacion
-              3'
-          related-party-tipo-vinculacion-4:
-            help: 'Casilla information: Casilla 3.vinculada.4.rate-vinculacion: related
-              party rate vinculacion 4.'
-            label: 'Casilla 3.vinculada.4.rate-vinculacion: related party rate vinculacion
-              4'
-          related-party-tipo-vinculacion-5:
-            help: 'Casilla information: Casilla 3.vinculada.5.rate-vinculacion: related
-              party rate vinculacion 5.'
-            label: 'Casilla 3.vinculada.5.rate-vinculacion: related party rate vinculacion
-              5'
           tipo-ejercicio-232:
             help: Tax information for casilla of Modelo 232.
-            label: Casilla — tax field
       field:
         official_name: Modelo 232. Informative return of related-party transactions
           and of transactions and situations relating to countries or territories
@@ -395,14 +224,7 @@ modelo:
               help: Field of related-party transaction number 5 declared on modelo
                 232.
               label: Transactions with related persons or entities 5 - Type of relationship
-            x-chim6r1ecdn62p8:
-              help: NACE code of the principal activity
-              label: NACE code of the principal activity
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Accrual year
-              label: Accrual year
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 232.
               label: Financial year type (12 calendar months / 12 months of 365 days
                 / less than 12 months)
           construct:
@@ -566,7 +388,6 @@ modelo:
               help: Accrual year
               label: Accrual tax year
             x-chim6r1eehkn0rpdcll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 232.
               label: Type of tax year (12 calendar months / 12 months of 365 days
                 / fewer than 12 months)
           construct:

@@ -1,26 +1,34 @@
 modelo:
   schema:
     '296':
+      casilla:
+        continuidad:
+          irnr-resumen-base:
+            help: Suma algebraica de les bases de retenció dels registres de perceptor.
+            label: Base de retencions i ingressos a compte
+          irnr-resumen-retenciones:
+            help: Suma de les retencions i ingressos a compte dels registres de perceptor.
+            label: Retencions i ingressos a compte
+          irnr-resumen-retenciones-ingresadas:
+            help: 'Part de les retencions efectivament ingressades: només els perceptors
+              amb clau 3 a 25, i els de clau 1 o 2 amb pagament 1. Pot ser inferior
+              a la casella 03.'
+            label: Retencions i ingressos a compte ingressats
       field:
         official_name: Modelo 296. Impost sobre la Renda de no Residents. No residents
           sense establiment permanent. Declaració anual de retencions i ingressos
           a compte.
         title: IRNR resum anual de retencions i ingressos a compte
       revision:
+        '2023':
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: Model 296 declaració informativa anual de retencions i ingressos
+                  a compte de l'IRNR sense establiment permanent
+          field:
+            label: null
         2024-y-siguientes:
-          casilla:
-            '02':
-              help: Suma algebraica de les bases de retenció dels registres de perceptor.
-              label: Base de retencions i ingressos a compte
-            '03':
-              help: Suma de les retencions i ingressos a compte dels registres de
-                perceptor.
-              label: Retencions i ingressos a compte
-            '04':
-              help: 'Part de les retencions efectivament ingressades: només els perceptors
-                amb clau 3 a 25, i els de clau 1 o 2 amb pagament 1. Pot ser inferior
-                a la casella 03.'
-              label: Retencions i ingressos a compte ingressats
           construct:
             modelo-296-calculation-construct:
               field:

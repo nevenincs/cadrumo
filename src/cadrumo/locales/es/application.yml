@@ -900,6 +900,11 @@ application:
         casilla.id canónico de forma segura.
       calculate_semantic_role_missing: La revisión del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
+      calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
+        corresponde a un selector de declarante de data_type=%{data_type} no numérico
+        que identifica al contribuyente que obtiene los rendimientos, no un importe.
+        Introduce el importe en su propia casilla numérica y reserva esta casilla
+        para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
       calculate_typed_text_input_invalid: El valor de --casilla no es válido para

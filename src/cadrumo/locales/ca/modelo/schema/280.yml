@@ -1,196 +1,107 @@
 modelo:
   schema:
     '280':
+      casilla:
+        continuidad:
+          filing-year:
+            help: 'Consulteu la informació de la casella: Exercici de declaració.'
+            label: Exercici de declaració
+          irpf-declarante-nif:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: NIF del declarant
+          m280-aportaciones-ejercicio:
+            help: 'Consulteu la informació de la casella: Aportacions efectuadas en
+              el exercici.'
+            label: Aportacions efectuades en l'exercici
+          m280-base-retencion-practicada:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: Base de la retenció practicada
+          m280-base-retenciones:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: Base de retencions
+          m280-clave-alta:
+            help: 'Consulteu la informació de la casella: Clave de alta.'
+            label: Clau d'alta
+          m280-declaracion-complementaria-sustitutiva:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: Declaració complementària o substitutiva
+          m280-declarado-nif:
+            help: 'Consulteu la informació de la casella: NIF del declarado.'
+            label: NIF del declarat
+          m280-declarado-nombre:
+            help: 'Consulteu la informació de la casella: Cognoms i nom del declarado.'
+            label: Cognoms i nom del declarat
+          m280-declarante-razon-social:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: Raó social del declarant
+          m280-extincion-plan:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: Extinció del Pla d'Estalvi a Llarg Termini
+          m280-fecha-apertura:
+            help: 'Consulteu la informació de la casella: Data de apertura.'
+            label: Data d'obertura
+          m280-fecha-extincion:
+            help: 'Consulteu la informació de la casella: Data de extincion.'
+            label: Data d'extinció
+          m280-identificador-producto:
+            help: 'Consulteu la informació de la casella: Identificador del producto
+              contratado.'
+            label: Identificador del producte contractat
+          m280-importe-total-aportaciones:
+            help: 'Consulteu la informació de la casella: Import total de aportacions.'
+            label: Import total d'aportacions
+          m280-numero-identificativo-anterior:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: Número identificatiu de la declaració anterior
+          m280-numero-identificativo-declaracion:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: Número identificatiu de la declaració
+          m280-numero-total-declarados:
+            help: Informació fiscal de la casella del Modelo 280.
+            label: Nombre total de declarats
+          m280-persona-relacion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: Persona amb qui relacionar-se
+          m280-rendimientos-negativos-acumulados:
+            help: 'Consulteu la informació de la casella: Rendiments negativos acumulados.'
+            label: Rendiments negatius acumulats
+          m280-rendimientos-negativos-ejercicio:
+            help: 'Consulteu la informació de la casella: Rendiments negativos obtenidos
+              durante el exercici.'
+            label: Rendiments negatius obtinguts durant l'exercici
+          m280-rendimientos-negativos-imputables:
+            help: 'Consulteu la informació de la casella: Rendiments negativos imputables.'
+            label: Rendiments negatius imputables
+          m280-rendimientos-positivos-acumulados:
+            help: 'Consulteu la informació de la casella: Rendiments positivos acumulados.'
+            label: Rendiments positius acumulats
+          m280-rendimientos-positivos-ejercicio:
+            help: 'Consulteu la informació de la casella: Rendiments positivos obtenidos
+              durante el exercici.'
+            label: Rendiments positius obtinguts durant l'exercici
+          m280-representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: NIF del representant legal
+          m280-tipo-identificador:
+            help: 'Consulteu la informació de la casella: Tipus de identificador.'
+            label: Tipus d'identificador
+          m280-tipo-plan-ahorro:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              280.
+            label: Tipus de Pla d'Estalvi a Llarg Termini
       field:
         official_name: Modelo 280. Declaració informativa anual de Plans d'Estalvi
           a Llarg Termini.
         title: Declaració informativa anual de Plans d'Estalvi a Llarg Termini
       revision:
         2022-2024:
-          casilla:
-            aportaciones-ejercicio:
-              help: 'Consulteu la informació de la casella: Aportacions efectuadas
-                en el exercici.'
-              label: Aportacions efectuades en l'exercici
-            base-retencion-practicada:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Base de la retenció practicada
-            base-retenciones:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Base de retencions
-            clave-alta:
-              help: 'Consulteu la informació de la casella: Clave de alta.'
-              label: Clau d'alta
-            declaracion-complementaria-sustitutiva:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Declaració complementària o substitutiva
-            declarado-nif:
-              help: 'Consulteu la informació de la casella: NIF del declarado.'
-              label: NIF del declarat
-            declarado-nombre:
-              help: 'Consulteu la informació de la casella: Cognoms i nom del declarado.'
-              label: Cognoms i nom del declarat
-            declarante-nif:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: NIF del declarant
-            declarante-razon-social:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Raó social del declarant
-            ejercicio-declaracion:
-              help: 'Consulteu la informació de la casella: Exercici de declaració.'
-              label: Exercici de declaració
-            extincion-plan:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Extinció del Pla d'Estalvi a Llarg Termini
-            fecha-apertura:
-              help: 'Consulteu la informació de la casella: Data de apertura.'
-              label: Data d'obertura
-            fecha-extincion:
-              help: 'Consulteu la informació de la casella: Data de extincion.'
-              label: Data d'extinció
-            identificador-producto:
-              help: 'Consulteu la informació de la casella: Identificador del producto
-                contratado.'
-              label: Identificador del producte contractat
-            importe-total-aportaciones:
-              help: 'Consulteu la informació de la casella: Import total de aportacions.'
-              label: Import total d'aportacions
-            numero-identificativo-anterior:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Número identificatiu de la declaració anterior
-            numero-identificativo-declaracion:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Número identificatiu de la declaració
-            numero-total-declarados:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Nombre total de declarats
-            persona-relacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Persona amb qui relacionar-se
-            rendimientos-negativos-acumulados:
-              help: 'Consulteu la informació de la casella: Rendiments negativos acumulados.'
-              label: Rendiments negatius acumulats
-            rendimientos-negativos-ejercicio:
-              help: 'Consulteu la informació de la casella: Rendiments negativos obtenidos
-                durante el exercici.'
-              label: Rendiments negatius obtinguts durant l'exercici
-            rendimientos-negativos-imputables:
-              help: 'Consulteu la informació de la casella: Rendiments negativos imputables.'
-              label: Rendiments negatius imputables
-            rendimientos-positivos-acumulados:
-              help: 'Consulteu la informació de la casella: Rendiments positivos acumulados.'
-              label: Rendiments positius acumulats
-            rendimientos-positivos-ejercicio:
-              help: 'Consulteu la informació de la casella: Rendiments positivos obtenidos
-                durante el exercici.'
-              label: Rendiments positius obtinguts durant l'exercici
-            representante-legal-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: NIF del representant legal
-            tipo-identificador:
-              help: 'Consulteu la informació de la casella: Tipus de identificador.'
-              label: Tipus d'identificador
-            tipo-plan-ahorro:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Tipus de Pla d'Estalvi a Llarg Termini
+          field:
+            label: null
         '2025':
-          casilla:
-            aportaciones-ejercicio:
-              help: 'Consulteu la informació de la casella: Aportacions efectuadas
-                en el exercici.'
-              label: Aportacions efectuades en l'exercici
-            base-retencion-practicada:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Base de la retenció practicada
-            base-retenciones:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Base de retencions
-            clave-alta:
-              help: 'Consulteu la informació de la casella: Clave de alta.'
-              label: Clau d'alta
-            declaracion-complementaria-sustitutiva:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Declaració complementària o substitutiva
-            declarado-nif:
-              help: 'Consulteu la informació de la casella: NIF del declarado.'
-              label: NIF del declarat
-            declarado-nombre:
-              help: 'Consulteu la informació de la casella: Cognoms i nom del declarado.'
-              label: Cognoms i nom del declarat
-            declarante-nif:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: NIF del declarant
-            declarante-razon-social:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Raó social del declarant
-            ejercicio-declaracion:
-              help: 'Consulteu la informació de la casella: Exercici de declaració.'
-              label: Exercici de declaració
-            extincion-plan:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Extinció del Pla d'Estalvi a Llarg Termini
-            fecha-apertura:
-              help: 'Consulteu la informació de la casella: Data de apertura.'
-              label: Data d'obertura
-            fecha-extincion:
-              help: 'Consulteu la informació de la casella: Data de extincion.'
-              label: Data d'extinció
-            identificador-producto:
-              help: 'Consulteu la informació de la casella: Identificador del producto
-                contratado.'
-              label: Identificador del producte contractat
-            importe-total-aportaciones:
-              help: 'Consulteu la informació de la casella: Import total de aportacions.'
-              label: Import total d'aportacions
-            numero-identificativo-anterior:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Número identificatiu de la declaració anterior
-            numero-identificativo-declaracion:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Número identificatiu de la declaració
-            numero-total-declarados:
-              help: Informació fiscal de la casella del Modelo 280.
-              label: Nombre total de declarats
-            persona-relacion:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Persona amb qui relacionar-se
-            rendimientos-negativos-acumulados:
-              help: 'Consulteu la informació de la casella: Rendiments negativos acumulados.'
-              label: Rendiments negatius acumulats
-            rendimientos-negativos-ejercicio:
-              help: 'Consulteu la informació de la casella: Rendiments negativos obtenidos
-                durante el exercici.'
-              label: Rendiments negatius obtinguts durant l'exercici
-            rendimientos-negativos-imputables:
-              help: 'Consulteu la informació de la casella: Rendiments negativos imputables.'
-              label: Rendiments negatius imputables
-            rendimientos-positivos-acumulados:
-              help: 'Consulteu la informació de la casella: Rendiments positivos acumulados.'
-              label: Rendiments positius acumulats
-            rendimientos-positivos-ejercicio:
-              help: 'Consulteu la informació de la casella: Rendiments positivos obtenidos
-                durante el exercici.'
-              label: Rendiments positius obtinguts durant l'exercici
-            representante-legal-nif:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: NIF del representant legal
-            tipo-identificador:
-              help: 'Consulteu la informació de la casella: Tipus de identificador.'
-              label: Tipus d'identificador
-            tipo-plan-ahorro:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                280.
-              label: Tipus de Pla d'Estalvi a Llarg Termini
           field:
             label: Casella— informació fiscal

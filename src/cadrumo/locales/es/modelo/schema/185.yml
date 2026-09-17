@@ -4,36 +4,22 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'Consulte la información correspondiente a la casilla: Ejercicio
-              al que se refiere la declaración.'
-            label: Casilla— ejercicio fiscal
+            help: Ejercicio fiscal al que se refiere la declaración, con cuatro cifras.
+            label: Ejercicio al que se refiere la declaración
           tipo-declaracion:
-            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
-              (originaria / sustitutiva / complementaria).'
-            label: 'Casilla tipo-declaración: tipo declaración'
+            help: 'Carácter de la declaración: originaria, sustitutiva de otra presentada
+              antes, o complementaria que añade datos omitidos.'
+            label: Tipo de declaración (originaria / sustitutiva / complementaria)
       field:
         official_name: Modelo 185. Declaración informativa mensual de cotizaciones
           de afiliados y mutualistas.
         title: Declaración informativa mensual de cotizaciones de afiliados y mutualistas
       revision:
         2003-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Ejercicio fiscal al que se refiere la declaración, con cuatro
-                cifras.
-              label: Ejercicio al que se refiere la declaración
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Carácter de la declaración: originaria, sustitutiva de otra presentada
-                antes, o complementaria que añade datos omitidos.'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 185 (orden-hac-96-2003), ejercicios 2003 a 2025
         2025-y-siguientes:
           casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la declaración.'
-              label: Ejercicio al que se refiere la declaración
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Número identificativo secuencial de esta declaración, de 13 posiciones
                 numéricas.
@@ -42,10 +28,6 @@ modelo:
               help: Mes natural al que corresponde la declaración, de 01 enero a 12
                 diciembre.
               label: PERÍODO
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Consulte la información correspondiente a la casilla: Tipo de
-                declaración (originaria / sustitutiva / complementaria).'
-              label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Número total de declarados incluidos para este declarante, es
                 decir, de registros de tipo 2.

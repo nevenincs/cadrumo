@@ -5,7 +5,44 @@ modelo:
         continuidad:
           '25':
             help: Tax information about tax information in casilla 25 of Modelo 202.
-            label: Casilla 25 — tax information
+            label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+              rate 2
+          importe-bonificacion-art-26-ley-19-1994:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount corresponding to the allowance
+              under art. 26 of Law 19/1994
+          importe-bonificacion-art-34-lis:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount of the allowance under art.
+              34 LIS
+          importe-excluido-aumento-capital-art-17-2-lis:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+          importe-excluido-quita-espera:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount excluded for debt-relief or
+              deferral arrangements
+          importe-integrado-base-imponible-quita-espera:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Part integrated into the tax base
+              for debt-relief or deferral arrangements
+          importe-integrado-cuota-quita-espera-cooperativas:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+          importe-no-computable-regimen-zec:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount not countable through application
+              of the ZEC tax regime
+          importe-reserva-inversiones-canarias:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount corresponding to the Canary
+              Islands investment reserve
           is-pf-mod-40-2-a-ingresar:
             help: 'Review the casilla information: Mod. 40.2 LIS - A ingresar.'
             label: Method under art. 40.2 LIS - Payable
@@ -73,7 +110,8 @@ modelo:
               LIS (cooperatives)
           is-pf-mod-40-3-b2-importe-pago-fraccionado:
             help: Tax information about tax information in casilla 22 of Modelo 202.
-            label: Casilla 22 — tax information
+            label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
+              rate 1
           is-pf-mod-40-3-b2-porcentaje-1:
             help: 'Review the casilla information: Mod. 40.3 LIS B2 - Percentage 1.'
             label: Method under art. 40.3 LIS, block B2 - Percentage 1
@@ -167,6 +205,19 @@ modelo:
             help: Tax information about tax information in casilla 29 of Modelo 202.
             label: Method under art. 40.3 LIS - Volume of transactions in Common Territory
               (%)
+          minoracion-rentas-bonificacion-art-33-lis:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Amount of the reduction for income
+              entitled to the allowance under art. 33 LIS
+          renta-exenta-cap-xiv-tit-vii-lis:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+          rentas-reversion-deterioros-integradas-base-imponible:
+            help: Amount declared in the additional-information block of the instalment
+              payment settlement.
+            label: Additional information (5) - Income from reversal of impairments
+              integrated into the tax base
           retenciones-ingresos-a-cuenta:
             help: Tax information for casilla 28 of Modelo 202.
             label: Method under art. 40.3 LIS - Withholdings and payments on account
@@ -179,240 +230,17 @@ modelo:
       revision:
         2019-2022:
           casilla:
-            '01':
-              help: Method under art. 40.2 LIS - Instalment payment base
-              label: Method under art. 40.2 LIS - Instalment payment base
-            '02':
-              help: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-            '03':
-              help: Method under art. 40.2 LIS - Payable
-              label: Method under art. 40.2 LIS - Payable
-            '04':
-              help: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-              label: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-            '05':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-            '06':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-            '07':
-              help: Method under art. 40.3 LIS - Other adjustments - Increases
-              label: Method under art. 40.3 LIS - Other adjustments - Increases
-            08:
-              help: Method under art. 40.3 LIS - Other adjustments - Decreases
-              label: Method under art. 40.3 LIS - Other adjustments - Decreases
-            '13':
-              help: Method under art. 40.3 LIS - Preliminary taxable base
-              label: Method under art. 40.3 LIS - Preliminary taxable base
-            '14':
-              help: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-              label: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-            '16':
-              help: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-            '17':
-              help: Method under art. 40.3 LIS, block B1 - General case - Percentage
-              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
-            '18':
-              help: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-            '19':
-              help: Method under art. 40.3 LIS, block B2 - Instalment payment base
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
-            '20':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 1
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
-            '21':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 1
-              label: Method under art. 40.3 LIS, block B2 - Percentage 1
-            '22':
-              help: Tax information about tax information in casilla 22 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 1
-            '23':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 2
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
-            '24':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 2
-              label: Method under art. 40.3 LIS, block B2 - Percentage 2
-            '25':
-              help: Tax information about tax information in casilla 25 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 2
-            '26':
-              help: Method under art. 40.3 LIS, block B2 - Preliminary result
-              label: Method under art. 40.3 LIS, block B2 - Preliminary result
-            '27':
-              help: Method under art. 40.3 LIS - Tax credits for the computed period
-              label: Method under art. 40.3 LIS - Tax credits for the computed period
-            '28':
-              help: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-              label: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-            '29':
-              help: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-              label: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-            '30':
-              help: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-              label: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-            '31':
-              help: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-            '32':
-              help: Method under art. 40.3 LIS - Result
-              label: Method under art. 40.3 LIS - Result
-            '33':
-              help: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-            '34':
-              help: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-            '37':
-              help: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-            '38':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-            '39':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-            '40':
-              help: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-            '42':
-              help: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-            '44':
-              help: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-            '45':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-            '46':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-            '47':
-              help: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
-                LIS
-              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
-                11.12 LIS
-            '48':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-            '49':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-            '50':
-              help: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
-                LIS (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
-                11.12 LIS (cooperatives)
-            '51':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-            '52':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the allowance under art.
-                34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the allowance
-                under art. 26 of Law 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount excluded for capital or equity
                 increases by set-off of claims not integrated into the tax base (art.
                 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount excluded for debt-relief
-                or deferral arrangements
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Part integrated into the tax base
-                for debt-relief or deferral arrangements
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Part integrated into the tax base
                 at liability level for debt-relief or deferral arrangements (cooperatives
                 only)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the reduction for income
-                entitled to the allowance under art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount not countable through application
-                of the ZEC tax regime
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount of exempt income of entities
                 applying the special tax regime of Chapter XIV of Title VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Income from reversal of impairments
-                integrated into the tax base
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the Canary
-                Islands investment reserve
           construct:
             modelo-202-foundation:
               field:
@@ -421,240 +249,17 @@ modelo:
             label: Casilla— tax information
         2023-2024:
           casilla:
-            '01':
-              help: Method under art. 40.2 LIS - Instalment payment base
-              label: Method under art. 40.2 LIS - Instalment payment base
-            '02':
-              help: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-            '03':
-              help: Method under art. 40.2 LIS - Payable
-              label: Method under art. 40.2 LIS - Payable
-            '04':
-              help: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-              label: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-            '05':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-            '06':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-            '07':
-              help: Method under art. 40.3 LIS - Other adjustments - Increases
-              label: Method under art. 40.3 LIS - Other adjustments - Increases
-            08:
-              help: Method under art. 40.3 LIS - Other adjustments - Decreases
-              label: Method under art. 40.3 LIS - Other adjustments - Decreases
-            '13':
-              help: Method under art. 40.3 LIS - Preliminary taxable base
-              label: Method under art. 40.3 LIS - Preliminary taxable base
-            '14':
-              help: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-              label: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-            '16':
-              help: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-            '17':
-              help: Method under art. 40.3 LIS, block B1 - General case - Percentage
-              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
-            '18':
-              help: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-            '19':
-              help: Method under art. 40.3 LIS, block B2 - Instalment payment base
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
-            '20':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 1
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
-            '21':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 1
-              label: Method under art. 40.3 LIS, block B2 - Percentage 1
-            '22':
-              help: Tax information about tax information in casilla 22 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 1
-            '23':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 2
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
-            '24':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 2
-              label: Method under art. 40.3 LIS, block B2 - Percentage 2
-            '25':
-              help: Tax information about tax information in casilla 25 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 2
-            '26':
-              help: Method under art. 40.3 LIS, block B2 - Preliminary result
-              label: Method under art. 40.3 LIS, block B2 - Preliminary result
-            '27':
-              help: Method under art. 40.3 LIS - Tax credits for the computed period
-              label: Method under art. 40.3 LIS - Tax credits for the computed period
-            '28':
-              help: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-              label: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-            '29':
-              help: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-              label: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-            '30':
-              help: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-              label: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-            '31':
-              help: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-            '32':
-              help: Method under art. 40.3 LIS - Result
-              label: Method under art. 40.3 LIS - Result
-            '33':
-              help: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-            '34':
-              help: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-            '37':
-              help: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-            '38':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-            '39':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-            '40':
-              help: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-            '42':
-              help: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-            '44':
-              help: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-            '45':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-            '46':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-            '47':
-              help: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
-                LIS
-              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
-                11.12 LIS
-            '48':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-            '49':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-            '50':
-              help: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
-                LIS (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
-                11.12 LIS (cooperatives)
-            '51':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-            '52':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the allowance under art.
-                34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the allowance
-                under art. 26 of Law 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount excluded for capital or equity
                 increases by set-off of claims not integrated into the tax base (art.
                 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount excluded for debt-relief
-                or deferral arrangements
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Part integrated into the tax base
-                for debt-relief or deferral arrangements
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Part integrated into the tax base
                 at liability level for debt-relief or deferral arrangements (cooperatives
                 only)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the reduction for income
-                entitled to the allowance under art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount not countable through application
-                of the ZEC tax regime
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount of exempt income of entities
                 applying the special tax regime of Chapter XIV of Title VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Income from reversal of impairments
-                integrated into the tax base
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the Canary
-                Islands investment reserve
           construct:
             modelo-202-foundation:
               field:
@@ -663,183 +268,6 @@ modelo:
             label: Casilla— tax information
         2025-y-siguientes:
           casilla:
-            '01':
-              help: Method under art. 40.2 LIS - Instalment payment base
-              label: Method under art. 40.2 LIS - Instalment payment base
-            '02':
-              help: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
-            '03':
-              help: Method under art. 40.2 LIS - Payable
-              label: Method under art. 40.2 LIS - Payable
-            '04':
-              help: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-              label: Method under art. 40.3 LIS - Accounting result after corporate
-                income tax
-            '05':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Increases
-            '06':
-              help: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-              label: Method under art. 40.3 LIS - Corporate income tax adjustments
-                - Decreases
-            '07':
-              help: Method under art. 40.3 LIS - Other adjustments - Increases
-              label: Method under art. 40.3 LIS - Other adjustments - Increases
-            08:
-              help: Method under art. 40.3 LIS - Other adjustments - Decreases
-              label: Method under art. 40.3 LIS - Other adjustments - Decreases
-            '13':
-              help: Method under art. 40.3 LIS - Preliminary taxable base
-              label: Method under art. 40.3 LIS - Preliminary taxable base
-            '14':
-              help: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-              label: Method under art. 40.3 LIS - Offset of negative bases from prior
-                tax years
-            '16':
-              help: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
-                payment base
-            '17':
-              help: Method under art. 40.3 LIS, block B1 - General case - Percentage
-              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
-            '18':
-              help: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
-                result
-            '19':
-              help: Method under art. 40.3 LIS, block B2 - Instalment payment base
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
-            '20':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 1
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
-            '21':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 1
-              label: Method under art. 40.3 LIS, block B2 - Percentage 1
-            '22':
-              help: Tax information about tax information in casilla 22 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 1
-            '23':
-              help: Method under art. 40.3 LIS, block B2 - Base at rate 2
-              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
-            '24':
-              help: Method under art. 40.3 LIS, block B2 - Percentage 2
-              label: Method under art. 40.3 LIS, block B2 - Percentage 2
-            '25':
-              help: Tax information about tax information in casilla 25 of Modelo
-                202.
-              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
-                rate 2
-            '26':
-              help: Method under art. 40.3 LIS, block B2 - Preliminary result
-              label: Method under art. 40.3 LIS, block B2 - Preliminary result
-            '27':
-              help: Method under art. 40.3 LIS - Tax credits for the computed period
-              label: Method under art. 40.3 LIS - Tax credits for the computed period
-            '28':
-              help: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-              label: Method under art. 40.3 LIS - Withholdings and payments on account
-                on income for the computed period
-            '29':
-              help: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-              label: Method under art. 40.3 LIS - Volume of transactions in Common
-                Territory (%)
-            '30':
-              help: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-              label: Method under art. 40.3 LIS - Instalment payments from prior periods
-                in Common Territory
-            '31':
-              help: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
-            '32':
-              help: Method under art. 40.3 LIS - Result
-              label: Method under art. 40.3 LIS - Result
-            '33':
-              help: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
-                10 million)
-            '34':
-              help: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
-                [32] and [33])
-            '37':
-              help: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
-            '38':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
-            '39':
-              help: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
-            '40':
-              help: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
-                liabilities (cooperatives)
-            '42':
-              help: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
-                liabilities (cooperatives)
-            '44':
-              help: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
-                not applied due to insufficient base
-            '45':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Increases
-            '46':
-              help: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
-                - Decreases
-            '47':
-              help: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
-                LIS
-              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
-                11.12 LIS
-            '48':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Increases
-            '49':
-              help: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
-                - Decreases
-            '50':
-              help: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
-                LIS (cooperatives)
-              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
-                11.12 LIS (cooperatives)
-            '51':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Increases
-            '52':
-              help: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
-              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
-                105 LIS) - Decreases
             '61':
               help: 'Review the casilla information: Mod. 40.3 LIS B2 - Base a rate
                 3.'
@@ -870,63 +298,17 @@ modelo:
               help: 'Review the casilla information: Mod. 40.3 LIS - Correcciones
                 by Impuesto Complementario (IC) - Aumentos.'
               label: Method under art. 40.3 LIS - Top-up Tax (IC) adjustments - Increases
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhdc5p78b9j6gmmoqbj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the allowance under art.
-                34 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn64rred5j6ior1cdkmurhddhinib9h74mj2e9p6gmm2sjk5kp3c:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the allowance
-                under art. 26 of Law 19/1994
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount excluded for capital or equity
                 increases by set-off of claims not integrated into the tax base (art.
                 17.2 LIS)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irbgdtp78p9dcls66r3ld5i6ubbhelkn8o9dclpn0pbic4:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount excluded for debt-relief
-                or deferral arrangements
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm4objckmmirbgdtn6iojcckmn2tb9ehgiqpbje1in4o8:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Part integrated into the tax base
-                for debt-relief or deferral arrangements
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Part integrated into the tax base
                 at liability level for debt-relief or deferral arrangements (cooperatives
                 only)
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6qqbedtp62or9dtn2qsj5dpq62spdc9nmsqb6d5hm2or9dtn2qobiegmj6cpddhkn6:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount of the reduction for income
-                entitled to the allowance under art. 33 LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6srpdcdnmqs3lehgm4r355lp6apr9dlimsbbqclhg:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount not countable through application
-                of the ZEC tax regime
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
               label: Additional information (5) - Amount of exempt income of entities
                 applying the special tax regime of Chapter XIV of Title VII LIS
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgn6bbiclr6asjjd5nmsbb4clq6asj9dtp6uso:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Income from reversal of impairments
-                integrated into the tax base
-            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbjclp7co9dd5n7cpbiedkmurj5ecmm6obec5p6iobj:
-              help: Amount declared in the additional-information block of the instalment
-                payment settlement.
-              label: Additional information (5) - Amount corresponding to the Canary
-                Islands investment reserve
           construct:
             modelo-202-foundation:
               field:

@@ -3,19 +3,40 @@ modelo:
     '151':
       casilla:
         continuidad:
+          contribuyente-fax-domicilio-espana:
+            help: Tax information about tax information in casilla 300-308 of Modelo
+              151.
+            label: Taxpayer. 61 - Fax number.
+          contribuyente-fax-domicilio-extranjero:
+            help: 'Review the casilla information: Taxpayer Address Foreign. 72 -
+              Nº Fax.'
+            label: Taxpayer foreign address. 72 - Fax number
+          cuota-cero:
+            help: 'Review the casilla information: Amount cero.'
+          did-devolucion-swift-bic:
+            help: 'Review the casilla information: Refund. SWIFT-BIC.'
+            label: Refund. SWIFT-BIC
           filing-period:
             help: Tax information for casilla of Modelo 151.
             label: Period (annual, 0A)
           filing-year:
             help: Tax information for casilla of Modelo 151.
             label: Tax year the return refers to
+          impatriado-base-liquidable-ahorro:
+            help: Tax information about tax information in casilla  of Modelo 151.
+            label: 'Savings taxable base (the part of the taxable base from income
+              under TRLIRNR art. 25.1.f: dividends, interest and savings capital gains
+              from Spanish sources)'
           impatriado-base-liquidable-general:
             help: Tax information about tax information in casilla  of Modelo 151.
             label: General taxable base (impatriate regime, excluding the savings
               component under art. 25.1.f TRLIRNR)
           impatriado-cuota-diferencial:
             help: Tax information about tax information in casilla  of Modelo 151.
-            label: Casilla— tax information
+          impatriado-cuota-integra-ahorro:
+            help: Tax information about tax information in casilla  of Modelo 151.
+            label: 'Gross savings tax liability (art. 93.2.e.2º scale: 19/21/23/27/30
+              on the savings taxable base, wording in force per Ley 7/2024)'
           impatriado-cuota-integra-general:
             help: Tax information about tax information in casilla  of Modelo 151.
             label: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
@@ -26,1835 +47,519 @@ modelo:
           m151-44-tipo-de-via:
             help: Tax information about tax information in casilla 317-321 of Modelo
               151.
-            label: Casilla 317-321 — tax information
-          m151-45-nombre-de-la-via-publica:
-            help: Tax information about tax information in casilla 322-371 of Modelo
-              151.
-            label: Casilla 322-371 — tax information
           m151-46-tipo-de-numeracion:
             help: Tax information about tax information in casilla 372-374 of Modelo
               151.
-            label: Casilla 372-374 — tax information
-          m151-47-numero-de-casa:
-            help: Tax information for casilla 375-379 of Modelo 151.
-            label: Casilla 375-379 — tax field
-          m151-48-calificador-de-numero:
-            help: Tax information for casilla 380-382 of Modelo 151.
-            label: Casilla 380-382 — tax field
           m151-49-bloque:
             help: Tax information about tax information in casilla 383-385 of Modelo
               151.
-            label: Casilla 383-385 — tax information
-          m151-50-portal:
-            help: Tax information about tax information in casilla 386-388 of Modelo
-              151.
-            label: Casilla 386-388 — tax information
-          m151-51-escalera:
-            help: Tax information about tax information in casilla 389-391 of Modelo
-              151.
-            label: Casilla 389-391 — tax information
-          m151-52-planta:
-            help: Tax information about tax information in casilla 392-394 of Modelo
-              151.
-            label: Casilla 392-394 — tax information
-          m151-53-puerta:
-            help: Tax information about tax information in casilla 395-397 of Modelo
-              151.
-            label: Casilla 395-397 — tax information
           m151-54-datos-complementarios-de-domicilio:
             help: Tax information about tax information in casilla 398-437 of Modelo
               151.
-            label: Casilla 398-437 — tax information
-          m151-55-localidad-poblacion:
-            help: Tax information about tax information in casilla 438-467 of Modelo
-              151.
-            label: Casilla 438-467 — tax information
-          m151-56-codigo-postal:
-            help: Tax information for casilla 468-472 of Modelo 151.
-            label: Casilla 468-472 — tax field
           m151-57-municipio:
             help: Tax information about tax information in casilla 475-479 of Modelo
               151.
-            label: Casilla 475-479 — tax information
           m151-58-provincia:
             help: Tax information about tax information in casilla 473-474 of Modelo
               151.
-            label: Casilla 473-474 — tax information
-          m151-73-referencia-catastral:
-            help: Tax information about tax information in casilla 480-499 of Modelo
-              151.
-            label: Casilla 480-499 — tax information
-          m151-adquiriente-f-j:
-            help: Tax information about tax information in casilla 236 of Modelo 151.
-            label: Casilla 236 — tax information
-          m151-adquiriente-nif:
-            help: Tax information about tax information in casilla 227-235 of Modelo
-              151.
-            label: Casilla 227-235 — tax information
           m151-cuota-de-participacion:
             help: Tax information about tax information in casilla 222-226 of Modelo
               151.
-            label: Casilla 222-226 — tax information
-          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
-            help: Tax information about tax information in casilla 479 of Modelo 151.
-            label: Casilla 479 — tax information
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
-            help: Tax information about tax information in casilla 469-473 of Modelo
-              151.
-            label: Casilla 469-473 — tax information
+            help: 'Tax information about tax information in casilla 469-473 of Modelo
+              151 References: [10].'
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
-            help: Tax information about tax information in casilla 481-500 of Modelo
-              151.
-            label: Casilla 481-500 — tax information
-          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
-            help: Tax information about tax information in casilla 480 of Modelo 151.
-            label: Casilla 480 — tax information
+            help: 'Tax information about tax information in casilla 481-500 of Modelo
+              151 References: [14].'
           m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
-            help: Tax information about tax information in casilla 474-478 of Modelo
-              151.
-            label: Casilla 474-478 — tax information
-          m151-datos-adicionales-rendimiento-trabajo-impuesto-satisfecho-en-el-extranjero-9:
-            help: Tax information about tax information in casilla 452-468 of Modelo
-              151.
-            label: Casilla 452-468 — tax information
-          m151-datos-adicionales-rendimiento-trabajo-rendimiento-integro-obtenido-y-gravado-en-el-extranjero-8:
-            help: Tax information about tax information in casilla 435-451 of Modelo
-              151.
-            label: Casilla 435-451 — tax information
+            help: 'Tax information about tax information in casilla 474-478 of Modelo
+              151 References: [11].'
           m151-descripcion-de-la-ganancia-patrimonial:
             help: Tax information for casilla 15-114 of Modelo 151.
-            label: Casilla 15-114 — tax field
           m151-descripcion-del-elemento-patrimonial:
             help: Tax information for casilla 15-114 of Modelo 151.
-            label: Casilla 15-114 — tax field
-          m151-diferencia-4:
-            help: Tax information about tax information in casilla 165-181 of Modelo
-              151.
-            label: Casilla 165-181 — tax information
-          m151-diferencia-adquisicion-4:
-            help: Tax information about tax information in casilla 62-78 of Modelo
-              151.
-            label: Casilla 62-78 — tax information
-          m151-diferencia-mejora-o-2a-adquisicion-8:
-            help: Tax information about tax information in casilla 130-146 of Modelo
-              151.
-            label: Casilla 130-146 — tax information
           m151-documento-publico-o-privado:
             help: Tax information about tax information in casilla 500 of Modelo 151.
-            label: Casilla 500 — tax information
           m151-fecha-de-adquisicion:
             help: Tax information about tax information in casilla 123-130 of Modelo
               151.
-            label: Casilla 123-130 — tax information
           m151-fecha-de-mejora-o-2a-adquisicion:
             help: Tax information about tax information in casilla 206-213 of Modelo
               151.
-            label: Casilla 206-213 — tax information
           m151-fecha-de-transmision:
             help: Tax information about tax information in casilla 115-122 of Modelo
               151.
-            label: Casilla 115-122 — tax information
-          m151-ganancia-o-perdida-adquisicion-5:
-            help: Tax information about tax information in casilla 79-95 of Modelo
-              151.
-            label: Casilla 79-95 — tax information
-          m151-ganancia-o-perdida-mejora-o-2a-adquisicion-9:
-            help: Tax information about tax information in casilla 147-163 of Modelo
-              151.
-            label: Casilla 147-163 — tax information
-          m151-ganancia-patrimonial-2:
-            help: Tax information about tax information in casilla 179-195 of Modelo
-              151.
-            label: Casilla 179-195 — tax information
-          m151-ganancia-patrimonial-3:
-            help: Tax information about tax information in casilla 116-132 of Modelo
-              151.
-            label: Casilla 116-132 — tax information
-          m151-ganancia-patrimonial-5:
-            help: Tax information about tax information in casilla 182-198 of Modelo
-              151.
-            label: Casilla 182-198 — tax information
           m151-ganancia-patrimonial-total-obtenida-10:
-            help: Tax information about tax information in casilla 164-180 of Modelo
-              151.
-            label: Casilla 164-180 — tax information
-          m151-ingresos-a-cuenta-4:
-            help: Tax information about tax information in casilla 33-49 of Modelo
-              151.
-            label: Casilla 33-49 — tax information
-          m151-ingresos-a-cuenta-repercutidos-5:
-            help: Tax information about tax information in casilla 50-66 of Modelo
-              151.
-            label: Casilla 50-66 — tax information
-          m151-naturaleza-2:
-            help: Tax information about tax information in casilla 15-15 of Modelo
-              151.
-            label: Casilla 15-15 — tax information
+            help: 'Tax information about tax information in casilla 164-180 of Modelo
+              151 References: [10].'
+            label: Total capital gain obtained [10]
           m151-nif-de-la-sociedad-o-fondo-de-inversion:
             help: Tax information about tax information in casilla 170-178 of Modelo
               151.
-            label: Casilla 170-178 — tax information
           m151-notario-o-fedetario:
             help: Tax information about tax information in casilla 501-600 of Modelo
               151.
-            label: Casilla 501-600 — tax information
-          m151-numero-de-protocolo:
-            help: Tax information for casilla 601-620 of Modelo 151.
-            label: Casilla 601-620 — tax field
-          m151-numero-justificante-del-modelo-211:
-            help: Tax information for casilla 15-27 of Modelo 151.
-            label: Casilla 15-27 — tax field
-          m151-pagador-f-j:
-            help: Tax information about tax information in casilla 110 of Modelo 151.
-            label: Casilla 110 — tax information
-          m151-pagador-nif:
-            help: Tax information about tax information in casilla 101-109 of Modelo
-              151.
-            label: Casilla 101-109 — tax information
-          m151-rendimiento-integro-6:
-            help: Tax information about tax information in casilla 67-83 of Modelo
-              151.
-            label: Casilla 67-83 — tax information
-          m151-rendimiento-integro-renta-inmobiliaria-imputada-6:
-            help: Tax information about tax information in casilla 67-83 of Modelo
-              151.
-            label: Casilla 67-83 — tax information
-          m151-rentencion-o-ingreso-a-cuenta-3:
-            help: Tax information about tax information in casilla 196-212 of Modelo
-              151.
-            label: Casilla 196-212 — tax information
-          m151-rentencion-o-ingreso-a-cuenta-7:
-            help: Tax information about tax information in casilla 84-100 of Modelo
-              151.
-            label: Casilla 84-100 — tax information
-          m151-resto-rentencion-o-ingreso-a-cuenta-7:
-            help: Tax information about tax information in casilla 1006-1022 of Modelo
-              151.
-            label: Casilla 1006-1022 — tax information
           m151-retencion-o-ingreso-a-cuenta-11:
-            help: Tax information about tax information in casilla 181-197 of Modelo
-              151.
-            label: Casilla 181-197 — tax information
-          m151-retencion-o-ingreso-a-cuenta-4:
-            help: Tax information about tax information in casilla 133-149 of Modelo
-              151.
-            label: Casilla 133-149 — tax information
-          m151-tipo-de-renta-1:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          m151-total-retenciones-o-ingresos-a-cuenta-9:
-            help: Tax information about tax information in casilla 856-872 of Modelo
-              151.
-            label: Casilla 856-872 — tax information
-          m151-valor-de-adquisicion-3:
-            help: Tax information about tax information in casilla 148-164 of Modelo
-              151.
-            label: Casilla 148-164 — tax information
-          m151-valor-de-adquisicion-adquisicion-3:
-            help: Tax information about tax information in casilla 45-61 of Modelo
-              151.
-            label: Casilla 45-61 — tax information
-          m151-valor-de-mejora-o-2a-adquisicion-mejora-o-2a-adquisicion-7:
-            help: Tax information about tax information in casilla 721-737 of Modelo
-              151.
-            label: Casilla 721-737 — tax information
-          m151-valor-de-transmision-2:
-            help: Tax information about tax information in casilla 131-147 of Modelo
-              151.
-            label: Casilla 131-147 — tax information
-          m151-valor-de-transmision-adquisicion-2:
-            help: Tax information about tax information in casilla 28-44 of Modelo
-              151.
-            label: Casilla 28-44 — tax information
-          m151-valor-de-transmision-mejora-o-2a-adquisicion-6:
-            help: Tax information about tax information in casilla 96-112 of Modelo
-              151.
-            label: Casilla 96-112 — tax information
-          m151-valoracion-3:
-            help: Tax information about tax information in casilla 16-32 of Modelo
-              151.
-            label: Casilla 16-32 — tax information
+            help: 'Tax information about tax information in casilla 181-197 of Modelo
+              151 References: [11].'
+            label: Withholding or payment on account [11]
           p01-asignacion-de-cantidades-a-fines-sociales:
             help: Tax information for casilla 925 of Modelo 151.
-            label: Casilla 925 — tax field
           p01-asignacion-tributaria-a-la-iglesia-catolica:
             help: Tax information for casilla 924 of Modelo 151.
-            label: Casilla 924 — tax field
           p01-comunidad-autonoma-de-e-el-ejercicio-indicado:
             help: Tax information for casilla 922-923 of Modelo 151.
-            label: Casilla 922-923 — tax field
           p01-contribuyente-44-tipo-de-via:
             help: Tax information about tax information in casilla 119-123 of Modelo
               151.
-            label: Casilla 119-123 — tax information
-          p01-contribuyente-45-nombre-de-la-via-publica:
-            help: Tax information about tax information in casilla 124-173 of Modelo
-              151.
-            label: Casilla 124-173 — tax information
           p01-contribuyente-46-tipo-de-numeracion:
             help: Tax information about tax information in casilla 174-176 of Modelo
               151.
-            label: Casilla 174-176 — tax information
           p01-contribuyente-47-numero-de-casa:
             help: Tax information about tax information in casilla 177-181 of Modelo
               151.
-            label: Casilla 177-181 — tax information
           p01-contribuyente-48-calificador-de-numero:
             help: Tax information about tax information in casilla 182-184 of Modelo
               151.
-            label: Casilla 182-184 — tax information
           p01-contribuyente-49-bloque:
             help: Tax information about tax information in casilla 185-187 of Modelo
               151.
-            label: Casilla 185-187 — tax information
-          p01-contribuyente-50-portal:
-            help: Tax information about tax information in casilla 188-190 of Modelo
-              151.
-            label: Casilla 188-190 — tax information
-          p01-contribuyente-51-escalera:
-            help: Tax information about tax information in casilla 191-193 of Modelo
-              151.
-            label: Casilla 191-193 — tax information
-          p01-contribuyente-52-planta:
-            help: Tax information about tax information in casilla 194-196 of Modelo
-              151.
-            label: Casilla 194-196 — tax information
-          p01-contribuyente-53-puerta:
-            help: Tax information about tax information in casilla 197-199 of Modelo
-              151.
-            label: Casilla 197-199 — tax information
           p01-contribuyente-54-datos-ementarios-de-domicilio:
             help: Tax information about tax information in casilla 200-239 of Modelo
               151.
-            label: Casilla 200-239 — tax information
-          p01-contribuyente-55-localidad-poblacion:
-            help: Tax information about tax information in casilla 240-269 of Modelo
+          p01-contribuyente-57-codigo-de-municipio:
+            help: Tax information about tax information in casilla 277-281 of Modelo
               151.
-            label: Casilla 240-269 — tax information
-          p01-contribuyente-59-telefono-fijo:
-            help: Tax information about tax information in casilla 282-290 of Modelo
-              151.
-            label: Casilla 282-290 — tax information
-          p01-contribuyente-60-telefono-movil:
-            help: Tax information about tax information in casilla 291-299 of Modelo
-              151.
-            label: Casilla 291-299 — tax information
+            label: Taxpayer. 57 - Municipality code.
           p01-contribuyente-cambio-de-domicilio:
             help: Tax information about tax information in casilla 118 of Modelo 151.
-            label: Casilla 118 — tax information
           p01-contribuyente-datos-ad-al-referencia-catastral:
             help: Tax information about tax information in casilla 623-642 of Modelo
               151.
-            label: Casilla 623-642 — tax information
           p01-contribuyente-datos-ad-enda-actual-titularidad:
             help: Tax information about tax information in casilla 616 of Modelo 151.
-            label: Casilla 616 — tax information
           p01-contribuyente-datos-ad-orcentaje-participacion:
             help: Tax information about tax information in casilla 617-621 of Modelo
               151.
-            label: Casilla 617-621 — tax information
           p01-contribuyente-datos-ad-vienda-actual-situacion:
             help: Tax information about tax information in casilla 622 of Modelo 151.
-            label: Casilla 622 — tax information
-          p01-contribuyente-domicili-anjero-70-telefono-fijo:
-            help: Tax information about tax information in casilla 571-585 of Modelo
-              151.
-            label: Casilla 571-585 — tax information
-          p01-contribuyente-domicili-ero-64-poblacion-ciudad:
-            help: Tax information about tax information in casilla 399-428 of Modelo
-              151.
-            label: Casilla 399-428 — tax information
-          p01-contribuyente-domicili-extranjero-62-domicilio:
-            help: Tax information about tax information in casilla 309-358 of Modelo
-              151.
-            label: Casilla 309-358 — tax information
-          p01-contribuyente-domicili-mplementarios-domicilio:
-            help: Tax information about tax information in casilla 359-398 of Modelo
-              151.
-            label: Casilla 359-398 — tax information
-          p01-contribuyente-domicili-njero-71-telefono-movil:
-            help: Tax information about tax information in casilla 586-600 of Modelo
-              151.
-            label: Casilla 586-600 — tax information
           p01-contribuyente-domicili-provincia-region-estado:
             help: Tax information about tax information in casilla 539-568 of Modelo
               151.
-            label: Casilla 539-568 — tax information
-          p01-contribuyente-domicili-ro-66-codigo-postal-zip:
-            help: Tax information about tax information in casilla 529-538 of Modelo
-              151.
-            label: Casilla 529-538 — tax information
-          p01-contribuyente-domicilio-extranjero-65-email:
-            help: Tax information about tax information in casilla 429-528 of Modelo
-              151.
-            label: Casilla 429-528 — tax information
-          p01-contribuyente-domicilio-extranjero-68-pais:
-            help: Tax information about tax information in casilla 569-570 of Modelo
-              151.
-            label: Casilla 569-570 — tax information
           p01-contribuyente-fecha-de-nacimiento:
             help: Tax information about tax information in casilla 110-117 of Modelo
               151.
-            label: Casilla 110-117 — tax information
-          p01-contribuyente-sexo:
-            help: Tax information about tax information in casilla 109 of Modelo 151.
-            label: Casilla 109 — tax information
-          p01-declaracion-complementaria:
-            help: Tax information about tax information in casilla 926 of Modelo 151.
-            label: Casilla 926 — tax information
-          p01-declaracion-complementaria-2:
-            help: Tax information about tax information in casilla 927 of Modelo 151.
-            label: Casilla 927 — tax information
-          p01-numero-de-justificante:
-            help: Tax information for casilla 928-940 of Modelo 151.
-            label: Casilla 928-940 — tax field
+          p01-devengo-periodo:
+            help: Tax information for casilla 107-108 of Modelo 151.
+            label: Accrual - period
           p01-representante-44-tipo-de-via:
             help: Tax information about tax information in casilla 732-736 of Modelo
               151.
-            label: Casilla 732-736 — tax information
-          p01-representante-45-nombre-de-la-via-publica:
-            help: Tax information about tax information in casilla 737-786 of Modelo
-              151.
-            label: Casilla 737-786 — tax information
           p01-representante-46-tipo-de-numeracion:
             help: Tax information about tax information in casilla 787-789 of Modelo
               151.
-            label: Casilla 787-789 — tax information
           p01-representante-47-numero-de-casa:
             help: Tax information about tax information in casilla 790-794 of Modelo
               151.
-            label: Casilla 790-794 — tax information
           p01-representante-48-calificador-de-numero:
             help: Tax information about tax information in casilla 795-797 of Modelo
               151.
-            label: Casilla 795-797 — tax information
           p01-representante-49-bloque:
             help: Tax information about tax information in casilla 798-800 of Modelo
               151.
-            label: Casilla 798-800 — tax information
-          p01-representante-50-portal:
-            help: Tax information about tax information in casilla 801-803 of Modelo
-              151.
-            label: Casilla 801-803 — tax information
-          p01-representante-51-escalera:
-            help: Tax information about tax information in casilla 804-806 of Modelo
-              151.
-            label: Casilla 804-806 — tax information
-          p01-representante-52-planta:
-            help: Tax information about tax information in casilla 807-809 of Modelo
-              151.
-            label: Casilla 807-809 — tax information
-          p01-representante-53-puerta:
-            help: Tax information about tax information in casilla 810-812 of Modelo
-              151.
-            label: Casilla 810-812 — tax information
           p01-representante-54-datos-ementarios-de-domicilio:
             help: Tax information about tax information in casilla 813-852 of Modelo
               151.
-            label: Casilla 813-852 — tax information
-          p01-representante-59-telefono-fijo:
-            help: Tax information about tax information in casilla 895-903 of Modelo
+          p01-representante-57-codigo-de-municipio:
+            help: Tax information about tax information in casilla 890-894 of Modelo
               151.
-            label: Casilla 895-903 — tax information
-          p01-representante-60-telefono-movil:
-            help: Tax information about tax information in casilla 904-912 of Modelo
-              151.
-            label: Casilla 904-912 — tax information
-          p01-representante-nif:
-            help: Tax information about tax information in casilla 643-651 of Modelo
-              151.
-            label: Casilla 643-651 — tax information
+            label: Representative. 57 - Municipality code.
+          p01-representante-apellidos:
+            help: 'Review the casilla information: Representative. Surname.'
+            label: Representative. Surnames
+          p01-representante-nombre:
+            help: 'Review the casilla information: Representative. Name.'
+            label: Representative. Given name
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
-            help: Tax information about tax information in casilla 225-229 of Modelo
-              151.
-            label: Casilla 225-229 — tax information
+            help: 'Tax information about tax information in casilla 225-229 of Modelo
+              151 References: [10].'
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
-            help: Tax information about tax information in casilla 713-717 of Modelo
-              151.
-            label: Casilla 713-717 — tax information
+            help: 'Tax information about tax information in casilla 713-717 of Modelo
+              151 References: [10].'
           p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
-            help: Tax information about tax information in casilla 957-961 of Modelo
-              151.
-            label: Casilla 957-961 — tax information
-          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
-            help: Tax information about tax information in casilla 236 of Modelo 151.
-            label: Casilla 236 — tax information
-          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
-            help: Tax information about tax information in casilla 724 of Modelo 151.
-            label: Casilla 724 — tax information
-          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
-            help: Tax information about tax information in casilla 968 of Modelo 151.
-            label: Casilla 968 — tax information
+            help: 'Tax information about tax information in casilla 957-961 of Modelo
+              151 References: [10].'
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
-            help: Tax information about tax information in casilla 230-234 of Modelo
-              151.
-            label: Casilla 230-234 — tax information
+            help: 'Tax information about tax information in casilla 230-234 of Modelo
+              151 References: [11].'
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
-            help: Tax information about tax information in casilla 718-722 of Modelo
-              151.
-            label: Casilla 718-722 — tax information
+            help: 'Tax information about tax information in casilla 718-722 of Modelo
+              151 References: [11].'
           p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
-            help: Tax information about tax information in casilla 962-966 of Modelo
-              151.
-            label: Casilla 962-966 — tax information
+            help: 'Tax information about tax information in casilla 962-966 of Modelo
+              151 References: [11].'
           p02-datos-adicionales-de-l-referencia-catastral-14-01:
-            help: Tax information about tax information in casilla 237-256 of Modelo
-              151.
-            label: Casilla 237-256 — tax information
+            help: 'Tax information about tax information in casilla 237-256 of Modelo
+              151 References: [14].'
           p02-datos-adicionales-de-l-referencia-catastral-14-03:
-            help: Tax information about tax information in casilla 725-744 of Modelo
-              151.
-            label: Casilla 725-744 — tax information
+            help: 'Tax information about tax information in casilla 725-744 of Modelo
+              151 References: [14].'
           p02-datos-adicionales-de-l-referencia-catastral-14-04:
-            help: Tax information about tax information in casilla 969-988 of Modelo
+            help: 'Tax information about tax information in casilla 969-988 of Modelo
+              151 References: [14].'
+          p02-pagador-apellidos-o-razon-social-01:
+            help: Tax information about tax information in casilla 111-170 of Modelo
               151.
-            label: Casilla 969-988 — tax information
-          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
-            help: Tax information about tax information in casilla 235 of Modelo 151.
-            label: Casilla 235 — tax information
-          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
-            help: Tax information about tax information in casilla 723 of Modelo 151.
-            label: Casilla 723 — tax information
-          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
-            help: Tax information about tax information in casilla 967 of Modelo 151.
-            label: Casilla 967 — tax information
-          p02-datos-adicionales-rend-echo-en-el-extranjero-9-01:
-            help: Tax information about tax information in casilla 208-224 of Modelo
+            label: Payer. Surnames or business name
+          p02-pagador-apellidos-o-razon-social-02:
+            help: Tax information about tax information in casilla 355-414 of Modelo
               151.
-            label: Casilla 208-224 — tax information
-          p02-datos-adicionales-rend-echo-en-el-extranjero-9-03:
-            help: Tax information about tax information in casilla 696-712 of Modelo
+            label: Payer. Surnames or business name
+          p02-pagador-apellidos-o-razon-social-03:
+            help: Tax information about tax information in casilla 599-658 of Modelo
               151.
-            label: Casilla 696-712 — tax information
-          p02-datos-adicionales-rend-echo-en-el-extranjero-9-04:
-            help: Tax information about tax information in casilla 940-956 of Modelo
+            label: Payer. Surnames or business name
+          p02-pagador-apellidos-o-razon-social-04:
+            help: Tax information about tax information in casilla 843-902 of Modelo
               151.
-            label: Casilla 940-956 — tax information
-          p02-datos-adicionales-rend-vado-en-el-extranjero-8-01:
-            help: Tax information about tax information in casilla 191-207 of Modelo
-              151.
-            label: Casilla 191-207 — tax information
-          p02-datos-adicionales-rend-vado-en-el-extranjero-8-03:
-            help: Tax information about tax information in casilla 679-695 of Modelo
-              151.
-            label: Casilla 679-695 — tax information
-          p02-datos-adicionales-rend-vado-en-el-extranjero-8-04:
-            help: Tax information about tax information in casilla 923-939 of Modelo
-              151.
-            label: Casilla 923-939 — tax information
-          p02-ingresos-a-cuenta-4-02:
-            help: Tax information about tax information in casilla 277-293 of Modelo
-              151.
-            label: Casilla 277-293 — tax information
-          p02-ingresos-a-cuenta-4-03:
-            help: Tax information about tax information in casilla 521-537 of Modelo
-              151.
-            label: Casilla 521-537 — tax information
-          p02-ingresos-a-cuenta-4-04:
-            help: Tax information about tax information in casilla 765-781 of Modelo
-              151.
-            label: Casilla 765-781 — tax information
-          p02-ingresos-a-cuenta-repercutidos-5-02:
-            help: Tax information about tax information in casilla 294-310 of Modelo
-              151.
-            label: Casilla 294-310 — tax information
-          p02-ingresos-a-cuenta-repercutidos-5-03:
-            help: Tax information about tax information in casilla 538-554 of Modelo
-              151.
-            label: Casilla 538-554 — tax information
-          p02-ingresos-a-cuenta-repercutidos-5-04:
-            help: Tax information about tax information in casilla 782-798 of Modelo
-              151.
-            label: Casilla 782-798 — tax information
-          p02-naturaleza-2-02:
-            help: Tax information about tax information in casilla 259-259 of Modelo
-              151.
-            label: Casilla 259-259 — tax information
-          p02-naturaleza-2-03:
-            help: Tax information about tax information in casilla 503-503 of Modelo
-              151.
-            label: Casilla 503-503 — tax information
-          p02-naturaleza-2-04:
-            help: Tax information about tax information in casilla 747-747 of Modelo
-              151.
-            label: Casilla 747-747 — tax information
-          p02-pagador-f-j-02:
-            help: Tax information about tax information in casilla 354 of Modelo 151.
-            label: Casilla 354 — tax information
-          p02-pagador-f-j-03:
-            help: Tax information about tax information in casilla 598 of Modelo 151.
-            label: Casilla 598 — tax information
-          p02-pagador-f-j-04:
-            help: Tax information about tax information in casilla 842 of Modelo 151.
-            label: Casilla 842 — tax information
-          p02-pagador-nif-02:
-            help: Tax information about tax information in casilla 345-353 of Modelo
-              151.
-            label: Casilla 345-353 — tax information
-          p02-pagador-nif-03:
-            help: Tax information about tax information in casilla 589-597 of Modelo
-              151.
-            label: Casilla 589-597 — tax information
-          p02-pagador-nif-04:
-            help: Tax information about tax information in casilla 833-841 of Modelo
-              151.
-            label: Casilla 833-841 — tax information
-          p02-rendimiento-integro-re-inmobiliaria-imputada-6-02:
-            help: Tax information about tax information in casilla 311-327 of Modelo
-              151.
-            label: Casilla 311-327 — tax information
-          p02-rendimiento-integro-re-inmobiliaria-imputada-6-03:
-            help: Tax information about tax information in casilla 555-571 of Modelo
-              151.
-            label: Casilla 555-571 — tax information
-          p02-rendimiento-integro-re-inmobiliaria-imputada-6-04:
-            help: Tax information about tax information in casilla 799-815 of Modelo
-              151.
-            label: Casilla 799-815 — tax information
-          p02-rentencion-o-ingreso-a-cuenta-7-02:
-            help: Tax information about tax information in casilla 328-344 of Modelo
-              151.
-            label: Casilla 328-344 — tax information
-          p02-rentencion-o-ingreso-a-cuenta-7-03:
-            help: Tax information about tax information in casilla 572-588 of Modelo
-              151.
-            label: Casilla 572-588 — tax information
-          p02-rentencion-o-ingreso-a-cuenta-7-04:
-            help: Tax information about tax information in casilla 816-832 of Modelo
-              151.
-            label: Casilla 816-832 — tax information
-          p02-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p02-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 257-258 of Modelo
-              151.
-            label: Casilla 257-258 — tax information
-          p02-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 501-502 of Modelo
-              151.
-            label: Casilla 501-502 — tax information
-          p02-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 745-746 of Modelo
-              151.
-            label: Casilla 745-746 — tax information
-          p02-valoracion-3-02:
-            help: Tax information about tax information in casilla 260-276 of Modelo
-              151.
-            label: Casilla 260-276 — tax information
-          p02-valoracion-3-03:
-            help: Tax information about tax information in casilla 504-520 of Modelo
-              151.
-            label: Casilla 504-520 — tax information
-          p02-valoracion-3-04:
-            help: Tax information about tax information in casilla 748-764 of Modelo
-              151.
-            label: Casilla 748-764 — tax information
+            label: Payer. Surnames or business name
+          p02-pagador-nombre-01:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p02-pagador-nombre-02:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p02-pagador-nombre-03:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p02-pagador-nombre-04:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
-            help: Tax information about tax information in casilla 225-229 of Modelo
-              151.
-            label: Casilla 225-229 — tax information
+            help: 'Tax information about tax information in casilla 225-229 of Modelo
+              151 References: [10].'
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
-            help: Tax information about tax information in casilla 469-473 of Modelo
-              151.
-            label: Casilla 469-473 — tax information
+            help: 'Tax information about tax information in casilla 469-473 of Modelo
+              151 References: [10].'
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
-            help: Tax information about tax information in casilla 713-717 of Modelo
-              151.
-            label: Casilla 713-717 — tax information
+            help: 'Tax information about tax information in casilla 713-717 of Modelo
+              151 References: [10].'
           p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
-            help: Tax information about tax information in casilla 957-961 of Modelo
-              151.
-            label: Casilla 957-961 — tax information
-          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
-            help: Tax information about tax information in casilla 236 of Modelo 151.
-            label: Casilla 236 — tax information
-          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
-            help: Tax information about tax information in casilla 480 of Modelo 151.
-            label: Casilla 480 — tax information
-          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
-            help: Tax information about tax information in casilla 724 of Modelo 151.
-            label: Casilla 724 — tax information
-          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
-            help: Tax information about tax information in casilla 968 of Modelo 151.
-            label: Casilla 968 — tax information
+            help: 'Tax information about tax information in casilla 957-961 of Modelo
+              151 References: [10].'
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
-            help: Tax information about tax information in casilla 230-234 of Modelo
-              151.
-            label: Casilla 230-234 — tax information
+            help: 'Tax information about tax information in casilla 230-234 of Modelo
+              151 References: [11].'
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
-            help: Tax information about tax information in casilla 474-478 of Modelo
-              151.
-            label: Casilla 474-478 — tax information
+            help: 'Tax information about tax information in casilla 474-478 of Modelo
+              151 References: [11].'
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
-            help: Tax information about tax information in casilla 718-722 of Modelo
-              151.
-            label: Casilla 718-722 — tax information
+            help: 'Tax information about tax information in casilla 718-722 of Modelo
+              151 References: [11].'
           p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
-            help: Tax information about tax information in casilla 962-966 of Modelo
-              151.
-            label: Casilla 962-966 — tax information
+            help: 'Tax information about tax information in casilla 962-966 of Modelo
+              151 References: [11].'
           p03-datos-adicionales-de-l-referencia-catastral-14-01:
-            help: Tax information about tax information in casilla 237-256 of Modelo
-              151.
-            label: Casilla 237-256 — tax information
+            help: 'Tax information about tax information in casilla 237-256 of Modelo
+              151 References: [14].'
           p03-datos-adicionales-de-l-referencia-catastral-14-02:
-            help: Tax information about tax information in casilla 481-500 of Modelo
-              151.
-            label: Casilla 481-500 — tax information
+            help: 'Tax information about tax information in casilla 481-500 of Modelo
+              151 References: [14].'
           p03-datos-adicionales-de-l-referencia-catastral-14-03:
-            help: Tax information about tax information in casilla 725-744 of Modelo
-              151.
-            label: Casilla 725-744 — tax information
+            help: 'Tax information about tax information in casilla 725-744 of Modelo
+              151 References: [14].'
           p03-datos-adicionales-de-l-referencia-catastral-14-04:
-            help: Tax information about tax information in casilla 969-988 of Modelo
+            help: 'Tax information about tax information in casilla 969-988 of Modelo
+              151 References: [14].'
+          p03-pagador-apellidos-o-razon-social-01:
+            help: Tax information about tax information in casilla 111-170 of Modelo
               151.
-            label: Casilla 969-988 — tax information
-          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
-            help: Tax information about tax information in casilla 235 of Modelo 151.
-            label: Casilla 235 — tax information
-          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
-            help: Tax information about tax information in casilla 479 of Modelo 151.
-            label: Casilla 479 — tax information
-          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
-            help: Tax information about tax information in casilla 723 of Modelo 151.
-            label: Casilla 723 — tax information
-          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
-            help: Tax information about tax information in casilla 967 of Modelo 151.
-            label: Casilla 967 — tax information
-          p03-datos-adicionales-rend-echo-en-el-extranjero-9-01:
-            help: Tax information about tax information in casilla 208-224 of Modelo
+            label: Payer. Surnames or business name
+          p03-pagador-apellidos-o-razon-social-02:
+            help: Tax information about tax information in casilla 355-414 of Modelo
               151.
-            label: Casilla 208-224 — tax information
-          p03-datos-adicionales-rend-echo-en-el-extranjero-9-02:
-            help: Tax information about tax information in casilla 452-468 of Modelo
+            label: Payer. Surnames or business name
+          p03-pagador-apellidos-o-razon-social-03:
+            help: Tax information about tax information in casilla 599-658 of Modelo
               151.
-            label: Casilla 452-468 — tax information
-          p03-datos-adicionales-rend-echo-en-el-extranjero-9-03:
-            help: Tax information about tax information in casilla 696-712 of Modelo
+            label: Payer. Surnames or business name
+          p03-pagador-apellidos-o-razon-social-04:
+            help: Tax information about tax information in casilla 843-902 of Modelo
               151.
-            label: Casilla 696-712 — tax information
-          p03-datos-adicionales-rend-echo-en-el-extranjero-9-04:
-            help: Tax information about tax information in casilla 940-956 of Modelo
-              151.
-            label: Casilla 940-956 — tax information
-          p03-datos-adicionales-rend-vado-en-el-extranjero-8-01:
-            help: Tax information about tax information in casilla 191-207 of Modelo
-              151.
-            label: Casilla 191-207 — tax information
-          p03-datos-adicionales-rend-vado-en-el-extranjero-8-02:
-            help: Tax information about tax information in casilla 435-451 of Modelo
-              151.
-            label: Casilla 435-451 — tax information
-          p03-datos-adicionales-rend-vado-en-el-extranjero-8-03:
-            help: Tax information about tax information in casilla 679-695 of Modelo
-              151.
-            label: Casilla 679-695 — tax information
-          p03-datos-adicionales-rend-vado-en-el-extranjero-8-04:
-            help: Tax information about tax information in casilla 923-939 of Modelo
-              151.
-            label: Casilla 923-939 — tax information
-          p03-ingresos-a-cuenta-4-01:
-            help: Tax information about tax information in casilla 33-49 of Modelo
-              151.
-            label: Casilla 33-49 — tax information
-          p03-ingresos-a-cuenta-4-02:
-            help: Tax information about tax information in casilla 277-293 of Modelo
-              151.
-            label: Casilla 277-293 — tax information
-          p03-ingresos-a-cuenta-4-03:
-            help: Tax information about tax information in casilla 521-537 of Modelo
-              151.
-            label: Casilla 521-537 — tax information
-          p03-ingresos-a-cuenta-4-04:
-            help: Tax information about tax information in casilla 765-781 of Modelo
-              151.
-            label: Casilla 765-781 — tax information
-          p03-ingresos-a-cuenta-repercutidos-5-01:
-            help: Tax information about tax information in casilla 50-66 of Modelo
-              151.
-            label: Casilla 50-66 — tax information
-          p03-ingresos-a-cuenta-repercutidos-5-02:
-            help: Tax information about tax information in casilla 294-310 of Modelo
-              151.
-            label: Casilla 294-310 — tax information
-          p03-ingresos-a-cuenta-repercutidos-5-03:
-            help: Tax information about tax information in casilla 538-554 of Modelo
-              151.
-            label: Casilla 538-554 — tax information
-          p03-ingresos-a-cuenta-repercutidos-5-04:
-            help: Tax information about tax information in casilla 782-798 of Modelo
-              151.
-            label: Casilla 782-798 — tax information
-          p03-naturaleza-2-01:
-            help: Tax information about tax information in casilla 15-15 of Modelo
-              151.
-            label: Casilla 15-15 — tax information
-          p03-naturaleza-2-02:
-            help: Tax information about tax information in casilla 259-259 of Modelo
-              151.
-            label: Casilla 259-259 — tax information
-          p03-naturaleza-2-03:
-            help: Tax information about tax information in casilla 503-503 of Modelo
-              151.
-            label: Casilla 503-503 — tax information
-          p03-naturaleza-2-04:
-            help: Tax information about tax information in casilla 747-747 of Modelo
-              151.
-            label: Casilla 747-747 — tax information
-          p03-pagador-f-j-01:
-            help: Tax information about tax information in casilla 110 of Modelo 151.
-            label: Casilla 110 — tax information
-          p03-pagador-f-j-02:
-            help: Tax information about tax information in casilla 354 of Modelo 151.
-            label: Casilla 354 — tax information
-          p03-pagador-f-j-03:
-            help: Tax information about tax information in casilla 598 of Modelo 151.
-            label: Casilla 598 — tax information
-          p03-pagador-f-j-04:
-            help: Tax information about tax information in casilla 842 of Modelo 151.
-            label: Casilla 842 — tax information
-          p03-pagador-nif-01:
-            help: Tax information about tax information in casilla 101-109 of Modelo
-              151.
-            label: Casilla 101-109 — tax information
-          p03-pagador-nif-02:
-            help: Tax information about tax information in casilla 345-353 of Modelo
-              151.
-            label: Casilla 345-353 — tax information
-          p03-pagador-nif-03:
-            help: Tax information about tax information in casilla 589-597 of Modelo
-              151.
-            label: Casilla 589-597 — tax information
-          p03-pagador-nif-04:
-            help: Tax information about tax information in casilla 833-841 of Modelo
-              151.
-            label: Casilla 833-841 — tax information
-          p03-rendimiento-integro-re-inmobiliaria-imputada-6-01:
-            help: Tax information about tax information in casilla 67-83 of Modelo
-              151.
-            label: Casilla 67-83 — tax information
-          p03-rendimiento-integro-re-inmobiliaria-imputada-6-02:
-            help: Tax information about tax information in casilla 311-327 of Modelo
-              151.
-            label: Casilla 311-327 — tax information
-          p03-rendimiento-integro-re-inmobiliaria-imputada-6-03:
-            help: Tax information about tax information in casilla 555-571 of Modelo
-              151.
-            label: Casilla 555-571 — tax information
-          p03-rendimiento-integro-re-inmobiliaria-imputada-6-04:
-            help: Tax information about tax information in casilla 799-815 of Modelo
-              151.
-            label: Casilla 799-815 — tax information
-          p03-rentencion-o-ingreso-a-cuenta-7-01:
-            help: Tax information about tax information in casilla 84-100 of Modelo
-              151.
-            label: Casilla 84-100 — tax information
-          p03-rentencion-o-ingreso-a-cuenta-7-02:
-            help: Tax information about tax information in casilla 328-344 of Modelo
-              151.
-            label: Casilla 328-344 — tax information
-          p03-rentencion-o-ingreso-a-cuenta-7-03:
-            help: Tax information about tax information in casilla 572-588 of Modelo
-              151.
-            label: Casilla 572-588 — tax information
-          p03-rentencion-o-ingreso-a-cuenta-7-04:
-            help: Tax information about tax information in casilla 816-832 of Modelo
-              151.
-            label: Casilla 816-832 — tax information
-          p03-resto-rendimiento-inte-inmobiliaria-imputada-6:
-            help: Tax information about tax information in casilla 989-1005 of Modelo
-              151.
-            label: Casilla 989-1005 — tax information
-          p03-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p03-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 257-258 of Modelo
-              151.
-            label: Casilla 257-258 — tax information
-          p03-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 501-502 of Modelo
-              151.
-            label: Casilla 501-502 — tax information
-          p03-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 745-746 of Modelo
-              151.
-            label: Casilla 745-746 — tax information
+            label: Payer. Surnames or business name
+          p03-pagador-nombre-01:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p03-pagador-nombre-02:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p03-pagador-nombre-03:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
+          p03-pagador-nombre-04:
+            help: 'Review the casilla information: Pagador. Name.'
+            label: Payer. Given name
           p03-total-rendimientos-int-nmobiliaria-imputada-15:
-            help: Tax information about tax information in casilla 1023-1039 of Modelo
-              151.
-            label: Casilla 1023-1039 — tax information
-          p03-valoracion-3-01:
-            help: Tax information about tax information in casilla 16-32 of Modelo
-              151.
-            label: Casilla 16-32 — tax information
-          p03-valoracion-3-02:
-            help: Tax information about tax information in casilla 260-276 of Modelo
-              151.
-            label: Casilla 260-276 — tax information
-          p03-valoracion-3-03:
-            help: Tax information about tax information in casilla 504-520 of Modelo
-              151.
-            label: Casilla 504-520 — tax information
-          p03-valoracion-3-04:
-            help: Tax information about tax information in casilla 748-764 of Modelo
-              151.
-            label: Casilla 748-764 — tax information
-          p04-ingresos-a-cuenta-4-01:
-            help: Tax information about tax information in casilla 33-49 of Modelo
-              151.
-            label: Casilla 33-49 — tax information
-          p04-ingresos-a-cuenta-4-02:
-            help: Tax information about tax information in casilla 121-137 of Modelo
-              151.
-            label: Casilla 121-137 — tax information
-          p04-ingresos-a-cuenta-4-03:
-            help: Tax information about tax information in casilla 209-225 of Modelo
-              151.
-            label: Casilla 209-225 — tax information
-          p04-ingresos-a-cuenta-4-04:
-            help: Tax information about tax information in casilla 297-313 of Modelo
-              151.
-            label: Casilla 297-313 — tax information
-          p04-ingresos-a-cuenta-4-05:
-            help: Tax information about tax information in casilla 385-401 of Modelo
-              151.
-            label: Casilla 385-401 — tax information
-          p04-ingresos-a-cuenta-4-06:
-            help: Tax information about tax information in casilla 473-489 of Modelo
-              151.
-            label: Casilla 473-489 — tax information
-          p04-ingresos-a-cuenta-4-07:
-            help: Tax information about tax information in casilla 561-577 of Modelo
-              151.
-            label: Casilla 561-577 — tax information
-          p04-ingresos-a-cuenta-4-08:
-            help: Tax information about tax information in casilla 649-665 of Modelo
-              151.
-            label: Casilla 649-665 — tax information
-          p04-ingresos-a-cuenta-4-09:
-            help: Tax information about tax information in casilla 737-753 of Modelo
-              151.
-            label: Casilla 737-753 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-01:
-            help: Tax information about tax information in casilla 50-66 of Modelo
-              151.
-            label: Casilla 50-66 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-02:
-            help: Tax information about tax information in casilla 138-154 of Modelo
-              151.
-            label: Casilla 138-154 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-03:
-            help: Tax information about tax information in casilla 226-242 of Modelo
-              151.
-            label: Casilla 226-242 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-04:
-            help: Tax information about tax information in casilla 314-330 of Modelo
-              151.
-            label: Casilla 314-330 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-05:
-            help: Tax information about tax information in casilla 402-418 of Modelo
-              151.
-            label: Casilla 402-418 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-06:
-            help: Tax information about tax information in casilla 490-506 of Modelo
-              151.
-            label: Casilla 490-506 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-07:
-            help: Tax information about tax information in casilla 578-594 of Modelo
-              151.
-            label: Casilla 578-594 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-08:
-            help: Tax information about tax information in casilla 666-682 of Modelo
-              151.
-            label: Casilla 666-682 — tax information
-          p04-ingresos-a-cuenta-repercutidos-5-09:
-            help: Tax information about tax information in casilla 754-770 of Modelo
-              151.
-            label: Casilla 754-770 — tax information
-          p04-naturaleza-2-01:
-            help: Tax information about tax information in casilla 15-15 of Modelo
-              151.
-            label: Casilla 15-15 — tax information
-          p04-naturaleza-2-02:
-            help: Tax information about tax information in casilla 103-103 of Modelo
-              151.
-            label: Casilla 103-103 — tax information
-          p04-naturaleza-2-03:
-            help: Tax information about tax information in casilla 191-191 of Modelo
-              151.
-            label: Casilla 191-191 — tax information
-          p04-naturaleza-2-04:
-            help: Tax information about tax information in casilla 279-279 of Modelo
-              151.
-            label: Casilla 279-279 — tax information
-          p04-naturaleza-2-05:
-            help: Tax information about tax information in casilla 367-367 of Modelo
-              151.
-            label: Casilla 367-367 — tax information
-          p04-naturaleza-2-06:
-            help: Tax information about tax information in casilla 455-455 of Modelo
-              151.
-            label: Casilla 455-455 — tax information
-          p04-naturaleza-2-07:
-            help: Tax information about tax information in casilla 543-543 of Modelo
-              151.
-            label: Casilla 543-543 — tax information
-          p04-naturaleza-2-08:
-            help: Tax information about tax information in casilla 631-631 of Modelo
-              151.
-            label: Casilla 631-631 — tax information
-          p04-naturaleza-2-09:
-            help: Tax information about tax information in casilla 719-719 of Modelo
-              151.
-            label: Casilla 719-719 — tax information
-          p04-rendimiento-integro-6-02:
-            help: Tax information about tax information in casilla 155-171 of Modelo
-              151.
-            label: Casilla 155-171 — tax information
-          p04-rendimiento-integro-6-03:
-            help: Tax information about tax information in casilla 243-259 of Modelo
-              151.
-            label: Casilla 243-259 — tax information
-          p04-rendimiento-integro-6-04:
-            help: Tax information about tax information in casilla 331-347 of Modelo
-              151.
-            label: Casilla 331-347 — tax information
-          p04-rendimiento-integro-6-05:
-            help: Tax information about tax information in casilla 419-435 of Modelo
-              151.
-            label: Casilla 419-435 — tax information
-          p04-rendimiento-integro-6-06:
-            help: Tax information about tax information in casilla 507-523 of Modelo
-              151.
-            label: Casilla 507-523 — tax information
-          p04-rendimiento-integro-6-07:
-            help: Tax information about tax information in casilla 595-611 of Modelo
-              151.
-            label: Casilla 595-611 — tax information
-          p04-rendimiento-integro-6-08:
-            help: Tax information about tax information in casilla 683-699 of Modelo
-              151.
-            label: Casilla 683-699 — tax information
-          p04-rendimiento-integro-6-09:
-            help: Tax information about tax information in casilla 771-787 of Modelo
-              151.
-            label: Casilla 771-787 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-01:
-            help: Tax information about tax information in casilla 84-100 of Modelo
-              151.
-            label: Casilla 84-100 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-02:
-            help: Tax information about tax information in casilla 172-188 of Modelo
-              151.
-            label: Casilla 172-188 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-03:
-            help: Tax information about tax information in casilla 260-276 of Modelo
-              151.
-            label: Casilla 260-276 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-04:
-            help: Tax information about tax information in casilla 348-364 of Modelo
-              151.
-            label: Casilla 348-364 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-05:
-            help: Tax information about tax information in casilla 436-452 of Modelo
-              151.
-            label: Casilla 436-452 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-06:
-            help: Tax information about tax information in casilla 524-540 of Modelo
-              151.
-            label: Casilla 524-540 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-07:
-            help: Tax information about tax information in casilla 612-628 of Modelo
-              151.
-            label: Casilla 612-628 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-08:
-            help: Tax information about tax information in casilla 700-716 of Modelo
-              151.
-            label: Casilla 700-716 — tax information
-          p04-rentencion-o-ingreso-a-cuenta-7-09:
-            help: Tax information about tax information in casilla 788-804 of Modelo
-              151.
-            label: Casilla 788-804 — tax information
-          p04-resto-rendimientos-integro-6:
-            help: Tax information about tax information in casilla 805-821 of Modelo
-              151.
-            label: Casilla 805-821 — tax information
-          p04-resto-rentencion-o-ingreso-a-cuenta-7:
-            help: Tax information about tax information in casilla 822-838 of Modelo
-              151.
-            label: Casilla 822-838 — tax information
-          p04-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p04-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 101-102 of Modelo
-              151.
-            label: Casilla 101-102 — tax information
-          p04-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 189-190 of Modelo
-              151.
-            label: Casilla 189-190 — tax information
-          p04-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 277-278 of Modelo
-              151.
-            label: Casilla 277-278 — tax information
-          p04-tipo-de-renta-1-05:
-            help: Tax information about tax information in casilla 365-366 of Modelo
-              151.
-            label: Casilla 365-366 — tax information
-          p04-tipo-de-renta-1-06:
-            help: Tax information about tax information in casilla 453-454 of Modelo
-              151.
-            label: Casilla 453-454 — tax information
-          p04-tipo-de-renta-1-07:
-            help: Tax information about tax information in casilla 541-542 of Modelo
-              151.
-            label: Casilla 541-542 — tax information
-          p04-tipo-de-renta-1-08:
-            help: Tax information about tax information in casilla 629-630 of Modelo
-              151.
-            label: Casilla 629-630 — tax information
-          p04-tipo-de-renta-1-09:
-            help: Tax information about tax information in casilla 717-718 of Modelo
-              151.
-            label: Casilla 717-718 — tax information
-          p04-total-rendimientos-integros-8:
-            help: Tax information about tax information in casilla 839-855 of Modelo
-              151.
-            label: Casilla 839-855 — tax information
-          p04-valoracion-3-01:
-            help: Tax information about tax information in casilla 16-32 of Modelo
-              151.
-            label: Casilla 16-32 — tax information
-          p04-valoracion-3-02:
-            help: Tax information about tax information in casilla 104-120 of Modelo
-              151.
-            label: Casilla 104-120 — tax information
-          p04-valoracion-3-03:
-            help: Tax information about tax information in casilla 192-208 of Modelo
-              151.
-            label: Casilla 192-208 — tax information
-          p04-valoracion-3-04:
-            help: Tax information about tax information in casilla 280-296 of Modelo
-              151.
-            label: Casilla 280-296 — tax information
-          p04-valoracion-3-05:
-            help: Tax information about tax information in casilla 368-384 of Modelo
-              151.
-            label: Casilla 368-384 — tax information
-          p04-valoracion-3-06:
-            help: Tax information about tax information in casilla 456-472 of Modelo
-              151.
-            label: Casilla 456-472 — tax information
-          p04-valoracion-3-07:
-            help: Tax information about tax information in casilla 544-560 of Modelo
-              151.
-            label: Casilla 544-560 — tax information
-          p04-valoracion-3-08:
-            help: Tax information about tax information in casilla 632-648 of Modelo
-              151.
-            label: Casilla 632-648 — tax information
-          p04-valoracion-3-09:
-            help: Tax information about tax information in casilla 720-736 of Modelo
-              151.
-            label: Casilla 720-736 — tax information
-          p05-ganancia-patrimonial-2-02:
-            help: Tax information about tax information in casilla 224-240 of Modelo
-              151.
-            label: Casilla 224-240 — tax information
-          p05-ganancia-patrimonial-2-03:
-            help: Tax information about tax information in casilla 269-285 of Modelo
-              151.
-            label: Casilla 269-285 — tax information
-          p05-ganancia-patrimonial-2-04:
-            help: Tax information about tax information in casilla 314-330 of Modelo
-              151.
-            label: Casilla 314-330 — tax information
-          p05-ganancia-patrimonial-2-05:
-            help: Tax information about tax information in casilla 359-375 of Modelo
-              151.
-            label: Casilla 359-375 — tax information
-          p05-ganancia-patrimonial-2-06:
-            help: Tax information about tax information in casilla 404-420 of Modelo
-              151.
-            label: Casilla 404-420 — tax information
-          p05-ganancia-patrimonial-2-07:
-            help: Tax information about tax information in casilla 449-465 of Modelo
-              151.
-            label: Casilla 449-465 — tax information
-          p05-ganancia-patrimonial-2-08:
-            help: Tax information about tax information in casilla 494-510 of Modelo
-              151.
-            label: Casilla 494-510 — tax information
+            help: 'Review the casilla information: Total income íntegros/Income property
+              imputada [15].'
+          p03-total-retenciones-o-ingresos-a-cuenta-16:
+            help: 'Tax information about tax information in casilla 1040-1056 of Modelo
+              151 References: [16].'
+            label: Total withholdings or payments on account [16]
           p05-nif-de-la-sociedad-o-fondo-de-inversion-02:
             help: Tax information about tax information in casilla 215-223 of Modelo
               151.
-            label: Casilla 215-223 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-03:
             help: Tax information about tax information in casilla 260-268 of Modelo
               151.
-            label: Casilla 260-268 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-04:
             help: Tax information about tax information in casilla 305-313 of Modelo
               151.
-            label: Casilla 305-313 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-05:
             help: Tax information about tax information in casilla 350-358 of Modelo
               151.
-            label: Casilla 350-358 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-06:
             help: Tax information about tax information in casilla 395-403 of Modelo
               151.
-            label: Casilla 395-403 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-07:
             help: Tax information about tax information in casilla 440-448 of Modelo
               151.
-            label: Casilla 440-448 — tax information
           p05-nif-de-la-sociedad-o-fondo-de-inversion-08:
             help: Tax information about tax information in casilla 485-493 of Modelo
               151.
-            label: Casilla 485-493 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-02:
-            help: Tax information about tax information in casilla 241-257 of Modelo
-              151.
-            label: Casilla 241-257 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-03:
-            help: Tax information about tax information in casilla 286-302 of Modelo
-              151.
-            label: Casilla 286-302 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-04:
-            help: Tax information about tax information in casilla 331-347 of Modelo
-              151.
-            label: Casilla 331-347 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-05:
-            help: Tax information about tax information in casilla 376-392 of Modelo
-              151.
-            label: Casilla 376-392 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-06:
-            help: Tax information about tax information in casilla 421-437 of Modelo
-              151.
-            label: Casilla 421-437 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-3-07:
-            help: Tax information about tax information in casilla 466-482 of Modelo
-              151.
-            label: Casilla 466-482 — tax information
-          p05-rentencion-o-ingreso-a-cuenta-6:
-            help: Tax information about tax information in casilla 83-99 of Modelo
-              151.
-            label: Casilla 83-99 — tax information
-          p05-resto-ganancia-patrimonial-2:
-            help: Tax information about tax information in casilla 528-544 of Modelo
-              151.
-            label: Casilla 528-544 — tax information
-          p05-resto-rentencion-o-ingreso-a-cuenta-3:
-            help: Tax information about tax information in casilla 545-561 of Modelo
-              151.
-            label: Casilla 545-561 — tax information
-          p05-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p05-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 168-169 of Modelo
-              151.
-            label: Casilla 168-169 — tax information
-          p05-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 213-214 of Modelo
-              151.
-            label: Casilla 213-214 — tax information
-          p05-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 258-259 of Modelo
-              151.
-            label: Casilla 258-259 — tax information
-          p05-tipo-de-renta-1-05:
-            help: Tax information about tax information in casilla 303-304 of Modelo
-              151.
-            label: Casilla 303-304 — tax information
-          p05-tipo-de-renta-1-06:
-            help: Tax information about tax information in casilla 348-349 of Modelo
-              151.
-            label: Casilla 348-349 — tax information
-          p05-tipo-de-renta-1-07:
-            help: Tax information about tax information in casilla 393-394 of Modelo
-              151.
-            label: Casilla 393-394 — tax information
-          p05-tipo-de-renta-1-08:
-            help: Tax information about tax information in casilla 438-439 of Modelo
-              151.
-            label: Casilla 438-439 — tax information
-          p05-total-ganancias-patrimoniales-4:
-            help: Tax information about tax information in casilla 562-578 of Modelo
-              151.
-            label: Casilla 562-578 — tax information
-          p05-total-retenciones-o-ingresos-a-cuenta-9:
-            help: Tax information about tax information in casilla 151-167 of Modelo
-              151.
-            label: Casilla 151-167 — tax information
+          p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6:
+            help: 'Tax information about tax information in casilla 100-116 of Modelo
+              151 References: [6].'
+            label: Negative income. Withholding or payment on account [6]
           p06-44-tipo-de-via-02:
             help: Tax information about tax information in casilla 925-929 of Modelo
               151.
-            label: Casilla 925-929 — tax information
-          p06-45-nombre-de-la-via-publica-02:
-            help: Tax information about tax information in casilla 930-979 of Modelo
-              151.
-            label: Casilla 930-979 — tax information
           p06-46-tipo-de-numeracion-02:
             help: Tax information about tax information in casilla 980-982 of Modelo
               151.
-            label: Casilla 980-982 — tax information
-          p06-47-numero-de-casa-02:
-            help: Tax information for casilla 983-987 of Modelo 151.
-            label: Casilla 983-987 — tax field
-          p06-48-calificador-de-numero-02:
-            help: Tax information for casilla 988-990 of Modelo 151.
-            label: Casilla 988-990 — tax field
           p06-49-bloque-02:
             help: Tax information about tax information in casilla 991-993 of Modelo
               151.
-            label: Casilla 991-993 — tax information
-          p06-50-portal-02:
-            help: Tax information about tax information in casilla 994-996 of Modelo
-              151.
-            label: Casilla 994-996 — tax information
-          p06-51-escalera-02:
-            help: Tax information about tax information in casilla 997-999 of Modelo
-              151.
-            label: Casilla 997-999 — tax information
-          p06-52-planta-02:
-            help: Tax information about tax information in casilla 1000-1002 of Modelo
-              151.
-            label: Casilla 1000-1002 — tax information
-          p06-53-puerta-02:
-            help: Tax information about tax information in casilla 1003-1005 of Modelo
-              151.
-            label: Casilla 1003-1005 — tax information
           p06-54-datos-complementarios-de-domicilio-02:
             help: Tax information about tax information in casilla 1006-1045 of Modelo
               151.
-            label: Casilla 1006-1045 — tax information
-          p06-55-localidad-poblacion-02:
-            help: Tax information about tax information in casilla 1046-1075 of Modelo
-              151.
-            label: Casilla 1046-1075 — tax information
-          p06-56-codigo-postal-02:
-            help: Tax information for casilla 1076-1080 of Modelo 151.
-            label: Casilla 1076-1080 — tax field
           p06-57-municipio-02:
             help: Tax information about tax information in casilla 1083-1087 of Modelo
               151.
-            label: Casilla 1083-1087 — tax information
           p06-58-provincia-02:
             help: Tax information about tax information in casilla 1081-1082 of Modelo
               151.
-            label: Casilla 1081-1082 — tax information
-          p06-73-referencia-catastral-02:
-            help: Tax information about tax information in casilla 1088-1107 of Modelo
+          p06-adquiriente-apellidos-o-razon-social-01:
+            help: Tax information about tax information in casilla 237-296 of Modelo
               151.
-            label: Casilla 1088-1107 — tax information
-          p06-adquiriente-f-j-02:
-            help: Tax information about tax information in casilla 844 of Modelo 151.
-            label: Casilla 844 — tax information
-          p06-adquiriente-nif-02:
-            help: Tax information about tax information in casilla 835-843 of Modelo
+            label: Acquirer. Surnames or business name
+          p06-adquiriente-apellidos-o-razon-social-02:
+            help: Tax information about tax information in casilla 845-904 of Modelo
               151.
-            label: Casilla 835-843 — tax information
+            label: Acquirer. Surnames or business name
+          p06-adquiriente-nombre-01:
+            help: 'Review the casilla information: Adquiriente. Name.'
+            label: Acquirer. Given name
+          p06-adquiriente-nombre-02:
+            help: 'Review the casilla information: Adquiriente. Name.'
+            label: Acquirer. Given name
           p06-cuota-de-participacion-02:
             help: Tax information about tax information in casilla 830-834 of Modelo
               151.
-            label: Casilla 830-834 — tax information
-          p06-diferencia-adquisicion-4-02:
-            help: Tax information about tax information in casilla 670-686 of Modelo
-              151.
-            label: Casilla 670-686 — tax information
-          p06-diferencia-mejora-o-2a-adquisicion-8-02:
-            help: Tax information about tax information in casilla 738-754 of Modelo
-              151.
-            label: Casilla 738-754 — tax information
           p06-documento-publico-o-privado-02:
             help: Tax information about tax information in casilla 1108 of Modelo
               151.
-            label: Casilla 1108 — tax information
           p06-fecha-de-adquisicion-01:
             help: Tax information about tax information in casilla 198-205 of Modelo
               151.
-            label: Casilla 198-205 — tax information
           p06-fecha-de-adquisicion-02:
             help: Tax information about tax information in casilla 806-813 of Modelo
               151.
-            label: Casilla 806-813 — tax information
           p06-fecha-de-mejora-o-2a-adquisicion-02:
             help: Tax information about tax information in casilla 814-821 of Modelo
               151.
-            label: Casilla 814-821 — tax information
           p06-fecha-de-transmision-01:
             help: Tax information about tax information in casilla 214-221 of Modelo
               151.
-            label: Casilla 214-221 — tax information
           p06-fecha-de-transmision-02:
             help: Tax information about tax information in casilla 822-829 of Modelo
               151.
-            label: Casilla 822-829 — tax information
-          p06-ganancia-o-perdida-adquisicion-5-02:
-            help: Tax information about tax information in casilla 687-703 of Modelo
-              151.
-            label: Casilla 687-703 — tax information
-          p06-ganancia-o-perdida-mejora-o-2a-adquisicion-9-02:
-            help: Tax information about tax information in casilla 755-771 of Modelo
-              151.
-            label: Casilla 755-771 — tax information
           p06-ganancia-patrimonial-total-obtenida-10-02:
-            help: Tax information about tax information in casilla 772-788 of Modelo
-              151.
-            label: Casilla 772-788 — tax information
+            help: 'Tax information about tax information in casilla 772-788 of Modelo
+              151 References: [10].'
+            label: Total capital gain obtained [10]
           p06-notario-o-fedetario-02:
             help: Tax information about tax information in casilla 1109-1208 of Modelo
               151.
-            label: Casilla 1109-1208 — tax information
-          p06-numero-de-protocolo-02:
-            help: Tax information for casilla 1209-1228 of Modelo 151.
-            label: Casilla 1209-1228 — tax field
-          p06-numero-justificante-del-modelo-211-02:
-            help: Tax information for casilla 623-635 of Modelo 151.
-            label: Casilla 623-635 — tax field
           p06-resto-ganancia-patrimonial-total-obtenida-10:
-            help: Tax information about tax information in casilla 1229-1245 of Modelo
-              151.
-            label: Casilla 1229-1245 — tax information
+            help: 'Tax information about tax information in casilla 1229-1245 of Modelo
+              151 References: [10].'
+            label: REMAINDER. Total capital gain obtained [10]
           p06-resto-retencion-o-ingreso-a-cuenta-11:
-            help: Tax information about tax information in casilla 1246-1262 of Modelo
-              151.
-            label: Casilla 1246-1262 — tax information
+            help: 'Tax information about tax information in casilla 1246-1262 of Modelo
+              151 References: [11].'
+            label: REMAINDER. Withholding or payment on account [11]
           p06-retencion-o-ingreso-a-cuenta-11-02:
-            help: Tax information about tax information in casilla 789-805 of Modelo
-              151.
-            label: Casilla 789-805 — tax information
-          p06-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p06-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 621-622 of Modelo
-              151.
-            label: Casilla 621-622 — tax information
+            help: 'Tax information about tax information in casilla 789-805 of Modelo
+              151 References: [11].'
+            label: Withholding or payment on account [11]
           p06-total-ganancias-patrimoniales-12:
-            help: Tax information about tax information in casilla 1263-1279 of Modelo
-              151.
-            label: Casilla 1263-1279 — tax information
+            help: 'Review the casilla information: Total ganancias capital-gains [12].'
+            label: Total capital gains [12]
           p06-total-retenciones-o-ingresos-a-cuenta-13:
-            help: Tax information about tax information in casilla 1280-1296 of Modelo
-              151.
-            label: Casilla 1280-1296 — tax information
-          p06-valor-de-adquisicion-adquisicion-3-02:
-            help: Tax information about tax information in casilla 653-669 of Modelo
-              151.
-            label: Casilla 653-669 — tax information
-          p06-valor-de-mejora-o-2a-a-jora-o-2a-adquisicion-7-01:
-            help: Tax information about tax information in casilla 113-129 of Modelo
-              151.
-            label: Casilla 113-129 — tax information
-          p06-valor-de-transmision-adquisicion-2-02:
-            help: Tax information about tax information in casilla 636-652 of Modelo
-              151.
-            label: Casilla 636-652 — tax information
-          p06-valor-de-transmision-mejora-o-2a-adquisicion-6-02:
-            help: Tax information about tax information in casilla 704-720 of Modelo
-              151.
-            label: Casilla 704-720 — tax information
+            help: 'Tax information about tax information in casilla 1280-1296 of Modelo
+              151 References: [13].'
+            label: Total withholdings or payments on account [13]
           p07-descripcion-de-la-ganancia-patrimonial-02:
             help: Tax information for casilla 152-251 of Modelo 151.
-            label: Casilla 152-251 — tax field
           p07-descripcion-de-la-ganancia-patrimonial-03:
             help: Tax information for casilla 289-388 of Modelo 151.
-            label: Casilla 289-388 — tax field
           p07-descripcion-del-elemento-patrimonial-01:
             help: Tax information for casilla 494-593 of Modelo 151.
-            label: Casilla 494-593 — tax field
           p07-descripcion-del-elemento-patrimonial-02:
             help: Tax information for casilla 680-779 of Modelo 151.
-            label: Casilla 680-779 — tax field
           p07-descripcion-del-elemento-patrimonial-03:
             help: Tax information for casilla 866-965 of Modelo 151.
-            label: Casilla 866-965 — tax field
           p07-descripcion-del-elemento-patrimonial-04:
             help: Tax information for casilla 1052-1151 of Modelo 151.
-            label: Casilla 1052-1151 — tax field
           p07-descripcion-del-elemento-patrimonial-05:
             help: Tax information for casilla 1238-1337 of Modelo 151.
-            label: Casilla 1238-1337 — tax field
-          p07-diferencia-4-01:
-            help: Tax information about tax information in casilla 644-660 of Modelo
-              151.
-            label: Casilla 644-660 — tax information
-          p07-diferencia-4-02:
-            help: Tax information about tax information in casilla 830-846 of Modelo
-              151.
-            label: Casilla 830-846 — tax information
-          p07-diferencia-4-03:
-            help: Tax information about tax information in casilla 1016-1032 of Modelo
-              151.
-            label: Casilla 1016-1032 — tax information
-          p07-diferencia-4-04:
-            help: Tax information about tax information in casilla 1202-1218 of Modelo
-              151.
-            label: Casilla 1202-1218 — tax information
-          p07-diferencia-4-05:
-            help: Tax information about tax information in casilla 1388-1404 of Modelo
-              151.
-            label: Casilla 1388-1404 — tax information
           p07-fecha-de-adquisicion-01:
             help: Tax information about tax information in casilla 602-609 of Modelo
               151.
-            label: Casilla 602-609 — tax information
           p07-fecha-de-adquisicion-02:
             help: Tax information about tax information in casilla 788-795 of Modelo
               151.
-            label: Casilla 788-795 — tax information
           p07-fecha-de-adquisicion-03:
             help: Tax information about tax information in casilla 974-981 of Modelo
               151.
-            label: Casilla 974-981 — tax information
           p07-fecha-de-adquisicion-04:
             help: Tax information about tax information in casilla 1160-1167 of Modelo
               151.
-            label: Casilla 1160-1167 — tax information
           p07-fecha-de-adquisicion-05:
             help: Tax information about tax information in casilla 1346-1353 of Modelo
               151.
-            label: Casilla 1346-1353 — tax information
           p07-fecha-de-transmision-01:
             help: Tax information about tax information in casilla 594-601 of Modelo
               151.
-            label: Casilla 594-601 — tax information
           p07-fecha-de-transmision-02:
             help: Tax information about tax information in casilla 780-787 of Modelo
               151.
-            label: Casilla 780-787 — tax information
           p07-fecha-de-transmision-03:
             help: Tax information about tax information in casilla 966-973 of Modelo
               151.
-            label: Casilla 966-973 — tax information
           p07-fecha-de-transmision-04:
             help: Tax information about tax information in casilla 1152-1159 of Modelo
               151.
-            label: Casilla 1152-1159 — tax information
           p07-fecha-de-transmision-05:
             help: Tax information about tax information in casilla 1338-1345 of Modelo
               151.
-            label: Casilla 1338-1345 — tax information
-          p07-ganancia-patrimonial-3-02:
-            help: Tax information about tax information in casilla 253-269 of Modelo
-              151.
-            label: Casilla 253-269 — tax information
-          p07-ganancia-patrimonial-3-03:
-            help: Tax information about tax information in casilla 390-406 of Modelo
-              151.
-            label: Casilla 390-406 — tax information
-          p07-ganancia-patrimonial-5-01:
-            help: Tax information about tax information in casilla 661-677 of Modelo
-              151.
-            label: Casilla 661-677 — tax information
-          p07-ganancia-patrimonial-5-02:
-            help: Tax information about tax information in casilla 847-863 of Modelo
-              151.
-            label: Casilla 847-863 — tax information
-          p07-ganancia-patrimonial-5-03:
-            help: Tax information about tax information in casilla 1033-1049 of Modelo
-              151.
-            label: Casilla 1033-1049 — tax information
-          p07-ganancia-patrimonial-5-04:
-            help: Tax information about tax information in casilla 1219-1235 of Modelo
-              151.
-            label: Casilla 1219-1235 — tax information
-          p07-ganancia-patrimonial-5-05:
-            help: Tax information about tax information in casilla 1405-1421 of Modelo
-              151.
-            label: Casilla 1405-1421 — tax information
-          p07-naturaleza-2-01:
-            help: Tax information about tax information in casilla 115 of Modelo 151.
-            label: Casilla 115 — tax information
-          p07-naturaleza-2-02:
-            help: Tax information about tax information in casilla 252 of Modelo 151.
-            label: Casilla 252 — tax information
-          p07-naturaleza-2-03:
-            help: Tax information about tax information in casilla 389 of Modelo 151.
-            label: Casilla 389 — tax information
-          p07-resto-ganancia-patrimonial-3:
-            help: Tax information about tax information in casilla 424-440 of Modelo
-              151.
-            label: Casilla 424-440 — tax information
-          p07-resto-retencion-o-ingreso-a-cuenta-4:
-            help: Tax information about tax information in casilla 441-457 of Modelo
-              151.
-            label: Casilla 441-457 — tax information
-          p07-retencion-o-ingreso-a-cuenta-4-02:
-            help: Tax information about tax information in casilla 270-286 of Modelo
-              151.
-            label: Casilla 270-286 — tax information
-          p07-retencion-o-ingreso-a-cuenta-4-03:
-            help: Tax information about tax information in casilla 407-423 of Modelo
-              151.
-            label: Casilla 407-423 — tax information
-          p07-tipo-de-renta-1-01:
-            help: Tax information about tax information in casilla 13-14 of Modelo
-              151.
-            label: Casilla 13-14 — tax information
-          p07-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 150-151 of Modelo
-              151.
-            label: Casilla 150-151 — tax information
-          p07-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 287-288 of Modelo
-              151.
-            label: Casilla 287-288 — tax information
-          p07-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 492-493 of Modelo
-              151.
-            label: Casilla 492-493 — tax information
-          p07-tipo-de-renta-1-05:
-            help: Tax information about tax information in casilla 678-679 of Modelo
-              151.
-            label: Casilla 678-679 — tax information
-          p07-tipo-de-renta-1-06:
-            help: Tax information about tax information in casilla 864-865 of Modelo
-              151.
-            label: Casilla 864-865 — tax information
-          p07-tipo-de-renta-1-07:
-            help: Tax information about tax information in casilla 1050-1051 of Modelo
-              151.
-            label: Casilla 1050-1051 — tax information
-          p07-tipo-de-renta-1-08:
-            help: Tax information about tax information in casilla 1236-1237 of Modelo
-              151.
-            label: Casilla 1236-1237 — tax information
-          p07-total-ganancias-patrimoniales-5:
-            help: Tax information about tax information in casilla 458-474 of Modelo
-              151.
-            label: Casilla 458-474 — tax information
-          p07-total-retencion-o-ingresos-a-cuenta-6:
-            help: Tax information about tax information in casilla 475-491 of Modelo
-              151.
-            label: Casilla 475-491 — tax information
-          p07-valor-de-adquisicion-3-01:
-            help: Tax information about tax information in casilla 627-643 of Modelo
-              151.
-            label: Casilla 627-643 — tax information
-          p07-valor-de-adquisicion-3-02:
-            help: Tax information about tax information in casilla 813-829 of Modelo
-              151.
-            label: Casilla 813-829 — tax information
-          p07-valor-de-adquisicion-3-03:
-            help: Tax information about tax information in casilla 999-1015 of Modelo
-              151.
-            label: Casilla 999-1015 — tax information
-          p07-valor-de-adquisicion-3-04:
-            help: Tax information about tax information in casilla 1185-1201 of Modelo
-              151.
-            label: Casilla 1185-1201 — tax information
-          p07-valor-de-adquisicion-3-05:
-            help: Tax information about tax information in casilla 1371-1387 of Modelo
-              151.
-            label: Casilla 1371-1387 — tax information
-          p07-valor-de-transmision-2-01:
-            help: Tax information about tax information in casilla 610-626 of Modelo
-              151.
-            label: Casilla 610-626 — tax information
-          p07-valor-de-transmision-2-02:
-            help: Tax information about tax information in casilla 796-812 of Modelo
-              151.
-            label: Casilla 796-812 — tax information
-          p07-valor-de-transmision-2-03:
-            help: Tax information about tax information in casilla 982-998 of Modelo
-              151.
-            label: Casilla 982-998 — tax information
-          p07-valor-de-transmision-2-04:
-            help: Tax information about tax information in casilla 1168-1184 of Modelo
-              151.
-            label: Casilla 1168-1184 — tax information
-          p07-valor-de-transmision-2-05:
-            help: Tax information about tax information in casilla 1354-1370 of Modelo
-              151.
-            label: Casilla 1354-1370 — tax information
+          p08-base-liquidable-del-ahorro-18:
+            help: 'Review the casilla information: Base liquidable of the ahorro [18].'
+            label: Savings taxable base [18]
+          p08-cuota-correspondiente-e-general-del-ahorro-20:
+            help: 'Tax information about tax information in casilla 842-858 of Modelo
+              151 References: [20].'
+            label: Tax on the savings taxable base [20]
           p08-cuota-integra-total-21:
-            help: Tax information about tax information in casilla 859-875 of Modelo
-              151.
-            label: Casilla 859-875 — tax information
+            help: 'Review the casilla information: Amount full total [21].'
+            label: Total gross tax [21]
           p08-cuota-integra-total-parte-autonomica-23:
-            help: Tax information about tax information in casilla 893-909 of Modelo
-              151.
-            label: Casilla 893-909 — tax information
+            help: 'Review the casilla information: Amount full total. Regional share
+              [23].'
           p08-cuota-integra-total-parte-estatal-22:
-            help: Tax information about tax information in casilla 876-892 of Modelo
-              151.
-            label: Casilla 876-892 — tax information
+            help: 'Review the casilla information: Amount full total. State share
+              [22].'
           p08-cuota-liquida-total-30:
-            help: Tax information for casilla 1012-1028 of Modelo 151.
-            label: Casilla 1012-1028 — tax field
+            help: 'Review the casilla information: Amount líquida total [30].'
+            label: Total net tax [30]
           p08-cuota-liquida-total-parte-autonomica-32:
-            help: Tax information for casilla 1046-1062 of Modelo 151.
-            label: Casilla 1046-1062 — tax field
+            help: 'Review the casilla information: Amount líquida total. Regional
+              share [32].'
           p08-cuota-liquida-total-parte-estatal-31:
-            help: Tax information for casilla 1029-1045 of Modelo 151.
-            label: Casilla 1029-1045 — tax field
+            help: 'Review the casilla information: Amount líquida total. State share
+              [31].'
           p08-cuotas-del-impuesto-so-as-en-la-declaracion-34:
-            help: Tax information about tax information in casilla 1080-1096 of Modelo
-              151.
-            label: Casilla 1080-1096 — tax information
+            help: 'Tax information about tax information in casilla 1080-1096 of Modelo
+              151 References: [34].'
           p08-deduccion-por-doble-im-anjero-parte-estatal-28:
-            help: Tax information for casilla 978-994 of Modelo 151.
-            label: Casilla 978-994 — tax field
+            help: 'Tax information about tax information in casilla 978-994 of Modelo
+              151 References: [28].'
           p08-deduccion-por-doble-im-dos-en-el-extranjero-27:
-            help: Tax information for casilla 961-977 of Modelo 151.
-            label: Casilla 961-977 — tax field
+            help: 'Tax information about tax information in casilla 961-977 of Modelo
+              151 References: [27].'
+            label: Deduction for international double taxation on employment income
+              obtained and taxed abroad [27]
           p08-deduccion-por-doble-im-ero-parte-autonomica-29:
-            help: Tax information for casilla 995-1011 of Modelo 151.
-            label: Casilla 995-1011 — tax field
+            help: 'Tax information about tax information in casilla 995-1011 of Modelo
+              151 References: [29].'
           p08-deduccion-por-donativos-24:
-            help: Tax information for casilla 910-926 of Modelo 151.
-            label: Casilla 910-926 — tax field
+            help: 'Tax information about tax information in casilla 910-926 of Modelo
+              151 References: [24].'
+            label: Deduction for donations [24]
           p08-deduccion-por-donativos-parte-autonomica-26:
-            help: Tax information for casilla 944-960 of Modelo 151.
-            label: Casilla 944-960 — tax field
+            help: 'Tax information about tax information in casilla 944-960 of Modelo
+              151 References: [26].'
           p08-deduccion-por-donativos-parte-estatal-25:
-            help: Tax information for casilla 927-943 of Modelo 151.
-            label: Casilla 927-943 — tax field
+            help: 'Tax information about tax information in casilla 927-943 of Modelo
+              151 References: [25].'
           p08-descripcion-del-elemento-patrimonial-02:
             help: Tax information for casilla 201-300 of Modelo 151.
-            label: Casilla 201-300 — tax field
           p08-descripcion-del-elemento-patrimonial-03:
             help: Tax information for casilla 387-486 of Modelo 151.
-            label: Casilla 387-486 — tax field
           p08-descripcion-del-elemento-patrimonial-04:
             help: Tax information for casilla 573-672 of Modelo 151.
-            label: Casilla 573-672 — tax field
           p08-devoluciones-acordadas-or-la-administracion-42:
-            help: Tax information for casilla 1216-1232 of Modelo 151.
-            label: Casilla 1216-1232 — tax field
-          p08-diferencia-4-02:
-            help: Tax information about tax information in casilla 351-367 of Modelo
-              151.
-            label: Casilla 351-367 — tax information
-          p08-diferencia-4-03:
-            help: Tax information about tax information in casilla 537-553 of Modelo
-              151.
-            label: Casilla 537-553 — tax information
-          p08-diferencia-4-04:
-            help: Tax information about tax information in casilla 723-739 of Modelo
-              151.
-            label: Casilla 723-739 — tax information
+            help: 'Tax information about tax information in casilla 1216-1232 of Modelo
+              151 References: [42].'
           p08-epigrafe-a1-35:
-            help: Tax information about tax information in casilla 1097-1113 of Modelo
-              151.
-            label: Casilla 1097-1113 — tax information
+            help: 'Review the casilla information: Epígrafe A1 [35].'
+            label: Heading A1 [35]
           p08-epigrafe-a2-36:
-            help: Tax information about tax information in casilla 1114-1130 of Modelo
-              151.
-            label: Casilla 1114-1130 — tax information
+            help: 'Review the casilla information: Epígrafe A2 [36].'
+            label: Heading A2 [36]
           p08-epigrafe-b-37:
-            help: Tax information about tax information in casilla 1131-1147 of Modelo
-              151.
-            label: Casilla 1131-1147 — tax information
+            help: 'Review the casilla information: Epígrafe B [37].'
+            label: Heading B [37]
           p08-epigrafe-c-38:
-            help: Tax information about tax information in casilla 1148-1164 of Modelo
-              151.
-            label: Casilla 1148-1164 — tax information
+            help: 'Review the casilla information: Epígrafe C [38].'
+            label: Heading C [38]
           p08-epigrafe-d-39:
-            help: Tax information about tax information in casilla 1165-1181 of Modelo
-              151.
-            label: Casilla 1165-1181 — tax information
+            help: 'Review the casilla information: Epígrafe D [39].'
+            label: Heading D [39]
           p08-epigrafe-e1-y-e2-40:
-            help: Tax information about tax information in casilla 1182-1198 of Modelo
-              151.
-            label: Casilla 1182-1198 — tax information
+            help: 'Review the casilla information: Epígrafe E1 and E2 [40].'
+            label: Headings E1 and E2 [40]
           p08-fecha-de-adquisicion-02:
             help: Tax information about tax information in casilla 309-316 of Modelo
               151.
-            label: Casilla 309-316 — tax information
           p08-fecha-de-adquisicion-03:
             help: Tax information about tax information in casilla 495-502 of Modelo
               151.
-            label: Casilla 495-502 — tax information
           p08-fecha-de-adquisicion-04:
             help: Tax information about tax information in casilla 681-688 of Modelo
               151.
-            label: Casilla 681-688 — tax information
           p08-fecha-de-transmision-02:
             help: Tax information about tax information in casilla 301-308 of Modelo
               151.
-            label: Casilla 301-308 — tax information
           p08-fecha-de-transmision-03:
             help: Tax information about tax information in casilla 487-494 of Modelo
               151.
-            label: Casilla 487-494 — tax information
           p08-fecha-de-transmision-04:
             help: Tax information about tax information in casilla 673-680 of Modelo
               151.
-            label: Casilla 673-680 — tax information
-          p08-ganancia-patrimonial-5-02:
-            help: Tax information about tax information in casilla 368-384 of Modelo
-              151.
-            label: Casilla 368-384 — tax information
-          p08-ganancia-patrimonial-5-03:
-            help: Tax information about tax information in casilla 554-570 of Modelo
-              151.
-            label: Casilla 554-570 — tax information
-          p08-ganancia-patrimonial-5-04:
-            help: Tax information about tax information in casilla 740-756 of Modelo
-              151.
-            label: Casilla 740-756 — tax information
-          p08-resto-ganancia-patrimonial-5:
-            help: Tax information about tax information in casilla 757-773 of Modelo
-              151.
-            label: Casilla 757-773 — tax information
+          p08-resultado-de-la-declaracion-43:
+            help: 'Review the casilla information: Result of the return [43].'
+            label: Result of the return [43]
           p08-resultados-a-ingresar-cion-administrativas-41:
-            help: Tax information about tax information in casilla 1199-1215 of Modelo
+            help: 'Tax information about tax information in casilla 1199-1215 of Modelo
+              151 References: [41].'
+          representante-fax:
+            help: Tax information about tax information in casilla 913-921 of Modelo
               151.
-            label: Casilla 1199-1215 — tax information
-          p08-tipo-de-renta-1-02:
-            help: Tax information about tax information in casilla 199-200 of Modelo
-              151.
-            label: Casilla 199-200 — tax information
-          p08-tipo-de-renta-1-03:
-            help: Tax information about tax information in casilla 385-386 of Modelo
-              151.
-            label: Casilla 385-386 — tax information
-          p08-tipo-de-renta-1-04:
-            help: Tax information about tax information in casilla 571-572 of Modelo
-              151.
-            label: Casilla 571-572 — tax information
-          p08-total-ganancias-patrimoniales-6:
-            help: Tax information about tax information in casilla 774-790 of Modelo
-              151.
-            label: Casilla 774-790 — tax information
-          p08-valor-de-adquisicion-3-02:
-            help: Tax information about tax information in casilla 334-350 of Modelo
-              151.
-            label: Casilla 334-350 — tax information
-          p08-valor-de-adquisicion-3-03:
-            help: Tax information about tax information in casilla 520-536 of Modelo
-              151.
-            label: Casilla 520-536 — tax information
-          p08-valor-de-adquisicion-3-04:
-            help: Tax information about tax information in casilla 706-722 of Modelo
-              151.
-            label: Casilla 706-722 — tax information
-          p08-valor-de-transmision-2-02:
-            help: Tax information about tax information in casilla 317-333 of Modelo
-              151.
-            label: Casilla 317-333 — tax information
-          p08-valor-de-transmision-2-03:
-            help: Tax information about tax information in casilla 503-519 of Modelo
-              151.
-            label: Casilla 503-519 — tax information
-          p08-valor-de-transmision-2-04:
-            help: Tax information about tax information in casilla 689-705 of Modelo
-              151.
-            label: Casilla 689-705 — tax information
+            label: Representative. 61 - Fax number.
+          tipo-de-declaracion:
+            label: Return type
       field:
         official_name: Modelo 151. Personal Income Tax return for taxpayers under
           the special regime applicable to workers posted to Spanish territory.
@@ -1863,18 +568,8 @@ modelo:
       revision:
         2015-2022:
           casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax year the return refers to
-              label: Tax year the return refers to
-            x-chim6r1ee1in4qbfchng:
-              help: Period (annual, 0A)
-              label: Period (annual, 0A)
             x-chkm8bj3elnn8o9dcdin4ro:
-              help: 'Review the casilla information: Amount cero.'
               label: Zero tax due
-            x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
-              help: 'Review the casilla information: Refund. SWIFT-BIC.'
-              label: Refund. SWIFT-BIC
             x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
               help: Tax information about tax information in casilla 13-46 of Modelo
                 151.
@@ -1887,54 +582,27 @@ modelo:
               help: Tax information about tax information in casilla 59 of Modelo
                 151.
               label: Requests the refund by bank transfer
-            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
-              help: General taxable base (impatriate regime, excluding the savings
-                component under art. 25.1.f TRLIRNR)
-              label: General taxable base (impatriate regime, excluding the savings
-                component under art. 25.1.f TRLIRNR)
             x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
-              help: Tax information about tax information in casilla  of Modelo 151.
               label: Net tax liability (gross general tax liability minus withholdings)
-            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
-              help: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
-                to €600,000, 47% on the excess)'
-              label: 'Gross general tax liability (scale under art. 93.2.e.1: 24%
-                up to €600,000, 47% on the excess)'
-            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
-              help: Withholdings and advance payments (art. 93.2.f)
-              label: Withholdings and advance payments (art. 93.2.f)
             x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
-              help: Tax information for casilla 925 of Modelo 151.
               label: Allocation of amounts to social purposes
             x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
-              help: Tax information for casilla 924 of Modelo 151.
               label: Tax allocation to the Catholic Church
             x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
-              help: Tax information for casilla 922-923 of Modelo 151.
               label: Autonomous community of residence during the stated tax year
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
-              help: Tax information about tax information in casilla 119-123 of Modelo
-                151.
               label: Taxpayer. 44 - Street type.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
               help: 'Review the casilla information: Taxpayer. 45 - Name of the vía
                 pública.'
               label: Taxpayer. 45 - Street name.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
-              help: Tax information about tax information in casilla 174-176 of Modelo
-                151.
               label: Taxpayer. 46 - Numbering type.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
-              help: Tax information about tax information in casilla 177-181 of Modelo
-                151.
               label: Taxpayer. 47 - House number.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
-              help: Tax information about tax information in casilla 182-184 of Modelo
-                151.
               label: Taxpayer. 48 - Number qualifier.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd1p5lh6orrhelig:
-              help: Tax information about tax information in casilla 185-187 of Modelo
-                151.
               label: Taxpayer. 49 - Block.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9g5lo6usjkc5m0:
               help: 'Review the casilla information: Taxpayer. 50 - Portal.'
@@ -1949,8 +617,6 @@ modelo:
               help: 'Review the casilla information: Taxpayer. 53 - Puerta.'
               label: Taxpayer. 53 - Door.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
-              help: Tax information about tax information in casilla 200-239 of Modelo
-                151.
               label: Taxpayer. 54 - Additional address details.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
               help: 'Review the casilla information: Taxpayer. 55 - Localidad/Población.'
@@ -1958,10 +624,6 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
               help: 'Review the casilla information: Taxpayer. 56 - Code postal.'
               label: Taxpayer. 56 - Postal code.
-            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
-              help: Tax information about tax information in casilla 277-281 of Modelo
-                151.
-              label: Taxpayer. 57 - Municipality code.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
               help: Tax information about tax information in casilla 275-276 of Modelo
                 151.
@@ -1972,29 +634,15 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
               help: 'Review the casilla information: Taxpayer. 60 - Teléfono móvil.'
               label: Taxpayer. 60 - Mobile telephone.
-            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhh5ln6ubb4ckmmcobo:
-              help: Tax information about tax information in casilla 300-308 of Modelo
-                151.
-              label: Taxpayer. 61 - Fax number.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
-              help: Tax information about tax information in casilla 118 of Modelo
-                151.
               label: Taxpayer. Change of address
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
-              help: Tax information about tax information in casilla 623-642 of Modelo
-                151.
               label: Taxpayer additional current-dwelling data. Cadastral reference
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
-              help: Tax information about tax information in casilla 616 of Modelo
-                151.
               label: Taxpayer additional current-dwelling data. Ownership
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: Tax information about tax information in casilla 617-621 of Modelo
-                151.
               label: Taxpayer additional current-dwelling data. Participation percentage
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
-              help: Tax information about tax information in casilla 622 of Modelo
-                151.
               label: Taxpayer additional current-dwelling data. Situation
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
               help: 'Review the casilla information: Taxpayer Address Foreign. 70
@@ -2017,8 +665,6 @@ modelo:
                 - Teléfono Móvil.'
               label: Taxpayer foreign address. 71 - Mobile telephone
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn0sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
-              help: Tax information about tax information in casilla 539-568 of Modelo
-                151.
               label: Taxpayer foreign address. 67 - Province/region/state
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn4rpd6or2qorfchkmerpde1nn6t31dgmnkqbg:
               help: 'Review the casilla information: Taxpayer Address Foreign. 66
@@ -2032,13 +678,7 @@ modelo:
               help: 'Review the casilla information: Taxpayer Address Foreign. 68
                 - Country.'
               label: Taxpayer foreign address. 68 - Country
-            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9n68mmsrpdcpgng:
-              help: 'Review the casilla information: Taxpayer Address Foreign. 72
-                - Nº Fax.'
-              label: Taxpayer foreign address. 72 - Fax number
             x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehng:
-              help: Tax information about tax information in casilla 110-117 of Modelo
-                151.
               label: Taxpayer. Date of birth
             x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1ng:
               help: 'Review the casilla information: Taxpayer. Sexo.'
@@ -2049,36 +689,23 @@ modelo:
             x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp0:
               help: 'Review the casilla information: Return Supplementary 2.'
               label: Supplementary return 2
-            x-e0o32bj4clr6arj7dsmn0pbid5nm8ro:
-              help: Tax information for casilla 107-108 of Modelo 151.
-              label: Accrual - period
             x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkck:
               help: Tax information about tax information in casilla 928-940 of Modelo
                 151.
               label: Receipt number
             x-e0o32bjiclo74pbjcln78obeehiiqd1k5lq6is3f5li6abbmd5gg:
-              help: Tax information about tax information in casilla 732-736 of Modelo
-                151.
               label: Representative. 44 - Street type.
             x-e0o32bjiclo74pbjcln78obeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
               help: 'Review the casilla information: Representative. 45 - Name of
                 the vía pública.'
               label: Representative. 45 - Street name.
             x-e0o32bjiclo74pbjcln78obeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
-              help: Tax information about tax information in casilla 787-789 of Modelo
-                151.
               label: Representative. 46 - Numbering type.
             x-e0o32bjiclo74pbjcln78obeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
-              help: Tax information about tax information in casilla 790-794 of Modelo
-                151.
               label: Representative. 47 - House number.
             x-e0o32bjiclo74pbjcln78obeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
-              help: Tax information about tax information in casilla 795-797 of Modelo
-                151.
               label: Representative. 48 - Number qualifier.
             x-e0o32bjiclo74pbjcln78obeehiiqd1p5lh6orrhelig:
-              help: Tax information about tax information in casilla 798-800 of Modelo
-                151.
               label: Representative. 49 - Block.
             x-e0o32bjiclo74pbjcln78obeehiiqd9g5lo6usjkc5m0:
               help: 'Review the casilla information: Representative. 50 - Portal.'
@@ -2093,8 +720,6 @@ modelo:
               help: 'Review the casilla information: Representative. 53 - Puerta.'
               label: Representative. 53 - Door.
             x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
-              help: Tax information about tax information in casilla 813-852 of Modelo
-                151.
               label: Representative. 54 - Additional address details.
             x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
               help: 'Review the casilla information: Representative. 55 - Localidad/Población.'
@@ -2102,10 +727,6 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
               help: 'Review the casilla information: Representative. 56 - Code postal.'
               label: Representative. 56 - Postal code.
-            x-e0o32bjiclo74pbjcln78obeehiiqd9n5lhmup39ctniqp355lmnarj9cdkn0qbf:
-              help: Tax information about tax information in casilla 890-894 of Modelo
-                151.
-              label: Representative. 57 - Municipality code.
             x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
               help: Tax information about tax information in casilla 888-889 of Modelo
                 151.
@@ -2118,41 +739,22 @@ modelo:
               help: 'Review the casilla information: Representative. 60 - Teléfono
                 móvil.'
               label: Representative. 60 - Mobile telephone.
-            x-e0o32bjiclo74pbjcln78obeehiiqdhh5ln6ubb4ckmmcobo:
-              help: Tax information about tax information in casilla 913-921 of Modelo
-                151.
-              label: Representative. 61 - Fax number.
-            x-e0o32bjiclo74pbjcln78obeehiiqobgclm6oqb4dtpg:
-              help: 'Review the casilla information: Representative. Surname.'
-              label: Representative. Surnames
             x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
               help: 'Review the casilla information: Representative. NIF.'
               label: Representative. Tax identification number
-            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p8:
-              help: 'Review the casilla information: Representative. Name.'
-              label: Representative. Given name
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: Tax information about tax information in casilla 13 of Modelo
                 151.
-              label: Return type
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              help: 'Tax information about tax information in casilla 225-229 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              help: 'Tax information about tax information in casilla 469-473 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              help: 'Tax information about tax information in casilla 713-717 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              help: 'Tax information about tax information in casilla 957-961 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
@@ -2176,43 +778,27 @@ modelo:
               label: Additional data on income from property and real estate. Situation
                 [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              help: 'Tax information about tax information in casilla 230-234 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              help: 'Tax information about tax information in casilla 474-478 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              help: 'Tax information about tax information in casilla 718-722 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              help: 'Tax information about tax information in casilla 962-966 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              help: 'Tax information about tax information in casilla 237-256 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              help: 'Tax information about tax information in casilla 481-500 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              help: 'Tax information about tax information in casilla 725-744 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              help: 'Tax information about tax information in casilla 969-988 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
@@ -2315,22 +901,6 @@ modelo:
               help: 'Tax information about tax information in casilla 747 of Modelo
                 151 References: [2].'
               label: Nature [2]
-            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
-              help: Tax information about tax information in casilla 111-170 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
-              help: Tax information about tax information in casilla 355-414 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
-              help: Tax information about tax information in casilla 599-658 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
-              help: Tax information about tax information in casilla 843-902 of Modelo
-                151.
-              label: Payer. Surnames or business name
             x-e0o34bjgc5jm2p3fe8mmcbba5ko32:
               help: 'Review the casilla information: Pagador. F/J.'
               label: Payer. Natural/legal person
@@ -2355,18 +925,6 @@ modelo:
             x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
               help: 'Review the casilla information: Pagador. NIF.'
               label: Payer. Tax identification number
-            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o34bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
             x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               help: 'Tax information about tax information in casilla 67-83 of Modelo
                 151 References: [6].'
@@ -2432,23 +990,15 @@ modelo:
                 151 References: [3].'
               label: Valuation [3]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60og:
-              help: 'Tax information about tax information in casilla 225-229 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60p0:
-              help: 'Tax information about tax information in casilla 469-473 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60pg:
-              help: 'Tax information about tax information in casilla 713-717 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn0sjfe1kmap31cgmj2c1d60q0:
-              help: 'Tax information about tax information in casilla 957-961 of Modelo
-                151 References: [10].'
               label: Additional data on income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmn6qbkelgm6qbfdomj2cpd60og:
@@ -2472,43 +1022,27 @@ modelo:
               label: Additional data on income from property and real estate. Situation
                 [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60og:
-              help: 'Tax information about tax information in casilla 230-234 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60p0:
-              help: 'Tax information about tax information in casilla 474-478 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60pg:
-              help: 'Tax information about tax information in casilla 718-722 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmmirjdelim4r35ecmnasrlcpp7aorkdsmj2c9d60q0:
-              help: 'Tax information about tax information in casilla 962-966 of Modelo
-                151 References: [11].'
               label: Additional data on income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko32:
-              help: 'Tax information about tax information in casilla 237-256 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko34:
-              help: 'Tax information about tax information in casilla 481-500 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko36:
-              help: 'Tax information about tax information in casilla 725-744 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc9k5ko38:
-              help: 'Tax information about tax information in casilla 969-988 of Modelo
-                151 References: [14].'
               label: Additional data on income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddgmn6bb55lkmsrblclh6opbj5lnn4qb7cln2qc9i5ko32:
@@ -2611,22 +1145,6 @@ modelo:
               help: 'Tax information about tax information in casilla 747 of Modelo
                 151 References: [2].'
               label: Nature [2]
-            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0c8:
-              help: Tax information about tax information in casilla 111-170 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0cg:
-              help: Tax information about tax information in casilla 355-414 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0co:
-              help: Tax information about tax information in casilla 599-658 of Modelo
-                151.
-              label: Payer. Surnames or business name
-            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmmubbic5t6urhdednm6qb1dgmj0d0:
-              help: Tax information about tax information in casilla 843-902 of Modelo
-                151.
-              label: Payer. Surnames or business name
             x-e0o36bjgc5jm2p3fe8mmcbba5ko32:
               help: 'Review the casilla information: Pagador. F/J.'
               label: Payer. Natural/legal person
@@ -2651,18 +1169,6 @@ modelo:
             x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
               help: 'Review the casilla information: Pagador. NIF.'
               label: Payer. Tax identification number
-            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g64:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g68:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6c:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
-            x-e0o36bjgc5jm2p3fe8mmsrrdc9p6ab9g6g:
-              help: 'Review the casilla information: Pagador. Name.'
-              label: Payer. Given name
             x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               help: 'Tax information about tax information in casilla 67-83 of Modelo
                 151 References: [6].'
@@ -2720,13 +1226,7 @@ modelo:
                 151 References: [1].'
               label: Income type [1]
             x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeegmmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc9l:
-              help: 'Review the casilla information: Total income íntegros/Income
-                property imputada [15].'
               label: Total gross income / imputed real-estate income [15]
-            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
-              help: 'Tax information about tax information in casilla 1040-1056 of
-                Modelo 151 References: [16].'
-              label: Total withholdings or payments on account [16]
             x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
               help: 'Tax information about tax information in casilla 16-32 of Modelo
                 151 References: [3].'
@@ -3045,44 +1545,24 @@ modelo:
               help: 'Review the casilla information: Income íntegros [2].'
               label: Gross receipts [2]
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g64:
-              help: Tax information about tax information in casilla 170-178 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g68:
-              help: Tax information about tax information in casilla 215-223 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6c:
-              help: Tax information about tax information in casilla 260-268 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6g:
-              help: Tax information about tax information in casilla 305-313 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6k:
-              help: Tax information about tax information in casilla 350-358 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6o:
-              help: Tax information about tax information in casilla 395-403 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6s:
-              help: Tax information about tax information in casilla 440-448 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g70:
-              help: Tax information about tax information in casilla 485-493 of Modelo
-                151.
               label: Tax identification number of the investment company or fund
             x-e0o3abjicln68qbdd5imst3f5ln6at3f5kqg:
               help: 'Review the casilla information: Net income [5].'
               label: Net income [5]
-            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
-              help: 'Tax information about tax information in casilla 100-116 of Modelo
-                151 References: [6].'
-              label: Negative income. Withholding or payment on account [6]
             x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmn4pbechkmqqb5dpq6ubbeclq6ub9n:
               help: 'Review the casilla information: Income Negativos. Net income[7].'
               label: Negative income. Net income [7]
@@ -3182,12 +1662,8 @@ modelo:
                 151 References: [9].'
               label: Total withholdings or payments on account [9]
             x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g64:
-              help: Tax information about tax information in casilla 317-321 of Modelo
-                151.
               label: 44 - Street type.
             x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g68:
-              help: Tax information about tax information in casilla 925-929 of Modelo
-                151.
               label: 44 - Street type.
             x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0c8:
               help: 'Review the casilla information: 45 - Name of the vía pública.'
@@ -3196,12 +1672,8 @@ modelo:
               help: 'Review the casilla information: 45 - Name of the vía pública.'
               label: 45 - Street name.
             x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko32:
-              help: Tax information about tax information in casilla 372-374 of Modelo
-                151.
               label: 46 - Numbering type.
             x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko34:
-              help: Tax information about tax information in casilla 980-982 of Modelo
-                151.
               label: 46 - Numbering type.
             x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0c8:
               help: Tax information about tax information in casilla 375-379 of Modelo
@@ -3220,12 +1692,8 @@ modelo:
                 151.
               label: 48 - Number qualifier.
             x-e0o3cbhk74mm4r3fe5qmab9g64:
-              help: Tax information about tax information in casilla 383-385 of Modelo
-                151.
               label: 49 - Block.
             x-e0o3cbhk74mm4r3fe5qmab9g68:
-              help: Tax information about tax information in casilla 991-993 of Modelo
-                151.
               label: 49 - Block.
             x-e0o3cbhl60mn0rriehgmob9g64:
               help: 'Review the casilla information: 50 - Portal.'
@@ -3252,12 +1720,8 @@ modelo:
               help: 'Review the casilla information: 53 - Puerta.'
               label: 53 - Door.
             x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0c8:
-              help: Tax information about tax information in casilla 398-437 of Modelo
-                151.
               label: 54 - Additional address details.
             x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0cg:
-              help: Tax information about tax information in casilla 1006-1045 of
-                Modelo 151.
               label: 54 - Additional address details.
             x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0c8:
               help: 'Review the casilla information: 55 - Localidad/Población.'
@@ -3272,20 +1736,12 @@ modelo:
               help: 'Review the casilla information: 56 - Code postal.'
               label: 56 - Postal code.
             x-e0o3cbhl6smmqtbed5hmis39dsmj0c8:
-              help: Tax information about tax information in casilla 475-479 of Modelo
-                151.
               label: 57 - Municipality
             x-e0o3cbhl6smmqtbed5hmis39dsmj0cg:
-              help: Tax information about tax information in casilla 1083-1087 of
-                Modelo 151.
               label: 57 - Municipality
             x-e0o3cbhl70mn0sjfepkmsor9c4mj0c8:
-              help: Tax information about tax information in casilla 473-474 of Modelo
-                151.
               label: 58 - Province.
             x-e0o3cbhl70mn0sjfepkmsor9c4mj0cg:
-              help: Tax information about tax information in casilla 1081-1082 of
-                Modelo 151.
               label: 58 - Province.
             x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1h:
               help: 'Review the casilla information: 73 - Referencia Catastral.'
@@ -3293,14 +1749,6 @@ modelo:
             x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1i:
               help: 'Review the casilla information: 73 - Referencia Catastral.'
               label: 73 - Cadastral reference
-            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko32:
-              help: Tax information about tax information in casilla 237-296 of Modelo
-                151.
-              label: Acquirer. Surnames or business name
-            x-e0o3cbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lniqsj1f9nmsbbjdthmiobc5ko34:
-              help: Tax information about tax information in casilla 845-904 of Modelo
-                151.
-              label: Acquirer. Surnames or business name
             x-e0o3cbj1chonaqbid5imst355lj2qqhd60og:
               help: 'Review the casilla information: Adquiriente. F/J.'
               label: Acquirer. Natural/legal person
@@ -3313,19 +1761,9 @@ modelo:
             x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
               help: 'Review the casilla information: Adquiriente. NIF.'
               label: Acquirer. Tax identification number
-            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1h:
-              help: 'Review the casilla information: Adquiriente. Name.'
-              label: Acquirer. Given name
-            x-e0o3cbj1chonaqbid5imst355ln6urb2e9iiqc1i:
-              help: 'Review the casilla information: Adquiriente. Name.'
-              label: Acquirer. Given name
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
-              help: Tax information about tax information in casilla 222-226 of Modelo
-                151.
               label: Participation share
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
-              help: Tax information about tax information in casilla 830-834 of Modelo
-                151.
               label: Participation share
             x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g64:
               help: 'Review the casilla information: Diferencia (Acquisition) [4].'
@@ -3342,36 +1780,20 @@ modelo:
                 151 References: [8].'
               label: Difference (improvement or 2nd acquisition) [8]
             x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0c8:
-              help: Tax information about tax information in casilla 500 of Modelo
-                151.
               label: Public or private deed
             x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0cg:
-              help: Tax information about tax information in casilla 1108 of Modelo
-                151.
               label: Public or private deed
             x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
-              help: Tax information about tax information in casilla 198-205 of Modelo
-                151.
               label: Acquisition date
             x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
-              help: Tax information about tax information in casilla 806-813 of Modelo
-                151.
               label: Acquisition date
             x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0c8:
-              help: Tax information about tax information in casilla 206-213 of Modelo
-                151.
               label: Date of the improvement or 2nd acquisition
             x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0cg:
-              help: Tax information about tax information in casilla 814-821 of Modelo
-                151.
               label: Date of the improvement or 2nd acquisition
             x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
-              help: Tax information about tax information in casilla 214-221 of Modelo
-                151.
               label: Transfer date
             x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
-              help: Tax information about tax information in casilla 822-829 of Modelo
-                151.
               label: Transfer date
             x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0c8:
               help: 'Tax information about tax information in casilla 79-95 of Modelo
@@ -3389,21 +1811,9 @@ modelo:
               help: 'Tax information about tax information in casilla 755-771 of Modelo
                 151 References: [9].'
               label: Gain or loss (improvement or 2nd acquisition) [9]
-            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1h:
-              help: 'Tax information about tax information in casilla 164-180 of Modelo
-                151 References: [10].'
-              label: Total capital gain obtained [10]
-            x-e0o3cbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
-              help: 'Tax information about tax information in casilla 772-788 of Modelo
-                151 References: [10].'
-              label: Total capital gain obtained [10]
             x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
-              help: Tax information about tax information in casilla 501-600 of Modelo
-                151.
               label: Notary or authenticating officer
             x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g68:
-              help: Tax information about tax information in casilla 1109-1208 of
-                Modelo 151.
               label: Notary or authenticating officer
             x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g64:
               help: Tax information about tax information in casilla 601-620 of Modelo
@@ -3421,22 +1831,6 @@ modelo:
               help: 'Review the casilla information: Number Receipt of the modelo
                 211.'
               label: Receipt number of form 211
-            x-e0o3cbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              help: 'Tax information about tax information in casilla 1229-1245 of
-                Modelo 151 References: [10].'
-              label: REMAINDER. Total capital gain obtained [10]
-            x-e0o3cbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
-              help: 'Tax information about tax information in casilla 1246-1262 of
-                Modelo 151 References: [11].'
-              label: REMAINDER. Withholding or payment on account [11]
-            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko32:
-              help: 'Tax information about tax information in casilla 181-197 of Modelo
-                151 References: [11].'
-              label: Withholding or payment on account [11]
-            x-e0o3cbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
-              help: 'Tax information about tax information in casilla 789-805 of Modelo
-                151 References: [11].'
-              label: Withholding or payment on account [11]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
               help: 'Tax information about tax information in casilla 13-14 of Modelo
                 151 References: [1].'
@@ -3445,14 +1839,6 @@ modelo:
               help: 'Tax information about tax information in casilla 621-622 of Modelo
                 151 References: [1].'
               label: Income type [1]
-            x-e0o3cbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
-              help: 'Review the casilla information: Total ganancias capital-gains
-                [12].'
-              label: Total capital gains [12]
-            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
-              help: 'Tax information about tax information in casilla 1280-1296 of
-                Modelo 151 References: [13].'
-              label: Total withholdings or payments on account [13]
             x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
               help: 'Tax information about tax information in casilla 45-61 of Modelo
                 151 References: [3].'
@@ -3488,28 +1874,20 @@ modelo:
                 151 References: [6].'
               label: Transfer value (improvement or 2nd acquisition) [6]
             x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1h:
-              help: Tax information for casilla 15-114 of Modelo 151.
               label: Description of the capital gain
             x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1i:
-              help: Tax information for casilla 152-251 of Modelo 151.
               label: Description of the capital gain
             x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1j:
-              help: Tax information for casilla 289-388 of Modelo 151.
               label: Description of the capital gain
             x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
-              help: Tax information for casilla 494-593 of Modelo 151.
               label: Description of the asset
             x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
-              help: Tax information for casilla 680-779 of Modelo 151.
               label: Description of the asset
             x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
-              help: Tax information for casilla 866-965 of Modelo 151.
               label: Description of the asset
             x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
-              help: Tax information for casilla 1052-1151 of Modelo 151.
               label: Description of the asset
             x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko3a:
-              help: Tax information for casilla 1238-1337 of Modelo 151.
               label: Description of the asset
             x-e0o3ebj4d5j6asj5dphmio9d6gmj0c8:
               help: 'Review the casilla information: Diferencia [4].'
@@ -3527,44 +1905,24 @@ modelo:
               help: 'Review the casilla information: Diferencia [4].'
               label: Difference [4]
             x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
-              help: Tax information about tax information in casilla 602-609 of Modelo
-                151.
               label: Acquisition date
             x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
-              help: Tax information about tax information in casilla 788-795 of Modelo
-                151.
               label: Acquisition date
             x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
-              help: Tax information about tax information in casilla 974-981 of Modelo
-                151.
               label: Acquisition date
             x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
-              help: Tax information about tax information in casilla 1160-1167 of
-                Modelo 151.
               label: Acquisition date
             x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60qg:
-              help: Tax information about tax information in casilla 1346-1353 of
-                Modelo 151.
               label: Acquisition date
             x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
-              help: Tax information about tax information in casilla 594-601 of Modelo
-                151.
               label: Transfer date
             x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
-              help: Tax information about tax information in casilla 780-787 of Modelo
-                151.
               label: Transfer date
             x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
-              help: Tax information about tax information in casilla 966-973 of Modelo
-                151.
               label: Transfer date
             x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
-              help: Tax information about tax information in casilla 1152-1159 of
-                Modelo 151.
               label: Transfer date
             x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60qg:
-              help: Tax information about tax information in casilla 1338-1345 of
-                Modelo 151.
               label: Transfer date
             x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0c8:
               help: 'Tax information about tax information in casilla 116-132 of Modelo
@@ -3710,83 +2068,36 @@ modelo:
               help: 'Tax information about tax information in casilla 1354-1370 of
                 Modelo 151 References: [2].'
               label: Transfer value [2]
-            x-e0o3gbj2c5pmabbcd5onaqb4c5h6op9dchimobb1d1nn4sjf5kojg:
-              help: 'Review the casilla information: Base liquidable of the ahorro
-                [18].'
-              label: Savings taxable base [18]
-            x-e0o3gbj3elnn8o9dcdnn4sj5edo6urj4d5imst355liiqpr5dpin4obc5li6ar1dc5k6usjidsmj4c0:
-              help: 'Tax information about tax information in casilla 842-858 of Modelo
-                151 References: [20].'
-              label: Tax on the savings taxable base [20]
-            x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
-              help: 'Review the casilla information: Amount full total [21].'
-              label: Total gross tax [21]
             x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              help: 'Review the casilla information: Amount full total. Regional share
-                [23].'
               label: Total gross tax. Regional share [23]
             x-e0o3gbj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              help: 'Review the casilla information: Amount full total. State share
-                [22].'
               label: Total gross tax. State share [22]
-            x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
-              help: 'Review the casilla information: Amount líquida total [30].'
-              label: Total net tax [30]
             x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              help: 'Review the casilla information: Amount líquida total. Regional
-                share [32].'
               label: Total net tax. Regional share [32]
             x-e0o3gbj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              help: 'Review the casilla information: Amount líquida total. State share
-                [31].'
               label: Total net tax. State share [31]
             x-e0o3gbj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdsmm2spdcln2qr315li6aorcc5p62or9dtn2qcpk:
-              help: 'Tax information about tax information in casilla 1080-1096 of
-                Modelo 151 References: [34].'
               label: Non-resident income tax paid on the income included in this return
                 [34]
             x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm2rjaclp6ubbgc5p78p9dclpn8obkc5m2qcho:
-              help: 'Tax information about tax information in casilla 978-994 of Modelo
-                151 References: [28].'
               label: Deduction for international double taxation on employment income
                 obtained and taxed abroad. State share [28]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmm8rrj5limsbb5dgmmau3ke9gmsqj5e9niqchn:
-              help: 'Tax information about tax information in casilla 961-977 of Modelo
-                151 References: [27].'
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad [27]
             x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dkmmasjf5lo62sjkckmm2tbkdtn6urb9cdgiqchp:
-              help: 'Tax information about tax information in casilla 995-1011 of
-                Modelo 151 References: [29].'
               label: Deduction for international double taxation on employment income
                 obtained and taxed abroad. Regional share [29]
-            x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqchk:
-              help: 'Tax information about tax information in casilla 910-926 of Modelo
-                151 References: [24].'
-              label: Deduction for donations [24]
             x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              help: 'Tax information about tax information in casilla 944-960 of Modelo
-                151 References: [26].'
               label: Deduction for donations. Regional share [26]
             x-e0o3gbj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
-              help: 'Tax information about tax information in casilla 927-943 of Modelo
-                151 References: [25].'
               label: Deduction for donations. State share [25]
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
-              help: Tax information for casilla 15-114 of Modelo 151.
               label: Description of the asset
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
-              help: Tax information for casilla 201-300 of Modelo 151.
               label: Description of the asset
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
-              help: Tax information for casilla 387-486 of Modelo 151.
               label: Description of the asset
             x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
-              help: Tax information for casilla 573-672 of Modelo 151.
               label: Description of the asset
             x-e0o3gbj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmmushddhgiqob4dlkmsqbjehp62or9dtn2qd1i:
-              help: 'Tax information about tax information in casilla 1216-1232 of
-                Modelo 151 References: [42].'
               label: Refunds granted by the Administration [42]
             x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
               help: 'Review the casilla information: Diferencia [4].'
@@ -3800,55 +2111,21 @@ modelo:
             x-e0o3gbj4d5j6asj5dphmio9d6gmj0d0:
               help: 'Review the casilla information: Diferencia [4].'
               label: Difference [4]
-            x-e0o3gbj5e1kmesj1cpiiqo9h5kpja:
-              help: 'Review the casilla information: Epígrafe A1 [35].'
-              label: Heading A1 [35]
-            x-e0o3gbj5e1kmesj1cpiiqo9i5kpjc:
-              help: 'Review the casilla information: Epígrafe A2 [36].'
-              label: Heading A2 [36]
-            x-e0o3gbj5e1kmesj1cpiiqohd6crg:
-              help: 'Review the casilla information: Epígrafe B [37].'
-              label: Heading B [37]
-            x-e0o3gbj5e1kmesj1cpiiqopd6cs0:
-              help: 'Review the casilla information: Epígrafe C [38].'
-              label: Heading C [38]
-            x-e0o3gbj5e1kmesj1cpiiqp1d6csg:
-              help: 'Review the casilla information: Epígrafe D [39].'
-              label: Heading D [39]
-            x-e0o3gbj5e1kmesj1cpiiqp9h5lsiqp9i5kq30:
-              help: 'Review the casilla information: Epígrafe E1 and E2 [40].'
-              label: Headings E1 and E2 [40]
             x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
-              help: Tax information about tax information in casilla 123-130 of Modelo
-                151.
               label: Acquisition date
             x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
-              help: Tax information about tax information in casilla 309-316 of Modelo
-                151.
               label: Acquisition date
             x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
-              help: Tax information about tax information in casilla 495-502 of Modelo
-                151.
               label: Acquisition date
             x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
-              help: Tax information about tax information in casilla 681-688 of Modelo
-                151.
               label: Acquisition date
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
-              help: Tax information about tax information in casilla 115-122 of Modelo
-                151.
               label: Transfer date
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
-              help: Tax information about tax information in casilla 301-308 of Modelo
-                151.
               label: Transfer date
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
-              help: Tax information about tax information in casilla 487-494 of Modelo
-                151.
               label: Transfer date
             x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
-              help: Tax information about tax information in casilla 673-680 of Modelo
-                151.
               label: Transfer date
             x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
               help: 'Tax information about tax information in casilla 182-198 of Modelo
@@ -3870,12 +2147,7 @@ modelo:
               help: 'Tax information about tax information in casilla 757-773 of Modelo
                 151 References: [5].'
               label: REMAINDER. Capital gain [5]
-            x-e0o3gbjiclpnar3kc5i6ubb4ckmmoo9dchim6r31e9gm6qbfdomj8co:
-              help: 'Review the casilla information: Result of the return [43].'
-              label: Result of the return [43]
             x-e0o3gbjiclpnar3kc5i6uspdc4mmirj7e9in6obi5lhmirre5lgm8rb9dpkn6t3ic5q6itj1ecmj8c8:
-              help: 'Tax information about tax information in casilla 1199-1215 of
-                Modelo 151 References: [41].'
               label: Amounts payable from earlier returns or administrative assessments
                 [41]
             x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
@@ -3946,9 +2218,7 @@ modelo:
               label: Filing year to which the return relates
             x-chim6r1ee1in4qbfchng:
               help: Period (annual, 0A)
-              label: Period (annual, 0A)
             x-chkm8bj3elnn8o9dcdin4ro:
-              help: 'Review the casilla information: Amount cero.'
               label: Zero tax amount
             x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
               help: Tax information about tax information in casilla 60-129 of Modelo
@@ -3973,9 +2243,6 @@ modelo:
               help: Tax information about tax information in casilla 14-14 of Modelo
                 151.
               label: Refund. Requests the refund by bank transfer
-            x-chkm8bj4clr6ur3lcdkmurhdedrmipjk5lh6ioo:
-              help: 'Review the casilla information: Refund. SWIFT-BIC.'
-              label: Refund. SWIFT-BIC
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               help: 'Review the casilla information: Payment/Domiciliación/Refund
                 - IBAN.'
@@ -3992,7 +2259,6 @@ modelo:
                 NIF of the investment company or fund
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
               help: Box 03 of modelo 151, tax year 2025.
-              label: Modelo
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
               help: Box 01 of modelo 151, tax year 2025.
               label: Start of the modelo and page identifier
@@ -4006,24 +2272,14 @@ modelo:
                 collective investment undertakings.
               label: Annex. Transfer of shares or units in collective investment undertakings.
                 Total withholdings or payments on account
-            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmm2q3fe9p6u:
-              help: Tax information about tax information in casilla  of Modelo 151.
-              label: 'Savings taxable base (the part of the taxable base from income
-                under TRLIRNR art. 25.1.f: dividends, interest and savings capital
-                gains from Spanish sources)'
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
               help: General taxable base (impatriate regime, excluding the savings
                 component under art. 25.1.f TRLIRNR)
               label: General taxable base (impatriate regime, excluding the savings-income
                 part under TRLIRNR art. 25.1.f)
             x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
-              help: Tax information about tax information in casilla  of Modelo 151.
               label: Net tax payable (gross general tax liability plus gross savings
                 tax liability, minus withholdings)
-            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dc5k6usjids:
-              help: Tax information about tax information in casilla  of Modelo 151.
-              label: 'Gross savings tax liability (art. 93.2.e.2º scale: 19/21/23/27/30
-                on the savings taxable base, wording in force per Ley 7/2024)'
             x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
               help: 'Gross general tax liability (scale under art. 93.2.e.1: 24% up
                 to €600,000, 47% on the excess)'
@@ -4287,35 +2543,22 @@ modelo:
             x-e0o32bjkd5o6ubb4ckmm8pb3dhgn4ob3d5nms:
               help: Tax information about tax information in casilla 13-13 of Modelo
                 151.
-              label: Return type
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              help: 'Tax information about tax information in casilla 469-473 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              help: 'Tax information about tax information in casilla 713-717 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              help: 'Tax information about tax information in casilla 957-961 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              help: 'Tax information about tax information in casilla 474-478 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              help: 'Tax information about tax information in casilla 718-722 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              help: 'Tax information about tax information in casilla 962-966 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
@@ -4349,28 +2592,18 @@ modelo:
               label: Additional details of income from property and real estate. Location
                 [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              help: 'Tax information about tax information in casilla 481-500 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              help: 'Tax information about tax information in casilla 725-744 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              help: 'Tax information about tax information in casilla 969-988 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              help: 'Tax information about tax information in casilla 225-229 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              help: 'Tax information about tax information in casilla 230-234 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
@@ -4384,8 +2617,6 @@ modelo:
               label: Additional details of income from property and real estate. Location
                 [13]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              help: 'Tax information about tax information in casilla 237-256 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
@@ -4573,33 +2804,21 @@ modelo:
                 151 References: [03].'
               label: Valuation [03]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko34:
-              help: 'Tax information about tax information in casilla 469-473 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko36:
-              help: 'Tax information about tax information in casilla 713-717 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9g5ko38:
-              help: 'Tax information about tax information in casilla 957-961 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko34:
-              help: 'Tax information about tax information in casilla 474-478 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko36:
-              help: 'Tax information about tax information in casilla 718-722 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9h5ko38:
-              help: 'Tax information about tax information in casilla 962-966 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9i5ko34:
@@ -4633,28 +2852,18 @@ modelo:
               label: Additional details of income from property and real estate. Location
                 [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko34:
-              help: 'Tax information about tax information in casilla 481-500 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko36:
-              help: 'Tax information about tax information in casilla 725-744 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqc9k5ko38:
-              help: 'Tax information about tax information in casilla 969-988 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c0:
-              help: 'Tax information about tax information in casilla 225-229 of Modelo
-                151 References: [10].'
               label: Additional details of income from property and real estate. Ownership
                 (%) [10]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2c8:
-              help: 'Tax information about tax information in casilla 230-234 of Modelo
-                151 References: [11].'
               label: Additional details of income from property and real estate. Usufruct
                 (%) [11]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2cg:
@@ -4668,8 +2877,6 @@ modelo:
               label: Additional details of income from property and real estate. Location
                 [13]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmm8p9ddhgn6bbicln78obj5li6asj9epgm8obj5li6abb2d5imspbj5liiqqbedkmj2d0:
-              help: 'Tax information about tax information in casilla 237-256 of Modelo
-                151 References: [14].'
               label: Additional details of income from property and real estate. Cadastral
                 reference [14]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
@@ -4849,13 +3056,7 @@ modelo:
                 151 References: [01].'
               label: Income type [01]
             x-e0o36bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmn4pbeehgiqqbedlnm4qbcd5gn4qb15lkmqs3lehgm8o9d64qg:
-              help: 'Review the casilla information: Total income íntegros/Income
-                property imputada [15].'
               label: Total gross returns / imputed real-estate income [15]
-            x-e0o36bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2dg:
-              help: 'Tax information about tax information in casilla 1040-1056 of
-                Modelo 151 References: [16].'
-              label: Total withholdings or payments on account [16]
             x-e0o36bjmc5m6usj1cdkmurhd60pg:
               help: 'Tax information about tax information in casilla 16-32 of Modelo
                 151 References: [03].'
@@ -5806,14 +4007,6 @@ modelo:
               help: 'Tax information about tax information in casilla 755-771 of Modelo
                 151 References: [09].'
               label: Gain or loss (Improvement or 2nd acquisition) [09]
-            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o0:
-              help: 'Tax information about tax information in casilla 164-180 of Modelo
-                151 References: [10].'
-              label: Total capital gain obtained [10]
-            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1dehnn8obc5lnm4t35dpkm8o9d64o2qc1i:
-              help: 'Tax information about tax information in casilla 772-788 of Modelo
-                151 References: [10].'
-              label: Total capital gain obtained [10]
             x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6s:
               help: 'Review the casilla information: Localidad/Población [37].'
               label: Locality/Town [37]
@@ -5898,22 +4091,6 @@ modelo:
             x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
               help: 'Review the casilla information: Referencia Catastral [53].'
               label: Cadastral reference [53]
-            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5lq6ut31dgmmuojkcln6ip315koj0:
-              help: 'Tax information about tax information in casilla 1229-1245 of
-                Modelo 151 References: [10].'
-              label: REMAINDER. Total capital gain obtained [10]
-            x-e0o3gbjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9h64:
-              help: 'Tax information about tax information in casilla 1246-1262 of
-                Modelo 151 References: [11].'
-              label: REMAINDER. Withholding or payment on account [11]
-            x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h:
-              help: 'Tax information about tax information in casilla 181-197 of Modelo
-                151 References: [11].'
-              label: Withholding or payment on account [11]
-            x-e0o3gbjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc9h5ko34:
-              help: 'Tax information about tax information in casilla 789-805 of Modelo
-                151 References: [11].'
-              label: Withholding or payment on account [11]
             x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
               help: 'Tax information about tax information in casilla 372-374 of Modelo
                 151 References: [28].'
@@ -5938,14 +4115,6 @@ modelo:
               help: 'Tax information about tax information in casilla 925-929 of Modelo
                 151 References: [26].'
               label: Street type [26]
-            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9h68:
-              help: 'Review the casilla information: Total ganancias capital-gains
-                [12].'
-              label: Total capital gains [12]
-            x-e0o3gbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj2co:
-              help: 'Tax information about tax information in casilla 1280-1296 of
-                Modelo 151 References: [13].'
-              label: Total withholdings or payments on account [13]
             x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0co:
               help: 'Tax information about tax information in casilla 45-61 of Modelo
                 151 References: [03].'
@@ -6211,59 +4380,26 @@ modelo:
               help: 'Tax information about tax information in casilla 1354-1370 of
                 Modelo 151 References: [02].'
               label: Transfer value [02]
-            x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmob9i64:
-              help: 'Review the casilla information: Amount full total [21].'
-              label: Total gross tax [21]
             x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kp36:
-              help: 'Review the casilla information: Amount full total. Regional share
-                [23].'
               label: Total gross tax. Regional portion [23]
             x-e0oj0bj3elnn8o9dd5n78pb7e9giqt3fehgmobbgc5p78p9dclpn8obkc5m2qchi:
-              help: 'Review the casilla information: Amount full total. State share
-                [22].'
               label: Total gross tax. State portion [22]
-            x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmob9j60:
-              help: 'Review the casilla information: Amount líquida total [30].'
-              label: Total net tax [30]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dc5qn8rredtmmior15kpj4:
-              help: 'Review the casilla information: Amount líquida total. Regional
-                share [32].'
               label: Total net tax. Regional portion [32]
             x-e0oj0bj3elnn8o9ddhkn2tb9chgiqt3fehgmobbgc5p78p9dclpn8obkc5m2qcph:
-              help: 'Review the casilla information: Amount líquida total. State share
-                [31].'
               label: Total net tax. State portion [31]
             x-e0oj0bj3elnn8obj5li6ar1dd5mn0tb5edq6ubbjdth74p9ddhgiqsj5dpq62bb4ckmmsrpde9in6qb4cln78pbj5lo62pr1cgmj6d0:
-              help: 'Tax information about tax information in casilla 1080-1096 of
-                Modelo 151 References: [34].'
               label: Non-Resident Income Tax amounts paid on the income included in
                 the return [34]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4do:
-              help: 'Tax information about tax information in casilla 961-977 of Modelo
-                151 References: [27].'
-              label: Deduction for international double taxation on employment income
-                obtained and taxed abroad [27]
             x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e0:
-              help: 'Tax information about tax information in casilla 978-994 of Modelo
-                151 References: [28].'
               label: Deduction for international double taxation on employment income
                 obtained and taxed abroad. State portion [28]
             x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fc9m6abb9dlo6usr9cdkmurhdd5n78pbidpgm6qbfdpgmobbgdtp2qsj1f9nmsbb4ckmj4e8:
-              help: 'Tax information about tax information in casilla 995-1011 of
-                Modelo 151 References: [29].'
               label: Deduction for international double taxation on employment income
                 obtained and taxed abroad. Regional portion [29]
-            x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqchk:
-              help: 'Tax information about tax information in casilla 910-926 of Modelo
-                151 References: [24].'
-              label: Deduction for donations [24]
             x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb1elq6urjfdlkm6o9d68r0:
-              help: 'Tax information about tax information in casilla 944-960 of Modelo
-                151 References: [26].'
               label: Deduction for donations. Regional portion [26]
             x-e0oj0bj4cli7aor3d5nmsbbgdtp2qp3fdpgn8qbmdtpiqs31e9q6abb5edq62t31dgmj4d8:
-              help: 'Tax information about tax information in casilla 927-943 of Modelo
-                151 References: [25].'
               label: Deduction for donations. State portion [25]
             x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
               help: 'Tax information about tax information in casilla 15-114 of Modelo
@@ -6282,8 +4418,6 @@ modelo:
                 151 References: [67].'
               label: Description of the asset [67]
             x-e0oj0bj4clr6ur3lcdkmurj5ecmm2orfe9i62p31ecmn0rri5lm62bb1chmmirj9edq74ob3d5nmsb9k68:
-              help: 'Tax information about tax information in casilla 1216-1232 of
-                Modelo 151 References: [42].'
               label: Refunds agreed by the Administration [42]
             x-e0oj0bj4d5j6asj5dphmio9d60q0:
               help: 'Review the casilla information: Diferencia [04].'
@@ -6297,24 +4431,6 @@ modelo:
             x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
               help: 'Review the casilla information: Diferencia [04].'
               label: Difference [04]
-            x-e0oj0bj5e1kmesj1cpiiqo9h5kpja:
-              help: 'Review the casilla information: Epígrafe A1 [35].'
-              label: Heading A1 [35]
-            x-e0oj0bj5e1kmesj1cpiiqo9i5kpjc:
-              help: 'Review the casilla information: Epígrafe A2 [36].'
-              label: Heading A2 [36]
-            x-e0oj0bj5e1kmesj1cpiiqohd6crg:
-              help: 'Review the casilla information: Epígrafe B [37].'
-              label: Heading B [37]
-            x-e0oj0bj5e1kmesj1cpiiqopd6cs0:
-              help: 'Review the casilla information: Epígrafe C [38].'
-              label: Heading C [38]
-            x-e0oj0bj5e1kmesj1cpiiqp1d6csg:
-              help: 'Review the casilla information: Epígrafe D [39].'
-              label: Heading D [39]
-            x-e0oj0bj5e1kmesj1cpiiqp9h5lsiqp9i5kq30:
-              help: 'Review the casilla information: Epígrafe E1 and E2 [40].'
-              label: Headings E1 and E2 [40]
             x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
               help: 'Tax information about tax information in casilla 123-130 of Modelo
                 151 References: [69].'
@@ -6368,8 +4484,6 @@ modelo:
                 151 References: [05].'
               label: REMAINDER. Capital gain [05]
             x-e0oj0bjiclpnar3kc5i6uspdc4mmirj7e9in6obi5li6abbcc5piqobeehin4qbfe9in6bb4clhmoobic5hmirreclpiqrpddgmj8c8:
-              help: 'Tax information about tax information in casilla 1199-1215 of
-                Modelo 151 References: [41].'
               label: Amounts payable from previous returns or administrative assessments
                 [41]
             x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:

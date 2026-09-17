@@ -4,28 +4,15 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: 'Consulte la información correspondiente a la casilla: Período de
-              la declaración.'
-            label: Casilla— período de liquidación
+            label: Periodo (trimestre natural)
           filing-year:
-            help: 'Consulte la información correspondiente a la casilla: Ejercicio
-              al que se refiere la declaración.'
-            label: Casilla— ejercicio fiscal
+            label: Ejercicio al que se refiere la autoliquidación
       field:
         official_name: Modelo 763. Impuesto sobre actividades de juego en los supuestos
           de actividades anuales o plurianuales. Autoliquidación.
         title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
       revision:
         2012-2014:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -34,15 +21,6 @@ modelo:
           field:
             label: Modelo 763, ejercicios 2012 (2.º a 4.º trimestre), 2013 y 2014
         2015-2017:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -51,15 +29,6 @@ modelo:
           field:
             label: Modelo 763, ejercicios 2015 a 2017
         2018-1t-3t:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -68,15 +37,6 @@ modelo:
           field:
             label: Modelo 763, ejercicio 2018 (1.º a 3.º trimestre)
         2018-4t:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
@@ -85,15 +45,6 @@ modelo:
           field:
             label: Modelo 763, ejercicio 2018 (4.º trimestre)
         2019-y-siguientes:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'Consulte la información correspondiente a la casilla: Ejercicio
-                al que se refiere la autoliquidación.'
-              label: Ejercicio al que se refiere la autoliquidación
-            x-chim6r1ee1in4qbfchng:
-              help: 'Consulte la información correspondiente a la casilla: Período
-                (trimestre natural).'
-              label: Periodo (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:

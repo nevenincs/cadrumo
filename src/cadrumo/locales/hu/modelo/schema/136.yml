@@ -6,6 +6,13 @@ modelo:
           különadója. Önbevallás.
         title: Egyes lottó- és fogadási nyeremények különadója. Önbevallás
       revision:
+        2022-2025:
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: '136-os modelo: egyes lottó- és fogadási nyeremények különadója'
+          field:
+            label: null
         '2026':
           casilla:
             '01':

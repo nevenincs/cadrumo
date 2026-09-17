@@ -3,48 +3,65 @@ modelo:
     '353':
       casilla:
         continuidad:
-          '05':
-            help: 'A Modelo 353 05. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 05 — adóügyi információ
           08:
             help: 'A Modelo 353 08. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 08 — adóügyi információ
-          09:
-            help: 'A Modelo 353 09. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 09 — adóügyi információ
           filing-period:
-            help: A Modelo 353 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'Tekintse át a casilla adatait: Időszak mensual (01..12).'
+            label: Havi időszak (01..12)
           filing-year:
-            help: A Modelo 353 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 353 . casilla adóügyi adatai: adóév.'
+            label: Az önadózás adóéve
           iva-agregado-reconciliacion-deducible-322:
-            help: 'A casilla adatai: Casilla iva.reconciliacion.levonható-322: iva
-              agregado reconciliacion levonható 322.'
-            label: 'Casilla iva.reconciliacion.levonható-322: iva agregado reconciliacion
-              levonható 322'
+            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
+            label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+              levonható összeg
           iva-agregado-reconciliacion-devengada-322:
-            help: 'A casilla adatai: Casilla iva.reconciliacion.felszámított-322:
-              iva agregado reconciliacion felszámított 322.'
-            label: 'Casilla iva.reconciliacion.felszámított-322: iva agregado reconciliacion
-              felszámított 322'
+            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
+            label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+              keletkezett ÁFA
           iva-agregado-reconciliacion-resultado-322:
-            help: 'A casilla adatai: Casilla iva.reconciliacion.eredmény-322: iva
-              agregado reconciliacion eredmény 322.'
-            label: 'Casilla iva.reconciliacion.eredmény-322: iva agregado reconciliacion
-              eredmény 322'
+            help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
+            label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
+              eredmény
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: 'Tekintse át a casilla adatait: Adóösszeg IVA autorepercutida en
+              Közösségen belüli beszerzések - agregado - csoport.'
+            label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - csoportösszesítés
+          iva-cuota-deducible-total:
+            help: 'Tekintse át a casilla adatait: Total adóösszeg IVA levonható (agregado
+              - csoport).'
+            label: Levonható ÁFA összesen (csoportösszesítés)
+          iva-cuota-devengada-total:
+            help: 'Tekintse át a casilla adatait: Total adóösszeg Felszámított áfa
+              (agregado - csoport).'
+            label: Keletkezett ÁFA összesen (csoportösszesítés)
+          iva-cuota-repercutida-general:
+            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
+              general (21%) - agregado - csoport.'
+            label: Általános kulcs (21%) szerint felszámított ÁFA - csoportösszesítés
+          iva-cuota-repercutida-reducido:
+            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
+              csökkentett (10%) - agregado - csoport.'
+            label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
+          iva-cuota-repercutida-super-reducido:
+            help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al kulcs
+              szupercsökkentett (4%) - agregado - csoport.'
+            label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
+          iva-cuota-soportada-interiores:
+            help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
+              interiores corrientes - agregado - csoport.'
+            label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
+          iva-resultado-regimen-general:
+            help: 'Tekintse át a casilla adatait: Eredmény - csoport (adóösszeg felszámított
+              agregada - adóösszeg levonható agregada).'
+            label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
+              levonható ÁFA)
           m353-a-deducir-autoliquidaciones-anteriores:
             help: 'A Modelo 353 04. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 04 — adóügyi információ
           m353-cuotas-a-compensar:
             help: 'A Modelo 353 02. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 02 — adóügyi információ
-          m353-resultado:
-            help: 'A Modelo 353 03. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 03 — adóügyi információ
           m353-resultado-total-entidades:
             help: A Modelo 353 01. casilla adóügyi adatai.
-            label: Casilla 01 — adóügyi mező
       field:
         official_name: Modelo 353. Hozzáadottérték-adó. Cégcsoport. Összesített nyomtatvány.
           Havi önbevallás.
@@ -53,16 +70,13 @@ modelo:
         2021-2025:
           casilla:
             '01':
-              help: A Modelo 353 01. casilla adóügyi adatai.
               label: Teljes eredmény (a szervezetek eredményeinek összege)
             '02':
-              help: 'A Modelo 353 02. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi évekről áthozott, beszámítandó összegek
             '03':
               help: 'Tekintse át a casilla adatait: Eredmény ([01] - [08]).'
               label: Eredmény ([01] - [08])
             '04':
-              help: 'A Modelo 353 04. casilla adóügyi adatai: adóügyi információ.'
               label: 'Levonandó: az ugyanazon jogcímen, évre és időszakra korábban
                 benyújtott önadózások eredménye'
             '05':
@@ -70,7 +84,6 @@ modelo:
                 ([03] - [04]).'
               label: Az önadózás eredménye ([03] - [04])
             08:
-              help: 'A Modelo 353 08. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi időszakokból származó, ebben az időszakban felhasznált
                 beszámítandó összegek
             09:
@@ -78,57 +91,6 @@ modelo:
                 [02], [08].'
               label: Korábbi időszakokból származó, későbbi időszakokra fennmaradó
                 beszámítandó összegek ([02] - [08])
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás adóéve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak mensual (01..12).'
-              label: Havi időszak (01..12)
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: 'Tekintse át a casilla adatait: Adóösszeg IVA autorepercutida
-                en Közösségen belüli beszerzések - agregado - csoport.'
-              label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - csoportösszesítés
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: 'Tekintse át a casilla adatait: Total adóösszeg IVA levonható
-                (agregado - csoport).'
-              label: Levonható ÁFA összesen (csoportösszesítés)
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: 'Tekintse át a casilla adatait: Total adóösszeg Felszámított áfa
-                (agregado - csoport).'
-              label: Keletkezett ÁFA összesen (csoportösszesítés)
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                levonható összeg
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                keletkezett ÁFA
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                eredmény
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
-                kulcs general (21%) - agregado - csoport.'
-              label: Általános kulcs (21%) szerint felszámított ÁFA - csoportösszesítés
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
-                kulcs csökkentett (10%) - agregado - csoport.'
-              label: Csökkentett kulcs (10%) szerint felszámított ÁFA - csoportösszesítés
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
-                kulcs szupercsökkentett (4%) - agregado - csoport.'
-              label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - csoportösszesítés
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: 'Tekintse át a casilla adatait: Eredmény - csoport (adóösszeg
-                felszámított agregada - adóösszeg levonható agregada).'
-              label: A csoport eredménye (összesített keletkezett ÁFA mínusz összesített
-                levonható ÁFA)
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
-                interiores corrientes - agregado - csoport.'
-              label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
           construct:
             modelo-353-iva-grupo-agregado:
               field:
@@ -172,24 +134,6 @@ modelo:
                 [10].'
               label: Benzin, gázolaj és bioüzemanyag értékesítése utáni előleg, az
                 állami adóhatóságnak betudhatóan [10]
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóév.'
-              label: Az önadózás adóéve
-            x-chim6r1ee1in4qbfchng:
-              help: 'Tekintse át a casilla adatait: Időszak mensual (01..12).'
-              label: Havi időszak (01..12)
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                levonható összeg
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                keletkezett ÁFA
-            x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: 'A Modelo 353 . casilla adóügyi adatai: adóügyi információ.'
-              label: A csoport tagjainak 322-es bevallásaiból egyeztetett, összesített
-                eredmény
           construct:
             modelo-353-iva-grupo-agregado:
               field:

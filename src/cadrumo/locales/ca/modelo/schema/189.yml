@@ -6,6 +6,12 @@ modelo:
           i rendes.
         title: Declaració informativa anual sobre valors, assegurances i rendes
       revision:
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             clave-identificacion:

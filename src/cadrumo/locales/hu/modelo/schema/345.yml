@@ -8,6 +8,15 @@ modelo:
         title: Nyugdíjprogramok és -pénztárak, résztvevők, befizetések és munkáltatói
           hozzájárulások éves adatszolgáltatási bevallása
       revision:
+        '2022':
+          field:
+            label: null
+        '2023':
+          field:
+            label: null
+        '2024':
+          field:
+            label: null
         '2025':
           casilla:
             anio-nacimiento:
@@ -18,7 +27,6 @@ modelo:
               label: Casilla— adóügyi információ
             clave:
               help: 'Tekintse át a casilla adatait: Clave.'
-              label: Clave
             codigo-provincia:
               help: A Modelo 345 . casilla adóügyi adatai.
               label: Tartománykód

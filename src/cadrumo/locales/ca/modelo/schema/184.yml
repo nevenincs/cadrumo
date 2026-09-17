@@ -4,335 +4,266 @@ modelo:
       casilla:
         continuidad:
           actividad-principal-espanola:
-            help: Informació fiscal de la casella 146 del Modelo 184.
-            label: Casella 146 — informació fiscal
+            label: ACTIVITAT PRINCIPAL
           base-deduccion-o-importe:
-            help: Informació fiscal de la casella 221-232 del Modelo 184.
-            label: Casella 221-232 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Base de la deducció / import
           cesionario-denominacion:
-            help: Informació fiscal de la casella 97-116 del Modelo 184.
-            label: Casella 97-116 — informació fiscal
+            label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
+              D'INVERSIÓ COL·LECTIVA
           cesionario-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 88-96 del
-              Modelo 184.
-            label: Casella 88-96 — informació fiscal
+            label: NIF DE PERSONA O ENTITAT CESSIONÀRIA / NIF DE LA INSTITUCIÓ D'INVERSIÓ
+              COL·LECTIVA
           clave-declarado:
-            help: Informació fiscal sobre informació fiscal de la casella 194 del
-              Modelo 184.
-            label: Casella 194 — informació fiscal
+            help: Dada declarada al model 184, declaració informativa d'entitats en
+              regim d'atribucio de rendes.
+            label: Clau de declarat
           clave-pais-entidad-extranjera:
-            help: Informació fiscal sobre informació fiscal de la casella 149-150
-              del Modelo 184.
-            label: Casella 149-150 — informació fiscal
+            label: CLAU PAÍS
           clave-pais-renta:
-            help: Informació fiscal sobre informació fiscal de la casella 80-81 del
-              Modelo 184.
-            label: Casella 80-81 — informació fiscal
+            label: CLAU PAÍS
           clave-tipo-participe:
-            help: Informació fiscal sobre informació fiscal de la casella 81 del Modelo
-              184.
-            label: Casella 81 — informació fiscal
+            label: CLAU TIPUS DE PARTÍCIP
           criterio-cobros-y-pagos:
-            help: Informació fiscal sobre informació fiscal de la casella 396 del
-              Modelo 184.
-            label: Casella 396 — informació fiscal
+            label: CRITERI DE COBRAMENTS I PAGAMENTS
           declaracion-complementaria-sustitutiva:
-            help: Informació fiscal de la casella 121-122 del Modelo 184.
-            label: Casella 121-122 — informació fiscal
+            label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
           epigrafe-iae:
-            help: Informació fiscal sobre informació fiscal de la casella 84-87 del
-              Modelo 184.
-            label: Casella 84-87 — informació fiscal
+            label: GRUP O EPÍGRAF IAE
           fecha-adquisicion:
-            help: Informació fiscal sobre informació fiscal de la casella 117-124
-              del Modelo 184.
-            label: Casella 117-124 — informació fiscal
+            label: Any
           filing-year:
-            help: Informació fiscal de la casella del Modelo 184.
-            label: Casella — informació fiscal
+            label: Exercici a què es refereix la declaració
           ganancias-perdidas-patrimoniales-atribuibles:
-            help: Informació fiscal sobre informació fiscal de la casella 208-220
-              del Modelo 184.
-            label: Casella 208-220 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Guanys / pèrdues
           gasto-actividad-amortizaciones:
-            help: Informació fiscal sobre informació fiscal de la casella 362-373
-              del Modelo 184.
-            label: Casella 362-373 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Amortitzacions
           gasto-actividad-arrendamientos-canones:
-            help: Informació fiscal sobre informació fiscal de la casella 302-313
-              del Modelo 184.
-            label: Casella 302-313 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Arrendaments i cànons
           gasto-actividad-consumos-explotacion:
-            help: Informació fiscal sobre informació fiscal de la casella 278-289
-              del Modelo 184.
-            label: Casella 278-289 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Consums d'explotació
           gasto-actividad-gastos-financieros:
-            help: Informació fiscal sobre informació fiscal de la casella 350-361
-              del Modelo 184.
-            label: Casella 350-361 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Despeses financeres
           gasto-actividad-gastos-personal:
-            help: Informació fiscal sobre informació fiscal de la casella 266-277
-              del Modelo 184.
-            label: Casella 266-277 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Despeses de personal
           gasto-actividad-otros-gastos-deducibles:
-            help: Informació fiscal sobre informació fiscal de la casella 386-395
-              del Modelo 184.
-            label: Casella 386-395 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Altres despeses fiscalment deduïbles
           gasto-actividad-provisiones:
-            help: Informació fiscal sobre informació fiscal de la casella 374-385
-              del Modelo 184.
-            label: Casella 374-385 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Provisions
           gasto-actividad-reparaciones-conservacion:
-            help: Informació fiscal sobre informació fiscal de la casella 314-325
-              del Modelo 184.
-            label: Casella 314-325 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Reparacions i conservació
           gasto-actividad-servicios-profesionales:
-            help: Informació fiscal sobre informació fiscal de la casella 326-337
-              del Modelo 184.
-            label: Casella 326-337 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Serveis professionals independents
           gasto-actividad-suministros:
-            help: Informació fiscal sobre informació fiscal de la casella 338-349
-              del Modelo 184.
-            label: Casella 338-349 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Subministraments
           gasto-actividad-tributos-deducibles:
-            help: Informació fiscal sobre informació fiscal de la casella 290-301
-              del Modelo 184.
-            label: Casella 290-301 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses d'activitats econòmiques. Tributs fiscalment deduïbles
           gasto-inmobiliario-amortizacion-bienes-muebles:
-            help: Informació fiscal sobre informació fiscal de la casella 481-488
-              del Modelo 184.
-            label: Casella 481-488 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Amortització de béns mobles
           gasto-inmobiliario-amortizacion-inmueble:
-            help: Informació fiscal sobre informació fiscal de la casella 471-480
-              del Modelo 184.
-            label: Casella 471-480 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Amortització de l'immoble
           gasto-inmobiliario-cantidades-devengadas-terceros:
-            help: Informació fiscal sobre informació fiscal de la casella 451-460
-              del Modelo 184.
-            label: Casella 451-460 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Quantitats meritades per tercers
           gasto-inmobiliario-conservacion-reparacion:
-            help: Informació fiscal sobre informació fiscal de la casella 408-418
-              del Modelo 184.
-            label: Casella 408-418 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Conservació i reparació
           gasto-inmobiliario-intereses-financiacion:
-            help: Informació fiscal sobre informació fiscal de la casella 397-407
-              del Modelo 184.
-            label: Casella 397-407 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Interessos i altres despeses
+              de finançament
           gasto-inmobiliario-intereses-gastos-reparacion:
-            help: Informació fiscal sobre informació fiscal de la casella 419-429
-              del Modelo 184.
-            label: Casella 419-429 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Interessos i despeses de reparació
+              i conservació pendents
           gasto-inmobiliario-otros-gastos-deducibles:
-            help: Informació fiscal sobre informació fiscal de la casella 489-497
-              del Modelo 184.
-            label: Casella 489-497 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Altres despeses deduïbles
           gasto-inmobiliario-primas-seguros:
-            help: Informació fiscal sobre informació fiscal de la casella 461-470
-              del Modelo 184.
-            label: Casella 461-470 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Primes d'assegurances
           gasto-inmobiliario-saldos-dudoso-cobro:
-            help: Informació fiscal sobre informació fiscal de la casella 440-450
-              del Modelo 184.
-            label: Casella 440-450 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Saldos de dubtós cobrament
           gasto-inmobiliario-tributos-recargos:
-            help: Informació fiscal sobre informació fiscal de la casella 430-439
-              del Modelo 184.
-            label: Casella 430-439 — informació fiscal
+            help: Despesa fiscalment deduible declarada en el registre d'entitat del
+              model 184. El disseny la divideix en part entera i part decimal.
+            label: Despeses del capital immobiliari. Tributs i recàrrecs
           gastos-deducibles-atribuibles:
-            help: Informació fiscal sobre informació fiscal de la casella 165-176
-              del Modelo 184.
-            label: Casella 165-176 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Despeses / excés de rendes negatives
           importe-atribuido-miembro:
-            help: Informació fiscal sobre informació fiscal de la casella 96-108 del
-              Modelo 184.
-            label: Casella 96-108 — informació fiscal
+            label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
           importe-neto-cifra-negocios:
-            help: Informació fiscal sobre informació fiscal de la casella 157-171
-              del Modelo 184.
-            label: Casella 157-171 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Import net de la xifra de negocis
           ingresos-integros-atribuibles:
-            help: Informació fiscal sobre informació fiscal de la casella 151-164
-              del Modelo 184.
-            label: Casella 151-164 — informació fiscal
+            help: Dada declarada al model 184, declaració informativa d'entitats en
+              regim d'atribucio de rendes.
+            label: Ingressos íntegres / import de rendiments meritats / resultat comptable
           miembro-a-31-diciembre:
-            help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
-              184.
-            label: Casella 82 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: Membre a 31 de desembre
           miembro-clave-pais:
-            help: Informació fiscal sobre informació fiscal de la casella 79-80 del
-              Modelo 184.
-            label: Casella 79-80 — informació fiscal
+            label: CLAU PAÍS
           miembro-codigo-provincia:
-            help: Informació fiscal de la casella 77-78 del Modelo 184.
-            label: Casella 77-78 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: Codi de província
           miembro-domicilio-fiscal:
-            help: Informació fiscal sobre informació fiscal de la casella 120-159
-              del Modelo 184.
-            label: Casella 120-159 — informació fiscal
+            label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
           miembro-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 18-26 del
-              Modelo 184.
-            label: Casella 18-26 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: NIF del membre
           miembro-nombre-razon-social:
-            help: Informació fiscal de la casella 36-75 del Modelo 184.
-            label: Casella 36-75 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: Cognoms i nom, raó social o denominació del membre
           miembro-representante-fiscal-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
-              Modelo 184.
-            label: Casella 27-35 — informació fiscal
+            help: Dada declarada al model 184, declaració informativa d'entitats en
+              regim d'atribucio de rendes.
+            label: NIF del representant fiscal
           naturaleza-inmueble:
-            help: Informació fiscal sobre informació fiscal de la casella 172 del
-              Modelo 184.
-            label: Casella 172 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: Naturalesa de l'immoble
           numero-dias-arrendamiento:
-            help: Informació fiscal de la casella 498-500 del Modelo 184.
-            label: Casella 498-500 — informació fiscal
+            label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI
           numero-dias-miembro:
-            help: Informació fiscal de la casella 83-85 del Modelo 184.
-            label: Casella 83-85 — informació fiscal
+            help: Dada del membre declarat en el registre de tipus 3 del model 184.
+            label: Nombre de dies com a membre
           numero-justificante:
-            help: Informació fiscal de la casella 108-120 del Modelo 184.
-            label: Casella 108-120 — informació fiscal
+            label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
           objeto-entidad-extranjera:
-            help: Informació fiscal sobre informació fiscal de la casella 148 del
-              Modelo 184.
-            label: Casella 148 — informació fiscal
+            label: OBJECTE
           persona-relacion:
-            help: Informació fiscal sobre informació fiscal de la casella 59-107 del
-              Modelo 184.
-            label: Casella 59-107 — informació fiscal
+            label: TELÈFON
           porcentaje-participacion:
-            help: Informació fiscal sobre informació fiscal de la casella 86-92 del
-              Modelo 184.
-            label: Casella 86-92 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Percentatge de participació
           porcentaje-reduccion-renta-atribuible:
-            help: Informació fiscal sobre informació fiscal de la casella 191-195
-              del Modelo 184.
-            label: Casella 191-195 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Percentatge de reducció
           porcentaje-renta-atribuible-residentes:
-            help: Informació fiscal sobre informació fiscal de la casella 151-155
-              del Modelo 184.
-            label: Casella 151-155 — informació fiscal
+            help: Dada declarada al model 184, declaració informativa d'entitats en
+              regim d'atribucio de rendes.
+            label: Percentatge de renda atribuïble
           porcentaje-titularidad-inmueble:
-            help: Informació fiscal sobre informació fiscal de la casella 195-199
-              del Modelo 184.
-            label: Casella 195-199 — informació fiscal
+            label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
           provisiones-y-gastos-dificil-justificacion:
-            help: Informació fiscal sobre informació fiscal de la casella 160-171
-              del Modelo 184.
-            label: Casella 160-171 — informació fiscal
+            label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
           reduccion-atribuida-miembro:
-            help: Informació fiscal sobre informació fiscal de la casella 109-119
-              del Modelo 184.
-            label: Casella 109-119 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Reducció
           referencia-catastral:
-            help: Informació fiscal sobre informació fiscal de la casella 246-265
-              del Modelo 184.
-            label: Casella 246-265 — informació fiscal
+            label: REFERÈNCIA CADASTRAL
           regimen-determinacion-rendimientos:
-            help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
-              184.
-            label: Casella 82 — informació fiscal
+            label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
           rendimiento-neto-minorado-agricola-estimacion-objetiva:
-            help: Informació fiscal de la casella 216-229 del Modelo 184.
-            label: Casella 216-229 — informació fiscal
+            label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
+              EN ESTIMACIÓ OBJECTIVA
           rendimiento-neto-previo-estimacion-objetiva:
-            help: Informació fiscal de la casella 203-215 del Modelo 184.
-            label: Casella 203-215 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Rendiment net previ d'activitats en estimació objectiva
           renta-atribuible-con-derecho-reduccion:
-            help: Informació fiscal sobre informació fiscal de la casella 196-207
-              del Modelo 184.
-            label: Casella 196-207 — informació fiscal
+            label: RENDA ATRIBUÏBLE AMB DRET A REDUCCIÓ
           renta-atribuible-importe:
-            help: Informació fiscal sobre informació fiscal de la casella 177-190
-              del Modelo 184.
-            label: Casella 177-190 — informació fiscal
+            label: Import de la renda atribuïble / rendiment net atribuïble al membre
+              de l'entitat (sense signe, sense coma decimal, en euros)
           representante-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 172-180
-              del Modelo 184.
-            label: Casella 172-180 — informació fiscal
+            label: N.I.F. DEL REPRESENTANT
           representante-nombre:
-            help: Informació fiscal sobre informació fiscal de la casella 181-220
-              del Modelo 184.
-            label: Casella 181-220 — informació fiscal
+            label: COGNOMS I NOM O RAÓ SOCIAL DEL REPRESENTANT
           retenciones-ingresos-a-cuenta-atribuibles:
-            help: Informació fiscal sobre informació fiscal de la casella 233-244
-              del Modelo 184.
-            label: Casella 233-244 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Retencions i ingressos a compte
           situacion-inmueble:
-            help: Informació fiscal sobre informació fiscal de la casella 245 del
-              Modelo 184.
-            label: Casella 245 — informació fiscal
+            label: SITUACIÓ DE L'IMMOBLE
           tipo-actividad:
-            help: Informació fiscal sobre informació fiscal de la casella 83 del Modelo
-              184.
-            label: Casella 83 — informació fiscal
+            label: TIPUS D'ACTIVITAT
           tipo-declaracion:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              184.
-            label: Casella— informació fiscal
+            label: Tipus de declaració (originària / substitutiva / complementària)
           tipo-entidad-espanola:
-            help: Informació fiscal sobre informació fiscal de la casella 145 del
-              Modelo 184.
-            label: Casella 145 — informació fiscal
+            label: TIPUS D'ENTITAT
           tipo-entidad-extranjera:
-            help: Informació fiscal sobre informació fiscal de la casella 147 del
-              Modelo 184.
-            label: Casella 147 — informació fiscal
+            label: TIPUS D'ENTITAT
           tipo-hoja:
-            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
-              184.
-            label: Casella 76 — informació fiscal
+            label: TIPUS DE FULL
           tipo-renta-atribuida-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 77 del Modelo
-              184.
-            label: Casella 77 — informació fiscal
+            label: Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital
+              immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió,
+              G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions IS,
+              K=retencions suportades, L=excés de rendes negatives de països sense
+              conveni)
           tipo-renta-atribuida-subclave:
-            help: Informació fiscal sobre informació fiscal de la casella 78-79 del
-              Modelo 184.
-            label: Casella 78-79 — informació fiscal
+            label: Subclau del tipus de renda atribuïda (granularitat per origen geogràfic
+              Espanya/estranger, reduccions aplicables, etc.)
           tipo-soporte:
-            help: Informació fiscal sobre informació fiscal de la casella 58 del Modelo
-              184.
-            label: Casella 58 — informació fiscal
+            label: TIPUS DE SUPORT
           tipo3-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 93 del Modelo
-              184.
-            label: Casella 93 — informació fiscal
+            label: CLAU
           tipo3-dias-arrendamiento:
-            help: Informació fiscal de la casella 200-202 del Modelo 184.
-            label: Casella 200-202 — informació fiscal
+            label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
           tipo3-referencia-catastral:
-            help: Informació fiscal sobre informació fiscal de la casella 174-193
-              del Modelo 184.
-            label: Casella 174-193 — informació fiscal
+            label: REFERÈNCIA CADASTRAL
           tipo3-situacion-inmueble:
-            help: Informació fiscal sobre informació fiscal de la casella 173 del
-              Modelo 184.
-            label: Casella 173 — informació fiscal
+            label: SITUACIÓ DE L'IMMOBLE
           tipo3-subclave:
-            help: Informació fiscal sobre informació fiscal de la casella 94-95 del
-              Modelo 184.
-            label: Casella 94-95 — informació fiscal
+            label: SUBCLAU
           tipo3-tipo-hoja:
-            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
-              184.
-            label: Casella 76 — informació fiscal
+            label: TIPUS DE FULL
           total-registros-socios:
-            help: Informació fiscal sobre informació fiscal de la casella 136-144
-              del Modelo 184.
-            label: Casella 136-144 — informació fiscal
+            label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
           tributacion-impuesto-sociedades:
-            help: Informació fiscal de la casella 156 del Modelo 184.
-            label: Casella 156 — informació fiscal
+            label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
           valor-adquisicion-o-ajustes-disminuciones:
-            help: Informació fiscal sobre informació fiscal de la casella 138-150
-              del Modelo 184.
-            label: Casella 138-150 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: Valor d'adquisició, subscripció o comptable
           valor-liquidativo-o-ajustes-aumentos:
-            help: Informació fiscal sobre informació fiscal de la casella 125-137
-              del Modelo 184.
-            label: Casella 125-137 — informació fiscal
+            help: Import declarat al model 184. El disseny el divideix en part entera
+              i part decimal.
+            label: 'Valor liquidatiu / ajustos: augments'
       field:
         official_name: Modelo 184. Declaració informativa anual d'entitats en règim
           d'atribució de rendes.
@@ -342,351 +273,124 @@ modelo:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercici 2015.
-              label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercici 2015.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Model 184, exercici 2015
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercicis 2016 a 2018.
-              label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercicis 2016 a 2018.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Model 184, exercicis 2016 a 2018
         2019-2021:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercicis 2019 a 2021.
-              label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercicis 2019 a 2021.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Model 184, exercicis 2019 a 2021
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercici 2022.
-              label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercici 2022.
-              label: Tipus de declaració (originària / substitutiva / complementària)
           field:
             label: Model 184, exercici 2022
         2023-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
               help: Casella 121-122 del model 184, exercicis 2023 i 2024.
-              label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercicis 2023 i 2024.
-              label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Casella 146 del model 184, exercicis 2023 i 2024.
-              label: ACTIVITAT PRINCIPAL
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
               help: Casella 145 del model 184, exercicis 2023 i 2024.
-              label: TIPUS D'ENTITAT
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
               help: Casella 149-150 del model 184, exercicis 2023 i 2024.
-              label: CLAU PAÍS
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
               help: Casella 148 del model 184, exercicis 2023 i 2024.
-              label: OBJECTE
-            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: Casella 147 del model 184, exercicis 2023 i 2024.
-              label: TIPUS D'ENTITAT
-            x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Import net de la xifra de negocis
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Casella 108-120 del model 184, exercicis 2023 i 2024.
-              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: Casella 59-107 del model 184, exercicis 2023 i 2024.
-              label: TELÈFON
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
               help: Casella 172-180 del model 184, exercicis 2023 i 2024.
-              label: N.I.F. DEL REPRESENTANT
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
               help: Casella 181-220 del model 184, exercicis 2023 i 2024.
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL REPRESENTANT
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercicis 2023 i 2024.
-              label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Casella 58 del model 184, exercicis 2023 i 2024.
-              label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Casella 136-144 del model 184, exercicis 2023 i 2024.
-              label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
               help: Casella 156 del model 184, exercicis 2023 i 2024.
-              label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
-            x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Base de la deducció / import
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: Casella 97-116 del model 184, exercicis 2023 i 2024.
-              label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
-                D'INVERSIÓ COL·LECTIVA
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
               help: Casella 88-96 del model 184, exercicis 2023 i 2024.
-              label: NIF DE PERSONA O ENTITAT CESSIONÀRIA / NIF DE LA INSTITUCIÓ D'INVERSIÓ
-                COL·LECTIVA
             x-ehkn0rpi5phmoobmck:
               help: Casella 77 del model 184, exercicis 2023 i 2024.
-              label: Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital
-                immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió,
-                G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions
-                IS, K=retencions suportades, L=excés de rendes negatives de països
-                sense conveni)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
               help: Casella 80-81 del model 184, exercicis 2023 i 2024.
-              label: CLAU PAÍS
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
               help: Casella 396 del model 184, exercicis 2023 i 2024.
-              label: CRITERI DE COBRAMENTS I PAGAMENTS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Casella 498-500 del model 184, exercicis 2023 i 2024.
-              label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
               help: Casella 84-87 del model 184, exercicis 2023 i 2024.
-              label: GRUP O EPÍGRAF IAE
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
               help: Casella 117-124 del model 184, exercicis 2023 i 2024.
-              label: Any
-            x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Guanys / pèrdues
-            x-ehkn0rpi5pjm2srkdtpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Despeses / excés de rendes negatives
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Amortitzacions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Arrendaments i cànons
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Consums d'explotació
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Despeses financeres
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Despeses de personal
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Altres despeses fiscalment
-                deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Provisions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Reparacions i conservació
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Serveis professionals independents
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Subministraments
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Tributs fiscalment deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Amortització de béns mobles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Amortització de l'immoble
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Quantitats meritades per tercers
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Conservació i reparació
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Interessos i altres despeses
-                de finançament
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Interessos i despeses de reparació
-                i conservació pendents
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Altres despeses deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Primes d'assegurances
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Saldos de dubtós cobrament
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Tributs i recàrrecs
-            x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Ingressos íntegres / import de rendiments meritats / resultat
-                comptable
-            x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Percentatge de reducció
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Casella 246-265 del model 184, exercicis 2023 i 2024.
-              label: REFERÈNCIA CADASTRAL
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
               help: Casella 82 del model 184, exercicis 2023 i 2024.
-              label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
               help: Casella 196-207 del model 184, exercicis 2023 i 2024.
-              label: RENDA ATRIBUÏBLE AMB DRET A REDUCCIÓ
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
               help: Casella 177-190 del model 184, exercicis 2023 i 2024.
-              label: Import de la renda atribuïble / rendiment net atribuïble al membre
-                de l'entitat (sense signe, sense coma decimal, en euros)
-            x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Retencions i ingressos a compte
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Casella 245 del model 184, exercicis 2023 i 2024.
-              label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpi5ppnaoj3dhgncp8:
               help: Casella 78-79 del model 184, exercicis 2023 i 2024.
-              label: Subclau del tipus de renda atribuïda (granularitat per origen
-                geogràfic Espanya/estranger, reduccions aplicables, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
               help: Casella 83 del model 184, exercicis 2023 i 2024.
-              label: TIPUS D'ACTIVITAT
             x-ehkn0rpi5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercicis 2023 i 2024.
-              label: TIPUS DE FULL
-            x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Valor d'adquisició, subscripció o comptable
-            x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: 'Valor liquidatiu / ajustos: augments'
             x-ehkn0rpj5phmoobmck:
               help: Casella 93 del model 184, exercicis 2023 i 2024.
-              label: CLAU
-            x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: Casella 79-80 del model 184, exercicis 2023 i 2024.
-              label: CLAU PAÍS
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
               help: Casella 81 del model 184, exercicis 2023 i 2024.
-              label: CLAU TIPUS DE PARTÍCIP
-            x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Codi de província
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Casella 200-202 del model 184, exercicis 2023 i 2024.
-              label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
-            x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Nombre de dies com a membre
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: Casella 120-159 del model 184, exercicis 2023 i 2024.
-              label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
             x-ehkn0rpj5pkmqs3fe9q6a:
               help: Casella 96-108 del model 184, exercicis 2023 i 2024.
-              label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
-            x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Membre a 31 de desembre
-            x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: NIF del membre
-            x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Cognoms i nom, raó social o denominació del membre
-            x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Naturalesa de l'immoble
-            x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Percentatge de participació
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: Casella 195-199 del model 184, exercicis 2023 i 2024.
-              label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
               help: Casella 160-171 del model 184, exercicis 2023 i 2024.
-              label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
-            x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Reducció
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Casella 174-193 del model 184, exercicis 2023 i 2024.
-              label: REFERÈNCIA CADASTRAL
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
               help: Casella 216-229 del model 184, exercicis 2023 i 2024.
-              label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
-                EN ESTIMACIÓ OBJECTIVA
-            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Rendiment net previ d'activitats en estimació objectiva
-            x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Casella 173 del model 184, exercicis 2023 i 2024.
-              label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpj5ppnaoj3dhgncp8:
               help: Casella 94-95 del model 184, exercicis 2023 i 2024.
-              label: SUBCLAU
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercicis 2023 i 2024.
-              label: TIPUS DE FULL
           construct:
             modelo-184-informative:
               field:
@@ -698,315 +402,96 @@ modelo:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
               help: Casella 121-122 del model 184, exercici 2025.
-              label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: Casella ejercicio del model 184, exercici 2025.
-              label: Exercici a què es refereix la declaració
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
               help: Casella 146 del model 184, exercici 2025.
-              label: ACTIVITAT PRINCIPAL
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
               help: Casella 145 del model 184, exercici 2025.
-              label: TIPUS D'ENTITAT
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
               help: Casella 149-150 del model 184, exercici 2025.
-              label: CLAU PAÍS
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
               help: Casella 148 del model 184, exercici 2025.
-              label: OBJECTE
-            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
               help: Casella 147 del model 184, exercici 2025.
-              label: TIPUS D'ENTITAT
-            x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Import net de la xifra de negocis
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Casella 108-120 del model 184, exercici 2025.
-              label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
               help: Casella 59-107 del model 184, exercici 2025.
-              label: TELÈFON
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
               help: Casella 172-180 del model 184, exercici 2025.
-              label: N.I.F. DEL REPRESENTANT
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
               help: Casella 181-220 del model 184, exercici 2025.
-              label: COGNOMS I NOM O RAÓ SOCIAL DEL REPRESENTANT
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: Casella tipo-declaracion del model 184, exercici 2025.
-              label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehkn0rpdednn0rriehig:
               help: Casella 58 del model 184, exercici 2025.
-              label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
               help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Nombre total de registres d'entitat
             x-chim6r1eehnn8obc5lpmuor9dtpg:
               help: Casella 136-144 del model 184, exercici 2025.
-              label: NOMBRE TOTAL DE REGISTRES DE SOCIS, HEREUS, COMUNERS O PARTÍCIPS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
               help: Casella 156 del model 184, exercici 2025.
-              label: TRIBUTACIÓ EN RÈGIM DE L'IMPOST SOBRE SOCIETATS
-            x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Base de la deducció / import
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
               help: Casella 97-116 del model 184, exercici 2025.
-              label: DENOMINACIÓ O RAÓ SOCIAL DEL CESSIONARI / DENOMINACIÓ DE LA INSTITUCIÓ
-                D'INVERSIÓ COL·LECTIVA
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
               help: Casella 88-96 del model 184, exercici 2025.
-              label: NIF DE PERSONA O ENTITAT CESSIONÀRIA / NIF DE LA INSTITUCIÓ D'INVERSIÓ
-                COL·LECTIVA
             x-ehkn0rpi5phmoobmck:
               help: Casella 77 del model 184, exercici 2025.
-              label: Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital
-                immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió,
-                G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions
-                IS, K=retencions suportades, L=excés de rendes negatives de països
-                sense conveni)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
               help: Casella 80-81 del model 184, exercici 2025.
-              label: CLAU PAÍS
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
               help: Casella 396 del model 184, exercici 2025.
-              label: CRITERI DE COBRAMENTS I PAGAMENTS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Casella 498-500 del model 184, exercici 2025.
-              label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
               help: Casella 84-87 del model 184, exercici 2025.
-              label: GRUP O EPÍGRAF IAE
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
               help: Casella 117-124 del model 184, exercici 2025.
-              label: Any
-            x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Guanys / pèrdues
-            x-ehkn0rpi5pjm2srkdtpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Despeses / excés de rendes negatives
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobddtp78qbqc5hmirreclpg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Amortitzacions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sobie9imsp31dlkmarjkdtpiqor1dpnmspbj:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Arrendaments i cànons
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2sorfdppnarbfecmmau3gdhnn8ob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Consums d'explotació
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspdcpkmsobecdkmasjfec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Despeses financeres
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2spr1edq6uspde1in4srfdpgmo:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Despeses de personal
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2srrke9nn6bb7c5pn8rrj5li6ap3lcdkm4r35ec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Altres despeses fiscalment
-                deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ss3idtr6isr9dtn6aso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Provisions
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssj5e1gn4ob3d5nmspbj5lhmurjjclp7cob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Reparacions i conservació
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssr5e9r6ior9dtpiqs3idtj6asr9dtn62r35ec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Serveis professionals independents
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2ssrldlkmsqbjehp6uso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Subministraments
-            x-ehkn0rpi5pjm2srkdtpiqob3ehkncqb4c5i2st3id5h7at3fecmm8pb4elhmiojcclpg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses d'activitats econòmiques. Tributs fiscalment deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb2d5imspbj5lmnapb2dhin6:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Amortització de béns mobles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pgmqrriehknkob3d5nmsbb9dpmnapb2dhig:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Amortització de l'immoble
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phm2rjkd5i62p35ecmm8pbmcln6eob4c5piqt35e9hmasjfec:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Quantitats meritades per tercers
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5phmurjjclp7cob3d5nmsbbiclo62sj1cdkmurg:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Conservació i reparació
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5lj6irj1dphmiob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Interessos i altres despeses
-                de finançament
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pkmst35e9in6pbj5ljm2srkdtpiqsj5e1gn4ob3d5nms:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Interessos i despeses de reparació
-                i conservació pendents
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pnn8sjfecmmeobjehnn6bb4cli7aor9c9m6aso:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Altres despeses deduïbles
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5po74qbdc5piqsr5ctqn4rrj:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Primes d'assegurances
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5ppm2r34dtpiqp3lchnn6rpdcdnm4sjf:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Saldos de dubtós cobrament
-            x-ehkn0rpi5pjm2srkdtpiqqbedlnm4qbcd5gn4qbf5pq74qb2elq6uspde9im6obictnn6:
-              help: Despesa fiscalment deduible declarada en el registre d'entitat
-                del model 184. El disseny la divideix en part entera i part decimal.
-              label: Despeses del capital immobiliari. Tributs i recàrrecs
-            x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Ingressos íntegres / import de rendiments meritats / resultat
-                comptable
-            x-ehkn0rpi5po6usj3cln78obackmn4pb4elhm6qbfdo:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Percentatge de reducció
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Casella 246-265 del model 184, exercici 2025.
-              label: REFERÈNCIA CADASTRAL
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
               help: Casella 82 del model 184, exercici 2025.
-              label: RÈGIM DE DETERMINACIÓ DE RENDIMENTS
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
               help: Casella 196-207 del model 184, exercici 2025.
-              label: RENDA ATRIBUÏBLE AMB DRET A REDUCCIÓ
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
               help: Casella 177-190 del model 184, exercici 2025.
-              label: Import de la renda atribuïble / rendiment net atribuïble al membre
-                de l'entitat (sense signe, sense coma decimal, en euros)
-            x-ehkn0rpi5pp6at35dphmirreclpg:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Retencions i ingressos a compte
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Casella 245 del model 184, exercici 2025.
-              label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpi5ppnaoj3dhgncp8:
               help: Casella 78-79 del model 184, exercici 2025.
-              label: Subclau del tipus de renda atribuïda (granularitat per origen
-                geogràfic Espanya/estranger, reduccions aplicables, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
               help: Casella 83 del model 184, exercici 2025.
-              label: TIPUS D'ACTIVITAT
             x-ehkn0rpi5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercici 2025.
-              label: TIPUS DE FULL
-            x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Valor d'adquisició, subscripció o comptable
-            x-ehkn0rpi5pr62r3fe8mmoqbhelkm8obkd5r6u:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: 'Valor liquidatiu / ajustos: augments'
             x-ehkn0rpj5phmoobmck:
               help: Casella 93 del model 184, exercici 2025.
-              label: CLAU
-            x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
               help: Casella 79-80 del model 184, exercici 2025.
-              label: CLAU PAÍS
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
               help: Casella 81 del model 184, exercici 2025.
-              label: CLAU TIPUS DE PARTÍCIP
-            x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Codi de província
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
               help: Casella 200-202 del model 184, exercici 2025.
-              label: NOMBRE DE DIES D'ARRENDAMENT O CESSIÓ D'ÚS I GAUDI DE L'IMMOBLE
-            x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Nombre de dies com a membre
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
               help: Casella 120-159 del model 184, exercici 2025.
-              label: DOMICILI FISCAL DEL MEMBRE DE L'ENTITAT
             x-ehkn0rpj5pkmqs3fe9q6a:
               help: Casella 96-108 del model 184, exercici 2025.
-              label: IMPORT (RENDIMENT / RETENCIÓ / DEDUCCIÓ)
-            x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Membre a 31 de desembre
-            x-ehkn0rpj5pmmipbdc9p6ubbed5j0:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: NIF del membre
-            x-ehkn0rpj5pmmipbdc9p6ubbedtmm4sj5:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Cognoms i nom, raó social o denominació del membre
-            x-ehkn0rpj5pn62t3le9gmopbqc4mmirjdelim4r35:
-              help: Dada del membre declarat en el registre de tipus 3 del model 184.
-              label: Naturalesa de l'immoble
-            x-ehkn0rpj5po6usj3cln78obackmn0obiehkm6qbgc5hmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Percentatge de participació
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
               help: Casella 195-199 del model 184, exercici 2025.
-              label: PERCENTATGE DE TITULARITAT DE L'IMMOBLE
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
               help: Casella 160-171 del model 184, exercici 2025.
-              label: PROVISIONS DEDUÏBLES I DESPESES DE DIFÍCIL JUSTIFICACIÓ
-            x-ehkn0rpj5pp6ap3lcdhmirre:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Reducció
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
               help: Casella 174-193 del model 184, exercici 2025.
-              label: REFERÈNCIA CADASTRAL
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
               help: Casella 216-229 del model 184, exercici 2025.
-              label: RENDIMENT NET MINORAT D'ACTIVITATS AGRÍCOLES, RAMADERES I FORESTALS
-                EN ESTIMACIÓ OBJECTIVA
-            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
-              help: Import declarat al model 184. El disseny el divideix en part entera
-                i part decimal.
-              label: Rendiment net previ d'activitats en estimació objectiva
-            x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dada declarada al model 184, declaració informativa d'entitats
-                en regim d'atribucio de rendes.
-              label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
               help: Casella 173 del model 184, exercici 2025.
-              label: SITUACIÓ DE L'IMMOBLE
             x-ehkn0rpj5ppnaoj3dhgncp8:
               help: Casella 94-95 del model 184, exercici 2025.
-              label: SUBCLAU
             x-ehkn0rpj5pq6is3f5lk6uqj1:
               help: Casella 76 del model 184, exercici 2025.
-              label: TIPUS DE FULL
           construct:
             modelo-184-informative:
               field:

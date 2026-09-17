@@ -3,12 +3,1357 @@ modelo:
     '220':
       casilla:
         continuidad:
+          base-imponible-tramo-dos:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 2.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Adóalap sávja 2
+          base-imponible-tramo-uno:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 1.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Adóalap sávja 1
+          documento-ingreso-devolucion-abono-activos-diferidos:
+            help: 'A Modelo 220 A. casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
+              Halasztott adókövetelés átváltásából származó jóváírás (LIS 130. cikk)
+          documento-ingreso-devolucion-apellidos-razon-social:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Vezetéknév
+              vagy cégnév
+          documento-ingreso-devolucion-banco-extranjero:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
+              ország: a bank neve'
+          documento-ingreso-devolucion-ciudad-banco:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
+              ország: város'
+          documento-ingreso-devolucion-codigo-pais-banco:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
+              ország: országkód'
+          documento-ingreso-devolucion-compensacion-activos-diferidos:
+            help: 'A Modelo 220 C. casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
+              Halasztott adókövetelés átváltásából származó beszámítás (LIS 130. cikk)
+          documento-ingreso-devolucion-cuenta-corriente-tributaria:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Adószámla
+          documento-ingreso-devolucion-cuota-cero:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Nulla adóösszeg
+          documento-ingreso-devolucion-direccion-banco:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
+              ország: a bank címe'
+          documento-ingreso-devolucion-ejercicio:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adóév
+          documento-ingreso-devolucion-fecha-fin:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
+              időszak záró dátuma (EEEEHHNN)
+          documento-ingreso-devolucion-fecha-inicio:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
+              időszak kezdő dátuma (EEEEHHNN)
+          documento-ingreso-devolucion-iban-devolucion:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. IBAN
+              kód - blokk
+          documento-ingreso-devolucion-iban-ingreso:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Befizetés. IBAN kód
+              - blokk
+          documento-ingreso-devolucion-importe-devolucion:
+            help: 'A Modelo 220 D. casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. Visszatérítendő
+              összeg
+          documento-ingreso-devolucion-importe-ingreso:
+            help: 'A Modelo 220 I. casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Befizetés. Fizetendő
+              összeg
+          documento-ingreso-devolucion-marca-sepa:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. SEPA
+              jelölő
+          documento-ingreso-devolucion-modalidad-devolucion:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. Visszatérítési
+              mód
+          documento-ingreso-devolucion-modalidad-ingreso:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Befizetés. Befizetési
+              mód
+          documento-ingreso-devolucion-nif:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Adóazonosító
+          documento-ingreso-devolucion-nombre:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Utónév
+          documento-ingreso-devolucion-pais-banco:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
+              ország: ország'
+          documento-ingreso-devolucion-periodo:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
+              időszak
+          documento-ingreso-devolucion-swift-bic:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. SWIFT-BIC
+              kód (csak többi ország / nem SEPA)
+          documento-ingreso-devolucion-tipo-ejercicio:
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adóév típusa
           filing-year:
-            help: A Modelo 220 . casilla adóügyi adatai.
-            label: Casilla — adóügyi mező
+            help: 'A Modelo 220 . casilla adóügyi adatai: adóév.'
+            label: Az adócsoport bevallásának vonatkozási éve
+          t22007000-00043:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az adócsoport entitásainak egyedi
+              adóalapjai összesen (a hajózási társaságok átalányadózása szerinti alapok
+              nélkül) (7A. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási
+              társaságok átalányadózása szerinti alapok nélkül) (7A. o.)
+          t22007000-00047:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: szövetkezeti
+              eredményből származó egyedi adóalapok összesen (7A. o.).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: szövetkezeti eredményből származó egyedi
+              adóalapok összesen (7A. o.)'
+          t22007000-00048:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: nem szövetkezeti
+              eredményből származó egyedi adóalapok összesen (7A. o.).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: nem szövetkezeti eredményből származó
+              egyedi adóalapok összesen (7A. o.)'
+          t22007000-00049:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Különleges rendszerben lévő hajózási
+              társaságokat tartalmazó csoportok: tonnatartalom alapján, átalányadózással
+              meghatározott adóalapok összesen (7A. o.)(*).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Különleges rendszerben lévő hajózási társaságokat tartalmazó csoportok:
+              tonnatartalom alapján, átalányadózással meghatározott adóalapok összesen
+              (7A. o.)(*)'
+          t22007000-00079:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének belső
+              eredmények halasztása miatti korrekciói összesen.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az adóalapok összegének belső eredmények halasztása miatti korrekciói
+              összesen
+          t22007000-00080:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+              összegéhez (**). Az adócsoport belső osztalékainak kiszűrése (7D. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport belső
+              osztalékainak kiszűrése (7D. o.)
+          t22007000-00082:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+              összegéhez (**). Az adócsoport entitásaiban lévő saját tőke részesedések
+              korábbi időszakokban kiszűrt értékvesztésének beszámítása (7E. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport entitásaiban
+              lévő saját tőke részesedések korábbi időszakokban kiszűrt értékvesztésének
+              beszámítása (7E. o.)
+          t22007000-00083:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+              összegéhez (**). Szövetkezeti csoportok: a "csoporton belüli visszatérítések",
+              a "csoporton belüli gazdasági támogatások" és a "csoport vezető entitása
+              által felosztott eredmények" kiszűrése (1345/1992. RD) (7G. o.).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Egyéb korrekciók az adóalapok összegéhez (**). Szövetkezeti csoportok:
+              a "csoporton belüli visszatérítések", a "csoporton belüli gazdasági
+              támogatások" és a "csoport vezető entitása által felosztott eredmények"
+              kiszűrése (1345/1992. RD) (7G. o.)'
+          t22007000-00085:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+              összegéhez (**). Egyéb korrekciók az egyedi adóalapok összegéhez vagy
+              az adócsoport adóalapjához (7H. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
+              az egyedi adóalapok összegéhez vagy az adócsoport adóalapjához (7H.
+              o.)
+          t22007000-00086:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
+              összegéhez (**). Egyéb korrekciók összesen.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
+              összesen
+          t22007000-00225:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport előzetes adóalapja.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport előzetes adóalapja
+          t22007000-00291:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti korlát
+              alkalmazása (LIS 62.1. e) cikk). Csökkenés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e) cikk).
+              Csökkenés
+          t22007000-00362:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport korábbi időszaki negatív
+              adóalapjainak beszámítása (7K. o.)(***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport korábbi időszaki negatív adóalapjainak beszámítása (7K.
+              o.)(***)
+          t22007000-00363:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: a csoport
+              korábbi időszaki negatív adókötelezettségeinek beszámítása (7K bis o.)(***).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: a csoport korábbi időszaki negatív adókötelezettségeinek
+              beszámítása (7K bis o.)(***)'
+          t22007000-00398:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti képzések
+              a csoporthoz való csatlakozás előtti időszakokból (LIS 67. d) és 74.3.
+              d) cikk)(***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke szerinti képzések a csoporthoz való csatlakozás
+              előtti időszakokból (LIS 67. d) és 74.3. d) cikk)(***)
+          t22007000-00540:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+              törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Csökkenés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              szerinti korlát alkalmazása. Csökkenés
+          t22007000-00541:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+              törvény 7. kiegészítő rendelkezése szerinti képzések az entitás csoporthoz
+              való csatlakozása előtti időszakokból (***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              szerinti képzések az entitás csoporthoz való csatlakozása előtti időszakokból
+              (***)
+          t22007000-00547:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Entitások negatív adóalapjainak
+              beszámítása a csoporthoz való csatlakozás előtti időszakokból (LIS 67.
+              e) és 74.3. e) cikk) (7L. o.)(***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Entitások negatív adóalapjainak beszámítása a csoporthoz való
+              csatlakozás előtti időszakokból (LIS 67. e) és 74.3. e) cikk) (7L. o.)(***)
+          t22007000-00550:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja a tőkésítési
+              tartalékok alkalmazása és a korábbi időszakok negatív adóalapjainak
+              beszámítása előtt.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport adóalapja a tőkésítési tartalékok alkalmazása és a korábbi
+              időszakok negatív adóalapjainak beszámítása előtt
+          t22007000-00552:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport adóalapja
+          t22007000-00553:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
+              adóalapok összege a kiszűrések levonása után, szövetkezeti eredményből.'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
+              levonása után, szövetkezeti eredményből'
+          t22007000-00554:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
+              adóalapok összege a kiszűrések levonása után, nem szövetkezeti eredményből.'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
+              levonása után, nem szövetkezeti eredményből'
+          t22007000-00558:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Adókulcs (%).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Adókulcs (%)
+          t22007000-00560:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport szövetkezeteinek bruttó
+              adókötelezettségei összesen.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport szövetkezeteinek bruttó adókötelezettségei összesen
+          t22007000-00561:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: entitások
+              negatív adókötelezettségeinek beszámítása a csoporthoz való csatlakozás
+              előtti időszakokból (7L bis o.)(***).'
+            label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Szövetkezeti csoportok: entitások negatív adókötelezettségeinek
+              beszámítása a csoporthoz való csatlakozás előtti időszakokból (7L bis
+              o.)(***)'
+          t22007000-00562:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A csoport bruttó adókötelezettsége.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A csoport bruttó adókötelezettsége
+          t22007000-01021:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
+              egyedi negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés).
+              Általános rendszer (7A bis o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Korábbi időszakok beszámított egyedi negatív adóalapjainak összege
+              (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A bis o.)
+          t22007000-01263:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
+              50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
+              Általános rendszer (7A. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
+              számítva (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A. o.)
+          t22007000-01264:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
+              50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
+              Kanári-szigeteki hajók és hajózási társaságok különleges rendszere (7A.
+              o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
+              számítva (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók és
+              hajózási társaságok különleges rendszere (7A. o.)
+          t22007000-01935:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
+              negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki
+              hajók és hajózási társaságok különleges rendszere (7A bis o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Korábbi időszakok beszámított negatív adóalapjainak összege (LIS
+              19. kiegészítő rendelkezés). Kanári-szigeteki hajók és hajózási társaságok
+              különleges rendszere (7A bis o.)
+          t22007000-02542:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti értékvesztések
+              és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások (LIS 14.1.
+              és 14.2. cikk), valamint a LIS 33.1. átmeneti rendelkezés szerinti képzések.
+              Növekedés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk), valamint
+              a LIS 33.1. átmeneti rendelkezés szerinti képzések. Növekedés
+          t22007000-02543:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti értékvesztések
+              és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások (LIS 14.1.
+              és 14.2. cikk). Csökkenés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk). Csökkenés
+          t22007000-02544:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti korlát
+              alkalmazása (LIS 62.1. e) cikk). Növekedés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e) cikk).
+              Növekedés
+          t22007000-02545:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Kiegyenlítési tartalék. Növekedés
+          t22007000-02546:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Kiegyenlítési tartalék. Csökkenés
+          t22007000-02547:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
+              a csoporthoz való csatlakozás előtti időszakokból (LIS 67. f) és 74.3.
+              f) cikk).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
+              előtti időszakokból (LIS 67. f) és 74.3. f) cikk)
+          t22007000-02548:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti értékvesztések
+              és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások. Növekedés
+              (szövetkezetek).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              szerinti céltartalékok és ráfordítások. Növekedés (szövetkezetek)
+          t22007000-02549:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti értékvesztések
+              és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások. Csökkenés
+              (szövetkezetek).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
+              szerinti céltartalékok és ráfordítások. Csökkenés (szövetkezetek)
+          t22007000-02890:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
+              törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Növekedés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
+              szerinti korlát alkalmazása. Növekedés
+          t22007000-02891:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Kiegyenlítési tartalék. Növekedés
+          t22007000-02892:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Kiegyenlítési tartalék. Csökkenés
+          t22007000-02893:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
+              a csoporthoz való csatlakozás előtti időszakokból.'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
+              előtti időszakokból
+          t22007000-02963:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Tőkésítési tartalék (***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Tőkésítési tartalék (***)
+          t22007000-03140:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Entitások tőkésítési tartaléka
+              a csoporthoz való csatlakozás előtti időszakokból, érvényesítve (LIS
+              67. c) és 74.3. c) cikk)(***).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Entitások tőkésítési tartaléka a csoporthoz való csatlakozás előtti
+              időszakokból, érvényesítve (LIS 67. c) és 74.3. c) cikk)(***)
+          t22007000-03241:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
+              belső eredmények halasztása miatt (**). Belső ügyletek eredményének
+              kiszűrése összesen (7C. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az adóalapok összegének korrekciói belső eredmények halasztása
+              miatt (**). Belső ügyletek eredményének kiszűrése összesen (7C. o.)
+          t22007000-03242:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
+              belső eredmények halasztása miatt (**). Belső ügyletek eredményének
+              beszámítása összesen (7C. o.).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Az adóalapok összegének korrekciói belső eredmények halasztása
+              miatt (**). Belső ügyletek eredményének beszámítása összesen (7C. o.)
+          t22009000-00186:
+            help: A Modelo 220 00186. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. A LIS 39.2. cikk szerinti korlát
+              alól kivont K+F+I levonások
+          t22009000-00399:
+            help: A Modelo 220 00399. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. A helyi szabályok alá tartozó
+              szervezetek egyedi levonásai
+          t22009000-00436:
+            help: 'A Modelo 220 00436. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
+              miatt (LIS 39.2. cikk szerinti választás), összesen. Külön jogállású
+              tartományi tanácsok és Navarra'
+          t22009000-00562:
+            help: 'Tekintse át a casilla adatait: Adóösszeg teljes.'
+            label: Teljes adótartozás
+          t22009000-00563:
+            help: A Modelo 220 00563. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. A Kanári-szigeteken előállított tárgyi termékek
+              értékesítésének kedvezménye (19/1994. törvény 26. cikk)
+          t22009000-00565:
+            help: A Modelo 220 00565. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Nonprofit szervezeteknek nyújtott
+              adományok levonása (49/2002. törvény)
+          t22009000-00566:
+            help: A Modelo 220 00566. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Szövetkezeti társaságok kedvezményei (20/1990. törvény)
+          t22009000-00567:
+            help: A Modelo 220 00567. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Ceutában és Melillában szerzett jövedelem kedvezménye
+              (LIS 33. cikk)
+          t22009000-00568:
+            help: A Modelo 220 00568. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Szolgáltatásnyújtási kedvezmények (LIS 34. cikk)
+          t22009000-00569:
+            help: A Modelo 220 00569. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Egyéb kedvezmények
+          t22009000-00570:
+            help: A Modelo 220 00570. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása a tárgyévben
+              érvényesítve (RDLeg 4/2004 30. cikk)
+          t22009000-00571:
+            help: A Modelo 220 00571. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Az időszakban keletkezett és érvényesített belföldi
+              kettős adóztatás (LIS 23.1. átmeneti rendelkezés)
+          t22009000-00572:
+            help: A Modelo 220 00572. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása az
+              időszakban érvényesítve (RDLeg 4/2004 31. és 32. cikk)
+          t22009000-00575:
+            help: A Modelo 220 00575. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Nemzetközi adóátláthatóság (LIS 100.10. cikk)
+          t22009000-00576:
+            help: A Modelo 220 00576. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Lakásbérbeadással foglalkozó szervezetek kedvezményei
+              (LIS VII. cím III. fejezet)
+          t22009000-00577:
+            help: A Modelo 220 00577. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Társaságok közötti belföldi kettős adóztatás 5/10
+              százalékon (szövetkezetek)
+          t22009000-00581:
+            help: A Modelo 220 00581. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Kanári-szigeteki hajózási társaságok kedvezményei
+              (19/1994. törvény 76. cikk)
+          t22009000-00582:
+            help: A Modelo 220 00582. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás
+          t22009000-00583:
+            help: A Modelo 220 00583. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Beruházási adótámogatás és
+              egyéb levonások
+          t22009000-00584:
+            help: A Modelo 220 00584. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Levonások a LIS 24.1. átmeneti
+              rendelkezése alapján
+          t22009000-00585:
+            help: A Modelo 220 00585. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Levonás a LIS 24.7. átmeneti
+              rendelkezése és az RDLeg 4/2004 42. cikke alapján
+          t22009000-00588:
+            help: A Modelo 220 00588. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Egyes tevékenységek ösztönzésére
+              szolgáló levonások (LIS VI. cím IV. fejezet, 24.3. átmeneti rendelkezés
+              és a 49/2002. törvény 27.3. cikke)
+          t22009000-00590:
+            help: A Modelo 220 00590. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki beruházási
+              levonások
+          t22009000-00592:
+            help: 'A Modelo 220 00592. casilla adóügyi adatai: adóügyi információ.'
+            label: Egyéb levonások. Nettó adótartozás. Nettó adótartozás
+          t22009000-00595:
+            help: 'A Modelo 220 00595. casilla adóügyi adatai: adóügyi információ.'
+            label: Az üzleti év fizetendő vagy visszajáró adója. Levonások és számlára
+              történő befizetések, valamint kollektív befektetési részesedések előleget
+          t22009000-00596:
+            help: 'A Modelo 220 00596. casilla adóügyi adatai: adóügyi információ.'
+            label: Az üzleti év fizetendő vagy visszajáró adója. Gazdasági érdekcsoportok
+              és ideiglenes vállalati társulások által hozzárendelt levonások
+          t22009000-00597:
+            help: 'A Modelo 220 00597. casilla adóügyi adatai: adóügyi információ.'
+            label: Az üzleti év fizetendő vagy visszajáró adója. Egyes sorsjáték-
+              és fogadási nyeremények levonásai
+          t22009000-00599:
+            help: 'A Modelo 220 00599. casilla adóügyi adatai: adóügyi információ.'
+            label: Az üzleti év fizetendő vagy visszajáró adója. Az időszak fizetendő
+              vagy visszajáró adója. Állam
+          t22009000-00600:
+            help: 'A Modelo 220 00600. casilla adóügyi adatai: adóügyi információ.'
+            label: Az üzleti év fizetendő vagy visszajáró adója. Az időszak fizetendő
+              vagy visszajáró adója. Külön jogállású tartományi tanácsok és Navarra
+          t22009000-00601:
+            help: 'A Modelo 220 00601. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Első részletfizetés.
+              Állam
+          t22009000-00602:
+            help: 'A Modelo 220 00602. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Első részletfizetés.
+              Külön jogállású tartományi tanácsok és Navarra
+          t22009000-00603:
+            help: 'A Modelo 220 00603. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Második részletfizetés.
+              Állam
+          t22009000-00604:
+            help: 'A Modelo 220 00604. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Második részletfizetés.
+              Külön jogállású tartományi tanácsok és Navarra
+          t22009000-00605:
+            help: 'A Modelo 220 00605. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Harmadik részletfizetés.
+              Állam
+          t22009000-00606:
+            help: 'A Modelo 220 00606. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Harmadik részletfizetés.
+              Külön jogállású tartományi tanácsok és Navarra
+          t22009000-00611:
+            help: 'A Modelo 220 00611. casilla adóügyi adatai: adóügyi információ.'
+            label: Részletfizetések. Különbözeti adótartozás. Különbözeti adótartozás.
+              Állam
+          t22009000-00612:
+            help: 'A Modelo 220 00612. casilla adóügyi adatai: adóügyi információ.'
+            label: Különbözeti adótartozás. Külön jogállású tartományi tanácsok és
+              Navarra
+          t22009000-00615:
+            help: 'A Modelo 220 00615. casilla adóügyi adatai: adóügyi információ.'
+            label: Az önadózás eredménye. Korábbi időszaki adókedvezmények elvesztése
+              miatti növekmény. Állam
+          t22009000-00616:
+            help: 'A Modelo 220 00616. casilla adóügyi adatai: adóügyi információ.'
+            label: Az önadózás eredménye. Korábbi időszaki adókedvezmények elvesztése
+              miatti növekmény. Külön jogállású tartományi tanácsok és Navarra
+          t22009000-00617:
+            help: 'A Modelo 220 00617. casilla adóügyi adatai: adóügyi információ.'
+            label: Az önadózás eredménye. Késedelmi kamat. Állam
+          t22009000-00618:
+            help: 'A Modelo 220 00618. casilla adóügyi adatai: adóügyi információ.'
+            label: Az önadózás eredménye. Késedelmi kamat. Külön jogállású tartományi
+              tanácsok és Navarra
+          t22009000-01375:
+            help: A Modelo 220 01375. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. A Baleári-szigeteken előállított tárgyi termékek
+              értékesítésének kedvezménye (31/2022. törvény 70. kiegészítő rendelkezése)
+          t22009000-01629:
+            help: A Modelo 220 01629. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Minimális nettó adótartozás
+              (LIS 30. bis cikk)
+          t22009000-01631:
+            help: 'A Modelo 220 01631. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi filmgyártási
+              levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő rendelkezése),
+              Állam'
+          t22009000-01632:
+            help: 'A Modelo 220 01632. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi filmgyártási
+              levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő rendelkezése),
+              Külön jogállású tartományi tanácsok és Navarra'
+          t22009000-01737:
+            help: 'A Modelo 220 01737. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi filmgyártási
+              levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő rendelkezése),
+              összesen. Külön jogállású tartományi tanácsok és Navarra'
+          t22009000-01965:
+            help: A Modelo 220 01965. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása az
+              időszakban érvényesítve (LIS 23.1. átmeneti rendelkezés)
+          t22009000-02188:
+            help: 'A Modelo 220 02188. casilla adóügyi adatai: adóügyi információ.'
+            label: Az időszak fizetendő vagy visszajáró adója. Levonások és számlára
+              történő befizetések összesen
+          t22009000-02353:
+            help: A Modelo 220 02353. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki külföldi filmgyártási
+              levonás (LIS 36.2. cikk és a 14/1994. törvény 14. kiegészítő rendelkezése)
+          t22009000-02354:
+            help: A Modelo 220 02354. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Kikötői hatóságok beruházásai
+              és költségei utáni levonások (LIS 38. bis cikk)
+          t22009000-02538:
+            help: 'Tekintse át a casilla adatait: Adóelszámolás. Eredmény - önadózási
+              bevallás. Állapot.'
+            label: Elszámolás. Az önadózás eredménye. Állam
+          t22009000-02539:
+            help: 'A Modelo 220 02539. casilla adóügyi adatai: adóügyi információ.'
+            label: Elszámolás. Az önadózás eredménye. Külön jogállású tartományi tanácsok
+              és Navarra
+          t22009000-03251:
+            help: A Modelo 220 03251. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása az
+              időszakban érvényesítve (LIS 31. és 32. cikk)
+          t22009000-03261:
+            help: A Modelo 220 03261. casilla adóügyi adatai.
+            label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
+              teljes adótartozás. Az időszakban keletkezett és érvényesített nemzetközi
+              kettős adóztatás (LIS 31. és 32. cikk)
+          t22009000-03344:
+            help: A Modelo 220 03344. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések visszafordítása
+              miatti levonás (LIS 37.1. átmeneti rendelkezés)
+          t22009000-03356:
+            help: A Modelo 220 03356. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések visszafordítása
+              miatti levonás (LIS 37.2. átmeneti rendelkezés)
+          t22009000-03358:
+            help: 'A Modelo 220 03358. casilla adóügyi adatai: adóügyi információ.'
+            label: Teljes adótartozás. A kiegyenlítő tartalék korrekciója (LIS 105.6.
+              cikk)
+          t22009000-03359:
+            help: A Modelo 220 03359. casilla adóügyi adatai.
+            label: Egyéb levonások. Nettó adótartozás. Külföldi filmgyártási levonás
+              (LIS 36.2. cikk)
+          t22009000-03360:
+            help: 'A Modelo 220 03360. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
+              (LIS 39.3. cikk), összesen. Külön jogállású tartományi tanácsok és Navarra'
+          t22009000-03393:
+            help: 'A Modelo 220 03393. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
+              miatt (LIS 39.2. cikk szerinti választás), Külön jogállású tartományi
+              tanácsok és Navarra'
+          t22009000-03398:
+            help: 'A Modelo 220 03398. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
+              (LIS 39.3. cikk), Külön jogállású tartományi tanácsok és Navarra'
+          t22009000-03399:
+            help: 'A Modelo 220 03399. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
+              miatt (LIS 39.2. cikk szerinti választás), Állam'
+          t22009000-03400:
+            help: 'A Modelo 220 03400. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
+              (LIS 39.3. cikk), Állam'
+          t22016000-00052:
+            help: 'A Modelo 220 00052. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Összesen. Araba
+          t22016000-00053:
+            help: 'A Modelo 220 00053. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Összesen. Gipuzkoa
+          t22016000-00054:
+            help: 'A Modelo 220 00054. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Összesen. Bizkaia
+          t22016000-00055:
+            help: 'A Modelo 220 00055. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Összesen. Navarra
+          t22016000-00056:
+            help: 'A Modelo 220 00056. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Összesen. Közös
+              terület
+          t22016000-00402:
+            help: 'A Modelo 220 00402. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              1. részletfizetés. Araba
+          t22016000-00420:
+            help: 'A Modelo 220 00420. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év fizetendő
+              vagy visszajáró adója. Araba
+          t22016000-00421:
+            help: 'A Modelo 220 00421. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év fizetendő
+              vagy visszajáró adója. Gipuzkoa
+          t22016000-00426:
+            help: 'A Modelo 220 00426. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év fizetendő
+              vagy visszajáró adója. Bizkaia
+          t22016000-00427:
+            help: 'A Modelo 220 00427. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év fizetendő
+              vagy visszajáró adója. Navarra
+          t22016000-00442:
+            help: 'A Modelo 220 00442. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              1. részletfizetés. Gipuzkoa
+          t22016000-00443:
+            help: 'A Modelo 220 00443. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              1. részletfizetés. Bizkaia
+          t22016000-00444:
+            help: 'A Modelo 220 00444. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              1. részletfizetés. Navarra
+          t22016000-00445:
+            help: 'A Modelo 220 00445. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              2. részletfizetés. Araba
+          t22016000-00446:
+            help: 'A Modelo 220 00446. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              2. részletfizetés. Gipuzkoa
+          t22016000-00447:
+            help: 'A Modelo 220 00447. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              2. részletfizetés. Bizkaia
+          t22016000-00448:
+            help: 'A Modelo 220 00448. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              2. részletfizetés. Navarra
+          t22016000-00449:
+            help: 'A Modelo 220 00449. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              3. részletfizetés. Araba
+          t22016000-00450:
+            help: 'A Modelo 220 00450. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              3. részletfizetés. Gipuzkoa
+          t22016000-00451:
+            help: 'A Modelo 220 00451. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              3. részletfizetés. Bizkaia
+          t22016000-00465:
+            help: 'A Modelo 220 00465. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              3. részletfizetés. Navarra
+          t22016000-00474:
+            help: 'A Modelo 220 00474. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+              Araba
+          t22016000-00475:
+            help: 'A Modelo 220 00475. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+              Gipuzkoa
+          t22016000-00476:
+            help: 'A Modelo 220 00476. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+              Bizkaia
+          t22016000-00477:
+            help: 'A Modelo 220 00477. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+              Navarra
+          t22016000-00482:
+            help: 'A Modelo 220 00482. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
+              adókedvezmények elvesztése miatti növekmény. Araba
+          t22016000-00483:
+            help: 'A Modelo 220 00483. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
+              adókedvezmények elvesztése miatti növekmény. Gipuzkoa
+          t22016000-00484:
+            help: 'A Modelo 220 00484. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
+              adókedvezmények elvesztése miatti növekmény. Bizkaia
+          t22016000-00485:
+            help: 'A Modelo 220 00485. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
+              adókedvezmények elvesztése miatti növekmény. Navarra
+          t22016000-00486:
+            help: 'A Modelo 220 00486. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
+              Araba
+          t22016000-00487:
+            help: 'A Modelo 220 00487. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
+              Gipuzkoa
+          t22016000-00488:
+            help: 'A Modelo 220 00488. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
+              Bizkaia
+          t22016000-00489:
+            help: 'A Modelo 220 00489. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
+              Navarra
+          t22016000-00494:
+            help: 'A Modelo 220 00494. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
+              visszajáró nettó összeg. Araba
+          t22016000-00495:
+            help: 'A Modelo 220 00495. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
+              visszajáró nettó összeg. Gipuzkoa
+          t22016000-00496:
+            help: 'A Modelo 220 00496. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
+              visszajáró nettó összeg. Bizkaia
+          t22016000-00497:
+            help: 'A Modelo 220 00497. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
+              visszajáró nettó összeg. Navarra
+          t22016000-00600:
+            help: 'A Modelo 220 00600. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év fizetendő
+              vagy visszajáró adója. A külön jogállású területek összesen
+          t22016000-00602:
+            help: 'A Modelo 220 00602. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              1. részletfizetés. A külön jogállású területek összesen
+          t22016000-00604:
+            help: 'A Modelo 220 00604. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              2. részletfizetés. A külön jogállású területek összesen
+          t22016000-00606:
+            help: 'A Modelo 220 00606. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
+              3. részletfizetés. A külön jogállású területek összesen
+          t22016000-00612:
+            help: 'A Modelo 220 00612. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+              A külön jogállású területek összesen
+          t22016000-00616:
+            help: 'A Modelo 220 00616. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
+              adókedvezmények elvesztése miatti növekmény. A külön jogállású területek
+              összesen
+          t22016000-00618:
+            help: 'A Modelo 220 00618. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
+              A külön jogállású területek összesen
+          t22016000-00622:
+            help: 'A Modelo 220 00622. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
+              visszajáró nettó összeg. A külön jogállású területek összesen
+          t22016000-00625:
+            help: 'A Modelo 220 00625. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
+              Közös terület
+          t22016000-00626:
+            help: 'A Modelo 220 00626. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
+              Araba
+          t22016000-00627:
+            help: 'A Modelo 220 00627. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
+              Gipuzkoa
+          t22016000-00628:
+            help: 'A Modelo 220 00628. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
+              Bizkaia
+          t22016000-00629:
+            help: 'A Modelo 220 00629. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
+              Navarra
+          t22016000-01632:
+            help: 'A Modelo 220 01632. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
+              törvény 14. kiegészítő rendelkezése). A külön jogállású területek összesen
+          t22016000-02066:
+            help: 'A Modelo 220 02066. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
+              törvény 14. kiegészítő rendelkezése). Araba
+          t22016000-02067:
+            help: 'A Modelo 220 02067. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
+              törvény 14. kiegészítő rendelkezése). Gipuzkoa
+          t22016000-02068:
+            help: 'A Modelo 220 02068. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
+              törvény 14. kiegészítő rendelkezése). Bizkaia
+          t22016000-02069:
+            help: 'A Modelo 220 02069. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
+              törvény 14. kiegészítő rendelkezése). Navarra
+          t22016000-02539:
+            help: 'A Modelo 220 02539. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az önadózás eredménye.
+              A külön jogállású területek összesen
+          t22016000-02541:
+            help: 'A Modelo 220 02541. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszak korábbi önadózásaiból fizetendő összegek. A külön
+              jogállású területek összesen'
+          t22016000-02789:
+            help: 'A Modelo 220 02789. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              A külön jogállású területek összesen'
+          t22016000-02791:
+            help: 'A Modelo 220 02791. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
+              A külön jogállású területek összesen'
+          t22016000-02793:
+            help: 'A Modelo 220 02793. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
+              A külön jogállású területek összesen'
+          t22016000-02795:
+            help: 'A Modelo 220 02795. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: első részlet. A külön jogállású
+              területek összesen'
+          t22016000-02797:
+            help: 'A Modelo 220 02797. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az önadózás eredménye az első részlettel
+              együtt. A külön jogállású területek összesen'
+          t22016000-02799:
+            help: 'A Modelo 220 02799. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: az
+              önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
+              a 2024. adózási időszak korábbi önadózásaiból. ötödik oszlop, a tervben
+              meg nem nevezett terület'
+          t22016000-02801:
+            help: 'A Modelo 220 02801. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
+              összeg a LIS 19.1. cikk szerinti első részlettel együtt. ötödik oszlop,
+              a tervben meg nem nevezett terület
+          t22016000-03192:
+            help: 'A Modelo 220 03192. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az önadózás eredménye.
+              Araba
+          t22016000-03193:
+            help: 'A Modelo 220 03193. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az önadózás eredménye.
+              Gipuzkoa
+          t22016000-03194:
+            help: 'A Modelo 220 03194. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az önadózás eredménye.
+              Bizkaia
+          t22016000-03195:
+            help: 'A Modelo 220 03195. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Az önadózás eredménye.
+              Navarra
+          t22016000-03293:
+            help: 'A Modelo 220 03293. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszak korábbi önadózásaiból fizetendő összegek. Araba'
+          t22016000-03294:
+            help: 'A Modelo 220 03294. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszak korábbi önadózásaiból fizetendő összegek. Gipuzkoa'
+          t22016000-03295:
+            help: 'A Modelo 220 03295. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszak korábbi önadózásaiból fizetendő összegek. Bizkaia'
+          t22016000-03296:
+            help: 'A Modelo 220 03296. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszak korábbi önadózásaiból fizetendő összegek. Navarra'
+          t22016000-03297:
+            help: 'A Modelo 220 03297. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Araba'
+          t22016000-03298:
+            help: 'A Modelo 220 03298. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Gipuzkoa'
+          t22016000-03299:
+            help: 'A Modelo 220 03299. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Bizkaia'
+          t22016000-03300:
+            help: 'A Modelo 220 03300. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: a
+              2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt visszatérítések.
+              Navarra'
+          t22016000-03301:
+            help: 'A Modelo 220 03301. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
+              Araba'
+          t22016000-03302:
+            help: 'A Modelo 220 03302. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
+              Gipuzkoa'
+          t22016000-03303:
+            help: 'A Modelo 220 03303. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
+              Bizkaia'
+          t22016000-03304:
+            help: 'A Modelo 220 03304. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
+              Navarra'
+          t22016000-03305:
+            help: 'A Modelo 220 03305. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
+              Araba'
+          t22016000-03306:
+            help: 'A Modelo 220 03306. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
+              Gipuzkoa'
+          t22016000-03307:
+            help: 'A Modelo 220 03307. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
+              Bizkaia'
+          t22016000-03308:
+            help: 'A Modelo 220 03308. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
+              Navarra'
+          t22016000-03309:
+            help: 'A Modelo 220 03309. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: első részlet. Araba'
+          t22016000-03310:
+            help: 'A Modelo 220 03310. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: első részlet. Gipuzkoa'
+          t22016000-03311:
+            help: 'A Modelo 220 03311. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: első részlet. Bizkaia'
+          t22016000-03312:
+            help: 'A Modelo 220 03312. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: első részlet. Navarra'
+          t22016000-03313:
+            help: 'A Modelo 220 03313. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az önadózás eredménye az első részlettel
+              együtt. Araba'
+          t22016000-03314:
+            help: 'A Modelo 220 03314. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az önadózás eredménye az első részlettel
+              együtt. Gipuzkoa'
+          t22016000-03315:
+            help: 'A Modelo 220 03315. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az önadózás eredménye az első részlettel
+              együtt. Bizkaia'
+          t22016000-03316:
+            help: 'A Modelo 220 03316. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
+              választása a LIS 19.1. cikk szerint: az önadózás eredménye az első részlettel
+              együtt. Navarra'
+          t22016000-03317:
+            help: 'A Modelo 220 03317. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: az
+              önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
+              a 2024. adózási időszak korábbi önadózásaiból. Araba'
+          t22016000-03318:
+            help: 'A Modelo 220 03318. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: az
+              önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
+              a 2024. adózási időszak korábbi önadózásaiból. Gipuzkoa'
+          t22016000-03319:
+            help: 'A Modelo 220 03319. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: az
+              önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
+              a 2024. adózási időszak korábbi önadózásaiból. Bizkaia'
+          t22016000-03320:
+            help: 'A Modelo 220 03320. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: az
+              önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
+              a 2024. adózási időszak korábbi önadózásaiból. Navarra'
+          t22016000-03321:
+            help: 'A Modelo 220 03321. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
+              összeg a LIS 19.1. cikk szerinti első részlettel együtt. Araba
+          t22016000-03322:
+            help: 'A Modelo 220 03322. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
+              összeg a LIS 19.1. cikk szerinti első részlettel együtt. Gipuzkoa
+          t22016000-03323:
+            help: 'A Modelo 220 03323. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
+              összeg a LIS 19.1. cikk szerinti első részlettel együtt. Bizkaia
+          t22016000-03324:
+            help: 'A Modelo 220 03324. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
+              összeg a LIS 19.1. cikk szerinti első részlettel együtt. Navarra
+          t22016000-03389:
+            help: 'A Modelo 220 03389. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
+              kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
+              Araba
+          t22016000-03390:
+            help: 'A Modelo 220 03390. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
+              kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
+              Gipuzkoa
+          t22016000-03391:
+            help: 'A Modelo 220 03391. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
+              kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
+              Bizkaia
+          t22016000-03392:
+            help: 'A Modelo 220 03392. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
+              kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
+              Navarra
+          t22016000-03393:
+            help: 'A Modelo 220 03393. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
+              kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
+              A külön jogállású területek összesen
+          t22016000-03394:
+            help: 'A Modelo 220 03394. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése (LIS 39.3. cikk). Araba
+          t22016000-03395:
+            help: 'A Modelo 220 03395. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése (LIS 39.3. cikk). Gipuzkoa
+          t22016000-03396:
+            help: 'A Modelo 220 03396. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése (LIS 39.3. cikk). Bizkaia
+          t22016000-03397:
+            help: 'A Modelo 220 03397. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése (LIS 39.3. cikk). Navarra
+          t22016000-03398:
+            help: 'A Modelo 220 03398. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
+              levonások kifizetése (LIS 39.3. cikk). A külön jogállású területek összesen
+          t22016001-02173:
+            help: 'A Modelo 220 02173. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
+              vagy beszámított visszatérítés. Gipuzkoa'
+          t22016001-02174:
+            help: 'A Modelo 220 02174. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
+              vagy beszámított visszatérítés. Bizkaia'
+          t22016001-02175:
+            help: 'A Modelo 220 02175. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
+              vagy beszámított visszatérítés. Navarra'
+          t22016001-02176:
+            help: 'A Modelo 220 02176. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: kifizetés. Araba'
+          t22016001-02177:
+            help: 'A Modelo 220 02177. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: kifizetés. Gipuzkoa'
+          t22016001-02178:
+            help: 'A Modelo 220 02178. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: kifizetés. Bizkaia'
+          t22016001-02179:
+            help: 'A Modelo 220 02179. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: kifizetés. Navarra'
+          t22016001-02180:
+            help: 'A Modelo 220 02180. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: beszámítás. Araba'
+          t22016001-02181:
+            help: 'A Modelo 220 02181. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: beszámítás. Gipuzkoa'
+          t22016001-02182:
+            help: 'A Modelo 220 02182. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: beszámítás. Bizkaia'
+          t22016001-02183:
+            help: 'A Modelo 220 02183. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: beszámítás. Navarra'
+          t22016001-02184:
+            help: 'A Modelo 220 02184. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: fizetendő. Araba'
+          t22016001-02185:
+            help: 'A Modelo 220 02185. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: fizetendő. Gipuzkoa'
+          t22016001-02186:
+            help: 'A Modelo 220 02186. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: fizetendő. Bizkaia'
+          t22016001-02187:
+            help: 'A Modelo 220 02187. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: fizetendő. Navarra'
+          t22016001-02804:
+            help: 'A Modelo 220 02804. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
+              vagy beszámított visszatérítés. A külön jogállású területek összesen'
+          t22016001-02807:
+            help: 'A Modelo 220 02807. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: kifizetés. A külön
+              jogállású területek összesen'
+          t22016001-02810:
+            help: 'A Modelo 220 02810. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: beszámítás. A külön
+              jogállású területek összesen'
+          t22016001-02813:
+            help: 'A Modelo 220 02813. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
+              adókövetelés átváltásának eredménye korrekció után: fizetendő. A külön
+              jogállású területek összesen'
+          t22016001-03325:
+            help: 'A Modelo 220 03325. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
+              vagy beszámított visszatérítés. Araba'
+          t22016001-03362:
+            help: 'A Modelo 220 03362. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó kifizetés. A külön jogállású területek összesen
+          t22016001-03364:
+            help: 'A Modelo 220 03364. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó beszámítás. A külön jogállású területek összesen
+          t22016001-03373:
+            help: 'A Modelo 220 03373. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó kifizetés. Araba
+          t22016001-03374:
+            help: 'A Modelo 220 03374. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó kifizetés. Gipuzkoa
+          t22016001-03375:
+            help: 'A Modelo 220 03375. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó kifizetés. Bizkaia
+          t22016001-03376:
+            help: 'A Modelo 220 03376. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó kifizetés. Navarra
+          t22016001-03377:
+            help: 'A Modelo 220 03377. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó beszámítás. Araba
+          t22016001-03378:
+            help: 'A Modelo 220 03378. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó beszámítás. Gipuzkoa
+          t22016001-03379:
+            help: 'A Modelo 220 03379. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó beszámítás. Bizkaia
+          t22016001-03380:
+            help: 'A Modelo 220 03380. casilla adóügyi adatai: adóügyi információ.'
+            label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
+              átváltásából származó beszámítás. Navarra
+          t220did00-00562:
+            help: 'A Modelo 220 00562. casilla adóügyi adatai: adóügyi információ.'
+            label: Befizetési vagy visszatérítési dokumentum. Elszámolás. A csoport
+              bruttó adókötelezettsége
+          t220did00-00621:
+            help: 'A Modelo 220 00621. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Elszámolás. Eredmény:
+              állami rész'
+          t220did00-02800:
+            help: 'A Modelo 220 02800. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Elszámolás. Részletfizetési
+              opció a LIS 19.1. cikke szerint. Fizetendő nettó összeg az első részlettel
+              együtt: állami rész'
+          t220did00-02806:
+            help: 'A Modelo 220 02806. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
+              A halasztott adókövetelés átváltásának eredménye rendezés után: jóváírás'
+          t220did00-02809:
+            help: 'A Modelo 220 02809. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
+              A halasztott adókövetelés átváltásának eredménye rendezés után: beszámítás'
+          t220did00-02812:
+            help: 'A Modelo 220 02812. casilla adóügyi adatai: adóügyi információ.'
+            label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
+              A halasztott adókövetelés átváltásának eredménye rendezés után: fizetendő'
           tipo-declaracion:
-            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
-            label: 'Casilla kulcs-bevallás: kulcs bevallás'
+            help: A Modelo 220 . casilla adóügyi adatai.
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          tipo-gravamen-tramo-dos:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 2 (három egész,
+              két tizedes).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Adókulcs sávja 2 (három egész, két tizedes)
+          tipo-gravamen-tramo-uno:
+            help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
+              adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 1 (három egész,
+              két tizedes).'
+            label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
+              lap). Adókulcs sávja 1 (három egész, két tizedes)
       field:
         official_name: Modelo 220. Társasági adó. Adókonszolidációs rendszer. Bevallás.
         title: IS éves önbevallás adókonszolidációs rendszerben (cégcsoportok)
@@ -2898,372 +4243,6 @@ modelo:
               help: A Modelo 220 00733. casilla adóügyi adatai.
               label: Az üzleti év konszolidált elszámolt bevétel- és ráfordításkimutatása
                 (5A. oldal, 02. lap). Tőkemódszerrel elszámolt entitások. Egyéb átsorolások
-            x-agp34c1g6so30c1q60o30d1j:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az adócsoport entitásainak
-                egyedi adóalapjai összesen (a hajózási társaságok átalányadózása szerinti
-                alapok nélkül) (7A. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az adócsoport entitásainak egyedi adóalapjai összesen (a hajózási
-                társaságok átalányadózása szerinti alapok nélkül) (7A. o.)
-            x-agp34c1g6so30c1q60o30d1n:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: szövetkezeti
-                eredményből származó egyedi adóalapok összesen (7A. o.).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: szövetkezeti eredményből származó egyedi
-                adóalapok összesen (7A. o.)'
-            x-agp34c1g6so30c1q60o30d1o:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: nem
-                szövetkezeti eredményből származó egyedi adóalapok összesen (7A. o.).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: nem szövetkezeti eredményből származó
-                egyedi adóalapok összesen (7A. o.)'
-            x-agp34c1g6so30c1q60o30d1p:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Különleges rendszerben lévő
-                hajózási társaságokat tartalmazó csoportok: tonnatartalom alapján,
-                átalányadózással meghatározott adóalapok összesen (7A. o.)(*).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Különleges rendszerben lévő hajózási társaságokat tartalmazó
-                csoportok: tonnatartalom alapján, átalányadózással meghatározott adóalapok
-                összesen (7A. o.)(*)'
-            x-agp34c1g6so30c1q60o30dpp:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének belső
-                eredmények halasztása miatti korrekciói összesen.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az adóalapok összegének belső eredmények halasztása miatti korrekciói
-                összesen
-            x-agp34c1g6so30c1q60o30e1g:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
-                összegéhez (**). Az adócsoport belső osztalékainak kiszűrése (7D.
-                o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
-                belső osztalékainak kiszűrése (7D. o.)
-            x-agp34c1g6so30c1q60o30e1i:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
-                összegéhez (**). Az adócsoport entitásaiban lévő saját tőke részesedések
-                korábbi időszakokban kiszűrt értékvesztésének beszámítása (7E. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Egyéb korrekciók az adóalapok összegéhez (**). Az adócsoport
-                entitásaiban lévő saját tőke részesedések korábbi időszakokban kiszűrt
-                értékvesztésének beszámítása (7E. o.)
-            x-agp34c1g6so30c1q60o30e1j:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
-                összegéhez (**). Szövetkezeti csoportok: a "csoporton belüli visszatérítések",
-                a "csoporton belüli gazdasági támogatások" és a "csoport vezető entitása
-                által felosztott eredmények" kiszűrése (1345/1992. RD) (7G. o.).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Egyéb korrekciók az adóalapok összegéhez (**). Szövetkezeti
-                csoportok: a "csoporton belüli visszatérítések", a "csoporton belüli
-                gazdasági támogatások" és a "csoport vezető entitása által felosztott
-                eredmények" kiszűrése (1345/1992. RD) (7G. o.)'
-            x-agp34c1g6so30c1q60o30e1l:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
-                összegéhez (**). Egyéb korrekciók az egyedi adóalapok összegéhez vagy
-                az adócsoport adóalapjához (7H. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
-                az egyedi adóalapok összegéhez vagy az adócsoport adóalapjához (7H.
-                o.)
-            x-agp34c1g6so30c1q60o30e1m:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Egyéb korrekciók az adóalapok
-                összegéhez (**). Egyéb korrekciók összesen.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Egyéb korrekciók az adóalapok összegéhez (**). Egyéb korrekciók
-                összesen
-            x-agp34c1g6so30c1q60o34chl:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport előzetes adóalapja.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport előzetes adóalapja
-            x-agp34c1g6so30c1q60o34e9h:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
-                korlát alkalmazása (LIS 62.1. e) cikk). Csökkenés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
-                cikk). Csökkenés
-            x-agp34c1g6so30c1q60o36dhi:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport korábbi időszaki
-                negatív adóalapjainak beszámítása (7K. o.)(***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport korábbi időszaki negatív adóalapjainak beszámítása
-                (7K. o.)(***)
-            x-agp34c1g6so30c1q60o36dhj:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: a csoport
-                korábbi időszaki negatív adókötelezettségeinek beszámítása (7K bis
-                o.)(***).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: a csoport korábbi időszaki negatív adókötelezettségeinek
-                beszámítása (7K bis o.)(***)'
-            x-agp34c1g6so30c1q60o36e9o:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
-                képzések a csoporthoz való csatlakozás előtti időszakokból (LIS 67.
-                d) és 74.3. d) cikk)(***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke szerinti képzések a csoporthoz való csatlakozás
-                előtti időszakokból (LIS 67. d) és 74.3. d) cikk)(***)
-            x-agp34c1g6so30c1q60o3ad1g:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
-                törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Csökkenés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
-                szerinti korlát alkalmazása. Csökkenés
-            x-agp34c1g6so30c1q60o3ad1h:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
-                törvény 7. kiegészítő rendelkezése szerinti képzések az entitás csoporthoz
-                való csatlakozása előtti időszakokból (***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
-                szerinti képzések az entitás csoporthoz való csatlakozása előtti időszakokból
-                (***)
-            x-agp34c1g6so30c1q60o3ad1n:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Entitások negatív adóalapjainak
-                beszámítása a csoporthoz való csatlakozás előtti időszakokból (LIS
-                67. e) és 74.3. e) cikk) (7L. o.)(***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Entitások negatív adóalapjainak beszámítása a csoporthoz való
-                csatlakozás előtti időszakokból (LIS 67. e) és 74.3. e) cikk) (7L.
-                o.)(***)
-            x-agp34c1g6so30c1q60o3ad9g:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja a tőkésítési
-                tartalékok alkalmazása és a korábbi időszakok negatív adóalapjainak
-                beszámítása előtt.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport adóalapja a tőkésítési tartalékok alkalmazása és a
-                korábbi időszakok negatív adóalapjainak beszámítása előtt
-            x-agp34c1g6so30c1q60o3ad9i:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport adóalapja.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport adóalapja
-            x-agp34c1g6so30c1q60o3ad9j:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
-                adóalapok összege a kiszűrések levonása után, szövetkezeti eredményből.'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
-                levonása után, szövetkezeti eredményből'
-            x-agp34c1g6so30c1q60o3ad9k:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: egyedi
-                adóalapok összege a kiszűrések levonása után, nem szövetkezeti eredményből.'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: egyedi adóalapok összege a kiszűrések
-                levonása után, nem szövetkezeti eredményből'
-            x-agp34c1g6so30c1q60o3ad9o:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Adókulcs (%).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Adókulcs (%)
-            x-agp34c1g6so30c1q60o3adhg:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport szövetkezeteinek
-                bruttó adókötelezettségei összesen.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport szövetkezeteinek bruttó adókötelezettségei összesen
-            x-agp34c1g6so30c1q60o3adhh:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Szövetkezeti csoportok: entitások
-                negatív adókötelezettségeinek beszámítása a csoporthoz való csatlakozás
-                előtti időszakokból (7L bis o.)(***).'
-              label: 'A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Szövetkezeti csoportok: entitások negatív adókötelezettségeinek
-                beszámítása a csoporthoz való csatlakozás előtti időszakokból (7L
-                bis o.)(***)'
-            x-agp34c1g6so30c1q60o3adhi:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A csoport bruttó adókötelezettsége.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A csoport bruttó adókötelezettsége
-            x-agp34c1g6so30c1q60oj0chh:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
-                egyedi negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés).
-                Általános rendszer (7A bis o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Korábbi időszakok beszámított egyedi negatív adóalapjainak összege
-                (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A bis o.)
-            x-agp34c1g6so30c1q60oj4dhj:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
-                50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
-                Általános rendszer (7A. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
-                számítva (LIS 19. kiegészítő rendelkezés). Általános rendszer (7A.
-                o.)
-            x-agp34c1g6so30c1q60oj4dhk:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az időszak egyedi negatív adóalapjai
-                50%-anak összege, be nem számítva (LIS 19. kiegészítő rendelkezés).
-                Kanári-szigeteki hajók és hajózási társaságok különleges rendszere
-                (7A. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az időszak egyedi negatív adóalapjai 50%-anak összege, be nem
-                számítva (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók
-                és hajózási társaságok különleges rendszere (7A. o.)
-            x-agp34c1g6so30c1q60ojicpl:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Korábbi időszakok beszámított
-                negatív adóalapjainak összege (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki
-                hajók és hajózási társaságok különleges rendszere (7A bis o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Korábbi időszakok beszámított negatív adóalapjainak összege
-                (LIS 19. kiegészítő rendelkezés). Kanári-szigeteki hajók és hajózási
-                társaságok különleges rendszere (7A bis o.)
-            x-agp34c1g6so30c1q60p3ad1i:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
-                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások
-                (LIS 14.1. és 14.2. cikk), valamint a LIS 33.1. átmeneti rendelkezés
-                szerinti képzések. Növekedés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-                szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk),
-                valamint a LIS 33.1. átmeneti rendelkezés szerinti képzések. Növekedés
-            x-agp34c1g6so30c1q60p3ad1j:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
-                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások
-                (LIS 14.1. és 14.2. cikk). Csökkenés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-                szerinti céltartalékok és ráfordítások (LIS 14.1. és 14.2. cikk).
-                Csökkenés
-            x-agp34c1g6so30c1q60p3ad1k:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke szerinti
-                korlát alkalmazása (LIS 62.1. e) cikk). Növekedés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke szerinti korlát alkalmazása (LIS 62.1. e)
-                cikk). Növekedés
-            x-agp34c1g6so30c1q60p3ad1l:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Kiegyenlítési tartalék. Növekedés
-            x-agp34c1g6so30c1q60p3ad1m:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Kiegyenlítési tartalék. Csökkenés
-            x-agp34c1g6so30c1q60p3ad1n:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
-                a csoporthoz való csatlakozás előtti időszakokból (LIS 67. f) és 74.3.
-                f) cikk).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
-                előtti időszakokból (LIS 67. f) és 74.3. f) cikk)
-            x-agp34c1g6so30c1q60p3ad1o:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
-                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások.
-                Növekedés (szövetkezetek).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-                szerinti céltartalékok és ráfordítások. Növekedés (szövetkezetek)
-            x-agp34c1g6so30c1q60p3ad1p:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 13.1. cikke szerinti
-                értékvesztések és a LIS 11.12. cikke szerinti céltartalékok és ráfordítások.
-                Csökkenés (szövetkezetek).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-                szerinti céltartalékok és ráfordítások. Csökkenés (szövetkezetek)
-            x-agp34c1g6so30c1q60p3ge9g:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). A LIS 11.12. cikke és a 20/1990.
-                törvény 7. kiegészítő rendelkezése szerinti korlát alkalmazása. Növekedés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
-                szerinti korlát alkalmazása. Növekedés
-            x-agp34c1g6so30c1q60p3ge9h:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Növekedés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Kiegyenlítési tartalék. Növekedés
-            x-agp34c1g6so30c1q60p3ge9i:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Kiegyenlítési tartalék. Csökkenés.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Kiegyenlítési tartalék. Csökkenés
-            x-agp34c1g6so30c1q60p3ge9j:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Entitások kiegyenlítési tartaléka
-                a csoporthoz való csatlakozás előtti időszakokból.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Entitások kiegyenlítési tartaléka a csoporthoz való csatlakozás
-                előtti időszakokból
-            x-agp34c1g6so30c1q60p3idhj:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Tőkésítési tartalék (***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Tőkésítési tartalék (***)
-            x-agp34c1g6so30c1q60pj2d1g:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Entitások tőkésítési tartaléka
-                a csoporthoz való csatlakozás előtti időszakokból, érvényesítve (LIS
-                67. c) és 74.3. c) cikk)(***).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Entitások tőkésítési tartaléka a csoporthoz való csatlakozás
-                előtti időszakokból, érvényesítve (LIS 67. c) és 74.3. c) cikk)(***)
-            x-agp34c1g6so30c1q60pj4d1h:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
-                belső eredmények halasztása miatt (**). Belső ügyletek eredményének
-                kiszűrése összesen (7C. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az adóalapok összegének korrekciói belső eredmények halasztása
-                miatt (**). Belső ügyletek eredményének kiszűrése összesen (7C. o.)
-            x-agp34c1g6so30c1q60pj4d1i:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Az adóalapok összegének korrekciói
-                belső eredmények halasztása miatt (**). Belső ügyletek eredményének
-                beszámítása összesen (7C. o.).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Az adóalapok összegének korrekciói belső eredmények halasztása
-                miatt (**). Belső ügyletek eredményének beszámítása összesen (7C.
-                o.)
-            x-agp34c1g6so30c1qegp34c1g6so30c1e6ss3cb9o60p0:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 1.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Adóalap sávja 1
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70o36b9o60rg:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 1 (három egész,
-                két tizedes).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Adókulcs sávja 1 (három egész, két tizedes)
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70o3gb9o68q0:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Adóalap sávja 2.'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Adóalap sávja 2
-            x-agp34c1g6so30c1qegp34c1g6so30c1e70p3ab9o68sg:
-              help: 'A 220-es modelo adata, 2024. adóév: A csoport adóalapja és bruttó
-                adókötelezettsége (7. oldal, 00. lap). Adókulcs sávja 2 (három egész,
-                két tizedes).'
-              label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-                lap). Adókulcs sávja 2 (három egész, két tizedes)
             x-agp34c1g6t0j0c9q60oj0c1n:
               help: 'A 220-es modelo adata, 2024. adóév: Egyedi negatív adóalapok
                 (DA 19ª LIS) (7A. oldal, 01. lap). Általános rendszer. Be nem számított
@@ -4174,276 +5153,6 @@ modelo:
               help: 'A Modelo 220 00991. casilla adóügyi adatai: adóügyi információ.'
               label: Számviteli eredmények és adóalapok konszolidációja. Adóalap (adózási
                 eredmény)
-            x-agp34c1g74o30c1q60o32e1m:
-              help: A Modelo 220 00186. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. A LIS 39.2. cikk szerinti
-                korlát alól kivont K+F+I levonások
-            x-agp34c1g74o30c1q60o36e9p:
-              help: A Modelo 220 00399. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. A helyi szabályok alá tartozó
-                szervezetek egyedi levonásai
-            x-agp34c1g74o30c1q60o38cpm:
-              help: 'A Modelo 220 00436. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen
-                adótartozás miatt (LIS 39.2. cikk szerinti választás), összesen. Külön
-                jogállású tartományi tanácsok és Navarra'
-            x-agp34c1g74o30c1q60o3adhi:
-              help: 'Tekintse át a casilla adatait: Adóösszeg teljes.'
-              label: Teljes adótartozás
-            x-agp34c1g74o30c1q60o3adhj:
-              help: A Modelo 220 00563. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. A Kanári-szigeteken előállított tárgyi termékek
-                értékesítésének kedvezménye (19/1994. törvény 26. cikk)
-            x-agp34c1g74o30c1q60o3adhl:
-              help: A Modelo 220 00565. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Nonprofit szervezeteknek
-                nyújtott adományok levonása (49/2002. törvény)
-            x-agp34c1g74o30c1q60o3adhm:
-              help: A Modelo 220 00566. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Szövetkezeti társaságok kedvezményei (20/1990.
-                törvény)
-            x-agp34c1g74o30c1q60o3adhn:
-              help: A Modelo 220 00567. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Ceutában és Melillában szerzett jövedelem kedvezménye
-                (LIS 33. cikk)
-            x-agp34c1g74o30c1q60o3adho:
-              help: A Modelo 220 00568. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Szolgáltatásnyújtási kedvezmények (LIS 34. cikk)
-            x-agp34c1g74o30c1q60o3adhp:
-              help: A Modelo 220 00569. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Egyéb kedvezmények
-            x-agp34c1g74o30c1q60o3adpg:
-              help: A Modelo 220 00570. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása a
-                tárgyévben érvényesítve (RDLeg 4/2004 30. cikk)
-            x-agp34c1g74o30c1q60o3adph:
-              help: A Modelo 220 00571. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Az időszakban keletkezett és érvényesített belföldi
-                kettős adóztatás (LIS 23.1. átmeneti rendelkezés)
-            x-agp34c1g74o30c1q60o3adpi:
-              help: A Modelo 220 00572. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása
-                az időszakban érvényesítve (RDLeg 4/2004 31. és 32. cikk)
-            x-agp34c1g74o30c1q60o3adpl:
-              help: A Modelo 220 00575. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Nemzetközi adóátláthatóság (LIS 100.10. cikk)
-            x-agp34c1g74o30c1q60o3adpm:
-              help: A Modelo 220 00576. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Lakásbérbeadással foglalkozó szervezetek kedvezményei
-                (LIS VII. cím III. fejezet)
-            x-agp34c1g74o30c1q60o3adpn:
-              help: A Modelo 220 00577. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Társaságok közötti belföldi kettős adóztatás 5/10
-                százalékon (szövetkezetek)
-            x-agp34c1g74o30c1q60o3ae1h:
-              help: A Modelo 220 00581. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Kanári-szigeteki hajózási társaságok kedvezményei
-                (19/1994. törvény 76. cikk)
-            x-agp34c1g74o30c1q60o3ae1i:
-              help: A Modelo 220 00582. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás
-            x-agp34c1g74o30c1q60o3ae1j:
-              help: A Modelo 220 00583. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Beruházási adótámogatás és
-                egyéb levonások
-            x-agp34c1g74o30c1q60o3ae1k:
-              help: A Modelo 220 00584. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Levonások a LIS 24.1. átmeneti
-                rendelkezése alapján
-            x-agp34c1g74o30c1q60o3ae1l:
-              help: A Modelo 220 00585. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Levonás a LIS 24.7. átmeneti
-                rendelkezése és az RDLeg 4/2004 42. cikke alapján
-            x-agp34c1g74o30c1q60o3ae1o:
-              help: A Modelo 220 00588. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Egyes tevékenységek ösztönzésére
-                szolgáló levonások (LIS VI. cím IV. fejezet, 24.3. átmeneti rendelkezés
-                és a 49/2002. törvény 27.3. cikke)
-            x-agp34c1g74o30c1q60o3ae9g:
-              help: A Modelo 220 00590. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki beruházási
-                levonások
-            x-agp34c1g74o30c1q60o3ae9i:
-              help: 'A Modelo 220 00592. casilla adóügyi adatai: adóügyi információ.'
-              label: Egyéb levonások. Nettó adótartozás. Nettó adótartozás
-            x-agp34c1g74o30c1q60o3ae9l:
-              help: 'A Modelo 220 00595. casilla adóügyi adatai: adóügyi információ.'
-              label: Az üzleti év fizetendő vagy visszajáró adója. Levonások és számlára
-                történő befizetések, valamint kollektív befektetési részesedések előleget
-            x-agp34c1g74o30c1q60o3ae9m:
-              help: 'A Modelo 220 00596. casilla adóügyi adatai: adóügyi információ.'
-              label: Az üzleti év fizetendő vagy visszajáró adója. Gazdasági érdekcsoportok
-                és ideiglenes vállalati társulások által hozzárendelt levonások
-            x-agp34c1g74o30c1q60o3ae9n:
-              help: 'A Modelo 220 00597. casilla adóügyi adatai: adóügyi információ.'
-              label: Az üzleti év fizetendő vagy visszajáró adója. Egyes sorsjáték-
-                és fogadási nyeremények levonásai
-            x-agp34c1g74o30c1q60o3ae9p:
-              help: 'A Modelo 220 00599. casilla adóügyi adatai: adóügyi információ.'
-              label: Az üzleti év fizetendő vagy visszajáró adója. Az időszak fizetendő
-                vagy visszajáró adója. Állam
-            x-agp34c1g74o30c1q60o3cc1g:
-              help: 'A Modelo 220 00600. casilla adóügyi adatai: adóügyi információ.'
-              label: Az üzleti év fizetendő vagy visszajáró adója. Az időszak fizetendő
-                vagy visszajáró adója. Külön jogállású tartományi tanácsok és Navarra
-            x-agp34c1g74o30c1q60o3cc1h:
-              help: 'A Modelo 220 00601. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Első részletfizetés.
-                Állam
-            x-agp34c1g74o30c1q60o3cc1i:
-              help: 'A Modelo 220 00602. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Első részletfizetés.
-                Külön jogállású tartományi tanácsok és Navarra
-            x-agp34c1g74o30c1q60o3cc1j:
-              help: 'A Modelo 220 00603. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Második részletfizetés.
-                Állam
-            x-agp34c1g74o30c1q60o3cc1k:
-              help: 'A Modelo 220 00604. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Második részletfizetés.
-                Külön jogállású tartományi tanácsok és Navarra
-            x-agp34c1g74o30c1q60o3cc1l:
-              help: 'A Modelo 220 00605. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Harmadik részletfizetés.
-                Állam
-            x-agp34c1g74o30c1q60o3cc1m:
-              help: 'A Modelo 220 00606. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Harmadik részletfizetés.
-                Külön jogállású tartományi tanácsok és Navarra
-            x-agp34c1g74o30c1q60o3cc9h:
-              help: 'A Modelo 220 00611. casilla adóügyi adatai: adóügyi információ.'
-              label: Részletfizetések. Különbözeti adótartozás. Különbözeti adótartozás.
-                Állam
-            x-agp34c1g74o30c1q60o3cc9i:
-              help: 'A Modelo 220 00612. casilla adóügyi adatai: adóügyi információ.'
-              label: Különbözeti adótartozás. Külön jogállású tartományi tanácsok
-                és Navarra
-            x-agp34c1g74o30c1q60o3cc9l:
-              help: 'A Modelo 220 00615. casilla adóügyi adatai: adóügyi információ.'
-              label: Az önadózás eredménye. Korábbi időszaki adókedvezmények elvesztése
-                miatti növekmény. Állam
-            x-agp34c1g74o30c1q60o3cc9m:
-              help: 'A Modelo 220 00616. casilla adóügyi adatai: adóügyi információ.'
-              label: Az önadózás eredménye. Korábbi időszaki adókedvezmények elvesztése
-                miatti növekmény. Külön jogállású tartományi tanácsok és Navarra
-            x-agp34c1g74o30c1q60o3cc9n:
-              help: 'A Modelo 220 00617. casilla adóügyi adatai: adóügyi információ.'
-              label: Az önadózás eredménye. Késedelmi kamat. Állam
-            x-agp34c1g74o30c1q60o3cc9o:
-              help: 'A Modelo 220 00618. casilla adóügyi adatai: adóügyi információ.'
-              label: Az önadózás eredménye. Késedelmi kamat. Külön jogállású tartományi
-                tanácsok és Navarra
-            x-agp34c1g74o30c1q60oj6dpl:
-              help: A Modelo 220 01375. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. A Baleári-szigeteken előállított tárgyi termékek
-                értékesítésének kedvezménye (31/2022. törvény 70. kiegészítő rendelkezése)
-            x-agp34c1g74o30c1q60ojcchp:
-              help: A Modelo 220 01629. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Minimális nettó adótartozás
-                (LIS 30. bis cikk)
-            x-agp34c1g74o30c1q60ojccph:
-              help: 'A Modelo 220 01631. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi
-                filmgyártási levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő
-                rendelkezése), Állam'
-            x-agp34c1g74o30c1q60ojccpi:
-              help: 'A Modelo 220 01632. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi
-                filmgyártási levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő
-                rendelkezése), Külön jogállású tartományi tanácsok és Navarra'
-            x-agp34c1g74o30c1q60ojecpn:
-              help: 'A Modelo 220 01737. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi
-                filmgyártási levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő
-                rendelkezése), összesen. Külön jogállású tartományi tanácsok és Navarra'
-            x-agp34c1g74o30c1q60ojidhl:
-              help: A Modelo 220 01965. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása az
-                időszakban érvényesítve (LIS 23.1. átmeneti rendelkezés)
-            x-agp34c1g74o30c1q60p32e1o:
-              help: 'A Modelo 220 02188. casilla adóügyi adatai: adóügyi információ.'
-              label: Az időszak fizetendő vagy visszajáró adója. Levonások és számlára
-                történő befizetések összesen
-            x-agp34c1g74o30c1q60p36d9j:
-              help: A Modelo 220 02353. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki külföldi
-                filmgyártási levonás (LIS 36.2. cikk és a 14/1994. törvény 14. kiegészítő
-                rendelkezése)
-            x-agp34c1g74o30c1q60p36d9k:
-              help: A Modelo 220 02354. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Kikötői hatóságok beruházásai
-                és költségei utáni levonások (LIS 38. bis cikk)
-            x-agp34c1g74o30c1q60p3acpo:
-              help: 'Tekintse át a casilla adatait: Adóelszámolás. Eredmény - önadózási
-                bevallás. Állapot.'
-              label: Elszámolás. Az önadózás eredménye. Állam
-            x-agp34c1g74o30c1q60p3acpp:
-              help: 'A Modelo 220 02539. casilla adóügyi adatai: adóügyi információ.'
-              label: Elszámolás. Az önadózás eredménye. Külön jogállású tartományi
-                tanácsok és Navarra
-            x-agp34c1g74o30c1q60pj4d9h:
-              help: A Modelo 220 03251. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása
-                az időszakban érvényesítve (LIS 31. és 32. cikk)
-            x-agp34c1g74o30c1q60pj4dhh:
-              help: A Modelo 220 03261. casilla adóügyi adatai.
-              label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-                teljes adótartozás. Az időszakban keletkezett és érvényesített nemzetközi
-                kettős adóztatás (LIS 31. és 32. cikk)
-            x-agp34c1g74o30c1q60pj6d1k:
-              help: A Modelo 220 03344. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések
-                visszafordítása miatti levonás (LIS 37.1. átmeneti rendelkezés)
-            x-agp34c1g74o30c1q60pj6d9m:
-              help: A Modelo 220 03356. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések
-                visszafordítása miatti levonás (LIS 37.2. átmeneti rendelkezés)
-            x-agp34c1g74o30c1q60pj6d9o:
-              help: 'A Modelo 220 03358. casilla adóügyi adatai: adóügyi információ.'
-              label: Teljes adótartozás. A kiegyenlítő tartalék korrekciója (LIS 105.6.
-                cikk)
-            x-agp34c1g74o30c1q60pj6d9p:
-              help: A Modelo 220 03359. casilla adóügyi adatai.
-              label: Egyéb levonások. Nettó adótartozás. Külföldi filmgyártási levonás
-                (LIS 36.2. cikk)
-            x-agp34c1g74o30c1q60pj6dhg:
-              help: 'A Modelo 220 03360. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-                (LIS 39.3. cikk), összesen. Külön jogállású tartományi tanácsok és
-                Navarra'
-            x-agp34c1g74o30c1q60pj6e9j:
-              help: 'A Modelo 220 03393. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen
-                adótartozás miatt (LIS 39.2. cikk szerinti választás), Külön jogállású
-                tartományi tanácsok és Navarra'
-            x-agp34c1g74o30c1q60pj6e9o:
-              help: 'A Modelo 220 03398. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-                (LIS 39.3. cikk), Külön jogállású tartományi tanácsok és Navarra'
-            x-agp34c1g74o30c1q60pj6e9p:
-              help: 'A Modelo 220 03399. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen
-                adótartozás miatt (LIS 39.2. cikk szerinti választás), Állam'
-            x-agp34c1g74o30c1q60pj8c1g:
-              help: 'A Modelo 220 03400. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-                (LIS 39.3. cikk), Állam'
             x-agp34c1h60o30c1q60o3adpl:
               help: A Modelo 220 00575. casilla adóügyi adatai.
               label: 'Entitásonkénti részletezés: nemzetközi adótranszparencia és
@@ -8357,733 +9066,6 @@ modelo:
               help: A Modelo 220 . casilla adóügyi adatai.
               label: Nyereség befektetéséhez kapcsolódó levonás (LIS 24.5. átmeneti
                 rendelkezés és TRLIS 37. cikk). Meg érvényesíthető levonás
-            x-agp34c1h6oo30c1q60o30d9i:
-              help: 'A Modelo 220 00052. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Összesen. Araba
-            x-agp34c1h6oo30c1q60o30d9j:
-              help: 'A Modelo 220 00053. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Összesen. Gipuzkoa
-            x-agp34c1h6oo30c1q60o30d9k:
-              help: 'A Modelo 220 00054. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Összesen. Bizkaia
-            x-agp34c1h6oo30c1q60o30d9l:
-              help: 'A Modelo 220 00055. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Összesen. Navarra
-            x-agp34c1h6oo30c1q60o30d9m:
-              help: 'A Modelo 220 00056. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Összesen. Közös
-                terület
-            x-agp34c1h6oo30c1q60o38c1i:
-              help: 'A Modelo 220 00402. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                1. részletfizetés. Araba
-            x-agp34c1h6oo30c1q60o38chg:
-              help: 'A Modelo 220 00420. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év
-                fizetendő vagy visszajáró adója. Araba
-            x-agp34c1h6oo30c1q60o38chh:
-              help: 'A Modelo 220 00421. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év
-                fizetendő vagy visszajáró adója. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38chm:
-              help: 'A Modelo 220 00426. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év
-                fizetendő vagy visszajáró adója. Bizkaia
-            x-agp34c1h6oo30c1q60o38chn:
-              help: 'A Modelo 220 00427. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év
-                fizetendő vagy visszajáró adója. Navarra
-            x-agp34c1h6oo30c1q60o38d1i:
-              help: 'A Modelo 220 00442. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                1. részletfizetés. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d1j:
-              help: 'A Modelo 220 00443. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                1. részletfizetés. Bizkaia
-            x-agp34c1h6oo30c1q60o38d1k:
-              help: 'A Modelo 220 00444. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                1. részletfizetés. Navarra
-            x-agp34c1h6oo30c1q60o38d1l:
-              help: 'A Modelo 220 00445. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                2. részletfizetés. Araba
-            x-agp34c1h6oo30c1q60o38d1m:
-              help: 'A Modelo 220 00446. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                2. részletfizetés. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d1n:
-              help: 'A Modelo 220 00447. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                2. részletfizetés. Bizkaia
-            x-agp34c1h6oo30c1q60o38d1o:
-              help: 'A Modelo 220 00448. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                2. részletfizetés. Navarra
-            x-agp34c1h6oo30c1q60o38d1p:
-              help: 'A Modelo 220 00449. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                3. részletfizetés. Araba
-            x-agp34c1h6oo30c1q60o38d9g:
-              help: 'A Modelo 220 00450. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                3. részletfizetés. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38d9h:
-              help: 'A Modelo 220 00451. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                3. részletfizetés. Bizkaia
-            x-agp34c1h6oo30c1q60o38dhl:
-              help: 'A Modelo 220 00465. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                3. részletfizetés. Navarra
-            x-agp34c1h6oo30c1q60o38dpk:
-              help: 'A Modelo 220 00474. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Különbözeti
-                adótartozás. Araba
-            x-agp34c1h6oo30c1q60o38dpl:
-              help: 'A Modelo 220 00475. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Különbözeti
-                adótartozás. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38dpm:
-              help: 'A Modelo 220 00476. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Különbözeti
-                adótartozás. Bizkaia
-            x-agp34c1h6oo30c1q60o38dpn:
-              help: 'A Modelo 220 00477. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Különbözeti
-                adótartozás. Navarra
-            x-agp34c1h6oo30c1q60o38e1i:
-              help: 'A Modelo 220 00482. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
-                adókedvezmények elvesztése miatti növekmény. Araba
-            x-agp34c1h6oo30c1q60o38e1j:
-              help: 'A Modelo 220 00483. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
-                adókedvezmények elvesztése miatti növekmény. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e1k:
-              help: 'A Modelo 220 00484. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
-                adókedvezmények elvesztése miatti növekmény. Bizkaia
-            x-agp34c1h6oo30c1q60o38e1l:
-              help: 'A Modelo 220 00485. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
-                adókedvezmények elvesztése miatti növekmény. Navarra
-            x-agp34c1h6oo30c1q60o38e1m:
-              help: 'A Modelo 220 00486. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
-                Araba
-            x-agp34c1h6oo30c1q60o38e1n:
-              help: 'A Modelo 220 00487. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
-                Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e1o:
-              help: 'A Modelo 220 00488. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
-                Bizkaia
-            x-agp34c1h6oo30c1q60o38e1p:
-              help: 'A Modelo 220 00489. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
-                Navarra
-            x-agp34c1h6oo30c1q60o38e9k:
-              help: 'A Modelo 220 00494. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
-                visszajáró nettó összeg. Araba
-            x-agp34c1h6oo30c1q60o38e9l:
-              help: 'A Modelo 220 00495. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
-                visszajáró nettó összeg. Gipuzkoa
-            x-agp34c1h6oo30c1q60o38e9m:
-              help: 'A Modelo 220 00496. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
-                visszajáró nettó összeg. Bizkaia
-            x-agp34c1h6oo30c1q60o38e9n:
-              help: 'A Modelo 220 00497. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
-                visszajáró nettó összeg. Navarra
-            x-agp34c1h6oo30c1q60o3cc1g:
-              help: 'A Modelo 220 00600. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az üzleti év
-                fizetendő vagy visszajáró adója. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cc1i:
-              help: 'A Modelo 220 00602. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                1. részletfizetés. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cc1k:
-              help: 'A Modelo 220 00604. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                2. részletfizetés. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cc1m:
-              help: 'A Modelo 220 00606. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
-                3. részletfizetés. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cc9i:
-              help: 'A Modelo 220 00612. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Különbözeti
-                adótartozás. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cc9m:
-              help: 'A Modelo 220 00616. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
-                adókedvezmények elvesztése miatti növekmény. A külön jogállású területek
-                összesen
-            x-agp34c1h6oo30c1q60o3cc9o:
-              help: 'A Modelo 220 00618. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Késedelmi kamat.
-                A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cchi:
-              help: 'A Modelo 220 00622. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő vagy
-                visszajáró nettó összeg. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60o3cchl:
-              help: 'A Modelo 220 00625. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
-                Közös terület
-            x-agp34c1h6oo30c1q60o3cchm:
-              help: 'A Modelo 220 00626. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
-                Araba
-            x-agp34c1h6oo30c1q60o3cchn:
-              help: 'A Modelo 220 00627. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
-                Gipuzkoa
-            x-agp34c1h6oo30c1q60o3ccho:
-              help: 'A Modelo 220 00628. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
-                Bizkaia
-            x-agp34c1h6oo30c1q60o3cchp:
-              help: 'A Modelo 220 00629. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Adózási százalékok.
-                Navarra
-            x-agp34c1h6oo30c1q60ojccpi:
-              help: 'A Modelo 220 01632. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
-                törvény 14. kiegészítő rendelkezése). A külön jogállású területek
-                összesen
-            x-agp34c1h6oo30c1q60p30dhm:
-              help: 'A Modelo 220 02066. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
-                törvény 14. kiegészítő rendelkezése). Araba
-            x-agp34c1h6oo30c1q60p30dhn:
-              help: 'A Modelo 220 02067. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
-                törvény 14. kiegészítő rendelkezése). Gipuzkoa
-            x-agp34c1h6oo30c1q60p30dho:
-              help: 'A Modelo 220 02068. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
-                törvény 14. kiegészítő rendelkezése). Bizkaia
-            x-agp34c1h6oo30c1q60p30dhp:
-              help: 'A Modelo 220 02069. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése a Kanári-szigeteken (LIS 39.3. cikk és a 19/1994.
-                törvény 14. kiegészítő rendelkezése). Navarra
-            x-agp34c1h6oo30c1q60p3acpp:
-              help: 'A Modelo 220 02539. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az önadózás
-                eredménye. A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60p3ad1h:
-              help: 'A Modelo 220 02541. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszak korábbi önadózásaiból fizetendő összegek.
-                A külön jogállású területek összesen'
-            x-agp34c1h6oo30c1q60p3ee1p:
-              help: 'A Modelo 220 02789. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt
-                visszatérítések. A külön jogállású területek összesen'
-            x-agp34c1h6oo30c1q60p3ee9h:
-              help: 'A Modelo 220 02791. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
-                A külön jogállású területek összesen'
-            x-agp34c1h6oo30c1q60p3ee9j:
-              help: 'A Modelo 220 02793. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
-                A külön jogállású területek összesen'
-            x-agp34c1h6oo30c1q60p3ee9l:
-              help: 'A Modelo 220 02795. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: első részlet. A külön jogállású
-                területek összesen'
-            x-agp34c1h6oo30c1q60p3ee9n:
-              help: 'A Modelo 220 02797. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az önadózás eredménye az első
-                részlettel együtt. A külön jogállású területek összesen'
-            x-agp34c1h6oo30c1q60p3ee9p:
-              help: 'A Modelo 220 02799. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                az önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
-                a 2024. adózási időszak korábbi önadózásaiból. ötödik oszlop, a tervben
-                meg nem nevezett terület'
-            x-agp34c1h6oo30c1q60p3gc1h:
-              help: 'A Modelo 220 02801. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
-                összeg a LIS 19.1. cikk szerinti első részlettel együtt. ötödik oszlop,
-                a tervben meg nem nevezett terület
-            x-agp34c1h6oo30c1q60pj2e9i:
-              help: 'A Modelo 220 03192. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az önadózás
-                eredménye. Araba
-            x-agp34c1h6oo30c1q60pj2e9j:
-              help: 'A Modelo 220 03193. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az önadózás
-                eredménye. Gipuzkoa
-            x-agp34c1h6oo30c1q60pj2e9k:
-              help: 'A Modelo 220 03194. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az önadózás
-                eredménye. Bizkaia
-            x-agp34c1h6oo30c1q60pj2e9l:
-              help: 'A Modelo 220 03195. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Az önadózás
-                eredménye. Navarra
-            x-agp34c1h6oo30c1q60pj4e9j:
-              help: 'A Modelo 220 03293. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszak korábbi önadózásaiból fizetendő összegek.
-                Araba'
-            x-agp34c1h6oo30c1q60pj4e9k:
-              help: 'A Modelo 220 03294. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszak korábbi önadózásaiból fizetendő összegek.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj4e9l:
-              help: 'A Modelo 220 03295. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszak korábbi önadózásaiból fizetendő összegek.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj4e9m:
-              help: 'A Modelo 220 03296. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszak korábbi önadózásaiból fizetendő összegek.
-                Navarra'
-            x-agp34c1h6oo30c1q60pj4e9n:
-              help: 'A Modelo 220 03297. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt
-                visszatérítések. Araba'
-            x-agp34c1h6oo30c1q60pj4e9o:
-              help: 'A Modelo 220 03298. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt
-                visszatérítések. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj4e9p:
-              help: 'A Modelo 220 03299. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt
-                visszatérítések. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1g:
-              help: 'A Modelo 220 03300. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                a 2024. adózási időszakra vonatkozó korábbi önadózásokból megítélt
-                visszatérítések. Navarra'
-            x-agp34c1h6oo30c1q60pj6c1h:
-              help: 'A Modelo 220 03301. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
-                Araba'
-            x-agp34c1h6oo30c1q60pj6c1i:
-              help: 'A Modelo 220 03302. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c1j:
-              help: 'A Modelo 220 03303. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1k:
-              help: 'A Modelo 220 03304. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az adóalapba beszámított összeg.
-                Navarra'
-            x-agp34c1h6oo30c1q60pj6c1l:
-              help: 'A Modelo 220 03305. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
-                Araba'
-            x-agp34c1h6oo30c1q60pj6c1m:
-              help: 'A Modelo 220 03306. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
-                Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c1n:
-              help: 'A Modelo 220 03307. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
-                Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c1o:
-              help: 'A Modelo 220 03308. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: a részletfizetésből eredő adótartozás.
-                Navarra'
-            x-agp34c1h6oo30c1q60pj6c1p:
-              help: 'A Modelo 220 03309. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: első részlet. Araba'
-            x-agp34c1h6oo30c1q60pj6c9g:
-              help: 'A Modelo 220 03310. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: első részlet. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9h:
-              help: 'A Modelo 220 03311. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: első részlet. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c9i:
-              help: 'A Modelo 220 03312. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: első részlet. Navarra'
-            x-agp34c1h6oo30c1q60pj6c9j:
-              help: 'A Modelo 220 03313. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az önadózás eredménye az első
-                részlettel együtt. Araba'
-            x-agp34c1h6oo30c1q60pj6c9k:
-              help: 'A Modelo 220 03314. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az önadózás eredménye az első
-                részlettel együtt. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9l:
-              help: 'A Modelo 220 03315. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az önadózás eredménye az első
-                részlettel együtt. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6c9m:
-              help: 'A Modelo 220 03316. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Részletfizetés
-                választása a LIS 19.1. cikk szerint: az önadózás eredménye az első
-                részlettel együtt. Navarra'
-            x-agp34c1h6oo30c1q60pj6c9n:
-              help: 'A Modelo 220 03317. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                az önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
-                a 2024. adózási időszak korábbi önadózásaiból. Araba'
-            x-agp34c1h6oo30c1q60pj6c9o:
-              help: 'A Modelo 220 03318. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                az önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
-                a 2024. adózási időszak korábbi önadózásaiból. Gipuzkoa'
-            x-agp34c1h6oo30c1q60pj6c9p:
-              help: 'A Modelo 220 03319. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                az önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
-                a 2024. adózási időszak korábbi önadózásaiból. Bizkaia'
-            x-agp34c1h6oo30c1q60pj6chg:
-              help: 'A Modelo 220 03320. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                az önadózás eredménye a LIS 19.1. cikk szerinti első részlettel együtt,
-                a 2024. adózási időszak korábbi önadózásaiból. Navarra'
-            x-agp34c1h6oo30c1q60pj6chh:
-              help: 'A Modelo 220 03321. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
-                összeg a LIS 19.1. cikk szerinti első részlettel együtt. Araba
-            x-agp34c1h6oo30c1q60pj6chi:
-              help: 'A Modelo 220 03322. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
-                összeg a LIS 19.1. cikk szerinti első részlettel együtt. Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6chj:
-              help: 'A Modelo 220 03323. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
-                összeg a LIS 19.1. cikk szerinti első részlettel együtt. Bizkaia
-            x-agp34c1h6oo30c1q60pj6chk:
-              help: 'A Modelo 220 03324. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Fizetendő nettó
-                összeg a LIS 19.1. cikk szerinti első részlettel együtt. Navarra
-            x-agp34c1h6oo30c1q60pj6e1p:
-              help: 'A Modelo 220 03389. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
-                kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
-                Araba
-            x-agp34c1h6oo30c1q60pj6e9g:
-              help: 'A Modelo 220 03390. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
-                kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
-                Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6e9h:
-              help: 'A Modelo 220 03391. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
-                kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
-                Bizkaia
-            x-agp34c1h6oo30c1q60pj6e9i:
-              help: 'A Modelo 220 03392. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
-                kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
-                Navarra
-            x-agp34c1h6oo30c1q60pj6e9j:
-              help: 'A Modelo 220 03393. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. K+F+I levonások
-                kifizetése elégtelen adótartozás miatt (LIS 39.2. cikk szerinti választás).
-                A külön jogállású területek összesen
-            x-agp34c1h6oo30c1q60pj6e9k:
-              help: 'A Modelo 220 03394. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése (LIS 39.3. cikk). Araba
-            x-agp34c1h6oo30c1q60pj6e9l:
-              help: 'A Modelo 220 03395. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése (LIS 39.3. cikk). Gipuzkoa
-            x-agp34c1h6oo30c1q60pj6e9m:
-              help: 'A Modelo 220 03396. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése (LIS 39.3. cikk). Bizkaia
-            x-agp34c1h6oo30c1q60pj6e9n:
-              help: 'A Modelo 220 03397. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése (LIS 39.3. cikk). Navarra
-            x-agp34c1h6oo30c1q60pj6e9o:
-              help: 'A Modelo 220 03398. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Külföldi filmgyártási
-                levonások kifizetése (LIS 39.3. cikk). A külön jogállású területek
-                összesen
-            x-agp34c1h6oo30c9q60p32dpj:
-              help: 'A Modelo 220 02173. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                megítélt vagy beszámított visszatérítés. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32dpk:
-              help: 'A Modelo 220 02174. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                megítélt vagy beszámított visszatérítés. Bizkaia'
-            x-agp34c1h6oo30c9q60p32dpl:
-              help: 'A Modelo 220 02175. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                megítélt vagy beszámított visszatérítés. Navarra'
-            x-agp34c1h6oo30c9q60p32dpm:
-              help: 'A Modelo 220 02176. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: kifizetés. Araba'
-            x-agp34c1h6oo30c9q60p32dpn:
-              help: 'A Modelo 220 02177. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: kifizetés. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32dpo:
-              help: 'A Modelo 220 02178. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: kifizetés. Bizkaia'
-            x-agp34c1h6oo30c9q60p32dpp:
-              help: 'A Modelo 220 02179. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: kifizetés. Navarra'
-            x-agp34c1h6oo30c9q60p32e1g:
-              help: 'A Modelo 220 02180. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: beszámítás. Araba'
-            x-agp34c1h6oo30c9q60p32e1h:
-              help: 'A Modelo 220 02181. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: beszámítás. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32e1i:
-              help: 'A Modelo 220 02182. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: beszámítás. Bizkaia'
-            x-agp34c1h6oo30c9q60p32e1j:
-              help: 'A Modelo 220 02183. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: beszámítás. Navarra'
-            x-agp34c1h6oo30c9q60p32e1k:
-              help: 'A Modelo 220 02184. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: fizetendő. Araba'
-            x-agp34c1h6oo30c9q60p32e1l:
-              help: 'A Modelo 220 02185. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: fizetendő. Gipuzkoa'
-            x-agp34c1h6oo30c9q60p32e1m:
-              help: 'A Modelo 220 02186. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: fizetendő. Bizkaia'
-            x-agp34c1h6oo30c9q60p32e1n:
-              help: 'A Modelo 220 02187. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: fizetendő. Navarra'
-            x-agp34c1h6oo30c9q60p3gc1k:
-              help: 'A Modelo 220 02804. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                megítélt vagy beszámított visszatérítés. A külön jogállású területek
-                összesen'
-            x-agp34c1h6oo30c9q60p3gc1n:
-              help: 'A Modelo 220 02807. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: kifizetés. A külön
-                jogállású területek összesen'
-            x-agp34c1h6oo30c9q60p3gc9g:
-              help: 'A Modelo 220 02810. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: beszámítás. A
-                külön jogállású területek összesen'
-            x-agp34c1h6oo30c9q60p3gc9j:
-              help: 'A Modelo 220 02813. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-                adókövetelés átváltásának eredménye korrekció után: fizetendő. A külön
-                jogállású területek összesen'
-            x-agp34c1h6oo30c9q60pj6chl:
-              help: 'A Modelo 220 03325. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő:
-                megítélt vagy beszámított visszatérítés. Araba'
-            x-agp34c1h6oo30c9q60pj6dhi:
-              help: 'A Modelo 220 03362. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó kifizetés. A külön jogállású területek összesen
-            x-agp34c1h6oo30c9q60pj6dhk:
-              help: 'A Modelo 220 03364. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó beszámítás. A külön jogállású területek összesen
-            x-agp34c1h6oo30c9q60pj6dpj:
-              help: 'A Modelo 220 03373. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó kifizetés. Araba
-            x-agp34c1h6oo30c9q60pj6dpk:
-              help: 'A Modelo 220 03374. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó kifizetés. Gipuzkoa
-            x-agp34c1h6oo30c9q60pj6dpl:
-              help: 'A Modelo 220 03375. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó kifizetés. Bizkaia
-            x-agp34c1h6oo30c9q60pj6dpm:
-              help: 'A Modelo 220 03376. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó kifizetés. Navarra
-            x-agp34c1h6oo30c9q60pj6dpn:
-              help: 'A Modelo 220 03377. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó beszámítás. Araba
-            x-agp34c1h6oo30c9q60pj6dpo:
-              help: 'A Modelo 220 03378. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó beszámítás. Gipuzkoa
-            x-agp34c1h6oo30c9q60pj6dpp:
-              help: 'A Modelo 220 03379. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó beszámítás. Bizkaia
-            x-agp34c1h6oo30c9q60pj6e1g:
-              help: 'A Modelo 220 03380. casilla adóügyi adatai: adóügyi információ.'
-              label: Felosztás a külön jogállású adóhatóságok között. Halasztott adókövetelések
-                átváltásából származó beszámítás. Navarra
-            x-agp34c2495230c1q60o3adhi:
-              help: 'A Modelo 220 00562. casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Elszámolás. A csoport
-                bruttó adókötelezettsége
-            x-agp34c2495230c1q60o3cchh:
-              help: 'A Modelo 220 00621. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Elszámolás. Eredmény:
-                állami rész'
-            x-agp34c2495230c1q60p3gc1g:
-              help: 'A Modelo 220 02800. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Elszámolás. Részletfizetési
-                opció a LIS 19.1. cikke szerint. Fizetendő nettó összeg az első részlettel
-                együtt: állami rész'
-            x-agp34c2495230c1q60p3gc1m:
-              help: 'A Modelo 220 02806. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
-                A halasztott adókövetelés átváltásának eredménye rendezés után: jóváírás'
-            x-agp34c2495230c1q60p3gc1p:
-              help: 'A Modelo 220 02809. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
-                A halasztott adókövetelés átváltásának eredménye rendezés után: beszámítás'
-            x-agp34c2495230c1q60p3gc9i:
-              help: 'A Modelo 220 02812. casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
-                A halasztott adókövetelés átváltásának eredménye rendezés után: fizetendő'
-            x-agp34c2495230c1q84:
-              help: 'A Modelo 220 A. casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
-                Halasztott adókövetelés átváltásából származó jóváírás (LIS 130. cikk)
-            x-agp34c2495230c1q8c:
-              help: 'A Modelo 220 C. casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Jóváírás/Beszámítás.
-                Halasztott adókövetelés átváltásából származó beszámítás (LIS 130.
-                cikk)
-            x-agp34c2495230c1q8g:
-              help: 'A Modelo 220 D. casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. Visszatérítendő
-                összeg
-            x-agp34c2495230c1q94:
-              help: 'A Modelo 220 I. casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Befizetés. Fizetendő
-                összeg
-            x-agp34c2495230c1qegp34c34d5i30c1e64o3ib9h68s0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Utónév
-            x-agp34c2495230c1qegp34c34d5i30c1e64r0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Adószámla
-            x-agp34c2495230c1qegp34c34d5i30c1e64riqchg:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adóév
-            x-agp34c2495230c1qegp34c34d5i30c1e64s30:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. Visszatérítési
-                mód
-            x-agp34c2495230c1qegp34c34d5i30c1e64sjg:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. SEPA
-                jelölő
-            x-agp34c2495230c1qegp34c34d5i30c1e64sjib9i6cp0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. IBAN
-                kód - blokk
-            x-agp34c2495230c1qegp34c34d5i30c1e68og:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adóév
-                típusa
-            x-agp34c2495230c1qegp34c34d5i30c1e68p2qchj:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
-                időszak
-            x-agp34c2495230c1qegp34c34d5i30c1e68pj6b9i6gpg:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Visszatérítés. SWIFT-BIC
-                kód (csak többi ország / nem SEPA)
-            x-agp34c2495230c1qegp34c34d5i30c1e68q2qcph:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
-                időszak kezdő dátuma (EEEEHHNN)
-            x-agp34c2495230c1qegp34c34d5i30c1e68q38b9j64pg:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
-                ország: a bank neve'
-            x-agp34c2495230c1qegp34c34d5i30c1e6coj8b9j6gs0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
-                ország: a bank címe'
-            x-agp34c2495230c1qegp34c34d5i30c1e6cp2qcpp:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Esedékesség. Adózási
-                időszak záró dátuma (EEEEHHNN)
-            x-agp34c2495230c1qegp34c34d5i30c1e6cq3ib9j6ss0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
-                ország: város'
-            x-agp34c2495230c1qegp34c34d5i30c1e6crjib9k64s0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
-                ország: ország'
-            x-agp34c2495230c1qegp34c34d5i30c1e6go2qd1o:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Adóazonosító
-            x-agp34c2495230c1qegp34c34d5i30c1e6gojib9k68o0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: 'Befizetési vagy visszatérítési dokumentum. Visszatérítés. Többi
-                ország: országkód'
-            x-agp34c2495230c1qegp34c34d5i30c1e6gp32:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Befizetés. Befizetési
-                mód
-            x-agp34c2495230c1qegp34c34d5i30c1e6gpjib9k6sp0:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Befizetés. IBAN kód
-                - blokk
-            x-agp34c2495230c1qegp34c34d5i30c1e6gsiqc9g70:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Azonosítás. Vezetéknév
-                vagy cégnév
-            x-agp34c2495230c1qegp34c34d5i30c1e6kqjg:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
-              label: Befizetési vagy visszatérítési dokumentum. Nulla adóösszeg
             x-c5hn8qbmd5i62p35ecn66rj1ckmj0c8:
               help: 'Tekintse át a casilla adatait: tevékenységek - csoport. Epigrafe
                 CNAE - tevékenység 1.'
@@ -9255,12 +9237,6 @@ modelo:
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
               help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy. Mobiltelefon
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóév.'
-              label: Az adócsoport bevallásának vonatkozási éve
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 220 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               help: 'A Modelo 220 . casilla adóügyi adatai: adóügyi információ.'
               label: Anyavállalat. Vezetéknév vagy cégnév
@@ -9416,13 +9392,6 @@ modelo:
           field:
             label: Orden HAC/657/2025 (220-as modelo), 2024-es adóév
         '2025':
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 220 . casilla adóügyi adatai: adóév.'
-              label: Az adócsoport bevallásának vonatkozási éve
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 220 . casilla adóügyi adatai.
-              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           construct:
             modelo-220-declaration-construct:
               field:
