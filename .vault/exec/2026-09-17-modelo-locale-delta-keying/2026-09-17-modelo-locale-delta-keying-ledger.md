@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-17'
 body_schema: 'body-v2'
-body_hash: 'sha256:840dfc69821239fc2fcd8f94da8569b2c246db76aaf049eddf15fdba388e36b2'
+body_hash: 'sha256:07037e86679c2adfa5101d0cb4418fa625f67ccda46430a523983d4a0ba34e39'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -104,6 +104,8 @@ related:
 - `S12` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
 - `S12` `M` `src/cadrumo/_data/registry/authority`
 - `S12` `verify:` `python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S12` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S12` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
 
 ## Notes
 
@@ -113,4 +115,5 @@ related:
 - `S07` identical cognates are classified in the honesty allowlist rather than stored as copies
 - `S12` Serving no translation where Spanish resolves nowhere removed ~2300 genuine en help texts (ca/hu likewise) that lacked a Spanish source; Spanish help is being authored and the translations restored from 1b7a46e4cb^
 - `S12` Edition-specific Spanish restored from official designs for Modelo 100 casillas 0002/0758/0854/1016 broke registry strict continuity; reverted to shared text, casilla-author now refuses such splits until the registry declares a continuity evolution
+- `S12` Modelo 100 casilla 1908 stays shared and cut short: its official label names annex B.8/B.9/B.11 per edition, which needs a registry casilla continuity evolution before the locale text can diverge
 

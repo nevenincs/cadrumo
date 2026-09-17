@@ -8,7 +8,7 @@ related:
   - '[[2026-09-17-modelo-locale-delta-keying-adr]]'
 modified: '2026-09-17'
 body_schema: body-v2
-body_hash: 'sha256:13834e5a7babd3ae693ad1cbbcd2ba761ba9e8a82878055ba980a660f89edccd'
+body_hash: 'sha256:74cda50cfe6df371d6799fa05ae3e3ae315cde4ec7e739d3afd366c1d164e281'
 ---
 
 # `modelo-locale-delta-keying` plan
@@ -71,6 +71,16 @@ Repair placeholders and in-flight Spanish additions, then fill missing translati
 - [x] `P04.S06` - review the in-flight Spanish continuity additions against sibling or official text; `src/cadrumo/locales/es/modelo/schema/`.
 - [x] `P04.S07` - fill missing en ca hu translations at canonical keys; `src/cadrumo/locales/{en,ca,hu}/modelo/schema/`.
 - [x] `P04.S08` - produce the wording-divergence review worklist against official designs; `var/test-iter/label_audit/`.
+
+### Phase `P05` - Content quality gates and source-grounded repair
+
+Measure the catalogue against the official record designs, repair what the capture lost, and gate the content invariants the collapse cannot see.
+
+- [x] `P05.S13` - Detect scaffold placeholders glossary artefacts truncation and stray whitespace in stored casilla text; `dev/locales/modelo_casilla_catalogue.py`.
+- [x] `P05.S14` - Check casilla orthography against the pinned dictionaries for lost diacritics and untranslated Spanish; `dev/locales/casilla_orthography.py`.
+- [x] `P05.S15` - Restore full Spanish label text from the official record designs and dictionaries; `src/cadrumo/_data/registry/authority`.
+- [x] `P05.S16` - Complete the en ca hu translations of the repaired labels and harmonise divergent renderings; `src/cadrumo/locales`.
+- [x] `P05.S17` - Refuse an authored edition split that the registry continuity contract forbids and support authored removals; `dev/locales/modelo_casilla_catalogue.py`.
 
 ## Parallelization
 
