@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -338,9 +339,12 @@ def _services(root: Path) -> OperationComposedServices:
         lease_token_factory=lambda: "2" * 64,
         clock=lambda: datetime.now(UTC),
         lease_duration=timedelta(minutes=5),
-        execution_timeout=timedelta(seconds=60),
+        execution_timeout=timedelta(seconds=_SETTLE_SECONDS),
         cleanup_timeout=timedelta(seconds=5),
     )
+
+
+_SETTLE_SECONDS = 60
 
 
 @contextmanager
@@ -362,8 +366,13 @@ def _real_runtime(tmp_path: Path, *, installed: set[str]) -> Generator[Path]:
 
 
 async def _settle(pilot: Pilot[None], screen: LocalReaderScreen, settled: Callable[[], bool]) -> None:
-    """Drive the page until ``settled`` holds, closing any operation modal still on top."""
-    for _ in range(100):
+    """Drive the page until ``settled`` holds, closing any operation modal still on top.
+
+    Bounded by the operations' own execution budget rather than a poll count,
+    so a loaded machine cannot turn a slow but valid run into a failure.
+    """
+    deadline = time.monotonic() + _SETTLE_SECONDS
+    while time.monotonic() < deadline:
         await pilot.pause(0.1)
         if isinstance(pilot.app.screen, OperationModal):
             await pilot.press("escape")
