@@ -39,6 +39,7 @@ _SURNAMES_NAME_FORMAT = "surnames_name"
 _IDENTITY_TAX_ID_KEY = "identity.tax_id"
 _IDENTITY_NAME_KEY = "identity.name"
 _IDENTITY_SURNAMES_KEY = "identity.surnames"
+_IDENTITY_LEGAL_NAME_KEY = "identity.legal_name"
 _ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
 _CONTACT_PERSON_PHONE_KEY = "contact.contact_person_phone"
 _CONTACT_PERSON_NAME_KEY = "contact.contact_person_name"
@@ -304,8 +305,14 @@ def _identity_from_profile_facts(
 
     name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
     surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
+    legal_name = str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip()
     entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
-    identity = _taxpayer_identity_facts(name=name, surnames=surnames, entity_type=entity_type)
+    identity = _taxpayer_identity_facts(
+        name=name,
+        surnames=surnames,
+        legal_name=legal_name,
+        entity_type=entity_type,
+    )
     if identity.full_name is None:
         return None
     return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
@@ -315,6 +322,7 @@ def _taxpayer_identity_facts(
     *,
     name: str,
     surnames: str,
+    legal_name: str,
     entity_type: str,
 ) -> TaxpayerIdentityFacts:
     """Shape natural-person and entity names into the producer's four facts."""
@@ -326,7 +334,7 @@ def _taxpayer_identity_facts(
             surnames=surnames or None,
             full_name=full_name or None,
         )
-    registered = compose_legal_full_name(surnames=surnames, name=name)
+    registered = legal_name or compose_legal_full_name(surnames=surnames, name=name)
     return TaxpayerIdentityFacts(
         legal_name=registered or None,
         given_name=None,
