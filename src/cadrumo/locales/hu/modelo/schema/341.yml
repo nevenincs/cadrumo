@@ -4,56 +4,34 @@ modelo:
       casilla:
         continuidad:
           '02':
-            help: 'A Modelo 341 02. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [02].'
             label: Az ügyletek összege [02]
           '03':
-            help: 'A Modelo 341 03. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [03].'
             label: Az ügyletek összege [03]
           '05':
-            help: 'A Modelo 341 05. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [05].'
             label: Kompenzációs százalék [05]
           '06':
-            help: 'A Modelo 341 06. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [06].'
             label: Kompenzációs százalék [06]
           08:
-            help: 'Tekintse át a casilla adatait: Összeg - beszámítás [08].'
             label: A kompenzáció összege [08]
           09:
-            help: 'Tekintse át a casilla adatait: Összeg - beszámítás [09].'
             label: A kompenzáció összege [09]
           codigo-cuenta-cliente:
-            help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
             label: Ügyfélszámla kódja (C.C.C.)
           filing-year:
-            help: 'A Modelo 341 . casilla adóügyi adatai: adóév.'
             label: Az önadózás vonatkozási éve
           letras-etiqueta-persona-fisica:
-            help: 'Tekintse át a casilla adatait: Letras - etiqueta identificativa.'
             label: Azonosító címke betűi
           observaciones-presentacion:
-            help: 'Tekintse át a casilla adatait: Observaciones.'
             label: Megjegyzések
           reagp-importe-compensacion:
-            help: 'Tekintse át a casilla adatait: Összeg - beszámítás [07].'
             label: A kompenzáció összege [07]
           reagp-importe-compensacion-total:
-            help: 'A Modelo 341 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [10].'
             label: A kompenzációk teljes összege [10]
           reagp-importe-operaciones:
-            help: 'A Modelo 341 01. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [01].'
             label: Az ügyletek összege [01]
           reagp-porcentaje-compensacion:
-            help: 'A Modelo 341 04. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [04].'
             label: Kompenzációs százalék [04]
           tipo-declaracion:
-            help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
             label: Az önadózás elszámolási időszaka
       construct:
         modelo-341-autoliquidacion:

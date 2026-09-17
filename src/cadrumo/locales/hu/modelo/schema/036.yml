@@ -200,123 +200,86 @@ modelo:
           act-sin-local-numero-referencia:
             label: Állandó helyiségén kívül végzett tevékenység. Hivatkozási szám
           decl-apellidos-razon-social:
-            help: A Modelo 036 102. casilla adóügyi adatai.
             label: Vezetéknév természetes személy esetén, vagy cégnév jogi személy
               esetén
           decl-causa-110:
-            help: 'A Modelo 036 110. casilla adóügyi adatai: adóügyi információ.'
             label: Adóazonosító szám (NIF) igénylése
           decl-causa-111:
-            help: 'A Modelo 036 111. casilla adóügyi adatai: adóügyi információ.'
             label: Bejelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásába
           decl-causa-120:
-            help: 'A Modelo 036 120. casilla adóügyi adatai: adóügyi információ.'
             label: Végleges NIF igénylése ideiglenes NIF birtokában
           decl-causa-121:
-            help: 'A Modelo 036 121. casilla adóügyi adatai: adóügyi információ.'
             label: Új NIF-igazolókártya igénylése
           decl-causa-122:
-            help: 'Tekintse át a casilla adatait: Modificación cím fiscal. (páginas
-              2A, 2B és 2C).'
             label: Adóügyi székhely módosítása (2A, 2B és 2C oldal)
           decl-causa-123:
-            help: 'A Modelo 036 123. casilla adóügyi adatai: adóügyi információ.'
             label: Székhely vagy ügyviteli központ módosítása (2A és 2B oldal)
           decl-causa-124:
-            help: A Modelo 036 124. casilla adóügyi adatai.
             label: Értesítési cím módosítása vagy törlése (2A, 2B és 2C oldal)
           decl-causa-125:
-            help: 'A Modelo 036 125. casilla adóügyi adatai: adóügyi információ.'
             label: Egyéb azonosító adatok vagy domain módosítása (2A, 2B és 2C oldal)
           decl-causa-126:
-            help: 'Tekintse át a casilla adatait: Modificación adatok representantes
-              (oldal 3).'
             label: Képviselői adatok módosítása (3. oldal)
           decl-causa-127:
-            help: 'A Modelo 036 127. casilla adóügyi adatai: adóügyi információ.'
             label: Gazdasági tevékenységekre és telephelyekre vonatkozó adatok módosítása
               (4. oldal)
           decl-causa-128:
-            help: 'A Modelo 036 128. casilla adóügyi adatai: adóügyi információ.'
             label: Nagyvállalati minősítés vagy 6.000.000 eurót meghaladó költségvetésű
               közigazgatási szerv minősítés módosítása (5. oldal)
           decl-causa-129:
-            help: A Modelo 036 129. casilla adóügyi adatai.
             label: Be- vagy kijelentkezés a havi visszatérítési nyilvántartásba (5.
               oldal)
           decl-causa-130:
-            help: A Modelo 036 130. casilla adóügyi adatai.
             label: Be- vagy kijelentkezés a közösségi adóalanyok nyilvántartásába
               (5. oldal)
           decl-causa-131:
-            help: 'A Modelo 036 131. casilla adóügyi adatai: adóügyi információ.'
             label: Az általános forgalmi adóra vonatkozó adatok módosítása (5. oldal)
           decl-causa-132:
-            help: A Modelo 036 132. casilla adóügyi adatai.
             label: A személyi jövedelemadóra vonatkozó adatok módosítása (6. oldal)
           decl-causa-133:
-            help: 'Tekintse át a casilla adatait: Modificación adatok relativos al
-              Impuesto sobre Társaságok (oldal 6).'
             label: A társasági adóra vonatkozó adatok módosítása (6. oldal)
           decl-causa-134:
-            help: A Modelo 036 134. casilla adóügyi adatai.
             label: A külföldi illetőségűek jövedelemadójára vonatkozó adatok módosítása
               állandó telephelyek, illetve külföldön alapított, spanyol területen
               jelen lévő jövedelem-hozzárendelésű szervezetek esetében (6. oldal)
           decl-causa-135:
-            help: 'A Modelo 036 135. casilla adóügyi adatai: adóügyi információ.'
             label: A 49/2002. sz. törvény II. címe szerinti különleges adózási rendszer
               választása vagy arról való lemondás (6. oldal)
           decl-causa-136:
-            help: 'Tekintse át a casilla adatait: Modificación adatok relativos a
-              adólevonások e előlegfizetések (oldal 7).'
             label: A levonásokra és előlegfizetésekre vonatkozó adatok módosítása
               (7. oldal)
           decl-causa-137:
-            help: 'A Modelo 036 137. casilla adóügyi adatai: adóügyi információ.'
             label: Egyéb adókra és nyilvántartásokra vonatkozó adatok módosítása (7.
               oldal)
           decl-causa-138:
-            help: 'Tekintse át a casilla adatait: Modificación adatok relativos a
-              regímenes especiales - comercio intracomunitario (oldal 7).'
             label: A közösségi kereskedelem különleges rendszereire vonatkozó adatok
               módosítása (7. oldal)
           decl-causa-139:
-            help: 'A Modelo 036 139. casilla adóügyi adatai: adóügyi információ.'
             label: A tagok, résztvevők vagy közreműködők jegyzékére vonatkozó adatok
               módosítása (8. oldal)
           decl-causa-140:
-            help: A Modelo 036 140. casilla adóügyi adatai.
             label: Valamennyi vállalkozási és/vagy szakmai tevékenység megszüntetése
               (jogi személyek és szervezetek, felszámolás nélkül; inaktív szervezetek)
           decl-causa-142:
-            help: A Modelo 036 142. casilla adóügyi adatai.
             label: Az AEAT, a TEA és a DGT értesítéseinek fogadására szolgáló telefonszámok
               és elektronikus címek módosítása vagy törlése (2A, 2B és 2C oldal)
           decl-causa-143:
-            help: 'A Modelo 036 143. casilla adóügyi adatai: adóügyi információ.'
             label: Az áfanyilvántartási könyvek AEAT elektronikus ügyfélkapun keresztüli
               vezetésének választásáról és az arról való lemondásról szóló bejelentés
               (5. oldal)
           decl-causa-150:
-            help: A Modelo 036 150. casilla adóügyi adatai.
             label: Kijelentkezés a vállalkozók, szakemberek és kifizetők nyilvántartásából
           decl-causa-baja:
-            help: A Modelo 036 151. casilla adóügyi adatai.
             label: A vállalkozók, szakemberek és levonók nyilvántartásából való törlés
               oka
           decl-fecha-efectiva-baja:
-            help: A Modelo 036 152. casilla adóügyi adatai.
             label: A nyilvántartásból való törlés tényleges dátuma
           decl-fecha-efectiva-cese:
-            help: 'A Modelo 036 141. casilla adóügyi adatai: adóügyi információ.'
             label: Az összes üzleti vagy szakmai tevékenység megszűnésének tényleges
               dátuma
           decl-nif:
-            help: A Modelo 036 101. casilla adóügyi adatai.
             label: A bevalló adóazonosító száma (NIF)
           decl-nombre:
-            help: A Modelo 036 103. casilla adóügyi adatai.
             label: Keresztnév természetes személyek esetén
           ep-avisos-email:
             label: Állandó telephely. Értesítések. E-mail
@@ -1083,92 +1046,68 @@ modelo:
             label: Jogi személy vagy szervezet. Jogi személyiség és szervezeti forma.
               Jogi személyiséggel rendelkezik
           rep1-apellidos-razon-social:
-            help: A Modelo 036 305. casilla adóügyi adatai.
             label: A képviselő vezeték- és keresztneve vagy cégneve (első képviselő,
               3.1 blokk)
           rep1-designada-apellido-1:
-            help: 'A Modelo 036 308. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy első vezetékneve (első képviselő,
               3.1 blokk)
           rep1-designada-apellido-2:
-            help: 'A Modelo 036 309. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy második vezetékneve (első képviselő,
               3.1 blokk)
           rep1-designada-fecha-causa:
-            help: A Modelo 036 313. casilla adóügyi adatai.
             label: A kijelölt természetes személyre vonatkozó benyújtási ok tényleges
               dátuma (első képviselő, 3.1 blokk)
           rep1-designada-nif:
-            help: 'A Modelo 036 307. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy adóazonosító száma (NIF) (első képviselő,
               3.1 blokk)
           rep1-designada-nombre:
-            help: 'A Modelo 036 310. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy keresztneve (első képviselő, 3.1
               blokk)
           rep1-fecha-causa:
-            help: A Modelo 036 303. casilla adóügyi adatai.
             label: A képviselőre vonatkozó benyújtási ok tényleges dátuma (első képviselő,
               3.1 blokk)
           rep1-nif:
-            help: 'A Modelo 036 304. casilla adóügyi adatai: adóügyi információ.'
             label: A képviselő adóazonosító száma (NIF) (első képviselő, 3.1 blokk)
           rep1-representacion-legal-clave:
-            help: 'A Modelo 036 331. casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselet kódja (első képviselő, 3.1 blokk)
           rep1-residente:
-            help: 'A Modelo 036 306. casilla adóügyi adatai: adóügyi információ.'
             label: 'A képviselő belföldi illetőségű-e: igen vagy nem (első képviselő,
               3.1 blokk)'
           rep1-tipo-representacion:
-            help: 'A Modelo 036 333. casilla adóügyi adatai: adóügyi információ.'
             label: A képviselet típusának kódja (első képviselő, 3.1 blokk)
           rep1-titulo-representacion:
-            help: 'A Modelo 036 334. casilla adóügyi adatai: adóügyi információ.'
             label: A képviseleti jogcím kódja (első képviselő, 3.1 blokk)
           rep2-apellidos-razon-social:
-            help: A Modelo 036 355. casilla adóügyi adatai.
             label: A képviselő vezeték- és keresztneve vagy cégneve (második képviselő,
               3.2 blokk)
           rep2-designada-apellido-1:
-            help: 'A Modelo 036 358. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy első vezetékneve (második képviselő,
               3.2 blokk)
           rep2-designada-apellido-2:
-            help: 'A Modelo 036 359. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy második vezetékneve (második képviselő,
               3.2 blokk)
           rep2-designada-fecha-causa:
-            help: A Modelo 036 363. casilla adóügyi adatai.
             label: A kijelölt természetes személyre vonatkozó benyújtási ok tényleges
               dátuma (második képviselő, 3.2 blokk)
           rep2-designada-nif:
-            help: 'A Modelo 036 357. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy adóazonosító száma (NIF) (második
               képviselő, 3.2 blokk)
           rep2-designada-nombre:
-            help: 'A Modelo 036 360. casilla adóügyi adatai: adóügyi információ.'
             label: A kijelölt természetes személy keresztneve (második képviselő,
               3.2 blokk)
           rep2-fecha-causa:
-            help: A Modelo 036 353. casilla adóügyi adatai.
             label: A képviselőre vonatkozó benyújtási ok tényleges dátuma (második
               képviselő, 3.2 blokk)
           rep2-nif:
-            help: 'A Modelo 036 354. casilla adóügyi adatai: adóügyi információ.'
             label: A képviselő adóazonosító száma (NIF) (második képviselő, 3.2 blokk)
           rep2-representacion-legal-clave:
-            help: 'A Modelo 036 381. casilla adóügyi adatai: adóügyi információ.'
             label: A törvényes képviselet kódja (második képviselő, 3.2 blokk)
           rep2-residente:
-            help: 'A Modelo 036 356. casilla adóügyi adatai: adóügyi információ.'
             label: 'A képviselő belföldi illetőségű-e: igen vagy nem (második képviselő,
               3.2 blokk)'
           rep2-tipo-representacion:
-            help: 'A Modelo 036 383. casilla adóügyi adatai: adóügyi információ.'
             label: A képviselet típusának kódja (második képviselő, 3.2 blokk)
           rep2-titulo-representacion:
-            help: 'A Modelo 036 384. casilla adóügyi adatai: adóügyi információ.'
             label: A képviseleti jogcím kódja (második képviselő, 3.2 blokk)
           ret-extractores-depositos-alcohol:
             label: Adóraktári kitárolók nyilvántartása. Kérelem az alkohol és származékos
@@ -1288,22 +1227,16 @@ modelo:
             label: Tagok, résztvevők vagy részesedők. Vezeték- és keresztnév vagy
               cégnév
           suc-a-nif:
-            help: 'A Modelo 036 920. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13a jogutód)
           suc-b-nif:
-            help: 'A Modelo 036 924. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13b jogutód)
           suc-c-nif:
-            help: 'A Modelo 036 928. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13c jogutód)
           suc-d-nif:
-            help: 'A Modelo 036 932. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13d jogutód)
           suc-e-nif:
-            help: 'A Modelo 036 936. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13e jogutód)
           suc-f-nif:
-            help: 'A Modelo 036 940. casilla adóügyi adatai: adóügyi információ.'
             label: A jogutód vagy kedvezményezett adóazonosító száma (NIF) (13f jogutód)
       construct:
         modelo-036-censo-foundation:
@@ -1384,2231 +1317,459 @@ modelo:
             label: 036-os modelo, 2023-tól 2025. február 2-ig
         2025-02-03-y-siguientes:
           casilla:
-            x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tevékenység. A tevékenység
-                leírása.'
-            x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
-              help: 'A 036-es modelo adata, 2025. adóév: Tevékenység. I.A.E. szakasz
-                és csoport vagy tétel.'
-            x-c5hn8bj1cdq6itj9chgm8bbkd5o6ubb1cdq6itj9chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tevékenység. A tevékenység
-                típusa.'
-            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd64:
-              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvántartási jelzők.
-                Az első közvetlenül érintett helyiség jelzője.'
-            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmm8qbiclhn8rpd68:
-              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvántartási jelzők.
-                A második közvetlenül érintett helyiség jelzője.'
-            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj2:
-              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvántartási jelzők.
-                Az első közvetve érintett helyiség jelzője.'
-            x-c5hn8bj9dpi6ior1chnn4pbj5lm6uor1dgmmirj4d5p6aorkdsmj4:
-              help: 'A 036-es modelo adata, 2025. adóév: Ingatlan-nyilvántartási jelzők.
-                A második közvetve érintett helyiség jelzője.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Bejegyzés.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc5m78o9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A bejegyzés dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Törlés.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dc9gmko9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A törlés dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0rrjehgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Irányítószám.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Tartománykód.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A tevékenységhez rendelés mértéke.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddlqmsqb3d5o6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Település.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpnmqojickmncqb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Közterület neve.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Házszám.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A bejegyzés hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Emelet.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1qmasjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Ajtó.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Ingatlan-nyilvántartási hivatkozás.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedim6or9dtn2qpric5j6ior1:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Ingatlan-nyilvántartási grafikus szakasz.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dedqn0pbicpkm6qb5:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Alapterület négyzetméterben.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). Változás.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A változás dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (első). A változás hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Bejegyzés.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A bejegyzés dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Törlés.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc9gmko9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A törlés dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0rrjehgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Irányítószám.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Tartománykód.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A tevékenységhez rendelés mértéke.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddlqmsqb3d5o6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Település.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpnmqojickmncqb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Közterület neve.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Házszám.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A bejegyzés hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Emelet.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1qmasjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Ajtó.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Ingatlan-nyilvántartási hivatkozás.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedim6or9dtn2qpric5j6ior1:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Ingatlan-nyilvántartási grafikus szakasz.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdedqn0pbicpkm6qb5:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Alapterület négyzetméterben.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). Változás.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A változás dátuma.'
-            x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetlenül érintett helyiség
-                (második). A változás hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Bejegyzés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A bejegyzés dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Törlés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm4obac4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A törlés dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbgdtpn8obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Irányítószám.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Tartománykód.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A tevékenységhez rendelés mértéke.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmqtbed5hmis39ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Település.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmsrrdc9p6abbmd5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Közterület neve.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Házszám.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A bejegyzés hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Emelet.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0tb5e9q62:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Ajtó.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Ingatlan-nyilvántartási hivatkozás.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6pb3cdkmurhdctp62pj9cdgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Ingatlan-nyilvántartási grafikus szakasz.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn6tbgclp6cqb3d5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Alapterület négyzetméterben.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mnasrf5li6asrkd5n6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Használat vagy rendeltetés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). Változás.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A változás dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (első). A változás hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Bejegyzés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A bejegyzés dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Törlés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm4obac4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A törlés dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbgdtpn8obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Irányítószám.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Tartománykód.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A tevékenységhez rendelés mértéke.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmqtbed5hmis39ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Település.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmsrrdc9p6abbmd5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Közterület neve.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Házszám.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A bejegyzés hivatkozási száma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Emelet.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0tb5e9q62:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Ajtó.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn4pb6clp6arj3d5giqor1ehgn6t3ic5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Ingatlan-nyilvántartási hivatkozás.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6pb3cdkmurhdctp62pj9cdgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Ingatlan-nyilvántartási grafikus szakasz.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn6tbgclp6cqb3d5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Alapterület négyzetméterben.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mnasrf5li6asrkd5n6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Használat vagy rendeltetés.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). Változás.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A változás dátuma.'
-            x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Közvetve érintett helyiség
-                (második). A változás hivatkozási száma.'
-            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. Bejegyzés.'
-            x-c5hn8bjjd5n2qr3fcdgmobb1dhq62bb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. A bejegyzés dátuma.'
-            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. Törlés.'
-            x-c5hn8bjjd5n2qr3fcdgmobb2c5l62bb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. A törlés dátuma.'
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. Tartománykód.'
               label: Állandó helyiségén kívül végzett tevékenység. Tartománykód
-            x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. Település.'
-            x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó helyiségén kívül
-                végzett tevékenység. Hivatkozási szám.'
             x-chim6r1ecdgnasr15koj8d0:
-              help: 'A Modelo 036 144. casilla adóügyi adatai: adóügyi információ.'
               label: NIF helyreállításának kérelmezése
             x-chim6r1ecdgnasr15koj8d8:
-              help: 'A Modelo 036 145. casilla adóügyi adatai: adóügyi információ.'
               label: A tényleges tulajdonosokra vonatkozó adatok módosítása (10. oldal)
             x-chim6r1ecdgnasr15koj8dg:
-              help: A Modelo 036 146. casilla adóügyi adatai.
               label: Felszámolás alatt álló szervezetekre vonatkozó módosítás
             x-chim6r1eclr6arjk5llmirj4:
-              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: Nyilvántartási bevallás típusa
             x-chim6r1ecpkn4rb15lhm2r39chgm8:
-              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: Milyen minőségben írják alá a bevallást
             x-chim6r1ecpkn4rb15lj6aor8c4:
-              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás aláírásának dátuma
             x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
-              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallást aláíró személy vezeték- és keresztneve
             x-chim6r1ecpkn4rb15lm7apr1e8:
-              help: 'A Modelo 036 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás aláírásának helye
             x-chim6r1eepkmepbecdkm2b9i60p3a:
-              help: 'A Modelo 036 vigencia. casilla adóügyi adatai: adóügyi információ.'
               label: Jogszabályi hatály 2025. február 3-tól
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                AEAT-értesítések bejegyzése.'
               label: Állandó telephely. Értesítések. AEAT-értesítések bejegyzése
             x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                AEAT-értesítések törlése.'
               label: Állandó telephely. Értesítések. AEAT-értesítések törlése
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                Regisztráció az AEAT mobilalkalmazásában.'
               label: Állandó telephely. Értesítések. Regisztráció az AEAT mobilalkalmazásában
             x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                Kiiratkozás az AEAT mobilalkalmazásából.'
               label: Állandó telephely. Értesítések. Kiiratkozás az AEAT mobilalkalmazásából
             x-clo2sobmd5pmuspdchjn8bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                DGT-értesítések bejegyzése.'
               label: Állandó telephely. Értesítések. DGT-értesítések bejegyzése
             x-clo2sobmd5pmuspdchjn8bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                DGT-értesítések törlése.'
               label: Állandó telephely. Értesítések. DGT-értesítések törlése
-            x-clo2sobmd5pmuspdclmm2qbc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                E-mail.'
             x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                Az értesítési e-mail bejegyzése vagy módosítása.'
               label: Állandó telephely. Értesítések. Az értesítési e-mail bejegyzése
                 vagy módosítása
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                Az értesítési e-mail törlése.'
               label: Állandó telephely. Értesítések. Az értesítési e-mail törlése
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                A mobiltelefon bejegyzése vagy módosítása.'
               label: Állandó telephely. Értesítések. A mobiltelefon bejegyzése vagy
                 módosítása
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                A mobiltelefon törlése.'
               label: Állandó telephely. Értesítések. A mobiltelefon törlése
-            x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                A mobiltelefon országhívó száma.'
             x-clo2sobmd5pmuspdehim2bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                TEA-értesítések bejegyzése.'
               label: Állandó telephely. Értesítések. TEA-értesítések bejegyzése
             x-clo2sobmd5pmuspdehim2bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                TEA-értesítések törlése.'
               label: Állandó telephely. Értesítések. TEA-értesítések törlése
-            x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítések.
-                Mobiltelefon.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Tömb.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Házszám kiegészítője.'
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. INE településkód.'
               label: Állandó telephely. Spanyolországi adóügyi lakcím. INE településkód
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Irányítószám.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Tartománykód.'
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. INE közterület-kód.'
               label: Állandó telephely. Spanyolországi adóügyi lakcím. INE közterület-kód
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Cím kiegészítése.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Lépcsőház.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Az adóügyi lakcím ingatlan-nyilvántartási jelzője.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Helység vagy település.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Település neve.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Közterület neve.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Házszám.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Emelet.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Lépcsőház bejárata.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Ajtó.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Ingatlan-nyilvántartási hivatkozás.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Házszám típusa.'
-            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Spanyolországi
-                adóügyi lakcím. Közterület jellege.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Minősége a postafiók tekintetében.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. A postafiók irányítószáma.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. A postafiók tartománykódja.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Postafiók száma.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. A postafiók címzettje, ha eltér a bevallótól.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. A postafiók települése vagy városa.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Az értesítési cím törlésének jelzője.'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Tömb (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Minősége (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Házszám kiegészítője (1. cím).'
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. INE településkód (1. cím).'
               label: Állandó telephely. Értesítési cím. INE településkód (1. cím)
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Irányítószám (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Tartománykód (1. cím).'
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. INE közterület-kód (1. cím).'
               label: Állandó telephely. Értesítési cím. INE közterület-kód (1. cím)
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Cím kiegészítése (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Címzett, ha eltér a bevallótól (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Lépcsőház (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Helység vagy település (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Település neve (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Közterület neve (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Házszám (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Emelet (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Lépcsőház bejárata (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Ajtó (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Házszám típusa (1. cím).'
-            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Értesítési
-                cím. Közterület jellege (1. cím).'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qobec5jn4obdc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Embléma.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Internetes domain vagy cím.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Internetes domain vagy cím (második).'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qpbj5lpnaorle9pm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                A külföldi illetőségű szervezet fióktelepe-e.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb3dtn76t39ehqm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Az alapítás dátuma.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb9dppm6sj9e1hmirre5lp6apr9edq74rpddlin4or1dpq6ir0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                A cégjegyzékbe történő bejegyzés dátuma.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhdclpn8ob4dsmn4pbjd5i6arj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Annak a külföldi illetőségű személynek vagy szervezetnek az illetősége
-                szerinti állam, amelytől függ.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhddpkmc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Annak a külföldi illetőségű személynek vagy szervezetnek az adóazonosító
-                száma, amelytől függ, ha van.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qrb1ehp6iuhde9gnkrre5lpmuor9c5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Annak a külföldi illetőségű személynek vagy szervezetnek a neve, amelytől
-                függ.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9co:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Adóazonosító szám (NIF).'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Az illetőség szerinti állam adóazonosító kódja vagy NVAT.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qsj1f9nmsbbjdthmiobc:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Cégnév.'
-            x-clo2sqb4cln78qb6d5hm2or9dtn2qt39e1niqpbjehgm4r35cdkmqqb5dpq6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephely. Azonosítás.
-                Az állandó telephely típusa.'
-            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfec:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Számlázás. A számlakiállítási
-                kötelezettségét a címzettek vagy harmadik felek teljesítik.'
-            x-d5r62bj6c5hn8tbic5hmirre5lj62orkelp62bbgdtp2qp35edq6irj1ehgn4qbfecmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Számlázás. Számlázás
-                címzettek vagy harmadik felek által. Dátum.'
-            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Nagyvállalat és közigazgatási
-                szervek. Olyan közigazgatási szerv, amelynek utolsó jóváhagyott éves
-                költségvetése meghaladja a 6 millió eurót.'
-            x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Nagyvállalat és közigazgatási
-                szervek. Nagyvállalati minőségű-e.'
-            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Nagyvállalat és közigazgatási
-                szervek. A 6 millió eurót meghaladó költségvetésű közigazgatási minőség
-                dátuma.'
-            x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
-              help: 'A 036-es modelo adata, 2025. adóév: Nagyvállalat és közigazgatási
-                szervek. A nagyvállalati minőség dátuma.'
             x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Külön jogállású
-                területek. Import AFA megfizetése. Választás vagy lemondás.'
               label: AFA. Import. Külön jogállású területek. Import AFA megfizetése.
                 Választás vagy lemondás
-            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Külön jogállású
-                területek. Import AFA megfizetése. Dátum.'
             x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Import AFA megfizetése.
-                Választás, lemondás, visszavonás vagy törlés.'
               label: AFA. Import. Import AFA megfizetése. Választás, lemondás, visszavonás
                 vagy törlés
-            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurhdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Import. Import AFA megfizetése.
-                Dátum.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lhmurb9cln7krpdd1gm4qbkelgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                Termékértékesítés vagy szolgáltatásnyújtás szokásos megkezdése.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1nn6t35e9kmusg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                A beszerzést követő termékértékesítés vagy szolgáltatásnyújtás.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45limst3icljm2spde1p6atj9c4mmubbjd5mnar3kc5n6ao8:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                A beszerzést megelőző vagy azzal egyidejűleg történő termékértékesítés
-                vagy szolgáltatásnyújtás.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mm6rrdd5imsujf5lk62oj9ehqm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                Az értékesítések szokásos megkezdésének dátuma.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo6usrkclp6irri:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                A későbbi értékesítések dátuma.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mmarjke9imeobj5lo74pbmd5giqrpdedkmqtbcehgmspb1:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                A megelőző vagy egyidejűleg történő értékesítések dátuma.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lj6aor8c4mn6pb3ehnn4bb4d5j6asj5dphmiob4ds:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                Az elkülönült ágazatot képező tevékenység megkezdésének dátuma.'
-            x-d5r62bj9dpkm6qbf5lgm6t39epkm8ob45lpmaorkdtp2qp39cpin4pbecdkm2p3f:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Tevékenység megkezdése.
-                Elkülönült ágazatot képező új tevékenység megkezdése.'
             x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvántartási könyvek.
-                A nyilvántartási könyvek vezetése az AEAT elektronikus felületen.'
               label: AFA. Nyilvántartási könyvek. A nyilvántartási könyvek vezetése
                 az AEAT elektronikus felületen
-            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior15lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvántartási könyvek.
-                A nyilvántartási könyvek elektronikus vezetése. Dátum.'
-            x-d5r62bjfc9m6ipr1cdkmurj5ecmmasrkc5h6opb3d5i6ubb5domn8ob9:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kötelezettségek. Az
-                adó alkalmazási területén letelepedett, vagy ott állandó telephellyel
-                rendelkezik.'
-            x-d5r62bjfc9m6ipr1cdkmurj5ecmn4pbmcln68pb4dtp2qp39edo6usr9ehkncrrj:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kötelezettségek. Mobiltelefonok,
-                játékkonzolok, hordozható számítógépek és táblagépek viszonteladó
-                minősége.'
-            x-d5r62bjfc9m6ipr1cdkmurj5ecmn6rrcdsmmus35e9gm6qbfdpin6bbjd5n2qoblehnmoqbhelkm8ob3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Kötelezettségek. Kizárólag
-                olyan nem adóköteles vagy mentes ügyleteket végez, amelyek nem tesznek
-                szükségessé időszaki önadózást.'
-            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6abbge9nncqbjd5nmsobc:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. Ideiglenes levonási százalék javaslata.'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj2:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. I. ágazat. C.N.A.E. kód (első).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj4:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. I. ágazat. C.N.A.E. kód (második).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mm6rj1ckmj6:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. I. ágazat. C.N.A.E. kód (harmadik).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd64mn0sjfe9p62t315lin6s35cdkm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. I. ágazat. Különleges levonási hányad választása.'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj2:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. II. ágazat. C.N.A.E. kód (első).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj4:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. II. ágazat. C.N.A.E. kód (második).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mm6rj1ckmj6:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. II. ágazat. C.N.A.E. kód (harmadik).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd68mn0sjfe9p62t315lin6s35cdkm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. II. ágazat. Különleges levonási hányad választása.'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj2:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. III. ágazat. C.N.A.E. kód (első).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj4:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. III. ágazat. C.N.A.E. kód (második).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmm6rj1ckmj6:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. III. ágazat. C.N.A.E. kód (harmadik).'
-            x-d5r62bjge9nn4sj1ehgiqsr5cdq6ushd6cmn0sjfe9p62t315lin6s35cdkm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. III. ágazat. Különleges levonási hányad választása.'
-            x-d5r62bjge9nn4sj1ehgiqsr9domn6pb3ehnn4pbj5li6ipj5e9imsor9c5i6uso:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Levonási hányad és elkülönült
-                ágazatok. Nincsenek elkülönült ágazatai.'
-            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aso:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Utazási irodak különleges rendszere, ügyletenként.'
-            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Utazási irodak. Dátum.'
-            x-d5r62bjicljmirb5dpin6bb1ctimsor9c5piqtj9c5l6aspdd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Utazási irodak. I.A.E. csoport vagy tétel, illetve tevékenységi kód.'
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Mezőgazdasági, állattenyésztési és halászati különleges rendszer.'
               label: AFA. Adózási rendszerek. Mezőgazdasági, állattenyésztési és halászati
                 különleges rendszer
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Mezőgazdaság, állattenyésztés és halászat. Dátum.'
               label: AFA. Adózási rendszerek. Mezőgazdaság, állattenyésztés és halászat.
                 Dátum
             x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Mezőgazdaság, állattenyésztés és halászat. I.A.E. csoport vagy tétel,
-                illetve tevékenységi kód.'
               label: AFA. Adózási rendszerek. Mezőgazdaság, állattenyésztés és halászat.
                 I.A.E. csoport vagy tétel, illetve tevékenységi kód
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek különleges rendszere, globális árréskülönbözet.'
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek globális árréskülönbözet. Dátum.'
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrb1e9jmarhdctm6uoj1dgmmiob5:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek globális árréskülönbözet. I.A.E. csoport vagy tétel,
-                illetve tevékenységi kód.'
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek különleges rendszere, ügyletenként.'
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek ügyletenként. Dátum.'
-            x-d5r62bjicljmirb5dpin6bb2d5imspbj5lqn6ob4dtpiqrrgclp62or9dtn2qqb1ck:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Használt cikkek ügyletenként. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Pénzforgalmi elszámolás különleges rendszere.'
               label: AFA. Adózási rendszerek. Pénzforgalmi elszámolás különleges rendszere
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Pénzforgalmi elszámolás. Dátum.'
               label: AFA. Adózási rendszerek. Pénzforgalmi elszámolás. Dátum
             x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Pénzforgalmi elszámolás. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
               label: AFA. Adózási rendszerek. Pénzforgalmi elszámolás. I.A.E. csoport
                 vagy tétel, illetve tevékenységi kód
-            x-d5r62bjicljmirb5dpin6bb7cln6asj1dg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Általános rendszer.'
-            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Általános rendszer. Dátum.'
-            x-d5r62bjicljmirb5dpin6bb7cln6asj1dgmmiob5:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Általános rendszer. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
-            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Befektetési arány különleges rendszere.'
-            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Befektetési arány. Dátum.'
-            x-d5r62bjicljmirb5dpin6bbfe9niqqbeepin4sr9dtn2qqb1ck:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Befektetési arány. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
-            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyenértékűségi felár különleges rendszere.'
-            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyenértékűségi felár. Dátum.'
-            x-d5r62bjicljmirb5dpin6bbiclhm2sj7dsmmasbld5r62r35dphmio9dd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyenértékűségi felár. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyszerűsített különleges rendszer.'
               label: AFA. Adózási rendszerek. Egyszerűsített különleges rendszer
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyszerűsített rendszer. Dátum.'
               label: AFA. Adózási rendszerek. Egyszerűsített rendszer. Dátum
             x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Adózási rendszerek.
-                Egyszerűsített rendszer. I.A.E. csoport vagy tétel, illetve tevékenységi
-                kód.'
               label: AFA. Adózási rendszerek. Egyszerűsített rendszer. I.A.E. csoport
                 vagy tétel, illetve tevékenységi kód
             x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvántartások. Kérelem
-                a havi visszatérítési nyilvántartásba való felvételre vagy törlésre.'
               label: AFA. Nyilvántartások. Kérelem a havi visszatérítési nyilvántartásba
                 való felvételre vagy törlésre
             x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvántartások. Kérelem
-                a közösségi adóalanyok nyilvántartásába való felvételre vagy törlésre.'
               label: AFA. Nyilvántartások. Kérelem a közösségi adóalanyok nyilvántartásába
                 való felvételre vagy törlésre
-            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpiqpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Nyilvántartások. Közösségi
-                adóalanyok nyilvántartása. Dátum.'
-            x-d5r62bjiclr6arj4cli6usj5ecmm2r3kc4mm4obac4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Eszköz-viszonteladó.
-                Viszonteladó bejegyzése vagy törlése. Dátum.'
             x-dth6obj9e9n74bbddti62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. Az állandó telephely típusa.'
               label: Külföldiek jövedelemadója. Állandó telephely. Az állandó telephely
                 típusa
-            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. Bevallásbenyújtási kötelezettség.'
-            x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. A bevallásbenyújtási kötelezettség dátuma.'
-            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. A 40.3. cikk szerinti számítási rendszer választása.'
-            x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qcpdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. A 40.3. cikk szerinti számítási rendszer választásának
-                dátuma.'
-            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. Az általános rendszer választása.'
-            x-dth6obj9e9n74bbfe1hmirre5lp6apr9dlimsbb7cln6asj1dgmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Külföldiek jövedelemadója.
-                Állandó telephely. Az általános rendszer választásának dátuma.'
             x-dth6obj9e9o6cbb5chpiqc9dd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az egyszerűsített módszer szerint
-                bevallott 1. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az egyszerűsített módszer szerint bevallott 1. tevékenység
             x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az egyszerűsített módszer szerint bevallott
-                1. tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az egyszerűsített
                 módszer szerint bevallott 1. tevékenység
             x-dth6obj9e9o6cbb5chpiqchdd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az egyszerűsített módszer szerint
-                bevallott 2. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az egyszerűsített módszer szerint bevallott 2. tevékenység
             x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az egyszerűsített módszer szerint bevallott
-                2. tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az egyszerűsített
                 módszer szerint bevallott 2. tevékenység
             x-dth6obj9e9o6cbb5chpiqcpdd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az egyszerűsített módszer szerint
-                bevallott 3. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az egyszerűsített módszer szerint bevallott 3. tevékenység
             x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az egyszerűsített módszer szerint bevallott
-                3. tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az egyszerűsített
                 módszer szerint bevallott 3. tevékenység
             x-dth6obj9e9o6cbb5chpiqd1dd5gma:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az egyszerűsített módszer szerint
-                bevallott 4. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az egyszerűsített módszer szerint bevallott 4. tevékenység
             x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az egyszerűsített módszer szerint bevallott
-                4. tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az egyszerűsített
                 módszer szerint bevallott 4. tevékenység
             x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az objektív megállapítás szerint
-                bevallott 1. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az objektív megállapítás szerint bevallott 1. tevékenység
             x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az objektív megállapítás szerint bevallott 1.
-                tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az objektív
                 megállapítás szerint bevallott 1. tevékenység
             x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az objektív megállapítás szerint
-                bevallott 2. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az objektív megállapítás szerint bevallott 2. tevékenység
             x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az objektív megállapítás szerint bevallott 2.
-                tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az objektív
                 megállapítás szerint bevallott 2. tevékenység
             x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az objektív megállapítás szerint
-                bevallott 3. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az objektív megállapítás szerint bevallott 3. tevékenység
             x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az objektív megállapítás szerint bevallott 3.
-                tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az objektív
                 megállapítás szerint bevallott 3. tevékenység
             x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                I.A.E. szakasz és csoport vagy tétel, az objektív megállapítás szerint
-                bevallott 4. tevékenység.'
               label: Személyi jövedelemadó (IRPF). I.A.E. szakasz és csoport vagy
                 tétel, az objektív megállapítás szerint bevallott 4. tevékenység
             x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A tevékenység típusa, az objektív megállapítás szerint bevallott 4.
-                tevékenység.'
               label: Személyi jövedelemadó (IRPF). A tevékenység típusa, az objektív
                 megállapítás szerint bevallott 4. tevékenység
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Normál közvetlen megállapítási módszer.'
               label: Személyi jövedelemadó (IRPF). Normál közvetlen megállapítási
                 módszer
-            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r1dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Normál közvetlen megállapítási módszer. Dátum.'
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Egyszerűsített közvetlen megállapítási módszer.'
               label: Személyi jövedelemadó (IRPF). Egyszerűsített közvetlen megállapítási
                 módszer
-            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p315lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Egyszerűsített közvetlen megállapítási módszer. Dátum.'
             x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Objektív megállapítási módszer.'
               label: Személyi jövedelemadó (IRPF). Objektív megállapítási módszer
-            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62bb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Objektív megállapítási módszer. Dátum.'
-            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i0:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Gazdasági tevékenységből eredő részletfizetési kötelezettség.'
-            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqob3ehkncqb4c5i2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A gazdasági tevékenységből eredő részletfizetési kötelezettség dátuma.'
-            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                Részletfizetési kötelezettség jövedelem-hozzárendelési szervezet tagjaként.'
-            x-dth6obj9e9o6cbbgc5jmuspdcpp62or3d5nmsob4dtpiqobke9km4tb3d5nmsbb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Személyi jövedelemadó (IRPF).
-                A jövedelem-hozzárendelési szervezet tagjakénti részletfizetési kötelezettség
-                dátuma.'
-            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. törvény szerinti
-                különleges adórendszer. A különleges adórendszer választásának gyakorlása.'
-            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bb5d9in4or55lnn0or9dtn2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. törvény szerinti
-                különleges adórendszer. A különleges adórendszer választásának dátuma.'
-            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. törvény szerinti
-                különleges adórendszer. A különleges adórendszerről való lemondás.'
-            x-dth6objicljmirb5dommopbp5kq3ib9i60o34bbicln7arj3d5giqpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: A 49/2002. törvény szerinti
-                különleges adórendszer. A különleges adórendszerről való lemondás
-                dátuma.'
-            x-dth6objjdthmipb4c5i6aspdcdkmasjickmmaqj5e9hmior9ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Az üzleti
-                év zárásának napja és hónapja.'
-            x-dth6objjdthmipb4c5i6aspdcln78qb4c5i2qpbocln78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Mentes szervezeti
-                minőség.'
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Mentesség.'
               label: Társasági adó. Mentesség
             x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Mentesség.
-                Dátum.'
               label: Társasági adó. Mentesség. Dátum
-            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Bevallásbenyújtási
-                kötelezettség.'
-            x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. A bevallásbenyújtási
-                kötelezettség dátuma.'
-            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. A 40.3. cikk
-                szerinti számítási rendszer választása.'
-            x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j5lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. A 40.3. cikk
-                szerinti számítási rendszer választásának dátuma.'
-            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Az adókonszolidációs
-                rendszer alkalmazásáról való lemondás.'
-            x-dth6objjdthmipb4c5i6aspde9imstbecdkm2bb3dtn76rrcd5i62or9dtn2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: Társasági adó. Az adókonszolidációs
-                rendszerről való lemondás dátuma.'
             x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. AEAT-értesítések
-                bejegyzése.'
               label: Értesítések. AEAT-értesítések bejegyzése
             x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. AEAT-értesítések
-                törlése.'
               label: Értesítések. AEAT-értesítések törlése
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. Regisztráció
-                az AEAT mobilalkalmazásában.'
               label: Értesítések. Regisztráció az AEAT mobilalkalmazásában
             x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. Kiiratkozás
-                az AEAT mobilalkalmazásából.'
               label: Értesítések. Kiiratkozás az AEAT mobilalkalmazásából
             x-e1j2sobmd5pmuspdchjn8bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. DGT-értesítések
-                bejegyzése.'
               label: Értesítések. DGT-értesítések bejegyzése
             x-e1j2sobmd5pmuspdchjn8bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. DGT-értesítések
-                törlése.'
               label: Értesítések. DGT-értesítések törlése
-            x-e1j2sobmd5pmuspdclmm2qbc:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. E-mail.'
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. Az értesítési
-                e-mail bejegyzése vagy módosítása.'
               label: Értesítések. Az értesítési e-mail bejegyzése vagy módosítása
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. Az értesítési
-                e-mail törlése.'
               label: Értesítések. Az értesítési e-mail törlése
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. A mobiltelefon
-                bejegyzése vagy módosítása.'
               label: Értesítések. A mobiltelefon bejegyzése vagy módosítása
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. A mobiltelefon
-                törlése.'
               label: Értesítések. A mobiltelefon törlése
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. A mobiltelefon
-                országhívó száma.'
               label: Értesítések. A mobiltelefon országhívó száma
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. TEA-értesítések
-                bejegyzése.'
               label: Értesítések. TEA-értesítések bejegyzése
             x-e1j2sobmd5pmuspdehim2bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. TEA-értesítések
-                törlése.'
               label: Értesítések. TEA-értesítések törlése
-            x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítések. Mobiltelefon.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Tömb.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Házszám kiegészítője.'
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                INE településkód.'
               label: Spanyolországi adóügyi lakcím. INE településkód
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0rrjehgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Irányítószám.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Tartománykód.'
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                INE közterület-kód.'
               label: Spanyolországi adóügyi lakcím. INE közterület-kód
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Cím kiegészítése.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dclpm6obcclp62:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Lépcsőház.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dd5n68qb3c5i6ushde9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Az adóügyi lakcím ingatlan-nyilvántartási jelzője.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddhnm6obcd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Helység vagy település.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddlqmsqb3d5o6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Település neve.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpnmqojickmncqb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Közterület neve.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Házszám.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Emelet.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1nn4t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Lépcsőház bejárata.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1qmasjkc4:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Ajtó.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de9imcpbicln66qb15lhm2t31edq74obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Ingatlan-nyilvántartási hivatkozás.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Házszám típusa.'
-            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Spanyolországi adóügyi lakcím.
-                Közterület jellege.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lh6orrhelig:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Tömb.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Házszám
-                kiegészítője.'
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. INE településkód.'
               label: Ügyintézési cím. INE településkód
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3fedq62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Irányítószám.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Tartománykód.'
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. INE közterület-kód.'
               label: Ügyintézési cím. INE közterület-kód
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmurbgdhimqpbeehniqp3fdlkm6qbcd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Cím kiegészítése.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lin6or1dhin4o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Lépcsőház.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lkmsp39cdgm8rri5lh62qj1:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Az ügyintézési
-                cím törlésének jelzője.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lm6uor1dhkm8ob4:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Helység
-                vagy település.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lmnarj9cdkn0qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Település
-                neve.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln6urb2e9iiqtj9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Közterület
-                neve.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Házszám.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Emelet.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6usjkc5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Lépcsőház
-                bejárata.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo7apbiehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Ajtó.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Házszám
-                típusa.'
-            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
-              help: 'A 036-es modelo adata, 2025. adóév: Ügyintézési cím. Közterület
-                jellege.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6obcd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Minősége
-                a postafiók tekintetében.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbgdtpn8obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. A postafiók
-                irányítószáma.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. A postafiók
-                tartománykódja.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Postafiók
-                száma.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. A postafiók
-                címzettje, ha eltér a bevallótól.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmn0rr2dhgm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. A postafiók
-                települése vagy városa.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqoj1d9giqp3fdlkm6qbcd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Az értesítési
-                cím törlése.'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqojcdtonap8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Tömb (1.
-                cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkm8ob4:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Minősége
-                (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Házszám kiegészítője
-                (1. cím).'
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. INE településkód
-                (1. cím).'
               label: Értesítési cím. INE településkód (1. cím)
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1nn6t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Irányítószám
-                (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Tartománykód
-                (1. cím).'
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. INE közterület-kód
-                (1. cím).'
               label: Értesítési cím. INE közterület-kód (1. cím)
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Cím kiegészítése
-                (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqp35edq6irj1ehgn4qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Címzett,
-                ha eltér a bevallótól (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqpbjcdgmopbic4:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Lépcsőház
-                (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqr3fcdgmoqb4c5i0:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Helység vagy
-                település (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrbldpkm6qbgd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Település
-                neve (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjfdlh74p9depkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Közterület
-                neve (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Házszám (1.
-                cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Emelet (1.
-                cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3fe9q62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Lépcsőház
-                bejárata (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3lclp78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Ajtó (1.
-                cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Házszám típusa
-                (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Értesítési cím. Közterület
-                jellege (1. cím).'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0ob9ec:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Országkód.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnm8qb7dsmn0rrjehgmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Irányítószám.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdcdnmqs3cclmmarjkdsmm8rrdd5hmir39ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Cím kiegészítése.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpdchnmqqb3d5m6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Lakcím.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1gmiso:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Ország.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1nm4r31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Település vagy város.'
-            x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Az illetőség szerinti állambeli
-                lakcím. Tartomány, régió vagy állam.'
-            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephelyek. Az állandó
-                telephelyek száma.'
-            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd64:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephelyek. Az 1.
-                állandó telephely megnevezése.'
-            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd68:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephelyek. A 2.
-                állandó telephely megnevezése.'
-            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm8pbedtmmirj1cdkmurhd6c:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephelyek. A 3.
-                állandó telephely megnevezése.'
-            x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmmus35e9giqpbjehgm4r35cdkmqqb5dpq6ubbgclp6qobecln78p8:
-              help: 'A 036-es modelo adata, 2025. adóév: Állandó telephelyek. Állandó
-                telephelyen keresztül működik-e Spanyolországban.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj2:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Első vezetéknév.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qobgclm6oqb4dsmj4:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Második vezetéknév.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qorfchkmerpde1gmispde9in6qb4cln66qb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Az illetőség
-                szerinti állam országkódja.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at0:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Internetes domain
-                vagy cím.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Internetes domain
-                vagy cím (második).'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmm2r3kc4mm4obac4:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Bejegyzés vagy
-                törlés korlátolt felelősségű vállalkozóként.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpbidgmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. A korlátolt felelősségű
-                vállalkozóként történő bejegyzés vagy törlés dátuma.'
             x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Az adóügyi illetőség
-                hatálybalépésének dátuma.'
               label: Azonosítás. Az adóügyi illetőség hatálybalépésének dátuma
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj1cdkmurj1dhkm8ob4:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. A külföldi illetőségű
-                személy állampolgársága.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9co:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Adóazonosító
-                szám (NIF vagy NIE).'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrj9commasrkc5i6ubbiclpmip35dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Az illetőség
-                szerinti állam adóazonosító kódja vagy közösségi adószám.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p8:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Keresztnév.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qrjfdlh74p9dcdnmqpbicdkm2r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. Kereskedelmi
-                név.'
-            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
-              help: 'A 036-es modelo adata, 2025. adóév: Azonosítás. A természetes
-                személy belföldi vagy külföldi illetőségű-e.'
             x-e1l2sobmd5pmubb1clgn8bb1dhq62:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. AEAT-értesítések bejegyzése.'
               label: Jogi személy vagy szervezet. Értesítések. AEAT-értesítések bejegyzése
             x-e1l2sobmd5pmubb1clgn8bb2c5l62:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. AEAT-értesítések törlése.'
               label: Jogi személy vagy szervezet. Értesítések. AEAT-értesítések törlése
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. Regisztráció az AEAT mobilalkalmazásában.'
               label: Jogi személy vagy szervezet. Értesítések. Regisztráció az AEAT
                 mobilalkalmazásában
             x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. Kiiratkozás az AEAT mobilalkalmazásából.'
               label: Jogi személy vagy szervezet. Értesítések. Kiiratkozás az AEAT
                 mobilalkalmazásából
             x-e1l2sobmd5pmubb4ctq2qobcehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. DGT-értesítések bejegyzése.'
               label: Jogi személy vagy szervezet. Értesítések. DGT-értesítések bejegyzése
             x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. DGT-értesítések törlése.'
               label: Jogi személy vagy szervezet. Értesítések. DGT-értesítések törlése
-            x-e1l2sobmd5pmubb5dlgmir0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. E-mail.'
             x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. Az értesítési e-mail bejegyzése vagy módosítása.'
               label: Jogi személy vagy szervezet. Értesítések. Az értesítési e-mail
                 bejegyzése vagy módosítása
             x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. Az értesítési e-mail törlése.'
               label: Jogi személy vagy szervezet. Értesítések. Az értesítési e-mail
                 törlése
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. A mobiltelefon bejegyzése vagy módosítása.'
               label: Jogi személy vagy szervezet. Értesítések. A mobiltelefon bejegyzése
                 vagy módosítása
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. A mobiltelefon törlése.'
               label: Jogi személy vagy szervezet. Értesítések. A mobiltelefon törlése
-            x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. A mobiltelefon országhívó száma.'
             x-e1l2sobmd5pmubbkclgiqobcehgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. TEA-értesítések bejegyzése.'
               label: Jogi személy vagy szervezet. Értesítések. TEA-értesítések bejegyzése
             x-e1l2sobmd5pmubbkclgiqoj1d9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. TEA-értesítések törlése.'
               label: Jogi személy vagy szervezet. Értesítések. TEA-értesítések törlése
-            x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítések. Mobiltelefon.'
-            x-e1l2sp35f1q2qorfchkmerpde1gmiso:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Országkód.'
-            x-e1l2sp35f1q2qorfchkmerpde1nn6t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Irányítószám.'
-            x-e1l2sp35f1q2qorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Cím kiegészítése.'
-            x-e1l2sp35f1q2qp3fdlkm6qbcd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Cím.'
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Külföldi adóügyi cím vagy székhely
-                jelzője.'
               label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli
                 cím. Külföldi adóügyi cím vagy székhely jelzője
-            x-e1l2sp35f1q2qs31d5pg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Ország.'
-            x-e1l2sp35f1q2qs3fc9m62or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Település vagy város.'
-            x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Az illetőség szerinti állambeli cím. Tartomány, régió vagy állam.'
-            x-e1l2sp36d5pm6bb2dhnn2tb5:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Tömb.'
-            x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Házszám kiegészítője.'
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. INE településkód.'
               label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. INE
                 településkód
-            x-e1l2sp36d5pm6bb3dti6iprf5lo6usrkc5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Irányítószám.'
-            x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Tartománykód.'
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. INE közterület-kód.'
               label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. INE
                 közterület-kód
-            x-e1l2sp36d5pm6bb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Cím kiegészítése.'
-            x-e1l2sp36d5pm6bb5edhm2r35e9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Lépcsőház.'
-            x-e1l2sp36d5pm6bb9dpi6ior1chnn4bbiclj6asj5dphmio9dcdgn8objehp62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Az adóügyi cím ingatlan-nyilvántartási
-                jelzője.'
-            x-e1l2sp36d5pm6bbcdthm2r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Helység vagy település.'
-            x-e1l2sp36d5pm6bbdeln6ior9e1kmu:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Település neve.'
-            x-e1l2sp36d5pm6bbedtmm4sj55lr6io8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Közterület neve.'
-            x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Házszám.'
-            x-e1l2sp36d5pm6bbgdhgmst31:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Emelet.'
-            x-e1l2sp36d5pm6bbgdtp78obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Lépcsőház bejárata.'
-            x-e1l2sp36d5pm6bbgelin4t31:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Ajtó.'
-            x-e1l2sp36d5pm6bbiclj6asj5dphmio9dcdgn8objehp62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Ingatlan-nyilvántartási hivatkozás.'
-            x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Házszám típusa.'
-            x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Spanyolországi adóügyi cím. Közterület jellege.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqor1dhkm8ob4:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Minősége a postafiók tekintetében.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1nn6t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. A postafiók irányítószáma.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. A postafiók tartománykódja.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Postafiók száma.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. A postafiók címzettje, ha eltér a bevallótól.'
-            x-e1l2sp3edtq6ibb1e1gn4t31chniqs3fc9m62or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. A postafiók települése vagy városa.'
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Az értesítési cím törlésének jelzője.'
               label: Jogi személy vagy szervezet. Értesítési cím. Az értesítési cím
                 törlésének jelzője
-            x-e1l2sp3edtq6ibb2dhnn2tb5:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Tömb (1. cím).'
-            x-e1l2sp3edtq6ibb3c5m6ip31cg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Minősége (1. cím).'
-            x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Házszám kiegészítője (1. cím).'
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. INE településkód (1. cím).'
               label: Jogi személy vagy szervezet. Értesítési cím. INE településkód
                 (1. cím)
-            x-e1l2sp3edtq6ibb3dti6iprf5lo6usrkc5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Irányítószám (1. cím).'
-            x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Tartománykód (1. cím).'
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. INE közterület-kód (1. cím).'
               label: Jogi személy vagy szervezet. Értesítési cím. INE közterület-kód
                 (1. cím)
-            x-e1l2sp3edtq6ibb3dtmn0r35dlimst3f5li6urb9cdkmoqbf:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Cím kiegészítése (1. cím).'
-            x-e1l2sp3edtq6ibb4clpn8qbec5q62sj9ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Címzett, ha eltér a bevallótól (1. cím).'
-            x-e1l2sp3edtq6ibb5edhm2r35e9gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Lépcsőház (1. cím).'
-            x-e1l2sp3edtq6ibbcdthm2r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Helység vagy település (1. cím).'
-            x-e1l2sp3edtq6ibbdeln6ior9e1kmu:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Település neve (1. cím).'
-            x-e1l2sp3edtq6ibbedtmm4sj55lr6io8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Közterület neve (1. cím).'
-            x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Házszám (1. cím).'
-            x-e1l2sp3edtq6ibbgdhgmst31:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Emelet (1. cím).'
-            x-e1l2sp3edtq6ibbgdtp78obc:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Lépcsőház bejárata (1. cím).'
-            x-e1l2sp3edtq6ibbgelin4t31:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Ajtó (1. cím).'
-            x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Házszám típusa (1. cím).'
-            x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Értesítési cím. Közterület jellege (1. cím).'
-            x-e1l2sp3jdthiqojcdtonap8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Tömb.'
-            x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Házszám kiegészítője.'
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. INE településkód.'
               label: Jogi személy vagy szervezet. Székhely. INE településkód
-            x-e1l2sp3jdthiqorfchkmerpde1nn6t31dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Irányítószám.'
-            x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Tartománykód.'
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. INE közterület-kód.'
               label: Jogi személy vagy szervezet. Székhely. INE közterület-kód
-            x-e1l2sp3jdthiqorfdlo6opbdcln78rpdchnmqqb3d5m6iro:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Cím kiegészítése.'
-            x-e1l2sp3jdthiqpbjcdgmopbic4:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Lépcsőház.'
-            x-e1l2sp3jdthiqr3fcdgmoqb4c5i0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Helység vagy település.'
-            x-e1l2sp3jdthiqrbldpkm6qbgd5ng:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Település neve.'
-            x-e1l2sp3jdthiqrjfdlh74p9depkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Közterület neve.'
-            x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Házszám.'
-            x-e1l2sp3jdthiqs3cc5n78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Emelet.'
-            x-e1l2sp3jdthiqs3fe9q62r0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Lépcsőház bejárata.'
-            x-e1l2sp3jdthiqs3lclp78o8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Ajtó.'
-            x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Házszám típusa.'
-            x-e1l2sp3jdthiqt39e1niqtj9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Székhely. Közterület jellege.'
-            x-e1l2spbgclp6qbb3elgmst3fec:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. Az állandó telephelyek száma.'
-            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj2:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. Az 1. állandó telephely megnevezése.'
-            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj4:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. A 2. állandó telephely megnevezése.'
-            x-e1l2spbgclp6qbb4cln6urb9dpgm6qbfdomj6:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. A 3. állandó telephely megnevezése.'
-            x-e1l2spbgclp6qbbed5j2qc8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. Az 1. állandó telephely adóazonosító száma.'
-            x-e1l2spbgclp6qbbed5j2qcg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. A 2. állandó telephely adóazonosító száma.'
-            x-e1l2spbgclp6qbbed5j2qco:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. A 3. állandó telephely adóazonosító száma.'
-            x-e1l2spbgclp6qbbfe1in4o9dclpn8ob2dhim6qbdd5imst3f5lo6asjdc5n6arjkck:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Állandó telephelyek. Állandó telephelyen keresztül működik-e Spanyolországban.'
-            x-e1l2sqb4cln78bb1dpgmesj1dlgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Embléma.'
-            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Internetes domain vagy cím.'
-            x-e1l2sqb4cln78bb4dtmmirj9dsmmirjkclp6spbk5lpmaorldpi62sj9ds:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Internetes domain vagy cím (második).'
-            x-e1l2sqb4cln78bb6clhmgo9dc5hnapbichniqtjfdhqmst31chin6:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. A megállapodás dátuma.'
-            x-e1l2sqb4cln78bb6clhmgo9dcdnmssrkd5q7aor9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Az alapítás dátuma.'
             x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Az adóügyi illetőség hatálybalépésének dátuma.'
               label: Jogi személy vagy szervezet. Azonosítás. Az adóügyi illetőség
                 hatálybalépésének dátuma
-            x-e1l2sqb4cln78bb6clhmgo9dd5n76orid5o66qbfdomn4pb7d5pn8sj1dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. A nyilvántartásba vétel dátuma.'
-            x-e1l2sqb4cln78bbed5j0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Adóazonosító szám (NIF).'
-            x-e1l2sqb4cln78bbed5j2qpbjehgm8rpde9in6qb4cln66qb1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Az illetőség szerinti állam adóazonosító kódja.'
-            x-e1l2sqb4cln78bbed5j2qrrke9nn6bbgc5kn6pbj:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Más országokbeli adóazonosító szám.'
-            x-e1l2sqb4cln78bbgc5kn6bb3dtn76t39ehqm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Külföldi illetőségű vagy külföldön alapított szervezet.'
-            x-e1l2sqb4cln78bbic5t6urhdednm6qb1dg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Cégnév.'
             x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Azonosítás. Belföldi illetőségű vagy Spanyolországban alapított, illetve
-                külföldi illetőségű szervezet.'
               label: Jogi személy vagy szervezet. Azonosítás. Belföldi illetőségű
                 vagy Spanyolországban alapított, illetve külföldi illetőségű szervezet
-            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Spanyolországban alapított,
-                gazdasági tevékenységét folytató jövedelem-hozzárendelési szervezet.'
-            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lhmurhdc5hn8qbmd5i62p1dcdm62sr5:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. A Spanyolországban alapított,
-                gazdasági tevékenységét folytató jövedelem-hozzárendelési szervezet
-                formája.'
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Spanyolországban alapított,
-                gazdasági tevékenységét nem folytató jövedelem-hozzárendelési szervezet.'
               label: Jogi személy vagy szervezet. Jogi személyiség és szervezeti forma.
                 Spanyolországban alapított, gazdasági tevékenységét nem folytató jövedelem-hozzárendelési
                 szervezet
-            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p1dcdm62sr5:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. A Spanyolországban alapított,
-                gazdasági tevékenységét nem folytató jövedelem-hozzárendelési szervezet
-                formája.'
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Külföldön alapított, Spanyolországban
-                jelenléttel bíró jövedelem-hozzárendelési szervezet.'
               label: Jogi személy vagy szervezet. Jogi személyiség és szervezeti forma.
                 Külföldön alapított, Spanyolországban jelenléttel bíró jövedelem-hozzárendelési
                 szervezet
-            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2bb3dhgn6p8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. A külföldön alapított, Spanyolországban
-                jelenléttel bíró jövedelem-hozzárendelési szervezet formája.'
             x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Külföldön alapított, Spanyolországban
-                jelenléttel nem bíró jövedelem-hozzárendelési szervezet.'
               label: Jogi személy vagy szervezet. Jogi személyiség és szervezeti forma.
                 Külföldön alapított, Spanyolországban jelenléttel nem bíró jövedelem-hozzárendelési
                 szervezet
-            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2bb3dhgn6p8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. A külföldön alapított, Spanyolországban
-                jelenléttel nem bíró jövedelem-hozzárendelési szervezet formája.'
-            x-e1l2ss3aelp2qpbj5lo6asjjdtn62bbaelp6ip39cdgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Jogi személy.'
-            x-e1l2ss3aelp2qpjfe9mm2bbaelp6ip39cdgg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Jogi forma.'
-            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Egyéb szervezetek.'
-            x-e1l2ss3aelp2qrrke9gn6bb5dpq6ip31chin6bb3dhgn6p8:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Egyéb szervezetek. Szervezeti
-                forma.'
-            x-e1l2ss3aelp2qt39cln6abbgclp76rrec5m6ip31cgmmktbid5i6ior1:
-              help: 'A 036-es modelo adata, 2025. adóév: Jogi személy vagy szervezet.
-                Jogi személyiség és szervezeti forma. Jogi személyiséggel rendelkezik.'
             x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: 'A benyújtás oka: a képviselő bejegyzése, törlése vagy módosítása
                 (első képviselő, 3.1 blokk)'
             x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: A képviselet oka (első képviselő, 3.1 blokk)
             x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kijelölt természetes személyre vonatkozó benyújtás oka (első
                 képviselő, 3.1 blokk)
             x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: 'A benyújtás oka: a képviselő bejegyzése, törlése vagy módosítása
                 (második képviselő, 3.2 blokk)'
             x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: A képviselet oka (második képviselő, 3.2 blokk)
             x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: A Modelo 036 . casilla adóügyi adatai.
               label: A kijelölt természetes személyre vonatkozó benyújtás oka (második
                 képviselő, 3.2 blokk)
-            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Adóraktári kitárolók nyilvántartása.
-                Kérelem az alkohol és származékos italok jövedéki adója alá tartozó
-                termékekre.'
-            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmobb6clhmgo8:
-              help: 'A 036-es modelo adata, 2025. adóév: Adóraktári kitárolók nyilvántartása.
-                Az alkoholra és származékos italokra vonatkozó kérelem dátuma.'
-            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uso:
-              help: 'A 036-es modelo adata, 2025. adóév: Adóraktári kitárolók nyilvántartása.
-                Kérelem a szénhidrogének jövedéki adója alá tartozó termékekre.'
-            x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lk6ip3idthm2sj2elp6uspdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Adóraktári kitárolók nyilvántartása.
-                A szénhidrogénekre vonatkozó kérelem dátuma.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Köteles önadózást
-                benyújtani a villamosenergia-adó tekintetében.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5mn0tb5edq6ubb5dhim6t3id5hmip31cgmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Dátum. Köteles
-                önadózást benyújtani a villamosenergia-adó tekintetében.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Kötelezettség
-                a telephelyek bejegyzésére a kezelő hivatal területi nyilvántartásába.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspdd5n76orid5o66qbfdomn4pb7d5pn8sjf5lq6asjid5q6usj9c5m2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Dátum. Kötelezettség
-                a telephelyek bejegyzésére a kezelő hivatal területi nyilvántartásába.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Kötelezettség
-                a biztosítási díjak különadójának bevallására.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Dátum. Kötelezettség
-                a biztosítási díjak különadójának bevallására.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Köteles benyújtani
-                a szénadó éves összefoglaló bevallását.'
-            x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Jövedéki adók. Dátum. Köteles
-                benyújtani a szénadó éves összefoglaló bevallását.'
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Közösségen belüli beszerzések.
-                Az általános AFA-rendszer választása, adóköteles vagy nem adóköteles.'
               label: AFA. Közösségen belüli beszerzések. Az általános AFA-rendszer
                 választása, adóköteles vagy nem adóköteles
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
-              help: 'A 036-es modelo adata, 2025. adóév: AFA. Közösségen belüli beszerzések.
-                Meghaladta a 10 000 eurós küszöbértéket.'
               label: AFA. Közösségen belüli beszerzések. Meghaladta a 10 000 eurós
                 küszöbértéket
-            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
-              help: 'A 036-es modelo adata, 2025. adóév: Környezetvédelmi adók. Bevallásbenyújtási
-                kötelezettség.'
-            x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Környezetvédelmi adók. A
-                bevallásbenyújtási kötelezettség dátuma.'
-            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                szakmai tevékenységből származó jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ecmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: szakmai tevékenységből származó
-                jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78ro:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                bérbeadásból vagy albérletből származó jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lgn4sj5dpi62rb9cln78rpdcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: bérbeadásból vagy albérletből
-                származó jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                ellenszolgáltatásból származó tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdcdnmst3ic5o74pbjehgm6qbfdommcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: ellenszolgáltatásból származó
-                tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ec:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                ügyletekből származó tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddto6asj1cdkmurj5ecmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: ügyletekből származó tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                egyéb tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpddtq74rrj5lj6aor8c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: egyéb tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                átruházásból származó tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lhm2s39ehgmobbddth6ir39c5p6irpdehp62rjjdlkn6qbfdommcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: átruházásból származó tőkejövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m0:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                munkaviszonyból származó jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lq74ob2c5l6ubbgclp76rrec5m2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: munkaviszonyból származó jövedelem.'
-            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ec:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. Levonási vagy számlára történő befizetési kötelezettség:
-                részvények vagy részesedések átruházása vagy visszaváltása.'
-            x-e9in8bjiclq6arj3d5nmspbj5lq74obeedmmisr9dtn2qob3cdkmurj5ecmmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Levonások és számlára történő
-                befizetések. A kötelezettség dátuma: részvények vagy részesedések
-                átruházása vagy visszaváltása.'
-            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p0:
-              help: 'A 036-es modelo adata, 2025. adóév: Egyes digitális szolgáltatások
-                adója. Önadózás benyújtására köteles.'
-            x-e9in8bjjclp7cqb3d5nn6bb4d5jmit31dhin6bbfc9m6ipr1cdkmurhdc5qn8rrcd5onaqb4c5p2qpj5cdk62:
-              help: 'A 036-es modelo adata, 2025. adóév: Egyes digitális szolgáltatások
-                adója. Az önadózási kötelezettség dátuma.'
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dchin6t39dpng:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.4.a cikk). Rendeltetési hely
-                szerinti adózás.'
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.4.a cikk). Dátum.'
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1de9incrr3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.4.a cikk). Visszavonás.'
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.4.a cikk). Meghaladta a 10
-                000 eurós küszöbértéket.'
               label: Távközlési, műsorszolgáltatási és elektronikus szolgáltatások
                 (70.Uno.4.a cikk). Meghaladta a 10 000 eurós küszöbértéket
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dchin6t39dpng:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.8 cikk). Rendeltetési hely
-                szerinti adózás.'
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.8 cikk). Dátum.'
-            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1de9incrr3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.8 cikk). Visszavonás.'
             x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
-              help: 'A 036-es modelo adata, 2025. adóév: Távközlési, műsorszolgáltatási
-                és elektronikus szolgáltatások (70.Uno.8 cikk). Meghaladta a 10 000
-                eurós küszöbértéket.'
               label: Távközlési, műsorszolgáltatási és elektronikus szolgáltatások
                 (70.Uno.8 cikk). Meghaladta a 10 000 eurós küszöbértéket
-            x-ednm6bj3c5qn6o9dcpim6q31:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                A benyújtási ok dátuma.'
             x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                A benyújtás oka.'
               label: Tagok, résztvevők vagy részesedők. A benyújtás oka
-            x-ednm6bj3elnn8o9dc5q74qb2elhmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                Hozzárendelési hányad vagy százalék.'
-            x-ednm6bj3elnn8o9de1gn4t39cdkn0ob3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                Részesedési hányad vagy százalék.'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                IRPF, egyszerűsített közvetlen megállapítás: lemondás vagy visszavonás.'
               label: 'Tagok, résztvevők vagy részesedők. IRPF, egyszerűsített közvetlen
                 megállapítás: lemondás vagy visszavonás'
             x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                IRPF, objektív megállapítás: lemondás vagy visszavonás.'
               label: 'Tagok, résztvevők vagy részesedők. IRPF, objektív megállapítás:
                 lemondás vagy visszavonás'
             x-ednm6bj9epgiqsj5c5jn0:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                AFA, mezőgazdasági különleges rendszer: lemondás vagy visszavonás.'
               label: 'Tagok, résztvevők vagy részesedők. AFA, mezőgazdasági különleges
                 rendszer: lemondás vagy visszavonás'
             x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                AFA, egyszerűsített rendszer: lemondás vagy visszavonás.'
               label: 'Tagok, résztvevők vagy részesedők. AFA, egyszerűsített rendszer:
                 lemondás vagy visszavonás'
-            x-ednm6bjed5j0:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                Adóazonosító szám (NIF).'
-            x-ednm6bjedtmm4sj55lp62ujfdomn6rr3d5gmo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tagok, résztvevők vagy részesedők.
-                Vezeték- és keresztnév vagy cégnév.'
-            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 923. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 921. casilla adóügyi adatai.
-            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 922. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 927. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 925. casilla adóügyi adatai.
-            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 926. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 931. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 929. casilla adóügyi adatai.
-            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 930. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 935. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 933. casilla adóügyi adatai.
-            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 934. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 939. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 937. casilla adóügyi adatai.
-            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 938. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 943. casilla adóügyi adatai: adóügyi információ.'
-            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: A Modelo 036 941. casilla adóügyi adatai.
-            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: 'A Modelo 036 942. casilla adóügyi adatai: adóügyi információ.'
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14a tényleges
                 tulajdonos
             x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14a tényleges tulajdonos
             x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14a tényleges tulajdonos
             x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14a tényleges tulajdonos
             x-ehkn8bj15ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14a tényleges tulajdonos
             x-ehkn8bj15ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14a tényleges
                 tulajdonos
             x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14a tényleges tulajdonos
             x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14a tényleges
                 tulajdonos
             x-ehkn8bj15lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14a tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14a tényleges
                 tulajdonos
             x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14b tényleges
                 tulajdonos
             x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14b tényleges tulajdonos
             x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14b tényleges tulajdonos
             x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14b tényleges tulajdonos
             x-ehkn8bj25ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14b tényleges tulajdonos
             x-ehkn8bj25ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14b tényleges
                 tulajdonos
             x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14b tényleges tulajdonos
             x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14b tényleges
                 tulajdonos
             x-ehkn8bj25lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14b tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14b tényleges
                 tulajdonos
             x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14c tényleges
                 tulajdonos
             x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14c tényleges tulajdonos
             x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14c tényleges tulajdonos
             x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14c tényleges tulajdonos
             x-ehkn8bj35ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14c tényleges tulajdonos
             x-ehkn8bj35ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14c tényleges
                 tulajdonos
             x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14c tényleges tulajdonos
             x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14c tényleges
                 tulajdonos
             x-ehkn8bj35lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14c tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14c tényleges
                 tulajdonos
             x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14d tényleges
                 tulajdonos
             x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14d tényleges tulajdonos
             x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14d tényleges tulajdonos
             x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14d tényleges tulajdonos
             x-ehkn8bj45ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14d tényleges tulajdonos
             x-ehkn8bj45ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14d tényleges
                 tulajdonos
             x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14d tényleges tulajdonos
             x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14d tényleges
                 tulajdonos
             x-ehkn8bj45lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14d tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14d tényleges
                 tulajdonos
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Nyilatkozat
-                az adatok változatlanságáról.'
               label: Tényleges tulajdonosok. Nyilatkozat az adatok változatlanságáról
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14e tényleges
                 tulajdonos
             x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14e tényleges tulajdonos
             x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14e tényleges tulajdonos
             x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14e tényleges tulajdonos
             x-ehkn8bj55ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14e tényleges tulajdonos
             x-ehkn8bj55ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14e tényleges
                 tulajdonos
             x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14e tényleges tulajdonos
             x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14e tényleges
                 tulajdonos
             x-ehkn8bj55lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14e tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14e tényleges
                 tulajdonos
             x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtási ok dátuma, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtási ok dátuma, 14f tényleges
                 tulajdonos
             x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                benyújtás oka, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. A benyújtás oka, 14f tényleges tulajdonos
             x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Születési
-                dátum, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Születési dátum, 14f tényleges tulajdonos
             x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Adóazonosító
-                szám vagy külföldi azonosító kód, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Adóazonosító szám vagy külföldi azonosító
                 kód, 14f tényleges tulajdonos
             x-ehkn8bj65ln62or9dtn62r39chgm8:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Állampolgárság,
-                14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Állampolgárság, 14f tényleges tulajdonos
             x-ehkn8bj65ln6urb2e9ig:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Vezeték-
-                és keresztnév, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Vezeték- és keresztnév, 14f tényleges
                 tulajdonos
             x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány kiállító országa, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány kiállító országa,
                 14f tényleges tulajdonos
             x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                illetőség szerinti ország, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az illetőség szerinti ország, 14f tényleges
                 tulajdonos
             x-ehkn8bj65lq6is3f5li6uorldlimst3f:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. Az
-                azonosító okmány típusa, 14f tényleges tulajdonos.'
               label: Tényleges tulajdonosok. Az azonosító okmány típusa, 14f tényleges
                 tulajdonos
             x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
-              help: 'A 036-es modelo adata, 2025. adóév: Tényleges tulajdonosok. A
-                tényleges tulajdonos azonosítására nem köteles szervezet.'
               label: Tényleges tulajdonosok. A tényleges tulajdonos azonosítására
                 nem köteles szervezet
           field:

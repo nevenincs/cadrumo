@@ -4,7 +4,6 @@ modelo:
       casilla:
         continuidad:
           '25':
-            help: 'A Modelo 202 25. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés összege,
               2. kulcs
           importe-bonificacion-art-26-ley-19-1994:
@@ -44,168 +43,112 @@ modelo:
             label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
               megfelelő összeg
           is-pf-mod-40-2-a-ingresar:
-            help: 'Tekintse át a casilla adatait: Mod. 40.2 LIS - A ingresar.'
             label: A LIS 40.2. cikke szerinti módszer - Befizetendő
           is-pf-mod-40-2-base-pago-fraccionado:
-            help: 'A Modelo 202 01. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
           is-pf-mod-40-2-resultado-declaracion-anterior:
-            help: 'Tekintse át a casilla adatait: Mod. 40.2 LIS - Eredmény - bevallás
-              korábbi (kiegészítő).'
             label: A LIS 40.2. cikke szerinti módszer - A korábbi bevallás eredménye
               (kiegészítő)
           is-pf-mod-40-3-amortizacion-30pct-dism:
-            help: 'A Modelo 202 37. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - 30%-os amortizációs költség
               - Csökkenések
           is-pf-mod-40-3-b1-base-pago-fraccionado:
-            help: 'A Modelo 202 16. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
               Előlegfizetés alapja
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
-            help: 'A Modelo 202 40. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Negatív adók beszámítása
               (szövetkezetek)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B1 - Dotaciones -
-              art. 11.12 LIS.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - A 11.12. cikk (LIS)
               szerinti céltartalékok
           is-pf-mod-40-3-b1-porcentaje:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B1 - Caso general
-              - Százalék.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
               Százalék
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B1 - Reserva nivelacion
-              convertida - Aumentos.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
               tartalék - Növekedések
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B1 - Reserva nivelacion
-              convertida - Disminuciones.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Átalakított kiegyenlítési
               tartalék - Csökkenések
           is-pf-mod-40-3-b1-resultado-previo:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B1 - Caso general
-              - Eredmény previo.'
             label: A LIS 40.3. cikke szerinti módszer, B1 blokk - Általános eset -
               Előzetes eredmény
           is-pf-mod-40-3-b2-base-pago-fraccionado:
-            help: 'A Modelo 202 19. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Az előlegfizetés
               alapja
           is-pf-mod-40-3-b2-base-tipo-1:
-            help: 'A Modelo 202 20. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap az 1. kulcshoz
           is-pf-mod-40-3-b2-base-tipo-2:
-            help: 'A Modelo 202 23. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 2. kulcshoz
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
-            help: 'A Modelo 202 42. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Negatív adók beszámítása
               (szövetkezetek)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Dotaciones art.
-              11.12 LIS (cooperativas).'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - A 11.12. cikk szerinti
               céltartalékok (szövetkezetek)
           is-pf-mod-40-3-b2-importe-pago-fraccionado:
-            help: 'A Modelo 202 22. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés összege,
               1. kulcs
           is-pf-mod-40-3-b2-porcentaje-1:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Százalék 1.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 1. százalék
           is-pf-mod-40-3-b2-porcentaje-2:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Százalék 2.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 2. százalék
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
-            help: 'A Modelo 202 51. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési tartalék
               (LIS 105. cikk) - Növekedések
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
-            help: 'A Modelo 202 52. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Kiegyenlítési tartalék
               (LIS 105. cikk) - Csökkenések
           is-pf-mod-40-3-b2-resultado-previo:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Eredmény previo.'
             label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előzetes eredmény
           is-pf-mod-40-3-base-imponible-previa:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Adóalap previa.'
             label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
           is-pf-mod-40-3-bonificaciones:
-            help: A Modelo 202 27. casilla adóügyi adatai.
             label: A LIS 40.3. cikke szerinti módszer - A számított időszak adókedvezményei
           is-pf-mod-40-3-cantidad-a-ingresar:
-            help: 'A Modelo 202 34. casilla adóügyi adatai: adóügyi információ Hivatkozások:
-              [32], [33].'
             label: A LIS 40.3. cikke szerinti módszer - Befizetendő összeg (a [32]
               és [33] rovat közül a nagyobb)
           is-pf-mod-40-3-compensacion-bases-negativas:
-            help: 'A Modelo 202 14. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Korábbi adóévek negatív adóalapjainak
               beszámítása
           is-pf-mod-40-3-correcciones-is-aumentos:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Correcciones szerinti
-              IS - Aumentos.'
             label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
               - Növekedések
           is-pf-mod-40-3-correcciones-is-disminuciones:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Correcciones szerinti
-              IS - Disminuciones.'
             label: A LIS 40.3. cikke szerinti módszer - Társasági adó szerinti korrekciók
               - Csökkenések
           is-pf-mod-40-3-minimo-a-ingresar:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Minimo a ingresar
-              (CN >= 10 millones euros).'
             label: A LIS 40.3. cikke szerinti módszer - Minimális befizetendő összeg
               (árbevétel >= 10 millió euró)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
-            help: 'A Modelo 202 30. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Korábbi időszakok közös területi
               előlegfizetései
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
-            help: A Modelo 202 44. casilla adóügyi adatai.
             label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
               adóalap miatt fel nem használt maradványa
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
-            help: 'A Modelo 202 45. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
               105. cikk) - Növekedések
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
-            help: 'A Modelo 202 46. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
               105. cikk) - Csökkenések
           is-pf-mod-40-3-resto-correcciones-aumentos:
-            help: 'A Modelo 202 07. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
           is-pf-mod-40-3-resto-correcciones-disminuciones:
-            help: 'A Modelo 202 08. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
           is-pf-mod-40-3-resultado:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Eredmény.'
             label: A LIS 40.3. cikke szerinti módszer - Eredmény
           is-pf-mod-40-3-resultado-contable:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Eredmény contable
-              despues - IS.'
             label: A LIS 40.3. cikke szerinti módszer - Társasági adó utáni számviteli
               eredmény
           is-pf-mod-40-3-resultado-declaracion-anterior:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Eredmény - bevallás
-              korábbi (kiegészítő).'
             label: A LIS 40.3. cikke szerinti módszer - A korábbi bevallás eredménye
               (kiegészítő)
           is-pf-mod-40-3-total-correcciones-aumentos:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - TOTAL correcciones
-              - Aumentos.'
             label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Növekedések
           is-pf-mod-40-3-total-correcciones-disminuciones:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - TOTAL correcciones
-              - Disminuciones.'
             label: A LIS 40.3. cikke szerinti módszer - Korrekciók összesen - Csökkenések
           is-pf-mod-40-3-volumen-territorio-comun-pct:
-            help: 'A Modelo 202 29. casilla adóügyi adatai: adóügyi információ.'
             label: A LIS 40.3. cikke szerinti módszer - Közös területi ügyletek volumene
               (%)
           minoracion-rentas-bonificacion-art-33-lis:
@@ -222,8 +165,6 @@ modelo:
             label: Kiegészítő információ (5) - Az adóalapba beszámított értékvesztés-visszaírásból
               származó jövedelem
           retenciones-ingresos-a-cuenta:
-            help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Adólevonások e előlegfizetések
-              sobre jövedelmek - időszak computado.'
             label: A LIS 40.3. cikke szerinti módszer - A számított időszak bevételeire
               vonatkozó forrásadó és előlegfizetés
       field:
@@ -272,28 +213,20 @@ modelo:
         2025-y-siguientes:
           casilla:
             '61':
-              help: 'A Modelo 202 61. casilla adóügyi adatai: adóügyi információ.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 3. kulcshoz
             '62':
-              help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Százalék 3.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 3. százalék
             '63':
-              help: 'A Modelo 202 63. casilla adóügyi adatai: adóügyi információ.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
                 összege, 3. kulcs
             '64':
-              help: 'A Modelo 202 64. casilla adóügyi adatai: adóügyi információ.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Alap a 4. kulcshoz
             '65':
-              help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS B2 - Százalék 4.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - 4. százalék
             '66':
-              help: 'A Modelo 202 66. casilla adóügyi adatai: adóügyi információ.'
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk - Előlegfizetés
                 összege, 4. kulcs
             '67':
-              help: 'Tekintse át a casilla adatait: Mod. 40.3 LIS - Correcciones szerinti
-                Impuesto Complementario (IC) - Aumentos.'
               label: A LIS 40.3. cikke szerinti módszer - Kiegészítő adó (IC) szerinti
                 korrekciók - Növekedések
             x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:

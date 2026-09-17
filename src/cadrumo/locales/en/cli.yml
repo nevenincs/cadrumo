@@ -803,14 +803,16 @@ cli:
         filing_record_id_help: Stable filing-record identifier
         import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
           (repeatable; at least one required)
+        import_declared_kind_file_error: --declared-kind is not accepted with --file;
+          import the correction with --set values.
+        import_declared_kind_help: Declaration type AEAT records for this presentation
+          (original, complementaria, sustitutiva, rectificativa); required when AEAT
+          already holds a confirmed declaration for the period
         import_file_help: Path to a CSV or XLSX casilla manifest exported from the
           external filing source
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
         import_set_required: --set is required at least once for an import.
-        import_unverifiable: 'Modelo {modelo} {period} {filing_year}: the imported
-          AEAT entry could not be compared with the pending local filing, so nothing
-          was recorded.'
         include_superseded_help: Include superseded filing records (excluded by default)
         list_help: List registered filing records
         modelo_help: Filter by modelo code (e.g. 303, 130, 100)
@@ -823,8 +825,8 @@ cli:
         observe_local_file_help: Path to a local CSV or XLSX spreadsheet of casilla_code,value
           rows (a cert-free reconstruction of a past filing). Combines with --set;
           a --set value for the same casilla overrides the spreadsheet row
-        observe_local_help: Record an operator-supplied local observation for calculation
-          prefill
+        observe_local_help: Record or clear an audited operator override of a period's
+          observation; any official AEAT observation is kept
         observe_local_reason_help: Why the operator overrides this period's observation;
           stored in the override audit
         observe_local_recorded_notice: Operator override recorded as a pending local

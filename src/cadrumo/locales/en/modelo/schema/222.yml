@@ -4,7 +4,6 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Tax information for casilla of Modelo 222.
             label: Filing year to which the instalment payment relates
           is-pf-grupo-info-aumento-capital-compensacion-creditos:
             help: Amount declared in the additional-information block of the tax group's
@@ -341,7 +340,6 @@ modelo:
               LIS).
             label: Mod. 40.3 LIS - TOTAL - Decreases
           tipo-declaracion:
-            help: Tax information about tax information in casilla  of Modelo 222.
             label: Instalment payment method (art. 40.2 gross tax liability / art.
               40.3 taxable base)
       construct:

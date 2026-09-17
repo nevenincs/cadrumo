@@ -4,10 +4,8 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'A Modelo 038 . casilla adóügyi adatai: adóév.'
             label: Az adóbevallás vonatkozási éve
           tipo-declaracion:
-            help: A Modelo 038 . casilla adóügyi adatai.
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       construct:
         modelo-038-informative:

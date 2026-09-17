@@ -42,8 +42,6 @@ modelo:
           embarcacion-tipo:
             label: Característiques i dades tècniques (7) - Embarcacions - Tipus-Model
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              309.
             label: Exercici a què es refereix la declaració
           hecho-imponible:
             label: 'Fet imposable (6):'
@@ -68,16 +66,11 @@ modelo:
             label: 'Fet imposable: lliuraments de béns i prestacions de serveis en
               procediments administratius i judicials'
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-              en adquisicions intracomunitàries (medios de transporte nuevos, etc.).'
             label: Quota d'IVA autorepercutida en adquisicions intracomunitàries (mitjans
               de transport nous, etc.)
           iva-cuota-no-periodica-total:
-            help: Informació fiscal de la casella del Modelo 309.
             label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
           iva-cuota-soportada-recargo-equivalencia:
-            help: 'Consulteu la informació de la casella: Quota IVA suportat per minoristas
-              en recàrrec d''equivalència (devolució a viajeros).'
             label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
               (devolució a viatgers)
           justificante-anterior:
@@ -86,9 +79,6 @@ modelo:
             help: Casella 15-18 del model 309, exercicis 2004-2015.
             label: Lletres de l’etiqueta identificativa
           motivo-declaracion-no-periodica:
-            help: 'Consulteu la informació de la casella: Tipus de trigger (medios
-              de transporte nuevos / règim agrícola / recàrrec d''equivalència / ejecucion
-              forzosa).'
             label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
               / recàrrec d'equivalència / execució forçosa)
           mtn-embarcacion-identificacion:

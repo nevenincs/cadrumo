@@ -853,14 +853,16 @@ cli:
         filing_record_id_help: Identificador estable d'un filing record
         import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
+        import_declared_kind_file_error: --declared-kind no s'admet amb --file; importeu
+          la correcció amb valors --set.
+        import_declared_kind_help: Tipus de declaració que l'AEAT registra per a aquesta
+          presentació (original, complementaria, sustitutiva, rectificativa); obligatori
+          quan l'AEAT ja té una declaració confirmada del període
         import_file_help: Camí a un manifest de caselles CSV o XLSX exportat des de
           la font de la declaració externa
         import_help: Persistir una declaració presentada externament com a filing
           record base amb evidència oficial importada de l'AEAT
         import_set_required: --set és obligatori almenys una vegada per a una importació.
-        import_unverifiable: 'Model {modelo} {period} {filing_year}: l''entrada importada
-          de l''AEAT no s''ha pogut comparar amb la presentació local pendent, així
-          que no s''ha registrat res.'
         include_superseded_help: Incloure els filing records superats (exclosos per
           defecte)
         list_help: Llistar els filing records registrats
@@ -875,8 +877,9 @@ cli:
           casilla_code,value (una reconstrucció sense certificat d'una presentació
           passada). Es combina amb --set; un valor de --set per a la mateixa casella
           sobreescriu la fila del full de càlcul
-        observe_local_help: Registra una observació local aportada per l'operador
-          per al preomplert del càlcul
+        observe_local_help: Registra o elimina una substitució auditada de l'operador
+          sobre l'observació d'un període; es conserva qualsevol observació oficial
+          de l'AEAT
         observe_local_reason_help: Motiu pel qual l'operador substitueix l'observació
           d'aquest període; es desa a l'auditoria de la substitució
         observe_local_recorded_notice: Substitució de l'operador registrada com a

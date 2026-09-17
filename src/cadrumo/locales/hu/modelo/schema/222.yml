@@ -4,7 +4,6 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: 'A Modelo 222 . casilla adóügyi adatai: adóév.'
             label: A részletfizetés vonatkozási éve
           is-pf-grupo-info-aumento-capital-compensacion-creditos:
             help: Az adócsoport részletfizetési elszámolásának kiegészítő információs
@@ -338,7 +337,6 @@ modelo:
               LIS).
             label: Mod. 40.3 LIS - ÖSSZESEN - Csökkentések
           tipo-declaracion:
-            help: 'A Modelo 222 . casilla adóügyi adatai: adóügyi információ.'
             label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
               adóalap)
       construct:

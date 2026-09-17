@@ -13,21 +13,14 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: Tax information for casilla 01 of Modelo 115.
               label: Number of recipients
             '02':
-              help: Tax information about tax information in casilla 02 of Modelo
-                115.
               label: Base of withholdings and payments on account
             '03':
-              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and payments on account
             '04':
-              help: Tax information about tax information in casilla 04 of Modelo
-                115.
               label: Result of previous returns
             '05':
-              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           field:
             label: Modelo 115 in force (Order of 20 November 2000, BOE-A-2000-21430),

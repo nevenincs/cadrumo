@@ -14,131 +14,88 @@ modelo:
         2022-y-siguientes:
           casilla:
             cantidades-minorar-principal:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A kölcsön tőketartozásának csökkentésére fordított összegek
             clave-intervencion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az ügyletben betöltött szerep kódja
             clave-tipo-identificacion:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: Az azonosítás típuskódja
             codigo-provincia:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: Tartománykód
             declaracion-complementaria-sustitutiva:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
-              help: 'Tekintse át a casilla adatait: NIF - declarado.'
               label: A bejelentett személy adószáma
             declarado-nombre:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A bejelentett személy neve vagy cégneve
             declarante-razon-social:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A bejelentő cégneve
             direccion-inmueble:
-              help: 'Tekintse át a casilla adatait: Direccion - inmueble.'
               label: Az ingatlan címe
             duracion-operacion:
-              help: 'Tekintse át a casilla adatait: Duracion - operacion en meses.'
               label: Az ügylet futamideje hónapban
             fecha-operacion:
-              help: 'Tekintse át a casilla adatait: Dátum - operacion.'
               label: Az ügylet dátuma
             identificacion-operacion:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A kölcsön, hitel vagy egyéb pénzügyi ügylet azonosítója
             importe-amortizacion-capital:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során tőketörlesztés címén kifizetett összeg
             importe-gastos-financiacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során külső finanszírozási költség címén kifizetett összeg
             importe-intereses:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során kamat címén kifizetett összeg
             importe-operacion:
-              help: 'Tekintse át a casilla adatait: Összeg - prestamo, credito u otra
-                operacion financiera.'
               label: A kölcsön, hitel vagy egyéb pénzügyi ügylet összege
             importe-reintegro-intereses:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során visszatérített kamat címén elszámolt összeg
             importe-total-capital-amortizado:
-              help: 'Tekintse át a casilla adatait: Összeg total - capital amortizado.'
               label: A törlesztett tőke teljes összege
             importe-total-gastos-financiacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A külső finanszírozásból eredő költségek összege
             importe-total-intereses:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során kifizetett kamat teljes összege
             importe-total-saldos-pendientes:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A december 31-én fennálló egyenlegek összege
             intereses-indemnizatorios:
-              help: 'Tekintse át a casilla adatait: Intereses indemnizatorios.'
               label: Kártalanítási kamat
             numero-identificativo-anterior:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A bevallás azonosító száma
             numero-total-declarados:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A bejelentett rekordok száma összesen
             origen-operacion:
-              help: 'Tekintse át a casilla adatait: Origen - operacion.'
               label: Az ügylet eredete
             otras-cantidades-indemnizatorias:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Egyéb kártalanítási összegek
             persona-relacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             porcentaje-financiacion-vivienda-habitual:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A finanszírozás állandó lakóingatlanra fordított százaléka
             porcentaje-participacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A részesedés százaléka
             prefijo-codigo-iban:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: Az IBAN-kód előtagja
             prestamista-nif:
-              help: 'Tekintse át a casilla adatait: NIF - prestamista.'
               label: A hitelező adószáma
             prestamista-nombre:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A hitelező neve vagy cégneve
             referencia-catastral:
-              help: 'Tekintse át a casilla adatait: Referencia catastral.'
               label: Ingatlan-nyilvántartási hivatkozás
             representante-legal-nif:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A törvényes képviselő adószáma
             saldo-pendiente:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: A december 31-én fennálló egyenleg
             situacion-inmueble:
-              help: 'Tekintse át a casilla adatait: Situacion - inmueble.'
               label: Az ingatlan elhelyezkedése
             subclave-operacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az ügylet alkódja
             tipo-operacion:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: Az ügylet típusa
             valor-tasacion-inmueble:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóügyi információ.'
               label: A biztosítékul adott ingatlan értékbecslés szerinti értéke
             x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 181 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 181 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
           field:
             label: 181-es modelo (EHA/3514/2009 rendelet), 2009. adóévtől

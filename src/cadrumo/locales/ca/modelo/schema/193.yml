@@ -4,189 +4,107 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 145-159
-              del Modelo 193.
             label: Base de retencions i ingressos a compte
           declaracion-anterior-numero:
-            help: Informació fiscal de la casella 123-135 del Modelo 193.
             label: Número identificatiu de la declaració anterior
           declaracion-complementaria:
-            help: Informació fiscal sobre informació fiscal de la casella 121 del
-              Modelo 193.
             label: DECLARACIÓ COMPLEMENTÀRIA O SUBSTITUTIVA
           declaracion-numero-identificativo:
-            help: Informació fiscal de la casella 108-120 del Modelo 193.
             label: NÚMERO IDENTIFICATIU DE LA DECLARACIÓ
           declaracion-sustitutiva:
-            help: Informació fiscal de la casella 122 del Modelo 193.
             label: Declaració substitutiva
           declarante-contacto-nombre:
-            help: Informació fiscal de la casella 68-107 del Modelo 193.
             label: COGNOMS I NOM
           declarante-contacto-telefono:
-            help: Informació fiscal de la casella 59-67 del Modelo 193.
             label: TELÈFON
           declarante-naturaleza:
-            help: Informació fiscal de la casella 235 del Modelo 193.
             label: NATURALESA DEL DECLARANT
           devengo-year:
-            help: Informació fiscal de la casella 118-121 del Modelo 193.
             label: EXERCICI DE MERITACIÓ
           gasto-contributor-nif:
-            help: 'Consulteu la informació d''aquesta casella: NIF del contribuent.'
             label: NIF del contribuent
           gasto-contributor-nombre:
-            help: Informació fiscal sobre informació fiscal de la casella 36-75 del
-              Modelo 193.
             label: Cognoms i nom del contribuent o denominació
           gasto-importe-anual:
-            help: Informació fiscal sobre informació fiscal de la casella 195-207
-              del Modelo 193.
             label: Import de despeses
           gastos-total-declarante:
-            help: Informació fiscal de la casella 220-234 del Modelo 193.
             label: Despeses deduïbles (art. 26.1.a Llei 35/2006)
           payee-base-retenciones-193:
-            help: Informació fiscal sobre informació fiscal de la casella 152-164
-              del Modelo 193.
             label: Base de retencions i ingressos a compte
           payee-ceuta-melilla-clave:
-            help: Informació fiscal sobre informació fiscal de la casella 314 del
-              Modelo 193.
             label: CEUTA O MELILLA / ILLA DE LA PALMA
           payee-clave-codigo:
-            help: Informació fiscal de la casella 79 del Modelo 193.
             label: CLAU CODI
           payee-clave-mercado:
             label: CLAU DE MERCAT
           payee-clave-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 92 del Modelo
-              193.
             label: CLAU DE PERCEPCIÓ
           payee-codigo-cuenta:
-            help: Informació fiscal de la casella 97-116 del Modelo 193.
             label: CODI DE COMPTE DE VALORS / NÚMERO D'OPERACIÓ DE PRÉSTEC
           payee-codigo-emisor:
-            help: Informació fiscal de la casella 80-91 del Modelo 193.
             label: CODI EMISSOR
           payee-compensaciones:
-            help: Informació fiscal sobre informació fiscal de la casella 225-236
-              del Modelo 193.
             label: Compensacions
           payee-fecha-devengo:
             label: DATA DE MERITACIÓ
           payee-fecha-inicio-prestamo:
-            help: Informació fiscal sobre informació fiscal de la casella 209-216
-              del Modelo 193.
             label: DATA D'INICI DEL PRÉSTEC
           payee-fecha-vencimiento-prestamo:
-            help: Informació fiscal sobre informació fiscal de la casella 217-224
-              del Modelo 193.
             label: DATA DE VENCIMENT DEL PRÉSTEC
           payee-garantias:
-            help: Informació fiscal sobre informació fiscal de la casella 237-248
-              del Modelo 193.
             label: Garanties
           payee-mediador-flag:
-            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
-              193.
             label: Pagament a un mediador
           payee-name:
-            help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
-              Modelo 193.
             label: Cognoms i nom, raó social o denominació del perceptor
           payee-naturaleza-declarante:
-            help: Informació fiscal de la casella 208 del Modelo 193.
             label: NATURALESA DEL DECLARANT
           payee-naturaleza-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 93-94 del
-              Modelo 193.
             label: NATURALESA
-          payee-nif:
-            help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
-              Modelo 193.
           payee-numero-orden-193:
             label: NÚMERO D'ORDRE
           payee-pago:
-            help: Informació fiscal sobre informació fiscal de la casella 95 del Modelo
-              193.
             label: PAGAMENT
           payee-penalizaciones:
-            help: Informació fiscal sobre informació fiscal de la casella 182-192
-              del Modelo 193.
             label: PENALITZACIONS
           payee-pendiente-flag:
-            help: Informació fiscal de la casella 117 del Modelo 193.
             label: PENDENT
           payee-percepciones-193:
-            help: Informació fiscal sobre informació fiscal de la casella 123-135
-              del Modelo 193.
             label: Import de les percepcions/remuneració al prestador
           payee-porcentaje-retencion:
-            help: Informació fiscal sobre informació fiscal de la casella 165-168
-              del Modelo 193.
             label: '% de retenció'
           payee-province:
-            help: Informació fiscal sobre província del perceptor de la casella 77-78
-              del Modelo 193.
             label: CODI DE PROVÍNCIA
           payee-reducciones-193:
-            help: Informació fiscal sobre informació fiscal de la casella 139-151
-              del Modelo 193.
             label: Import de reduccions
           payee-retenciones-193:
-            help: Informació fiscal sobre informació fiscal de la casella 169-181
-              del Modelo 193.
             label: Retencions i ingressos a compte
           payee-retenciones-forales-araba:
-            help: Informació fiscal sobre informació fiscal de la casella 275-287
-              del Modelo 193.
             label: Retencions i ingressos a compte ingressats. Diputació Foral d'Araba/Àlaba
           payee-retenciones-forales-bizkaia:
-            help: Informació fiscal sobre informació fiscal de la casella 301-313
-              del Modelo 193.
             label: Retencions i ingressos a compte ingressats. Diputació Foral de
               Biscaia
           payee-retenciones-forales-estatal:
-            help: Informació fiscal sobre informació fiscal de la casella 249-261
-              del Modelo 193.
             label: Retencions i ingressos a compte ingressats. Hisenda de l'Estat
           payee-retenciones-forales-gipuzkoa:
-            help: Informació fiscal sobre informació fiscal de la casella 288-300
-              del Modelo 193.
             label: Retencions i ingressos a compte ingressats. Diputació Foral de
               Guipúscoa
           payee-retenciones-forales-navarra:
-            help: Informació fiscal sobre informació fiscal de la casella 262-274
-              del Modelo 193.
             label: Retencions i ingressos a compte ingressats. Comunitat Foral de
               Navarra
           payee-tipo-codigo:
-            help: Informació fiscal de la casella 96 del Modelo 193.
             label: TIPUS DE CODI
           payee-tipo-percepcion:
-            help: Informació fiscal sobre informació fiscal de la casella 122 del
-              Modelo 193.
             label: Tipus de percepció
           perc-nif-representante:
-            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
-              Modelo 193.
             label: NIF del representant legal
           representante-legal-nif:
-            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
-              Modelo 193.
             label: NIF del representant legal
           retenciones-ingresadas-total:
-            help: Informació fiscal sobre informació fiscal de la casella 175-189
-              del Modelo 193.
             label: RETENCIONS I INGRESSOS A COMPTE INGRESSATS
           retenciones-ingresos-a-cuenta:
-            help: Informació fiscal sobre informació fiscal de la casella 160-174
-              del Modelo 193.
             label: Retencions i ingressos a compte
           total-perceptores-count:
-            help: Informació fiscal sobre informació fiscal de la casella 136-144
-              del Modelo 193.
             label: NOMBRE TOTAL DE PERCEPTORS
       construct:
         modelo-193-annual-summary:

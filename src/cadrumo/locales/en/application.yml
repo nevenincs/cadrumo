@@ -655,6 +655,8 @@ application:
           filing record.
         filing_record_missing: No current filing record exists for that modelo and
           period. File the period first.
+        filing_record_unconfirmed: The captured receipt did not confirm filing record
+          %{filing_record_id} (outcome %{outcome}; %{notices}).
         metadata_snapshot_not_active: Only an active live-capture snapshot can register
           justificante metadata.
         modelo_unknown: The justificante capture modelo is not a known AEAT modelo.
@@ -912,6 +914,9 @@ application:
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
+      external_import_unverifiable: The imported filing for work unit %{work_unit_id}
+        could not be reconciled with the period's filing history (%{notices}); nothing
+        was recorded.
       filed_observation_split_storage_context: The IVA compensation history store
         is a different database than the calculation observation store
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
@@ -958,6 +963,12 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      local_observation_actor_blank: A manual observation override must name the operator
+        who records it.
+      local_observation_override_missing: Modelo %{modelo} %{filing_year} %{period}
+        has no operator override to clear.
+      local_observation_reason_blank: A manual observation override must state the
+        reason for it.
       m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
         profile than the bucket it would be recorded in
       m210_ledger_manual_agrupacion_rows: Modelo 210 ledger source mode derives annual

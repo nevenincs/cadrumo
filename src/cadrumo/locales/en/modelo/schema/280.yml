@@ -4,85 +4,58 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: Tax information for casilla of Modelo 280.
             label: Reporting year
           irpf-declarante-nif:
-            help: Tax information for casilla of Modelo 280.
             label: Declarant's tax identification number (NIF)
           m280-aportaciones-ejercicio:
-            help: Tax information for casilla of Modelo 280.
             label: Contributions made during the year
           m280-base-retencion-practicada:
-            help: 'Review the casilla information: Base of the retencion practicada.'
             label: Base of the withholding applied
           m280-base-retenciones:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Withholding base
           m280-clave-alta:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Registration key
           m280-declaracion-complementaria-sustitutiva:
-            help: Tax information for casilla of Modelo 280.
             label: Supplementary or replacement return
           m280-declarado-nif:
-            help: 'Review the casilla information: NIF of the declarado.'
             label: Reported person's tax identification number (NIF)
           m280-declarado-nombre:
-            help: 'Review the casilla information: Surname and name of the declarado.'
             label: Surname and forename of the reported person
           m280-declarante-razon-social:
-            help: Tax information for casilla of Modelo 280.
             label: Business name of the filer
           m280-extincion-plan:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Termination of the Long-Term Savings Plan
           m280-fecha-apertura:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Opening date
           m280-fecha-extincion:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Termination date
           m280-identificador-producto:
-            help: 'Review the casilla information: Identificador of the producto contratado.'
             label: Identifier of the contracted product
           m280-importe-total-aportaciones:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Total amount of contributions
           m280-numero-identificativo-anterior:
-            help: Tax information for casilla of Modelo 280.
             label: Identifying number of the previous return
           m280-numero-identificativo-declaracion:
-            help: Tax information for casilla of Modelo 280.
             label: Declaration identifying number
           m280-numero-total-declarados:
-            help: Tax information for casilla of Modelo 280.
             label: Total number of reported persons
           m280-persona-relacion:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Contact person
           m280-rendimientos-negativos-acumulados:
-            help: 'Review the casilla information: Income negativos acumulados.'
             label: Accumulated negative returns
           m280-rendimientos-negativos-ejercicio:
-            help: Tax information for casilla of Modelo 280.
             label: Negative returns obtained during the year
           m280-rendimientos-negativos-imputables:
-            help: 'Review the casilla information: Income negativos imputables.'
             label: Attributable negative returns
           m280-rendimientos-positivos-acumulados:
-            help: 'Review the casilla information: Income positivos acumulados.'
             label: Accumulated positive returns
           m280-rendimientos-positivos-ejercicio:
-            help: Tax information for casilla of Modelo 280.
             label: Positive returns obtained during the year
           m280-representante-legal-nif:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Tax ID of the legal representative
           m280-tipo-identificador:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Identifier type
           m280-tipo-plan-ahorro:
-            help: Tax information about tax information in casilla  of Modelo 280.
             label: Type of long-term savings plan
       field:
         official_name: Modelo 280. Annual informative return of Long-Term Savings

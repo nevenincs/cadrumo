@@ -41,7 +41,6 @@ modelo:
           embarcacion-tipo:
             label: Characteristics and technical data (7) - Vessels - Type-Model
           filing-year:
-            help: Tax information for casilla of Modelo 309.
             label: Filing year to which the return relates
           hecho-imponible:
             label: 'Taxable event (6):'
@@ -65,14 +64,11 @@ modelo:
             label: 'Taxable event: supplies of goods and services in administrative
               and judicial proceedings'
           iva-cuota-autorepercutida-intracomunitaria:
-            help: Tax information about tax information in casilla  of Modelo 309.
             label: Self-charged VAT on intra-Community acquisitions (new means of
               transport, etc.)
           iva-cuota-no-periodica-total:
-            help: Tax information for casilla of Modelo 309.
             label: Total non-periodic VAT (self-charged + surcharge input tax)
           iva-cuota-soportada-recargo-equivalencia:
-            help: Tax information about tax information in casilla  of Modelo 309.
             label: Input VAT borne by retailers under the equivalence surcharge (traveller
               refund)
           justificante-anterior:
@@ -81,7 +77,6 @@ modelo:
             help: Box 15-18 of Modelo 309, tax years 2004-2015.
             label: Identification label letters
           motivo-declaracion-no-periodica:
-            help: Tax information about tax information in casilla  of Modelo 309.
             label: Trigger type (new means of transport / agricultural regime / equivalence
               surcharge / enforced execution)
           mtn-embarcacion-identificacion:

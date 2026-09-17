@@ -4,385 +4,224 @@ modelo:
       casilla:
         continuidad:
           dr303-01:
-            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
-              303.
             label: IVA meritat, règim general tipus superreduït 4% - base imposable
           dr303-02:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus superreduït
-              4pct - Tipus percentatge.'
             label: IVA meritat, règim general tipus superreduït 4% - percentatge del
               tipus
           dr303-03:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus superreduït
-              4pct - Quota.'
             label: IVA meritat, règim general tipus superreduït 4% - quota
           dr303-04:
-            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
-              303.
             label: IVA meritat, règim general tipus reduït 10% - base imposable
           dr303-05:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus reduït
-              10pct - Tipus percentatge.'
             label: IVA meritat, règim general tipus reduït 10% - percentatge del tipus
           dr303-06:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus reduït
-              10pct - Quota.'
             label: IVA meritat, règim general tipus reduït 10% - quota
           dr303-07:
-            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
-              303.
             label: IVA meritat, règim general tipus general 21% - base imposable
           dr303-08:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus general
-              21pct - Tipus percentatge.'
             label: IVA meritat, règim general tipus general 21% - percentatge del
               tipus
           dr303-09:
-            help: 'Consulteu la informació de la casella: IVA meritat RG tipus general
-              21pct - Quota.'
             label: IVA meritat, règim general tipus general 21% - quota
           dr303-10:
-            help: Informació fiscal sobre informació fiscal de la casella 10 del Modelo
-              303.
             label: IVA meritat per adquisicions intracomunitàries de béns i serveis
               - base
           dr303-108:
-            help: Informació fiscal sobre informació fiscal de la casella 108 del
-              Modelo 303.
             label: Rectificativa - altres ajustos en supòsits determinats per discrepància
               de criteri administratiu
           dr303-109:
-            help: 'Consulteu la informació de la casella: Resultat - Devoluciones
-              acordadas AEAT anteriors autoliquidacions del exercici i període.'
             label: Resultat - devolucions acordades per l'AEAT d'autoliquidacions
               anteriors de l'exercici i període
           dr303-11:
-            help: 'Consulteu la informació de la casella: IVA meritat adquisicions
-              intracomunitàries béns i serveis - Quota.'
             label: IVA meritat per adquisicions intracomunitàries de béns i serveis
               - quota
           dr303-111:
-            help: 'Consulteu la informació de la casella: Rectificativa - Import de
-              la rectificació.'
             label: Rectificativa - import de la rectificació
           dr303-112:
             label: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
               atribuït a l'Estat
           dr303-12:
-            help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
-              303.
             label: IVA meritat per altres operacions amb inversió del subjecte passiu
               excloses les intracomunitàries - base
           dr303-120:
-            help: Informació fiscal sobre informació fiscal de la casella 120 del
-              Modelo 303.
             label: Informació addicional - operacions no subjectes per regles de localització,
               exclosa la casella 123
           dr303-122:
-            help: Informació fiscal sobre informació fiscal de la casella 122 del
-              Modelo 303.
             label: Informació addicional - operacions subjectes a inversió del subjecte
               passiu
           dr303-123:
-            help: Informació fiscal sobre informació fiscal de la casella 123 del
-              Modelo 303.
             label: Informació addicional - operacions no subjectes per localització
               en règims especials de finestreta única
           dr303-124:
-            help: Informació fiscal sobre informació fiscal de la casella 124 del
-              Modelo 303.
             label: Informació addicional - operacions subjectes en règims especials
               de finestreta única
           dr303-13:
-            help: Informació fiscal sobre informació fiscal de la casella 13 del Modelo
-              303.
             label: IVA meritat per altres operacions amb inversió del subjecte passiu
               excloses les intracomunitàries - quota
           dr303-14:
-            help: Informació fiscal sobre informació fiscal de la casella 14 del Modelo
-              303.
             label: Modificació de bases i quotes d'IVA meritat - base imposable
           dr303-15:
-            help: 'Consulteu la informació de la casella: Modificacion bases i quotes
-              IVA meritat - Quota.'
             label: Modificació de bases i quotes d'IVA meritat - quota
           dr303-150:
-            help: Informació fiscal sobre informació fiscal de la casella 150 del
-              Modelo 303.
             label: IVA meritat, règim general nou tipus tram 1 - base imposable
           dr303-151:
-            help: 'Consulteu la informació de la casella: IVA meritat règim general
-              nuevo tipus tier 1 - Tipus percentatge.'
             label: IVA meritat, règim general nou tipus tram 1 - percentatge del tipus
           dr303-152:
-            help: 'Consulteu la informació de la casella: IVA meritat règim general
-              nuevo tipus tier 1 - Quota.'
             label: IVA meritat, règim general nou tipus tram 1 - quota
           dr303-153:
-            help: Informació fiscal sobre informació fiscal de la casella 153 del
-              Modelo 303.
             label: IVA meritat, règim general nou tipus tram 2 - base imposable
           dr303-154:
-            help: 'Consulteu la informació de la casella: IVA meritat règim general
-              nuevo tipus tier 2 - Tipus percentatge.'
             label: IVA meritat, règim general nou tipus tram 2 - percentatge del tipus
           dr303-155:
-            help: 'Consulteu la informació de la casella: IVA meritat règim general
-              nuevo tipus tier 2 - Quota.'
             label: IVA meritat, règim general nou tipus tram 2 - quota
           dr303-156:
-            help: Informació fiscal de la casella 156 del Modelo 303.
             label: Recàrrec d'equivalència al 0,5% - base imposable
           dr303-157:
-            help: Informació fiscal de la casella 157 del Modelo 303.
             label: Recàrrec d'equivalència al 0,5% - percentatge del tipus
           dr303-158:
-            help: Informació fiscal de la casella 158 del Modelo 303.
             label: Recàrrec d'equivalència al 0,5% - quota
           dr303-16:
-            help: Informació fiscal de la casella 16 del Modelo 303.
             label: Recàrrec d'equivalència al 1,0% - base imposable
           dr303-165:
-            help: Informació fiscal sobre informació fiscal de la casella 165 del
-              Modelo 303.
             label: IVA meritat, règim general tipus 2% des de 2024 - base imposable
           dr303-166:
-            help: Informació fiscal sobre informació fiscal de la casella 166 del
-              Modelo 303.
             label: IVA meritat, règim general tipus 2% des de 2024 - percentatge del
               tipus
           dr303-167:
-            help: Informació fiscal sobre informació fiscal de la casella 167 del
-              Modelo 303.
             label: IVA meritat, règim general tipus 2% des de 2024 - quota
           dr303-168:
-            help: Informació fiscal de la casella 168 del Modelo 303.
             label: Nou tipus de recàrrec d'equivalència des de 2024 - base imposable
           dr303-169:
-            help: Informació fiscal de la casella 169 del Modelo 303.
             label: Nou tipus de recàrrec d'equivalència des de 2024 - percentatge
               del tipus
           dr303-17:
-            help: Informació fiscal de la casella 17 del Modelo 303.
             label: Recàrrec d'equivalència al 1,0% - percentatge del tipus
           dr303-170:
-            help: Informació fiscal de la casella 170 del Modelo 303.
             label: Nou tipus de recàrrec d'equivalència des de 2024 - quota
           dr303-18:
-            help: Informació fiscal de la casella 18 del Modelo 303.
             label: Recàrrec d'equivalència al 1,0% - quota
           dr303-19:
-            help: Informació fiscal de la casella 19 del Modelo 303.
             label: Recàrrec d'equivalència al 1,4% - base imposable
           dr303-20:
-            help: Informació fiscal de la casella 20 del Modelo 303.
             label: Recàrrec d'equivalència al 1,4% - percentatge del tipus
           dr303-21:
-            help: Informació fiscal de la casella 21 del Modelo 303.
             label: Recàrrec d'equivalència al 1,4% - quota
           dr303-22:
-            help: Informació fiscal de la casella 22 del Modelo 303.
             label: Recàrrec d'equivalència al 5,2% - base imposable
           dr303-23:
-            help: Informació fiscal de la casella 23 del Modelo 303.
             label: Recàrrec d'equivalència al 5,2% - percentatge del tipus
           dr303-24:
-            help: Informació fiscal de la casella 24 del Modelo 303.
             label: Recàrrec d'equivalència al 5,2% - quota
           dr303-25:
-            help: Informació fiscal de la casella 25 del Modelo 303.
             label: Modificació de bases i quotes del recàrrec d'equivalència - base
               imposable
           dr303-26:
-            help: Informació fiscal de la casella 26 del Modelo 303.
             label: Modificació de bases i quotes del recàrrec d'equivalència - quota
           dr303-27:
-            help: 'Consulteu la informació de la casella: Total quota meritada.'
             label: Total quota meritada
           dr303-28:
-            help: Informació fiscal sobre informació fiscal de la casella 28 del Modelo
-              303.
             label: IVA deduïble en operacions interiors corrents - base
           dr303-29:
-            help: 'Consulteu la informació de la casella: IVA deduïble ops interiores
-              corrientes - Quota.'
             label: IVA deduïble en operacions interiors corrents - quota
           dr303-30:
-            help: Informació fiscal sobre informació fiscal de la casella 30 del Modelo
-              303.
             label: IVA deduïble en operacions interiors de béns d'inversió - base
           dr303-31:
-            help: 'Consulteu la informació de la casella: IVA deduïble ops interiores
-              béns inversió - Quota.'
             label: IVA deduïble en operacions interiors de béns d'inversió - quota
           dr303-32:
-            help: Informació fiscal sobre informació fiscal de la casella 32 del Modelo
-              303.
             label: IVA deduïble en importacions de béns corrents - base
           dr303-33:
-            help: 'Consulteu la informació de la casella: IVA deduïble importacions
-              béns corrientes - Quota.'
             label: IVA deduïble en importacions de béns corrents - quota
           dr303-34:
-            help: Informació fiscal sobre informació fiscal de la casella 34 del Modelo
-              303.
             label: IVA deduïble en importacions de béns d'inversió - base
           dr303-35:
-            help: 'Consulteu la informació de la casella: IVA deduïble importacions
-              béns inversió - Quota.'
             label: IVA deduïble en importacions de béns d'inversió - quota
           dr303-36:
-            help: Informació fiscal sobre informació fiscal de la casella 36 del Modelo
-              303.
             label: IVA deduïble en adquisicions intracomunitàries corrents - base
           dr303-37:
-            help: 'Consulteu la informació de la casella: IVA deduïble adquisicions
-              intracomunitàries corrientes - Quota.'
             label: IVA deduïble en adquisicions intracomunitàries corrents - quota
           dr303-38:
-            help: Informació fiscal sobre informació fiscal de la casella 38 del Modelo
-              303.
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - base
           dr303-39:
-            help: 'Consulteu la informació de la casella: IVA deduïble adquisicions
-              intracomunitàries béns inversió - Quota.'
             label: IVA deduïble en adquisicions intracomunitàries de béns d'inversió
               - quota
           dr303-40:
-            help: Informació fiscal sobre informació fiscal de la casella 40 del Modelo
-              303.
             label: Rectificació de deduccions - base
           dr303-41:
-            help: 'Consulteu la informació de la casella: Rectificació deduccions
-              - Quota.'
             label: Rectificació de deduccions - quota
           dr303-42:
-            help: 'Consulteu la informació de la casella: Compensaciones règim especial
-              agricultura ganaderia i pesca - Quota.'
             label: Compensacions del règim especial d'agricultura, ramaderia i pesca
               - quota
           dr303-43:
-            help: 'Consulteu la informació de la casella: Regularització béns de inversió
-              - Quota.'
             label: Regularització de béns d'inversió - quota
           dr303-44:
-            help: 'Consulteu la informació de la casella: Regularització prorrata
-              per percentatge definitivo - Quota.'
             label: Regularització de prorrata per percentatge definitiu - quota
           dr303-45:
-            help: 'Consulteu la informació de la casella: Total a deduir - Quota.'
             label: Total a deduir - quota
           dr303-47:
-            help: Informació fiscal de la casella 47 del Modelo 303.
             label: Règim simplificat, 1T-2T-3T - suma d'ingressos a compte del conjunt
               d'activitats
           dr303-48:
-            help: Informació fiscal de la casella 48 del Modelo 303.
             label: Règim simplificat, 4T - suma de quotes derivades del conjunt d'activitats
           dr303-49:
-            help: Informació fiscal sobre informació fiscal de la casella 49 del Modelo
-              303.
             label: Règim simplificat, 4T - suma d'ingressos a compte realitzats en
               l'exercici
           dr303-50:
-            help: 'Consulteu la informació de la casella: RS - 4T - Resultat ([48]-[49]).'
             label: Règim simplificat, 4T - resultat ([48] - [49])
           dr303-51:
-            help: 'Consulteu la informació de la casella: RS - Quotes devengadas adquisicions
-              intracomunitàries béns.'
             label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
               de béns
           dr303-52:
-            help: 'Consulteu la informació de la casella: RS - Quotes devengadas lliuraments
-              activos fixos.'
             label: Règim simplificat - quotes meritades per lliuraments d'actius fixos
           dr303-53:
-            help: Informació fiscal sobre informació fiscal de la casella 53 del Modelo
-              303.
             label: Règim simplificat - quotes meritades d'IVA meritat per inversió
               del subjecte passiu
           dr303-54:
-            help: 'Consulteu la informació de la casella: RS - Total quota resultante.'
             label: Règim simplificat - total quota resultant
           dr303-55:
-            help: 'Consulteu la informació de la casella: RS - IVA deduïble adquisició
-              o importacion activos fixos.'
             label: Règim simplificat - IVA deduïble per adquisició o importació d'actius
               fixos
           dr303-56:
-            help: 'Consulteu la informació de la casella: RS - IVA deduïble regularització
-              béns inversió.'
             label: Règim simplificat - IVA deduïble per regularització de béns d'inversió
           dr303-57:
-            help: 'Consulteu la informació de la casella: RS - Total IVA deduïble
-              règim simplificado ([55]+[56]).'
             label: Règim simplificat - total IVA deduïble ([55] + [56])
           dr303-58:
-            help: 'Consulteu la informació de la casella: RS - Resultat règim simplificado
-              ([54]-[57]).'
             label: Resultat del règim simplificat ([54] - [57])
           dr303-59:
-            help: 'Consulteu la informació de la casella: Informacion adicional -
-              Lliuraments intracomunitarias béns i serveis.'
             label: Informació addicional - lliuraments intracomunitaris de béns i
               serveis
           dr303-60:
-            help: 'Consulteu la informació de la casella: Informacion adicional -
-              Exportacions i operacions asimiladas.'
             label: Informació addicional - exportacions i operacions assimilades
           dr303-62:
-            help: Informació fiscal sobre informació fiscal de la casella 62 del Modelo
-              303.
             label: Informació addicional - lliuraments de criteri de caixa meritats
               art. 75 LIVA - base imposable
           dr303-63:
-            help: 'Consulteu la informació de la casella: Informacion adicional -
-              Lliuraments criterio caja meritat art 75 LIVA - Quota.'
             label: Informació addicional - lliuraments de criteri de caixa meritats
               art. 75 LIVA - quota
           dr303-65:
-            help: Informació fiscal de la casella 65 del Modelo 303.
             label: Resultat - percentatge atribuïble a l'Administració de l'Estat
           dr303-68:
-            help: Informació fiscal de la casella 68 del Modelo 303.
             label: Resultat - resultat de regularització anual de tributació conjunta
           dr303-70:
-            help: Informació fiscal sobre informació fiscal de la casella 70 del Modelo
-              303.
             label: Resultat - resultats a ingressar d'autoliquidacions anteriors de
               l'exercici i període
           dr303-74:
-            help: Informació fiscal sobre informació fiscal de la casella 74 del Modelo
-              303.
             label: Informació addicional - adquisicions de criteri de caixa - base
               imposable
           dr303-75:
-            help: 'Consulteu la informació de la casella: Informacion adicional -
-              Adquisicions criterio caja - Quota.'
             label: Informació addicional - adquisicions de criteri de caixa - quota
           dr303-76:
-            help: 'Consulteu la informació de la casella: Resultat - Regularització
-              quotes art 80 cinco 5a LIVA.'
             label: Resultat - regularització de quotes art. 80 cinc 5a LIVA
           dr303-77:
-            help: Informació fiscal de la casella 77 del Modelo 303.
             label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
           filing-period:
-            help: Informació fiscal de la casella del Modelo 303.
             label: Període trimestral (1T / 2T / 3T / 4T)
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              303.
             label: Exercici fiscal de l'autoliquidació
           iva-autoconsumo-promotor-base:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              303.
             label: Base imposable de l'autoconsum del promotor immobiliari (cost de
               construcció, Art. 9.1.c + Art. 79.4 LISIVA)
           iva-autoconsumo-promotor-cuota:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              303.
             label: Quota d'IVA de l'autoconsum del promotor immobiliari (21% sobre
               la base imposable, Art. 9.1.c + Art. 90 LISIVA)
           iva-base-autorepercutida-intracomunitaria-devengado:
@@ -390,99 +229,57 @@ modelo:
               intracomunitàries.
             label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
           iva-compensacion-aplicada-periodo:
-            help: 'Consulteu la informació de la casella: Quotes a compensar de períodes
-              anteriors aplicadas en este període.'
             label: Compensacions de períodes anteriors aplicades en aquest període
           iva-compensacion-disponible-fin-periodo:
-            help: 'Consulteu la informació de la casella: Saldo de compensació disponible
-              per a períodes posteriors.'
             label: Saldo de compensació disponible al final del període
           iva-compensacion-generada-periodo:
-            help: 'Consulteu la informació de la casella: Saldo a compensar generat
-              en este període.'
             label: Saldo a compensar generat en aquest període
           iva-compensacion-pendiente-anteriores:
-            help: 'Consulteu la informació de la casella: Quotes a compensar pendientes
-              de períodes anteriors.'
             label: Quotes a compensar pendents de períodes anteriors
           iva-compensacion-pendiente-posteriores:
-            help: 'Consulteu la informació de la casella: Quotes a compensar de períodes
-              previos pendientes per a períodes posteriors.'
             label: Compensacions de períodes anteriors pendents per a períodes posteriors
           iva-cuota-autorepercutida-interior-deducible:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              303.
             label: IVA autorepercutit deduïble en operacions interiors
           iva-cuota-autorepercutida-interior-devengado:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              303.
             label: IVA autorepercutit meritat en operacions interiors
           iva-cuota-autorepercutida-intracomunitaria:
-            help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-              en adquisicions intracomunitàries (LIVA art 84.Uno.2).'
             label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
           iva-cuota-autorepercutida-intracomunitaria-deducible:
-            help: 'Consulteu la informació de la casella: Quota IVA deduïble autorepercutida
-              en adquisicions intracomunitàries (LIVA art 13 + art 15 + art 84.Uno.2
-              + art 92; oficial casillas 36/37).'
             label: IVA autorepercutit deduïble en adquisicions intracomunitàries
           iva-cuota-autorepercutida-intracomunitaria-devengado:
-            help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-              meritada en adquisicions intracomunitàries (LIVA art 13 + art 15 + art
-              84.Uno.2; oficial casillas 10/11).'
             label: IVA autorepercutit meritat en adquisicions intracomunitàries
           iva-cuota-deducible-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA deduïble
-              (suportat en operacions interiors + autorepercutido deduïble).'
             label: Total quota d'IVA deduïble
           iva-cuota-devengada-total:
-            help: 'Consulteu la informació de la casella: Total quota IVA meritada
-              (repercutit a los tres tipos + autorepercutido en adquisicions intracomunitàries).'
             label: Total quota d'IVA meritada
           iva-cuota-repercutida-general:
             help: Quota total d'IVA repercutit calculada al tipus general del 21%.
             label: Quota IVA repercutit al tipus general (21%)
           iva-cuota-repercutida-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus reduït (10%).'
             label: Quota d'IVA repercutit al tipus reduït (10%)
           iva-cuota-repercutida-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que conviu
               amb el tipus reduït ordinari del 10%.
             label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
-            help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-              tipus superreduït (4%).'
             label: Quota d'IVA repercutit al tipus superreduït (4%)
           iva-cuota-repercutida-super-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus superreduït,
               que conviu amb el tipus superreduït ordinari del 4%.
             label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
           iva-cuota-soportada-importaciones:
-            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-              303.
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
           iva-cuota-soportada-interiores:
-            help: 'Consulteu la informació de la casella: Quota IVA suportat en operacions
-              interiors corrientes.'
             label: Quota IVA suportat en operacions interiors corrents
           iva-prorrata-porcentaje:
-            help: 'Consulteu la informació de la casella: Prorrata general - percentatge
-              (volumen amb derecho / volumen total × 100).'
             label: Percentatge de prorrata general
           iva-prorrata-volumen-con-derecho:
-            help: Informació fiscal de la casella del Modelo 303.
             label: Volum anual d'operacions que originen dret a deducció
           iva-prorrata-volumen-total:
-            help: 'Consulteu la informació de la casella: Volumen anual total de operacions.'
             label: Volum anual total d'operacions
           iva-regularizacion-inversiones:
-            help: 'Consulteu la informació de la casella: Regularització per béns
-              de inversió (LIVA arts. 107-110).'
             label: Regularització de béns d'inversió
           iva-resultado-regimen-general:
-            help: 'Consulteu la informació de la casella: Resultat del règim general
-              (quota meritada - quota deduïble).'
             label: Resultat del règim general
           m303-deducciones-sector-1-domestic-current-base:
             help: Casella 700 del model 303, exercici 2022.
@@ -885,328 +682,22 @@ modelo:
             label: Modelo 303, exercici 2025
         2026-y-siguientes:
           casilla:
-            '01':
-              help: 'Casella 01: base imposable de l''IVA meritat en el règim general
-                al tipus superreduït del 4%.'
-            '02':
-              help: 'Casella 02: percentatge del tipus de l''IVA meritat en el règim
-                general al tipus superreduït del 4%.'
-            '03':
-              help: 'Casella 03: quota d''IVA meritat en el règim general al tipus
-                superreduït del 4%.'
-            '04':
-              help: 'Casella 04: base imposable de l''IVA meritat en el règim general
-                al tipus reduït del 10%.'
-            '05':
-              help: 'Casella 05: percentatge del tipus de l''IVA meritat en el règim
-                general al tipus reduït del 10%.'
-            '06':
-              help: 'Casella 06: quota d''IVA meritat en el règim general al tipus
-                reduït del 10%.'
-            '07':
-              help: 'Casella 07: base imposable de l''IVA meritat en el règim general
-                al tipus general del 21%.'
-            08:
-              help: 'Casella 08: percentatge del tipus de l''IVA meritat en el règim
-                general al tipus general del 21%.'
-            09:
-              help: 'Casella 09: quota d''IVA meritat en el règim general al tipus
-                general del 21%.'
-            '10':
-              help: 'Casella 10: base de l''IVA meritat per adquisicions intracomunitàries
-                de béns i serveis.'
-            '108':
-              help: 'Casella 108: altres ajustos en una autoliquidació rectificativa
-                per supòsits determinats per discrepància de criteri administratiu.'
-            '109':
-              help: 'Casella 109: devolucions acordades per l''AEAT en autoliquidacions
-                anteriors del mateix exercici i període.'
-            '11':
-              help: 'Casella 11: quota d''IVA meritat per adquisicions intracomunitàries
-                de béns i serveis.'
-            '111':
-              help: 'Casella 111: import de la rectificació declarat en una autoliquidació
-                rectificativa.'
-            '12':
-              help: 'Casella 12: base de l''IVA meritat per altres operacions amb
-                inversió del subjecte passiu excloses les intracomunitàries.'
-            '120':
-              help: 'Casella 120: informació addicional sobre operacions no subjectes
-                per regles de localització, exclosa la casella 123.'
-            '122':
-              help: 'Casella 122: informació addicional sobre operacions subjectes
-                a inversió del subjecte passiu.'
-            '123':
-              help: 'Casella 123: informació addicional sobre operacions no subjectes
-                per regles de localització en règims especials de finestreta única.'
-            '124':
-              help: 'Casella 124: informació addicional sobre operacions subjectes
-                en règims especials de finestreta única.'
-            '13':
-              help: 'Casella 13: quota d''IVA meritat per altres operacions amb inversió
-                del subjecte passiu excloses les intracomunitàries.'
-            '14':
-              help: 'Casella 14: base imposable de la modificació de bases i quotes
-                d''IVA meritat.'
-            '15':
-              help: 'Casella 15: quota de la modificació de bases i quotes d''IVA
-                meritat.'
-            '150':
-              help: 'Casella 150: base imposable de l''IVA meritat en el règim general
-                nou tipus tram 1.'
-            '151':
-              help: 'Casella 151: percentatge del tipus de l''IVA meritat en el règim
-                general nou tipus tram 1.'
-            '152':
-              help: 'Casella 152: quota d''IVA meritat en el règim general nou tipus
-                tram 1.'
-            '153':
-              help: 'Casella 153: base imposable de l''IVA meritat en el règim general
-                nou tipus tram 2.'
-            '154':
-              help: 'Casella 154: percentatge del tipus de l''IVA meritat en el règim
-                general nou tipus tram 2.'
-            '155':
-              help: 'Casella 155: quota d''IVA meritat en el règim general nou tipus
-                tram 2.'
-            '156':
-              help: 'Casella 156: base imposable del recàrrec d''equivalència al 0,5%.'
-            '157':
-              help: 'Casella 157: percentatge del tipus del recàrrec d''equivalència
-                al 0,5%.'
-            '158':
-              help: 'Casella 158: quota del recàrrec d''equivalència al 0,5%.'
-            '16':
-              help: 'Casella 16: base imposable del recàrrec d''equivalència al 1,0%.'
-            '165':
-              help: 'Casella 165: base imposable de l''IVA meritat en el règim general
-                al tipus del 2% des de 2024.'
-            '166':
-              help: 'Casella 166: percentatge del tipus de l''IVA meritat en el règim
-                general al tipus del 2% des de 2024.'
-            '167':
-              help: 'Casella 167: quota d''IVA meritat en el règim general al tipus
-                del 2% des de 2024.'
-            '168':
-              help: 'Casella 168: base imposable del nou tipus de recàrrec d''equivalència
-                des de 2024.'
-            '169':
-              help: 'Casella 169: percentatge del tipus del nou recàrrec d''equivalència
-                des de 2024.'
-            '17':
-              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència
-                al 1,0%.'
-            '170':
-              help: 'Casella 170: quota del nou recàrrec d''equivalència des de 2024.'
-            '18':
-              help: 'Casella 18: quota del recàrrec d''equivalència al 1,0%.'
-            '19':
-              help: 'Casella 19: base imposable del recàrrec d''equivalència al 1,4%.'
-            '20':
-              help: 'Casella 20: percentatge del tipus del recàrrec d''equivalència
-                al 1,4%.'
-            '21':
-              help: 'Casella 21: quota del recàrrec d''equivalència al 1,4%.'
-            '22':
-              help: 'Casella 22: base imposable del recàrrec d''equivalència al 5,2%.'
-            '23':
-              help: 'Casella 23: percentatge del tipus del recàrrec d''equivalència
-                al 5,2%.'
-            '24':
-              help: 'Casella 24: quota del recàrrec d''equivalència al 5,2%.'
-            '25':
-              help: 'Casella 25: base imposable de la modificació de bases i quotes
-                del recàrrec d''equivalència.'
-            '26':
-              help: 'Casella 26: quota de la modificació de bases i quotes del recàrrec
-                d''equivalència.'
-            '27':
-              help: 'Casella 27: total de la quota meritada.'
-            '28':
-              help: 'Casella 28: base de l''IVA deduïble en operacions interiors corrents.'
-            '29':
-              help: 'Casella 29: quota d''IVA deduïble en operacions interiors corrents.'
-            '30':
-              help: 'Casella 30: base de l''IVA deduïble en operacions interiors de
-                béns d''inversió.'
-            '31':
-              help: 'Casella 31: quota d''IVA deduïble en operacions interiors de
-                béns d''inversió.'
-            '32':
-              help: 'Casella 32: base de l''IVA deduïble en importacions de béns corrents.'
-            '33':
-              help: 'Casella 33: quota d''IVA deduïble en importacions de béns corrents.'
-            '34':
-              help: 'Casella 34: base de l''IVA deduïble en importacions de béns d''inversió.'
-            '35':
-              help: 'Casella 35: quota d''IVA deduïble en importacions de béns d''inversió.'
-            '36':
-              help: 'Casella 36: base de l''IVA deduïble en adquisicions intracomunitàries
-                corrents.'
-            '37':
-              help: 'Casella 37: quota d''IVA deduïble en adquisicions intracomunitàries
-                corrents.'
-            '38':
-              help: 'Casella 38: base de l''IVA deduïble en adquisicions intracomunitàries
-                de béns d''inversió.'
-            '39':
-              help: 'Casella 39: quota d''IVA deduïble en adquisicions intracomunitàries
-                de béns d''inversió.'
-            '40':
-              help: 'Casella 40: base de la rectificació de deduccions.'
-            '41':
-              help: 'Casella 41: quota de la rectificació de deduccions.'
-            '42':
-              help: 'Casella 42: quota de compensacions del règim especial d''agricultura,
-                ramaderia i pesca.'
-            '43':
-              help: 'Casella 43: quota de regularització de béns d''inversió.'
-            '44':
-              help: 'Casella 44: quota de regularització de prorrata per percentatge
-                definitiu.'
-            '45':
-              help: 'Casella 45: total de la quota d''IVA a deduir.'
-            '47':
-              help: 'Casella 47: suma d''ingressos a compte del conjunt d''activitats
-                en règim simplificat en el 1T, 2T o 3T.'
-            '48':
-              help: 'Casella 48: suma de quotes derivades del conjunt d''activitats
-                en règim simplificat en el 4T.'
-            '49':
-              help: 'Casella 49: suma d''ingressos a compte realitzats durant l''exercici
-                en règim simplificat en el 4T.'
-            '50':
-              help: 'Casella 50: resultat del règim simplificat en el 4T, calculat
-                com la casella 48 menys la casella 49 ([48]-[49]).'
-            '51':
-              help: 'Casella 51: quotes d''IVA meritades per adquisicions intracomunitàries
-                de béns en règim simplificat.'
-            '52':
-              help: 'Casella 52: quotes d''IVA meritades per lliuraments d''actius
-                fixos en règim simplificat.'
-            '53':
-              help: 'Casella 53: quotes d''IVA meritades en règim simplificat per
-                operacions amb inversió del subjecte passiu.'
-            '54':
-              help: 'Casella 54: total de la quota resultant en règim simplificat.'
-            '55':
-              help: 'Casella 55: IVA deduïble per adquisició o importació d''actius
-                fixos en règim simplificat.'
-            '56':
-              help: 'Casella 56: IVA deduïble per regularització de béns d''inversió
-                en règim simplificat.'
-            '57':
-              help: 'Casella 57: total d''IVA deduïble en règim simplificat, calculat
-                com la casella 55 més la casella 56 ([55]+[56]).'
-            '58':
-              help: 'Casella 58: resultat del règim simplificat, calculat com la casella
-                54 menys la casella 57 ([54]-[57]).'
-            '59':
-              help: 'Casella 59: informació addicional sobre lliuraments intracomunitaris
-                de béns i serveis.'
-            '60':
-              help: 'Casella 60: informació addicional sobre exportacions i operacions
-                assimilades.'
-            '62':
-              help: 'Casella 62: base imposable de lliuraments de criteri de caixa
-                meritats segons l''article 75 LIVA.'
-            '63':
-              help: 'Casella 63: quota de lliuraments de criteri de caixa meritats
-                segons l''article 75 LIVA.'
             '64':
               help: 'Informació fiscal sobre informació fiscal de la casella 64 del
                 Modelo 303 Referències: [46], [58], [76].'
               label: Resultat - Suma de resultats ([46]+[58]+[76])
-            '65':
-              help: 'Casella 65: percentatge del resultat atribuïble a l''Administració
-                de l''Estat.'
             '66':
               help: 'Informació fiscal sobre informació fiscal de la casella 66 del
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
-            '68':
-              help: 'Casella 68: resultat de regularització anual de tributació conjunta.'
-            '70':
-              help: 'Casella 70: resultats a ingressar procedents d''autoliquidacions
-                anteriors del mateix exercici i període.'
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
-            '74':
-              help: 'Casella 74: base imposable d''adquisicions en el règim de criteri
-                de caixa.'
-            '75':
-              help: 'Casella 75: quota d''adquisicions en el règim de criteri de caixa.'
-            '76':
-              help: 'Casella 76: ajust del resultat per regularització de quotes segons
-                l''article 80.cinc.5a LIVA.'
-            '77':
-              help: 'Casella 77: IVA a la importació liquidat per la Duana que resta
-                pendent d''ingrés.'
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Exercici fiscal al qual es refereix l'autoliquidació.
-            x-chim6r1ee1in4qbfchng:
-              help: 'Període trimestral de l''autoliquidació: 1T, 2T, 3T o 4T.'
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4cli7aor9c9m6a:
-              help: IVA autorepercutit deduïble en operacions interiors subjectes
-                a inversió del subjecte passiu.
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78pbid5nn4bj4clr6arj7c5i6u:
-              help: IVA autorepercutit meritat en operacions interiors subjectes a
-                inversió del subjecte passiu.
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries subjectes
-                a inversió del subjecte passiu.
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pb4elhmiojcck:
-              help: IVA autorepercutit deduïble en adquisicions intracomunitàries
-                de béns i serveis.
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4ds:
-              help: IVA autorepercutit meritat en adquisicions intracomunitàries de
-                béns i serveis.
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
-              help: Quotes pendents de períodes anteriors aplicades en aquest període.
-            x-d5r62bj3dtmn0pbeedgm6qbfdomm8qbje1nmsqb2dhiiqpj9domn0pbid5nm8ro:
-              help: Saldo d'IVA a compensar disponible per traslladar a períodes posteriors.
-            x-d5r62bj3dtmn0pbeedgm6qbfdommepbeclp62p315lo6asj9dti6u:
-              help: Saldo d'IVA a compensar generat per l'autoliquidació d'aquest
-                període.
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lgmst35e9kmusj5ec:
-              help: Quotes d'IVA a compensar que resten pendents de períodes anteriors.
-            x-d5r62bj3dtmn0pbeedgm6qbfdomn0pbechkmarjkckmn0pbid5nm8rrj5lo6usrkclp6irriclpg:
-              help: Compensacions d'IVA de períodes anteriors que resten pendents
-                per a períodes posteriors.
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: Total de la quota d'IVA deduïble, inclòs l'IVA suportat interior
-                i l'IVA autorepercutit deduïble.
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: Total de la quota d'IVA meritada, inclòs l'IVA repercutit i l'IVA
-                autorepercutit aplicable.
-            x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
-              help: Percentatge de prorrata general calculat a partir del volum amb
-                dret a deducció sobre el volum total.
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
-              help: Volum anual d'operacions que originen dret a deduir l'IVA.
-            x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lq6ut31dg:
-              help: Volum anual total d'operacions emprat per al càlcul de la prorrata
-                general.
-            x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
-              help: Regularització de l'IVA corresponent a béns d'inversió.
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: Total d'IVA repercutit calculat al tipus general del 21%.
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: Total d'IVA repercutit calculat al tipus reduït del 10%.
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
                 Modelo 303 Referències: [66], [77], [68], [78].'
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: Resultat del règim general calculat com IVA meritat menys IVA
-                deduïble.
-            x-d5r62bjjdto6usjkc5i6ubj9dlo6usjkc5hmirreclpg:
-              help: IVA suportat deduïble en importacions de béns corrents.
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: Total d'IVA suportat pagat en compres interiors de béns i serveis
-                corrents.
           field:
             label: Modelo 303, exercici 2026 i següents

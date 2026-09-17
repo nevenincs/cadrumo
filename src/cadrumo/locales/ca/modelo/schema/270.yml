@@ -8,8 +8,6 @@ modelo:
               registres de perceptor, en euros.
             label: Total import base de retenció o ingrés a compte
           filing-year:
-            help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
-              270.
             label: Exercici a què es refereix la declaració
           m270-clave-personalidad:
             help: 'Només s''emplena quan el tipus de perceptor és la clau 5: F si
@@ -127,7 +125,6 @@ modelo:
               de perceptor, en euros.
             label: Total import de la retenció o ingrés a compte
           tipo-declaracion:
-            help: Informació fiscal de la casella del Modelo 270.
             label: Tipus de declaració (originària / substitutiva / complementària)
           total-perceptores-count:
             help: Nombre total de perceptors relacionats en els registres de detall

@@ -1462,8 +1462,6 @@ modelo:
               help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
                 Modificación bases i quotes de operacions intragrupo [11].'
             '112':
-              help: 'Informació fiscal sobre informació fiscal de la casella 112 del
-                Modelo 322 Referències: [112].'
               label: Liquidació (continuació). Pagament a compte de lliuraments de
                 gasolines, gasoils i biocarburants posteriors a la ultimació del règim
                 de dipòsit diferent del duaner [112]
@@ -2053,8 +2051,6 @@ modelo:
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: Informació fiscal de la casella del Modelo 322.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
-              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
-                322.
               label: Dret a deduir el pagament a compte de lliuraments de gasolines,
                 gasolis i biocarburants
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:

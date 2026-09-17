@@ -4,116 +4,70 @@ modelo:
       casilla:
         continuidad:
           base-retenciones-ingresos-a-cuenta:
-            help: 'Review the casilla information: Base withholdings e payments on
-              account total.'
             label: Total base for withholdings and payments on account
           declaracion-complementaria-sustitutiva:
-            help: Tax information for casilla 121-122 of Modelo 180.
             label: Supplementary or replacement declaration
           devengo-year:
-            help: Tax information for casilla 110-113 of Modelo 180.
             label: Accrual tax year
           numero-identificativo-declaracion:
-            help: 'Review the casilla information: Number identificativo of the return.'
             label: Declaration identification number
           numero-identificativo-declaracion-anterior:
-            help: 'Review the casilla information: Number identificativo of the return
-              previous.'
             label: Identification number of the previous declaration
           payee-inmueble-bloque:
-            help: Tax information about tax information in casilla 201-203 of Modelo
-              180.
             label: Block of the leased property
           payee-inmueble-calificador-numero:
-            help: Tax information for casilla 198-200 of Modelo 180.
             label: Qualifier of the leased property's house number
           payee-inmueble-codigo-municipio:
-            help: Tax information for casilla 316-320 of Modelo 180.
             label: Municipality code of the leased property
           payee-inmueble-codigo-postal:
-            help: Tax information for casilla 323-327 of Modelo 180.
             label: Postal code of the leased property
           payee-inmueble-complemento:
-            help: Tax information about tax information in casilla 216-255 of Modelo
-              180.
             label: Address complement of the leased property
           payee-inmueble-escalera:
-            help: 'Review the casilla information: Escalera of the inmueble arrendado.'
             label: Staircase of the leased property
           payee-inmueble-localidad:
-            help: 'Review the casilla information: Localidad of the inmueble arrendado.'
             label: Locality of the leased property
           payee-inmueble-municipio:
-            help: Tax information about tax information in casilla 286-315 of Modelo
-              180.
             label: Municipality of the leased property
           payee-inmueble-nombre-via:
-            help: 'Review the casilla information: Name of the via publica of the
-              inmueble arrendado.'
             label: Name of the public thoroughfare of the leased property
           payee-inmueble-numero-casa:
-            help: Tax information for casilla 193-197 of Modelo 180.
             label: House number of the leased property
           payee-inmueble-planta:
-            help: 'Review the casilla information: Planta of the inmueble arrendado.'
             label: Floor of the leased property
           payee-inmueble-portal:
-            help: 'Review the casilla information: Portal of the inmueble arrendado.'
             label: Building entrance of the leased property
           payee-inmueble-provincia:
-            help: Tax information for casilla 321-322 of Modelo 180.
             label: Province code of the leased property
           payee-inmueble-puerta:
-            help: 'Review the casilla information: Puerta of the inmueble arrendado.'
             label: Door of the leased property
           payee-inmueble-referencia-catastral:
-            help: 'Review the casilla information: Referencia catastral of the inmueble
-              arrendado.'
             label: Cadastral reference of the leased property
           payee-inmueble-situacion:
-            help: 'Review the casilla information: Situacion of the inmueble.'
             label: Status of the property
           payee-inmueble-tipo-numeracion:
-            help: Tax information about tax information in casilla 190-192 of Modelo
-              180.
             label: Numbering type of the leased property
           payee-inmueble-tipo-via:
-            help: Tax information about tax information in casilla 135-139 of Modelo
-              180.
             label: Thoroughfare type of the leased property
           payee-modalidad-renta:
-            help: Tax information about tax information in casilla 78 of Modelo 180.
             label: Type of income
           payee-name:
-            help: Tax information for casilla 36-75 of Modelo 180.
             label: Recipient's surname and first name, business name or designation
           payee-nif:
-            help: 'Review the casilla information: NIF of the recipient.'
             label: Recipient's NIF
           payee-province:
-            help: Tax information for casilla 76-77 of Modelo 180.
             label: Province code of the recipient's address
           payee-representative-nif:
-            help: Tax information about representative NIF in casilla 27-35 of Modelo
-              180.
             label: NIF of the recipient's legal representative
           perc-base:
-            help: 'Review the casilla information: Base withholdings e payments on
-              account of the recipient.'
             label: Recipient's base for withholdings and payments on account
           perc-retenciones:
-            help: 'Review the casilla information: Withholdings e payments on account
-              of the recipient.'
             label: Recipient's withholdings and payments on account
           porcentaje-retencion:
-            help: Tax information for casilla 93-96 of Modelo 180.
             label: Withholding percentage applied
           retenciones-ingresos-a-cuenta:
-            help: 'Review the casilla information: Withholdings e payments on account
-              total.'
             label: Total withholdings and payments on account
           total-perceptores-count:
-            help: Tax information for casilla 136-144 of Modelo 180.
             label: Total number of recipients
       construct:
         modelo-180-annual-summary:

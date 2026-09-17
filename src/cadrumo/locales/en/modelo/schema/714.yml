@@ -4,394 +4,265 @@ modelo:
       casilla:
         continuidad:
           filing-period:
-            help: Tax information for casilla of Modelo 714.
             label: Period (annual, 0A)
           filing-year:
-            help: Tax information for casilla of Modelo 714.
             label: Tax year the return relates to
           patrimonio-anio-declaracion:
-            help: Tax information for casilla of Modelo 714.
             label: Date of the return - Year
           patrimonio-arte-antiguedades:
-            help: Tax information for casilla 17 of Modelo 714.
             label: Assets and rights - L. Works of art and antiques - Total
           patrimonio-base-ahorro-excluida:
-            help: 'Review the casilla information: Assessment - Límite amount full
-              - Parte of the tax base of the ahorro of the IRPF.'
             label: Assessment - Gross tax liability limit - Portion of the personal
               income tax savings taxable base
           patrimonio-base-imponible:
-            help: Tax information about tax information in casilla 25 of Modelo 714.
             label: 'Net wealth summary: taxable base after reductions - Taxable base'
           patrimonio-base-liquidable:
-            help: Tax information about tax information in casilla 27 of Modelo 714.
             label: 'Net wealth summary: taxable base after reductions - Taxable base
               after reductions'
           patrimonio-base-liquidable-gravada-extranjero:
-            help: Tax information for casilla b of Modelo 714.
             label: Tax calculation - Deduction for taxes paid abroad - Part of the
               taxable base taxed abroad
           patrimonio-bienes-afectos-exentos:
-            help: Tax information for casilla 04 of Modelo 714.
             label: Assets and rights - D. Exempt assets and rights used in business
               and professional activities - Total (net of debts)
           patrimonio-bienes-afectos-no-exentos:
-            help: Tax information for casilla 03 of Modelo 714.
             label: Assets and rights - C. Non-exempt assets and rights used in business
               and professional activities - Total
           patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles:
-            help: Tax information for casilla a of Modelo 714.
             label: Assets and rights - C1. Non-exempt assets used in business and
               professional activities (excluding immovable property) - Total
           patrimonio-bonificacion-autonomica-aplicada:
-            help: Tax information for casilla 50 of Modelo 714.
             label: Assessment - Regional deductions and reductions - Regional reduction
               - Amount applied
           patrimonio-bonificacion-ceuta-melilla:
-            help: Tax information for casilla 44 of Modelo 714.
             label: Assessment - Ceuta and Melilla tax reduction - Amount of the reduction
           patrimonio-clase-discapacidad:
-            help: Tax information for casilla of Modelo 714.
             label: Taxpayer - Disability - Type of disability
           patrimonio-complementaria-cuotas-anteriores:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Supplementary return - Amounts payable from previous self-assessments
               or administrative assessments
           patrimonio-comunidad-mayor-valor-bienes:
-            help: Tax information for casilla 3 of Modelo 714.
             label: Special taxation arrangements - Autonomous Community where the
               largest of the assets or rights is located
-          patrimonio-comunidad-residencia:
-            help: Tax information about tax information in casilla 8 of Modelo 714.
           patrimonio-concesiones-administrativas:
-            help: Tax information for casilla 19 of Modelo 714.
             label: Assets and rights - N. Administrative concessions - Total
           patrimonio-cuota-a-ingresar:
-            help: 'Review the casilla information: Assessment - Amount a ingresar
-              - Amount a ingresar.'
             label: Assessment - Tax payable - Tax payable
           patrimonio-cuota-integra:
-            help: 'Review the casilla information: Assessment - Amount full - Amount
-              full.'
             label: Assessment - Gross tax liability - Gross tax liability
           patrimonio-cuota-integra-susceptible-limitacion:
-            help: Tax information about tax information in casilla 36 of Modelo 714.
             label: Assessment - Gross tax liability limit - Portion of the gross wealth
               tax liability subject to limitation
           patrimonio-cuota-minorada:
-            help: 'Review the casilla information: Assessment - Amount minorada -
-              Amount minorada.'
             label: Assessment - Reduced tax liability - Reduced tax liability
           patrimonio-cuota-proporcional-bienes-ceuta-melilla:
-            help: Tax information for casilla 43 of Modelo 714.
             label: Assessment - Ceuta and Melilla tax reduction - Proportional share
               of the liability attributable to those assets and rights
           patrimonio-cuotas-previas-complementaria:
-            help: 'Review the casilla information: Adjustment return supplementary
-              - Amount ingresar previous self-assessments/liquidaciones.'
             label: Supplementary return adjustment - Tax payable per earlier self-assessments
               or assessments
           patrimonio-declaracion-complementaria:
-            help: 'Review the casilla information: Return Supplementary.'
             label: Supplementary return
           patrimonio-declaracion-negativa:
-            help: 'Review the casilla information: Return negative.'
             label: Nil return
           patrimonio-deduccion-impuestos-extranjero:
-            help: Tax information for casilla 41 of Modelo 714.
             label: Assessment - Relief for foreign taxes - Amount of the relief
           patrimonio-deducciones-autonomicas-aplicadas:
-            help: Tax information for casilla 49 of Modelo 714.
             label: Assessment - Regional deductions and reductions - Regional deductions
               - Amount applied
           patrimonio-deducciones-autonomicas-derecho:
-            help: Tax information for casilla 48 of Modelo 714.
             label: Assessment - Regional deductions and reductions - Regional deductions
               - Total amount qualifying for the deduction
           patrimonio-demas-bienes-derechos:
-            help: Tax information for casilla 22 of Modelo 714.
             label: Assets and rights - R. Other assets and rights of economic value
               - Total
           patrimonio-depositos-cuentas:
-            help: Tax information for casilla 05 of Modelo 714.
             label: Assets and rights - E. Current and savings account deposits, financial
               accounts and term deposits - Total
           patrimonio-derechos-reales-uso-disfrute:
-            help: Tax information for casilla 18 of Modelo 714.
             label: Assets and rights - M. Rights of use and enjoyment (habitual dwelling
               excluded) - Total
           patrimonio-deudas-deducibles:
-            help: 'Review the casilla information: Deudas deducibles - Total.'
             label: Deductible debts - Total
           patrimonio-dia-declaracion:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Date of the return - Day
           patrimonio-diferencia-ingresar-complementaria:
-            help: 'Review the casilla information: Adjustment return supplementary
-              - Diferencia a ingresar result return supplementary.'
             label: Supplementary return adjustment - Additional amount payable as
               a result of the supplementary return
           patrimonio-dividendos-no-irpf:
-            help: Tax information about tax information in casilla 31 of Modelo 714.
             label: Assessment - Gross tax liability limit - Dividends and profit shares
               not included in personal income tax
           patrimonio-domicilio-extranjero-codigo-pais:
-            help: Tax information about tax information in casilla 42 of Modelo 714.
             label: Taxpayer - Foreign address - Country code
           patrimonio-domicilio-extranjero-codigo-postal:
-            help: 'Tax information about tax information in casilla 39 of Modelo 714
-              References: [ZIP].'
             label: Taxpayer - Foreign address - Postcode (ZIP)
           patrimonio-domicilio-extranjero-datos-complementarios:
-            help: Tax information about tax information in casilla 36 of Modelo 714.
             label: Taxpayer - Foreign address - Further address details
           patrimonio-domicilio-extranjero-direccion:
-            help: Tax information about tax information in casilla 35 of Modelo 714.
             label: Taxpayer - Foreign address - Address
           patrimonio-domicilio-extranjero-pais:
-            help: Tax information about tax information in casilla 41 of Modelo 714.
             label: Taxpayer - Foreign address - Country
           patrimonio-domicilio-extranjero-poblacion:
-            help: Tax information about tax information in casilla 37 of Modelo 714.
             label: Taxpayer - Foreign address - Town or city
           patrimonio-domicilio-extranjero-provincia-region-estado:
-            help: Tax information about tax information in casilla 40 of Modelo 714.
             label: Taxpayer - Foreign address - Province, region or state
           patrimonio-domicilio-habitual-bloque:
-            help: Tax information about tax information in casilla 20 of Modelo 714.
             label: Taxpayer - Habitual residence address - Block
           patrimonio-domicilio-habitual-calificador-numero:
-            help: Tax information about tax information in casilla 19 of Modelo 714.
             label: Taxpayer - Habitual residence address - Number qualifier
           patrimonio-domicilio-habitual-codigo-postal:
-            help: Tax information about tax information in casilla 27 of Modelo 714.
             label: Taxpayer - Habitual residence address - Postcode
           patrimonio-domicilio-habitual-codigo-provincia:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Taxpayer - Habitual residence - Province code
           patrimonio-domicilio-habitual-datos-complementarios:
-            help: Tax information about tax information in casilla 25 of Modelo 714.
             label: Taxpayer - Habitual residence address - Further address details
           patrimonio-domicilio-habitual-escalera:
-            help: Tax information about tax information in casilla 22 of Modelo 714.
             label: Taxpayer - Habitual residence address - Stairway
           patrimonio-domicilio-habitual-localidad:
-            help: Tax information about tax information in casilla 26 of Modelo 714.
             label: Taxpayer - Habitual residence address - Locality or settlement
               (where different from the municipality)
           patrimonio-domicilio-habitual-municipio:
-            help: Tax information about tax information in casilla 28 of Modelo 714.
             label: Taxpayer - Habitual residence address - Municipality name
           patrimonio-domicilio-habitual-nombre-via:
-            help: Tax information about tax information in casilla 16 of Modelo 714.
             label: Taxpayer - Habitual residence address - Street name
           patrimonio-domicilio-habitual-numero-casa:
-            help: Tax information about tax information in casilla 18 of Modelo 714.
             label: Taxpayer - Habitual residence address - House number
           patrimonio-domicilio-habitual-planta:
-            help: Tax information about tax information in casilla 23 of Modelo 714.
             label: Taxpayer - Habitual residence address - Floor
           patrimonio-domicilio-habitual-portal:
-            help: Tax information about tax information in casilla 21 of Modelo 714.
             label: Taxpayer - Habitual residence address - Entrance
           patrimonio-domicilio-habitual-provincia:
-            help: Tax information about tax information in casilla 29 of Modelo 714.
             label: Taxpayer - Habitual residence address - Province
           patrimonio-domicilio-habitual-puerta:
-            help: Tax information about tax information in casilla 24 of Modelo 714.
             label: Taxpayer - Habitual residence address - Door
           patrimonio-domicilio-habitual-tipo-numeracion:
-            help: Tax information about tax information in casilla 17 of Modelo 714.
             label: Taxpayer - Habitual residence address - Numbering type
           patrimonio-domicilio-habitual-tipo-via:
-            help: Tax information about tax information in casilla 15 of Modelo 714.
             label: Taxpayer - Habitual residence address - Street type
           patrimonio-estado-civil:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Taxpayer - Marital status
           patrimonio-exceso-limite-conjunto:
-            help: 'Review the casilla information: Assessment - Límite amount full
-              - a) Exceso.'
             label: Assessment - Gross tax liability limit - a) Excess
           patrimonio-exento-progresividad:
-            help: Tax information for casilla 28 of Modelo 714.
             label: Exempt wealth taken into account for progressivity - Exempt assets
               and rights, other than those setting the rate applicable to the remainder
           patrimonio-fecha-nacimiento:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Taxpayer - Date of birth
           patrimonio-forma-pago:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Payment - Payment method
           patrimonio-idioma-declaracion:
-            help: 'Review the casilla information: Idioma of the return.'
             label: Language of the return
           patrimonio-importe-ingreso:
-            help: 'Review the casilla information: Payment - Amount of the payment.'
             label: Payment - Payment amount
           patrimonio-impuestos-satisfechos-extranjero:
-            help: Tax information for casilla a of Modelo 714.
             label: Tax calculation - Deduction for taxes paid abroad - Taxes actually
               paid abroad
           patrimonio-inmuebles-afectos-no-exentos:
-            help: Tax information for casilla b of Modelo 714.
             label: Assets and rights - C2. Non-exempt immovable property used in business
               and professional activities - Total
           patrimonio-inmuebles-rusticos:
-            help: Tax information for casilla 02 of Modelo 714.
             label: Assets and rights - B. Rural immovable property - Total
           patrimonio-inmuebles-urbanos-no-exentos:
-            help: Tax information for casilla 01 of Modelo 714.
             label: Assets and rights - A2. Urban immovable property - Other properties
               - Total urban immovable property
           patrimonio-inversion-colectiva-negociada-no-exenta:
-            help: Tax information for casilla 08 of Modelo 714.
             label: Assets and rights - G1. Non-exempt securities - Traded shares and
               units in collective investment institutions - Total
           patrimonio-inversion-colectiva-no-negociada-no-exenta:
-            help: Tax information for casilla 10 of Modelo 714.
             label: Assets and rights - G3. Non-exempt securities - Untraded shares
               and units in collective investment institutions - total
           patrimonio-irpf-bases-imponibles:
-            help: Tax information about tax information in casilla 30 of Modelo 714.
             label: Assessment - Gross tax liability limit - Sum of the personal income
               tax taxable bases
           patrimonio-irpf-cuotas-excluidas-base-ahorro:
-            help: 'Review the casilla information: Assessment - Límite amount full
-              - Parte amounts íntegras IRPF, saldo positivo ganancias and pérdidas
-              capital-gains.'
             label: Assessment - Gross tax liability limit - Portion of gross personal
               income tax liabilities on the positive balance of capital gains and
               losses
           patrimonio-irpf-cuotas-integras:
-            help: 'Review the casilla information: Assessment - Límite amount full
-              - Amounts íntegras of the IRPF.'
             label: Assessment - Gross tax liability limit - Gross personal income
               tax liabilities
           patrimonio-limite-conjunto:
-            help: Tax information for casilla 33 of Modelo 714.
             label: Assessment - Gross tax liability limit - Joint limit on wealth
               tax and personal income tax liabilities
           patrimonio-localidad-declaracion:
-            help: 'Review the casilla information: Date of the return - Localidad.'
             label: Date of the return - Town
           patrimonio-mes-declaracion:
-            help: 'Review the casilla information: Date of the return - Mes.'
             label: Date of the return - Month
           patrimonio-minimo-exento:
-            help: Tax information about tax information in casilla 26 of Modelo 714.
             label: 'Net wealth summary: taxable base after reductions - Reduction
               for the exempt minimum'
           patrimonio-monedas-virtuales:
-            help: Tax information for casilla 46 of Modelo 714.
             label: Assets and rights - Q. Virtual currency balances - Total
           patrimonio-nacionalidad:
-            help: Tax information about tax information in casilla nacionalidad of
-              Modelo 714.
             label: Taxpayer - Nationality
-          patrimonio-obligacion-real-no-residente:
-            help: Tax information about tax information in casilla 1 of Modelo 714.
-          patrimonio-obligacion-real-regimen-impatriados:
-            help: Tax information about tax information in casilla 4 of Modelo 714.
           patrimonio-opcion-normativa-autonomica-impatriados:
-            help: Tax information about tax information in casilla 12 of Modelo 714.
             label: Where box 4 has been ticked and the regional rules are elected
-          patrimonio-opcion-obligacion-personal-no-residente:
-            help: Tax information about tax information in casilla 2 of Modelo 714.
           patrimonio-opciones-contractuales:
-            help: Tax information for casilla 21 of Modelo 714.
             label: Assets and rights - P. Contractual options - Total
           patrimonio-otras-entidades-negociadas-no-exentas:
-            help: Tax information for casilla 09 of Modelo 714.
             label: Assets and rights - G2. Non-exempt securities - Shares and holdings
               in the funds of other entities - Total
           patrimonio-otras-entidades-no-negociadas-no-exentas:
-            help: Tax information for casilla 11 of Modelo 714.
             label: Assets and rights - G4. Non-exempt securities - Untraded shares
               and holdings in other legal entities - Total
           patrimonio-otros-inmuebles-urbanos:
-            help: Tax information for casilla 63 of Modelo 714.
             label: Assets and rights - A2. Urban immovable property - Other properties
               - Total
           patrimonio-participaciones-negociadas-exentas:
-            help: Tax information for casilla 12 of Modelo 714.
             label: Assets and rights - H1. Exempt securities - Traded shares and holdings
               in legal entities - Total (net of debts)
           patrimonio-participaciones-no-negociadas-exentas:
-            help: Tax information for casilla 13 of Modelo 714.
             label: Assets and rights - H2. Exempt securities - Exempt untraded shares
               and holdings in legal entities - Total (net of debts)
           patrimonio-porcentaje-discapacidad:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Taxpayer - Disability - Disability percentage
           patrimonio-propiedad-intelectual-industrial:
-            help: Tax information for casilla 20 of Modelo 714.
             label: Assets and rights - O. Rights arising from intellectual or industrial
               property - Total
           patrimonio-reduccion-limite-ochenta:
-            help: Tax information about tax information in casilla 39 of Modelo 714.
             label: Assessment - Gross tax liability limit - b) 80% of the gross wealth
               tax liability
           patrimonio-regimen-economico-matrimonio:
-            help: 'Review the casilla information: Regime económico of the matrimonio.'
             label: Marital property regime
           patrimonio-rentas-temporales-vitalicias:
-            help: Tax information for casilla 15 of Modelo 714.
             label: Assets and rights - J. Temporary and life annuities - Total
           patrimonio-representante-nif:
-            help: 'Review the casilla information: Representative - NIF.'
             label: Representative - Tax identification number
           patrimonio-representante-nombre:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Representative - Surnames and given name, or company name
           patrimonio-seguros-vida:
-            help: Tax information for casilla 14 of Modelo 714.
             label: Assets and rights - I. Life insurance policies - Total
           patrimonio-sexo-contribuyente:
-            help: Tax information about tax information in casilla sexo of Modelo
-              714.
             label: Taxpayer - Sex
           patrimonio-suma-cuotas-limite:
-            help: Tax information for casilla 37 of Modelo 714.
             label: Assessment - Gross tax liability limit - Sum of liabilities for
               the purposes of the joint limit
           patrimonio-tipo-declaracion:
-            help: Tax information about tax information in casilla  of Modelo 714.
             label: Return type
           patrimonio-total-bienes-derechos-no-exentos:
-            help: Tax information for casilla 23 of Modelo 714.
             label: 'Net wealth summary: taxable base after reductions - Total non-exempt
               assets and rights'
           patrimonio-total-cuota-integra:
-            help: 'Review the casilla information: Assessment - Total amount full
-              - Total amount full.'
             label: Assessment - Total gross tax liability - Total gross tax liability
           patrimonio-valor-neto-bienes-ceuta-melilla:
-            help: Tax information for casilla 42 of Modelo 714.
             label: Assessment - Ceuta and Melilla tax reduction - Net value of assets
               and rights in Ceuta and Melilla
           patrimonio-valores-cesion-capitales-negociados:
-            help: Tax information for casilla 06 of Modelo 714.
             label: Assets and rights - F1. Securities representing capital lent to
               third parties - Government debt, debentures, bonds and other traded
               securities - Total
           patrimonio-valores-cesion-capitales-no-negociados:
-            help: Tax information for casilla 07 of Modelo 714.
             label: Assets and rights - F2. Securities representing capital lent to
               third parties - Debentures, bonds, certificates of deposit and promissory
               notes - total
           patrimonio-vehiculos-joyas-pieles-embarcaciones-aeronaves:
-            help: Tax information for casilla 16 of Modelo 714.
             label: Assets and rights - K. Vehicles, jewellery, luxury furs, vessels
               and aircraft - Total
           patrimonio-vivienda-habitual-exenta:
-            help: Tax information for casilla 61 of Modelo 714.
             label: Assets and rights - A1. Urban immovable property - Exempt value
           patrimonio-vivienda-habitual-no-exenta:
-            help: Tax information for casilla 62 of Modelo 714.
             label: Assets and rights - A1. Urban immovable property - Non-exempt value
           patrimonio-vivienda-habitual-susceptible-exencion:
-            help: Tax information for casilla 60 of Modelo 714.
             label: Assets and rights - A1. Urban immovable property - Total value
               of the habitual dwelling eligible for exemption
       construct:

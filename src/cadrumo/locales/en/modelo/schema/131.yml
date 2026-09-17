@@ -4,47 +4,36 @@ modelo:
       casilla:
         continuidad:
           irpf-pf-modulos-1-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 1 (Employed staff): number of units'
           irpf-pf-modulos-1-unidades-anterior:
-            help: Tax information for casilla of Modelo 131.
             label: 'Módulo 1 (Employed staff): number of units in the previous tax
               year (2023), for the employment-incentive reduction'
           irpf-pf-modulos-2-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 2 (Non-employed staff): number of units'
           irpf-pf-modulos-3-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 3 (activity-specific unit: floor area, distance travelled
               or load): number of units'
           irpf-pf-modulos-4-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 4 (activity-specific unit: electricity or other energy
               consumption): number of units'
           irpf-pf-modulos-5-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 5 (activity-specific unit, e.g. remaining floor area of
               an independent premises or tables): number of units'
           irpf-pf-modulos-6-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 6 (activity-specific unit, e.g. remaining floor area of
               a non-independent premises or type A machines): number of units'
           irpf-pf-modulos-7-unidades:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Módulo 7 (activity-specific unit, e.g. oven surface area or type
               B machines): number of units'
           irpf-pf-modulos-diferencia:
-            help: 'Review the casilla information: Diferencia.'
             label: Difference
           irpf-pf-modulos-epigrafe-iae:
-            help: Tax information for casilla of Modelo 131.
             label: IAE heading of the activity under the objective estimation (módulos)
               regime. For headings 659.4 and 691.9, which group two different activities
               under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
               according to the activity - see the coefficient parameter m131-modulos-coeficientes
               for the exact assignment.
           irpf-pf-modulos-indice-inicio-actividad:
-            help: Tax information for casilla of Modelo 131.
             label: 'Corrective index for the start of new activities (letter b.4,
               activity started on or after 1-1-2025 in an exclusive premises). Index
               declared by the operator (0.80/0.90; 0.60/0.70 with disability >=33%,
@@ -52,93 +41,65 @@ modelo:
               not model the start year or the disability. Incompatible with the seasonal
               index (b.2): if both are declared, the seasonal index prevails.'
           irpf-pf-modulos-indice-pequena-dimension:
-            help: Tax information for casilla of Modelo 131.
             label: Corrective index for small enterprises (letter b.1 - single municipality,
               single premises, no staff or up to 2 employees). Index declared by the
               operator (0.70/0.75/0.80/0.90, Order HAC/1425/2025 Annex II, instruction
               2.3.b.1); the engine does not model taxpayer facts. Never applies to
               activities with a special index (721.2, 722).
           irpf-pf-modulos-indice-temporada:
-            help: Tax information for casilla of Modelo 131.
             label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
               to 180 days/year). Index declared by the operator (1.50/1.35/1.25 depending
               on duration, Order HAC/1425/2025 Annex II, instruction 2.3.b.2); the
               engine does not model duration as a taxpayer fact. Incompatible with
               the new-activity start-up index (b.4): if both are declared, this one
               prevails.'
-          irpf-pf-modulos-minoracion-inversion:
-            help: Tax information for casilla of Modelo 131.
           irpf-pf-modulos-pequena-dimension-ignorado-flag:
-            help: Tax information for casilla of Modelo 131.
             label: 'Internal indicator (1/0): the declared small-enterprise corrective
               index (b.1) was ignored due to incompatibility with the activity''s
               special corrective index (Order HAC/1425/2025 Annex II, instruction
               2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
-            help: Tax information for casilla of Modelo 131.
             label: 'Net income from the activity (Phase 4: módulos − general 5 percent
               reduction)'
           irpf-pf-modulos-rendimiento-neto-minorado:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Reduced net income (Phase 2: preliminary − employment-incentive
               reduction − investment-incentive reduction)'
-          irpf-pf-modulos-rendimiento-neto-modulos:
-            help: Tax information for casilla of Modelo 131.
           irpf-pf-modulos-rendimiento-neto-previo:
-            help: Tax information about tax information in casilla  of Modelo 131.
             label: 'Preliminary net income (Phase 1: Σ módulo units × annual yield
               per unit)'
           irpf-pf-modulos-resultado-declaracion:
-            help: 'Review the casilla information: Result of the return.'
             label: Result of the return
           irpf-pf-modulos-resultados-negativos-anteriores:
-            help: Tax information about tax information in casilla 11 of Modelo 131.
             label: Negative results from previous quarters
           irpf-pf-modulos-suma-rendimientos:
-            help: Tax information about tax information in casilla 01 of Modelo 131.
             label: Sum of net income
           irpf-pf-modulos-temporada-inicio-actividad-conflicto-flag:
-            help: Tax information for casilla of Modelo 131.
             label: 'Internal indicator (1/0): the seasonal corrective index (b.2)
               and the new-activity start-up corrective index (b.4) were declared simultaneously,
               which are mutually incompatible (Order HAC/1425/2025 Annex II, instruction
               2.3).'
-          irpf-pf-modulos-total:
-            help: 'Review the casilla information: Total.'
           irpf-pf-modulos-volumen-agrario:
-            help: Tax information about tax information in casilla 05 of Modelo 131.
             label: Agricultural income for the quarter
           irpf-pf-modulos-volumen-sin-datos-base:
-            help: Tax information about tax information in casilla 03 of Modelo 131.
             label: Turnover or income without base data
           irpf-pf-saldo-negativo-fin-periodo:
-            help: 'Review the casilla information: Saldo negativo trasladable a periods
-              subsequent (max 0, -casilla 10).'
             label: Negative balance carried forward to later periods (max. 0, -box
               10)
           minoracion-rendimientos-actividades-economicas:
-            help: Tax information about tax information in casilla 09 of Modelo 131.
             label: Reduction for net income from business/professional activities
           pago-fraccionado-previo:
-            help: Tax information about tax information in casilla 07 of Modelo 131.
             label: Sum of preliminary instalment payments
           pago-fraccionado-previo-agrario:
-            help: Tax information about tax information in casilla 06 of Modelo 131.
             label: Preliminary agricultural instalment payment
           pago-fraccionado-previo-datos-base:
-            help: Tax information about tax information in casilla 02 of Modelo 131.
             label: Preliminary instalment payment using base data (datos-base)
           pago-fraccionado-previo-sin-datos-base:
-            help: Tax information about tax information in casilla 04 of Modelo 131.
             label: Preliminary instalment payment without base data
           prestamo-vivienda-habitual:
-            help: Tax information about tax information in casilla 12 of Modelo 131.
             label: Payment of loans for the taxpayer's main home
           resultado-anteriores-autoliquidaciones:
-            help: Tax information about tax information in casilla 14 of Modelo 131.
             label: Result payable from previous self-assessments
           retenciones-ingresos-a-cuenta:
-            help: 'Review the casilla information: Withholdings e payments on account.'
             label: Withholdings and payments on account
       field:
         official_name: Modelo 131. Personal Income Tax. Entrepreneurs and professionals
@@ -163,7 +124,6 @@ modelo:
                 not model the start year or the disability. Incompatible with the
                 seasonal index (b.2): if both are declared, the seasonal index prevails.'
             modulos-indice-pequena-dimension:
-              help: Tax information about tax information in casilla  of Modelo 131.
               label: Corrective index for small enterprises (letter b.1 - single municipality,
                 single premises, no staff or up to 2 employees). Index declared by
                 the operator (0.70/0.75/0.80/0.90, Order HFP/1359/2023 Annex II, instruction
@@ -183,7 +143,6 @@ modelo:
                 asset register - see Order HFP/1359/2023 Annex II, instruction 2.2.b)
                 and your own depreciation schedule.
             modulos-pequena-dimension-ignorado-flag:
-              help: Tax information about tax information in casilla  of Modelo 131.
               label: 'Internal indicator (1/0): the declared small-enterprise corrective
                 index (b.1) was ignored due to incompatibility with the activity''s
                 special corrective index (Order HFP/1359/2023 Annex II, instruction
@@ -194,7 +153,6 @@ modelo:
                 start-up, excess - in the order and with the incompatibilities of
                 Order HFP/1359/2023 Annex II, instruction 2.3)'
             modulos-temporada-inicio-actividad-conflicto-flag:
-              help: Tax information about tax information in casilla  of Modelo 131.
               label: 'Internal indicator (1/0): the seasonal corrective index (b.2)
                 and the new-activity start-up corrective index (b.4) were declared
                 simultaneously, which are mutually incompatible (Order HFP/1359/2023

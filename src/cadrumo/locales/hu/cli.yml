@@ -856,14 +856,16 @@ cli:
         filing_record_id_help: Stabil benyújtási rekord-azonosító.
         import_casilla_help: Importált mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
+        import_declared_kind_file_error: A --declared-kind nem használható a --file
+          kapcsolóval; a helyesbítést --set értékekkel importálja.
+        import_declared_kind_help: Az AEAT által erre a benyújtásra rögzített bevallásfajta
+          (original, complementaria, sustitutiva, rectificativa); kötelező, ha az
+          AEAT-nál már van megerősített bevallás az időszakra
         import_file_help: A külső bevallási forrásból exportált CSV- vagy XLSX-casillajegyzék
           elérési útja.
         import_help: Külsőleg benyújtott bevallás megőrzése alap-benyújtási rekordként,
           importált AEAT-igazolt bizonyítékkal.
         import_set_required: A --set legalább egyszer kötelező importáláshoz.
-        import_unverifiable: '{modelo} modell, {period} {filing_year}: az importált
-          AEAT-bejegyzés nem volt összevethető a függő helyi benyújtással, ezért semmi
-          sem került rögzítésre.'
         include_superseded_help: Felváltott benyújtási rekordok bevonása (alapértelmezés
           szerint kizárva).
         list_help: Regisztrált benyújtási rekordok listázása.
@@ -878,8 +880,8 @@ cli:
           sorokkal (egy korábbi bevallás tanúsítvány nélküli rekonstrukciója). Kombinálható
           a --set kapcsolóval; ugyanazon casillához tartozó --set érték felülírja
           a táblázat sorát
-        observe_local_help: Rögzítsen egy kezelő által megadott helyi megfigyelést
-          a számítás előtöltéséhez
+        observe_local_help: Egy időszak megfigyelésének naplózott kezelői felülírását
+          rögzíti vagy törli; az AEAT hivatalos megfigyelése megmarad
         observe_local_reason_help: Az ok, amiért a kezelő felülírja az időszak megfigyelését;
           a felülírás naplójában tárolódik
         observe_local_recorded_notice: A kezelő felülírása függő helyi megfigyelésként
