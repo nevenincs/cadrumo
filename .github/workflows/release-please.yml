@@ -36,6 +36,13 @@ jobs:
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # Only what this job does with the token: release commits, tags and
+          # releases (contents), the release pull request and its labels
+          # (pull-requests, issues), and dispatching release.yml (actions).
+          permission-actions: write
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
 
       - name: Run release-please
         id: release
@@ -50,25 +57,45 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
-          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
 
       - name: Set up uv for the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          version: "0.11.29"
+          enable-cache: false
 
-      - name: Regenerate and push uv.lock onto the release branch
+      # The App token is handed only to the step that pushes, never to the one
+      # that resolves the lockfile, and it is never written to .git/config.
+      - name: Regenerate uv.lock on the release branch
+        id: branch-lock
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         run: |
           uv lock
           if git diff --quiet uv.lock; then
             echo "uv.lock is already up to date"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add uv.lock
-            git commit -m "chore: update uv.lock for release"
-            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Push the regenerated uv.lock onto the release branch
+        if: steps.branch-lock.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::${auth}"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "chore: update uv.lock for release"
+          git push
 
       # The lockfile push lands after release-please makes the pull request
       # mergeable. A release merged inside that window ships the previous
@@ -80,24 +107,40 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: main
-          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
 
       - name: Set up uv for the lockfile verification
         if: steps.release.outputs.release_created == 'true'
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          version: "0.11.29"
+          enable-cache: false
 
-      - name: Open a reconciling pull request when the lockfile drifted
+      - name: Reconcile uv.lock with the released version
+        id: main-lock
         if: steps.release.outputs.release_created == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          TAG: ${{ steps.release.outputs.tag_name }}
         run: |
           if uv lock --locked; then
             echo "uv.lock on main matches the released version"
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "::warning::uv.lock on main did not match the released version; opening a reconciling pull request"
           uv lock
+          echo "drifted=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open a reconciling pull request when the lockfile drifted
+        if: steps.main-lock.outputs.drifted == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::${auth}"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
           BRANCH="chore/reconcile-uv-lock-${TAG}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -120,7 +163,8 @@ jobs:
             echo "::error::could not read the proposed version from the release branch manifest"
             exit 1
           fi
-          gh workflow run release.yml --ref "${HEAD_BRANCH}"             -f phase=prove -f "ref=${HEAD_BRANCH}" -f "version=${version}"
+          gh workflow run release.yml --ref "${HEAD_BRANCH}" \
+            -f phase=prove -f "ref=${HEAD_BRANCH}" -f "version=${version}"
           echo "Dispatched release proof for ${version} on ${HEAD_BRANCH}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Dispatch release publication
@@ -134,7 +178,8 @@ jobs:
             echo "::error::release_created is true but the tag or version is empty"
             exit 1
           fi
-          gh workflow run release.yml --ref "${TAG}"             -f phase=publish -f "ref=${TAG}" -f "version=${VERSION}"
+          gh workflow run release.yml --ref "${TAG}" \
+            -f phase=publish -f "ref=${TAG}" -f "version=${VERSION}"
           echo "Dispatched release publication for ${VERSION} at ${TAG}" >> "$GITHUB_STEP_SUMMARY"
 
       # A release-please run that finds a merged, untagged release PR aborts
