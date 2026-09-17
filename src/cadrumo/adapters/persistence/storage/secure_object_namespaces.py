@@ -389,7 +389,7 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     namespace="cadrumo.calculations.observations",
     owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V2,
     # Single-filer rows key on (modelo, filing_year, period); a per-grupo-member
     # filing widens the same key with an optional trailing member segment so two
     # members' filings for one triple persist as distinct rows (the 353<-322
@@ -1066,7 +1066,7 @@ MODELO_FILING_RECORD_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     namespace="cadrumo.domain.modelos.filing_records",
     owner="cadrumo.domain.modelos",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V2,
     object_key_grammar="catalogue",
     default_object_key=SECURE_OBJECT_CATALOGUE_KEY,
     scope=StorageNamespaceScope.PROFILE_LOCAL,
