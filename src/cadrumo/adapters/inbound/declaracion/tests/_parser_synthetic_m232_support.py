@@ -9,6 +9,7 @@ from reportlab.pdfgen import canvas
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from .....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ._parser_boundary_support import (
     _MODELO_232_2016_SYNTHETIC_FIXTURE,
     _MODELO_232_2018_SYNTHETIC_FIXTURE,
@@ -65,7 +66,7 @@ def _write_modelo_232_declaration_pdf(path: Path, *, ejercicio: int) -> None:
         f"Codigo Seguro de Verificacion: SANITIZED232{ejercicio}",
         "Fecha y hora de presentacion: 2024-01-01 10:00:00",
         "Fecha de alta de la actividad: 01-01-1900",
-        "https://sede.agenciatributaria.gob.es",
+        SEDE_ROOT_URL_FIXTURE.rstrip("/"),
     )
     pdf = canvas.Canvas(str(path), pagesize=A4)
     _width, height = A4
