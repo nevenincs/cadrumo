@@ -65,8 +65,8 @@ earlier poll. Dependency waits are therefore invisible here and need no special
 handling.
 
 *A job held by ``max-parallel`` is NOT known to be excluded, and this is a
-gap rather than a measurement.* ``packaging-homebrew.yml`` caps its acquisition
-matrix at two concurrent legs. If GitHub reports a leg held by that cap as
+gap rather than a measurement.* ``release.yml``'s Homebrew acquisition matrix
+is capped at two concurrent legs. If GitHub reports a leg held by that cap as
 ``queued`` -- which is plausible and is NOT verified here, unlike the ``needs:``
 case above which was measured with timestamps -- then a held leg whose label
 set happens to be unoccupied would be flagged, and cancelling the run is what
@@ -200,19 +200,18 @@ def classify(
     *,
     now_epoch: float,
     threshold_seconds: float,
-    watchdog_job_name: str,
     occupied: frozenset[tuple[str, ...]] | None = None,
 ) -> tuple[Verdict, ...]:
     """Classify every queued job that has waited past the threshold.
 
-    The watchdog excludes ITSELF: it is a job in the same run, and a watchdog
-    that reports its own queue wait would fire on nothing but its own existence
-    the moment the fleet was merely busy.
+    The watchdog never sees ITSELF here: it is a job in the same run, but it
+    can only poll while its own job is running, so the job list always reports
+    it as ``in_progress`` and the status filter excludes it without naming it.
     """
     occupancy = occupied_label_keys(jobs) if occupied is None else occupied
     verdicts: list[Verdict] = []
     for job in jobs:
-        if job.status != "queued" or job.name == watchdog_job_name:
+        if job.status != "queued":
             continue
         waited = now_epoch - job.queued_since_epoch
         if waited <= threshold_seconds:
@@ -375,7 +374,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     repository = os.environ["GITHUB_REPOSITORY"]
     run_id = os.environ["GITHUB_RUN_ID"]
     token = os.environ["GH_TOKEN"]
-    watchdog_job_name = os.environ.get("WATCHDOG_JOB_NAME", "")
     threshold = float(os.environ.get("THRESHOLD_SECONDS", "300"))
     poll = float(os.environ.get("POLL_SECONDS", "15"))
     # The window must outlast the earliest possible firing, which is derived
@@ -404,10 +402,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             jobs,
             now_epoch=time.time(),
             threshold_seconds=threshold,
-            watchdog_job_name=watchdog_job_name,
             occupied=occupied,
         )
-        queued = [job.name for job in jobs if job.status == "queued" and job.name != watchdog_job_name]
+        queued = [job.name for job in jobs if job.status == "queued"]
         print(f"poll +{time.monotonic() - started:.0f}s | queued={len(queued)} | occupied={sorted(occupied)}")
 
         confirmations, confirmed = confirm_unschedulable(verdicts, confirmations, required=required)

@@ -100,7 +100,7 @@ def _payload() -> dict[str, Any]:
             },
             {
                 "name": "Cadrumo probe / queue watchdog",
-                "status": "queued",
+                "status": "in_progress",
                 "labels": ["self-hosted", "Linux", "X64"],
                 "created_at": "2026-08-05T12:50:25Z",
                 "started_at": "2026-08-05T12:50:25Z",
@@ -114,7 +114,6 @@ def _classify(payload: dict[str, Any], **overrides: Any) -> tuple[Any, ...]:
     kwargs: dict[str, Any] = {
         "now_epoch": _NOW,
         "threshold_seconds": 120.0,
-        "watchdog_job_name": "Cadrumo probe / queue watchdog",
     }
     kwargs.update(overrides)
     return classify(parse_jobs(payload), **kwargs)
@@ -183,7 +182,6 @@ def test_a_freshly_queued_job_does_not_fire_on_a_timezone_offset() -> None:
         parse_jobs(payload),
         now_epoch=time.time(),
         threshold_seconds=300.0,
-        watchdog_job_name="",
     )
     assert verdicts == (), f"a job queued 5s ago was judged past a 300s threshold: {verdicts}"
 
@@ -294,13 +292,17 @@ def test_a_lane_that_recovers_starts_its_count_again() -> None:
 
 
 def test_watchdog_never_reports_its_own_queue_wait() -> None:
-    """The watchdog is a job in the run it watches and must exclude itself.
+    """The watchdog is a job in the run it watches and must never report itself.
 
-    It queues for a runner like anything else. A watchdog that counted its own
-    wait would fire on a merely-busy fleet, every time.
+    It can only poll while its own job runs, so the job list shows it as
+    ``in_progress``; exclusion rests on that status, not on a configured name
+    that can drift from the job's display name.
     """
+    watchdog = next(job for job in parse_jobs(_payload()) if job.name == "Cadrumo probe / queue watchdog")
+    assert watchdog.status == "in_progress"
     reported = {verdict.job_name for verdict in _classify(_payload())}
     assert "Cadrumo probe / queue watchdog" not in reported
+    assert "Cadrumo probe / schedulable control B" in reported, "a queued job past the threshold must be reported"
 
 
 def test_nothing_fires_before_the_threshold() -> None:
