@@ -57,7 +57,6 @@ from .....application.operations.interactions import OperationActorReference
 from .....application.operations.models import OperationRequest, OperationRevision
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationRegistry
-from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....application.user_profile.censal_observation import (
     CensalObservation,
     CensalObservationAddress,
@@ -82,6 +81,7 @@ from .....domain.calculations.registry.authority import bundled_indexed_authorit
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
 from ....adapter_composition import build_censal_fetch_port
+from ....operation_composition import build_auth_operation_ports
 from ...components.host import ScreenHostApp
 from ..controller import OperationController
 from ..interactions import (
@@ -125,7 +125,7 @@ def _runtime(
 ) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
     """One real production-shaped registry, journal, lease, and custody set."""
     # Registration validates facts against registry authority, so it runs under a real lease.
-    with bundled_indexed_authority().operation():
+    with bundled_indexed_authority().operation() as authority_operation:
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
         async def acquire_censo() -> CensalOperationAcquisition:
@@ -145,7 +145,9 @@ def _runtime(
                 passphrase_callback=lambda: _CREDENTIAL_INPUT,
                 profile_decode_context=_profile_decode_context_for_test,
             )
-            auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
+            auth_definitions = build_auth_operation_definitions(
+                ports=build_auth_operation_ports(), profile_login=lambda **_kwargs: initial_login
+            )
             auth_registrations = build_auth_operation_registrations(auth_definitions)
             censal_definition = build_censal_operation_definition(
                 certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
@@ -167,7 +169,7 @@ def _runtime(
             journal = OperationJournalRepository(storage_root=root / "operations")
             with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
                 services = compose_operation_services(
-                    authority_operation=unread_authority_operation(),
+                    authority_operation=authority_operation,
                     registry=registry,
                     journal=journal,
                     reader=journal,
@@ -204,6 +206,24 @@ async def _submit_censal_review(services: OperationComposedServices, profile_id:
     )
 
 
+async def _start_until_waiting(controller: OperationController) -> None:
+    """Start the operation and return once it pauses on its REVIEW interaction.
+
+    Starting only admits the operation; it reaches its REVIEW on the
+    supervised task afterwards.
+    """
+    await controller.start()
+    async with asyncio.timeout(30):
+        while True:
+            observed = await controller.observe(0)
+            assert isinstance(observed, OperationObservationSuccessV1)
+            projection = observed.projection
+            assert projection.lifecycle is not OperationLifecycle.TERMINAL, projection.terminal_condition
+            if projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
+                return
+            await asyncio.sleep(0.05)
+
+
 def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_path: Path) -> None:
     """One real REVIEW operation, projected, interacted with, and settled."""
     with _runtime(tmp_path) as (services, _registry, profile_id):
@@ -211,7 +231,7 @@ def test_controller_drives_a_review_operation_to_public_terminal_settlement(tmp_
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
 
             log_view = build_initial_log_view(controller.operation_id)
             observed = await controller.observe(log_view.next_cursor)
@@ -283,7 +303,7 @@ def test_controller_cooperative_cancellation_settles_with_public_acknowledgement
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
 
             waiting = await controller.observe(0)
             assert isinstance(waiting, OperationObservationSuccessV1)
@@ -396,7 +416,7 @@ def test_review_unavailable_disposition_for_a_stale_reference(tmp_path: Path) ->
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             waiting = await controller.observe(0)
             assert isinstance(waiting, OperationObservationSuccessV1)
             pending = waiting.projection.pending_interaction
@@ -436,7 +456,7 @@ def test_installed_modal_settles_a_real_operation_end_to_end(tmp_path: Path) -> 
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             waiting = await controller.observe(0)
             assert isinstance(waiting, OperationObservationSuccessV1)
             pending = waiting.projection.pending_interaction
@@ -545,16 +565,21 @@ async def _timeline(controller: OperationController) -> tuple[list[_RenderedSamp
             samples.append(sample)
 
     async with host.run_test(size=(120, 40)) as pilot:
-        for _ in range(600):
+        # Settlement runs on the supervised task after the apply, so the
+        # bound is wall-clock time rather than a count of pilot pauses.
+        deadline = asyncio.get_running_loop().time() + 60
+        while asyncio.get_running_loop().time() < deadline:
             _record()
             if modal.is_mounted:
                 apply_control = modal.query("#btn-operation-apply")
                 if not applied and apply_control and not apply_control.only_one(Button).disabled:
-                    applied = True
-                    await pilot.click("#btn-operation-apply")
+                    # The control can be enabled in the same frame that grows
+                    # the review row and moves it, so a click aimed at the
+                    # stale position misses; a missed click is retried.
+                    applied = await pilot.click("#btn-operation-apply")
             if host.outcome is not None:
                 break
-            await pilot.pause()
+            await pilot.pause(0.02)
     assert applied, "the modal never offered the apply control, so the REVIEW was never answered"
 
     assert isinstance(host.outcome, OperationModalSettledOutcomeV1), (
@@ -571,7 +596,7 @@ def test_the_modal_renders_every_declared_fact_across_one_real_operation(tmp_pat
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             samples, settled = await _timeline(controller)
 
             assert any(sample.status for sample in samples), "the spinner or terminal copy never reached the status row"
@@ -600,7 +625,7 @@ def test_the_modal_renders_review_content_and_cancel_availability_while_waiting(
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             modal = OperationModal(controller)
 
             class _Host(App[None]):
@@ -634,7 +659,7 @@ def test_rendered_state_follows_supervisor_revisions_and_never_regresses(tmp_pat
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             samples, settled = await _timeline(controller)
 
             revisions = [sample.revision for sample in samples]
@@ -656,7 +681,7 @@ def test_a_derived_field_that_disagrees_with_its_projection_is_refused(tmp_path:
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             observed = await controller.observe(0)
             assert isinstance(observed, OperationObservationSuccessV1)
             honest = build_operation_modal_view_model(observed.projection)
@@ -695,7 +720,7 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
         async def run() -> None:
             submitted = await _submit_censal_review(services, profile_id)
             controller = OperationController(services=services, submission=submitted, actor_ref=_ACTOR)
-            await controller.start()
+            await _start_until_waiting(controller)
             observed = await controller.observe(0)
             assert isinstance(observed, OperationObservationSuccessV1)
             pending = observed.projection.pending_interaction
