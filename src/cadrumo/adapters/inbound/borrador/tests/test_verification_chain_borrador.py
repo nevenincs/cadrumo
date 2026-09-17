@@ -69,9 +69,12 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
+from .....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import BorradorParseError
 from ..parser import parse_borrador
@@ -168,10 +171,28 @@ def _relation_values_for_year(year: int) -> dict[str, Decimal]:
     }
 
 
-@pytest.mark.parametrize(
-    "year",
-    [2021, 2022, 2023],
-)
+_BORRADOR_FIXTURE_YEARS: tuple[int, ...] = (2021, 2022, 2023)
+
+
+def _split_fixture_years() -> tuple[tuple[int, ...], tuple[int, ...]]:
+    support = published_supported_filing_years()
+    admitted = tuple(year for year in _BORRADOR_FIXTURE_YEARS if support is None or support.admits_filing_year(year))
+    return admitted, tuple(year for year in _BORRADOR_FIXTURE_YEARS if year not in admitted)
+
+
+_SUPPORTED_FIXTURE_YEARS, _UNSUPPORTED_FIXTURE_YEARS = _split_fixture_years()
+
+
+@pytest.mark.parametrize("year", _UNSUPPORTED_FIXTURE_YEARS)
+def test_verification_chain_m100_borrador_refuses_years_below_the_supported_floor(year: int) -> None:
+    """A borrador fixture year outside the support envelope resolves no filing snapshot."""
+    assert (_BORRADOR_FIXTURES_DIR / f"modelo_100_{year}.pdf").is_file()
+
+    with pytest.raises(NoRevisionForPeriodError):
+        _registry_snapshot_m100(year)
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_FIXTURE_YEARS)
 def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: int) -> None:
     """Engine recomputes cuota íntegra estatal and autonómica from the extracted leaf input.
 

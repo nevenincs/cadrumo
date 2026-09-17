@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
+from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.field_role import FieldRole
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.tabular import NormalizedTable
@@ -129,6 +130,7 @@ class AmbiguousRole(BaseModel):
     headers: tuple[str, ...] = Field(min_length=2)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _index_and_header_counts_agree(self) -> AmbiguousRole:
         if len(self.column_indexes) != len(self.headers):
             raise ValueError("column_indexes and headers must describe the same columns")

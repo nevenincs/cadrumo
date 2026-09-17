@@ -29,7 +29,7 @@ from cadrumo.tests.fixtures.provenance import (
     producer_field,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 

@@ -405,7 +405,7 @@ def _decimal(raw: str | None) -> Decimal | None:
 
 
 def _iva_id_candidate_values(party: Element) -> tuple[str | None, tuple[str, ...]]:
-    """Collect candidate identifiers while retaining the first explicit VAT id."""
+    """Collect candidate identifiers while retaining the first explicit NIF-IVA."""
     candidates: list[str] = []
     for node in party.iter():
         text = (node.text or "").strip()

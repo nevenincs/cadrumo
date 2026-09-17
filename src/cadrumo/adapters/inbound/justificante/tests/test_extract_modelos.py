@@ -24,7 +24,7 @@ from .....core.period import Period
 from .....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .._extract import extract_justificante
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 # Synthetic PDF text shapes derived from live captures with PII
