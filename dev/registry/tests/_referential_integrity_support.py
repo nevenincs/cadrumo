@@ -88,6 +88,7 @@ __all__ = [
     "segmented_casilla",
     "single_segment_casilla",
     "snapshot_for_revision",
+    "supported_filing_year",
 ]
 
 
@@ -98,10 +99,9 @@ def _snapshot_for_revision(
 ) -> RegistrySnapshot:
     """Build a minimal snapshot for a given revision without running integrity checks."""
 
-    selector = revision.period_selector
-    filing_year = selector.years[0] if selector.years else selector.year_from
-    assert filing_year is not None
-    period = selector.periods[0]
+    filing_year = supported_filing_year(revision, catalogues)
+    assert filing_year is not None, f"revision {revision.id!r} lies wholly below the supported floor"
+    period = revision.period_selector.periods[0]
     # APPLICABILITY grade, not the FILING default. These fixtures exist to
     # exercise REFERENTIAL integrity -- dangling ids, bound casillas with no
     # binding definition -- and carry no export layout, so a filing-grade
@@ -115,6 +115,25 @@ def _snapshot_for_revision(
         revision_id=revision.id,
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
+
+
+def supported_filing_year(revision: ModeloRevision, catalogues: RegistryCatalogues) -> int | None:
+    """Return the revision's first filing year the registry supports, or ``None``.
+
+    A revision whose whole span lies below the supported floor is a stored
+    historical baseline: it can be hydrated but never selected for a snapshot.
+    """
+    selector = revision.period_selector
+    first_year = selector.years[0] if selector.years else selector.year_from
+    assert first_year is not None
+    support = catalogues.supported_filing_years
+    if support is None or first_year >= support.floor:
+        return first_year
+    if selector.years:
+        return next((year for year in selector.years if year >= support.floor), None)
+    if selector.year_to is not None and selector.year_to < support.floor:
+        return None
+    return support.floor
 
 
 _REFERENCE_LEGAL_ID = "ley-35-2006:art-1"

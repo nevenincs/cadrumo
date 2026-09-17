@@ -22,8 +22,9 @@ from cadrumo.domain.calculations.registry.schema_extraction import ExtractionPro
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from ._gate_support import catalogues_for_m130_gate_tests
+from .profile_schema_support import load_user_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _DATA_ROOT = bundled_path()
 # The validator never derives this path (see test_justificante_corpus_derivation.py,
@@ -61,6 +62,7 @@ def _validator(
         catalogues,
         source_root=_DATA_ROOT,
         justificante_corpus_root=justificante_corpus_root,
+        user_profile_schema=load_user_profile_schema(),
     )
 
 

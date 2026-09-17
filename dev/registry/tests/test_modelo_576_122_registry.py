@@ -29,7 +29,6 @@ from datetime import date
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -37,10 +36,10 @@ from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_
 from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # (modelo_id, revision, approval, plazo, doc, tax_domain)
 _MODELOS = [
@@ -71,7 +70,7 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
     modelo, catalogues = _committed_modelo(mid)
     assert modelo.id == mid
     assert modelo.tax_domain == domain
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for ref in {approval, plazo}:
         entry = catalogues.legal[ref]

@@ -32,7 +32,7 @@ from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _catalogues() -> RegistryCatalogues:

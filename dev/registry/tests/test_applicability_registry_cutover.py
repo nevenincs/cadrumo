@@ -43,7 +43,7 @@ from ..conformance.loader_directory_mode_support import (
     write_fragmented_revision,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _LEGAL_ID = "test-ley-001:art-1"
 _SOURCE_ID = "test-source-001"

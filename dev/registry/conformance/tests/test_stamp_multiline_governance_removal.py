@@ -43,6 +43,11 @@ def _manifest_path(registry_root: Path) -> Path:
     return registry_root / "modelos" / _MODELO / "revisions" / _REVISION / "revision.toml"
 
 
+def _shipped_revision_table() -> dict[str, object]:
+    shipped = bundled_path("registry", "aeat", "modelos", _MODELO, "revisions", _REVISION, "revision.toml")
+    return parse_toml(shipped.read_text("utf-8"))["revisions"][_REVISION]
+
+
 def _prepared_registry(tmp_path: Path, reviewed_by_block: str, *, suffix: str = "") -> Path:
     registry_root = _copy_modelo(tmp_path)
     manifest = _manifest_path(registry_root)
@@ -97,8 +102,9 @@ def test_neighbouring_declarations_survive_the_removal(tmp_path: Path) -> None:
     rewritten = manifest.read_bytes().decode("utf-8")
 
     parsed = parse_toml(rewritten)["revisions"][_REVISION]
-    assert parsed["authority_grade"] == "applicability"
-    assert "orden-hfp-816-2017:art-1" in parsed["legal_refs"]
+    shipped = _shipped_revision_table()
+    assert parsed["authority_grade"] == shipped["authority_grade"]
+    assert parsed["legal_refs"] == shipped["legal_refs"]
 
 
 def test_a_bracket_initial_prose_line_does_not_end_the_revision_table(tmp_path: Path) -> None:
@@ -119,13 +125,11 @@ def test_a_bracket_initial_prose_line_does_not_end_the_revision_table(tmp_path: 
         "and the scan must not read it as a table header.\n"
         '"""\n'
     )
-    neighbour = f'\n[revisions."{_REVISION}".family_dispositions.formulas]\nreason = "unchanged neighbour"\n'
+    # The shipped manifest's own disposition tables follow the revision table, so
+    # they are the real neighbours the scan must leave intact.
+    shipped_dispositions = _shipped_revision_table()["family_dispositions"]
 
-    manifest = _stamp_replacement(
-        tmp_path,
-        block,
-        suffix=neighbour,
-    )
+    manifest = _stamp_replacement(tmp_path, block)
     rewritten = manifest.read_bytes().decode("utf-8")
 
     parsed = parse_toml(rewritten)["revisions"][_REVISION]
@@ -134,4 +138,4 @@ def test_a_bracket_initial_prose_line_does_not_end_the_revision_table(tmp_path: 
     assert "VERIFIED" not in rewritten
     assert "@270+4" not in rewritten
     # The real table that follows is untouched.
-    assert parsed["family_dispositions"]["formulas"]["reason"] == "unchanged neighbour"
+    assert parsed["family_dispositions"] == shipped_dispositions

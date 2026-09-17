@@ -18,7 +18,7 @@ from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M721_BOE_ERAS = (
     (2023, "boe-modelo-721-2023-layout"),

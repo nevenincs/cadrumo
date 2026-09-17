@@ -11,7 +11,7 @@ from ._modelo_303_registry_support import (
     load_modelo_303,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_modelo_303_monthly_snapshot_resolves_for_each_period() -> None:

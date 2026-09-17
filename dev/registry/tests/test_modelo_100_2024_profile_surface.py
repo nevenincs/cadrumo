@@ -18,10 +18,10 @@ from cadrumo.domain.calculations.registry.tests.snapshot_support import build_sn
 
 from ..compiler.fact_providers import compile_registered_fact_providers
 from ..compiler.loader import load_shared_catalogues
-from ..compiler.validator import RegistryValidator
 from ..maintenance_support import load_modelo_path
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _EXPECTED_CASILLA_TO_BINDING: Mapping[str, str] = {
     "DPNIF_D": "renta-profile-tax-id",
@@ -86,7 +86,7 @@ def _shared_catalogues() -> RegistryCatalogues:
 def _modelo_100_2024_snapshot() -> RegistrySnapshot:
     catalogues = _shared_catalogues()
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "100"))
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
 
 

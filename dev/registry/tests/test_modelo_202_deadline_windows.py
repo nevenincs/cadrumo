@@ -7,13 +7,12 @@ from datetime import date
 import pytest
 
 from cadrumo.core.period import PeriodKind, registry_period_kind
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
-from ..compiler.validator import RegistryValidator
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 _EXPECTED_WINDOWS = {
@@ -39,7 +38,7 @@ def test_committed_modelo_202_has_exact_supported_year_deadline_census() -> None
     """Bundled AEAT calendars publish each exact M202/M222 date and cutoff."""
     modelos, catalogues = bundled_registry_tree()
     modelo = next(item for item in modelos if item.id == "202")
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     observed = {
         (window.period.filing_year, window.period.registry_token): (

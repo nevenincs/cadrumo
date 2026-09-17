@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import (
@@ -14,10 +13,10 @@ from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionTargetDefinition,
 )
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M202_REVISION_ID = "2025-y-siguientes"
 _M202_PROFILE_ID = "9f8cdb06-8956-4a23-8db4-e7a51efa2ada"  # was 'modelo-202-declaracion-pdf'
@@ -77,7 +76,7 @@ def _with_provisional_profile(
 
 
 def _validate(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_committed_m202_has_no_declaration_pdf_profile_without_real_specimen() -> None:

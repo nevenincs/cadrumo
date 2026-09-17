@@ -50,7 +50,7 @@ from ..profile import (
 from ..registry_classification_coherence import build_classification_coherence_audit
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: Anti-vacuity floors. Well below the tree's real size (73 modelos / 90
 #: revisions at the time of writing) so ordinary registry growth or a modelo

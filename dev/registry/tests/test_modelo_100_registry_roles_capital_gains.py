@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
-from ._modelo_100_registry_support import _modelo_100_snapshot
+from ._modelo_100_registry_support import _modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,7 +68,7 @@ _SPECIAL_ASSET_IMPUTATION_CASES = (
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_snapshot(filing_year).revision
+    return _modelo_100_revision(filing_year)
 
 
 def test_modelo_100_instalment_collection_year_counts_are_integer() -> None:

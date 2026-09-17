@@ -32,7 +32,9 @@ _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data
 
 _MODELO = "131"
 _REVISION = "2025"
-_FORMULA_FRAGMENT = f"revisions/{_REVISION}/formulas/0001-formulas.toml"
+# The 2025 edition inherits this formula through 2024 from the 2019-2023 storage
+# baseline, so the fixture edits the fragment that edition actually hydrates.
+_FORMULA_FRAGMENT = "revisions/2019-2023/formulas/0001-declarations.toml"
 _FORMULA_ID = "modelo-131-pago-fraccionado-sin-datos-base"
 _BOOLEAN_BINDING = "modelo-131.page1.discapacidad-33"
 _CASILLA = "03"

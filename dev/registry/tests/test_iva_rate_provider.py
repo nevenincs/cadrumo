@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
-    iva_rate_record_from_fact,
+    rate_record_from_fact,
 )
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind, require_eu_member_state
 
@@ -154,7 +154,7 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     )
 
     assert isinstance(resolved, ResolvedMappingFact)
-    assert iva_rate_record_from_fact(resolved, authority=authority).pct == Decimal("21")
+    assert rate_record_from_fact(resolved, authority=authority).pct == Decimal("21")
     assert resolved.legal_refs == ("ley-37-1992:art-90",)
     assert resolved.authority_digest == "a" * 64
 
@@ -187,9 +187,9 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
 
     assert isinstance(ordinary, ResolvedMappingFact)
     assert isinstance(coexisting, ResolvedMappingFact)
-    assert iva_rate_record_from_fact(ordinary, authority=authority).pct == Decimal("4")
-    assert iva_rate_record_from_fact(coexisting, authority=authority).pct == Decimal("2")
-    assert iva_rate_record_from_fact(coexisting, authority=authority).supersedes_tier_default is True
+    assert rate_record_from_fact(ordinary, authority=authority).pct == Decimal("4")
+    assert rate_record_from_fact(coexisting, authority=authority).pct == Decimal("2")
+    assert rate_record_from_fact(coexisting, authority=authority).supersedes_tier_default is True
 
 
 def test_iva_provider_preserves_complete_legal_or_source_evidence_lanes() -> None:

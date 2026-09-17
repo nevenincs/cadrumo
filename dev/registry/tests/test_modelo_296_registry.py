@@ -5,12 +5,11 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
@@ -24,7 +23,7 @@ def test_modelo_296_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_296()
     assert modelo.id == "296"
     assert modelo.revisions, "296 must declare at least one revision"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_296_declares_no_formula() -> None:

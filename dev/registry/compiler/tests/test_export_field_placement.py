@@ -34,7 +34,7 @@ from ..validate_export_field_placement import (
 )
 from ..validator import RegistryValidator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _REVISION = "2024-y-siguientes"
 _PERCEPTOR_RECORD = Path("revisions") / _REVISION / "export" / "0002-record-m296-perceptor.toml"

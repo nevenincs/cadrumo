@@ -25,7 +25,7 @@ from ._modelo_100_registry_support import (
     _REGULARIZACION_DEDUCTION_LOSS_INTEREST_CASILLAS,
     _REGULARIZACION_PREVIOUS_INTEREST_CASILLAS,
     _RIRPF_DEDUCTION_LOSS_ART_59_REF,
-    _modelo_100_snapshot,
+    _modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -118,7 +118,7 @@ _CASILLA_0581_ROLE_CASES = (
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_snapshot(filing_year).revision
+    return _modelo_100_revision(filing_year)
 
 
 def test_modelo_100_casilla_0921_role_tracks_year_specific_official_meaning() -> None:

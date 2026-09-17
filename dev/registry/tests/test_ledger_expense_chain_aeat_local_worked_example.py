@@ -70,7 +70,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _FILING_YEAR = 2024
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "0A")

@@ -4,18 +4,17 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.registry_schema_support import (
     with_revision as _with_revision,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_validator_rejects_filing_schedule_legal_ref_without_legal_authority() -> None:
@@ -31,7 +30,7 @@ def test_validator_rejects_filing_schedule_legal_ref_without_legal_authority() -
         RegistryValidationError,
         match=r"filing schedule modelo-111-trimestral legal ref .* is not legal authority",
     ):
-        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+        committed_registry_validator(mutated_catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_filing_schedule_without_official_guidance_source() -> None:
@@ -47,7 +46,7 @@ def test_validator_rejects_filing_schedule_without_official_guidance_source() ->
         RegistryValidationError,
         match=r"filing schedule modelo-111-trimestral requires official_source_guidance source evidence",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+        committed_registry_validator(catalogues).validate_modelo(
             _with_revision(modelo, mutated_revision),
         )
 
@@ -69,7 +68,7 @@ def test_validator_rejects_filing_schedule_condition_legal_ref_without_legal_aut
             r"legal ref .* is not legal authority"
         ),
     ):
-        RegistryValidator(mutated_catalogues, source_root=bundled_path()).validate_modelo(modelo)
+        committed_registry_validator(mutated_catalogues).validate_modelo(modelo)
 
 
 def test_validator_rejects_filing_schedule_condition_without_official_guidance_source() -> None:
@@ -92,6 +91,6 @@ def test_validator_rejects_filing_schedule_condition_without_official_guidance_s
             r"requires official_source_guidance source evidence"
         ),
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+        committed_registry_validator(catalogues).validate_modelo(
             _with_revision(modelo, mutated_revision),
         )

@@ -20,9 +20,10 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from dev.registry.compiler.authority import compiled_bundled_authority
-from dev.registry.compiler.validator import RegistryValidator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+from .profile_schema_support import committed_registry_validator
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
 
@@ -133,7 +134,7 @@ def test_modelo_130_supported_year_deadline_census_dates_sources_and_ownership(
 
     assert len(revision.deadline_windows) == len(windows) == 20
     assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     calendar_refs = {f"aeat-calendario-contribuyente-{year}" for year in range(2022, 2027)}
     assert calendar_refs <= set(revision.source_refs)

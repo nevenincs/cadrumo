@@ -35,7 +35,7 @@ from .ledger_iva_aggregation_support import (
     _observation,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:

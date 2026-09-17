@@ -8,10 +8,10 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M151_FORM_ORDER_REF = "orden-hap-2783-2015:art-1"
 
@@ -25,7 +25,7 @@ def test_modelo_151_validator_accepts_committed_definition() -> None:
     assert modelo.id == "151"
     assert modelo.revisions, "151 must declare at least one revision"
     assert any(rev.formulas for rev in modelo.revisions.values()), "151 must declare formulas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_151_revision_2015_declares_constructs() -> None:

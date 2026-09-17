@@ -10,7 +10,7 @@ import pytest
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
     _C_VALENCIANA_DEDUCTION_SECTION,
-    _modelo_100_snapshot,
+    _modelo_100_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -354,7 +354,7 @@ _C_VALENCIANA_REVIEW_YEARS = tuple(sorted(_VA35_EXPECTED_ROWS))
 
 @lru_cache
 def _revision_for(filing_year: int):
-    return _modelo_100_snapshot(filing_year).revision
+    return _modelo_100_revision(filing_year)
 
 
 def _assert_c_valenciana_rows(filing_year: int, expected_rows: _ExpectedRows) -> None:

@@ -15,7 +15,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 
 from ..maintenance_support import load_modelo_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M202_B1_B2_RESULTADO_PREVIO_XOR_PREDICATE_ID = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 _CASILLA_18: CasillaId = validated_casilla_id("18", surface="test M202 B1 resultado previo")

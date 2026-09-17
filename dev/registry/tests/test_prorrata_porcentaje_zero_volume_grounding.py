@@ -53,7 +53,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_led
 from cadrumo.domain.iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")

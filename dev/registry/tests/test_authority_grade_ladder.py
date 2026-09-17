@@ -10,11 +10,10 @@ grade honestly while a calculation claim over an empty formula family does not.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from dev.registry.compiler.schema_family_coverage import build_revision_coverage_manifest
 
@@ -44,7 +43,7 @@ def revision_with_unresolved_families():
     Built from the corpus rather than synthesised, so the ladder is exercised
     against a shape the registry actually holds.
     """
-    root = Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+    root = bundled_path("registry", "aeat")
     modelos, _catalogues = load_registry_tree(root)
     for modelo in sorted(modelos, key=lambda m: m.id):
         for _revision_id, revision in sorted(modelo.revisions.items()):

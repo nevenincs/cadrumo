@@ -69,6 +69,16 @@ def _registry_validator() -> RegistryValidator:
 
 
 @cache
+def _modelo_100_revision(filing_year: int = 2025) -> ModeloRevision:
+    """Return the authored, hydrated edition for one ejercicio.
+
+    Content assertions about an authored edition read the canonical authoring
+    load, which is not gated by the runtime support floor; a filing snapshot is
+    only for questions about what runtime would select.
+    """
+    return _loaded_registry()[0]["100"].revisions[str(filing_year)]
+
+
 def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
     modelos_by_id, catalogues = _loaded_registry()
     return build_snapshot(

@@ -87,7 +87,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.compiler.record_design import extract_record_design
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 #: Provenance stamped onto directly-constructed projections in this module. A

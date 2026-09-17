@@ -2,24 +2,25 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
+from ...tests.profile_schema_support import committed_registry_validator
 from ..coverage import build_construct_evidence_ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_validated_authority_rejects_invalid_source_ref_on_model_copy() -> None:
-    """An invalid source id fails through the public validated-authority flow."""
+def test_compiler_validation_rejects_invalid_source_ref_on_model_copy() -> None:
+    """An invalid source id fails the compiler validation that admits a candidate.
+
+    The runtime authority consumes already-validated material and does not
+    revalidate, so the refusal belongs to the development compiler.
+    """
     authority = compiled_bundled_authority()
     modelo = authority.modelo("130")
-    assert authority.validate_modelo(modelo.id) is modelo
 
     revision = next(revision for revision in modelo.revisions.values() if revision.formulas)
     formula = revision.formulas[0]
@@ -28,20 +29,14 @@ def test_validated_authority_rejects_invalid_source_ref_on_model_copy() -> None:
     mutated_modelo = modelo.model_copy(
         update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
     )
-    mutated_authority: ValidatedRegistryAuthority = replace(
-        authority,
-        modelos=(mutated_modelo,),
-        _modelos_by_id={mutated_modelo.id: mutated_modelo},
-        _registry_validated=False,
-        _validated_modelos=set(),
-        _snapshots={},
-    )
+    validator = committed_registry_validator(authority.catalogues)
+    validator.validate_modelo(modelo)
 
     with pytest.raises(
         RegistryValidationError,
         match=r"formula .* references unknown source id 's09-invalid-source'",
     ):
-        mutated_authority.validate_modelo(modelo.id)
+        validator.validate_modelo(mutated_modelo)
 
 
 def test_construct_evidence_classifies_incomplete_model_copy_refs_as_unresolved() -> None:

@@ -7,15 +7,15 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.aeat_literal_fixtures import PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.registry_schema_support import (
     committed_registry_tree as _committed_registry_tree,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @pytest.mark.parametrize(
@@ -34,7 +34,7 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
     procedure_ref = f"aeat-modelo-{modelo_id}-procedure"
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     procedure = catalogues.sources[procedure_ref]
     layout = catalogues.sources[layout_ref]
@@ -124,7 +124,7 @@ def test_current_retention_autoliquidaciones_use_current_grounded_sources(
     layout_ref = f"boe-modelo-{modelo_id}-form-layout"
     stale_prefix = f"enrolled-modelo-{modelo_id}-"
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     procedure = catalogues.sources[procedure_ref]
     text = catalogues.sources[text_ref]

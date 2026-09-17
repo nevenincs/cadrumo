@@ -9,6 +9,7 @@ own defect would also stop refusing the corpus.
 
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -32,9 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
 _M151_REVISION = "2025-y-siguientes"
-_M151_BINDINGS = f"revisions/{_M151_REVISION}/bindings/0001-m151-impatriado-base.toml"
 _M151_BINDING_ID = "modelo-151-impatriado-base-liquidable-general"
-_M151_CASILLA = "revisions/2025-y-siguientes/casillas/cdecl.ejercicio__cimpatriado.cuota-diferencial.toml"
 
 _M151_PROVIDER_LINE = (
     'provider = { kind = "ledger_impatriado_income_aggregation", modelo = "151", '
@@ -51,14 +50,52 @@ def _copy_modelo(tmp_path: Path, modelo_id: str) -> Path:
     return destination
 
 
-def _rewrite(tree: Path, relative: str, old: str, new: str) -> None:
-    """Replace one exact authored line in a copied fragment."""
-    path = tree / relative
+def _unique_fragment(tree: Path, anchor: str) -> Path:
+    """Return the one authored fragment in the copied tree that contains ``anchor``.
+
+    Fragments are located by content rather than by filename, because edition
+    compaction moves declarations between files and into inherited baselines.
+    """
+    matches = [path for path in sorted(tree.rglob("*.toml")) if anchor in path.read_text(encoding="utf-8")]
+    if len(matches) != 1:
+        message = f"fixture anchor {anchor!r} is authored in {len(matches)} fragments: {matches}"
+        raise AssertionError(message)
+    return matches[0]
+
+
+def _rewrite(tree: Path, old: str, new: str) -> None:
+    """Replace one exact authored line that occurs once across the copied tree."""
+    path = _unique_fragment(tree, old)
     text = path.read_text(encoding="utf-8")
     if text.count(old) != 1:
-        message = f"fixture edit is not unique in {relative}: {old!r} appears {text.count(old)} times"
+        message = f"fixture edit is not unique in {path}: {old!r} appears {text.count(old)} times"
         raise AssertionError(message)
     path.write_text(text.replace(old, new), encoding="utf-8")
+
+
+def _binding_row_span(text: str, binding_id: str) -> tuple[int, int]:
+    """Return the ``[[revisions.*.bindings]]`` row that declares ``binding_id``."""
+    declaration = text.index(f'id = "{binding_id}"')
+    headers = [match.start() for match in re.finditer(r"^\[\[revisions\.", text, re.MULTILINE)]
+    start = max(position for position in headers if position < declaration)
+    end = min((position for position in headers if position > declaration), default=len(text))
+    return start, end
+
+
+def _m151_binding_fragment(tree: Path) -> Path:
+    return _unique_fragment(tree, f'id = "{_M151_BINDING_ID}"')
+
+
+def _rewrite_m151_binding(tree: Path, old: str, new: str) -> None:
+    """Replace one exact line inside the authored M151 binding row only."""
+    path = _m151_binding_fragment(tree)
+    text = path.read_text(encoding="utf-8")
+    start, end = _binding_row_span(text, _M151_BINDING_ID)
+    row = text[start:end]
+    if row.count(old) != 1:
+        message = f"fixture edit is not unique in the {_M151_BINDING_ID} row: {old!r} appears {row.count(old)} times"
+        raise AssertionError(message)
+    path.write_text(text[:start] + row.replace(old, new) + text[end:], encoding="utf-8")
 
 
 def _revision(tree: Path, revision_id: str) -> ModeloRevision:
@@ -80,7 +117,7 @@ def test_a_converted_modelo_passes_binding_registration_validation(tmp_path: Pat
 
 def test_an_unregistered_provider_kind_is_refused_before_compilation(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
-    _rewrite(tree, _M151_BINDINGS, _M151_PROVIDER_LINE, 'provider = { kind = "not_a_provider_kind" }')
+    _rewrite_m151_binding(tree, _M151_PROVIDER_LINE, 'provider = { kind = "not_a_provider_kind" }')
 
     with pytest.raises(RegistryLoadError, match="not_a_provider_kind"):
         _revision(tree, _M151_REVISION)
@@ -88,20 +125,18 @@ def test_an_unregistered_provider_kind_is_refused_before_compilation(tmp_path: P
 
 def test_a_deferred_provider_kind_cannot_feed_a_bound_casilla(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
-    _rewrite(
+    _rewrite_m151_binding(
         tree,
-        _M151_BINDINGS,
         _M151_PROVIDER_LINE,
         'provider = { kind = "donativo_donor", fact = "row_field", row_field = "donor_tax_id", '
         'grouping = "per_donativo_donor", record = "donante", data_type = "text" }',
     )
-    _rewrite(
+    _rewrite_m151_binding(
         tree,
-        _M151_BINDINGS,
         _M151_VALUE_LINE,
-        'value = { data_type = "rows", channel = "row_set", row_grouping = "donativo" }',
+        'value = { data_type = "text", channel = "row_set", row_grouping = "donativo" }',
     )
-    _rewrite(tree, _M151_BINDINGS, _M151_AGGREGATION_LINE, 'aggregation = { op = "rows" }')
+    _rewrite_m151_binding(tree, _M151_AGGREGATION_LINE, 'aggregation = { op = "rows" }')
 
     failures = _failures(tree, _M151_REVISION)
 
@@ -111,7 +146,7 @@ def test_a_deferred_provider_kind_cannot_feed_a_bound_casilla(tmp_path: Path) ->
 
 def test_a_value_channel_the_provider_cannot_produce_is_refused(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
-    _rewrite(tree, _M151_BINDINGS, _M151_VALUE_LINE, 'value = { data_type = "integer", channel = "integer" }')
+    _rewrite_m151_binding(tree, _M151_VALUE_LINE, 'value = { data_type = "integer", channel = "integer" }')
 
     failures = _failures(tree, _M151_REVISION)
 
@@ -120,7 +155,7 @@ def test_a_value_channel_the_provider_cannot_produce_is_refused(tmp_path: Path) 
 
 def test_an_aggregation_op_the_provider_does_not_support_is_refused(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
-    _rewrite(tree, _M151_BINDINGS, _M151_AGGREGATION_LINE, 'aggregation = { op = "count_distinct" }')
+    _rewrite_m151_binding(tree, _M151_AGGREGATION_LINE, 'aggregation = { op = "count_distinct" }')
 
     failures = _failures(tree, _M151_REVISION)
 
@@ -133,9 +168,8 @@ def test_an_aggregation_op_the_provider_does_not_support_is_refused(tmp_path: Pa
 
 def test_a_terminal_origin_class_the_provider_cannot_rest_on_is_refused(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
-    _rewrite(
+    _rewrite_m151_binding(
         tree,
-        _M151_BINDINGS,
         _M151_AGGREGATION_LINE,
         _M151_AGGREGATION_LINE + '\nterminal_origins = [{ source_class = "profile_field", role = "primary", '
         'cardinality = "exactly_one", fingerprint = "required" }]',
@@ -148,13 +182,11 @@ def test_a_terminal_origin_class_the_provider_cannot_rest_on_is_refused(tmp_path
 
 def test_a_rows_aggregation_on_a_scalar_channel_is_refused(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "190")
-    fragment = "revisions/2024/bindings/0002-bindings.toml"
     _rewrite(
         tree,
-        fragment,
         'id = "modelo-190-perceptor-row-nif"\nprovider = { kind = "withholding", fact = "row_field", '
         'row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor", '
-        'data_type = "text" }\nvalue = { data_type = "rows", channel = "row_set", row_grouping = "withholding" }',
+        'data_type = "text" }\nvalue = { data_type = "text", channel = "row_set", row_grouping = "withholding" }',
         'id = "modelo-190-perceptor-row-nif"\nprovider = { kind = "withholding", fact = "row_field", '
         'row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor", '
         'data_type = "text" }\nvalue = { data_type = "money", channel = "decimal" }',
@@ -173,16 +205,17 @@ def test_a_rows_aggregation_on_a_scalar_channel_is_refused(tmp_path: Path) -> No
 def test_an_alternate_binding_whose_value_contract_differs_is_refused(tmp_path: Path) -> None:
     tree = _copy_modelo(tmp_path, "151")
     alternate_id = f"{_M151_BINDING_ID}-alternate"
-    binding_fragment = (tree / _M151_BINDINGS).read_text(encoding="utf-8")
-    authored_row = binding_fragment[binding_fragment.index(f'[[revisions."{_M151_REVISION}".bindings]]') :]
+    binding_path = _m151_binding_fragment(tree)
+    binding_fragment = binding_path.read_text(encoding="utf-8")
+    start, end = _binding_row_span(binding_fragment, _M151_BINDING_ID)
+    authored_row = binding_fragment[start:end]
     alternate_row = authored_row.replace(_M151_BINDING_ID, alternate_id).replace(
         _M151_VALUE_LINE,
         'value = { data_type = "integer", channel = "integer" }',
     )
-    (tree / _M151_BINDINGS).write_text(binding_fragment + "\n" + alternate_row, encoding="utf-8")
+    binding_path.write_text(binding_fragment.rstrip("\n") + "\n\n" + alternate_row, encoding="utf-8")
     _rewrite(
         tree,
-        _M151_CASILLA,
         f'binding = "{_M151_BINDING_ID}"',
         f'binding = "{_M151_BINDING_ID}"\nalternate_bindings = ["{alternate_id}"]',
     )
@@ -207,12 +240,14 @@ def _append_binding_row(tree: Path, new_id: str, *, extra: str = "") -> None:
     narrowest possible orphan fixture.
     """
     newline = chr(10)
-    fragment = (tree / _M151_BINDINGS).read_text(encoding="utf-8")
-    authored_row = fragment[fragment.index(f'[[revisions."{_M151_REVISION}".bindings]]') :]
+    path = _m151_binding_fragment(tree)
+    fragment = path.read_text(encoding="utf-8")
+    start, end = _binding_row_span(fragment, _M151_BINDING_ID)
+    authored_row = fragment[start:end]
     copied = authored_row.replace(_M151_BINDING_ID, new_id)
     if extra:
         copied = copied.replace(_M151_AGGREGATION_LINE, _M151_AGGREGATION_LINE + newline + extra)
-    (tree / _M151_BINDINGS).write_text(fragment + newline + copied, encoding="utf-8")
+    path.write_text(fragment.rstrip(newline) + newline + newline + copied, encoding="utf-8")
 
 
 def test_a_binding_no_consumer_names_earns_an_unreferenced_advisory(tmp_path: Path) -> None:
@@ -231,7 +266,10 @@ def test_a_non_calculation_binding_earns_no_unreferenced_advisory(tmp_path: Path
     _append_binding_row(
         tree,
         "modelo-151-impatriado-export-only",
-        extra='applicability = { kind = "non_calculation" }',
+        extra=(
+            'applicability = { kind = "non_calculation", reason = "application_calculation_handoff", '
+            'consumed_by = "impatriado application handoff" }'
+        ),
     )
 
     revision = _revision(tree, _M151_REVISION)

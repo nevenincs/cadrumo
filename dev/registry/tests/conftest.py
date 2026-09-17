@@ -11,11 +11,18 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
+from ..compiler import fact_providers
 from ..compiler.authority import compiled_bundled_authority
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,
 )
+
+
+@pytest.fixture
+def isolated_provider_registration(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Compile a minimal tree without the governed-fact providers the bundled registry enrolls."""
+    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
 
 
 @pytest.fixture(scope="session")

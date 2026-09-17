@@ -29,6 +29,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.ledger_binding_selector_support import LedgerIncomeFact
 from cadrumo.domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
@@ -65,7 +66,8 @@ def _modelo_151_snapshot():
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2020,
+        # The 2015-2022 design, at the first ejercicio inside the supported floor.
+        filing_year=2022,
         period="0A",
     )
 
@@ -87,11 +89,7 @@ def test_cash_received_sum_fact_reads_gross_amount_unconditionally() -> None:
     gross_binding = committed_binding.model_copy(
         update={
             "id": "test-impatriado-gross-income-sum",
-            "selector": {
-                "modelo": "151",
-                "target_casilla_id": _M151_BASE_CASILLA,
-                "fact": "cash_received_sum",
-            },
+            "provider": committed_binding.provider.model_copy(update={"fact": LedgerIncomeFact.CASH_RECEIVED_SUM}),
         },
     )
     revision_with_gross_binding = revision.model_copy(update={"bindings": (*revision.bindings, gross_binding)})

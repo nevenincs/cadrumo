@@ -17,10 +17,10 @@ from ..compiler.loader import (
     load_modelo_directory,
     load_shared_catalogues,
 )
-from ..compiler.validator import RegistryValidator
 from .ledger_iva_aggregation_support import _deduction_provenance
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @cache
@@ -37,7 +37,7 @@ def test_modelo_309_validator_accepts_committed_definition() -> None:
     assert modelo.id == "309"
     assert modelo.revisions, "309 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "309 must declare casillas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_309_metadata_matches_orden_hac_3625_2003() -> None:

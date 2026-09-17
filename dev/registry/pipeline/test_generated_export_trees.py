@@ -53,7 +53,7 @@ from .joined_record_design import design_view
 from .render_check import compare_revision_against_committed, parsed_tree_file
 from .source_defects import source_defects_for
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @dataclass(frozen=True)

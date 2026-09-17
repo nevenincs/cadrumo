@@ -6,7 +6,7 @@ import pytest
 
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
-from ._modelo_100_registry_support import _modelo_100_snapshot
+from ._modelo_100_registry_support import _modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -27,7 +27,7 @@ _WORKER_WITH_EMPLOYER_CONTRIBUTION_ROLE = (
 
 
 def test_modelo_100_2021_prevision_social_0426_is_distinct_employer_anexo_c3_slot() -> None:
-    revision = _modelo_100_snapshot(2021).revision
+    revision = _modelo_100_revision(2021)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0426", "0427"}}
 
     assert set(casillas_by_id) == {"0426", "0427"}
@@ -56,7 +56,7 @@ def test_modelo_100_2021_prevision_social_0426_is_distinct_employer_anexo_c3_slo
 
 @pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
 def test_modelo_100_2022_onward_prevision_social_0426_is_worker_contribution_slot(filing_year: int) -> None:
-    revision = _modelo_100_snapshot(filing_year).revision
+    revision = _modelo_100_revision(filing_year)
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in {"0426", "0427"}}
 
     assert set(casillas_by_id) == {"0426", "0427"}

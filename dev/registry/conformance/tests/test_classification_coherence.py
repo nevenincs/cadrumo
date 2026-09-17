@@ -51,7 +51,7 @@ from ..registry_classification_coherence import (
     build_classification_coherence_audit,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _LEGAL_REFS = ("lex:art-1",)
 _SOURCE_REFS = ("src-1",)

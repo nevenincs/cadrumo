@@ -66,7 +66,7 @@ from .manual_oracle_support import (
     read_manual_worked_example,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 _ORACLE_PAYLOAD_NAME = "modelo-303-2025-prorrata-general-regularizacion.json"
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")

@@ -48,7 +48,7 @@ from ._modelo_100_registry_support import (
     _source_root,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
     "legal",

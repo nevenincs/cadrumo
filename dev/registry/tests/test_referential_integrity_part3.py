@@ -24,8 +24,14 @@ from ._referential_integrity_support import (
     minimal_revision,
     segmented_casilla,
 )
+from .profile_schema_support import load_user_profile_schema
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_domain,
+    pytest.mark.usefixtures("governed_fact_scope"),
+    pytest.mark.usefixtures("isolated_provider_registration"),
+]
 
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
@@ -57,7 +63,9 @@ _FORMULA_REVISION_APPLICATION_LINKS = (
 
 
 def _validate_revision(revision: ModeloRevision) -> None:
-    RegistryValidator(minimal_catalogues()).validate_modelo(minimal_modelo(revision))
+    RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(
+        minimal_modelo(revision)
+    )
 
 
 def test_same_number_distinct_segmento_casillas_validate() -> None:

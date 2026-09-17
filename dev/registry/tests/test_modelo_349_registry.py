@@ -26,7 +26,6 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..compiler.validator import RegistryValidator
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
@@ -56,8 +55,9 @@ from ._modelo_349_registry_support import (
     _load_modelo_349,
     _modelo_349_revision,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @cache
@@ -75,7 +75,7 @@ def _snapshot_349(filing_year: int, period: str) -> RegistrySnapshot:
 def test_committed_modelo_349_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_349()
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     assert set(modelo.revisions) == {"2020-y-siguientes"}
 

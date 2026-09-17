@@ -7,18 +7,17 @@ from datetime import date
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,
 )
 from ..conformance.registry_schema_support import (
     committed_snapshot as _committed_snapshot,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "orden-eha-1274-2007:art-1",
@@ -40,7 +39,7 @@ def test_modelo_036_validator_accepts_committed_definition() -> None:
     assert modelo.id == "036"
     assert modelo.revisions, "036 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "036 must declare casillas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_036_metadata_matches_orden_eha_1274_2007_and_hac_1526_2024() -> None:

@@ -11,7 +11,6 @@ from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
-from ..compiler.validator import RegistryValidator
 from ._modelo_303_registry_support import (
     _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
     _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
@@ -20,8 +19,9 @@ from ._modelo_303_registry_support import (
     _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
     load_modelo_303,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
@@ -29,7 +29,7 @@ def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
     assert modelo.id == "303"
     assert modelo.revisions, "303 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "303 must declare casillas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:

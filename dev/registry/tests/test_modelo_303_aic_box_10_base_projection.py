@@ -32,6 +32,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     iva_ledger_selector,
@@ -44,7 +45,7 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, Iva
 from ..compiler.loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _REVISION_ID = "2025"
 _CASILLA_BASE = "iva.autorepercutido.intracomunitaria.devengado.base"
@@ -64,7 +65,7 @@ def _m303_revision(root: Path):
 
 
 def _bundled_registry_root() -> Path:
-    return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+    return bundled_path("registry", "aeat")
 
 
 def test_box_10_is_computed_from_the_base_parity_casilla() -> None:

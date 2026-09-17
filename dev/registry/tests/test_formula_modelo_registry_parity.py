@@ -4,17 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
-
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces() -> None:
     modelos, catalogues = _committed_registry_tree()
-    validator = RegistryValidator(catalogues, source_root=bundled_path())
+    validator = committed_registry_validator(catalogues)
     required_surfaces = {"calculation", "review", "approval", "reconciliation", "workflow"}
 
     for modelo in modelos:

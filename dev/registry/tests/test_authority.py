@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import shutil
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -12,12 +13,12 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 
-from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader_cache import registry_disk_cache_dir
 from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
@@ -29,10 +30,19 @@ from ..conformance.loader_directory_mode_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-@pytest.fixture
-def isolated_provider_registration(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Compile a minimal tree without the governed-fact providers the bundled registry enrolls."""
-    monkeypatch.setattr(fact_providers, "FACT_PROVIDER_REGISTRATIONS", ())
+def _install_committed_profile_schema(root: Path) -> None:
+    """Give a synthetic tree the inputs every compilation requires beside its modelos.
+
+    The profile schema sits beside the registry, and the authored facts must
+    carry the Spanish tax-ID format the loader validates identities with.
+    """
+    target = root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"), target)
+    facts_dir = root / "registry" / "aeat" / "facts"
+    facts_dir.mkdir(parents=True, exist_ok=True)
+    fact_name = "0102-spanish-tax-identifier-format.toml"
+    shutil.copyfile(bundled_path("registry", "aeat", "facts", fact_name), facts_dir / fact_name)
 
 
 _LEGACY_AUTHORITY_CACHE_SCHEMA_VERSION = "casilla-reference-ambiguity-v2"
@@ -256,6 +266,7 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(
     """
 
     registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
@@ -307,6 +318,7 @@ def test_authority_compiles_each_state_of_a_real_aba_tree_cycle_from_its_own_byt
     original content rather than to the state it last saw.
     """
     registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
@@ -360,6 +372,7 @@ def test_authority_cache_invalidates_when_source_evidence_changes(
 ) -> None:
     """Authority validation must rerun when corpus evidence changes under the same source root."""
     registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
@@ -395,6 +408,7 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(
     """A filesystem validation marker must not bypass casilla-reference guards."""
 
     registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
@@ -456,6 +470,7 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(
     """A reused printed number with one bare-id owner must fail at authority load."""
 
     registry_root = tmp_path / "registry" / "aeat"
+    _install_committed_profile_schema(tmp_path)
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
     revision_dir.mkdir(parents=True)

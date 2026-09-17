@@ -15,10 +15,10 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _COMMON_SURFACES = {
     "approval",
@@ -100,7 +100,7 @@ def test_modelo_131_supported_year_2022_deadline_census_dates_sources_and_owners
     assert len(revision.deadline_windows) == len(windows) == 8
     assert set(revision.constructs[0].deadline_windows) == {window.id for window in revision.deadline_windows}
     assert {period for year, period in windows if year == 2022} == set(expected_2022)
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for source_ref in {"aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"}:
         source = catalogues.sources[source_ref]

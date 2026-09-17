@@ -55,13 +55,13 @@ from cadrumo.domain.calculations.registry.facts.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.fact_providers import compile_registered_fact_providers
 from ..compiler.legal_grounding import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue_grounding,
 )
+from ..compiler.loader import load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -161,7 +161,7 @@ def dana_authority() -> DanaAuthority:
     Raises:
         AssertionError: If any expected DANA entry is absent from the tree.
     """
-    _, catalogues = bundled_registry_tree()
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
     missing_legal = [ref for ref in DANA_LEGAL_REFS if ref not in catalogues.legal]
     missing_sources = [ref for ref in DANA_SOURCE_REFS if ref not in catalogues.sources]
     assert not missing_legal, f"DANA legal entries absent from the registry: {missing_legal!r}"
@@ -398,7 +398,7 @@ def test_the_reduction_fact_resolves_only_for_the_lawful_2024_window() -> None:
     assert {citation.source_ref for citation in resolved.source_citations} == set(DANA_SOURCE_REFS)
 
     for effective_date in (date(2024, 11, 12), date(2025, 1, 1)):
-        with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
+        with pytest.raises(RegistryValidationError, match="falls outside its hard support boundaries"):
             resolve_governed_fact(
                 catalogue=authority.facts,
                 query=ScalarFactQuery(

@@ -26,7 +26,7 @@ from ..pipeline.m390_auxiliary_envelope import (
 )
 from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M390_DESIGNS = (
     ("aeat-dr-390-2022", "2022", "2022", 2022),

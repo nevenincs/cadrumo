@@ -21,7 +21,7 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 class BindingEntry(TypedDict, total=False):

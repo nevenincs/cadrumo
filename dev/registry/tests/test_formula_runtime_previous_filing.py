@@ -5,15 +5,17 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffset, TargetPeriodOffset
 from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+    PreviousFilingProvider,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
@@ -261,12 +263,18 @@ def test_previous_filing_requirements_max_year_delta_one_admits_one_year_cross_e
 def test_previous_filing_requirements_max_year_delta_rejects_negative_values(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match="max_year_delta must be non-negative"):
-        _previous_filing_offset_year_periods(
-            committed_modelo_130_snapshot,
-            target_period="1T",
-            max_year_delta=-1,
-        )
+    # The bound is now a typed temporal member, which refuses a negative reach.
+    with pytest.raises(ValidationError, match="max_years must be non-negative"):
+        FilingYearOffset(years=-1, max_years=-1, source_periods=("0A",))
+
+
+def _prior_period_provider(*, within_filing_year: bool) -> PreviousFilingProvider:
+    """A one-period-back M130 source; ``within_filing_year`` is the zero-year bound."""
+    return PreviousFilingProvider(
+        source_modelo="130",
+        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
+        temporal=TargetPeriodOffset(periods=-1, within_filing_year=within_filing_year),
+    )
 
 
 def _previous_filing_offset_year_periods(
@@ -289,18 +297,14 @@ def _previous_filing_offset_requirements(
     target_period: str,
     max_year_delta: int | None,
 ) -> tuple[RegistryFoldRequirement, ...]:
-    selector: dict[str, object] = {
-        "source": "previous_filing",
-        "source_modelo": "130",
-        "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-        "source_period_offset_from_target": -1,
-    }
-    if max_year_delta is not None:
-        selector["max_year_delta"] = max_year_delta
+    # A period offset is either confined to its filing year (the zero bound) or
+    # unbounded; a one-year bound reaches exactly what the unbounded offset does.
+    if max_year_delta not in (None, 0, 1):
+        raise AssertionError(f"unsupported max_year_delta {max_year_delta!r} for a period offset")
     binding = _previous_year_net_income_binding(snapshot).model_copy(
         update={
             "id": "test-previous-filing-offset-requirements",
-            "selector": selector,
+            "provider": _prior_period_provider(within_filing_year=max_year_delta == 0),
             "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
         },
     )
@@ -315,13 +319,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
     capped_binding = base_binding.model_copy(
         update={
             "id": "test-cap-suppressed-binding",
-            "selector": {
-                "source": "previous_filing",
-                "source_modelo": "130",
-                "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-                "source_period_offset_from_target": -1,
-                "max_year_delta": 0,
-            },
+            "provider": _prior_period_provider(within_filing_year=True),
             "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
         },
     )
@@ -361,13 +359,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
     capped_binding = base_binding.model_copy(
         update={
             "id": "test-cap-suppressed-binding-resolve",
-            "selector": {
-                "source": "previous_filing",
-                "source_modelo": "130",
-                "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
-                "source_period_offset_from_target": -1,
-                "max_year_delta": 0,
-            },
+            "provider": _prior_period_provider(within_filing_year=True),
             "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
         },
     )

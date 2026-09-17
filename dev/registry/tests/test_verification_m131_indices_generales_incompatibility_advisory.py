@@ -57,7 +57,7 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 
 from ..maintenance_support import load_modelo_path
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 _CASILLA_PEQUENA_DIMENSION_FLAG: CasillaId = validated_casilla_id(
     "modulos-pequena-dimension-ignorado-flag",

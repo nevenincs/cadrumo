@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
     committed_registry as _committed_registry,
 )
@@ -17,8 +15,9 @@ from ..conformance.registry_schema_support import (
 from ..conformance.registry_schema_support import (
     with_revision as _with_revision,
 )
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_validator_rejects_verification_expectation_without_official_guidance_source() -> None:
@@ -37,6 +36,6 @@ def test_validator_rejects_verification_expectation_without_official_guidance_so
             r"requires official_source_guidance source evidence"
         ),
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+        committed_registry_validator(catalogues).validate_modelo(
             _with_revision(modelo, mutated_revision),
         )

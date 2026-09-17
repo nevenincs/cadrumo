@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from datetime import date
 
 import pytest
@@ -12,8 +11,11 @@ from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.tests.inventory import REPO_ROOT
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.corpus_catalogue import verify_source_file
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..compiler.loader import load_catalogue_file
@@ -21,11 +23,10 @@ from .catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,
     _FORMAL_WITHHOLDING_MODELOS,
     _FRACTIONAL_PAYMENT_ARTICLE_REF,
-    _M100_WITHHOLDING_IMPORT_SECTIONS,
     _catalogues,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_m210_art_5_grounding_covers_each_distinct_presentation_case() -> None:
@@ -477,9 +478,13 @@ def test_ley_19_1994_canary_tax_regime_refs_link_to_current_boe_corpus() -> None
         verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
+def _authored_legal_reference(reference_id: str) -> LegalReference:
+    """Return an authored legal declaration, including one only a profile schema cites."""
+    return compiled_bundled_authority().catalogues.legal[reference_id]
+
+
 def test_ley_49_2002_art_14_special_regime_option_links_to_boe_corpus() -> None:
-    catalogues = _catalogues()
-    reference = catalogues.legal["ley-49-2002:art-14"]
+    reference = _authored_legal_reference("ley-49-2002:art-14")
 
     assert reference.corpus_ref == "corpus/normatives/html/ley-49-2002-art-14.html#a14"
     assert reference.effective_from == date(2002, 12, 25)
@@ -513,9 +518,8 @@ def test_retired_normative_summary_corpus_files_are_not_bundled() -> None:
 
 
 def test_rd_1007_verifactu_refs_are_article_level_and_current() -> None:
-    catalogues = _catalogues()
-    art3 = catalogues.legal["rd-1007-2023:art-3"]
-    df4 = catalogues.legal["rd-1007-2023:df-4"]
+    art3 = _authored_legal_reference("rd-1007-2023:art-3")
+    df4 = _authored_legal_reference("rd-1007-2023:df-4")
 
     assert art3.article == "3"
     assert art3.corpus_ref == "corpus/normatives/html/rd-1007-2023.html#a3"
@@ -581,67 +585,67 @@ def test_formal_withholding_modelos_do_not_cite_fractional_payment_article() -> 
     assert missing_formal_article == []
 
 
+def _modelo_100_revisions() -> dict[str, ModeloRevision]:
+    """Return every authored Modelo 100 revision, hydrated from its delta chain.
+
+    A fragment file no longer maps to one declaration, and an edition may
+    inherit a declaration's legal references, so only the hydrated revision
+    says which article a declaration actually cites.
+    """
+    modelo = next(candidate for candidate in compiled_bundled_authority().modelos if candidate.id == "100")
+    return {str(revision_id): revision for revision_id, revision in modelo.revisions.items()}
+
+
 def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
     offenders: list[str] = []
     missing_formal_article: list[str] = []
-    checked: list[str] = []
+    checked: dict[str, set[str]] = {}
 
-    for path in scan_directory(modelo_root, pattern="*.toml", recursive=True):
-        if not (set(path.parts) & _M100_WITHHOLDING_IMPORT_SECTIONS):
-            continue
+    for revision_id, revision in _modelo_100_revisions().items():
+        imports: list[tuple[str, str, tuple[str, ...]]] = []
+        for binding in revision.bindings:
+            source_modelo = getattr(binding.provider, "source_modelo", None)
+            if source_modelo is not None and "retenciones" in str(binding.id):
+                imports.append((str(binding.id), str(source_modelo), tuple(binding.legal_refs)))
+        for dependency in revision.dependency_classifications:
+            imports.append((str(dependency.id), str(dependency.source_modelo), tuple(dependency.legal_refs)))
+        for declaration_id, source_modelo, legal_refs in imports:
+            if source_modelo not in _FORMAL_WITHHOLDING_MODELOS:
+                continue
+            site = f"{revision_id}:{declaration_id}"
+            checked.setdefault(revision_id, set()).add(source_modelo)
+            if _FRACTIONAL_PAYMENT_ARTICLE_REF in legal_refs:
+                offenders.append(site)
+            if _FORMAL_WITHHOLDING_ARTICLE_REF not in legal_refs:
+                missing_formal_article.append(site)
 
-        text = path.read_text(encoding="utf-8")
-        if "retenciones" not in text.lower():
-            continue
-        if not any(f'source_modelo = "{modelo_id}"' in text for modelo_id in _FORMAL_WITHHOLDING_MODELOS):
-            continue
-
-        rel_path = path.relative_to(modelo_root).as_posix()
-        checked.append(rel_path)
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
-            offenders.append(rel_path)
-        if _FORMAL_WITHHOLDING_ARTICLE_REF not in text:
-            missing_formal_article.append(rel_path)
-
-    # 51 = the M100 withholding-import (bindings/relations/dependency_classifications) TOMLs
-    # that fold a formal retención source into the renta declaration, per surviving revision:
-    #   2020-2023: sources {111, 123} -> 7 files each (28)
-    #   2024:      sources {111, 123, 193} -> 10
-    #   2025:      sources {111, 123, 190, 193} -> 13
-    # The earlier count of 72 included the modelo-115 (and 2025 modelo-180) rental-retention
-    # fold-in across every revision; those were retired as dormant relation targets consumed by
-    # no casilla binding and no formula in `ff3e6b166` (fix(registry): retire dormant M100 rental
-    # retention sources), which added the consumed-target drift gate in test_modelo_100_drift_detection.
-    assert len(checked) == 51
+    # Every surviving revision folds the periodic 111/123 withholdings in, and the
+    # annual summaries join as their filing years adopt them; a revision missing
+    # from this map would mean the scan stopped reaching the imports at all.
+    assert {revision_id: {"111", "123"} <= sources for revision_id, sources in checked.items()} == dict.fromkeys(
+        _modelo_100_revisions(), True
+    )
+    assert {"190", "193"} <= checked["2025"]
     assert offenders == []
     assert missing_formal_article == []
 
 
 def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_article() -> None:
-    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
     offenders: list[str] = []
-    checked: list[str] = []
+    checked: set[str] = set()
 
-    for path in sorted(modelo_root.rglob("formulas/*.toml")):
-        text = path.read_text(encoding="utf-8")
-        formula_id = next((line for line in text.splitlines() if line.startswith("id = ")), "")
-        if "retenciones" not in formula_id.lower():
-            continue
+    for revision_id, revision in _modelo_100_revisions().items():
+        for formula in revision.formulas:
+            if "retenciones" not in str(formula.id).lower():
+                continue
+            site = f"{revision_id}:{formula.id}"
+            checked.add(site)
+            if _FRACTIONAL_PAYMENT_ARTICLE_REF in formula.legal_refs:
+                offenders.append(site)
 
-        rel_path = path.relative_to(modelo_root).as_posix()
-        checked.append(rel_path)
-        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
-            offenders.append(rel_path)
-
-    # Anchored on the fragment's IDENTITY, not on its ordinal prefix. The prefix
-    # is a position within the directory and renumbers whenever a sibling
-    # fragment is added or removed -- this pinned `0068-` and broke when the
-    # same fragment became `0069-`, which says nothing about the property under
-    # test. The stem names the formula; that is what has to still be checked.
-    anchor = "revisions/2025/formulas/renta-retenciones-arrendamientos-urbanos.toml"
-    stems = {re.sub(r"/\d+-", "/", rel_path) for rel_path in checked}
-    assert anchor in stems, f"{anchor} is no longer among the checked retención formulas: {sorted(stems)[:6]}"
+    # Anchored on the formula's identity, so the gate cannot pass by checking nothing.
+    anchor = "2025:renta-retenciones-arrendamientos-urbanos"
+    assert anchor in checked, f"{anchor} is no longer among the checked retención formulas: {sorted(checked)[:6]}"
     assert offenders == []
 
 

@@ -6,23 +6,23 @@ from functools import cache
 
 import pytest
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from dev.registry.compiler.validator import RegistryValidator
 from dev.registry.conformance.registry_schema_support import committed_registry_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+from .profile_schema_support import committed_registry_validator
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 @cache
 def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     modelos, catalogues = committed_registry_tree()
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
+    committed_registry_validator(catalogues).validate_registry(modelos)
     return modelos, catalogues
 
 

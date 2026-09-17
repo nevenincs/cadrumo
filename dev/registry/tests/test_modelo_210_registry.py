@@ -27,10 +27,10 @@ from ..compiler.loader import (
     load_catalogue_file,
     load_modelo_directory,
 )
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M210_FORM_ORDER_REF = "orden-eha-3316-2010:art-1"
 _M210_AGRUPACION_ORDER_REF = "orden-eha-3316-2010:art-2"
@@ -91,7 +91,7 @@ def test_modelo_210_validator_accepts_committed_definition() -> None:
     assert modelo.id == "210"
     assert modelo.revisions, "210 must declare at least one revision"
     assert any(rev.formulas for rev in modelo.revisions.values()), "210 must declare formulas"
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
 
 def test_convenio_authority_projects_authored_facts_with_typed_override_kinds() -> None:

@@ -53,6 +53,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.filing_year import FilingYear
 from cadrumo.core.period import RegistrySelectorPeriodCode
 from cadrumo.core.revision_review import RevisionReviewStatus
@@ -189,6 +190,7 @@ class EvidenceTierCoverageGate(CoverageModel):
     detail: str
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_status_matches_evidence(self) -> EvidenceTierCoverageGate:
         has_evidence = bool(
             self.legal_refs or self.source_refs or self.workbook_refs or self.cross_reference_refs,
@@ -344,6 +346,7 @@ class ConstructEvidenceRow(CoverageModel):
         return self._authority_proof in _AUTHORITY_CHECK_PROOFS
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_evidence_shape(self) -> ConstructEvidenceRow:
         self._validate_binding_identity()
         has_legal = bool(self.legal_refs)
@@ -408,6 +411,7 @@ class ConstructEvidenceLedger(CoverageModel):
         return self.authority_fallback_reason is not None
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rows_are_unique(self) -> ConstructEvidenceLedger:
         coordinates = [(row.kind, row.construct_id) for row in self.rows]
         if len(coordinates) != len(set(coordinates)):

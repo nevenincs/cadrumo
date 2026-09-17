@@ -29,7 +29,7 @@ from .ledger_iva_aggregation_support import (
     _rate_kind,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
 def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_filings() -> None:

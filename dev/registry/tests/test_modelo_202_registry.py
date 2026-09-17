@@ -21,10 +21,10 @@ from cadrumo.domain.calculations.registry.schema_formula import FormulaExpressio
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.legal_grounding import verify_legal_catalogue
-from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from .profile_schema_support import committed_registry_validator
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M202_BASE_ORDER_REF = "orden-hfp-227-2017:art-1"
 _M202_2018_ORDER_REF = "orden-hac-941-2018:art-primero-5-anexo-i"
@@ -91,7 +91,7 @@ def _load_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
 def test_committed_modelo_202_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_202()
 
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+    committed_registry_validator(catalogues).validate_modelo(modelo)
 
     assert set(modelo.revisions) == {"2019-2022", "2023-2024", "2025-y-siguientes"}
 
